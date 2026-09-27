@@ -1,0 +1,2 @@
+firebase-admin>=6.5
+functions-framework>=3.8

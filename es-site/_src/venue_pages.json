@@ -1,0 +1,387 @@
+{
+"Greenwich|CT": {
+"Delamar Greenwich Harbor": "/venues/greenwich-ct/delamar-greenwich-harbor",
+"Whitby Castle": "/venues/greenwich-ct/whitby-castle",
+"The J House Greenwich": "/venues/greenwich-ct/the-j-house-greenwich",
+"Serafresca at the IC": "/venues/greenwich-ct/serafresca-at-the-ic",
+"Abigail Kirsch at The Loading Dock": "/venues/greenwich-ct/abigail-kirsch-at-the-loading-dock",
+"Reid Castle Events": "/venues/greenwich-ct/reid-castle-events",
+"Foundation House": "/venues/greenwich-ct/foundation-house"
+},
+"Hartford|CT": {
+"The Riverview": "/venues/hartford-ct/the-riverview",
+"Saint Clements Castle & Marina": "/venues/hartford-ct/saint-clements-castle-marina",
+"Elizabeth Park Conservancy": "/venues/hartford-ct/elizabeth-park-conservancy",
+"Pond House Cafe": "/venues/hartford-ct/pond-house-cafe",
+"The Society Room of Hartford": "/venues/hartford-ct/the-society-room-of-hartford",
+"The Glastonbury Boathouse": "/venues/hartford-ct/the-glastonbury-boathouse",
+"The Pavilion on Crystal Lake": "/venues/hartford-ct/the-pavilion-on-crystal-lake",
+"The Barns at Wesleyan Hills": "/venues/hartford-ct/the-barns-at-wesleyan-hills"
+},
+"Litchfield|CT": {
+"The Riverview": "/venues/litchfield-ct/the-riverview",
+"La Bella Vista": "/venues/litchfield-ct/la-bella-vista",
+"The Waterview": "/venues/litchfield-ct/the-waterview",
+"The Litchfield Inn": "/venues/litchfield-ct/the-litchfield-inn",
+"Wood Acres Farm": "/venues/litchfield-ct/wood-acres-farm",
+"Winvian Farm": "/venues/litchfield-ct/winvian-farm",
+"South Farms": "/venues/litchfield-ct/south-farms",
+"Lost Fox Inn": "/venues/litchfield-ct/lost-fox-inn"
+},
+"Mystic|CT": {
+"Inn at Mystic": "/venues/mystic-ct/inn-at-mystic",
+"Saltwater Farm Vineyard": "/venues/mystic-ct/saltwater-farm-vineyard",
+"Wright's Mill Farm": "/venues/mystic-ct/wright-s-mill-farm",
+"Kingdom of the Hawk Vineyard": "/venues/mystic-ct/kingdom-of-the-hawk-vineyard",
+"Delamar Mystic": "/venues/mystic-ct/delamar-mystic",
+"Harbor View Landing": "/venues/mystic-ct/harbor-view-landing",
+"The Hounds": "/venues/mystic-ct/the-hounds",
+"Mystic Yachting Club at Willow Point": "/venues/mystic-ct/mystic-yachting-club-at-willow-point"
+},
+"New Haven|CT": {
+"The Woodwinds": "/venues/new-haven-ct/the-woodwinds",
+"The Waterview": "/venues/new-haven-ct/the-waterview",
+"Amarante's Sea Cliff": "/venues/new-haven-ct/amarante-s-sea-cliff",
+"Cascade Fine Catering": "/venues/new-haven-ct/cascade-fine-catering",
+"Anthony's Ocean View": "/venues/new-haven-ct/anthony-s-ocean-view",
+"Bill Miller's Castle": "/venues/new-haven-ct/bill-miller-s-castle",
+"New Haven Lawn Club": "/venues/new-haven-ct/new-haven-lawn-club",
+"Birchwoods Banquet Facility": "/venues/new-haven-ct/birchwoods-banquet-facility"
+},
+"Berkshires|MA": {
+"The Mount, Edith Wharton Cultural Center": "/venues/berkshires-ma/the-mount-edith-wharton-cultural-center",
+"Miraval Berkshires Resort and Spa": "/venues/berkshires-ma/miraval-berkshires-resort-and-spa",
+"Valley View Farm": "/venues/berkshires-ma/valley-view-farm",
+"The Lakehouse Inn": "/venues/berkshires-ma/the-lakehouse-inn",
+"Quonquont Farm": "/venues/berkshires-ma/quonquont-farm",
+"Gedney Farm": "/venues/berkshires-ma/gedney-farm",
+"Wicked Awesome Events: Amongst the Oaks": "/venues/berkshires-ma/wicked-awesome-events-amongst-the-oaks",
+"Bloom Meadows": "/venues/berkshires-ma/bloom-meadows"
+},
+"Boston|MA": {
+"Willowdale Estate": "/venues/boston-ma/willowdale-estate",
+"The Villa at Ridder Country Club": "/venues/boston-ma/the-villa-at-ridder-country-club",
+"Harvard Club of Boston": "/venues/boston-ma/harvard-club-of-boston",
+"Hampshire House": "/venues/boston-ma/hampshire-house",
+"Oceanview of Nahant": "/venues/boston-ma/oceanview-of-nahant",
+"Saphire Estate": "/venues/boston-ma/saphire-estate",
+"State Room: A Longwood Venue": "/venues/boston-ma/state-room-a-longwood-venue",
+"Glen Magna Farms": "/venues/boston-ma/glen-magna-farms"
+},
+"Cape Cod|MA": {
+"Wequassett Resort and Golf Club": "/venues/cape-cod-ma/wequassett-resort-and-golf-club",
+"Pelham House Resort": "/venues/cape-cod-ma/pelham-house-resort",
+"Highfield Hall & Gardens": "/venues/cape-cod-ma/highfield-hall-gardens",
+"Ocean Edge Resort & Golf Club": "/venues/cape-cod-ma/ocean-edge-resort-golf-club",
+"Wychmere Beach Club": "/venues/cape-cod-ma/wychmere-beach-club",
+"The Ridge Club": "/venues/cape-cod-ma/the-ridge-club",
+"Wychmere Beach Club Weddings": "/venues/cape-cod-ma/wychmere-beach-club-weddings",
+"Shining Tides Weddings": "/venues/cape-cod-ma/shining-tides-weddings"
+},
+"Martha's Vineyard|MA": {
+"Harbor View Hotel": "/venues/martha-s-vineyard-ma/harbor-view-hotel",
+"Winnetu Oceanside Resort": "/venues/martha-s-vineyard-ma/winnetu-oceanside-resort",
+"Martha's Vineyard Agricultural Society": "/venues/martha-s-vineyard-ma/martha-s-vineyard-agricultural-society",
+"Lambert's Cove Inn & Resort": "/venues/martha-s-vineyard-ma/lambert-s-cove-inn-resort",
+"The Dunes": "/venues/martha-s-vineyard-ma/the-dunes",
+"Shining Tides Weddings": "/venues/martha-s-vineyard-ma/shining-tides-weddings",
+"Grange Hall": "/venues/martha-s-vineyard-ma/grange-hall",
+"Union Chapel": "/venues/martha-s-vineyard-ma/union-chapel"
+},
+"Nantucket|MA": {
+"The Nantucket Hotel & Resort": "/venues/nantucket-ma/the-nantucket-hotel-resort",
+"White Elephant Nantucket": "/venues/nantucket-ma/white-elephant-nantucket",
+"The Wauwinet": "/venues/nantucket-ma/the-wauwinet",
+"Dreamland Film and Performing Arts Theatre": "/venues/nantucket-ma/dreamland-film-and-performing-arts-theatre",
+"Shining Tides Weddings": "/venues/nantucket-ma/shining-tides-weddings",
+"The Sea View": "/venues/nantucket-ma/the-sea-view",
+"Harborview Nantucket": "/venues/nantucket-ma/harborview-nantucket",
+"Nantucket Beach Club": "/venues/nantucket-ma/nantucket-beach-club"
+},
+"Salem|MA": {
+"Willowdale Estate": "/venues/salem-ma/willowdale-estate",
+"Danversport": "/venues/salem-ma/danversport",
+"The House of the Seven Gables": "/venues/salem-ma/the-house-of-the-seven-gables",
+"Oceanview of Nahant": "/venues/salem-ma/oceanview-of-nahant",
+"Olio | Historic Wedding & Event Venue": "/venues/salem-ma/olio-historic-wedding-event-venue",
+"Glen Magna Farms": "/venues/salem-ma/glen-magna-farms",
+"Hamilton Hall": "/venues/salem-ma/hamilton-hall",
+"Tupper Manor": "/venues/salem-ma/tupper-manor"
+},
+"Worcester|MA": {
+"Mechanics Hall": "/venues/worcester-ma/mechanics-hall",
+"The Barn at Wight Farm": "/venues/worcester-ma/the-barn-at-wight-farm",
+"Harrington Farm": "/venues/worcester-ma/harrington-farm",
+"Grand View": "/venues/worcester-ma/grand-view",
+"Fern Hill Barn by Wedgewood Weddings": "/venues/worcester-ma/fern-hill-barn-by-wedgewood-weddings",
+"Asa Waters Mansion": "/venues/worcester-ma/asa-waters-mansion",
+"Tuckerman Hall": "/venues/worcester-ma/tuckerman-hall",
+"The Barn at Blackstone National": "/venues/worcester-ma/the-barn-at-blackstone-national"
+},
+"Bar Harbor|ME": {
+"Bar Harbor Inn & Spa": "/venues/bar-harbor-me/bar-harbor-inn-spa",
+"Harborside Hotel, Spa & Marina": "/venues/bar-harbor-me/harborside-hotel-spa-marina",
+"Atlantic Oceanside Hotel & Event Center": "/venues/bar-harbor-me/atlantic-oceanside-hotel-event-center",
+"Ivy Manor Inn - Village Center": "/venues/bar-harbor-me/ivy-manor-inn-village-center",
+"Terramor Outdoor Resort": "/venues/bar-harbor-me/terramor-outdoor-resort",
+"Bar Harbor Club": "/venues/bar-harbor-me/bar-harbor-club",
+"Hulls Cove School House": "/venues/bar-harbor-me/hulls-cove-school-house",
+"The Foggy Pearl": "/venues/bar-harbor-me/the-foggy-pearl"
+},
+"Camden|ME": {
+"Samoset Resort": "/venues/camden-me/samoset-resort",
+"16 Bay View": "/venues/camden-me/16-bay-view",
+"The Norumbega": "/venues/camden-me/the-norumbega",
+"Whitehall Inn": "/venues/camden-me/whitehall-inn",
+"Camden Amphitheater": "/venues/camden-me/camden-amphitheater",
+"Tops'l Farm": "/venues/camden-me/tops-l-farm",
+"Beech Hill Barn": "/venues/camden-me/beech-hill-barn",
+"SaltWater Fields Wedding & Event Barn": "/venues/camden-me/saltwater-fields-wedding-event-barn"
+},
+"Kennebunkport|ME": {
+"The Nonantum Resort": "/venues/kennebunkport-me/the-nonantum-resort",
+"White Barn Inn, Auberge Collection": "/venues/kennebunkport-me/white-barn-inn-auberge-collection",
+"Village by the Sea": "/venues/kennebunkport-me/village-by-the-sea",
+"Cape Arundel Inn & Resort": "/venues/kennebunkport-me/cape-arundel-inn-resort",
+"Wandby Landing": "/venues/kennebunkport-me/wandby-landing",
+"Hidden Pond": "/venues/kennebunkport-me/hidden-pond",
+"Latitudes At Nonantum Resort": "/venues/kennebunkport-me/latitudes-at-nonantum-resort",
+"River Winds Farm And Estate": "/venues/kennebunkport-me/river-winds-farm-and-estate"
+},
+"Portland|ME": {
+"Saltwater Grille": "/venues/portland-me/saltwater-grille",
+"The Inn On Peaks Island": "/venues/portland-me/the-inn-on-peaks-island",
+"Grace Wedding Venue & Event Center": "/venues/portland-me/grace-wedding-venue-event-center",
+"Brick South Events & Catering Co.": "/venues/portland-me/brick-south-events-catering-co",
+"Portland Ocean Gateway": "/venues/portland-me/portland-ocean-gateway",
+"Caswell Farm & Wedding Barn": "/venues/portland-me/caswell-farm-wedding-barn",
+"Flanagan Farm": "/venues/portland-me/flanagan-farm",
+"Fortland": "/venues/portland-me/fortland"
+},
+"Manchester|NH": {
+"Dell-Lea Weddings & Events": "/venues/manchester-nh/dell-lea-weddings-events",
+"Birch Wood Vineyards by Wedgewood Weddings": "/venues/manchester-nh/birch-wood-vineyards-by-wedgewood-weddings",
+"Granite Rose by Wedgewood Weddings": "/venues/manchester-nh/granite-rose-by-wedgewood-weddings",
+"Manchester Country Club - NH": "/venues/manchester-nh/manchester-country-club-nh",
+"The Barn at Bull Meadow": "/venues/manchester-nh/the-barn-at-bull-meadow",
+"The Gardens at Uncanoonuc Mountain": "/venues/manchester-nh/the-gardens-at-uncanoonuc-mountain",
+"Oscar Barn Events Venue": "/venues/manchester-nh/oscar-barn-events-venue",
+"Allrose Farm": "/venues/manchester-nh/allrose-farm"
+},
+"North Conway|NH": {
+"Cranmore Mountain Lodge": "/venues/north-conway-nh/cranmore-mountain-lodge",
+"Christmas Farm Inn and Spa": "/venues/north-conway-nh/christmas-farm-inn-and-spa",
+"Eagle Mountain House & Golf Club": "/venues/north-conway-nh/eagle-mountain-house-golf-club",
+"Stonehurst Manor": "/venues/north-conway-nh/stonehurst-manor",
+"The Barn on the Pemi": "/venues/north-conway-nh/the-barn-on-the-pemi",
+"The Preserve at Chocorua": "/venues/north-conway-nh/the-preserve-at-chocorua",
+"1785 Inn": "/venues/north-conway-nh/1785-inn",
+"Whiteface Hollow": "/venues/north-conway-nh/whiteface-hollow"
+},
+"Portsmouth|NH": {
+"Wentworth by the Sea": "/venues/portsmouth-nh/wentworth-by-the-sea",
+"Wentworth By The Sea Country Club": "/venues/portsmouth-nh/wentworth-by-the-sea-country-club",
+"The Thompson Inn & Cyderhouse": "/venues/portsmouth-nh/the-thompson-inn-cyderhouse",
+"The View at Pepperrell Cove": "/venues/portsmouth-nh/the-view-at-pepperrell-cove",
+"The Surf Room": "/venues/portsmouth-nh/the-surf-room",
+"The Envio Weddings & Events": "/venues/portsmouth-nh/the-envio-weddings-events",
+"The Hawthorn Wedding & Events": "/venues/portsmouth-nh/the-hawthorn-wedding-events",
+"Churchill Barn Weddings and Events": "/venues/portsmouth-nh/churchill-barn-weddings-and-events"
+},
+"Block Island|RI": {
+"Spring House Hotel": "/venues/block-island-ri/spring-house-hotel",
+"Block Island Beach House": "/venues/block-island-ri/block-island-beach-house",
+"Belle Mer: A Longwood Venue": "/venues/block-island-ri/belle-mer-a-longwood-venue",
+"Newport Beach House: A Longwood Venue": "/venues/block-island-ri/newport-beach-house-a-longwood-venue",
+"Regatta Place": "/venues/block-island-ri/regatta-place",
+"Kinney Bungalow at Sunset Farm": "/venues/block-island-ri/kinney-bungalow-at-sunset-farm",
+"The Sullivan House": "/venues/block-island-ri/the-sullivan-house",
+"Crescent Pond Weddings": "/venues/block-island-ri/crescent-pond-weddings"
+},
+"Newport|RI": {
+"The Chanler at Cliff Walk": "/venues/newport-ri/the-chanler-at-cliff-walk",
+"OceanCliff Hotel": "/venues/newport-ri/oceancliff-hotel",
+"Belle Mer: A Longwood Venue": "/venues/newport-ri/belle-mer-a-longwood-venue",
+"Glen Manor House": "/venues/newport-ri/glen-manor-house",
+"Newport Beach House: A Longwood Venue": "/venues/newport-ri/newport-beach-house-a-longwood-venue",
+"Regatta Place": "/venues/newport-ri/regatta-place",
+"Queen Anne's Loft": "/venues/newport-ri/queen-anne-s-loft",
+"Little Gold": "/venues/newport-ri/little-gold"
+},
+"Providence|RI": {
+"Squantum Association": "/venues/providence-ri/squantum-association",
+"Belle Mer: A Longwood Venue": "/venues/providence-ri/belle-mer-a-longwood-venue",
+"Aldrich Mansion": "/venues/providence-ri/aldrich-mansion",
+"Newport Beach House: A Longwood Venue": "/venues/providence-ri/newport-beach-house-a-longwood-venue",
+"The Overlook at Meehan": "/venues/providence-ri/the-overlook-at-meehan",
+"Hope Events on Main": "/venues/providence-ri/hope-events-on-main",
+"Aldrich House": "/venues/providence-ri/aldrich-house",
+"Ballroom at the Providence G": "/venues/providence-ri/ballroom-at-the-providence-g"
+},
+"Amarillo|TX": {
+"Starlight Canyon": "/venues/amarillo-tx/starlight-canyon",
+"Knotting Hill Wedding and Event Venue": "/venues/amarillo-tx/knotting-hill-wedding-and-event-venue",
+"Cornerstone Ranch Event Center": "/venues/amarillo-tx/cornerstone-ranch-event-center",
+"Garden of Dreams": "/venues/amarillo-tx/garden-of-dreams",
+"Destiny's Garden": "/venues/amarillo-tx/destiny-s-garden",
+"The Resplendent Garden": "/venues/amarillo-tx/the-resplendent-garden",
+"The Barn on Willow Creek": "/venues/amarillo-tx/the-barn-on-willow-creek",
+"Panhandle Charm Weddings & Events": "/venues/amarillo-tx/panhandle-charm-weddings-events"
+},
+"Austin|TX": {
+"Ma Maison Wedding Venue": "/venues/austin-tx/ma-maison-wedding-venue",
+"Barr Mansion, Ballroom, and Farmstead": "/venues/austin-tx/barr-mansion-ballroom-and-farmstead",
+"The Arlo": "/venues/austin-tx/the-arlo",
+"The Addison Grove": "/venues/austin-tx/the-addison-grove",
+"Ranch Austin": "/venues/austin-tx/ranch-austin",
+"The Wildflower Barn": "/venues/austin-tx/the-wildflower-barn",
+"The Vineyards at Chappel Lodge": "/venues/austin-tx/the-vineyards-at-chappel-lodge",
+"Allan House": "/venues/austin-tx/allan-house"
+},
+"College Station|TX": {
+"Peach Creek Ranch": "/venues/college-station-tx/peach-creek-ranch",
+"7f Lodge & Events": "/venues/college-station-tx/7f-lodge-events",
+"Camp Hosea": "/venues/college-station-tx/camp-hosea",
+"Deep in the Heart Farms": "/venues/college-station-tx/deep-in-the-heart-farms",
+"Brownstone Reserve": "/venues/college-station-tx/brownstone-reserve",
+"The Weinberg at Wixon Valley": "/venues/college-station-tx/the-weinberg-at-wixon-valley",
+"Inn at Quarry Ridge": "/venues/college-station-tx/inn-at-quarry-ridge",
+"The Barn BCS Wedding Venue": "/venues/college-station-tx/the-barn-bcs-wedding-venue"
+},
+"Corpus Christi|TX": {
+"The Venue by Z Party": "/venues/corpus-christi-tx/the-venue-by-z-party",
+"Ortiz Center": "/venues/corpus-christi-tx/ortiz-center",
+"Mansion Royal": "/venues/corpus-christi-tx/mansion-royal",
+"Texas Event Center At Mansion By The Sea": "/venues/corpus-christi-tx/texas-event-center-at-mansion-by-the-sea",
+"The Courtyard at Gaslight Square": "/venues/corpus-christi-tx/the-courtyard-at-gaslight-square",
+"The Ranch at San Patricio": "/venues/corpus-christi-tx/the-ranch-at-san-patricio",
+"Rancho Cielito Lindo": "/venues/corpus-christi-tx/rancho-cielito-lindo",
+"Crystal Reception Hall- Corpus Christi": "/venues/corpus-christi-tx/crystal-reception-hall-corpus-christi"
+},
+"Dallas|TX": {
+"D'Vine Grace Vineyard": "/venues/dallas-tx/d-vine-grace-vineyard",
+"Knotting Hill Place": "/venues/dallas-tx/knotting-hill-place",
+"The Olana": "/venues/dallas-tx/the-olana",
+"The Dallas Oasis": "/venues/dallas-tx/the-dallas-oasis",
+"The Hillside Estate": "/venues/dallas-tx/the-hillside-estate",
+"On The Levee": "/venues/dallas-tx/on-the-levee",
+"The French Farmhouse Venue": "/venues/dallas-tx/the-french-farmhouse-venue",
+"The Room on Main": "/venues/dallas-tx/the-room-on-main"
+},
+"El Paso|TX": {
+"St. Rogers Depot": "/venues/el-paso-tx/st-rogers-depot",
+"Keystone Heritage Park and the El Paso Desert Botanical Garden": "/venues/el-paso-tx/keystone-heritage-park-and-the-el-paso-desert-botanical-garden",
+"Epic Railyard Event Center": "/venues/el-paso-tx/epic-railyard-event-center",
+"The Venue Events & Ballroom": "/venues/el-paso-tx/the-venue-events-ballroom",
+"Starlight Event Center": "/venues/el-paso-tx/starlight-event-center",
+"Grand Gala Events | El Paso's 5-Star Venue": "/venues/el-paso-tx/grand-gala-events-el-paso-s-5-star-venue",
+"Versalles Palace & Events Center": "/venues/el-paso-tx/versalles-palace-events-center",
+"Vienna Ballroom & Garden": "/venues/el-paso-tx/vienna-ballroom-garden"
+},
+"Fort Worth|TX": {
+"Stoney Ridge Villa": "/venues/fort-worth-tx/stoney-ridge-villa",
+"Fort Worth Botanic Garden": "/venues/fort-worth-tx/fort-worth-botanic-garden",
+"River Ranch Stockyards": "/venues/fort-worth-tx/river-ranch-stockyards",
+"Fort Worth Country Memories": "/venues/fort-worth-tx/fort-worth-country-memories",
+"BRIK Venue": "/venues/fort-worth-tx/brik-venue",
+"The 4 Eleven": "/venues/fort-worth-tx/the-4-eleven",
+"Hidden Gardens Event Venue": "/venues/fort-worth-tx/hidden-gardens-event-venue",
+"The Heirloom Hideaway & Arboreum": "/venues/fort-worth-tx/the-heirloom-hideaway-arboreum"
+},
+"Fredericksburg|TX": {
+"Camp Hideaway - Fredericksburg": "/venues/fredericksburg-tx/camp-hideaway-fredericksburg",
+"The Lodge at Country Inn Cottages": "/venues/fredericksburg-tx/the-lodge-at-country-inn-cottages",
+"La Bonne Vie Ranch": "/venues/fredericksburg-tx/la-bonne-vie-ranch",
+"Contigo Ranch Fredericksburg": "/venues/fredericksburg-tx/contigo-ranch-fredericksburg",
+"Willow Sky Ranch": "/venues/fredericksburg-tx/willow-sky-ranch",
+"Crockett Haus, LLC": "/venues/fredericksburg-tx/crockett-haus-llc",
+"Swallows Eve": "/venues/fredericksburg-tx/swallows-eve",
+"The Ginger Ranch": "/venues/fredericksburg-tx/the-ginger-ranch"
+},
+"Galveston|TX": {
+"Moody Mansion": "/venues/galveston-tx/moody-mansion",
+"Moody Gardens Hotel and Convention Center": "/venues/galveston-tx/moody-gardens-hotel-and-convention-center",
+"Waters Edge": "/venues/galveston-tx/waters-edge",
+"The Lyceum": "/venues/galveston-tx/the-lyceum",
+"Beauty & The Beach Wedding Venue": "/venues/galveston-tx/beauty-the-beach-wedding-venue",
+"Lasker Inn Bed & Breakfast and Event Venue": "/venues/galveston-tx/lasker-inn-bed-breakfast-and-event-venue",
+"Bayside Event Center & Lodge": "/venues/galveston-tx/bayside-event-center-lodge",
+"Galveston Wedding Chapel": "/venues/galveston-tx/galveston-wedding-chapel"
+},
+"Hill Country|TX": {
+"Ma Maison Wedding Venue": "/venues/hill-country-tx/ma-maison-wedding-venue",
+"Spinelli's Wedding Venue": "/venues/hill-country-tx/spinelli-s-wedding-venue",
+"Paniolo Ranch": "/venues/hill-country-tx/paniolo-ranch",
+"Geronimo Oaks - Weddings and Events": "/venues/hill-country-tx/geronimo-oaks-weddings-and-events",
+"Remi's Ridge at Hidden Falls": "/venues/hill-country-tx/remi-s-ridge-at-hidden-falls",
+"The Wildflower Barn": "/venues/hill-country-tx/the-wildflower-barn",
+"Hayes Hollow at Hidden Falls": "/venues/hill-country-tx/hayes-hollow-at-hidden-falls",
+"Vista West Ranch": "/venues/hill-country-tx/vista-west-ranch"
+},
+"Houston|TX": {
+"The Bell Tower on 34th": "/venues/houston-tx/the-bell-tower-on-34th",
+"The Carriage House Houston": "/venues/houston-tx/the-carriage-house-houston",
+"The Astorian": "/venues/houston-tx/the-astorian",
+"Pelazzio Reception Venue Houston": "/venues/houston-tx/pelazzio-reception-venue-houston",
+"AvantGarden": "/venues/houston-tx/avantgarden",
+"Madera Estates": "/venues/houston-tx/madera-estates",
+"Ashton Gardens | North Houston": "/venues/houston-tx/ashton-gardens-north-houston",
+"The Houston Club": "/venues/houston-tx/the-houston-club"
+},
+"Lubbock|TX": {
+"Castle Event Center": "/venues/lubbock-tx/castle-event-center",
+"Eberley Brooks Events": "/venues/lubbock-tx/eberley-brooks-events",
+"Bella Vie Wedding Venue & Event Center": "/venues/lubbock-tx/bella-vie-wedding-venue-event-center",
+"Autumn Oaks Event Center": "/venues/lubbock-tx/autumn-oaks-event-center",
+"The Historic Baker Building": "/venues/lubbock-tx/the-historic-baker-building",
+"The Historic Watson Building": "/venues/lubbock-tx/the-historic-watson-building",
+"Horseshoe Knot Event Center": "/venues/lubbock-tx/horseshoe-knot-event-center",
+"Kitalou Gin": "/venues/lubbock-tx/kitalou-gin"
+},
+"San Antonio|TX": {
+"Rancho La Mission": "/venues/san-antonio-tx/rancho-la-mission",
+"Granberry Hills Event Facility": "/venues/san-antonio-tx/granberry-hills-event-facility",
+"The Veranda": "/venues/san-antonio-tx/the-veranda",
+"Lambermont Events": "/venues/san-antonio-tx/lambermont-events",
+"The Club at Garden Ridge": "/venues/san-antonio-tx/the-club-at-garden-ridge",
+"The Gardens At West Green": "/venues/san-antonio-tx/the-gardens-at-west-green",
+"Magnolia Halle": "/venues/san-antonio-tx/magnolia-halle",
+"La Fontana Springs Wedding & Event Center": "/venues/san-antonio-tx/la-fontana-springs-wedding-event-center"
+},
+"Waco|TX": {
+"Gathering Oaks Retreat": "/venues/waco-tx/gathering-oaks-retreat",
+"Deerfield Estates Venue": "/venues/waco-tx/deerfield-estates-venue",
+"Silo and Oak": "/venues/waco-tx/silo-and-oak",
+"Old Bethany Weddings and Events": "/venues/waco-tx/old-bethany-weddings-and-events",
+"The Palladium": "/venues/waco-tx/the-palladium",
+"Vintage Oaks Venue": "/venues/waco-tx/vintage-oaks-venue",
+"The Pavilion at the Carleen Bright Arboretum": "/venues/waco-tx/the-pavilion-at-the-carleen-bright-arboretum",
+"Knoxville Ranch Wedding & Event Venue": "/venues/waco-tx/knoxville-ranch-wedding-event-venue"
+},
+"Burlington|VT": {
+"The Mansfield Barn": "/venues/burlington-vt/the-mansfield-barn",
+"Intervale Center": "/venues/burlington-vt/intervale-center",
+"The Barn at Smugglers' Notch": "/venues/burlington-vt/the-barn-at-smugglers-notch",
+"Copper at Dorset": "/venues/burlington-vt/copper-at-dorset",
+"The Barn at Boyden Farm": "/venues/burlington-vt/the-barn-at-boyden-farm",
+"Red Barn Gardens": "/venues/burlington-vt/red-barn-gardens",
+"Reading Farms Estate": "/venues/burlington-vt/reading-farms-estate",
+"Skinner Barn": "/venues/burlington-vt/skinner-barn"
+},
+"Stowe|VT": {
+"Topnotch Resort": "/venues/stowe-vt/topnotch-resort",
+"Zenbarn": "/venues/stowe-vt/zenbarn",
+"Edson Hill": "/venues/stowe-vt/edson-hill",
+"The Inn at the Round Barn Farm": "/venues/stowe-vt/the-inn-at-the-round-barn-farm",
+"The Mansfield Barn": "/venues/stowe-vt/the-mansfield-barn",
+"Stone Hill Inn": "/venues/stowe-vt/stone-hill-inn",
+"The Barn at Smugglers' Notch": "/venues/stowe-vt/the-barn-at-smugglers-notch",
+"The Ponds at Bolton Valley": "/venues/stowe-vt/the-ponds-at-bolton-valley"
+},
+"Woodstock|VT": {
+"Woodstock Inn & Resort": "/venues/woodstock-vt/woodstock-inn-resort",
+"The Quechee Inn at Marshland Farm": "/venues/woodstock-vt/the-quechee-inn-at-marshland-farm",
+"Reading Farms Estate": "/venues/woodstock-vt/reading-farms-estate",
+"Apple Hill Inn": "/venues/woodstock-vt/apple-hill-inn"
+}
+}

@@ -1,0 +1,30 @@
+name = "lazo-site"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# Custom domain: add meetlazo.com route in Cloudflare dash after first deploy,
+# or uncomment once the zone is on the account:
+# routes = [{ pattern = "meetlazo.com", custom_domain = true }]
+
+[[r2_buckets]]
+binding = "SITE"
+bucket_name = "lazo-site"
+
+# JC-LAZO-GALLERY-0911-005: post-wedding delivery galleries live in their own
+# bucket so deploy_site.py's prune can never touch client photos.
+[[r2_buckets]]
+binding = "GALLERIES"
+bucket_name = "lazo-galleries"
+
+# JC-LAZO-PRINTS-0920-001: the print store. Secrets go in with `wrangler secret put`:
+#   WHCC_EDITOR_KEY WHCC_EDITOR_SECRET WHCC_OS_KEY WHCC_OS_SECRET
+#   STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET PRINTS_ADMIN_KEY (and GALLERY_SECRET, already set)
+[vars]
+WHCC_ENV = "sandbox"          # "production" when the live credential set is in
+PRINT_MARKUP = "100"          # percent over WHCC wholesale, shown to the couple
+PRINT_FROM_NAME = "Lazo Weddings"
+PRINT_FROM_ADDR1 = ""         # the return address printed on the label (US street address, no PO box)
+PRINT_FROM_ADDR2 = ""
+PRINT_FROM_CITY = ""
+PRINT_FROM_STATE = ""
+PRINT_FROM_ZIP = ""

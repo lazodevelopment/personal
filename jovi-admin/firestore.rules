@@ -1,0 +1,96 @@
+rules_version = '2';
+// Jovi — proposed Firestore rules adding STAFF access on top of the member app's rules.
+// The member rules below are a conservative reconstruction ("a signed-in user may read/write
+// their own documents"); merge this file with the live rules from the Firebase console before
+// deploying, and keep whatever member-side rules FlutterFlow generated that are stricter.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Staff helpers ────────────────────────────────────────────────
+    function signedIn() { return request.auth != null; }
+    function staffDoc() { return get(/databases/$(database)/documents/staff/$(request.auth.uid)); }
+    function isStaff() { return signedIn() && exists(/databases/$(database)/documents/staff/$(request.auth.uid)) && staffDoc().data.active != false; }
+    function role() { return staffDoc().data.role; }
+    function hasRole(list) { return isStaff() && role() in list; }
+    function isSuper() { return hasRole(['superadmin']); }
+    function business() { return hasRole(['superadmin', 'admin', 'exec', 'support']); }
+    function businessWrite() { return hasRole(['superadmin', 'admin']); }
+    function clinical() { return hasRole(['superadmin', 'clinician', 'support']); }
+    function chartWrite() { return hasRole(['superadmin', 'clinician']); }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // ── Staff & governance (staff app only) ──────────────────────────
+    // Bootstrap: these emails may create their own superadmin record once (no console step needed).
+    function bootstrapEmail() { return request.auth.token.email in ['jesse@briskhealth.com']; }
+    match /staff/{uid} {
+      allow read: if isStaff() || isOwner(uid);
+      allow write: if isSuper();
+      allow create: if isOwner(uid) && bootstrapEmail() && request.resource.data.role == 'superadmin';
+      // let a signed-in staff member stamp lastSeenAt on their own record
+      allow update: if isOwner(uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastSeenAt', 'lastEmail']);
+    }
+    match /audit_logs/{id} { allow read: if hasRole(['superadmin', 'admin']); allow create: if isStaff(); }
+    match /promo_codes/{id} { allow read: if signedIn(); allow write: if businessWrite(); }
+    match /broadcasts/{id} { allow read: if business(); allow write: if businessWrite(); }
+    match /clinic_slots/{id} { allow read: if signedIn(); allow write: if businessWrite() || chartWrite(); }
+    match /clinical_tasks/{id} { allow read, write: if clinical() || businessWrite(); }
+    match /note_templates/{id} { allow read: if isStaff(); allow write: if chartWrite(); }
+    match /smart_phrases/{id} { allow read: if isStaff(); allow write: if chartWrite(); }
+    match /schedule_blocks/{id} { allow read: if isStaff(); allow write: if chartWrite() || businessWrite(); }
+    match /waitlist/{id} { allow read: if isStaff(); allow write: if chartWrite() || businessWrite(); }
+    match /orders/{id} { allow read: if clinical(); allow create, update: if chartWrite(); }
+    match /fax_outbox/{id} { allow read: if clinical(); allow create, update: if chartWrite(); }
+    match /fax_inbox/{id} { allow read: if clinical(); allow update: if chartWrite(); }
+    match /ff_push_notifications/{id} { allow create: if businessWrite(); }
+
+    // ── Members ──────────────────────────────────────────────────────
+    // Business roles may read the profile/billing fields; clinical roles read everything.
+    // Field-level PHI separation is enforced in the app (business pages never render clinical
+    // subcollections), and subcollection rules below keep clinical data off the business role.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isStaff();
+      allow write: if isOwner(uid);
+      allow update: if businessWrite() || chartWrite();
+
+      match /notifications/{id} { allow read, write: if isOwner(uid) || isStaff(); }
+      match /fcm_tokens/{id} { allow read, write: if isOwner(uid); allow read: if isStaff(); }
+      match /dependents/{id} { allow read: if isOwner(uid) || isStaff(); allow write: if isOwner(uid) || businessWrite() || chartWrite(); }
+      match /claims/{id} { allow read: if isOwner(uid) || isStaff(); allow write: if isOwner(uid); allow update: if hasRole(['superadmin', 'admin', 'clinician']); }
+      match /pets/{petId} {
+        allow read: if isOwner(uid) || isStaff();
+        allow write: if isOwner(uid) || chartWrite();
+        match /{sub=**} { allow read: if isOwner(uid) || clinical(); allow write: if isOwner(uid) || chartWrite(); }
+      }
+      // Clinical subcollections: PHI. Owner and clinical roles only.
+      match /{clinical=**} {
+        allow read: if isOwner(uid) || clinical();
+        allow write: if isOwner(uid) || chartWrite();
+      }
+    }
+
+    // ── Top-level member collections ─────────────────────────────────
+    match /requests/{id} { allow read: if isStaff() || (signedIn() && resource.data.userId == request.auth.uid); allow create: if signedIn(); allow update, delete: if (signedIn() && resource.data.userId == request.auth.uid) || chartWrite() || businessWrite(); }
+    match /cancelled_appointments/{id} { allow read: if isStaff() || (signedIn() && resource.data.userId == request.auth.uid); allow create: if signedIn(); }
+    match /appointments/{id} { allow read: if isStaff() || (signedIn() && resource.data.userId == request.auth.uid); allow write: if signedIn(); }
+    match /prescriptions/{id} { allow read: if clinical() || (signedIn() && resource.data.userId == request.auth.uid); allow write: if chartWrite() || (signedIn() && request.resource.data.userId == request.auth.uid); }
+    match /prescriptionRefills/{id} { allow read: if clinical() || business() || (signedIn() && resource.data.userId == request.auth.uid); allow create: if signedIn(); allow update: if hasRole(['superadmin', 'clinician', 'support']) || (signedIn() && resource.data.userId == request.auth.uid); }
+    match /refills/{id} { allow read, write: if signedIn(); }
+    match /helpTickets/{id} { allow read: if isStaff() || (signedIn() && resource.data.userId == request.auth.uid); allow write: if signedIn();
+      match /messages/{m} { allow read, write: if signedIn(); } }
+    match /payment_logs/{id} { allow read: if business(); allow write: if false; }
+    match /kurv_pass_cancellations/{id} { allow read: if business(); allow create: if signedIn(); }
+    match /security_logs/{id} { allow read: if hasRole(['superadmin', 'admin']); allow create: if signedIn(); }
+    match /pharmacies/{id} { allow read: if signedIn(); allow write: if businessWrite(); }
+    match /clinics/{id} { allow read: if signedIn(); allow write: if businessWrite(); }
+    match /visit_records/{id} { allow read: if clinical() || (signedIn() && resource.data.userId == request.auth.uid); allow write: if chartWrite() || signedIn(); }
+    match /claims/{id} { allow read: if isStaff() || (signedIn() && resource.data.userId == request.auth.uid); allow write: if signedIn(); allow update: if hasRole(['superadmin', 'admin', 'clinician']); }
+
+    // Collection-group reads used by the EHR queues (vaccinations due, pet claims, scheduled reminders).
+    match /{path=**}/vaccinations/{id} { allow read: if clinical(); }
+    match /{path=**}/claims/{id} { allow read: if isStaff(); }
+    match /{path=**}/scheduled_reminders/{id} { allow read: if clinical(); }
+    match /{path=**}/pets/{id} { allow read: if isStaff(); }
+    match /{path=**}/visit_records/{id} { allow read: if clinical(); }
+    match /{path=**}/lab_results/{id} { allow read: if clinical(); }
+  }
+}

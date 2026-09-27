@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{#- JC-LAZO-CFORM-0916-001: this page used to be a hand-rolled standalone copy
+    of base.html carrying a FOOTER FROM AUGUST - the old four-column one, with
+    none of the city or category links the real footer has, and no /contact/ or
+    /delete-account/ line. It also had no site nav, so the only way back was the
+    browser's own button. Extending base.html fixes all of that at once and
+    keeps it fixed: one header, one footer, one stylesheet stamp.
+
+    The three mailto:privacy@ links are now the form, preset to the deletion
+    topic, with the account-email field the request actually needs. -#}
+{% block title %}Delete your Lazo account{% endblock %}
+{% block desc %}How to delete your Lazo account and the data that goes with it &mdash; in the app in two taps, or by request here. What we remove, what we must keep, and how long each takes.{% endblock %}
+{% block canonical %}{{ base }}/delete-account/{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Your account</p>
+  <h1>Delete your account</h1>
+  <p class="hero-sub">You can close your Lazo account and delete the data that goes with it at any time. Two taps in the app, no phone call, no retention offer, no questions about why.</p>
+</div></section>
+
+<section class="band prose legal doc">
+<p class="page-back"><a href="/contact/">Back to Contact</a></p>
+
+<h2>1. The fastest way: in the app</h2>
+<p>Open Lazo, go to <strong>Account</strong>, scroll to the bottom and tap <strong>Delete my account</strong>. Confirm once. Your account closes immediately and the deletion described below starts the same day. This works in the Android and iOS apps and at <a href="https://app.meetlazo.com">app.meetlazo.com</a>.</p>
+
+<h2>2. Or ask us to do it</h2>
+<p>If you can't sign in, or you'd rather a person handled it, send the request with the form below. Use the email address on the account if you can &mdash; that's how we confirm the request is really yours. We'll verify it, delete the account within 7 days, and write back when it's done. You don't need to give a reason, and we won't ask for one.</p>
+<p>The same form covers deleting <em>part</em> of your data without closing the account &mdash; a wedding website, a guest list, an uploaded photo. Say which in the message.</p>
+
+<h2>3. What gets deleted</h2>
+<p>When you delete your account we remove your login and everything tied to it: your name, email and phone number; your wedding details (date, city, budget, planning progress); your vendor team, saved vendors and inquiries; your messages with vendors; your guest list, seating chart, music and day-of details; your wedding website and registry links; your uploaded photos; your June conversations; and the device tokens used for notifications. If your partner shares the plan, their login is unaffected &mdash; the shared plan is deleted only when the last person on it deletes their account.</p>
+
+<h2>4. What we keep, and for how long</h2>
+<p><strong>Payment records.</strong> If you paid a vendor through Lazo, we keep the invoice and transaction record (amount, date, vendor) for up to 7 years because tax and payment-network rules require it. It's no longer linked to a live account.</p>
+<p><strong>Verified reviews.</strong> A review you left for a vendor stays published, because the vendor and other couples rely on it, but it's detached from your account and shown without your name.</p>
+<p><strong>Backups and logs.</strong> Encrypted backups roll off within 30 days. Standard server logs are kept up to 90 days for security.</p>
+<p>Everything else is gone within 30 days of your request.</p>
+
+<h2>5. Vendors</h2>
+<p>Vendor accounts follow the same process: <strong>Account &rarr; Delete my account</strong> in the vendor dashboard, or send the request below. Your public profile comes down the same day. Reviews couples left for you remain in our records but are unpublished; contracts, invoices and payout records are kept for the legal retention period above.</p>
+
+<h2>6. Anything else about your data</h2>
+<p>Access, correction, a copy of what we hold, or a state-law privacy right &mdash; the same form handles all of it; just say which in the message. Our full <a href="/privacy/">Privacy Policy</a> explains what we collect and why.</p>
+</section>
+
+{% with
+  cf_id = 'delete-request',
+  cf_topic = 'delete',
+  cf_extra = 'account',
+  cf_title = 'Send a deletion request',
+  cf_sub = 'Write from the address on your account if you can \u2014 it is how we confirm the request is yours. Verified, deleted within 7 days, and we reply when it is done.',
+  cf_label = 'What would you like deleted?',
+  cf_ph = 'For example: delete my whole account. Or: leave my account open but delete my wedding website and the photos I uploaded.'
+%}{% include "_contact_form.html" %}{% endwith %}
+
+<section class="next-reads">
+  <h2>Related</h2>
+  <div class="next-grid">
+    <a href="/privacy/"><b>Privacy Policy</b><span>What we collect, why, and who ever sees it.</span></a>
+    <a href="/terms/"><b>Terms of Service</b><span>The agreement between you and Lazo Weddings, LLC.</span></a>
+    <a href="/contact/"><b>Contact us</b><span>Anything that isn't your data &mdash; a person reads every message.</span></a>
+  </div>
+</section>
+{% endblock %}

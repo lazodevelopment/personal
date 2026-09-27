@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Iowa Apartments — Verified Resident Reviews | LeaseReputation</title>
+<meta name="description" content="Compare 127 apartment communities across Iowa with verified resident reviews on LeaseReputation. Reputation Scores built only from residents who actually lived there — never for sale." />
+<link rel="canonical" href="https://leasereputation.com/apartments/ia/" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l11 5v8c0 7.5-4.7 12.7-11 15C9.7 27.7 5 22.5 5 15V7l11-5z' fill='%234F46E5'/%3E%3Cpath d='M11 16.5l3.5 3.5 6.5-7' stroke='%2334D399' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<meta property="og:title" content="Iowa Apartments — Verified Resident Reviews | LeaseReputation" />
+<meta property="og:description" content="Compare 127 apartment communities across Iowa with verified resident reviews on LeaseReputation. Reputation Scores built only from residents who actually lived there — never for sale." />
+<meta property="og:image" content="https://leasereputation.com/leasereputation-og.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --indigo:#4C4FE6; --indigo-bright:#6E72F0; --deep:#1E1A5C; --ink:#15102E; --ink-deep:#0E0A20;
+    --lilac:#C4B5FD; --white:#FFFFFF; --warn:#FF8B8B; --mint:#3DDC97;
+    --text:#EFEDFB; --text-dim:rgba(233,231,251,.64); --text-faint:rgba(233,231,251,.42);
+    --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.09); --border:rgba(255,255,255,.12);
+    --maxw:1160px; --pad:clamp(20px,5vw,24px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:
+    radial-gradient(circle at 50% -8%, var(--deep) 0%, var(--ink-deep) 55%), var(--ink-deep);
+    color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(rgba(196,181,253,.05) 1.1px,transparent 1.1px);background-size:30px 30px}
+  img,svg{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);width:100%}
+  h1,h2,h3{line-height:1.1;letter-spacing:-.02em;font-weight:800}
+
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:rgba(14,10,32,.72);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .logo{display:inline-flex;align-items:center;gap:10px}
+  .logo .wm{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+  .logo .wm .l{color:rgba(255,255,255,.6);font-weight:500}
+  .logo .wm .r{color:#fff;font-weight:800}
+  .shield{width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#1E1A5C,#4C4FE6)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:.95rem;
+    padding:12px 22px;border-radius:12px;background:var(--indigo);color:#fff;transition:.18s;border:1px solid transparent}
+  .btn:hover{background:var(--indigo-bright);transform:translateY(-2px)}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{background:var(--glass-2);border-color:var(--lilac)}
+
+  .hero{padding:64px 0 40px;position:relative}
+  .hero.has-photo{padding:0}
+  /* Content-driven height: the photo is a backdrop, the text defines the
+     box — so long community names can never clip out the top on mobile. */
+  .hero-photo{position:relative;min-height:clamp(320px,42vw,460px);overflow:hidden;border-radius:0 0 28px 28px;display:flex;flex-direction:column;justify-content:flex-end}
+  .hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo-credit{position:absolute;right:10px;bottom:8px;z-index:3;font-size:.68rem;
+    color:rgba(255,255,255,.75);background:rgba(0,0,0,.35);border-radius:6px;
+    padding:2px 8px;letter-spacing:.02em}
+  .hero-photo::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(14,10,32,.35) 0%,rgba(14,10,32,.55) 45%,rgba(14,10,32,.96) 100%)}
+  .hero-photo .hero-inner{position:relative;z-index:2;
+    padding:clamp(96px,20vw,150px) var(--pad) 34px}
+  .hero-photo .hero-inner .wrap-inner{max-width:var(--maxw);margin:0 auto;width:100%}
+  .eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);
+    margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:22px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--indigo),var(--lilac))}
+  h1{font-size:clamp(2rem,5.5vw,3.3rem);margin-bottom:14px}
+  h1 .accent{color:var(--lilac)}
+  .sub{font-size:clamp(1.05rem,2.3vw,1.25rem);color:var(--text-dim);max-width:640px;margin-bottom:14px}
+  .meta{color:var(--text-faint);font-size:.95rem;margin-bottom:30px}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+
+  .card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:28px;margin:20px 0}
+  .card h2{font-size:1.5rem;margin-bottom:12px}
+  .card h3{font-size:1.12rem;margin:18px 0 8px}
+  .card p{color:var(--text-dim);margin-bottom:14px}
+  .card p:last-child{margin-bottom:0}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:8px}
+  .fact{background:var(--glass-2);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .fact .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text-faint);margin-bottom:6px}
+  .fact .v{font-weight:700;font-size:1.02rem}
+
+  .facts-list{margin:8px 0 0 18px;padding:0;line-height:1.6}
+  .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:8px}
+  .vid{position:relative;margin-top:20px;border-radius:12px;overflow:hidden;cursor:pointer;
+    aspect-ratio:16/9;background:#000;border:1px solid rgba(255,255,255,.08)}
+  .vid img{width:100%;height:100%;object-fit:cover;display:block;opacity:.82;transition:opacity .2s}
+  .vid:hover img{opacity:1}
+  .vid-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;
+    border-radius:50%;background:rgba(99,91,255,.92);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-size:1.4rem;padding-left:5px;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+  .vid-cap{margin-top:10px;font-size:.85rem;color:var(--muted)}
+  .vid-frame{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:20px;display:block}
+  .why .item{display:flex;gap:12px;align-items:flex-start}
+  .why .dot{width:22px;height:22px;border-radius:50%;flex:none;background:rgba(61,220,151,.15);
+    display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .why .dot svg{width:13px;height:13px;stroke:var(--mint)}
+  .why .item p{color:var(--text-dim);font-size:.95rem}
+  .why .item strong{color:var(--text);display:block;margin-bottom:2px}
+
+  .cta-band{text-align:center;padding:44px 28px;margin:32px 0;border-radius:22px;
+    background:linear-gradient(135deg,rgba(76,79,230,.18),rgba(196,181,253,.08));border:1px solid var(--border)}
+  .cta-band h2{font-size:1.7rem;margin-bottom:10px}
+  .cta-band p{color:var(--text-dim);margin-bottom:22px;max-width:520px;margin-left:auto;margin-right:auto}
+
+  .related{margin:36px 0}
+  .related h2{font-size:1.3rem;margin-bottom:16px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:var(--glass);border:1px solid var(--border);border-radius:11px;padding:10px 15px;
+    font-size:.9rem;color:var(--text-dim);transition:.16s}
+  .chip:hover{border-color:var(--lilac);color:var(--text)}
+
+  footer{border-top:1px solid var(--border);margin-top:50px;padding:34px 0;color:var(--text-faint);font-size:.9rem}
+  .foot{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+  .foot a{color:var(--text-dim)} .foot a:hover{color:var(--lilac)}
+  .disclaimer{font-size:.8rem;color:var(--text-faint);margin-top:14px;line-height:1.5;max-width:820px}
+
+  .scoregrid{display:grid;grid-template-columns:150px 1fr;gap:26px;align-items:center;margin-top:16px}
+  @media(max-width:560px){.scoregrid{grid-template-columns:1fr;justify-items:center}}
+  .ring{width:140px;height:140px}
+  .dims{width:100%}
+  .dimrow{margin-bottom:12px}.dimrow:last-child{margin-bottom:0}
+  .dimtop{display:flex;justify-content:space-between;font-size:.92rem;color:var(--text-dim);margin-bottom:5px}
+  .dimtop b{font-weight:800}
+  .dimtrack{height:7px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+  .dimfill{height:100%;border-radius:4px}
+  .review{border:1px solid var(--border);background:var(--glass-2);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .rhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .rstars{color:#FFC862;letter-spacing:2px;font-size:.95rem}
+  .rmeta{font-size:.82rem;color:var(--text-faint);margin-top:2px}
+  .rtext{color:var(--text-dim);margin-top:10px;font-size:.97rem}
+  .rfoot{margin-top:10px}
+  .renew{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px}
+  .renew.yes{color:var(--mint);background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.3)}
+  .renew.no{color:var(--warn);background:rgba(255,139,139,.08);border:1px solid rgba(255,139,139,.3)}
+
+  .lockband{display:flex;align-items:center;gap:22px;padding:18px;border-radius:14px;
+    background:var(--glass-2);border:1px solid var(--border)}
+  @media(max-width:520px){.lockband{flex-direction:column;text-align:center}}
+  .lockring{position:relative;width:110px;height:110px;flex:none}
+  .lockring svg{width:110px;height:110px;filter:blur(1px)}
+  .lockglyph{position:absolute;right:-4px;bottom:-4px;width:34px;height:34px;border-radius:50%;
+    background:var(--indigo);display:flex;align-items:center;justify-content:center;
+    font-size:15px;box-shadow:0 4px 14px rgba(79,70,229,.5)}
+  .lockcopy{display:flex;flex-direction:column;gap:6px}
+  .lockcopy strong{color:var(--text);font-size:.98rem;line-height:1.45}
+  .lockcopy span{color:var(--text-faint);font-size:.88rem;line-height:1.5}
+
+  .renewline{margin-top:14px;font-size:.98rem;color:var(--text-dim)}
+  .methodline{margin-top:8px;font-size:.8rem;color:var(--text-faint);line-height:1.55}
+  .methodline em{color:var(--text-dim);font-style:normal;font-weight:700}
+  .rphotos{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+  .rphotos img{width:104px;height:104px;object-fit:cover;border-radius:10px;
+    border:1px solid var(--border)}
+
+  .crumbs{font-size:.78rem;color:var(--text-faint);margin:18px 0 4px}
+  .crumbs a{color:var(--text-faint);text-decoration:none}
+  .crumbs a:hover{color:var(--lilac)}
+  .crumbs span{color:var(--text-dim)}
+  .glance{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+  .chip{border:1px solid var(--border);background:var(--glass-2);border-radius:999px;
+    padding:7px 14px;font-size:.84rem;color:var(--text-dim)}
+  .chip strong{color:var(--text)}
+  .claimstrip{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    border:1px dashed var(--border);background:var(--glass-2);border-radius:16px;
+    padding:18px 22px;margin-top:22px}
+  .claimstrip div{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .claimstrip strong{color:var(--text);font-size:.98rem}
+  .claimstrip span{color:var(--text-faint);font-size:.85rem;line-height:1.5}
+  @media(max-width:620px){.claimstrip{flex-direction:column;align-items:flex-start}}
+  .stickybar{display:none}
+  @media(max-width:640px){
+    .stickybar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;
+      align-items:center;justify-content:space-between;gap:12px;
+      padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+      background:rgba(14,10,32,.92);backdrop-filter:blur(12px);
+      border-top:1px solid var(--border)}
+    .stickybar span{font-size:.88rem;font-weight:700;color:var(--text)}
+    .stickybar .btn{padding:10px 18px;font-size:.85rem}
+    body{padding-bottom:74px}
+  }
+  .mgmtresp{border:1px solid var(--border);border-left:3px solid var(--indigo);
+    background:var(--glass-2);border-radius:14px;padding:16px 20px;margin-top:14px}
+  .mgmtresp .mghead{font-weight:800;font-size:.9rem;color:var(--text);
+    display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .mgbadge{font-size:.7rem;font-weight:700;color:var(--lilac);
+    border:1px solid var(--border);border-radius:999px;padding:2px 9px}
+  .mgmtresp p{color:var(--text-dim);font-size:.92rem;margin:0}
+
+  .grouplist{margin-top:8px}
+  .grow{display:flex;align-items:center;gap:14px;padding:13px 4px;border-top:1px solid var(--border);text-decoration:none}
+  .grow:first-child{border-top:none}
+  .grow .gname{color:var(--text);font-weight:700;font-size:1rem;flex:1;min-width:0}
+  .grow .gmeta{color:var(--text-faint);font-size:.82rem;white-space:nowrap}
+  .grow .gtier{font-size:.78rem;font-weight:800;padding:3px 11px;border-radius:999px;white-space:nowrap}
+  .grow:hover .gname{color:var(--lilac)}
+  .statrow{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 4px}
+  .statchip{border:1px solid var(--border);background:var(--glass-2);border-radius:999px;padding:8px 16px;font-size:.88rem;color:var(--text-dim)}
+  .statchip b{color:var(--text)}
+
+  .citygroup{border-top:1px solid var(--border);padding:10px 0}
+  .citygroup summary{cursor:pointer;font-weight:700;color:var(--text);font-size:1.02rem;
+    list-style:none;display:flex;align-items:center;gap:10px;padding:6px 0}
+  .citygroup summary::-webkit-details-marker{display:none}
+  .citygroup summary::before{content:"+";color:var(--lilac);font-weight:800;width:16px}
+  .citygroup[open] summary::before{content:"−"}
+  .ccount{font-size:.78rem;font-weight:700;color:var(--text-faint);
+    background:var(--glass-2);border:1px solid var(--border);border-radius:999px;padding:2px 10px}
+  .citylinks{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 6px 26px}
+  .citylinks a{color:var(--text-dim);text-decoration:none;font-size:.9rem;
+    border:1px solid var(--border);background:var(--glass-2);border-radius:999px;
+    padding:6px 13px;transition:border-color .15s,color .15s}
+  .citylinks a:hover{color:var(--text);border-color:var(--lilac)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="https://leasereputation.com/" aria-label="LeaseReputation home">
+      <span class="shield"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5.5v5.6c0 4.9 3.4 9.5 8 10.9 4.6-1.4 8-6 8-10.9V5.5L12 2z" fill="rgba(255,255,255,.2)"/><path d="m8.6 12.2 2.3 2.3 4.5-4.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="wm"><span class="l">lease</span><span class="r">reputation</span></span>
+    </a>
+    <a class="btn" href="https://app.leasereputation.com">Open the app</a>
+  </div>
+</header>
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Verified Resident Reviews</div>
+    <h1>Apartments in<br /><span class="accent">Iowa.</span></h1>
+    <p class="sub">127 communities across Iowa with verified-resident reviews. Every score computed from proven residents — never sponsored, boosted, or bought.</p>
+    <div class="statrow"><span class="statchip"><b>127</b>&nbsp;communities</span><span class="statchip"><b>0</b>&nbsp;verified reviews</span></div>
+    <div class="cta-row"><a class="btn" href="https://app.leasereputation.com">Open the app</a><a class="btn btn-ghost" href="https://leasereputation.com/community/">All communities</a></div>
+  </div>
+</section>
+<div class="wrap">
+  <div class="card"><h2>Know your rights in Iowa</h2><p>Security deposit deadlines, repair rights, entry notice, and eviction timelines — with statute citations.</p><p><a class="btn ghost" href="https://leasereputation.com/guides/tenant-rights/ia/">Iowa tenant rights guide</a></p></div><div class="card"><h2>Iowa city guides</h2><div class="citylinks" style="padding-left:0"><a href="https://leasereputation.com/apartments/des-moines-ia/">Des Moines</a><a href="https://leasereputation.com/apartments/west-des-moines-ia/">West Des Moines</a><a href="https://leasereputation.com/apartments/clive-ia/">Clive</a></div></div><div class="card"><h2>Every Iowa community <span class="ccount">127</span></h2><details class="citygroup"><summary>Clive <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/stonegate-crossing-clive.html">Stonegate Crossing</a><a href="https://leasereputation.com/community/the-mccoy-at-8035-apartments-clive.html">The McCoy at 8035 Apartments</a><a href="https://leasereputation.com/community/the-vibe-at-8035-apartments-clive.html">The Vibe at 8035 Apartments</a></div></details><details class="citygroup"><summary>Council Bluffs <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/broadmoor-at-river-s-edge-council-bluffs.html">Broadmoor at River&#x27;s Edge</a></div></details><details class="citygroup"><summary>Des Moines <span class="ccount">64</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/3000-grand-apartments-des-moines.html">3000 Grand Apartments</a><a href="https://leasereputation.com/community/4000-ingersoll-des-moines.html">4000 Ingersoll</a><a href="https://leasereputation.com/community/418-east-grand-des-moines.html">418 East Grand</a><a href="https://leasereputation.com/community/5fifty5-des-moines.html">5Fifty5</a><a href="https://leasereputation.com/community/ballyard-lofts-des-moines.html">Ballyard Lofts</a><a href="https://leasereputation.com/community/broadway-heights-des-moines.html">Broadway Heights</a><a href="https://leasereputation.com/community/canary-lofts-des-moines.html">Canary Lofts</a><a href="https://leasereputation.com/community/city-square-lofts-des-moines.html">City Square Lofts</a><a href="https://leasereputation.com/community/cityville-apartments-des-moines.html">Cityville Apartments</a><a href="https://leasereputation.com/community/clemens-building-apartments-des-moines.html">Clemens Building Apartments</a><a href="https://leasereputation.com/community/college-hill-des-moines.html">College Hill</a><a href="https://leasereputation.com/community/confluence-on-3rd-apartments-des-moines.html">Confluence on 3rd Apartments</a><a href="https://leasereputation.com/community/connolly-lofts-des-moines.html">Connolly Lofts</a><a href="https://leasereputation.com/community/district-at-6th-des-moines.html">District at 6th</a><a href="https://leasereputation.com/community/drake-west-village-des-moines.html">Drake West Village</a><a href="https://leasereputation.com/community/eagle-view-lofts-des-moines.html">Eagle View Lofts</a><a href="https://leasereputation.com/community/flats-on-5th-apartments-des-moines.html">Flats on 5th Apartments</a><a href="https://leasereputation.com/community/fleming-building-des-moines.html">Fleming Building</a><a href="https://leasereputation.com/community/flux-apartments-des-moines.html">Flux Apartments</a><a href="https://leasereputation.com/community/forest-ave-apartments-des-moines.html">Forest Ave Apartments</a><a href="https://leasereputation.com/community/gateway-lofts-des-moines.html">Gateway Lofts</a><a href="https://leasereputation.com/community/grand-prix-apartments-des-moines.html">Grand Prix Apartments</a><a href="https://leasereputation.com/community/harbach-lofts-des-moines.html">Harbach Lofts</a><a href="https://leasereputation.com/community/high-street-lofts-des-moines.html">High Street Lofts</a><a href="https://leasereputation.com/community/highland-park-apartments-des-moines.html">Highland Park Apartments</a><a href="https://leasereputation.com/community/ingersoll-square-apartments-des-moines.html">Ingersoll Square Apartments</a><a href="https://leasereputation.com/community/jackson-crossing-des-moines.html">Jackson Crossing</a><a href="https://leasereputation.com/community/level-des-moines.html">Level</a><a href="https://leasereputation.com/community/linc-at-gray-s-station-des-moines.html">LINC at Gray&#x27;s Station</a><a href="https://leasereputation.com/community/maxwell-apartments-des-moines.html">Maxwell Apartments</a><a href="https://leasereputation.com/community/park-avenue-by-broadmoor-des-moines.html">Park Avenue by Broadmoor</a><a href="https://leasereputation.com/community/park-winds-apartments-des-moines.html">Park Winds Apartments</a><a href="https://leasereputation.com/community/r-t-lofts-apartments-des-moines.html">R&amp;T Lofts Apartments</a><a href="https://leasereputation.com/community/riverpoint-lofts-des-moines.html">Riverpoint Lofts</a><a href="https://leasereputation.com/community/rocket-transfer-lofts-des-moines.html">Rocket Transfer Lofts</a><a href="https://leasereputation.com/community/rowat-lofts-des-moines.html">Rowat Lofts</a><a href="https://leasereputation.com/community/slate-at-gray-s-landing-des-moines.html">Slate at Gray&#x27;s Landing</a><a href="https://leasereputation.com/community/soll-apartments-des-moines.html">Soll Apartments</a><a href="https://leasereputation.com/community/sunshine-lofts-des-moines.html">Sunshine Lofts</a><a href="https://leasereputation.com/community/sutton-hill-des-moines.html">Sutton Hill</a><a href="https://leasereputation.com/community/tempo-east-village-living-des-moines.html">Tempo East Village Living</a><a href="https://leasereputation.com/community/the-argonne-1723-grand-ave-des-moines-ia-50309-des-moines.html">The Argonne, 1723 Grand Ave, Des Moines, IA 50309</a><a href="https://leasereputation.com/community/the-aspen-des-moines.html">The Aspen</a><a href="https://leasereputation.com/community/the-brady-apartments-des-moines.html">The Brady Apartments</a><a href="https://leasereputation.com/community/the-deco-des-moines.html">The Deco</a><a href="https://leasereputation.com/community/the-edge-at-gray-s-landing-des-moines.html">The Edge at Gray&#x27;s Landing</a><a href="https://leasereputation.com/community/the-elliott-des-moines.html">The Elliott</a><a href="https://leasereputation.com/community/the-equitable-building-des-moines.html">The Equitable Building</a><a href="https://leasereputation.com/community/the-flats-at-highland-park-des-moines.html">The Flats at Highland Park</a><a href="https://leasereputation.com/community/the-imperial-apartments-des-moines.html">The Imperial Apartments</a><a href="https://leasereputation.com/community/the-james-on-grand-des-moines.html">The James on Grand</a><a href="https://leasereputation.com/community/the-lyon-apartments-des-moines.html">The Lyon Apartments</a><a href="https://leasereputation.com/community/the-meridian-at-gray-s-landing-des-moines.html">The Meridian at Gray&#x27;s Landing</a><a href="https://leasereputation.com/community/the-nexus-at-gray-s-landing-des-moines.html">The Nexus at Gray&#x27;s Landing</a><a href="https://leasereputation.com/community/the-oaks-apartments-des-moines.html">The Oaks Apartments</a><a href="https://leasereputation.com/community/the-parker-at-seventh-des-moines.html">The Parker at Seventh</a><a href="https://leasereputation.com/community/the-residences-at-river-view-des-moines.html">The Residences at River View</a><a href="https://leasereputation.com/community/the-view-on-douglas-des-moines.html">The View on Douglas</a><a href="https://leasereputation.com/community/townhall-apartments-des-moines.html">Townhall Apartments</a><a href="https://leasereputation.com/community/union-at-rivers-edge-des-moines.html">Union at Rivers Edge</a><a href="https://leasereputation.com/community/velocity-des-moines.html">Velocity</a><a href="https://leasereputation.com/community/village-at-grays-lake-apartments-des-moines.html">Village at Grays Lake Apartments</a><a href="https://leasereputation.com/community/vue-des-moines.html">Vue</a><a href="https://leasereputation.com/community/weston-park-apartment-homes-des-moines.html">Weston Park Apartment Homes</a></div></details><details class="citygroup"><summary>Grimes <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/the-reserve-at-destination-pointe-grimes.html">The Reserve at Destination Pointe</a></div></details><details class="citygroup"><summary>Urbandale <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/westpointe-apartments-townhomes-urbandale.html">Westpointe Apartments &amp; Townhomes</a></div></details><details class="citygroup"><summary>Waukee <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/west-light-waukee.html">West Light</a></div></details><details class="citygroup"><summary>West Des Moines <span class="ccount">55</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/360-at-jordan-west-west-des-moines.html">360 at Jordan West</a><a href="https://leasereputation.com/community/92west-west-des-moines.html">92West</a><a href="https://leasereputation.com/community/ashworth-pointe-townhomes-west-des-moines.html">Ashworth Pointe Townhomes</a><a href="https://leasereputation.com/community/aspire-townhomes-west-des-moines.html">Aspire Townhomes</a><a href="https://leasereputation.com/community/aventura-west-des-moines.html">Aventura</a><a href="https://leasereputation.com/community/bella-terra-west-des-moines.html">Bella Terra</a><a href="https://leasereputation.com/community/bellemeade-apartments-west-des-moines.html">BelleMeade Apartments</a><a href="https://leasereputation.com/community/bennett-grand-woods-apartments-west-des-moines.html">Bennett Grand Woods Apartments</a><a href="https://leasereputation.com/community/boulder-ridge-apartment-homes-west-des-moines.html">Boulder Ridge Apartment Homes</a><a href="https://leasereputation.com/community/broadmoor-at-jordan-creek-west-des-moines.html">Broadmoor at Jordan Creek</a><a href="https://leasereputation.com/community/brookside-condominiums-west-des-moines.html">Brookside Condominiums</a><a href="https://leasereputation.com/community/cambridge-court-apartments-west-des-moines.html">Cambridge Court Apartments</a><a href="https://leasereputation.com/community/cascades-at-jordan-creek-west-des-moines.html">Cascades at Jordan Creek</a><a href="https://leasereputation.com/community/colonial-village-apartments-west-des-moines.html">Colonial Village Apartments</a><a href="https://leasereputation.com/community/concord-at-marketplace-west-des-moines.html">Concord at Marketplace</a><a href="https://leasereputation.com/community/country-club-village-apartments-west-des-moines.html">Country Club Village Apartments</a><a href="https://leasereputation.com/community/eastwood-apartments-west-des-moines.html">Eastwood Apartments</a><a href="https://leasereputation.com/community/fairmeadows-village-55-apartment-community-west-des-moines.html">Fairmeadows Village 55+ Apartment Community</a><a href="https://leasereputation.com/community/fountain-terrace-west-des-moines.html">Fountain Terrace</a><a href="https://leasereputation.com/community/hamlet-apartments-west-des-moines.html">Hamlet Apartments</a><a href="https://leasereputation.com/community/keystone-on-8th-west-des-moines.html">Keystone on 8th</a><a href="https://leasereputation.com/community/lift-at-jordan-creek-west-des-moines.html">Lift at Jordan Creek</a><a href="https://leasereputation.com/community/lloyd-companies-des-moines-west-des-moines.html">Lloyd Companies Des Moines</a><a href="https://leasereputation.com/community/mansions-at-jordan-creek-west-des-moines.html">Mansions At Jordan Creek</a><a href="https://leasereputation.com/community/maple-grove-villas-west-des-moines.html">Maple Grove Villas</a><a href="https://leasereputation.com/community/maplewood-townhomes-west-des-moines.html">Maplewood Townhomes</a><a href="https://leasereputation.com/community/meadow-chase-apartments-west-des-moines.html">Meadow Chase Apartments</a><a href="https://leasereputation.com/community/midwest-hospitality-management-llc-west-des-moines.html">Midwest Hospitality &amp; Management LLC</a><a href="https://leasereputation.com/community/normandy-terrace-apartments-west-des-moines.html">Normandy Terrace Apartments</a><a href="https://leasereputation.com/community/olde-english-village-apartments-west-des-moines.html">Olde English Village Apartments</a><a href="https://leasereputation.com/community/park-88-apartments-west-des-moines.html">Park 88 Apartments</a><a href="https://leasereputation.com/community/picket-fence-community-west-des-moines.html">Picket Fence Community</a><a href="https://leasereputation.com/community/plaza-50-west-des-moines.html">Plaza 50</a><a href="https://leasereputation.com/community/pointe-west-apartment-homes-west-des-moines.html">Pointe West Apartment Homes</a><a href="https://leasereputation.com/community/polo-club-apartments-west-des-moines.html">Polo Club Apartments</a><a href="https://leasereputation.com/community/prairiegrass-at-jordan-creek-apartments-west-des-moines.html">PrairieGrass at Jordan Creek Apartments</a><a href="https://leasereputation.com/community/regency-woods-apartments-west-des-moines.html">Regency Woods Apartments</a><a href="https://leasereputation.com/community/renew-jordan-creek-west-des-moines.html">ReNew Jordan Creek</a><a href="https://leasereputation.com/community/robin-hill-apartments-west-des-moines.html">Robin Hill Apartments</a><a href="https://leasereputation.com/community/sierra-pointe-apartments-west-des-moines.html">Sierra Pointe Apartments</a><a href="https://leasereputation.com/community/strathmore-apartment-homes-west-des-moines.html">Strathmore Apartment Homes</a><a href="https://leasereputation.com/community/sun-prairie-vista-court-apartments-west-des-moines.html">Sun Prairie &amp; Vista Court Apartments</a><a href="https://leasereputation.com/community/the-cunningham-apartments-west-des-moines.html">The Cunningham Apartments</a><a href="https://leasereputation.com/community/the-flats-apartments-west-des-moines.html">The Flats Apartments</a><a href="https://leasereputation.com/community/the-fountains-apartments-west-des-moines.html">The Fountains Apartments</a><a href="https://leasereputation.com/community/the-pointe-on-88th-west-des-moines.html">The Pointe on 88th</a><a href="https://leasereputation.com/community/the-reserve-at-jordan-creek-west-des-moines.html">The Reserve at Jordan Creek</a><a href="https://leasereputation.com/community/turtlecreek-west-des-moines.html">TurtleCreek</a><a href="https://leasereputation.com/community/valley-west-apartments-west-des-moines.html">Valley West Apartments</a><a href="https://leasereputation.com/community/watermark-at-jordan-creek-west-des-moines.html">Watermark at Jordan Creek</a><a href="https://leasereputation.com/community/wellington-apartments-west-des-moines.html">Wellington Apartments</a><a href="https://leasereputation.com/community/westbrooke-apartments-west-des-moines.html">Westbrooke Apartments</a><a href="https://leasereputation.com/community/westwood-apartments-west-des-moines.html">Westwood Apartments</a><a href="https://leasereputation.com/community/whisper-ridge-west-des-moines.html">Whisper Ridge</a><a href="https://leasereputation.com/community/woodland-place-apartments-west-des-moines.html">Woodland Place Apartments</a></div></details><details class="citygroup"><summary>Windsor Heights <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/windsor-square-by-broadmoor-windsor-heights.html">Windsor Square by Broadmoor</a></div></details></div>
+</div>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><a href="https://leasereputation.com/">leasereputation.com</a> &middot; <a href="https://leasereputation.com/community/">All communities</a> &middot; <a href="https://leasereputation.com/guides/tenant-rights/">Tenant rights</a> &middot; <a href="https://leasereputation.com/privacy.html">Privacy</a> &middot; <a href="https://leasereputation.com/terms.html">Terms</a></div>
+      <div>&copy; 2026 Lease Reputation LLC</div>
+    </div>
+    <p class="disclaimer">LeaseReputation is an independent review platform and is not affiliated with, endorsed by, or sponsored by any apartment community, property manager, or developer named on this page. Community names and trademarks are the property of their respective owners and are used here for identification and reference only. Reviews reflect the opinions of verified residents. Verified reviewers may receive a small thank-you gift (such as a $5 coffee card); gifts are the same for every verified reviewer and are never conditioned on the content or sentiment of a review. Community photos via Google.</p>
+  </div>
+</footer>
+</body>
+</html>

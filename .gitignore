@@ -1,0 +1,56 @@
+# ---- Whitelist: ignore everything in the home folder except project folders ----
+/*
+!/.gitignore
+!/README.md
+!/atavia-*/
+!/es-*/
+!/jovi-*/
+!/lazo-*/
+!/lease-reputation/
+!/lr-*/
+!/roven-*/
+!/kurv-functions/
+!/functions/
+!/site-bak-archive-0926/
+
+# ---- Generated output and deploy mirrors (rebuilt from source, too big for GitHub) ----
+/lazo-directory/dist/
+/atavia-deploy/
+/es-deploy/
+/roven-deploy/
+/lr-site/community/
+/lazo-directory/generate/lastmod_cache.json
+
+# ---- Secrets: never commit ----
+.env
+.env.*
+!.env.example
+/secrets/
+*serviceAccount*.json
+*service-account*.json
+*-admin.json
+*.pem
+*.p12
+*.pfx
+.wrangler/
+.firebase/
+*.log
+
+# ---- Dependencies, caches, editor backups ----
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.claude/
+*.bak
+*.bak-*
+*.bak*
+*.zip
+Thumbs.db
+desktop.ini
+
+# ---- Jovi FlutterFlow files with a live OpenAI key baked in (move key server-side, then un-ignore) ----
+/lazo-directory/app-patches/jovi/chatbot.dart
+/lazo-directory/app-patches/jovi/symptom_checker.dart
+/lazo-directory/app-patches/jovi/pet_symptom_checker.dart

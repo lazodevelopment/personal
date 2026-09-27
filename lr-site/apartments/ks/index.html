@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kansas Apartments — Verified Resident Reviews | LeaseReputation</title>
+<meta name="description" content="Compare 158 apartment communities across Kansas with verified resident reviews on LeaseReputation. Reputation Scores built only from residents who actually lived there — never for sale." />
+<link rel="canonical" href="https://leasereputation.com/apartments/ks/" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l11 5v8c0 7.5-4.7 12.7-11 15C9.7 27.7 5 22.5 5 15V7l11-5z' fill='%234F46E5'/%3E%3Cpath d='M11 16.5l3.5 3.5 6.5-7' stroke='%2334D399' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<meta property="og:title" content="Kansas Apartments — Verified Resident Reviews | LeaseReputation" />
+<meta property="og:description" content="Compare 158 apartment communities across Kansas with verified resident reviews on LeaseReputation. Reputation Scores built only from residents who actually lived there — never for sale." />
+<meta property="og:image" content="https://leasereputation.com/leasereputation-og.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --indigo:#4C4FE6; --indigo-bright:#6E72F0; --deep:#1E1A5C; --ink:#15102E; --ink-deep:#0E0A20;
+    --lilac:#C4B5FD; --white:#FFFFFF; --warn:#FF8B8B; --mint:#3DDC97;
+    --text:#EFEDFB; --text-dim:rgba(233,231,251,.64); --text-faint:rgba(233,231,251,.42);
+    --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.09); --border:rgba(255,255,255,.12);
+    --maxw:1160px; --pad:clamp(20px,5vw,24px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:
+    radial-gradient(circle at 50% -8%, var(--deep) 0%, var(--ink-deep) 55%), var(--ink-deep);
+    color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(rgba(196,181,253,.05) 1.1px,transparent 1.1px);background-size:30px 30px}
+  img,svg{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);width:100%}
+  h1,h2,h3{line-height:1.1;letter-spacing:-.02em;font-weight:800}
+
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:rgba(14,10,32,.72);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .logo{display:inline-flex;align-items:center;gap:10px}
+  .logo .wm{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+  .logo .wm .l{color:rgba(255,255,255,.6);font-weight:500}
+  .logo .wm .r{color:#fff;font-weight:800}
+  .shield{width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#1E1A5C,#4C4FE6)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:.95rem;
+    padding:12px 22px;border-radius:12px;background:var(--indigo);color:#fff;transition:.18s;border:1px solid transparent}
+  .btn:hover{background:var(--indigo-bright);transform:translateY(-2px)}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{background:var(--glass-2);border-color:var(--lilac)}
+
+  .hero{padding:64px 0 40px;position:relative}
+  .hero.has-photo{padding:0}
+  /* Content-driven height: the photo is a backdrop, the text defines the
+     box — so long community names can never clip out the top on mobile. */
+  .hero-photo{position:relative;min-height:clamp(320px,42vw,460px);overflow:hidden;border-radius:0 0 28px 28px;display:flex;flex-direction:column;justify-content:flex-end}
+  .hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo-credit{position:absolute;right:10px;bottom:8px;z-index:3;font-size:.68rem;
+    color:rgba(255,255,255,.75);background:rgba(0,0,0,.35);border-radius:6px;
+    padding:2px 8px;letter-spacing:.02em}
+  .hero-photo::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(14,10,32,.35) 0%,rgba(14,10,32,.55) 45%,rgba(14,10,32,.96) 100%)}
+  .hero-photo .hero-inner{position:relative;z-index:2;
+    padding:clamp(96px,20vw,150px) var(--pad) 34px}
+  .hero-photo .hero-inner .wrap-inner{max-width:var(--maxw);margin:0 auto;width:100%}
+  .eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);
+    margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:22px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--indigo),var(--lilac))}
+  h1{font-size:clamp(2rem,5.5vw,3.3rem);margin-bottom:14px}
+  h1 .accent{color:var(--lilac)}
+  .sub{font-size:clamp(1.05rem,2.3vw,1.25rem);color:var(--text-dim);max-width:640px;margin-bottom:14px}
+  .meta{color:var(--text-faint);font-size:.95rem;margin-bottom:30px}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+
+  .card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:28px;margin:20px 0}
+  .card h2{font-size:1.5rem;margin-bottom:12px}
+  .card h3{font-size:1.12rem;margin:18px 0 8px}
+  .card p{color:var(--text-dim);margin-bottom:14px}
+  .card p:last-child{margin-bottom:0}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:8px}
+  .fact{background:var(--glass-2);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .fact .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text-faint);margin-bottom:6px}
+  .fact .v{font-weight:700;font-size:1.02rem}
+
+  .facts-list{margin:8px 0 0 18px;padding:0;line-height:1.6}
+  .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:8px}
+  .vid{position:relative;margin-top:20px;border-radius:12px;overflow:hidden;cursor:pointer;
+    aspect-ratio:16/9;background:#000;border:1px solid rgba(255,255,255,.08)}
+  .vid img{width:100%;height:100%;object-fit:cover;display:block;opacity:.82;transition:opacity .2s}
+  .vid:hover img{opacity:1}
+  .vid-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;
+    border-radius:50%;background:rgba(99,91,255,.92);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-size:1.4rem;padding-left:5px;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+  .vid-cap{margin-top:10px;font-size:.85rem;color:var(--muted)}
+  .vid-frame{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:20px;display:block}
+  .why .item{display:flex;gap:12px;align-items:flex-start}
+  .why .dot{width:22px;height:22px;border-radius:50%;flex:none;background:rgba(61,220,151,.15);
+    display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .why .dot svg{width:13px;height:13px;stroke:var(--mint)}
+  .why .item p{color:var(--text-dim);font-size:.95rem}
+  .why .item strong{color:var(--text);display:block;margin-bottom:2px}
+
+  .cta-band{text-align:center;padding:44px 28px;margin:32px 0;border-radius:22px;
+    background:linear-gradient(135deg,rgba(76,79,230,.18),rgba(196,181,253,.08));border:1px solid var(--border)}
+  .cta-band h2{font-size:1.7rem;margin-bottom:10px}
+  .cta-band p{color:var(--text-dim);margin-bottom:22px;max-width:520px;margin-left:auto;margin-right:auto}
+
+  .related{margin:36px 0}
+  .related h2{font-size:1.3rem;margin-bottom:16px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:var(--glass);border:1px solid var(--border);border-radius:11px;padding:10px 15px;
+    font-size:.9rem;color:var(--text-dim);transition:.16s}
+  .chip:hover{border-color:var(--lilac);color:var(--text)}
+
+  footer{border-top:1px solid var(--border);margin-top:50px;padding:34px 0;color:var(--text-faint);font-size:.9rem}
+  .foot{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+  .foot a{color:var(--text-dim)} .foot a:hover{color:var(--lilac)}
+  .disclaimer{font-size:.8rem;color:var(--text-faint);margin-top:14px;line-height:1.5;max-width:820px}
+
+  .scoregrid{display:grid;grid-template-columns:150px 1fr;gap:26px;align-items:center;margin-top:16px}
+  @media(max-width:560px){.scoregrid{grid-template-columns:1fr;justify-items:center}}
+  .ring{width:140px;height:140px}
+  .dims{width:100%}
+  .dimrow{margin-bottom:12px}.dimrow:last-child{margin-bottom:0}
+  .dimtop{display:flex;justify-content:space-between;font-size:.92rem;color:var(--text-dim);margin-bottom:5px}
+  .dimtop b{font-weight:800}
+  .dimtrack{height:7px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+  .dimfill{height:100%;border-radius:4px}
+  .review{border:1px solid var(--border);background:var(--glass-2);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .rhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .rstars{color:#FFC862;letter-spacing:2px;font-size:.95rem}
+  .rmeta{font-size:.82rem;color:var(--text-faint);margin-top:2px}
+  .rtext{color:var(--text-dim);margin-top:10px;font-size:.97rem}
+  .rfoot{margin-top:10px}
+  .renew{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px}
+  .renew.yes{color:var(--mint);background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.3)}
+  .renew.no{color:var(--warn);background:rgba(255,139,139,.08);border:1px solid rgba(255,139,139,.3)}
+
+  .lockband{display:flex;align-items:center;gap:22px;padding:18px;border-radius:14px;
+    background:var(--glass-2);border:1px solid var(--border)}
+  @media(max-width:520px){.lockband{flex-direction:column;text-align:center}}
+  .lockring{position:relative;width:110px;height:110px;flex:none}
+  .lockring svg{width:110px;height:110px;filter:blur(1px)}
+  .lockglyph{position:absolute;right:-4px;bottom:-4px;width:34px;height:34px;border-radius:50%;
+    background:var(--indigo);display:flex;align-items:center;justify-content:center;
+    font-size:15px;box-shadow:0 4px 14px rgba(79,70,229,.5)}
+  .lockcopy{display:flex;flex-direction:column;gap:6px}
+  .lockcopy strong{color:var(--text);font-size:.98rem;line-height:1.45}
+  .lockcopy span{color:var(--text-faint);font-size:.88rem;line-height:1.5}
+
+  .renewline{margin-top:14px;font-size:.98rem;color:var(--text-dim)}
+  .methodline{margin-top:8px;font-size:.8rem;color:var(--text-faint);line-height:1.55}
+  .methodline em{color:var(--text-dim);font-style:normal;font-weight:700}
+  .rphotos{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+  .rphotos img{width:104px;height:104px;object-fit:cover;border-radius:10px;
+    border:1px solid var(--border)}
+
+  .crumbs{font-size:.78rem;color:var(--text-faint);margin:18px 0 4px}
+  .crumbs a{color:var(--text-faint);text-decoration:none}
+  .crumbs a:hover{color:var(--lilac)}
+  .crumbs span{color:var(--text-dim)}
+  .glance{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+  .chip{border:1px solid var(--border);background:var(--glass-2);border-radius:999px;
+    padding:7px 14px;font-size:.84rem;color:var(--text-dim)}
+  .chip strong{color:var(--text)}
+  .claimstrip{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    border:1px dashed var(--border);background:var(--glass-2);border-radius:16px;
+    padding:18px 22px;margin-top:22px}
+  .claimstrip div{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .claimstrip strong{color:var(--text);font-size:.98rem}
+  .claimstrip span{color:var(--text-faint);font-size:.85rem;line-height:1.5}
+  @media(max-width:620px){.claimstrip{flex-direction:column;align-items:flex-start}}
+  .stickybar{display:none}
+  @media(max-width:640px){
+    .stickybar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;
+      align-items:center;justify-content:space-between;gap:12px;
+      padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+      background:rgba(14,10,32,.92);backdrop-filter:blur(12px);
+      border-top:1px solid var(--border)}
+    .stickybar span{font-size:.88rem;font-weight:700;color:var(--text)}
+    .stickybar .btn{padding:10px 18px;font-size:.85rem}
+    body{padding-bottom:74px}
+  }
+  .mgmtresp{border:1px solid var(--border);border-left:3px solid var(--indigo);
+    background:var(--glass-2);border-radius:14px;padding:16px 20px;margin-top:14px}
+  .mgmtresp .mghead{font-weight:800;font-size:.9rem;color:var(--text);
+    display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .mgbadge{font-size:.7rem;font-weight:700;color:var(--lilac);
+    border:1px solid var(--border);border-radius:999px;padding:2px 9px}
+  .mgmtresp p{color:var(--text-dim);font-size:.92rem;margin:0}
+
+  .grouplist{margin-top:8px}
+  .grow{display:flex;align-items:center;gap:14px;padding:13px 4px;border-top:1px solid var(--border);text-decoration:none}
+  .grow:first-child{border-top:none}
+  .grow .gname{color:var(--text);font-weight:700;font-size:1rem;flex:1;min-width:0}
+  .grow .gmeta{color:var(--text-faint);font-size:.82rem;white-space:nowrap}
+  .grow .gtier{font-size:.78rem;font-weight:800;padding:3px 11px;border-radius:999px;white-space:nowrap}
+  .grow:hover .gname{color:var(--lilac)}
+  .statrow{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 4px}
+  .statchip{border:1px solid var(--border);background:var(--glass-2);border-radius:999px;padding:8px 16px;font-size:.88rem;color:var(--text-dim)}
+  .statchip b{color:var(--text)}
+
+  .citygroup{border-top:1px solid var(--border);padding:10px 0}
+  .citygroup summary{cursor:pointer;font-weight:700;color:var(--text);font-size:1.02rem;
+    list-style:none;display:flex;align-items:center;gap:10px;padding:6px 0}
+  .citygroup summary::-webkit-details-marker{display:none}
+  .citygroup summary::before{content:"+";color:var(--lilac);font-weight:800;width:16px}
+  .citygroup[open] summary::before{content:"−"}
+  .ccount{font-size:.78rem;font-weight:700;color:var(--text-faint);
+    background:var(--glass-2);border:1px solid var(--border);border-radius:999px;padding:2px 10px}
+  .citylinks{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 6px 26px}
+  .citylinks a{color:var(--text-dim);text-decoration:none;font-size:.9rem;
+    border:1px solid var(--border);background:var(--glass-2);border-radius:999px;
+    padding:6px 13px;transition:border-color .15s,color .15s}
+  .citylinks a:hover{color:var(--text);border-color:var(--lilac)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="https://leasereputation.com/" aria-label="LeaseReputation home">
+      <span class="shield"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5.5v5.6c0 4.9 3.4 9.5 8 10.9 4.6-1.4 8-6 8-10.9V5.5L12 2z" fill="rgba(255,255,255,.2)"/><path d="m8.6 12.2 2.3 2.3 4.5-4.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="wm"><span class="l">lease</span><span class="r">reputation</span></span>
+    </a>
+    <a class="btn" href="https://app.leasereputation.com">Open the app</a>
+  </div>
+</header>
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Verified Resident Reviews</div>
+    <h1>Apartments in<br /><span class="accent">Kansas.</span></h1>
+    <p class="sub">158 communities across Kansas with verified-resident reviews. Every score computed from proven residents — never sponsored, boosted, or bought.</p>
+    <div class="statrow"><span class="statchip"><b>158</b>&nbsp;communities</span><span class="statchip"><b>0</b>&nbsp;verified reviews</span></div>
+    <div class="cta-row"><a class="btn" href="https://app.leasereputation.com">Open the app</a><a class="btn btn-ghost" href="https://leasereputation.com/community/">All communities</a></div>
+  </div>
+</section>
+<div class="wrap">
+  <div class="card"><h2>Know your rights in Kansas</h2><p>Security deposit deadlines, repair rights, entry notice, and eviction timelines — with statute citations.</p><p><a class="btn ghost" href="https://leasereputation.com/guides/tenant-rights/ks/">Kansas tenant rights guide</a></p></div><div class="card"><h2>Kansas city guides</h2><div class="citylinks" style="padding-left:0"><a href="https://leasereputation.com/apartments/wichita-ks/">Wichita</a><a href="https://leasereputation.com/apartments/overland-park-ks/">Overland Park</a><a href="https://leasereputation.com/apartments/leawood-ks/">Leawood</a><a href="https://leasereputation.com/apartments/kansas-city-ks/">Kansas City</a><a href="https://leasereputation.com/apartments/lenexa-ks/">Lenexa</a><a href="https://leasereputation.com/apartments/shawnee-ks/">Shawnee</a></div></div><div class="card"><h2>Every Kansas community <span class="ccount">158</span></h2><details class="citygroup"><summary>Kansas City <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/prairie-view-at-village-west-kansas-city.html">Prairie View at Village West</a><a href="https://leasereputation.com/community/switch-apartments-kansas-city.html">Switch Apartments</a><a href="https://leasereputation.com/community/the-hudson-kansas-city.html">The Hudson</a></div></details><details class="citygroup"><summary>Leawood <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/mission-106-apartments-leawood.html">Mission 106 Apartments</a><a href="https://leasereputation.com/community/the-residences-at-park-place-leawood.html">The Residences at Park Place</a><a href="https://leasereputation.com/community/villa-milano-apartments-and-villas-leawood.html">Villa Milano Apartments and Villas</a></div></details><details class="citygroup"><summary>Lenexa <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/prairie-creek-apartments-townhomes-lenexa.html">Prairie Creek Apartments &amp; Townhomes</a><a href="https://leasereputation.com/community/sonoma-hill-lenexa.html">Sonoma Hill</a><a href="https://leasereputation.com/community/the-peak-at-sonoma-lenexa.html">The Peak At Sonoma</a></div></details><details class="citygroup"><summary>Maize <span class="ccount">2</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/copper-creek-apartment-homes-maize.html">Copper Creek Apartment Homes</a><a href="https://leasereputation.com/community/watercress-apartments-maize.html">Watercress Apartments</a></div></details><details class="citygroup"><summary>Merriam <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/grand-station-lofts-merriam.html">Grand Station Lofts</a></div></details><details class="citygroup"><summary>Mission <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/the-locale-mission.html">The Locale</a></div></details><details class="citygroup"><summary>Overland Park <span class="ccount">61</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/87th-street-apartments-overland-park.html">87th Street Apartments</a><a href="https://leasereputation.com/community/adara-overland-park-overland-park.html">Adara Overland Park</a><a href="https://leasereputation.com/community/arcadia-at-overland-park-overland-park.html">Arcadia at Overland Park</a><a href="https://leasereputation.com/community/aventura-clear-creek-overland-park.html">Aventura Clear Creek</a><a href="https://leasereputation.com/community/avenue-80-apartments-overland-park.html">Avenue 80 Apartments</a><a href="https://leasereputation.com/community/avia-apartments-at-110th-street-overland-park.html">AVIA Apartments at 110th Street</a><a href="https://leasereputation.com/community/birchwood-villas-overland-park.html">Birchwood Villas</a><a href="https://leasereputation.com/community/bradford-pointe-apartments-and-townhomes-overland-park.html">Bradford Pointe Apartments and Townhomes</a><a href="https://leasereputation.com/community/canopy-flats-luxury-apartments-overland-park.html">Canopy Flats Luxury Apartments</a><a href="https://leasereputation.com/community/corbin-crossing-apartments-overland-park.html">Corbin Crossing Apartments</a><a href="https://leasereputation.com/community/courtyard-apartments-overland-park.html">Courtyard Apartments</a><a href="https://leasereputation.com/community/crowne-chase-apartment-homes-overland-park.html">Crowne Chase Apartment Homes</a><a href="https://leasereputation.com/community/cyan-southcreek-overland-park.html">Cyan Southcreek</a><a href="https://leasereputation.com/community/deer-creek-apartment-homes-overland-park.html">Deer Creek Apartment Homes</a><a href="https://leasereputation.com/community/element-25-overland-park.html">Element 25</a><a href="https://leasereputation.com/community/highland-park-apartment-homes-overland-park.html">Highland Park Apartment Homes</a><a href="https://leasereputation.com/community/highland-ridge-apartments-overland-park.html">Highland Ridge Apartments</a><a href="https://leasereputation.com/community/highlands-lodge-overland-park.html">Highlands Lodge</a><a href="https://leasereputation.com/community/hunter-s-pointe-apartments-and-townhomes-overland-park.html">Hunter&#x27;s Pointe Apartments and Townhomes</a><a href="https://leasereputation.com/community/jefferson-pointe-apartments-and-townhomes-overland-park.html">Jefferson Pointe Apartments and Townhomes</a><a href="https://leasereputation.com/community/kelly-park-apartments-overland-park.html">Kelly Park Apartments</a><a href="https://leasereputation.com/community/kelly-reserve-apartments-overland-park.html">Kelly Reserve Apartments</a><a href="https://leasereputation.com/community/lexington-farms-overland-park.html">Lexington Farms</a><a href="https://leasereputation.com/community/louisburg-square-apartments-townhomes-overland-park.html">Louisburg Square Apartments &amp; Townhomes</a><a href="https://leasereputation.com/community/maa-prairie-trace-overland-park.html">MAA Prairie Trace</a><a href="https://leasereputation.com/community/overland-station-overland-park.html">Overland Station</a><a href="https://leasereputation.com/community/pebblebrook-apartment-homes-overland-park.html">Pebblebrook Apartment Homes</a><a href="https://leasereputation.com/community/promontory-overland-park.html">Promontory</a><a href="https://leasereputation.com/community/residences-at-prairiefire-overland-park.html">Residences at Prairiefire</a><a href="https://leasereputation.com/community/sheridan-ridge-townhomes-overland-park.html">Sheridan Ridge Townhomes</a><a href="https://leasereputation.com/community/signature-place-apartments-overland-park.html">Signature Place Apartments</a><a href="https://leasereputation.com/community/sorrento-at-deer-creek-apartment-homes-overland-park.html">Sorrento at Deer Creek Apartment Homes</a><a href="https://leasereputation.com/community/stone-ridge-apartments-overland-park.html">Stone Ridge Apartments</a><a href="https://leasereputation.com/community/stonehaven-overland-park-apartments-overland-park.html">Stonehaven Overland Park Apartments</a><a href="https://leasereputation.com/community/stonepost-ranch-apartment-homes-overland-park.html">Stonepost Ranch Apartment Homes</a><a href="https://leasereputation.com/community/the-apex-at-cityplace-overland-park.html">The Apex at CityPlace</a><a href="https://leasereputation.com/community/the-club-at-indian-creek-apartment-homes-overland-park.html">The Club at Indian Creek Apartment Homes</a><a href="https://leasereputation.com/community/the-halston-apartments-overland-park.html">The Halston Apartments</a><a href="https://leasereputation.com/community/the-highlands-overland-park.html">The Highlands</a><a href="https://leasereputation.com/community/the-interurban-lofts-overland-park.html">The InterUrban Lofts</a><a href="https://leasereputation.com/community/the-isaac-active-adult-apartments-overland-park.html">The Isaac Active Adult Apartments</a><a href="https://leasereputation.com/community/the-lodge-of-overland-park-overland-park.html">The Lodge of Overland Park</a><a href="https://leasereputation.com/community/the-louis-townhomes-overland-park.html">The Louis Townhomes</a><a href="https://leasereputation.com/community/the-oslo-kc-overland-park.html">The Oslo KC</a><a href="https://leasereputation.com/community/the-residences-at-bluhawk-apartment-homes-overland-park.html">The Residences at Bluhawk Apartment Homes</a><a href="https://leasereputation.com/community/the-residences-at-galleria-overland-park.html">The Residences at Galleria</a><a href="https://leasereputation.com/community/the-ridge-overland-park-overland-park.html">The Ridge Overland Park</a><a href="https://leasereputation.com/community/the-royale-at-cityplace-overland-park.html">The Royale at CityPlace</a><a href="https://leasereputation.com/community/the-sovereign-at-overland-park-overland-park.html">The Sovereign at Overland Park</a><a href="https://leasereputation.com/community/the-vue-overland-park.html">The Vue</a><a href="https://leasereputation.com/community/the-woods-of-cherry-creek-apartment-homes-overland-park.html">The Woods of Cherry Creek Apartment Homes</a><a href="https://leasereputation.com/community/treetop-lodge-apartments-overland-park.html">Treetop Lodge Apartments</a><a href="https://leasereputation.com/community/vale-overland-park-overland-park.html">Vale Overland Park</a><a href="https://leasereputation.com/community/villa-medici-apartments-overland-park.html">Villa Medici Apartments</a><a href="https://leasereputation.com/community/village-at-lionsgate-apartments-overland-park.html">Village at Lionsgate Apartments</a><a href="https://leasereputation.com/community/village-at-mission-farms-overland-park.html">Village at Mission Farms</a><a href="https://leasereputation.com/community/villas-at-carrington-square-overland-park.html">Villas at Carrington Square</a><a href="https://leasereputation.com/community/waterford-place-apartments-townhomes-overland-park.html">Waterford Place Apartments &amp; Townhomes</a><a href="https://leasereputation.com/community/weston-point-overland-park.html">Weston Point</a><a href="https://leasereputation.com/community/whispering-hills-apartments-overland-park.html">Whispering Hills Apartments</a><a href="https://leasereputation.com/community/wynnewood-farms-apartment-homes-overland-park.html">Wynnewood Farms Apartment Homes</a></div></details><details class="citygroup"><summary>Prairie Village <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/the-kessler-residences-prairie-village.html">The Kessler Residences</a></div></details><details class="citygroup"><summary>Shawnee <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/bonavia-luxury-apartments-shawnee.html">Bonavia Luxury Apartments</a><a href="https://leasereputation.com/community/lenox-west-shawnee.html">Lenox West</a><a href="https://leasereputation.com/community/the-chadwick-shawnee.html">The Chadwick</a></div></details><details class="citygroup"><summary>Westwood <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/woodside-village-north-apartments-westwood.html">Woodside Village North Apartments</a></div></details><details class="citygroup"><summary>Wichita <span class="ccount">79</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/225-sycamore-wichita.html">225 Sycamore</a><a href="https://leasereputation.com/community/250-douglas-place-wichita.html">250 Douglas Place</a><a href="https://leasereputation.com/community/520commerce-lofts-wichita.html">520Commerce Lofts</a><a href="https://leasereputation.com/community/altitude-wichita-wichita.html">Altitude Wichita</a><a href="https://leasereputation.com/community/aspen-park-apartments-wichita.html">Aspen Park Apartments</a><a href="https://leasereputation.com/community/berkshire-apartments-and-townhomes-wichita.html">Berkshire Apartments and Townhomes</a><a href="https://leasereputation.com/community/brickstone-at-woodlawn-wichita.html">Brickstone at Woodlawn</a><a href="https://leasereputation.com/community/brookwood-apartments-wichita.html">Brookwood Apartments</a><a href="https://leasereputation.com/community/central-bay-apartments-wichita.html">Central Bay Apartments</a><a href="https://leasereputation.com/community/chisholm-lake-apartments-wichita.html">Chisholm Lake Apartments</a><a href="https://leasereputation.com/community/cimarron-apartments-wichita.html">Cimarron Apartments</a><a href="https://leasereputation.com/community/claremont-apartments-wichita.html">Claremont Apartments</a><a href="https://leasereputation.com/community/colorado-derby-lofts-wichita.html">Colorado Derby Lofts</a><a href="https://leasereputation.com/community/cottages-at-crestview-wichita.html">Cottages at Crestview</a><a href="https://leasereputation.com/community/cross-creek-apartments-and-townhomes-wichita.html">Cross Creek Apartments and Townhomes</a><a href="https://leasereputation.com/community/crown-chase-apartments-wichita.html">Crown Chase Apartments</a><a href="https://leasereputation.com/community/dumont-at-delano-wichita.html">Dumont at Delano</a><a href="https://leasereputation.com/community/eagle-creek-wichita.html">Eagle Creek</a><a href="https://leasereputation.com/community/eaglerock-village-home-wichita.html">Eaglerock Village Home</a><a href="https://leasereputation.com/community/eaton-place-wichita.html">Eaton Place</a><a href="https://leasereputation.com/community/fairmount-flats-wichita.html">Fairmount Flats</a><a href="https://leasereputation.com/community/fox-run-apartments-wichita.html">Fox Run Apartments</a><a href="https://leasereputation.com/community/hi-tone-lofts-wichita.html">Hi-Tone Lofts</a><a href="https://leasereputation.com/community/high-point-east-apartment-homes-wichita.html">High Point East Apartment Homes</a><a href="https://leasereputation.com/community/highland-house-apartments-wichita.html">Highland House Apartments</a><a href="https://leasereputation.com/community/horizons-east-wichita.html">Horizons East</a><a href="https://leasereputation.com/community/huntington-park-apartments-wichita.html">Huntington Park Apartments</a><a href="https://leasereputation.com/community/indian-hills-apartment-homes-wichita.html">Indian Hills Apartment Homes</a><a href="https://leasereputation.com/community/innes-station-apartments-wichita.html">Innes Station Apartments</a><a href="https://leasereputation.com/community/inwood-crossings-wichita.html">Inwood Crossings</a><a href="https://leasereputation.com/community/june-sunshine-a-fresh-start-your-new-home-at-forrest-grove-apartments-wichita.html">June Sunshine + A Fresh Start = Your New Home at Forrest Grove Apartments!</a><a href="https://leasereputation.com/community/la-crosse-apartments-wichita.html">La Crosse Apartments</a><a href="https://leasereputation.com/community/lakeside-townhomes-wichita.html">Lakeside Townhomes</a><a href="https://leasereputation.com/community/lofts-by-viewpoints-wichita.html">Lofts by Viewpoints</a><a href="https://leasereputation.com/community/lux-off-riverwalk-apartments-wichita.html">Lux off Riverwalk Apartments</a><a href="https://leasereputation.com/community/main-street-residences-wichita.html">Main Street Residences</a><a href="https://leasereputation.com/community/maple-gardens-village-wichita.html">Maple Gardens Village</a><a href="https://leasereputation.com/community/morgans-landing-apartments-wichita.html">Morgans Landing Apartments</a><a href="https://leasereputation.com/community/mosley-street-place-wichita.html">Mosley Street Place</a><a href="https://leasereputation.com/community/newport-wichita-apartments-wichita.html">Newport Wichita Apartments</a><a href="https://leasereputation.com/community/ovation-apartments-wichita.html">Ovation Apartments</a><a href="https://leasereputation.com/community/pinnacle-lofts-wichita.html">Pinnacle Lofts</a><a href="https://leasereputation.com/community/player-piano-lofts-wichita.html">Player Piano Lofts</a><a href="https://leasereputation.com/community/portofino-apartments-wichita.html">Portofino Apartments</a><a href="https://leasereputation.com/community/quarters-at-cambridge-wichita.html">Quarters At Cambridge</a><a href="https://leasereputation.com/community/raintree-apartments-wichita.html">Raintree Apartments</a><a href="https://leasereputation.com/community/remington-apartments-wichita.html">Remington apartments</a><a href="https://leasereputation.com/community/renata-view-apartments-wichita.html">Renata View Apartments</a><a href="https://leasereputation.com/community/renew-wichita-wichita.html">ReNew Wichita</a><a href="https://leasereputation.com/community/river-vista-apartments-wichita.html">River Vista Apartments</a><a href="https://leasereputation.com/community/river-walk-apartments-wichita.html">River Walk Apartments</a><a href="https://leasereputation.com/community/rock-island-lofts-wichita.html">Rock Island Lofts</a><a href="https://leasereputation.com/community/seventeenth-apartments-wichita.html">Seventeenth Apartments</a><a href="https://leasereputation.com/community/silver-springs-apartments-wichita.html">Silver Springs Apartments</a><a href="https://leasereputation.com/community/spaghetti-works-apartments-wichita.html">Spaghetti Works Apartments</a><a href="https://leasereputation.com/community/stoney-pointe-apartment-homes-wichita.html">Stoney Pointe Apartment Homes</a><a href="https://leasereputation.com/community/stratford-west-apartments-wichita.html">Stratford West Apartments</a><a href="https://leasereputation.com/community/sundance-apartments-wichita.html">Sundance Apartments</a><a href="https://leasereputation.com/community/sunstone-at-fox-ridge-wichita.html">SunSTONE at Fox Ridge</a><a href="https://leasereputation.com/community/tenant-access-to-a-20-acre-private-lake-at-your-new-home-kingston-cove-apartments-wichita.html">Tenant Access to a 20 Acre Private Lake at your New Home, Kingston Cove Apartments</a><a href="https://leasereputation.com/community/the-avante-apartments-wichita.html">The Avante Apartments</a><a href="https://leasereputation.com/community/the-finn-lofts-wichita.html">The Finn Lofts</a><a href="https://leasereputation.com/community/the-flats-324-wichita.html">The Flats 324</a><a href="https://leasereputation.com/community/the-landing-at-woodlawn-tower-wichita.html">The Landing at Woodlawn Tower</a><a href="https://leasereputation.com/community/the-lofts-at-old-town-square-wichita.html">The Lofts at Old Town Square</a><a href="https://leasereputation.com/community/the-lux-wichita.html">The LUX</a><a href="https://leasereputation.com/community/the-national-wichita.html">The National</a><a href="https://leasereputation.com/community/the-renfro-wichita.html">The Renfro</a><a href="https://leasereputation.com/community/the-swope-lofts-wichita.html">The Swope Lofts</a><a href="https://leasereputation.com/community/the-terra-at-3600-wichita.html">The Terra at 3600</a><a href="https://leasereputation.com/community/the-vue-luxury-apartments-wichita.html">The VUE Luxury Apartments</a><a href="https://leasereputation.com/community/twin-lakes-apartments-wichita.html">Twin Lakes Apartments</a><a href="https://leasereputation.com/community/union-mill-wichita.html">Union Mill</a><a href="https://leasereputation.com/community/uptown-landing-wichita.html">Uptown Landing</a><a href="https://leasereputation.com/community/villas-of-waterford-apartments-wichita.html">Villas of Waterford Apartments</a><a href="https://leasereputation.com/community/washburn-apartments-wichita.html">Washburn Apartments</a><a href="https://leasereputation.com/community/water-s-edge-apartments-wichita.html">Water&#x27;s Edge Apartments</a><a href="https://leasereputation.com/community/westborough-arms-apartments-and-townhomes-wichita.html">Westborough Arms Apartments and Townhomes</a><a href="https://leasereputation.com/community/westlink-village-apartments-wichita.html">Westlink Village Apartments</a></div></details></div>
+</div>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><a href="https://leasereputation.com/">leasereputation.com</a> &middot; <a href="https://leasereputation.com/community/">All communities</a> &middot; <a href="https://leasereputation.com/guides/tenant-rights/">Tenant rights</a> &middot; <a href="https://leasereputation.com/privacy.html">Privacy</a> &middot; <a href="https://leasereputation.com/terms.html">Terms</a></div>
+      <div>&copy; 2026 Lease Reputation LLC</div>
+    </div>
+    <p class="disclaimer">LeaseReputation is an independent review platform and is not affiliated with, endorsed by, or sponsored by any apartment community, property manager, or developer named on this page. Community names and trademarks are the property of their respective owners and are used here for identification and reference only. Reviews reflect the opinions of verified residents. Verified reviewers may receive a small thank-you gift (such as a $5 coffee card); gifts are the same for every verified reviewer and are never conditioned on the content or sentiment of a review. Community photos via Google.</p>
+  </div>
+</footer>
+</body>
+</html>

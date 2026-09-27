@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roven — Hiring, proven. Every job real. Every employer verified.</title>
+<meta name="description" content="Roven is the hiring marketplace where every employer is verified, every job is confirmed open, and employers are publicly scored on how they treat applicants. Free for job seekers. Employers pay only when they hire.">
+<link rel="canonical" href="https://rovenhr.com/">
+<meta property="og:title" content="Roven — Hiring, proven.">
+<meta property="og:description" content="Every job real. Every employer verified. Employers scored on how they treat you.">
+<meta property="og:url" content="https://rovenhr.com/">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://rovenhr.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="stylesheet" href="styles.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Roven",
+  "url": "https://rovenhr.com",
+  "logo": "https://rovenhr.com/og-image.png",
+  "slogan": "Hiring, proven.",
+  "description": "The hiring marketplace where every employer is verified, every job is confirmed open, and employers are publicly scored on how they treat applicants.",
+  "address": { "@type": "PostalAddress", "addressLocality": "Phoenix", "addressRegion": "AZ", "addressCountry": "US" },
+  "legalName": "Roven HR, LLC"
+}
+</script>
+<style>
+/* --- homepage additions --- */
+.hp-stats{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 4px}
+.hp-stat{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:100px;padding:9px 16px}
+.hp-stat b{font-family:'Bricolage Grotesque',sans-serif;font-size:17px;font-weight:800;color:#3ADB8B;letter-spacing:-.4px}
+.hp-stat span{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;font-weight:700;color:rgba(255,255,255,.62)}
+.hp-example-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(232,196,111,.14);border:1px solid rgba(232,196,111,.45);border-radius:100px;padding:5px 11px;margin-bottom:12px;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;font-weight:700;color:#E8C46F}
+/* live activity ticker */
+#hp-ticker{display:none;border-top:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.025);overflow:hidden;padding:13px 0}
+#hp-ticker .lbl{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.14em;font-weight:700;color:#3ADB8B;padding:0 18px;white-space:nowrap;display:inline-flex;align-items:center;gap:7px}
+#hp-ticker .dot{width:7px;height:7px;border-radius:50%;background:#3ADB8B;box-shadow:0 0 8px rgba(58,219,139,.8);flex:none}
+#hp-ticker .track{display:flex;align-items:center;gap:0;animation:hp-scroll 46s linear infinite;width:max-content}
+#hp-ticker:hover .track{animation-play-state:paused}
+#hp-ticker .item{display:inline-flex;align-items:center;gap:10px;padding:0 26px;border-right:1px solid rgba(255,255,255,.09);white-space:nowrap;font-size:13.5px;color:rgba(255,255,255,.72)}
+#hp-ticker .item em{font-style:normal;color:#fff;font-weight:600}
+#hp-ticker .item .ago{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.08em;color:rgba(255,255,255,.42)}
+@keyframes hp-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){#hp-ticker .track{animation:none;flex-wrap:wrap}}
+
+/* --- homepage FAQ --- */
+#faq{background:#F2F5F4;scroll-margin-top:80px}
+.hp-faq{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;align-items:start;margin-top:6px}
+.hp-faq-group{grid-column:1/-1;display:flex;align-items:center;gap:14px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;font-weight:700;color:#0F7A45;margin:26px 0 6px}
+.hp-faq-group::after{content:'';flex:1;height:1px;background:#D8DEDC}
+.hp-faq-group:first-child{margin-top:8px}
+.hp-faq details{border:1px solid #DDE4E2;border-left:3px solid #DDE4E2;border-radius:12px;background:#fff;overflow:hidden;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.hp-faq details:hover{border-color:#BFD3CA;border-left-color:#1CA45F;box-shadow:0 4px 14px rgba(22,32,46,.06)}
+.hp-faq details[open]{border-color:#C7DCD1;border-left-color:#1CA45F;box-shadow:0 6px 20px rgba(22,32,46,.08)}
+.hp-faq summary{cursor:pointer;list-style:none;padding:15px 18px;font-family:'Instrument Sans',sans-serif;font-size:15px;font-weight:600;line-height:1.4;color:#16202E;display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.hp-faq summary::-webkit-details-marker{display:none}
+.hp-faq summary::after{content:'+';font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:700;color:#1CA45F;flex:none;line-height:1.25;transition:transform .16s ease}
+.hp-faq details[open] summary::after{content:'\2212'}
+.hp-faq details p{margin:0;padding:0 18px 16px;font-size:13.5px;line-height:1.68;color:#41505F;border-top:1px solid #EDF1EF;padding-top:14px;margin-top:-2px}
+.hp-faq details p a{color:#0F7A45;text-decoration:none;border-bottom:1px solid rgba(28,164,95,.4)}
+.hp-faq details p a:hover{border-bottom-color:#1CA45F}
+@media(max-width:820px){.hp-faq{grid-template-columns:1fr}}
+
+/* --- hero strikethrough --- */
+.hero h1 .strike,.hp-strike{position:relative;color:rgba(255,255,255,.42);white-space:nowrap}
+.hero h1 .strike::after,.hp-strike::after{content:"";position:absolute;left:-3%;right:-3%;top:52%;height:5px;background:#C0483B;transform:rotate(-2.2deg);border-radius:3px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="logo-link" href="index.html" aria-label="Roven home"><img class="logo-img" src="logo.png" alt="Roven" width="640" height="293"></a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="navlinks">MENU</button>
+    <ul class="nav-links" id="navlinks">
+      <li><a href="how-it-works.html">How it works</a></li>
+      <li><a href="employers.html">For employers</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a class="nav-cta" href="https://app.rovenhr.com">Open the app</a></li>
+    </ul>
+  </div>
+</nav>
+<div class="scroll-progress" aria-hidden="true"><div class="bar"></div></div>
+
+<!-- ================= HERO ================= -->
+<header class="hero">
+  <div class="orb green"></div><div class="orb blue"></div><div class="orb small"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Hiring, proven</span>
+      <h1><span class="hp-strike">Ghost jobs.</span><br><span class="hp-strike">Ghosting.</span><br><span class="accent">Get hired on Roven.</span></h1>
+      <p class="lede">Every job on Roven is a real, confirmed-open role at a verified business &mdash; and every employer's response rate is published on their listings, so you can see who actually answers before you spend an hour applying. Free for job seekers. Forever.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-green magnet" href="https://app.rovenhr.com">Find work on Roven</a>
+        <a class="btn btn-ghost-dark magnet" href="employers.html">Hire with Roven</a>
+      </div>
+      <div class="chip-row">
+<div class="hp-stats"><div class="hp-stat"><b>$0</b><span>FOREVER, FOR JOB SEEKERS</span></div><div class="hp-stat"><b>100%</b><span>OF EMPLOYERS VERIFIED</span></div><div class="hp-stat"><b>30 DAY</b><span>FRESHNESS CLOCK ON EVERY JOB</span></div></div>
+        <span class="chip"><span class="dot"></span>NOW LIVE NATIONWIDE</span>
+        <span class="chip">FREE FOR JOB SEEKERS. ALWAYS.</span>
+      </div>
+    </div>
+
+    <!-- signature: live accountability record -->
+    <div class="floaty"><div class="score-card glass tilt-target" aria-label="Example employer accountability record">
+      <div class="sc-head">
+        <div>
+<div class="hp-example-tag">ILLUSTRATIVE EXAMPLE &middot; NOT A REAL EMPLOYER</div>
+          <div class="sc-name">Meridian Field Services</div>
+          <span class="sc-badge"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9 L8 15 L17 4"/></svg>VERIFIED EMPLOYER</span>
+        </div>
+        <svg class="ring" data-score="82" viewBox="0 0 100 100" role="img" aria-label="Accountability score 82 out of 100">
+          <circle class="track" cx="50" cy="50" r="42"/>
+          <circle class="meter" cx="50" cy="50" r="42" style="stroke-dashoffset:48"/>
+          <text x="50" y="52">82</text>
+        </svg>
+      </div>
+      <div class="sc-rows">
+        <div class="sc-row"><span>Applications answered</span><span class="val good" data-count="94" data-suffix="%">94%</span></div>
+        <div class="sc-row"><span>Median response time</span><span class="val" data-count="1.8" data-decimals="1" data-suffix=" days">1.8 days</span></div>
+        <div class="sc-row"><span>Ghosted applicants</span><span class="val" data-count="3" data-suffix="%">3%</span></div>
+        <div class="sc-row"><span>Hires this year</span><span class="val" data-count="11">11</span></div>
+      </div>
+      <div class="sc-live"><span class="dot"></span><span class="sc-live-text"></span></div>
+      <div class="sc-foot">COMPUTED FROM PLATFORM ACTIVITY · NOT EDITABLE · NOT FOR SALE</div>
+    </div>
+    </div>
+  </div>
+</header>
+<div id="hp-ticker" aria-label="Recent activity on Roven">
+  <div class="track" id="hp-ticker-track"></div>
+</div>
+<script>
+(function () {
+  var MIN_ITEMS = 6;  // below this the ticker stays hidden - a nearly empty
+                      // ticker is worse than no ticker, and faking rows is
+                      // exactly what we criticise other boards for.
+  fetch('/activity.json', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !d.items || d.items.length < MIN_ITEMS) return;
+      var track = document.getElementById('hp-ticker-track');
+      var html = d.items.map(function (i) {
+        return '<span class="item"><em>' + i.what + '</em> &middot; ' +
+               i.where + ' <span class="ago">' + i.ago + '</span></span>';
+      }).join('');
+      track.innerHTML = html + html;   // duplicated for a seamless loop
+      document.getElementById('hp-ticker').style.display = 'block';
+    })
+    .catch(function () { /* stay hidden */ });
+})();
+</script>
+
+
+<!-- ================= PROBLEM ================= -->
+<section class="section tint">
+  <div class="wrap">
+    <p class="kicker">The job board problem</p>
+    <h2>You already know how the other boards end.</h2>
+    <p class="sub">You polish the résumé, write the cover letter, hit apply — and nothing. Not a rejection. Nothing. That silence isn't bad luck; it's how job boards are built. They get paid when jobs get posted, not when people get hired.</p>
+    <div class="problem-grid">
+      <div class="problem reveal tilt">
+        <div class="stat"><s>Ghost jobs</s></div>
+        <h3>Listings that were never real</h3>
+        <p>Roles kept open to collect résumés, test the market, or look like growth. On Roven, a job can't go live until the employer confirms it's a real, open position.</p>
+      </div>
+      <div class="problem reveal tilt">
+        <div class="stat"><s>The void</s></div>
+        <h3>Applications with no answer</h3>
+        <p>Most applications on the big boards never get a response of any kind. On Roven, response rates are tracked, timed, and published on every employer's profile.</p>
+      </div>
+      <div class="problem reveal tilt">
+        <div class="stat"><s>Pay-to-play</s></div>
+        <h3>Visibility sold to the highest bidder</h3>
+        <p>Sponsored listings decide what you see, not fit. Roven doesn't sell placement, and an employer's reputation score can't be bought, edited, or hidden.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PILLARS ================= -->
+<section class="section">
+  <div class="wrap">
+    <p class="kicker">How Roven is different</p>
+    <h2>Four rules. No exceptions.</h2>
+    <div class="pillar-grid">
+      <div class="pillar reveal tilt">
+        <svg class="p-mark" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 3 L29 8 V16 C29 24 24 29 17 31 C10 29 5 24 5 16 V8 Z M11 16 L15.5 21 L23 11"/></svg>
+        <h3>Verified</h3>
+        <p>Every employer passes business identity verification before their first post. No shell companies, no scrapers, no fake recruiters. If it's on Roven, it's a real business we've checked.</p>
+      </div>
+      <div class="pillar reveal tilt">
+        <svg class="p-mark" viewBox="0 0 34 34" aria-hidden="true"><path d="M5 29 V19 M13 29 V11 M21 29 V15 M29 29 V5"/></svg>
+        <h3>Accountable</h3>
+        <p>Response rate, response speed, ghost rate — measured automatically and published on every employer profile. How they treat applicants follows them.</p>
+      </div>
+      <div class="pillar reveal tilt">
+        <svg class="p-mark" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 5 V29 M9 12 C9 8 13 7 17 7 C21 7 25 8 25 11 C25 18 9 15 9 22 C9 26 13 27 17 27 C21 27 25 26 25 23"/></svg>
+        <h3>Aligned</h3>
+        <p>Posting is free. Searching is free. Roven only makes money when a real hire happens — so our incentive is your outcome, not your ad spend.</p>
+      </div>
+      <div class="pillar reveal tilt">
+        <svg class="p-mark" viewBox="0 0 34 34" aria-hidden="true"><path d="M14 5 A9 9 0 1 0 14 23 A9 9 0 1 0 14 5 M20 20 L29 29"/></svg>
+        <h3>Intelligent</h3>
+        <p>Matching built on skills and fit, not keyword bingo. Fewer, better applications on both sides of the table.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW IT WORKS ================= -->
+<section class="section tint">
+  <div class="wrap">
+    <p class="kicker">How it works</p>
+    <h2>Two sides. One honest deal.</h2>
+    <div class="split">
+      <div class="lane candidate reveal">
+        <div class="lane-tag">For job seekers</div>
+        <h3>Apply like it counts — because it does.</h3>
+        <div class="step"><span class="n">01</span><div><h4>Browse verified jobs</h4><p>Full-time, part-time, and contract — every listing is a confirmed open role at an identity-verified business, labeled with exactly what kind of work it is.</p></div></div>
+        <div class="step"><span class="n">02</span><div><h4>See how employers behave</h4><p>Check any employer's accountability record before you spend time applying.</p></div></div>
+        <div class="step"><span class="n">03</span><div><h4>Get an actual answer</h4><p>Employers are scored on responding. Silence costs them, publicly.</p></div></div>
+        <div class="step"><span class="n">04</span><div><h4>Get hired</h4><p>Interview, offer, hire — tracked on-platform so your experience counts.</p></div></div>
+        <div class="lane-price">Cost to you: <strong>$0, forever.</strong></div>
+      </div>
+      <div class="lane employer reveal">
+        <div class="lane-tag">For employers</div>
+        <h3>Stop paying to post. Pay when you hire.</h3>
+        <div class="step"><span class="n">01</span><div><h4>Verify once</h4><p>A few minutes of business verification. It becomes a trust badge candidates can see.</p></div></div>
+        <div class="step"><span class="n">02</span><div><h4>Post real roles, free</h4><p>No posting fees, no sponsorship ladder, no pay-per-click meter running.</p></div></div>
+        <div class="step"><span class="n">03</span><div><h4>Meet serious candidates</h4><p>Verified applicants, matched on fit — not a résumé flood.</p></div></div>
+        <div class="step"><span class="n">04</span><div><h4>Pay on the hire</h4><p>A placement fee only when someone you hired through Roven actually starts.</p></div></div>
+        <div class="lane-price">Launch pricing: <strong>placement fees waived.</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SCORE SHOWCASE ================= -->
+<section class="section dark">
+  <div class="orb green" style="opacity:.35"></div><div class="orb blue" style="opacity:.3"></div>
+  <div class="wrap showcase">
+    <div>
+      <p class="kicker">The accountability score</p>
+      <h2>Receipts, not reviews.</h2>
+      <p class="sub">Anyone can write a review. Roven's employer scores are computed from what actually happened on the platform — every application answered or ignored, timed to the hour. Employers can't edit them. We can't sell them. That's the point.</p>
+      <ul class="metric-list glass metric-panel">
+        <li><span class="m">RESPONSE RATE</span><span>The share of applications that got a real answer — an interview, an offer, or an honest no.</span></li>
+        <li><span class="m">RESPONSE TIME</span><span>How long applicants wait to hear back, measured from the moment they apply.</span></li>
+        <li><span class="m">GHOST RATE</span><span>Applications left in silence past our response window. It's on the record.</span></li>
+        <li><span class="m">HIRE FOLLOW-THROUGH</span><span>Confirmed hires, verified from both sides of the table.</span></li>
+      </ul>
+    </div>
+    <div class="score-card glass tilt-target" aria-label="Example employer accountability record">
+      <div class="sc-head">
+        <div>
+<div class="hp-example-tag">ILLUSTRATIVE EXAMPLE &middot; NOT A REAL EMPLOYER</div>
+          <div class="sc-name">Copperline Dental Group</div>
+          <span class="sc-badge"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 9 L8 15 L17 4"/></svg>VERIFIED EMPLOYER</span>
+        </div>
+        <svg class="ring" data-score="91" viewBox="0 0 100 100" role="img" aria-label="Accountability score 91 out of 100">
+          <circle class="track" cx="50" cy="50" r="42"/>
+          <circle class="meter" cx="50" cy="50" r="42" style="stroke-dashoffset:24"/>
+          <text x="50" y="52">91</text>
+        </svg>
+      </div>
+      <div class="sc-rows">
+        <div class="sc-row"><span>Applications answered</span><span class="val good" data-count="98" data-suffix="%">98%</span></div>
+        <div class="sc-row"><span>Median response time</span><span class="val" data-count="22" data-suffix=" hours">22 hours</span></div>
+        <div class="sc-row"><span>Ghosted applicants</span><span class="val" data-count="0" data-suffix="%">0%</span></div>
+        <div class="sc-row"><span>Hires this year</span><span class="val" data-count="6">6</span></div>
+      </div>
+      <div class="sc-live"><span class="dot"></span><span class="sc-live-text"></span></div>
+      <div class="sc-foot">COMPUTED FROM PLATFORM ACTIVITY · NOT EDITABLE · NOT FOR SALE</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GET STARTED CTA ================= -->
+<section class="section cta-band" id="get-started">
+  <div class="wrap">
+    <p class="kicker" style="text-align:center">Live nationwide</p>
+    <h2 style="max-width:none">Hiring gets honest today.</h2>
+    <p class="sub">Create a free account and see it for yourself — verified employers, confirmed roles, and accountability you can read before you apply.</p>
+    <div class="hero-ctas" style="justify-content:center">
+      <a class="btn btn-green magnet" href="https://app.rovenhr.com">Find work — free forever</a>
+      <a class="btn btn-ghost-dark magnet" href="https://app.rovenhr.com">Start hiring — free to post</a>
+    </div>
+    <p class="form-note">NO SPAM. NO RÉSUMÉ SELLING. NO GHOST JOBS.</p>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<section class="section" id="faq">
+  <div class="wrap">
+    <p class="kicker">Questions</p>
+    <h2>Straight answers.</h2>
+    <div class="hp-faq">
+      
+      <details><summary>Is Roven really free for job seekers?</summary><p>Yes, permanently. There is no premium tier, no paid placement, no way to pay for your application to be seen sooner, and no charge to download anything you make here. It is written into our <a href="/terms.html">Terms of Service</a>, because a promise that is not written down is not a promise.</p></details>
+      <details><summary>Do I have to pay to download my resume?</summary><p>No. Most resume builders let you build one free and then ask for a card at the download step. The <a href="/alternatives/free-resume-builder.html">Roven resume builder</a> is free to build, free to improve with AI, and free to download &mdash; with no watermark. The file is yours to send anywhere, including to jobs that are not on Roven.</p></details>
+      <details><summary>What does &ldquo;confirmed open&rdquo; actually mean?</summary><p>Every listing runs on a 30-day confirmation clock. The employer has to re-confirm the role is genuinely still open, or it comes down automatically. You can see how recently that happened on the listing itself &mdash; &ldquo;confirmed open 2 days ago&rdquo;. It is the single biggest reason ghost jobs cannot survive here.</p></details>
+      <details><summary>Will I actually hear back?</summary><p>That is the whole product. Every employer's response rate, average response speed and confirmed hires are computed automatically from real activity and published on every listing they post. They cannot edit it and they cannot buy it. Passing on someone is a perfectly good answer; silence is the only wrong one, and here it is visible.</p></details>
+      <details><summary>How is this different from Indeed or ZipRecruiter?</summary><p>They charge employers per application or per month, so the incentive is volume. Roven charges one flat fee only when a hire actually happens, so our incentive is your outcome. We also verify every employer and publish their response record. There is a full breakdown on our <a href="/alternatives/index.html">comparison pages</a>.</p></details>
+      <details><summary>Do I have to upload a resume?</summary><p>You need a work history, but you can type it in instead of uploading anything. Either way you only enter it once: it becomes your profile, your resume, and what the match engine scores new roles against.</p></details>
+      <details><summary>Do employers see my photo?</summary><p>Only if you add one, and it is entirely optional. When you do, it appears alongside your application so an employer sees a person rather than a username.</p></details>
+      <details><summary>Can I delete my account and my data?</summary><p>Yes, from your profile in the app. Your sign-in is deleted immediately, your profile, work history, resume files and photo are purged, and past applications are anonymized so employers keep the record of how they handled an application without keeping your identity. The details are in our <a href="/privacy.html">privacy policy</a>.</p></details>
+            <p style="grid-column:1/-1;margin:24px 0 0;font-size:13.5px;color:#5B6874">Hiring instead? The employer questions - pricing, verification, how the accountability record works - are answered on the <a href="/employers" style="color:#0F7A45;font-weight:600">employers page</a>.</p>
+
+    </div>
+  </div>
+</section>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is Roven really free for job seekers?","acceptedAnswer":{"@type":"Answer","text":"Yes, permanently. There is no premium tier, no paid placement, no way to pay for your application to be seen sooner, and no charge to download anything you make here. It is written into our Terms of Service, because a promise that is not written down is not a promise."}},{"@type":"Question","name":"Do I have to pay to download my resume?","acceptedAnswer":{"@type":"Answer","text":"No. Most resume builders let you build one free and then ask for a card at the download step. The Roven resume builder is free to build, free to improve with AI, and free to download - with no watermark. The file is yours to send anywhere, including to jobs that are not on Roven."}},{"@type":"Question","name":"What does 'confirmed open' actually mean?","acceptedAnswer":{"@type":"Answer","text":"Every listing runs on a 30-day confirmation clock. The employer has to re-confirm the role is genuinely still open, or it comes down automatically. You can see how recently that happened on the listing itself. It is the single biggest reason ghost jobs cannot survive here."}},{"@type":"Question","name":"Will I actually hear back?","acceptedAnswer":{"@type":"Answer","text":"That is the whole product. Every employer's response rate, average response speed and confirmed hires are computed automatically from real activity and published on every listing they post. They cannot edit it and they cannot buy it. Passing on someone is a perfectly good answer; silence is the only wrong one, and here it is visible."}},{"@type":"Question","name":"How is this different from Indeed or ZipRecruiter?","acceptedAnswer":{"@type":"Answer","text":"They charge employers per application or per month, so the incentive is volume. Roven charges one flat fee only when a hire actually happens, so our incentive is your outcome. We also verify every employer and publish their response record."}},{"@type":"Question","name":"Do I have to upload a resume?","acceptedAnswer":{"@type":"Answer","text":"You need a work history, but you can type it in instead of uploading anything. Either way you only enter it once: it becomes your profile, your resume, and what the match engine scores new roles against."}},{"@type":"Question","name":"Do employers see my photo?","acceptedAnswer":{"@type":"Answer","text":"Only if you add one, and it is entirely optional. When you do, it appears alongside your application so an employer sees a person rather than a username."}},{"@type":"Question","name":"Can I delete my account and my data?","acceptedAnswer":{"@type":"Answer","text":"Yes, from your profile in the app. Your sign-in is deleted immediately, your profile, work history, resume files and photo are purged, and past applications are anonymized so employers keep the record of how they handled an application without keeping your identity."}}]}</script>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a class="logo-link" href="index.html" aria-label="Roven home"><img class="logo-img foot" src="logo-white.png" alt="Roven" width="640" height="293"></a>
+        <p class="tag">The hiring marketplace with receipts. Hiring, proven.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="how-it-works.html">How it works</a></li>
+          <li><a href="employers.html">For employers</a></li>
+          <li><a href="https://app.rovenhr.com">Open the app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="terms.html">Terms of service</a></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
+          <li><a href="accessibility.html">Accessibility</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-social" style="display:flex;gap:14px;align-items:center;margin:26px 0 18px">
+      <a href="https://facebook.com/hireroven" target="_blank" rel="noopener" aria-label="Roven on Facebook" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.7c0-.9.3-1.6 1.6-1.6h1.7V3.2c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.4V13h2.7v8h3.4z"/></svg>
+      </a>
+      <a href="https://instagram.com/hireroven" target="_blank" rel="noopener" aria-label="Roven on Instagram" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.8.1-1.1.1-1.5.2-1.7.3-.4.2-.7.4-1 .7-.3.3-.5.6-.7 1-.1.2-.3.6-.3 1.7-.1 1.3-.1 1.7-.1 4.8s0 3.5.1 4.8c.1 1.1.2 1.5.3 1.7.2.4.4.7.7 1 .3.3.6.5 1 .7.2.1.6.3 1.7.3 1.3.1 1.7.1 4.8.1s3.5 0 4.8-.1c1.1-.1 1.5-.2 1.7-.3.4-.2.7-.4 1-.7.3-.3.5-.6.7-1 .1-.2.3-.6.3-1.7.1-1.3.1-1.7.1-4.8s0-3.5-.1-4.8c-.1-1.1-.2-1.5-.3-1.7-.2-.4-.4-.7-.7-1-.3-.3-.6-.5-1-.7-.2-.1-.6-.3-1.7-.3-1.3-.1-1.7-.1-4.8-.1zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2zm5.1-3.1a1.1 1.1 0 1 1 0 2.3 1.1 1.1 0 0 1 0-2.3z"/></svg>
+      </a>
+      <a href="https://youtube.com/@hireroven" target="_blank" rel="noopener" aria-label="Roven on YouTube" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2s-.2-1.4-.8-2c-.7-.8-1.6-.8-2-.9C16 4 12 4 12 4s-4 0-6.8.3c-.4 0-1.2.1-2 .9-.6.6-.8 2-.8 2S2.2 8.9 2.2 10.5v1.5c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.7.8 1.7.8 2.1.9 1.6.1 6.7.3 6.7.3s4 0 6.8-.3c.4 0 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.5c0-1.6-.2-3.3-.2-3.3zM9.9 14.9V8.6l5.4 3.2-5.4 3.1z"/></svg>
+      </a>
+      <a href="https://tiktok.com/@hireroven" target="_blank" rel="noopener" aria-label="Roven on TikTok" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.8a5.4 5.4 0 0 1-1.2-3.3h-3v12.2a2.9 2.9 0 1 1-2.1-2.8V8.7a6 6 0 1 0 5.2 5.9V9.2a8.4 8.4 0 0 0 4.9 1.6V7.7a5.4 5.4 0 0 1-3.8-1.9z"/></svg>
+      </a>
+    </div>
+      <p style="font-size:11px;line-height:1.6;color:rgba(255,255,255,.4);max-width:640px;margin:0 0 14px">Roven is a hiring marketplace. Roven is not an employment agency, staffing firm, or recruiter, and is not a party to any employment relationship formed through the platform.</p>    <div class="footer-legal">
+      <span>© 2026 ROVEN · ROVEN HR, LLC</span>
+    </div>
+  </div>
+</footer>
+
+<script src="motion.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{#- guest_guide.html - JC-LAZO-GUEST-0917-001
+    /guests/<slug>/. Content is config/guests.py.
+
+    Structured differently from every other cluster, because the reader is
+    different. Someone searching "can I wear black to a wedding" wants a verdict,
+    not an essay - so the answer is the first thing on the page, in its own
+    block, before any heading. The quick table is second. The prose is third, for
+    the people who want the reasoning.
+
+    Ordering it the other way round - context, nuance, then eventually an answer -
+    is how every other etiquette page on the internet is written, and it is why
+    they are frustrating to read. -#}
+{% block title %}{{ g.question }} | Lazo{% endblock %}
+{% block desc %}{{ g.answer|striptags|truncate(152, True, '') }}{% endblock %}
+{% block canonical %}{{ base }}/guests/{{ slug }}/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ g.question|tojson }},
+  "description": {{ g.answer|striptags|tojson }},
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/guests/{{ slug }}/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for q, a in g.faqs %}
+    { "@type": "Question", "name": {{ q|tojson }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ a|tojson }} } }{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow"><a href="/guests/">For wedding guests</a></p>
+  <h1>{{ g.question }}</h1>
+</div></section>
+
+<section class="band prose doc">
+<p class="page-back"><a href="/guests/">All guest guides</a></p>
+
+{#- the verdict, before anything else -#}
+<div class="verdict">
+  <p class="verdict-tag">The short answer</p>
+  <p class="verdict-text">{{ g.answer }}</p>
+</div>
+
+{%- if g.quick %}
+<h2>At a glance</h2>
+<dl class="quick-table">
+  {%- for situation, what in g.quick %}
+  <dt>{{ situation }}</dt><dd>{{ what }}</dd>
+  {%- endfor %}
+</dl>
+{%- endif %}
+
+{%- for heading, paras in g.sections %}
+<h2>{{ heading }}</h2>
+{%- for para in paras %}
+<p>{{ para|safe }}</p>
+{%- endfor %}
+{%- endfor %}
+
+<h2>Common questions</h2>
+<div class="faq-block">
+  {%- for q, a in g.faqs %}
+  <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+  {%- endfor %}
+</div>
+</section>
+
+<section class="next-reads">
+  <h2>Also worth knowing</h2>
+  <div class="next-grid">
+    {%- for r in related %}
+    <a href="{{ r.href }}"><b>{{ r.short }}</b><span>{{ r.group }}</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/guests/">All {{ guide_count }} guest guides &rarr;</a> &middot; <a href="/planning/">Planning your own wedding? &rarr;</a></p>
+</section>
+{% endblock %}

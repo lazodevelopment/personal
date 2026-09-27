@@ -1,0 +1,16 @@
+rules_version = '2';
+// Proposed Storage rules adding staff access. Merge with the live rules (FlutterFlow's default is usually
+// "allow read, write: if request.auth != null"); keep member-side rules as they are.
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function isStaff() { return signedIn() && firestore.exists(/databases/(default)/documents/staff/$(request.auth.uid)); }
+    match /scribe/{uid}/{file} { allow read, write: if signedIn() && request.auth.uid == uid; }
+    match /users/{uid}/{allPaths=**} { allow read: if signedIn() && (request.auth.uid == uid || isStaff()); allow write: if signedIn() && (request.auth.uid == uid || isStaff()); }
+    match /uploads/{uid}/{allPaths=**} { allow read: if signedIn() && (request.auth.uid == uid || isStaff()); allow write: if signedIn() && request.auth.uid == uid; }
+    match /pet_photos/{uid}/{allPaths=**} { allow read: if signedIn(); allow write: if signedIn() && request.auth.uid == uid; }
+    match /request_photos/{file} { allow read: if signedIn(); allow write: if signedIn(); }
+    match /helpTickets/{ticketId}/{allPaths=**} { allow read, write: if signedIn(); }
+    match /{allPaths=**} { allow read, write: if signedIn(); }
+  }
+}

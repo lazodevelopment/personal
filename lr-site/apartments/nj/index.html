@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>New Jersey Apartments — Verified Resident Reviews | LeaseReputation</title>
+<meta name="description" content="Compare 207 apartment communities across New Jersey with verified resident reviews on LeaseReputation. Reputation Scores built only from residents who actually lived there — never for sale." />
+<link rel="canonical" href="https://leasereputation.com/apartments/nj/" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2l11 5v8c0 7.5-4.7 12.7-11 15C9.7 27.7 5 22.5 5 15V7l11-5z' fill='%234F46E5'/%3E%3Cpath d='M11 16.5l3.5 3.5 6.5-7' stroke='%2334D399' stroke-width='2.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<meta property="og:title" content="New Jersey Apartments — Verified Resident Reviews | LeaseReputation" />
+<meta property="og:description" content="Compare 207 apartment communities across New Jersey with verified resident reviews on LeaseReputation. Reputation Scores built only from residents who actually lived there — never for sale." />
+<meta property="og:image" content="https://leasereputation.com/leasereputation-og.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --indigo:#4C4FE6; --indigo-bright:#6E72F0; --deep:#1E1A5C; --ink:#15102E; --ink-deep:#0E0A20;
+    --lilac:#C4B5FD; --white:#FFFFFF; --warn:#FF8B8B; --mint:#3DDC97;
+    --text:#EFEDFB; --text-dim:rgba(233,231,251,.64); --text-faint:rgba(233,231,251,.42);
+    --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.09); --border:rgba(255,255,255,.12);
+    --maxw:1160px; --pad:clamp(20px,5vw,24px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:
+    radial-gradient(circle at 50% -8%, var(--deep) 0%, var(--ink-deep) 55%), var(--ink-deep);
+    color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:radial-gradient(rgba(196,181,253,.05) 1.1px,transparent 1.1px);background-size:30px 30px}
+  img,svg{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);width:100%}
+  h1,h2,h3{line-height:1.1;letter-spacing:-.02em;font-weight:800}
+
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+    background:rgba(14,10,32,.72);border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .logo{display:inline-flex;align-items:center;gap:10px}
+  .logo .wm{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+  .logo .wm .l{color:rgba(255,255,255,.6);font-weight:500}
+  .logo .wm .r{color:#fff;font-weight:800}
+  .shield{width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#1E1A5C,#4C4FE6)}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;font-size:.95rem;
+    padding:12px 22px;border-radius:12px;background:var(--indigo);color:#fff;transition:.18s;border:1px solid transparent}
+  .btn:hover{background:var(--indigo-bright);transform:translateY(-2px)}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{background:var(--glass-2);border-color:var(--lilac)}
+
+  .hero{padding:64px 0 40px;position:relative}
+  .hero.has-photo{padding:0}
+  /* Content-driven height: the photo is a backdrop, the text defines the
+     box — so long community names can never clip out the top on mobile. */
+  .hero-photo{position:relative;min-height:clamp(320px,42vw,460px);overflow:hidden;border-radius:0 0 28px 28px;display:flex;flex-direction:column;justify-content:flex-end}
+  .hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .photo-credit{position:absolute;right:10px;bottom:8px;z-index:3;font-size:.68rem;
+    color:rgba(255,255,255,.75);background:rgba(0,0,0,.35);border-radius:6px;
+    padding:2px 8px;letter-spacing:.02em}
+  .hero-photo::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(14,10,32,.35) 0%,rgba(14,10,32,.55) 45%,rgba(14,10,32,.96) 100%)}
+  .hero-photo .hero-inner{position:relative;z-index:2;
+    padding:clamp(96px,20vw,150px) var(--pad) 34px}
+  .hero-photo .hero-inner .wrap-inner{max-width:var(--maxw);margin:0 auto;width:100%}
+  .eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);
+    margin-bottom:16px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:22px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--indigo),var(--lilac))}
+  h1{font-size:clamp(2rem,5.5vw,3.3rem);margin-bottom:14px}
+  h1 .accent{color:var(--lilac)}
+  .sub{font-size:clamp(1.05rem,2.3vw,1.25rem);color:var(--text-dim);max-width:640px;margin-bottom:14px}
+  .meta{color:var(--text-faint);font-size:.95rem;margin-bottom:30px}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+
+  .card{background:var(--glass);border:1px solid var(--border);border-radius:20px;padding:28px;margin:20px 0}
+  .card h2{font-size:1.5rem;margin-bottom:12px}
+  .card h3{font-size:1.12rem;margin:18px 0 8px}
+  .card p{color:var(--text-dim);margin-bottom:14px}
+  .card p:last-child{margin-bottom:0}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:8px}
+  .fact{background:var(--glass-2);border:1px solid var(--border);border-radius:14px;padding:16px}
+  .fact .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--text-faint);margin-bottom:6px}
+  .fact .v{font-weight:700;font-size:1.02rem}
+
+  .facts-list{margin:8px 0 0 18px;padding:0;line-height:1.6}
+  .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:8px}
+  .vid{position:relative;margin-top:20px;border-radius:12px;overflow:hidden;cursor:pointer;
+    aspect-ratio:16/9;background:#000;border:1px solid rgba(255,255,255,.08)}
+  .vid img{width:100%;height:100%;object-fit:cover;display:block;opacity:.82;transition:opacity .2s}
+  .vid:hover img{opacity:1}
+  .vid-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64px;height:64px;
+    border-radius:50%;background:rgba(99,91,255,.92);color:#fff;display:flex;align-items:center;
+    justify-content:center;font-size:1.4rem;padding-left:5px;box-shadow:0 8px 30px rgba(0,0,0,.45)}
+  .vid-cap{margin-top:10px;font-size:.85rem;color:var(--muted)}
+  .vid-frame{width:100%;aspect-ratio:16/9;border:0;border-radius:12px;margin-top:20px;display:block}
+  .why .item{display:flex;gap:12px;align-items:flex-start}
+  .why .dot{width:22px;height:22px;border-radius:50%;flex:none;background:rgba(61,220,151,.15);
+    display:flex;align-items:center;justify-content:center;margin-top:2px}
+  .why .dot svg{width:13px;height:13px;stroke:var(--mint)}
+  .why .item p{color:var(--text-dim);font-size:.95rem}
+  .why .item strong{color:var(--text);display:block;margin-bottom:2px}
+
+  .cta-band{text-align:center;padding:44px 28px;margin:32px 0;border-radius:22px;
+    background:linear-gradient(135deg,rgba(76,79,230,.18),rgba(196,181,253,.08));border:1px solid var(--border)}
+  .cta-band h2{font-size:1.7rem;margin-bottom:10px}
+  .cta-band p{color:var(--text-dim);margin-bottom:22px;max-width:520px;margin-left:auto;margin-right:auto}
+
+  .related{margin:36px 0}
+  .related h2{font-size:1.3rem;margin-bottom:16px}
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{background:var(--glass);border:1px solid var(--border);border-radius:11px;padding:10px 15px;
+    font-size:.9rem;color:var(--text-dim);transition:.16s}
+  .chip:hover{border-color:var(--lilac);color:var(--text)}
+
+  footer{border-top:1px solid var(--border);margin-top:50px;padding:34px 0;color:var(--text-faint);font-size:.9rem}
+  .foot{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}
+  .foot a{color:var(--text-dim)} .foot a:hover{color:var(--lilac)}
+  .disclaimer{font-size:.8rem;color:var(--text-faint);margin-top:14px;line-height:1.5;max-width:820px}
+
+  .scoregrid{display:grid;grid-template-columns:150px 1fr;gap:26px;align-items:center;margin-top:16px}
+  @media(max-width:560px){.scoregrid{grid-template-columns:1fr;justify-items:center}}
+  .ring{width:140px;height:140px}
+  .dims{width:100%}
+  .dimrow{margin-bottom:12px}.dimrow:last-child{margin-bottom:0}
+  .dimtop{display:flex;justify-content:space-between;font-size:.92rem;color:var(--text-dim);margin-bottom:5px}
+  .dimtop b{font-weight:800}
+  .dimtrack{height:7px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden}
+  .dimfill{height:100%;border-radius:4px}
+  .review{border:1px solid var(--border);background:var(--glass-2);border-radius:14px;padding:16px 18px;margin-top:14px}
+  .rhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .rstars{color:#FFC862;letter-spacing:2px;font-size:.95rem}
+  .rmeta{font-size:.82rem;color:var(--text-faint);margin-top:2px}
+  .rtext{color:var(--text-dim);margin-top:10px;font-size:.97rem}
+  .rfoot{margin-top:10px}
+  .renew{font-size:.8rem;font-weight:700;padding:3px 10px;border-radius:999px}
+  .renew.yes{color:var(--mint);background:rgba(61,220,151,.1);border:1px solid rgba(61,220,151,.3)}
+  .renew.no{color:var(--warn);background:rgba(255,139,139,.08);border:1px solid rgba(255,139,139,.3)}
+
+  .lockband{display:flex;align-items:center;gap:22px;padding:18px;border-radius:14px;
+    background:var(--glass-2);border:1px solid var(--border)}
+  @media(max-width:520px){.lockband{flex-direction:column;text-align:center}}
+  .lockring{position:relative;width:110px;height:110px;flex:none}
+  .lockring svg{width:110px;height:110px;filter:blur(1px)}
+  .lockglyph{position:absolute;right:-4px;bottom:-4px;width:34px;height:34px;border-radius:50%;
+    background:var(--indigo);display:flex;align-items:center;justify-content:center;
+    font-size:15px;box-shadow:0 4px 14px rgba(79,70,229,.5)}
+  .lockcopy{display:flex;flex-direction:column;gap:6px}
+  .lockcopy strong{color:var(--text);font-size:.98rem;line-height:1.45}
+  .lockcopy span{color:var(--text-faint);font-size:.88rem;line-height:1.5}
+
+  .renewline{margin-top:14px;font-size:.98rem;color:var(--text-dim)}
+  .methodline{margin-top:8px;font-size:.8rem;color:var(--text-faint);line-height:1.55}
+  .methodline em{color:var(--text-dim);font-style:normal;font-weight:700}
+  .rphotos{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+  .rphotos img{width:104px;height:104px;object-fit:cover;border-radius:10px;
+    border:1px solid var(--border)}
+
+  .crumbs{font-size:.78rem;color:var(--text-faint);margin:18px 0 4px}
+  .crumbs a{color:var(--text-faint);text-decoration:none}
+  .crumbs a:hover{color:var(--lilac)}
+  .crumbs span{color:var(--text-dim)}
+  .glance{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 6px}
+  .chip{border:1px solid var(--border);background:var(--glass-2);border-radius:999px;
+    padding:7px 14px;font-size:.84rem;color:var(--text-dim)}
+  .chip strong{color:var(--text)}
+  .claimstrip{display:flex;align-items:center;justify-content:space-between;gap:18px;
+    border:1px dashed var(--border);background:var(--glass-2);border-radius:16px;
+    padding:18px 22px;margin-top:22px}
+  .claimstrip div{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .claimstrip strong{color:var(--text);font-size:.98rem}
+  .claimstrip span{color:var(--text-faint);font-size:.85rem;line-height:1.5}
+  @media(max-width:620px){.claimstrip{flex-direction:column;align-items:flex-start}}
+  .stickybar{display:none}
+  @media(max-width:640px){
+    .stickybar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;
+      align-items:center;justify-content:space-between;gap:12px;
+      padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+      background:rgba(14,10,32,.92);backdrop-filter:blur(12px);
+      border-top:1px solid var(--border)}
+    .stickybar span{font-size:.88rem;font-weight:700;color:var(--text)}
+    .stickybar .btn{padding:10px 18px;font-size:.85rem}
+    body{padding-bottom:74px}
+  }
+  .mgmtresp{border:1px solid var(--border);border-left:3px solid var(--indigo);
+    background:var(--glass-2);border-radius:14px;padding:16px 20px;margin-top:14px}
+  .mgmtresp .mghead{font-weight:800;font-size:.9rem;color:var(--text);
+    display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .mgbadge{font-size:.7rem;font-weight:700;color:var(--lilac);
+    border:1px solid var(--border);border-radius:999px;padding:2px 9px}
+  .mgmtresp p{color:var(--text-dim);font-size:.92rem;margin:0}
+
+  .grouplist{margin-top:8px}
+  .grow{display:flex;align-items:center;gap:14px;padding:13px 4px;border-top:1px solid var(--border);text-decoration:none}
+  .grow:first-child{border-top:none}
+  .grow .gname{color:var(--text);font-weight:700;font-size:1rem;flex:1;min-width:0}
+  .grow .gmeta{color:var(--text-faint);font-size:.82rem;white-space:nowrap}
+  .grow .gtier{font-size:.78rem;font-weight:800;padding:3px 11px;border-radius:999px;white-space:nowrap}
+  .grow:hover .gname{color:var(--lilac)}
+  .statrow{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0 4px}
+  .statchip{border:1px solid var(--border);background:var(--glass-2);border-radius:999px;padding:8px 16px;font-size:.88rem;color:var(--text-dim)}
+  .statchip b{color:var(--text)}
+
+  .citygroup{border-top:1px solid var(--border);padding:10px 0}
+  .citygroup summary{cursor:pointer;font-weight:700;color:var(--text);font-size:1.02rem;
+    list-style:none;display:flex;align-items:center;gap:10px;padding:6px 0}
+  .citygroup summary::-webkit-details-marker{display:none}
+  .citygroup summary::before{content:"+";color:var(--lilac);font-weight:800;width:16px}
+  .citygroup[open] summary::before{content:"−"}
+  .ccount{font-size:.78rem;font-weight:700;color:var(--text-faint);
+    background:var(--glass-2);border:1px solid var(--border);border-radius:999px;padding:2px 10px}
+  .citylinks{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 6px 26px}
+  .citylinks a{color:var(--text-dim);text-decoration:none;font-size:.9rem;
+    border:1px solid var(--border);background:var(--glass-2);border-radius:999px;
+    padding:6px 13px;transition:border-color .15s,color .15s}
+  .citylinks a:hover{color:var(--text);border-color:var(--lilac)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="https://leasereputation.com/" aria-label="LeaseReputation home">
+      <span class="shield"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2 4 5.5v5.6c0 4.9 3.4 9.5 8 10.9 4.6-1.4 8-6 8-10.9V5.5L12 2z" fill="rgba(255,255,255,.2)"/><path d="m8.6 12.2 2.3 2.3 4.5-4.8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span class="wm"><span class="l">lease</span><span class="r">reputation</span></span>
+    </a>
+    <a class="btn" href="https://app.leasereputation.com">Open the app</a>
+  </div>
+</header>
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Verified Resident Reviews</div>
+    <h1>Apartments in<br /><span class="accent">New Jersey.</span></h1>
+    <p class="sub">207 communities across New Jersey with verified-resident reviews. Every score computed from proven residents — never sponsored, boosted, or bought.</p>
+    <div class="statrow"><span class="statchip"><b>207</b>&nbsp;communities</span><span class="statchip"><b>0</b>&nbsp;verified reviews</span></div>
+    <div class="cta-row"><a class="btn" href="https://app.leasereputation.com">Open the app</a><a class="btn btn-ghost" href="https://leasereputation.com/community/">All communities</a></div>
+  </div>
+</section>
+<div class="wrap">
+  <div class="card"><h2>Know your rights in New Jersey</h2><p>Security deposit deadlines, repair rights, entry notice, and eviction timelines — with statute citations.</p><p><a class="btn ghost" href="https://leasereputation.com/guides/tenant-rights/nj/">New Jersey tenant rights guide</a></p></div><div class="card"><h2>New Jersey city guides</h2><div class="citylinks" style="padding-left:0"><a href="https://leasereputation.com/apartments/jersey-city-nj/">Jersey City</a><a href="https://leasereputation.com/apartments/hoboken-nj/">Hoboken</a><a href="https://leasereputation.com/apartments/cherry-hill-township-nj/">Cherry Hill Township</a><a href="https://leasereputation.com/apartments/maple-shade-nj/">Maple Shade</a><a href="https://leasereputation.com/apartments/marlton-nj/">Marlton</a><a href="https://leasereputation.com/apartments/weehawken-township-nj/">Weehawken Township</a><a href="https://leasereputation.com/apartments/haddonfield-nj/">Haddonfield</a><a href="https://leasereputation.com/apartments/voorhees-township-nj/">Voorhees Township</a><a href="https://leasereputation.com/apartments/newark-nj/">Newark</a><a href="https://leasereputation.com/apartments/haddon-township-nj/">Haddon Township</a><a href="https://leasereputation.com/apartments/collingswood-nj/">Collingswood</a></div></div><div class="card"><h2>Every New Jersey community <span class="ccount">207</span></h2><details class="citygroup"><summary>Barrington <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/clements-court-apartments-barrington.html">Clements Court Apartments</a></div></details><details class="citygroup"><summary>Cherry Hill Township <span class="ccount">33</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/202-park-cherry-hill-township.html">202 Park</a><a href="https://leasereputation.com/community/barclay-towers-cherry-hill-township.html">Barclay Towers</a><a href="https://leasereputation.com/community/benedict-s-place-cherry-hill-township.html">Benedict&#x27;s Place</a><a href="https://leasereputation.com/community/bishop-s-view-apartment-homes-cherry-hill-township.html">Bishop&#x27;s View Apartment Homes</a><a href="https://leasereputation.com/community/burroughs-mill-cherry-hill-township.html">Burroughs Mill</a><a href="https://leasereputation.com/community/cherry-hill-towers-apartment-homes-cherry-hill-township.html">Cherry Hill Towers Apartment Homes</a><a href="https://leasereputation.com/community/dubin-house-cherry-hill-township.html">Dubin House</a><a href="https://leasereputation.com/community/dwell-cherry-hill-apartments-cherry-hill-township.html">Dwell Cherry Hill Apartments</a><a href="https://leasereputation.com/community/enclave-at-woodcrest-station-cherry-hill-township.html">Enclave at Woodcrest Station</a><a href="https://leasereputation.com/community/evans-francis-estates-cherry-hill-township.html">Evans Francis Estates</a><a href="https://leasereputation.com/community/evan-s-mill-cherry-hill-township.html">Evan’s Mill</a><a href="https://leasereputation.com/community/glen-point-apartments-cherry-hill-township.html">Glen Point Apartments</a><a href="https://leasereputation.com/community/hampshire-house-apartments-cherry-hill-township.html">Hampshire House Apartments</a><a href="https://leasereputation.com/community/lexington-house-apartment-homes-cherry-hill-township.html">Lexington House Apartment Homes</a><a href="https://leasereputation.com/community/mark-70-condominiums-cherry-hill-township.html">Mark 70 Condominiums</a><a href="https://leasereputation.com/community/parc-at-cherry-hill-apartment-homes-cherry-hill-township.html">Parc at Cherry Hill Apartment Homes</a><a href="https://leasereputation.com/community/park-lane-at-garden-state-park-cherry-hill-township.html">Park Lane at Garden State Park</a><a href="https://leasereputation.com/community/park-place-at-garden-state-park-cherry-hill-township.html">Park Place at Garden State Park</a><a href="https://leasereputation.com/community/park-village-at-garden-state-park-cherry-hill-township.html">Park Village at Garden State Park</a><a href="https://leasereputation.com/community/playa-del-sol-condominiums-cherry-hill-township.html">Playa Del Sol Condominiums</a><a href="https://leasereputation.com/community/premier-at-cherry-hill-cherry-hill-township.html">Premier at Cherry Hill</a><a href="https://leasereputation.com/community/sergi-farms-cherry-hill-township.html">Sergi Farms</a><a href="https://leasereputation.com/community/sussex-house-apartments-cherry-hill-township.html">Sussex House Apartments</a><a href="https://leasereputation.com/community/the-apartments-at-st-thomas-cherry-hill-township.html">The Apartments at St. Thomas</a><a href="https://leasereputation.com/community/the-colonials-apartment-homes-cherry-hill-township.html">The Colonials Apartment Homes</a><a href="https://leasereputation.com/community/the-grand-cherry-hill-apartment-homes-cherry-hill-township.html">The Grand Cherry Hill Apartment Homes</a><a href="https://leasereputation.com/community/the-highlands-at-cherry-hill-apartments-cherry-hill-township.html">The Highlands at Cherry Hill Apartments</a><a href="https://leasereputation.com/community/the-plaza-grande-at-garden-state-park-cherry-hill-township.html">The Plaza Grande at Garden State Park</a><a href="https://leasereputation.com/community/village-apartments-of-cherry-hill-cherry-hill-township.html">Village Apartments of Cherry Hill</a><a href="https://leasereputation.com/community/wallworth-park-apartments-cherry-hill-township.html">Wallworth Park Apartments</a><a href="https://leasereputation.com/community/waterford-apartment-cherry-hill-township.html">Waterford Apartment</a><a href="https://leasereputation.com/community/waterford-co-op-residence-cherry-hill-township.html">Waterford Co-Op Residence</a><a href="https://leasereputation.com/community/weinberg-commons-cherry-hill-township.html">Weinberg Commons</a></div></details><details class="citygroup"><summary>Collingswood <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/marina-park-apartments-collingswood.html">Marina Park Apartments</a><a href="https://leasereputation.com/community/the-collings-at-the-lumberyard-collingswood.html">The Collings at the Lumberyard</a><a href="https://leasereputation.com/community/the-metropolitan-collingswood-collingswood.html">the metropolitan collingswood</a></div></details><details class="citygroup"><summary>Gloucester City <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/river-pointe-apartment-homes-gloucester-city.html">River Pointe Apartment Homes</a></div></details><details class="citygroup"><summary>Haddon Heights <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/gladmar-court-apartments-haddon-heights.html">Gladmar Court Apartments</a></div></details><details class="citygroup"><summary>Haddon Township <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/albertson-village-apartments-haddon-township.html">Albertson Village Apartments</a><a href="https://leasereputation.com/community/haddon-towne-center-haddon-township.html">Haddon Towne Center</a><a href="https://leasereputation.com/community/haddonview-apartments-haddon-township.html">Haddonview Apartments</a></div></details><details class="citygroup"><summary>Haddonfield <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/birchwood-at-tarditi-commons-haddonfield.html">Birchwood at Tarditi Commons</a><a href="https://leasereputation.com/community/chestnut-house-apartments-haddonfield.html">Chestnut House Apartments</a><a href="https://leasereputation.com/community/haddon-hills-apartments-haddonfield.html">Haddon Hills Apartments</a></div></details><details class="citygroup"><summary>Hi-Nella <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/fox-pointe-apartment-homes-hi-nella.html">Fox Pointe Apartment Homes</a></div></details><details class="citygroup"><summary>Hoboken <span class="ccount">53</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/1000-jefferson-hoboken.html">1000 Jefferson</a><a href="https://leasereputation.com/community/1000-maxwell-place-hoboken.html">1000 Maxwell Place</a><a href="https://leasereputation.com/community/1125-jefferson-hoboken.html">1125 Jefferson</a><a href="https://leasereputation.com/community/1200-grand-condo-hoboken.html">1200 Grand Condo</a><a href="https://leasereputation.com/community/1400-hudson-street-at-hudson-tea-hoboken.html">1400 Hudson Street at Hudson Tea</a><a href="https://leasereputation.com/community/1425-hudson-street-at-hudson-tea-hoboken.html">1425 Hudson Street at Hudson Tea</a><a href="https://leasereputation.com/community/1450-washington-st-hoboken.html">1450 Washington St</a><a href="https://leasereputation.com/community/333-river-street-apartments-hoboken.html">333 River Street Apartments</a><a href="https://leasereputation.com/community/333-river-street-apartments-south-door-hoboken.html">333 River Street Apartments South Door</a><a href="https://leasereputation.com/community/600-harrison-apartments-hoboken.html">600 Harrison Apartments</a><a href="https://leasereputation.com/community/7-seventy-house-hoboken.html">7 Seventy House</a><a href="https://leasereputation.com/community/77-park-avenue-apartments-hoboken.html">77 Park Avenue Apartments</a><a href="https://leasereputation.com/community/artisan-series-hoboken.html">Artisan Series</a><a href="https://leasereputation.com/community/avalon-hoboken-hoboken.html">Avalon Hoboken</a><a href="https://leasereputation.com/community/church-towers-hoboken.html">Church Towers</a><a href="https://leasereputation.com/community/columbian-towers-hoboken.html">Columbian Towers</a><a href="https://leasereputation.com/community/corcoran-sawyer-smith-hoboken.html">Corcoran Sawyer Smith</a><a href="https://leasereputation.com/community/courtyard-at-jefferson-hoboken.html">Courtyard at Jefferson</a><a href="https://leasereputation.com/community/edge-lofts-hoboken.html">Edge Lofts</a><a href="https://leasereputation.com/community/grand-adams-apartments-hoboken.html">Grand Adams Apartments</a><a href="https://leasereputation.com/community/harlow-hoboken.html">Harlow</a><a href="https://leasereputation.com/community/hudson-square-north-hoboken.html">Hudson Square North</a><a href="https://leasereputation.com/community/hudson-square-south-hoboken.html">Hudson Square South</a><a href="https://leasereputation.com/community/jefferson-trust-condos-hoboken.html">Jefferson Trust Condos</a><a href="https://leasereputation.com/community/juliana-apartments-hoboken.html">Juliana Apartments</a><a href="https://leasereputation.com/community/marian-towers-hoboken.html">Marian Towers</a><a href="https://leasereputation.com/community/marineview-plaza-hoboken.html">Marineview Plaza</a><a href="https://leasereputation.com/community/maxwell-place-on-the-hudson-hoboken.html">Maxwell Place on the Hudson</a><a href="https://leasereputation.com/community/move-ahead-homes-hoboken.html">Move Ahead Homes</a><a href="https://leasereputation.com/community/observer-park-apartments-hoboken.html">Observer Park Apartments</a><a href="https://leasereputation.com/community/park-garden-hoboken.html">Park + Garden</a><a href="https://leasereputation.com/community/prestige-properties-hoboken.html">Prestige Properties</a><a href="https://leasereputation.com/community/southend-lofts-hoboken.html">Southend Lofts</a><a href="https://leasereputation.com/community/the-berkshire-hoboken.html">The Berkshire</a><a href="https://leasereputation.com/community/the-bexley-hoboken.html">The Bexley</a><a href="https://leasereputation.com/community/the-clock-tower-apartments-hoboken.html">The Clock Tower Apartments</a><a href="https://leasereputation.com/community/the-hoboken-grande-hoboken.html">The Hoboken Grande</a><a href="https://leasereputation.com/community/the-hudson-tea-buildings-hoboken.html">The Hudson Tea Buildings</a><a href="https://leasereputation.com/community/the-jill-biggs-group-hoboken.html">The Jill Biggs Group</a><a href="https://leasereputation.com/community/the-jordan-hoboken.html">The Jordan</a><a href="https://leasereputation.com/community/the-lexington-apartments-hoboken.html">The Lexington Apartments</a><a href="https://leasereputation.com/community/the-north-constitution-hoboken.html">The North Constitution</a><a href="https://leasereputation.com/community/the-north-independence-hoboken.html">The North Independence</a><a href="https://leasereputation.com/community/the-patrician-hoboken.html">The Patrician</a><a href="https://leasereputation.com/community/the-rivington-apartments-hoboken.html">The Rivington Apartments</a><a href="https://leasereputation.com/community/the-sky-club-hoboken.html">The Sky Club</a><a href="https://leasereputation.com/community/the-skyline-hoboken.html">The Skyline</a><a href="https://leasereputation.com/community/the-south-independence-hoboken.html">The South Independence</a><a href="https://leasereputation.com/community/the-sovereign-hoboken.html">The Sovereign</a><a href="https://leasereputation.com/community/the-vanguard-at-the-shipyard-apartments-hoboken.html">The Vanguard at the Shipyard Apartments</a><a href="https://leasereputation.com/community/vine-apartments-hoboken.html">VINE Apartments</a><a href="https://leasereputation.com/community/walter-burns-living-on-the-hudson-hoboken.html">Walter Burns | Living On The Hudson</a><a href="https://leasereputation.com/community/wonder-lofts-hoboken.html">Wonder Lofts</a></div></details><details class="citygroup"><summary>Jersey City <span class="ccount">73</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/100-house-jersey-city.html">100 House</a><a href="https://leasereputation.com/community/15-central-luxury-apartment-rentals-in-journal-square-jersey-city-jersey-city.html">15 Central | Luxury Apartment Rentals in Journal Square, Jersey City</a><a href="https://leasereputation.com/community/18-park-apartments-jersey-city.html">18 Park Apartments</a><a href="https://leasereputation.com/community/225-grand-apartments-jersey-city.html">225 Grand Apartments</a><a href="https://leasereputation.com/community/235-grand-apartments-jersey-city.html">235 Grand Apartments</a><a href="https://leasereputation.com/community/26-van-reipen-luxury-apartment-rentals-in-journal-square-jersey-city-jersey-city.html">26 Van Reipen | Luxury Apartment Rentals in Journal Square, Jersey City</a><a href="https://leasereputation.com/community/28-cottage-luxury-apartment-rentals-in-journal-square-jersey-city-jersey-city.html">28 Cottage | Luxury Apartment Rentals in Journal Square, Jersey City</a><a href="https://leasereputation.com/community/295j-apartments-jersey-city.html">295J Apartments</a><a href="https://leasereputation.com/community/3-acres-jersey-city.html">3 Acres</a><a href="https://leasereputation.com/community/3-journal-square-jersey-city.html">3 Journal Square</a><a href="https://leasereputation.com/community/333-grand-at-liberty-harbor-jersey-city.html">333 Grand at Liberty Harbor</a><a href="https://leasereputation.com/community/351-marin-apartments-jersey-city.html">351 Marin Apartments</a><a href="https://leasereputation.com/community/485-marin-apartments-jersey-city.html">485 Marin Apartments</a><a href="https://leasereputation.com/community/50-regent-at-liberty-harbor-jersey-city.html">50 Regent at Liberty Harbor</a><a href="https://leasereputation.com/community/505-summit-jersey-city.html">505 Summit</a><a href="https://leasereputation.com/community/65-bay-street-apartments-jersey-city.html">65 Bay Street Apartments</a><a href="https://leasereputation.com/community/9-homestead-luxury-apartment-rentals-in-journal-square-jersey-city-jersey-city.html">9 Homestead | Luxury Apartment Rentals in Journal Square, Jersey City</a><a href="https://leasereputation.com/community/avalon-cove-jersey-city.html">Avalon Cove</a><a href="https://leasereputation.com/community/beach-at-newport-jersey-city.html">Beach at Newport</a><a href="https://leasereputation.com/community/bela-and-the-bedford-jersey-city.html">BELA and The Bedford</a><a href="https://leasereputation.com/community/birch-house-jersey-city.html">Birch House</a><a href="https://leasereputation.com/community/cast-iron-lofts-jersey-city.html">Cast Iron Lofts</a><a href="https://leasereputation.com/community/conifer-flats-jersey-city.html">Conifer Flats</a><a href="https://leasereputation.com/community/dvora-175-second-jersey-city.html">DVORA 175 Second</a><a href="https://leasereputation.com/community/element-flats-jersey-city.html">Element Flats</a><a href="https://leasereputation.com/community/gallery-lofts-jc-jersey-city.html">Gallery Lofts - JC</a><a href="https://leasereputation.com/community/grove-pointe-apartments-jersey-city.html">Grove Pointe Apartments</a><a href="https://leasereputation.com/community/haus25-jersey-city.html">Haus25</a><a href="https://leasereputation.com/community/hudson-house-east-jersey-city.html">Hudson House East</a><a href="https://leasereputation.com/community/journal-square-urby-apartments-jersey-city.html">Journal Square Urby Apartments</a><a href="https://leasereputation.com/community/journal-squared-jersey-city.html">Journal Squared</a><a href="https://leasereputation.com/community/laguna-at-newport-jersey-city.html">Laguna at Newport</a><a href="https://leasereputation.com/community/le-leo-jersey-city.html">Le Leo</a><a href="https://leasereputation.com/community/lenox-jersey-city.html">Lenox</a><a href="https://leasereputation.com/community/liberty-harbor-apartments-jersey-city.html">Liberty Harbor Apartments</a><a href="https://leasereputation.com/community/madox-apartments-jersey-city.html">Madox Apartments</a><a href="https://leasereputation.com/community/modera-lofts-jersey-city.html">Modera Lofts</a><a href="https://leasereputation.com/community/mrk-luxury-apartment-rentals-in-journal-square-jersey-city-jersey-city.html">MRK | Luxury Apartment Rentals in Journal Square, Jersey City</a><a href="https://leasereputation.com/community/newport-rentals-apartments-jersey-city.html">Newport Rentals Apartments</a><a href="https://leasereputation.com/community/oliver-on-the-hudson-jersey-city.html">Oliver on the Hudson</a><a href="https://leasereputation.com/community/one-grove-jersey-city.html">One Grove</a><a href="https://leasereputation.com/community/one-ten-jersey-city.html">One Ten</a><a href="https://leasereputation.com/community/overlook-flats-jersey-city-jersey-city.html">Overlook Flats Jersey City</a><a href="https://leasereputation.com/community/park-francis-jersey-city.html">Park Francis</a><a href="https://leasereputation.com/community/pipo-s-modern-luxury-apartments-near-manhattan-book-direct-save-jersey-city.html">Pipo’s modern Luxury Apartments Near Manhattan | Book Direct &amp; Save</a><a href="https://leasereputation.com/community/quinn-jersey-city.html">Quinn</a><a href="https://leasereputation.com/community/rivet-apartments-jersey-city.html">Rivet Apartments</a><a href="https://leasereputation.com/community/sable-jersey-city-apartments-jersey-city.html">Sable Jersey City Apartments</a><a href="https://leasereputation.com/community/sawyer-jersey-city.html">Sawyer</a><a href="https://leasereputation.com/community/silverman-jersey-city.html">SILVERMAN</a><a href="https://leasereputation.com/community/skylar-lofts-jersey-city.html">Skylar Lofts</a><a href="https://leasereputation.com/community/soho-lofts-jersey-city.html">Soho Lofts</a><a href="https://leasereputation.com/community/solaris-lofts-jersey-city.html">Solaris Lofts</a><a href="https://leasereputation.com/community/swift-co-jersey-city.html">Swift &amp; Co.</a><a href="https://leasereputation.com/community/the-agnes-jersey-city.html">The Agnes</a><a href="https://leasereputation.com/community/the-ashton-apartments-jersey-city.html">The Ashton Apartments</a><a href="https://leasereputation.com/community/the-beacon-jersey-city.html">The Beacon</a><a href="https://leasereputation.com/community/the-bedford-jersey-city.html">The Bedford</a><a href="https://leasereputation.com/community/the-blvd-collection-jersey-city.html">The BLVD Collection</a><a href="https://leasereputation.com/community/the-cliffs-lofts-jersey-city.html">The Cliffs Lofts</a><a href="https://leasereputation.com/community/the-enclave-jersey-city.html">The Enclave</a><a href="https://leasereputation.com/community/the-gotham-jersey-city.html">The Gotham</a><a href="https://leasereputation.com/community/the-hazel-jersey-city-jersey-city.html">The Hazel Jersey City</a><a href="https://leasereputation.com/community/the-hendrix-jersey-city.html">The Hendrix</a><a href="https://leasereputation.com/community/the-journal-jersey-city.html">The Journal</a><a href="https://leasereputation.com/community/the-lively-apartments-jersey-city.html">The Lively Apartments</a><a href="https://leasereputation.com/community/the-one-nj-jersey-city.html">The One NJ</a><a href="https://leasereputation.com/community/the-regent-at-liberty-harbor-jersey-city.html">The Regent at Liberty Harbor</a><a href="https://leasereputation.com/community/the-zenith-at-liberty-harbor-jersey-city.html">The Zenith at Liberty Harbor</a><a href="https://leasereputation.com/community/vantage-collection-jersey-city.html">Vantage Collection</a><a href="https://leasereputation.com/community/verde-jersey-city-jersey-city.html">Verde Jersey City</a><a href="https://leasereputation.com/community/waterside-square-north-at-newport-jersey-city.html">Waterside Square North at Newport</a><a href="https://leasereputation.com/community/windsor-at-liberty-house-apartments-jersey-city.html">Windsor at Liberty House Apartments</a></div></details><details class="citygroup"><summary>Kearny <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/vermella-east-kearny.html">Vermella East</a></div></details><details class="citygroup"><summary>Lawnside <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/station-place-lawnside.html">Station Place</a></div></details><details class="citygroup"><summary>Maple Shade <span class="ccount">9</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/fox-meadow-apartments-maple-shade.html">Fox Meadow Apartments</a><a href="https://leasereputation.com/community/maple-grand-apartments-maple-shade.html">Maple Grand Apartments</a><a href="https://leasereputation.com/community/maple-terrace-apartments-maple-shade.html">Maple Terrace Apartments</a><a href="https://leasereputation.com/community/park-crossing-maple-shade.html">Park Crossing</a><a href="https://leasereputation.com/community/pickwick-apartments-maple-shade.html">Pickwick Apartments</a><a href="https://leasereputation.com/community/roberts-mill-apartment-homes-maple-shade.html">Roberts Mill Apartment Homes</a><a href="https://leasereputation.com/community/ryan-s-run-west-maple-shade.html">Ryan&#x27;s Run West</a><a href="https://leasereputation.com/community/village-of-stoney-run-maple-shade.html">Village of Stoney Run</a><a href="https://leasereputation.com/community/woods-edge-apartment-homes-maple-shade.html">Woods Edge Apartment Homes</a></div></details><details class="citygroup"><summary>Marlton <span class="ccount">5</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/brook-view-apartments-marlton.html">Brook View Apartments</a><a href="https://leasereputation.com/community/inwood-at-renaissance-square-marlton.html">Inwood at Renaissance Square</a><a href="https://leasereputation.com/community/merion-marlton-apartment-homes-marlton.html">Merion Marlton Apartment Homes</a><a href="https://leasereputation.com/community/nieuw-amsterdam-apartment-homes-marlton.html">Nieuw Amsterdam Apartment Homes</a><a href="https://leasereputation.com/community/the-metropolitan-marlton-marlton.html">The Metropolitan Marlton</a></div></details><details class="citygroup"><summary>Merchantville <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/42-west-apartments-merchantville.html">42 West Apartments</a></div></details><details class="citygroup"><summary>Moorestown <span class="ccount">2</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/moorestowne-woods-apartment-homes-moorestown.html">Moorestowne Woods Apartment Homes</a><a href="https://leasereputation.com/community/pleasant-valley-apartments-moorestown.html">Pleasant Valley Apartments</a></div></details><details class="citygroup"><summary>Mt Laurel Township <span class="ccount">2</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/ramblewood-village-apartments-mt-laurel-township.html">Ramblewood Village Apartments</a><a href="https://leasereputation.com/community/the-neil-mt-laurel-township.html">The Neil</a></div></details><details class="citygroup"><summary>Newark <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/24-jones-newark.html">24 Jones</a><a href="https://leasereputation.com/community/eleven80-apartments-newark.html">Eleven80 Apartments</a><a href="https://leasereputation.com/community/one-theater-square-newark.html">One Theater Square</a></div></details><details class="citygroup"><summary>Pennsauken <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/cooper-river-plaza-pennsauken.html">Cooper River Plaza</a></div></details><details class="citygroup"><summary>Pine Hill <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/glen-eyre-apartments-pine-hill.html">Glen Eyre Apartments</a></div></details><details class="citygroup"><summary>Somerdale <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/warwick-terrace-apartment-homes-somerdale.html">Warwick Terrace Apartment Homes</a></div></details><details class="citygroup"><summary>Somerville <span class="ccount">1</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/somerville-parc-somerville.html">Somerville Parc</a></div></details><details class="citygroup"><summary>Voorhees Township <span class="ccount">3</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/burnt-mill-apartment-homes-voorhees-township.html">Burnt Mill Apartment Homes</a><a href="https://leasereputation.com/community/foster-square-apartments-voorhees-township.html">Foster Square Apartments</a><a href="https://leasereputation.com/community/the-vista-apartments-voorhees-township.html">The Vista Apartments</a></div></details><details class="citygroup"><summary>Weehawken Township <span class="ccount">4</span></summary><div class="citylinks"><a href="https://leasereputation.com/community/estuary-apartments-weehawken-township.html">Estuary Apartments</a><a href="https://leasereputation.com/community/hamilton-cove-weehawken-township.html">Hamilton Cove</a><a href="https://leasereputation.com/community/harbor-1500-weehawken-township.html">Harbor 1500</a><a href="https://leasereputation.com/community/hoboken-point-weehawken-township.html">Hoboken Point</a></div></details></div>
+</div>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div><a href="https://leasereputation.com/">leasereputation.com</a> &middot; <a href="https://leasereputation.com/community/">All communities</a> &middot; <a href="https://leasereputation.com/guides/tenant-rights/">Tenant rights</a> &middot; <a href="https://leasereputation.com/privacy.html">Privacy</a> &middot; <a href="https://leasereputation.com/terms.html">Terms</a></div>
+      <div>&copy; 2026 Lease Reputation LLC</div>
+    </div>
+    <p class="disclaimer">LeaseReputation is an independent review platform and is not affiliated with, endorsed by, or sponsored by any apartment community, property manager, or developer named on this page. Community names and trademarks are the property of their respective owners and are used here for identification and reference only. Reviews reflect the opinions of verified residents. Verified reviewers may receive a small thank-you gift (such as a $5 coffee card); gifts are the same for every verified reviewer and are never conditioned on the content or sentiment of a review. Community photos via Google.</p>
+  </div>
+</footer>
+</body>
+</html>

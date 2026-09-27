@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WHY-0907-002: the argument, in the editorial system and the same voice as the home.
+    Photo hero, the stance in two columns, the three promises as prose, how the score works, one CTA. -#}
+{% block title %}Why Lazo &mdash; The Wedding Site That Can't Be Bought{% endblock %}
+{% block desc %}The big wedding sites make money selling vendors access to you. Lazo can't. Rankings earned from verified couples, reviews that need a real wedding behind them, leads that are never for sale.{% endblock %}
+{% block canonical %}{{ base }}/why-lazo/{% endblock %}
+{% block nav_key %}why{% endblock %}
+{% block main %}
+<style>
+  .why-cols{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:28px}
+  .why-cols h3{font-size:30px;margin:0 0 10px}
+  .why-cols p{margin:0;color:var(--muted);font-size:16px}
+  .why-cols .them h3,.why-cols .them p{color:#9A8FA1}
+  .why-list{max-width:760px}
+  .why-list h2{font-size:34px;margin:44px 0 10px}
+  .why-list h2:first-child{margin-top:0}
+  .why-list p{font-size:17px;color:#3E3644;margin:0 0 12px}
+  .score{background:var(--card);border:1px solid var(--gold-line);border-radius:22px;padding:32px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;max-width:860px}
+  .score .n{font-family:var(--serif);font-size:96px;line-height:1;color:var(--plum-deep);font-weight:500;font-feature-settings:"lnum" 1}
+  .score .n small{display:block;font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink);font-weight:700;margin-top:6px}
+  .score p{margin:0 0 8px;font-size:15.5px;color:#3E3644}
+  @media(max-width:820px){.why-cols,.score{grid-template-columns:1fr}.score .n{font-size:72px}}
+</style>
+<section class="hero hero-photo" style="background-image:url('/assets/photos/atmo-candlelight.jpg')">
+  <div class="hero-inner">
+    <p class="eyebrow">Why Lazo</p>
+    <h1>The wedding industry has a trust problem. <em>We built the fix.</em></h1>
+    <p class="hero-sub">The biggest wedding sites make money selling vendors access to you. We think the biggest day of your life deserves better incentives than that.</p>
+  </div>
+</section>
+
+<section class="band">
+  <p class="eyebrow" style="color:var(--gold-ink)">The difference, in one sentence</p>
+  <h2 class="band-title">The site you make an account on <em>first.</em></h2>
+  <div class="why-cols">
+    <div class="them"><h3>The big sites sell you.</h3><p>The vendor at the top of your results is usually the one who paid the most. Anyone can post a review. Your inquiry becomes a &ldquo;lead&rdquo; sold to a dozen vendors, and the planning tools exist to put ads in front of you.</p></div>
+    <div><h3>Lazo can't.</h3><p>Rankings are earned from couples who booked. Reviews need a real wedding behind them. You choose who hears from you. And the tools exist to get you married &mdash; that's the whole business.</p></div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0"><div class="why-list">
+  <h2>Rankings are never for sale.</h2>
+  <p>Search order comes from the Lazo Score &mdash; a reputation number built from verified reviews, reply speed and real bookings, weighted for recency. No vendor can buy a better position, and every vendor can see exactly where they stand and why.</p>
+  <h2>Every review is verified.</h2>
+  <p>A review only counts when the couple booked that vendor through Lazo &mdash; the booking is the proof. Vendors can reply to every review, free, forever. If we ever remove one, the reason is logged in its place.</p>
+  <h2>Every lead is a real couple.</h2>
+  <p>You verify your account before you contact anyone, and your inquiry carries your date and what you're planning. Vendors never pay per lead, so no one profits from sending them junk &mdash; and no one profits from selling your inbox.</p>
+</div></section>
+
+<section class="band" style="padding-top:0">
+  <div class="score">
+    <div class="n">65<small>the baseline</small></div>
+    <div>
+      <p><strong>New vendors start at the community baseline, not at zero and not at a fake five stars.</strong></p>
+      <p>As verified reviews arrive, a score earns its way up or down from 65. It's honest, and it means the number you see always means the same thing &mdash; on a brand-new studio and on one with a hundred weddings behind it.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band band-claim" style="padding-top:0">
+  <div class="claim-strip claim-wide">
+    <h2>Plan on the site that isn't selling you.</h2>
+    <p>Verified vendors, a budget with real prices in your city, one thread per vendor with the contract inside it, and June &mdash; who knows your date and plans it with you. Free.</p>
+    <a class="btn-gold" href="https://app.meetlazo.com">Start planning free</a>
+  </div>
+</section>
+{% endblock %}

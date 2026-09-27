@@ -1,0 +1,57 @@
+<header class="hero" style="min-height:52vh">
+  <div class="hero-bg"><img data-img="hero4" alt=""></div>
+  <div class="wrap">
+    <span class="hero-badge fade-up d1">Check Availability</span>
+    <h1 class="fade-up d2" style="font-family:var(--serif);font-size:clamp(34px,5vw,56px)">Tell us about <em>your day</em></h1>
+    <p class="fade-up d3" style="color:var(--mist);max-width:640px;margin:14px auto 0">A limited number of dates each season. One short form, one honest answer, usually within a business day.</p>
+  </div>
+</header>
+<section id="contact" style="padding-top:0">
+  <div class="wrap">
+    <div style="text-align:center">
+      <span class="eyebrow">Are you ready?</span>
+      <h2>Check <span class="script-accent">availability</span></h2>
+      <p class="lede" style="margin:0 auto">Tell us about your day and we'll confirm your date — usually within hours.</p>
+    </div>
+    <div class="glass fade-up" style="max-width:720px;margin:0 auto 26px;padding:22px 26px;border-radius:var(--radius);text-align:center"><p style="font-family:var(--serif);font-style:italic;font-size:18px;color:var(--ice)">&ldquo;"Incredibly professional and warm — they captured every moment with remarkable detail and went the extra mile to make us feel at ease. The results are stunning."&rdquo;</p><p style="color:var(--champagne);font-size:13px;letter-spacing:.16em;text-transform:uppercase;margin-top:10px">Kevin &amp; Shawna  Videography</p></div>
+<div id="cityContext" class="glass" style="display:none;max-width:720px;margin:0 auto 22px;padding:16px 22px;border-radius:var(--radius);border-left:3px solid var(--champagne)">Planning a wedding in <strong id="cityContextName"></strong> &mdash; wonderful. Travel there is already included.</div>
+<form class="glass" id="availabilityForm" method="POST">
+      <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-5000px" aria-hidden="true">
+      <div class="form-row">
+        <div class="field"><label for="f-name">Your Names</label><input id="f-name" name="names" type="text" placeholder="Jordan &amp; Taylor" required></div>
+        <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" placeholder="you@email.com" required></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label for="f-date">Wedding Date</label><input id="f-date" name="wedding_date" type="date" required></div>
+        <div class="field"><label for="f-loc">Location</label><input id="f-loc" name="location" type="text" placeholder="City, State (or venue)" required></div>
+      </div>
+      <div class="field"><label for="f-pkg">Interested In</label>
+        <select id="f-pkg" name="package"><option value="" selected>Not sure yet &mdash; help us choose</option>
+          <optgroup label="Videography">
+            <option value="The Vignette">The Vignette &mdash; 4 hr &middot; $1,200</option>
+            <option value="The Story">The Story &mdash; 6 hr &middot; $1,400</option>
+            <option value="The Feature">The Feature &mdash; 8 hr &middot; $1,500</option>
+            <option value="The Cinema">The Cinema &mdash; 10 hr &middot; $2,000</option>
+          </optgroup>
+          <optgroup label="Photography">
+            <option value="The Portrait">The Portrait &mdash; 4 hr &middot; $1,500</option>
+            <option value="The Signature">The Signature &mdash; 6 hr &middot; $1,700</option>
+            <option value="The Gallery">The Gallery &mdash; 8 hr &middot; $2,000</option>
+            <option value="The Archive">The Archive &mdash; 10 hr &middot; $2,600</option>
+          </optgroup>
+          <optgroup label="Photography &amp; Film">
+            <option value="The Ensemble">The Ensemble &mdash; 6 hr &middot; $3,000</option>
+            <option value="The Keepsake">The Keepsake &mdash; 8 hr &middot; $3,500</option>
+            <option value="The Opus">The Opus &mdash; 10 hr &middot; $4,000</option>
+          </optgroup></select>
+      </div>
+      <div class="field"><label for="f-msg">Tell us about your day</label><textarea id="f-msg" name="message" rows="4" placeholder="Guest count, vibe, anything you'd like us to know…"></textarea></div>
+      <div style="text-align:center;margin-top:8px"><button class="btn btn-solid" type="submit" style="border:0;cursor:pointer">Check Availability</button></div>
+      <p class="form-note" id="formNote">We reply to every inquiry — most within the same day.</p>
+    <input type="hidden" name="City" value="">
+<input type="hidden" name="City Page" value="">
+<input type="hidden" name="Landing Page" value="">
+<input type="hidden" name="Referrer" value="">
+</form>
+  </div>
+</section>

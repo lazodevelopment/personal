@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{#- traditions_index.html - JC-LAZO-TRAD-0916-001
+    /traditions/ - the hub. Grouped by `group` rather than `culture`, because
+    culture is the descriptive line on each page and is deliberately specific
+    ("Mexican, Spanish & Latin American"), which makes 19 headings out of 25
+    pages. The groups are a small fixed set. -#}
+{% block title %}Wedding Traditions From Around the World | Lazo{% endblock %}
+{% block desc %}What actually happens in a lazo ceremony, las arras, a baraat, a tea ceremony, a hora. {{ tradition_count }} wedding traditions explained properly &mdash; and what to tell your vendors so each one goes well.{% endblock %}
+{% block canonical %}{{ base }}/traditions/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Wedding traditions",
+  "description": "Wedding traditions from around the world, explained as they are actually performed.",
+  "url": "{{ base }}/traditions/",
+  "publisher": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" }
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Wedding traditions</p>
+  <h1>The rituals a wedding is actually made of.</h1>
+  <p class="hero-sub">{{ tradition_count }} traditions, explained as they are really performed &mdash; and what to tell your officiant, your photographer and your DJ so each one goes the way it should.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="lede">We are named after one of these. <em>El lazo</em> is the cord looped in a figure eight around a couple after their vows, and it is the reason this company is called what it is &mdash; so writing carelessly about anyone else's ceremony was never going to be an option.</p>
+<p>Most wedding sites give a tradition a paragraph inside a listicle, usually written by someone who has never seen it happen. These pages describe what actually occurs, who does it, where practice varies by country and family, and the concrete thing you have to tell a vendor for it to go well. Where a tradition carries a history that matters, we say so rather than reducing it to decor.</p>
+</section>
+
+{%- for group, items in groups %}
+<section class="cost-cities trad-group">
+  <h2>{{ group }}</h2>
+  <div class="cc-guides">
+    {%- for it in items %}
+    <a href="{{ it.href }}">
+      <b>{{ it.short }}</b>
+      <em>{{ it.culture }}</em>
+      <span>{{ it.blurb }}</span>
+    </a>
+    {%- endfor %}
+  </div>
+</section>
+{%- endfor %}
+
+<section class="band prose doc">
+<h2>Including a tradition that isn't yours</h2>
+<p>Couples marry across cultures constantly, and blending two sets of rituals is one of the genuinely good problems in wedding planning. A few things make it go well.</p>
+<ul>
+  <li><strong>Ask the family who holds it.</strong> Not the internet, and not us. The version your partner's grandmother knows is the one that will mean something in the room.</li>
+  <li><strong>Have someone explain it aloud.</strong> Half your guests will not know what they are watching. Thirty seconds from the officiant turns a nice moment into the one people talk about afterwards.</li>
+  <li><strong>Know which ones carry weight.</strong> Some traditions are festive and travel easily. Others &mdash; jumping the broom is the clearest example &mdash; are tied to a specific history, and taking them on without that history is not the same act.</li>
+  <li><strong>Do fewer, properly.</strong> Three rituals given room beat eight crammed into a forty-minute ceremony. Every one of them needs a cue, a rehearsal and a photographer who knows it is coming.</li>
+</ul>
+</section>
+
+<section class="next-reads">
+  <h2>Where to next</h2>
+  <div class="next-grid">
+    <a href="/what-is-a-lazo/"><b>The lazo tradition</b><span>The wedding lasso ceremony we are named for.</span></a>
+    <a href="/cost/"><b>What a wedding costs</b><span>Honest ranges for every vendor you'll hire.</span></a>
+    <a href="/{{ first_metro.id }}/wedding-officiants/"><b>Find an officiant</b><span>The vendor who makes most of these happen.</span></a>
+  </div>
+</section>
+{% endblock %}

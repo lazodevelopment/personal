@@ -1,0 +1,112 @@
+{#- _footer.html - JC-LAZO-FOOT-0915-001
+    The site's only footer, in one file so build.py and deploy/swap_footer.py
+    render byte-identical markup.
+
+    Two things make it earn its height:
+      1. It is CONTEXTUAL. On a metro, category or vendor page `metro` is in
+         scope, so the category column links into the city the reader is
+         already in - a Denver vendor page carries fifteen Denver links, not
+         fifteen Phoenix ones. Everywhere else it falls back to Phoenix.
+      2. It is the site's internal-linking spine: 15 categories + 45 city
+         pages + the comparison pages, which until now were reachable from
+         almost nowhere.
+
+    Every href here points at a page that exists. Nothing is invented; if a
+    page is retired, delete the line.  Columns collapse to accordions under
+    760px (lazo.js adds .foot-acc; without JS everything is simply open).  -#}
+{%- set fm = metro.id if metro is defined and metro else 'phoenix' -%}
+{%- set fmn = metro.name if metro is defined and metro else '' -%}
+<footer class="site-foot">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <div class="foot-id">
+      <img src="/assets/foot-logo.png" alt="Lazo" class="foot-mark-img">
+      <p class="foot-line">Tied together.</p>
+      <p class="foot-promise">Real couples. Real reviews. Rankings no one can buy.</p>
+      </div>
+      <div class="foot-act">
+        <a class="foot-cta" href="https://app.meetlazo.com">Start planning</a>
+        <p class="foot-social">
+          <a href="https://instagram.com/trylazo" rel="noopener">Instagram</a>
+          <a href="https://facebook.com/getlazo" rel="noopener">Facebook</a>
+          <a href="https://tiktok.com/@trylazo" rel="noopener">TikTok</a>
+        </p>
+      </div>
+    </div>
+    <nav class="foot-cols" aria-label="Footer">
+      <div class="foot-col">
+        <h4>Plan your wedding</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="https://app.meetlazo.com">Start planning</a>
+          <a href="/wedding-websites/">Free wedding websites</a>
+          <a href="/{{ fm }}/">Find vendors{% if fmn %} in {{ fmn }}{% endif %}</a>
+          <a href="/planning/">How to plan a wedding</a>
+          <a href="/marriage-license/">Marriage license by state</a>
+          <a href="/guests/">Wedding guest etiquette</a>
+          <a href="/cost/">What a wedding costs</a>
+          <a href="/questions/">What to ask your vendors</a>
+          <a href="/when-to-book/">When to book everything</a>
+          <a href="/why-lazo/">Why Lazo</a>
+          <a href="/traditions/">Wedding traditions</a>
+          <a href="/what-is-a-lazo/">The Lazo tradition</a>
+        </div></div>
+      </div>
+      <div class="foot-col foot-col-2">
+        <h4>{% if fmn %}{{ fmn }} vendors{% else %}Find vendors{% endif %}</h4>
+        <div class="foot-links"><div class="foot-stack">
+          {%- for c in foot_cats or [] %}
+          <a href="/{{ fm }}/{{ c.slug }}/">{{ c.label }}</a>
+          {%- endfor %}
+        </div></div>
+      </div>
+      <div class="foot-col">
+        <h4>For vendors</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/for-vendors/">How it works</a>
+          <a href="/for-vendors/#claim">Claim your profile</a>
+          <a href="/for-vendors/#pricing">Pricing</a>
+          <a href="/for-vendors/#promise">Our vendor promise</a>
+          <a href="/for-vendors/#showcase">What your profile looks like</a>
+        </div></div>
+      </div>
+      <div class="foot-col">
+        <h4>Compare</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/zola-alternative/">Lazo vs Zola</a>
+          <a href="/the-knot-alternative/">Lazo vs The Knot</a>
+          <a href="/weddingwire-alternative/">Lazo vs WeddingWire</a>
+          <a href="/the-knot-alternative-for-vendors/">The Knot alternative for vendors</a>
+          <a href="/weddingwire-alternative-for-vendors/">WeddingWire alternative for vendors</a>
+          <a href="/honeybook-alternative/">HoneyBook alternative</a>
+        </div></div>
+      </div>
+      <div class="foot-col">
+        <h4>Company &amp; help</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/about/">About Lazo</a>
+          <a href="/contact/">Contact us</a>
+          <a href="/why-lazo/">How our rankings work</a>
+          <a href="/delete-account/">Delete your account</a>
+        </div></div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="foot-col foot-cities">
+    <h4>Wedding vendors by city</h4>
+    <div class="foot-links"><div class="foot-stack foot-city-list">
+      {%- for m in (foot_metros or [])|sort(attribute='name') %}
+      <a href="/{{ m.id }}/">{{ m.name }} wedding vendors</a>
+      {%- endfor %}
+    </div></div>
+  </div>
+
+  <div class="foot-legal">
+    <p class="foot-copy">&copy; 2026 Lazo Weddings, LLC &middot; meetlazo.com</p>
+    <nav class="foot-fine" aria-label="Legal">
+      <a href="/terms/">Terms of Service</a>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </div>
+</footer>

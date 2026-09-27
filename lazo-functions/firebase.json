@@ -1,0 +1,6 @@
+{
+  "functions": [
+    { "source": "functions", "codebase": "default" },
+    { "source": "functions-dashboard", "codebase": "dashboard", "runtime": "nodejs22" }
+  ]
+}

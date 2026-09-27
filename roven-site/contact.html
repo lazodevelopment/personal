@@ -1,0 +1,147 @@
+<!-- ===== HEADER ===== -->
+<section class="page-hero" style="padding-bottom:clamp(40px,5vw,60px)">
+  <div class="page-hero__bg" aria-hidden="true">
+    <img src="https://firebasestorage.googleapis.com/v0/b/atavia-c29cd.firebasestorage.app/o/DSC_5442.jpg?alt=media&token=bca5fb9d-96cf-4a02-90df-294c7fb85ec0" alt="">
+  </div>
+  <span class="page-hero__watermark" aria-hidden="true">A</span>
+  <div class="wrap">
+    <div class="eyebrow center rules reveal">Reserve Your Date Now</div>
+    <h1 class="page-hero__title reveal d1">Booking <em>Form</em></h1>
+    <p class="page-hero__sub reveal d2">Tell us about your day and we'll respond within 24 hours. A $500 deposit reserves your date and is applied toward your package price.</p>
+  </div>
+</section>
+
+<!-- ===== FORM ===== -->
+<section class="sec sec--tight">
+  <div class="wrap">
+    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:clamp(36px,5vw,64px);align-items:start" class="contact-grid">
+      <!-- form -->
+      <div class="reveal">
+        <div class="form-note"><strong>Please note:</strong> if your wedding is less than 45 days out, we require a $250 accommodation fee.</div>
+        <div class="form-note" style="margin-bottom:28px">This is a booking form — please be financially prepared after submitting.</div>
+
+        <!--
+          FORMSPREE: connected to form mqevwabr. To change the destination,
+          create/select a form at https://formspree.io and swap the ID in the action below.
+          Until then, submissions will not be delivered.
+        -->
+        <div id="venueContext" class="venue-exp" style="display:none;margin-bottom:26px">You&rsquo;re inquiring about <strong id="venueContextName"></strong> &mdash; we&rsquo;ll have this venue&rsquo;s details ready when we reply.</div>
+<form id="bookingForm" action="https://formspree.io/f/mqevwabr" method="POST" novalidate>
+          <div class="field-row">
+            <div class="field"><label for="fname">First Name</label><input type="text" id="fname" name="First Name" autocomplete="given-name"></div>
+            <div class="field"><label for="lname">Last Name</label><input type="text" id="lname" name="Last Name" autocomplete="family-name"></div>
+          </div>
+          <div class="field"><label for="email">Email <span class="req">*</span></label><input type="email" id="email" name="Email" required autocomplete="email"></div>
+          <div class="field-row">
+            <div class="field"><label for="phone">Phone</label><input type="tel" id="phone" name="Phone" autocomplete="tel"></div>
+            <div class="field"><label for="wdate">Wedding Date <span class="req">*</span></label><input type="date" id="wdate" name="Wedding Date" required></div>
+          </div>
+          <div class="field">
+            <label for="source">Where did you find us? <span class="req">*</span></label>
+            <select id="source" name="Where did you find us" required>
+              <option value="" disabled selected>Select one</option>
+              <option>Zola</option><option>The Knot</option><option>WeddingWire</option><option>Google</option>
+              <option>Facebook</option><option>Instagram</option><option>TikTok</option><option>Friend/Family</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="package">What package would you like to book? <span class="req">*</span></label>
+            <select id="package" name="Package" required>
+              <option value="" disabled selected>Select a package</option>
+              <option>The Aubade — 4 Hour Video</option>
+              <option>The Verse — 6 Hour Video</option>
+              <option>The Reverie — 8 Hour Video</option>
+              <option>The Sonnet — 10 Hour Video</option>
+              <option>The Petite — 4 Hour Photo</option>
+              <option>The Bloom — 6 Hour Photo</option>
+              <option>The Garden — 8 Hour Photo</option>
+              <option>The Estate — 10 Hour Photo</option>
+              <option>The Duet — 6 Hour Combo</option>
+              <option>The Heirloom — 8 Hour Combo</option>
+              <option>The Legacy — 10 Hour Combo</option>
+              <option>Not sure yet — help me choose</option>
+            </select>
+          </div>
+          <!-- honeypot + subject -->
+          <input type="text" name="_gotcha" style="display:none" tabindex="-1" aria-hidden="true">
+          <input type="hidden" name="_subject" value="New booking request — Atavia Weddings">
+          <!-- lead attribution: filled by JS from the visitor's session -->
+          <input type="hidden" name="Venue" value="">
+          <input type="hidden" name="Venue Page" value="">
+          <input type="hidden" name="Landing Page" value="">
+          <input type="hidden" name="Referrer" value="">
+          <button type="submit" class="btn btn--copper" style="width:100%;justify-content:center;padding:18px">Submit Booking Request <span class="arr">&#8599;</span></button>
+          <div class="form-status" id="formStatus" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+
+      <!-- sidebar -->
+      <aside class="reveal d1" style="position:sticky;top:calc(var(--nav-h) + 24px)">
+        <div class="fcard" style="background:var(--char-card)">
+          <div class="sec__roman" style="text-align:left;margin-bottom:20px">Get in Touch</div>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div>
+              <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);margin-bottom:6px">Call or Text</div>
+              <a href="tel:+13365379590" style="font-family:var(--display);font-size:22px;color:var(--ivory-bright)">(336) 537-9590</a>
+            </div>
+            <div>
+              <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);margin-bottom:6px">Email</div>
+              <a href="mailto:info@ataviaweddings.com" style="font-family:var(--display);font-size:20px;color:var(--ivory-bright);word-break:break-word">info@ataviaweddings.com</a>
+            </div>
+            <div>
+              <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);margin-bottom:6px">Follow</div>
+              <a href="https://www.instagram.com/ataviaweddings" target="_blank" rel="noopener" style="font-family:var(--display);font-size:20px;color:var(--ivory-bright)">@ataviaweddings</a>
+            </div>
+            <div style="border-top:1px solid var(--line);padding-top:20px">
+              <div style="font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--copper);margin-bottom:6px">Response Time</div>
+              <p style="color:var(--ivory-dim);font-size:15px;line-height:1.6">We reply to every inquiry within 24 hours. Dates are reserved first-come, first-served.</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  @media(max-width:820px){ .contact-grid{grid-template-columns:1fr!important} .contact-grid aside{position:static!important} }
+</style>
+
+<script>
+(function(){
+  var form=document.getElementById('bookingForm'), status=document.getElementById('formStatus');
+  if(!form)return;
+
+  // --- lead attribution: pull what site.js recorded for this visit -------
+  function fill(name,val){ var el=form.querySelector('[name="'+name+'"]'); if(el) el.value = val || ''; }
+  try{
+    var ss=window.sessionStorage;
+    fill('Venue',        ss.getItem('atv_venue'));
+    fill('Venue Page',   ss.getItem('atv_venue_url'));
+    fill('Landing Page', ss.getItem('atv_landing'));
+    fill('Referrer',     ss.getItem('atv_referrer'));
+  }catch(e){}
+
+  form.addEventListener('submit',function(e){
+    // Basic required validation
+    if(!form.checkValidity()){ return; } // let native validation show
+    e.preventDefault();
+    var action=form.getAttribute('action');
+    if(action.indexOf('YOUR_FORM_ID')!==-1){
+      status.className='form-status show err';
+      status.textContent='Form not connected yet — add your Formspree ID to start receiving submissions.';
+      return;
+    }
+    var btn=form.querySelector('button[type=submit]');
+    btn.disabled=true; status.className='form-status show'; status.textContent='Sending…';
+    fetch(action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}})
+      .then(function(r){
+        if(r.ok){ form.reset(); if(window.fbq){ fbq('track','Lead'); } status.className='form-status show ok';
+          status.textContent='Thank you — your booking request is on its way. We\u2019ll be in touch within 24 hours.'; }
+        else { return r.json().then(function(d){ throw new Error((d.errors&&d.errors[0]&&d.errors[0].message)||'Something went wrong.'); }); }
+      })
+      .catch(function(err){ status.className='form-status show err'; status.textContent=err.message+' Please email info@ataviaweddings.com.'; })
+      .finally(function(){ btn.disabled=false; });
+  });
+})();
+</script>

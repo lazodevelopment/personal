@@ -1,0 +1,341 @@
+{
+ "sage": {
+  "name": "Sage",
+  "vibe": "Botanical · garden · forest light",
+  "styles": [
+   "garden",
+   "greenery",
+   "floral",
+   "boho"
+  ],
+  "colors": [
+   "sage-green",
+   "eucalyptus"
+  ],
+  "title": "Sage — Free Garden & Greenery Wedding Website Template | Lazo",
+  "desc": "Sage is a free botanical wedding website template with hand-drawn greenery, RSVPs, schedule and registry built in. Add your names and it's live in minutes."
+ },
+ "noir": {
+  "name": "Noir",
+  "vibe": "Black tie · editorial · midnight gold",
+  "styles": [
+   "black-tie",
+   "elegant",
+   "modern"
+  ],
+  "colors": [
+   "black",
+   "gold",
+   "champagne"
+  ],
+  "title": "Noir — Free Black Tie Wedding Website Template | Lazo",
+  "desc": "Noir is a free black-tie wedding website template: editorial type, midnight gold, RSVPs, schedule and registry. Type your names and publish in minutes."
+ },
+ "dune": {
+  "name": "Dune",
+  "vibe": "Desert modern · dusk hills · golden hour",
+  "styles": [
+   "desert",
+   "modern",
+   "destination",
+   "boho"
+  ],
+  "colors": [
+   "terracotta",
+   "dusty-rose"
+  ],
+  "title": "Dune — Free Desert Wedding Website Template | Lazo",
+  "desc": "Dune is a free desert-modern wedding website template with adobe arches and golden-hour color, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "fete": {
+  "name": "Fête",
+  "vibe": "Classic · formal · the first dance",
+  "styles": [
+   "classic",
+   "elegant",
+   "black-tie"
+  ],
+  "colors": [
+   "navy",
+   "gold",
+   "blush"
+  ],
+  "title": "Fête — Free Classic Formal Wedding Website Template | Lazo",
+  "desc": "Fête is a free classic wedding website template with a monogram crest, formal type, RSVPs, schedule and registry. Add your names and it's live in minutes."
+ },
+ "tide": {
+  "name": "Tide",
+  "vibe": "Coastal · sea light · barefoot by the water",
+  "styles": [
+   "beach",
+   "coastal",
+   "destination"
+  ],
+  "colors": [
+   "seaglass",
+   "navy"
+  ],
+  "title": "Tide — Free Coastal Beach Wedding Website Template | Lazo",
+  "desc": "Tide is a free coastal wedding website template: breezy, barefoot and light, with RSVPs, schedule, travel details and registry. Live in minutes."
+ },
+ "flora": {
+  "name": "Flora",
+  "vibe": "Romantic · garden roses · candlelight",
+  "styles": [
+   "floral",
+   "romantic",
+   "garden",
+   "spring"
+  ],
+  "colors": [
+   "rose",
+   "peony",
+   "blush"
+  ],
+  "title": "Flora — Free Floral Romantic Wedding Website Template | Lazo",
+  "desc": "Flora is a free floral wedding website template with romantic blooms, RSVPs, schedule and registry. Type your names and watch it come alive."
+ },
+ "atelier": {
+  "name": "Atelier",
+  "vibe": "Minimal · editorial · black and white",
+  "styles": [
+   "minimalist",
+   "modern",
+   "small-wedding",
+   "elopement"
+  ],
+  "colors": [
+   "black",
+   "white",
+   "stone"
+  ],
+  "title": "Atelier — Free Minimalist Modern Wedding Website Template | Lazo",
+  "desc": "Atelier is a free minimalist wedding website template: big type, lots of air, perfect for a small wedding or elopement. RSVPs, schedule and registry included."
+ },
+ "verona": {
+  "name": "Verona",
+  "vibe": "Vineyard · Italian villa · harvest light",
+  "styles": [
+   "vineyard",
+   "rustic",
+   "fall",
+   "romantic"
+  ],
+  "colors": [
+   "burgundy",
+   "tuscan-gold"
+  ],
+  "title": "Verona — Free Vineyard & Fall Wedding Website Template | Lazo",
+  "desc": "Verona is a free vineyard wedding website template with harvest color and candlelight, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "shore": {
+  "name": "Shore",
+  "vibe": "Ocean · sand and sea light · barefoot vows",
+  "styles": [
+   "beach",
+   "coastal",
+   "destination",
+   "summer"
+  ],
+  "colors": [
+   "lagoon",
+   "sunset",
+   "driftwood"
+  ],
+  "title": "Shore — Free Ocean Beach Wedding Website Template | Lazo",
+  "desc": "Shore is a free beach wedding website template with waves, sand and shells, plus RSVPs, schedule, travel and registry. Add your names and publish."
+ },
+ "summit": {
+  "name": "Summit",
+  "vibe": "Mountains · alpine lakes · thin air",
+  "styles": [
+   "mountain",
+   "rustic",
+   "destination",
+   "outdoor"
+  ],
+  "colors": [
+   "alpine-green",
+   "granite"
+  ],
+  "title": "Summit — Free Mountain Wedding Website Template | Lazo",
+  "desc": "Summit is a free mountain wedding website template with peaks, pines and alpine light, plus RSVPs, schedule, travel and registry. Live in minutes."
+ },
+ "ranch": {
+  "name": "Ranch",
+  "vibe": "Rustic · big sky · barn and bonfire",
+  "styles": [
+   "western",
+   "rustic",
+   "barn",
+   "outdoor"
+  ],
+  "colors": [
+   "saddle-brown",
+   "denim"
+  ],
+  "title": "Ranch — Free Rustic Western Barn Wedding Website Template | Lazo",
+  "desc": "Ranch is a free rustic wedding website template for barn and western weddings: boots, big sky, RSVPs, schedule and registry. Live in minutes."
+ },
+ "starlit": {
+  "name": "Starlit",
+  "vibe": "Night sky · a hill full of stars",
+  "styles": [
+   "celestial",
+   "romantic",
+   "elegant",
+   "evening"
+  ],
+  "colors": [
+   "midnight",
+   "nebula",
+   "gold"
+  ],
+  "title": "Starlit — Free Celestial Night Sky Wedding Website Template | Lazo",
+  "desc": "Starlit is a free celestial wedding website template with lanterns and a sky full of stars, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "frost": {
+  "name": "Frost",
+  "vibe": "Winter · snow light · candlelight",
+  "styles": [
+   "winter",
+   "elegant",
+   "romantic",
+   "holiday"
+  ],
+  "colors": [
+   "ice-blue",
+   "evergreen"
+  ],
+  "title": "Frost — Free Winter Wedding Website Template | Lazo",
+  "desc": "Frost is a free winter wedding website template with snow, evergreens and candlelight, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "harvest": {
+  "name": "Harvest",
+  "vibe": "Fall · maple, pumpkin & plum · a bonfire after",
+  "styles": [
+   "fall",
+   "rustic",
+   "romantic",
+   "outdoor"
+  ],
+  "colors": [
+   "maple",
+   "pumpkin",
+   "plum",
+   "moss"
+  ],
+  "title": "Harvest — Free Fall & Autumn Wedding Website Template | Lazo",
+  "desc": "Harvest is a free fall wedding website template with maple, pumpkin and plum color looks, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "aquarelle": {
+  "name": "Aquarelle",
+  "vibe": "Watercolor · soft washes · blush, sky & lilac",
+  "styles": [
+   "watercolor",
+   "romantic",
+   "floral",
+   "spring",
+   "garden"
+  ],
+  "colors": [
+   "blush",
+   "sky",
+   "lilac",
+   "sage"
+  ],
+  "title": "Aquarelle — Free Watercolor Wedding Website Template | Lazo",
+  "desc": "Aquarelle is a free watercolor wedding website template with soft washes of blush, sky and lilac, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "prism": {
+  "name": "Prism",
+  "vibe": "Geometric · terrazzo · clean lines, big windows",
+  "styles": [
+   "geometric",
+   "modern",
+   "minimalist",
+   "city"
+  ],
+  "colors": [
+   "terrazzo",
+   "ink",
+   "coral",
+   "mint"
+  ],
+  "title": "Prism — Free Geometric Modern Wedding Website Template | Lazo",
+  "desc": "Prism is a free geometric wedding website template with clean lines and terrazzo color, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "meadow": {
+  "name": "Meadow",
+  "vibe": "Boho · pampas, terracotta & golden hour",
+  "styles": [
+   "boho",
+   "outdoor",
+   "rustic",
+   "summer"
+  ],
+  "colors": [
+   "pampas",
+   "terracotta",
+   "rust",
+   "olive"
+  ],
+  "title": "Meadow — Free Boho Wedding Website Template | Lazo",
+  "desc": "Meadow is a free boho wedding website template with pampas, terracotta and golden-hour light, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "gilded": {
+  "name": "Gilded",
+  "vibe": "Art deco · gold fans, onyx & emerald",
+  "styles": [
+   "vintage",
+   "art-deco",
+   "black-tie",
+   "elegant",
+   "evening"
+  ],
+  "colors": [
+   "onyx",
+   "emerald",
+   "ivory",
+   "burgundy"
+  ],
+  "title": "Gilded — Free Vintage Art Deco Wedding Website Template | Lazo",
+  "desc": "Gilded is a free art deco wedding website template with gold fans, onyx and emerald, plus RSVPs, schedule and registry. Live in minutes."
+ },
+ "marigold": {
+  "name": "Marigold",
+  "vibe": "South Asian · marigold garlands · three days, one celebration",
+  "styles": [
+   "south-asian",
+   "indian",
+   "multi-day",
+   "cultural"
+  ],
+  "colors": [
+   "marigold",
+   "magenta",
+   "royal-blue",
+   "emerald"
+  ],
+  "title": "Marigold — Free South Asian & Indian Wedding Website Template | Lazo",
+  "desc": "Marigold is a free Indian wedding website template with marigold garlands, a multi-day schedule for mehndi, sangeet and baraat, RSVPs per event and registry."
+ },
+ "papel": {
+  "name": "Papel",
+  "vibe": "Latin fiesta · papel picado · mariachi until late",
+  "styles": [
+   "latin",
+   "mexican",
+   "fiesta",
+   "cultural"
+  ],
+  "colors": [
+   "fiesta",
+   "cobalt",
+   "terracotta",
+   "jade"
+  ],
+  "title": "Papel — Free Latin & Mexican Wedding Website Template | Lazo",
+  "desc": "Papel is a free Latin wedding website template with papel picado banners, cobalt and terracotta, room for the lazo and the padrinos, plus RSVPs and registry."
+ }
+}

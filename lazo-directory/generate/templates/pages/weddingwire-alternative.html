@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}WeddingWire Alternative (2026): Lazo, Where Rankings Can't Be Bought{% endblock %}
+{% block desc %}Looking for a WeddingWire alternative? Lazo ranks vendors by verified reviews from real weddings — never by ad spend. Free planning tools, free wedding website, and June, your AI copilot.{% endblock %}
+{% block canonical %}{{ base }}/weddingwire-alternative/{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How is Lazo different from WeddingWire?",
+      "acceptedAnswer": { "@type": "Answer", "text": "WeddingWire, like most large directories, is built on paid vendor advertising, so visibility can reflect ad spend. Lazo ranks vendors only by the Lazo Score, built from verified reviews from real weddings. No vendor can buy a better position." } },
+    { "@type": "Question", "name": "Aren't WeddingWire and The Knot the same company?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes, both brands are operated by The Knot Worldwide, so their vendor advertising model is shared. Lazo is independent and built on the opposite incentive: rankings earned from verified reviews, never sold." } },
+    { "@type": "Question", "name": "Is Lazo free for couples?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Completely. Vendor search, messaging, budget, guest list, seating chart, a wedding website with RSVPs, and June, the AI copilot — all free forever, no ads, and your contact info is never sold." } },
+    { "@type": "Question", "name": "How many vendors are on Lazo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Lazo lists 88,000+ vendor pages across 45 U.S. metros, ranked by verified-review scores." } }
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<style>
+.cmp{width:100%;max-width:860px;border-collapse:separate;border-spacing:0;margin:10px 0 6px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(217,183,124,.45);border-radius:18px;overflow:hidden;
+  font-size:14.5px}
+.cmp th,.cmp td{padding:13px 16px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(217,183,124,.28)}
+.cmp tr:last-child td{border-bottom:0}
+.cmp thead th{background:linear-gradient(120deg,#3D1C3B,#52284F);color:#FAF6F0;font-weight:600;font-size:13.5px;
+  letter-spacing:.4px}
+.cmp thead th:first-child{width:34%}
+.cmp td:first-child{font-weight:600;color:#52284F}
+.cmp .yes{color:#2E8B6B;font-weight:600}
+.cmp .meh{color:#7A6E80}
+.cmp-note{font-size:12px;color:#7A6E80;max-width:860px;margin:4px 0 0}
+.tm-note{font-size:11.5px;color:#8A7D90;max-width:860px;margin:26px 0 0;line-height:1.6}
+@media(max-width:640px){.cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}}
+</style>
+<section class="hero"><div class="hero-inner">
+<p class="eyebrow">The honest comparison</p>
+<h1>Looking for a WeddingWire alternative?</h1>
+<p class="hero-sub">WeddingWire has reviews by the millions &mdash; and an advertising business behind the rankings. Lazo asks a harder question: what if every review had to be proven, and no ranking could ever be bought?</p>
+</div></section>
+
+<section class="band prose">
+<h2>Volume isn&rsquo;t the same as trust</h2>
+<p>A mountain of reviews only helps if you can believe them. On open-submission platforms, anyone can post, vendors juggle their reputation across ad tiers, and the couple reading it all is left doing forensic work on strangers&rsquo; five-stars. (Worth knowing: WeddingWire and The Knot are both operated by The Knot Worldwide &mdash; same parent, same advertising model.)</p>
+<h2>What verification changes</h2>
+<p><strong>Proof before it counts.</strong> Every review on Lazo comes from a couple who verified the work happened &mdash; contract or payment record. The Lazo Score is built from nothing else.</p>
+<p><strong>Rankings you can take at face value.</strong> Search order is the score, weighted for recency. New vendors start at the community baseline of 65 &mdash; not zero, not fake five stars &mdash; and earn their way from there.</p>
+<p><strong>An inquiry, not a lead.</strong> When you contact a vendor on Lazo, that vendor gets your message &mdash; and nobody else does. Your details are never resold.</p>
+<h2>Side by side</h2>
+<table class="cmp">
+<thead><tr><th></th><th>Lazo</th><th>Typical ad-driven directory</th></tr></thead>
+<tbody>
+<tr><td>Review requirement</td><td class="yes">Verified real wedding</td><td class="meh">Open submission</td></tr>
+<tr><td>How vendors rank</td><td class="yes">Verified-review score only</td><td class="meh">Paid placement influences visibility</td></tr>
+<tr><td>Hiding bad reviews</td><td class="yes">Impossible at any price</td><td class="meh">Varies</td></tr>
+<tr><td>Your contact info</td><td class="yes">Never sold, never shared</td><td class="meh">Lead-generation model</td></tr>
+<tr><td>Planning tools + website</td><td class="yes">Free forever, no ads</td><td class="meh">Free, ad-supported</td></tr>
+<tr><td>AI planning help</td><td class="yes">June &mdash; knows your date &amp; budget</td><td class="meh">Generic content</td></tr>
+</tbody>
+</table>
+<p class="cmp-note">General comparison with large advertising-based wedding directories; third-party details reflect publicly available information as of July 2026 and may change.</p>
+<h2>Being fair about it</h2>
+<p>WeddingWire&rsquo;s inventory and brand recognition are real. If maximum listing volume is what you want, it delivers volume. Lazo trades a little of that scale for something we think matters more on the biggest day of your life: numbers you never have to squint at.</p>
+</section>
+
+<section class="band band-plum">
+<h2 class="band-title">What you get on Lazo</h2>
+<div class="promises">
+<div class="promise"><h3>Reviews with receipts</h3><p>Every score built from verified weddings. If we ever remove a review, the reason is logged in its place.</p></div>
+<div class="promise"><h3>June, your AI copilot</h3><p>Ask what to book next, whether you&rsquo;re on budget, or for a drafted vendor message &mdash; she works from your real data.</p></div>
+<div class="promise"><h3>Every tool, free</h3><p>Budget, guest list, seating chart, messaging, in-app proposals, and a wedding website with RSVPs.</p></div>
+</div>
+</section>
+
+<section class="band">
+<h2>Questions couples ask</h2>
+<details class="faq"><summary>Is Lazo really independent?</summary><p>Yes. Lazo is independently built and operated, and its ranking system has no advertising input at all.</p></details>
+<details class="faq"><summary>What does a Lazo Score mean?</summary><p>It&rsquo;s a reputation number built purely from verified reviews, weighted for recency. The same number means the same thing for every vendor on the platform.</p></details>
+<details class="faq"><summary>What does Lazo cost couples?</summary><p>Nothing, ever. All tools are free forever with no ads or upsells, and your contact information is never sold.</p></details>
+<details class="faq"><summary>Can vendors respond to reviews?</summary><p>Yes &mdash; free, always. What they can&rsquo;t do is pay to bury one.</p></details>
+<div class="claim-strip" style="margin-top:34px">
+<h2>Reviews you can believe. Rankings you can trust.</h2>
+<p>Plan your whole wedding on the honest marketplace &mdash; free.</p>
+<p><a class="btn-gold" href="https://app.meetlazo.com">Start planning free</a></p>
+</div>
+<div class="related-block" style="margin-top:30px">
+<h2>Keep comparing</h2>
+<div class="related-links">
+<a href="{{ base }}/the-knot-alternative/">The Knot alternative</a>
+<a href="{{ base }}/zola-alternative/">Zola alternative</a>
+<a href="{{ base }}/folia-alternative/">Folia alternative</a>
+<a href="{{ base }}/why-lazo/">Why Lazo</a>
+<a href="{{ base }}/weddingwire-alternative-for-vendors/">Vendors: WeddingWire alternative</a>
+</div>
+</div>
+<p class="tm-note">WeddingWire&reg; and The Knot&reg; are registered trademarks of The Knot Worldwide Inc. Lazo is not affiliated with, sponsored by, or endorsed by The Knot Worldwide. Names are used for identification and comparison only.</p>
+</section>
+{% endblock %}

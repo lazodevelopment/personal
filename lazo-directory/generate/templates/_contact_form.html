@@ -1,0 +1,82 @@
+{#- _contact_form.html - JC-LAZO-CFORM-0916-001
+    The site's only contact form, in one file, so /contact/, /delete-account/,
+    /privacy/ and /terms/ all post the same shape to the same endpoint.
+
+    Why it exists: every one of those pages used to print hello@ / vendors@ /
+    press@ / trust@ / privacy@ as plain text or a mailto:. That is four
+    mailboxes for a reader to choose between, a dead end for anyone without a
+    desktop mail client, and a scraper's shopping list. One form, one topic
+    picker, one inbox.
+
+    Caller sets, with {% set %} or {% with %}, any of:
+      cf_id      anchor id for the section            (default "contact-form")
+      cf_topic   preselects the topic; when set the picker is hidden and the
+                 topic rides along in a hidden input  (default: reader picks)
+      cf_title   heading                              (default "Send us a note")
+      cf_sub     one line under the heading
+      cf_label   label over the message box
+      cf_ph      placeholder for the message box
+      cf_extra   "account" adds the account-email field the deletion flow needs
+
+    No JS is required to read it and no JS is required to SEE it - lazo.js
+    upgrades the submit to fetch(); without the script the form still posts
+    to the worker and the worker answers with a thank-you page. -#}
+{%- set _id = cf_id|default('contact-form') -%}
+<section class="cform-band" id="{{ _id }}">
+  <form class="cform" method="post" action="https://meetlazo.com/api/contact">
+    <h2 class="cform-h">{{ cf_title|default('Send us a note') }}</h2>
+    <p class="cform-sub">{{ cf_sub|default('A person reads every one of these. Most replies go out the same business day, and always within two.') }}</p>
+
+    <div class="cf-grid">
+      <p class="cf-field">
+        <label for="{{ _id }}-name">Your name</label>
+        <input id="{{ _id }}-name" name="name" type="text" autocomplete="name" maxlength="120" required>
+      </p>
+      <p class="cf-field">
+        <label for="{{ _id }}-email">Email</label>
+        <input id="{{ _id }}-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+      </p>
+    </div>
+
+    {%- if cf_topic %}
+    <input type="hidden" name="topic" value="{{ cf_topic }}">
+    {%- else %}
+    <p class="cf-field">
+      <label for="{{ _id }}-topic">What's this about?</label>
+      <select id="{{ _id }}-topic" name="topic">
+        <option value="general">I'm planning a wedding &mdash; a question about Lazo</option>
+        <option value="vendor">I'm a vendor &mdash; my profile, my claim, or Pro</option>
+        <option value="trust">A review, a ranking, or something that looks wrong</option>
+        <option value="privacy">My data, my privacy, or deleting my account</option>
+        <option value="press">Press, partnerships, or investors</option>
+        <option value="other">Something else</option>
+      </select>
+    </p>
+    {%- endif %}
+
+    {%- if cf_extra == 'account' %}
+    <p class="cf-field">
+      <label for="{{ _id }}-acct">The email address on the Lazo account <span class="cf-opt">&mdash; if it's different from the one above</span></label>
+      <input id="{{ _id }}-acct" name="accountEmail" type="email" autocomplete="off" maxlength="254">
+    </p>
+    {%- endif %}
+
+    <p class="cf-field">
+      <label for="{{ _id }}-msg">{{ cf_label|default('Your message') }}</label>
+      <textarea id="{{ _id }}-msg" name="message" rows="6" maxlength="4000" required
+                placeholder="{{ cf_ph|default('Tell us what you need. Detail helps us answer in one reply instead of three.') }}"></textarea>
+    </p>
+
+    {#- honeypot: a field no human sees and every dumb bot fills -#}
+    <p class="cf-hp" aria-hidden="true">
+      <label for="{{ _id }}-web">Website</label>
+      <input id="{{ _id }}-web" name="website" type="text" tabindex="-1" autocomplete="off">
+    </p>
+
+    <div class="cf-send">
+      <button class="btn-gold" type="submit">Send message</button>
+      <p class="cf-note">We use what you send here to answer you &mdash; nothing else. See our <a href="/privacy/">Privacy Policy</a>.</p>
+    </div>
+    <p class="cf-msg" role="status" aria-live="polite"></p>
+  </form>
+</section>

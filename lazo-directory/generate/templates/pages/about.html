@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{#- JC-LAZO-CFORM-0916-001: the About page was three paragraphs - thin enough
+    that a reader deciding whether to trust us with their wedding left knowing
+    less than they arrived with. This is the same story, told properly: the
+    name, the founder, what we refuse to sell, how the money actually works,
+    and where we are. Every claim here is one we can stand behind on the
+    rankings page and in the vendor terms. -#}
+{% block title %}About Lazo &mdash; Tied Together{% endblock %}
+{% block desc %}Lazo is a verified wedding marketplace built by a working wedding vendor: every review comes from a couple who actually got married, and rankings can't be bought at any price.{% endblock %}
+{% block canonical %}{{ base }}/about/{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Our story</p>
+  <h1>Named for the moment<br>two lives are tied together.</h1>
+  <p class="hero-sub">A wedding is a set of bonds &mdash; the couple's first, and then everyone they trust to make the day real. We built a marketplace that treats both honestly.</p>
+</div></section>
+
+<section class="band prose doc">
+  <p class="lede">In Mexican, Filipino, and Spanish wedding traditions, <em>el lazo</em> is a cord draped around a couple in a figure eight &mdash; an infinity loop &mdash; after they exchange vows. It marks a bond that can't be broken. We took the name because that's what a wedding is, and because the tie that binds ought to describe how this industry treats the people in it: honestly.</p>
+  <p>If you want the tradition itself rather than the company, we wrote the long version: <a href="/what-is-a-lazo/">what the lazo ceremony is and where it comes from &rarr;</a></p>
+
+  <p class="dek">Why we exist</p>
+  <h2>Built by someone who paid for the leads</h2>
+  <p>Lazo was founded by a working wedding vendor &mdash; a photographer and videographer who spent years on the other side of this marketplace. He paid for leads that never answered. He watched rankings get decided by who spent the most that month, on platforms that called it "featured placement" and hoped nobody read closely. He paid three subscriptions to do what should have been one job.</p>
+  <p>The pattern underneath all of it is the same: on most wedding platforms, the vendor is the customer and the couple is the product. That's why the lead you bought was sold to four other people. That's why the top result is the top result. Once you see it, you can't unsee it &mdash; and you certainly can't build the honest version by bolting it onto the same business model.</p>
+
+  <div class="pull">A ranking that money can move isn't a ranking. It's an ad with the label filed off.</div>
+
+  <p class="dek">What we hold to</p>
+  <h2>Three promises, and what they cost us</h2>
+  <p>These aren't values on a wall. Each one is money we decided not to take.</p>
+  <ul>
+    <li><strong>Rankings can't be bought.</strong> Not with ads, not with a subscription, not at any price, not for one week in one city. Pro sharpens a vendor's tools; it never touches their position. The revenue we give up here is the single most expensive thing about running Lazo, and it's the whole point. <a href="/why-lazo/">The full method is published &rarr;</a></li>
+    <li><strong>Every review comes from a verified couple.</strong> Someone who actually held their wedding with that vendor &mdash; not an email address that clicked a link. We don't take a review down because a vendor doesn't like it, and when one does come down, our moderation log says publicly why.</li>
+    <li><strong>Leads are free, and they're real people.</strong> $0 per lead, ever, and 0% of what a vendor books. A lead on Lazo is one couple writing to one vendor, with a real date and a real venue &mdash; not a contact detail resold five times before lunch.</li>
+  </ul>
+
+  <p class="dek">How the money works</p>
+  <h2>So what do we actually sell?</h2>
+  <p>Tools. Listing, leads and booking are free forever for every vendor in every category. <a href="/for-vendors/#pricing">Lazo Pro</a> is $79/month for the vendors who want text alerts the moment a lead lands, follow-up sequences, an availability calendar and analytics; Pro Studio adds contracts with e-signature, invoicing, and June, our AI copilot for the business side. Couples pay nothing, because a couple who is paying is a couple we'd be tempted to sell.</p>
+  <p>That's the entire list. If we ever add a line to it, it will be on this page before it is in the product.</p>
+
+  <p class="dek">Where we are</p>
+  <h2>{{ metro_count|default(45) }} markets, and counting</h2>
+  <p>We started in Phoenix, Denver and Dallas&ndash;Fort Worth, and we're now live across {{ metro_count|default(45) }} metros with {{ vendor_total_display|default('70,000+') }} wedding businesses indexed &mdash; photographers, videographers, planners, venues, florists, caterers, DJs, bands, officiants and the rest of the people who make a wedding day happen. New cities go live when there are enough real vendors in them to give a couple a genuine choice, not the moment we can spell the city's name.</p>
+  <p>Lazo Weddings, LLC is based in Phoenix, Arizona. We're small on purpose: small enough that a person still reads every message that comes through the contact form, and small enough that the promises above are still decisions somebody makes rather than a policy somebody inherited.</p>
+</section>
+
+{% with
+  cf_title = 'Ask us anything',
+  cf_sub = 'About the rankings, the company, the roadmap, or a wedding you\'re planning right now. A person reads every one.'
+%}{% include "_contact_form.html" %}{% endwith %}
+
+<section class="next-reads">
+  <h2>Read on</h2>
+  <div class="next-grid">
+    <a href="/why-lazo/"><b>How our rankings work</b><span>The whole method, published &mdash; and everything that can't move it.</span></a>
+    <a href="/what-is-a-lazo/"><b>The lazo tradition</b><span>The wedding lasso ceremony our name comes from.</span></a>
+    <a href="/for-vendors/"><b>For vendors</b><span>Free forever, $0 per lead, 0% of your bookings.</span></a>
+  </div>
+</section>
+{% endblock %}

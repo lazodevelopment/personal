@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{#- tradition.html - JC-LAZO-TRAD-0916-001
+    /traditions/<slug>/. Content is config/traditions.py.
+
+    The `planning` block is what keeps these from being blog posts: every page
+    ends with the concrete things a couple has to tell a vendor for the tradition
+    to actually happen, and links the vendor categories it concerns. A reader who
+    arrives on "what is las arras" leaves knowing they need to brief an officiant
+    and a photographer - and with a link to ours. -#}
+{% block title %}{{ t.question }} | Lazo{% endblock %}
+{% block desc %}{{ t.lede|striptags|truncate(152, True, '') }}{% endblock %}
+{% block canonical %}{{ base }}/traditions/{{ slug }}/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ t.question|tojson }},
+  "description": {{ t.lede|tojson }},
+  "about": {{ t.short|tojson }},
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/traditions/{{ slug }}/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for q, a in t.faqs %}
+    { "@type": "Question", "name": {{ q|tojson }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ a|tojson }} } }{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow"><a href="/traditions/">Wedding traditions</a></p>
+  <h1>{{ t.question }}</h1>
+  <p class="hero-sub">{{ t.culture }}{% if t.also %} &middot; also called {{ t.also }}{% endif %}</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="page-back"><a href="/traditions/">All wedding traditions</a></p>
+
+<p class="lede">{{ t.lede }}</p>
+
+{%- for heading, paras in t.sections %}
+<h2>{{ heading }}</h2>
+{%- for para in paras %}
+<p>{{ para }}</p>
+{%- endfor %}
+{%- endfor %}
+
+<h2>Planning it properly</h2>
+<p>A tradition only goes well if the people running your day know it is coming. These are the things to say out loud, and who to say them to.</p>
+<dl class="cost-drivers cost-save">
+  {%- for what, why in t.planning %}
+  <dt>{{ what }}</dt><dd>{{ why }}</dd>
+  {%- endfor %}
+</dl>
+
+<h2>Common questions</h2>
+<div class="faq-block">
+  {%- for q, a in t.faqs %}
+  <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+  {%- endfor %}
+</div>
+</section>
+
+{%- if vendor_cats %}
+<section class="cost-cities">
+  <h2>The vendors who make this work</h2>
+  <p class="cc-sub">{{ t.short }} depends on people who have done it before. Every review on Lazo comes from a couple who actually got married with that vendor, and rankings can't be bought.</p>
+  <div class="cc-grid">
+    {%- for c in vendor_cats %}
+    <a href="/{{ first_metro.id }}/{{ c.slug }}/"><b>{{ c.label }}</b><span>in {{ first_metro.name }}</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/{{ first_metro.id }}/">Browse every category in {{ first_metro.name }} &rarr;</a>{% if vendor_cats %} &middot; <a href="/cost/{{ vendor_cats[0].slug }}/">What a {{ vendor_cats[0].singular|lower }} costs &rarr;</a>{% endif %}</p>
+</section>
+{%- endif %}
+
+<section class="next-reads">
+  <h2>Related traditions</h2>
+  <div class="next-grid">
+    {%- for r in related %}
+    <a href="{{ r.href }}"><b>{{ r.short }}</b><span>{{ r.culture }}</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/traditions/">All {{ tradition_count }} wedding traditions &rarr;</a></p>
+</section>
+{% endblock %}

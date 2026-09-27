@@ -1,0 +1,5 @@
+// Add inside  match /databases/{database}/documents { ... }  next to the existing sessions block.
+// Lets the Visitors page read every visit's page hits in one query (collection-group).
+match /{path=**}/hits/{hit} {
+  allow read: if isAdmin();
+}

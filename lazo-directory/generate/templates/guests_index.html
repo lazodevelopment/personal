@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{#- guests_index.html - JC-LAZO-GUEST-0917-001
+    /guests/ - the hub for the one audience the rest of the site ignores. -#}
+{% block title %}Wedding Guest Etiquette &mdash; What to Wear, Give and Do | Lazo{% endblock %}
+{% block desc %}Straight answers for wedding guests: what to wear, whether black is rude, how much to give, when you can leave. {{ guide_count }} guides, each with the answer in the first line.{% endblock %}
+{% block canonical %}{{ base }}/guests/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Wedding guest guides",
+  "description": "Straight answers to the questions wedding guests actually ask.",
+  "url": "{{ base }}/guests/",
+  "publisher": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" }
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">For wedding guests</p>
+  <h1>You're invited. Now what?</h1>
+  <p class="hero-sub">Straight answers to what guests actually worry about &mdash; what to wear, what to give, and what you're allowed to do. No hedging, no etiquette lecture.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="lede">Nearly everything written about weddings is written for the couple. But a wedding has one couple and a hundred and forty guests, and the guests are the ones lying awake wondering whether their dress is too white.</p>
+<p>So these are for you. Every page starts with the answer &mdash; yes, no, or it depends and here's on what &mdash; and explains itself underneath, for when you want to know why.</p>
+</section>
+
+{%- for group, items in groups %}
+<section class="cost-cities trad-group">
+  <h2>{{ group }}</h2>
+  <div class="cc-guides">
+    {%- for it in items %}
+    <a href="/guests/{{ it.slug }}/">
+      <b>{{ it.question }}</b>
+      <span>{{ it.blurb }}</span>
+    </a>
+    {%- endfor %}
+  </div>
+</section>
+{%- endfor %}
+
+<section class="band prose doc">
+<h2>The three that matter most</h2>
+<ul>
+  <li><strong>Don't wear white.</strong> It is the one guest rule that genuinely still holds, and it includes ivory, cream, champagne and anything that photographs white under a flash.</li>
+  <li><strong>RSVP by the date, even if it's a no.</strong> About a fifth of guests miss it at every wedding, which means the couple spends a week chasing people while finalising catering numbers.</li>
+  <li><strong>Bring only the people named on the invitation.</strong> Venues have hard capacity limits and catering is charged per head. An extra guest is a real cost, not a formality.</li>
+</ul>
+
+<h2>If the wedding isn't a Western one</h2>
+<p>A lot of guest advice assumes a white dress, a church and a seated dinner. If you have been invited to a Chinese, Indian, Nigerian, Jewish, Persian or any other wedding whose customs you do not know, the colours to avoid and the things that will happen are genuinely different &mdash; red is the bride's colour at some, white means mourning at others.</p>
+<p>We have <a href="/traditions/">45 pages on wedding traditions</a> describing what actually happens at them, written for people who want to turn up and get it right.</p>
+</section>
+
+<section class="next-reads">
+  <h2>Elsewhere on Lazo</h2>
+  <div class="next-grid">
+    <a href="/traditions/"><b>Wedding traditions</b><span>45 ceremonies explained as they're really performed.</span></a>
+    <a href="/planning/"><b>Planning your own?</b><span>Timelines, seating, vows, licences and the rest.</span></a>
+    <a href="/{{ first_metro.id }}/"><b>Find vendors in {{ first_metro.name }}</b><span>Every review verified, rankings never sold.</span></a>
+  </div>
+</section>
+{% endblock %}

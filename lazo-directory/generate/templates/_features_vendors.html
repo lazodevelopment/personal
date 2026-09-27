@@ -1,0 +1,258 @@
+{#- JC-LAZO-VENDORS-0920-FEATURES: the vendor toolkit, sold the way the homepage sells the
+    couple tools: twelve cards, each with a drawn mockup in the dashboard's own look, tagged
+    Free, Pro or Pro Studio. Included by pages/for-vendors.html in place of the old six-card
+    toolkit. Mockups are decorative: aria-hidden, the text carries. -#}
+<style>
+.fvf{background:#FAF6F0;padding:88px 0}
+.fvf .in{max-width:1180px;margin:0 auto;padding:0 22px}
+.fvf .head{max-width:760px;margin:0 auto 40px;text-align:center}
+.fvf .head h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(34px,4.6vw,52px);line-height:1.05;color:#52284F;margin:8px 0 12px}
+.fvf .head h2 em{font-style:italic;color:#B08D3E}
+.fvf .head p{color:#6B5F72;font-size:17px;line-height:1.6;margin:0}
+.fvg{display:grid;gap:22px;grid-template-columns:1fr}
+@media(min-width:720px){.fvg{grid-template-columns:1fr 1fr}}
+@media(min-width:1080px){.fvg{grid-template-columns:1fr 1fr 1fr}}
+.fvc{background:#FFFDF9;border:1px solid #E6D6B8;border-radius:22px;overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s}
+.fvc:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(61,28,59,.12)}
+.fvc .mk{height:232px;background:linear-gradient(180deg,#2A1530,#3D1C3B);position:relative;overflow:hidden;padding:16px 16px 0}
+.fvc .mk::after{content:"";position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(180deg,rgba(61,28,59,0),#3D1C3B);pointer-events:none;z-index:3}
+.fvc .tx{padding:18px 20px 20px}
+.fvc .tg{display:inline-block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;border-radius:999px;padding:3px 9px;background:#E7F3EC;color:#2E8B6B}
+.fvc .tg.pro{background:#F3E7CE;color:#8A6A2F}
+.fvc .tg.studio{background:#52284F;color:#D9B77C}
+.fvc h3{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:24px;line-height:1.12;margin:8px 0 6px;color:#52284F}
+.fvc p{margin:0;color:#6B5F72;font-size:14.5px;line-height:1.55}
+/* dashboard pieces */
+.mk .hdr{display:flex;align-items:center;gap:8px;color:#FAF6F0;font-weight:800;font-size:15px;margin:0 0 9px}
+.mk .hdr small{margin-left:auto;font-size:10.5px;color:rgba(250,246,240,.7);font-weight:600}
+.mk .card{background:#FBF7F0;border:1px solid rgba(217,183,124,.7);border-radius:16px;padding:11px 13px;margin-bottom:8px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.mk .row{display:flex;align-items:center;gap:9px;background:#FBF7F0;border:1px solid rgba(217,183,124,.7);border-radius:14px;padding:9px 11px;margin-bottom:7px;font-size:12px;color:#241E2B;box-shadow:0 6px 16px rgba(0,0,0,.16)}
+.mk .av{width:24px;height:24px;border-radius:50%;background:#52284F;color:#D9B77C;font-size:9px;font-weight:800;display:grid;place-items:center;flex:none}
+.mk .av.g{background:#D9B77C;color:#52284F}
+.mk .pill{font-size:10px;font-weight:800;border-radius:999px;padding:2px 8px;background:#E7F3EC;color:#2E8B6B;white-space:nowrap}
+.mk .pill.p{background:#F7EBD3;color:#8A6A2F}
+.mk .pill.d{background:#52284F;color:#D9B77C}
+.mk .sub{font-size:10.5px;color:#7A6E80;line-height:1.35}
+.mk .cap{font-family:'Cormorant Garamond',serif;font-size:17px;color:#52284F;font-weight:600;line-height:1.1}
+.mk .gbtn{display:inline-block;background:#D9B77C;color:#3D1C3B;border-radius:999px;padding:5px 11px;font-size:10.5px;font-weight:800}
+.mk .obtn{display:inline-block;border:1px solid #D9B77C;color:#52284F;border-radius:999px;padding:4px 10px;font-size:10.5px;font-weight:800;background:#fff}
+.mk .b1,.mk .b2{font-size:11.5px;padding:8px 11px;border-radius:12px;margin-bottom:7px;max-width:88%;line-height:1.4}
+.mk .b1{background:#EFE4EE;color:#241E2B;margin-left:auto}
+.mk .b2{background:#FBF7F0;color:#241E2B;border:1px solid rgba(217,183,124,.7)}
+.mk .b2 b{color:#52284F}
+.mk .sms{background:#1B0C1E;color:#FAF6F0;border-radius:14px;padding:10px 12px;font-size:11.5px;line-height:1.4;border:1px solid rgba(217,183,124,.4)}
+.mk .sms small{display:block;color:rgba(250,246,240,.55);font-size:10px;margin-bottom:4px;letter-spacing:.06em}
+.mk .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+.mk .cal span{aspect-ratio:1;display:grid;place-items:center;font-size:10px;color:#241E2B;border-radius:6px;background:#fff;border:1px solid rgba(217,183,124,.5)}
+.mk .cal span.bk{background:#52284F;color:#D9B77C;border-color:#52284F}
+.mk .cal span.h{background:none;border:0;color:#7A6E80;font-size:9px;font-weight:700}
+.mk .st{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mk .st div{background:#FBF7F0;border:1px solid rgba(217,183,124,.7);border-radius:12px;padding:9px 10px;box-shadow:0 6px 16px rgba(0,0,0,.16)}
+.mk .st b{display:block;font-family:'Cormorant Garamond',serif;font-size:22px;color:#52284F;font-weight:600;line-height:1}
+.mk .st span{font-size:9.5px;color:#7A6E80}
+.mk .bar{height:6px;border-radius:999px;background:rgba(82,40,79,.1);overflow:hidden;margin-top:5px}
+.mk .bar i{display:block;height:100%;background:#D9B77C;width:var(--w,50%)}
+.mk .gal{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.mk .gal i{aspect-ratio:1;border-radius:6px;background:#EFE4D2;display:block;background-size:cover;background-position:center}
+.mk .stars{color:#D9B77C;font-size:12px;letter-spacing:1px}
+.mk .lbl{display:flex;justify-content:space-between;align-items:baseline;font-size:11px;color:#241E2B;font-weight:700}
+.mk .lbl span{color:#7A6E80;font-weight:500}
+/* distinct shapes */
+.mk .lead{display:flex;gap:10px;align-items:stretch;background:#FBF7F0;border:1px solid rgba(217,183,124,.7);border-radius:14px;padding:9px;margin-bottom:7px;box-shadow:0 6px 16px rgba(0,0,0,.16)}
+.mk .lead .dt{flex:none;width:46px;border-radius:9px;background:#52284F;color:#FAF6F0;text-align:center;padding:5px 0}
+.mk .lead .dt b{display:block;font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1;color:#D9B77C}
+.mk .lead .dt span{font-size:8.5px;letter-spacing:.12em;font-weight:700}
+.mk .lead .who{flex:1;min-width:0}
+.mk .lead .who b{display:block;font-size:12.5px;color:#241E2B}
+.mk .lead .who .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk .lead .tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.mk .lead .tags i{font-style:normal;font-size:9.5px;font-weight:700;border-radius:999px;padding:1px 7px;background:#F3E7CE;color:#8A6A2F}
+.mk .doc{background:#fff;border:1px solid rgba(217,183,124,.7);border-radius:6px;padding:14px 16px 12px;box-shadow:0 8px 20px rgba(0,0,0,.2);position:relative;font-size:10.5px;color:#7A6E80;line-height:1.5}
+.mk .doc h4{margin:0 0 6px;font-family:'Cormorant Garamond',serif;font-size:16px;color:#52284F;font-weight:600}
+.mk .doc .ln{height:5px;border-radius:3px;background:#EFE4D2;margin:5px 0}
+.mk .doc .sig{margin-top:10px;display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #E6D6B8;padding-top:8px}
+.mk .doc .sig b{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;color:#241E2B;font-weight:500}
+.mk .doc .seal{position:absolute;right:12px;top:12px;width:48px;height:48px;border-radius:50%;border:2px solid #2E8B6B;color:#2E8B6B;display:grid;place-items:center;font-size:9px;font-weight:800;text-align:center;line-height:1.1;transform:rotate(-12deg);background:rgba(231,243,236,.9)}
+.mk .rcpt{display:flex;gap:14px;align-items:center;background:#FBF7F0;border:1px solid rgba(217,183,124,.7);border-radius:16px;padding:12px 14px;box-shadow:0 8px 20px rgba(0,0,0,.18)}
+.mk .ring{flex:none;width:86px;height:86px;border-radius:50%;background:conic-gradient(#2E8B6B 0 12%,#D9B77C 12% 56%,#EFE4D2 56% 100%);display:grid;place-items:center}
+.mk .ring i{width:62px;height:62px;border-radius:50%;background:#FBF7F0;display:grid;place-items:center;font-style:normal;text-align:center;font-size:9px;color:#7A6E80;line-height:1.1}
+.mk .ring i b{display:block;font-family:'Cormorant Garamond',serif;font-size:17px;color:#52284F;font-weight:600}
+.mk .rl{font-size:11px;color:#241E2B;line-height:1.5}
+.mk .rl b{color:#52284F}
+.mk .rl .k{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.mk .lock{position:absolute;left:50%;top:12px;width:210px;margin-left:-105px;border:5px solid #1B0C1E;border-radius:26px;background:radial-gradient(120% 80% at 50% 0%,#5A2A56,#1B0C1E 70%);padding:14px 10px 30px;text-align:center}
+.mk .lock .tm{font-family:'Cormorant Garamond',serif;font-size:34px;color:#FAF6F0;line-height:1;font-weight:500}
+.mk .lock .dy{font-size:9.5px;color:rgba(250,246,240,.7);letter-spacing:.1em;margin-bottom:10px}
+.mk .lock .nt{background:rgba(250,246,240,.14);backdrop-filter:blur(6px);border:1px solid rgba(250,246,240,.25);border-radius:12px;padding:8px 10px;text-align:left;color:#FAF6F0;font-size:10.5px;line-height:1.35}
+.mk .lock .nt small{display:flex;justify-content:space-between;font-size:9px;color:rgba(250,246,240,.7);margin-bottom:3px}
+.mk .lock .nt b{color:#D9B77C}
+.mk .spark{display:block;width:100%;height:56px}
+.mk .net{position:absolute;inset:44px 16px 0}
+.mk .net svg{position:absolute;inset:0;width:100%;height:100%}
+.mk .net .n{position:absolute;width:40px;height:40px;border-radius:50%;background:#FBF7F0;border:2px solid #D9B77C;display:grid;place-items:center;font-size:10px;font-weight:800;color:#52284F;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.mk .net .n.you{width:54px;height:54px;background:#52284F;color:#D9B77C;border-color:#D9B77C;font-size:11px}
+.mk .net .n small{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;font-size:9px;color:rgba(250,246,240,.85);white-space:nowrap;font-weight:600}
+.mk .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.mk .slots span{border:1px solid rgba(217,183,124,.8);border-radius:8px;padding:6px 0;text-align:center;font-size:11px;color:#52284F;background:#fff}
+.mk .slots span.on{background:#52284F;color:#D9B77C;border-color:#52284F}
+.mk .slots span.x{color:#B8AEC0;text-decoration:line-through;background:#F6F1EA}
+.mk .rv{background:#FBF7F0;border:1px solid rgba(217,183,124,.7);border-radius:16px;padding:12px 14px;box-shadow:0 8px 20px rgba(0,0,0,.18);position:relative}
+.mk .rv .q{position:absolute;right:12px;top:2px;font-family:'Cormorant Garamond',serif;font-size:56px;color:#E6D6B8;line-height:1}
+.mk .rv p{margin:6px 0 0;font-family:'Cormorant Garamond',serif;font-size:15px;color:#241E2B;line-height:1.3;font-style:italic}
+.mk .note{font-size:10.5px;color:rgba(250,246,240,.7);margin-top:8px;line-height:1.35}
+.fvf .all{margin-top:34px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.fvf .all span{border:1px solid #E6D6B8;background:#fff;border-radius:999px;padding:8px 14px;font-size:13.5px;color:#52284F}
+.fvf .key{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:0 0 26px;font-size:12.5px;color:#6B5F72}
+.fvf .key i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+</style>
+<section class="fvf" id="features">
+  <div class="in">
+    <div class="head">
+      <p class="fv-kick">The toolkit</p>
+      <h2>Everything you pay four companies for. <em>Free to start, Pro to win.</em></h2>
+      <p>Leads, threads, proposals and reviews are free forever. Pro adds the speed and polish that earn the ranking; Pro Studio runs the whole business in the thread. None of it buys a better position.</p>
+    </div>
+    <div class="key"><span><i style="background:#2E8B6B"></i>Free, every vendor</span><span><i style="background:#D9B77C"></i>Lazo Pro · $79/mo</span><span><i style="background:#52284F"></i>Pro Studio · $129/mo</span></div>
+    <div class="fvg">
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Leads<small>3 new this week</small></div>
+          <div class="lead"><div class="dt"><b>2</b><span>JUL</span></div><div class="who"><b>Mindy &amp; John</b><div class="sub">Dallas–Fort Worth · 150 guests · Photographer</div><div class="tags"><i>$75,000 budget</i><i>10 months out</i><i>Verified couple</i></div></div></div>
+          <div class="lead"><div class="dt"><b>12</b><span>JUN</span></div><div class="who"><b>Charlotte &amp; Henry</b><div class="sub">Charleston · 120 guests · replied in 2 min</div><div class="tags"><i>$40,000 budget</i><i>Proposal sent</i></div></div></div>
+        </div>
+        <div class="tx"><span class="tg">Free</span><h3>Leads with names, faces and real dates</h3><p>Every inquiry is a signed-in couple with a date, a city and a budget. Yours alone, never resold to five competitors, and never billed per lead.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Mindy &amp; John<small>Thread</small></div>
+          <div class="b1">Are you free July 2? We loved the Sedona gallery.</div>
+          <div class="b2"><b>Atavia Weddings</b> · Yes, and it’s yours if you want it. Here’s the full-day collection with the second shooter.</div>
+          <div class="row" style="margin-top:2px"><span class="av g">$</span><span><b style="font-weight:700">Proposal · Full day, 10 hours</b><br><span class="sub">$4,200 · retainer $500</span></span><span class="gbtn" style="margin-left:auto">Accept</span></div>
+        </div>
+        <div class="tx"><span class="tg">Free</span><h3>One thread per couple, proposal inside it</h3><p>Quote in the conversation with your packages filled in. The couple taps accept and you are booked, with no separate proposal app and no monthly fee for it.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="doc"><div class="seal">SIGNED<br>AUG 8</div><h4>Wedding Photography Agreement</h4>
+            <div class="ln" style="width:92%"></div><div class="ln" style="width:78%"></div><div class="ln" style="width:85%"></div><div class="ln" style="width:60%"></div>
+            <div class="sig"><span><b>Mindy Carter</b><br>11:02 AM · audit trail kept</span><span style="text-align:right"><b>Atavia Weddings</b><br>countersigned</span></div>
+          </div>
+          <div class="note">June turned the contract you already use into this template in about a minute.</div>
+        </div>
+        <div class="tx"><span class="tg studio">Pro Studio</span><h3>Contracts, signed in the same thread</h3><p>Legal e-signature with audit trail. June turns the contract you already use into a template, and every couple signs where the conversation already lives.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Invoices<small>0% to Lazo</small></div>
+          <div class="rcpt"><div class="ring"><i><b>$500</b>of $4,200</i></div>
+            <div class="rl"><b>Mindy &amp; John</b> · full day<br><span class="k" style="background:#2E8B6B"></span>Retainer $500 · paid by card<br><span class="k" style="background:#D9B77C"></span>Payment 2 of 3 · $1,850 · Mar 2<br><span class="k" style="background:#EFE4D2"></span>Final $1,850 · Jun 2 · tip line on</div></div>
+          <div class="note">Through your own processor. Reminders go out on their own.</div>
+        </div>
+        <div class="tx"><span class="tg studio">Pro Studio</span><h3>Invoices, payment plans and tips</h3><p>Card payments through your own processor, in the thread. Installments, reminders and a tip line. Lazo takes nothing from what couples pay you.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="lock"><div class="tm">9:41</div><div class="dy">TUESDAY, JUNE 3</div>
+            <div class="nt"><small><span>LAZO</span><span>now</span></small><b>New lead:</b> Charlotte &amp; Henry · June 12, 2027 · Charleston. Reply here or tap to open the thread.</div>
+            <div class="nt" style="margin-top:6px;opacity:.85"><small><span>LAZO</span><span>4s ago</span></small>Auto-reply sent in your words · follow-ups set for day 3 and day 5.</div>
+          </div>
+        </div>
+        <div class="tx"><span class="tg pro">Pro</span><h3>Text alerts, auto-replies, follow-ups</h3><p>A text the moment a couple inquires, an instant reply in your words with their name and date filled in, and day-3 and day-5 nudges. First reply usually wins.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Availability<small>June 2027</small></div>
+          <div class="card" style="padding:9px 11px">
+            <div class="cal"><span class="h">S</span><span class="h">M</span><span class="h">T</span><span class="h">W</span><span class="h">T</span><span class="h">F</span><span class="h">S</span>
+              <span></span><span></span><span>1</span><span>2</span><span>3</span><span>4</span><span class="bk">5</span>
+              <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span class="bk">12</span>
+              <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span class="bk">19</span>
+              <span>20</span><span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><span>26</span></div>
+          </div>
+        </div>
+        <div class="tx"><span class="tg pro">Pro</span><h3>An availability calendar couples see first</h3><p>Mark booked dates and couples see them before they inquire. Fewer dead-end messages, and a feed for your own calendar app.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Analytics<small>Phoenix · photographers</small></div>
+          <div class="st"><div><b>#4</b><span>your rank of 60</span></div><div><b>92%</b><span>replied in 24h</span></div><div><b>11</b><span>inquiries · 30 days</span></div></div>
+          <div class="card" style="margin-top:8px;padding:8px 12px 6px"><div class="lbl">Inquiries, last 12 weeks <span>+38%</span></div>
+            <svg class="spark" viewBox="0 0 300 56" preserveAspectRatio="none"><defs><linearGradient id="sg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#D9B77C" stop-opacity=".55"/><stop offset="1" stop-color="#D9B77C" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0 44 L27 40 L54 42 L81 34 L108 36 L135 28 L162 30 L189 22 L216 24 L243 16 L270 14 L300 8 L300 56 L0 56 Z" fill="url(#sg)"/>
+              <path d="M0 44 L27 40 L54 42 L81 34 L108 36 L135 28 L162 30 L189 22 L216 24 L243 16 L270 14 L300 8" fill="none" stroke="#52284F" stroke-width="2.5" stroke-linejoin="round"/>
+              <circle cx="300" cy="8" r="4" fill="#D9B77C" stroke="#52284F" stroke-width="2"/></svg></div>
+        </div>
+        <div class="tx"><span class="tg pro">Pro</span><h3>Analytics that coach you</h3><p>Your rank in your market and what moves it, response rate, inquiry trends, and what couples in your city actually pay for your category.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">June for Studio<small>Pro Studio</small></div>
+          <div class="b1">Audit my profile. Why am I #4 and not #1?</div>
+          <div class="b2"><b>Three things.</b> Your reply time slipped to 19 hours in August; the top three answer in under 2. Your gallery has no reception photos. And your starting price is hidden, so 40% of inquiries are outside your range. Want me to draft the reply template?</div>
+        </div>
+        <div class="tx"><span class="tg studio">Pro Studio</span><h3>June, your AI business copilot</h3><p>Profile audits, pricing strategy against your market, review coaching, and replies drafted in your voice from the couple’s real details.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Client galleries<small>Mindy &amp; John · 412 photos</small></div>
+          <div class="card" style="padding:9px 10px 10px">
+            <div class="gal"><i style="background-image:url('/assets/photos/atmo-firstdance.jpg')"></i><i style="background-image:url('/assets/photos/hero-3.jpg')"></i><i style="background-image:url('/assets/photos/atmo-candlelight.jpg')"></i><i style="background-image:url('/assets/photos/atmo-toast.jpg')"></i><i style="background-image:url('/assets/photos/atmo-veil.jpg')"></i><i style="background-image:url('/assets/photos/atmo-rings.jpg')"></i><i style="background-image:url('/assets/photos/hero-1.jpg')"></i><i style="background-image:url('/assets/photos/hero-2.jpg')"></i></div>
+            <div class="lbl" style="margin-top:8px"><span>Passcode on · downloads on · your logo &amp; colors</span><span class="pill">Live</span></div>
+            <div class="sub" style="margin-top:4px">Couples heart favorites and order prints from the lab, shipped blind.</div>
+          </div>
+        </div>
+        <div class="tx"><span class="tg studio">Pro Studio</span><h3>Delivery galleries with a print store</h3><p>Deliver the wedding on a page with your branding, a passcode and downloads. Couples order professional prints and wall art straight from it.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Reviews<small>4.9 · 31 verified</small></div>
+          <div class="rv"><span class="q">”</span><div class="lbl"><span><span class="av" style="display:inline-grid;vertical-align:middle;margin-right:6px">MJ</span>Mindy &amp; John</span><span class="stars">★★★★★</span></div>
+            <p>Atavia made the whole day feel easy. The sneak peeks came the next morning.</p>
+            <div class="sub" style="margin-top:6px;color:#2E8B6B;font-weight:700">✓ Booked through Lazo · counts toward your Lazo Score</div></div>
+          <div class="b2" style="max-width:100%;margin-top:8px"><b>Your reply</b> · Thank you both. That sunset was a gift.</div>
+        </div>
+        <div class="tx"><span class="tg">Free</span><h3>Reviews from couples who booked you</h3><p>No drive-by stars, no anonymous takedowns: a review needs a booking behind it. You reply to every one, free, and the Lazo Score weighs them by recency.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Your team<small>Referrals</small></div>
+          <div class="net">
+            <svg viewBox="0 0 320 180" preserveAspectRatio="none"><g stroke="#D9B77C" stroke-width="1.5" stroke-dasharray="4 4" opacity=".8"><line x1="160" y1="60" x2="60" y2="130"/><line x1="160" y1="60" x2="160" y2="140"/><line x1="160" y1="60" x2="262" y2="126"/><line x1="160" y1="60" x2="250" y2="30"/></g></svg>
+            <div class="n you" style="left:calc(50% - 27px);top:33px">YOU<small>Atavia</small></div>
+            <div class="n" style="left:calc(19% - 20px);top:110px">BF<small>Bloom &amp; Fern · 14 sent</small></div>
+            <div class="n" style="left:calc(50% - 20px);top:120px">DR<small>DJ Rae · 9 sent</small></div>
+            <div class="n" style="left:calc(82% - 20px);top:106px">HC<small>Hall &amp; Co · 6 sent</small></div>
+            <div class="n" style="left:calc(78% - 17px);top:12px;width:34px;height:34px;font-size:9px">MJ<small>Mindy &amp; John</small></div>
+          </div>
+        </div>
+        <div class="tx"><span class="tg">Free</span><h3>Send couples to the crew you trust</h3><p>Recommend the vendors you work with and they land on your couple’s vendor team as referred by you. The people who refer you do the same.</p></div>
+      </div>
+
+      <div class="fvc">
+        <div class="mk" aria-hidden="true">
+          <div class="hdr">Book a consult<small>meetlazo.com/book/atavia</small></div>
+          <div class="card"><div class="lbl">Thursday, June 5 <span>30-min video call</span></div>
+            <div class="slots"><span class="x">9:00</span><span>10:00</span><span>11:00</span><span class="x">1:00</span><span class="on">2:00</span><span>3:00</span></div>
+            <div class="sub" style="margin-top:8px">Charlotte picked 2:00 · confirmation and reminder sent · lands in her thread</div></div>
+          <div class="note">Plus a one-line embed for the form on your own site, and questionnaires.</div>
+        </div>
+        <div class="tx"><span class="tg">Free</span><h3>A scheduler and a lead form for your own website</h3><p>Couples book a consult from your Lazo page, and inquiries from your own site land in the same threads. Questionnaires collect the day’s details when you need them.</p></div>
+      </div>
+
+    </div>
+    <div class="all">
+      <span>Claimed &amp; verified profile with gallery, packages, video</span><span>Pro badge on your profile</span><span>Unlimited gallery &amp; every market unlocked</span><span>Price sheet import</span><span>Your logo &amp; colors on galleries</span><span>Timelines, guest lists &amp; seating sent to you by couples</span><span>Song lists from the couple’s Music page</span><span>Venue Showcase 360 tours</span><span>Say hello to matching couples</span>
+    </div>
+  </div>
+</section>

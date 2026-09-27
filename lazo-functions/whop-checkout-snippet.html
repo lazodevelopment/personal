@@ -1,0 +1,83 @@
+<!-- ============================================================
+     pro/checkout/index.html — Whop swap (JC-LAZO-WHOP-0905-003)
+     Replace the HelcimPay <script> + helcimInitCheckout/helcimActivate
+     JS with this. Keep the existing proIntentInfo fetch that renders the
+     plan summary (vendorName / tier / cadence / amountCents) — unchanged.
+     ============================================================ -->
+
+<!-- 1. Whop loader (async; mounts any [data-whop-checkout-plan-id] div) -->
+<script async defer src="https://js.whop.com/static/checkout/loader.js"></script>
+
+<!-- 2. Mount point — attributes are filled by JS below before the loader sees it -->
+<div id="whop-mount"></div>
+<div id="whop-done" style="display:none"></div>
+
+<script>
+(function () {
+  var FN = "https://us-central1-lazo-513ec.cloudfunctions.net";
+  var qs = new URLSearchParams(location.search);
+  var intent = qs.get("intent") || "";
+  var mount = document.getElementById("whop-mount");
+  var done = document.getElementById("whop-done");
+
+  function showDone(ok) {
+    mount.style.display = "none";
+    done.style.display = "block";
+    done.innerHTML = ok
+      ? '<h2 style="color:#52284F">You\'re in.</h2><p>Your receipt is on its way. <a href="https://app.meetlazo.com/">Open your dashboard</a> — your new tier is live.</p>'
+      : '<h2 style="color:#52284F">Payment didn\'t go through.</h2><p>Nothing was charged. <a href="' + location.pathname + '?intent=' + intent + '">Try again</a> or reopen checkout from your dashboard.</p>';
+  }
+
+  // Returning from an external payment method (Cash App Pay, bank, etc.)
+  if (qs.get("whop") === "return") {
+    showDone(qs.get("status") === "success");
+    return;
+  }
+
+  fetch(FN + "/whopInitCheckout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ intent: intent })
+  })
+  .then(function (r) { return r.json().then(function (j) { j._status = r.status; return j; }); })
+  .then(function (j) {
+    if (!j.sessionId) {
+      mount.innerHTML = '<p style="color:#7A6E80">' + (j.error || "Could not start checkout.") + '</p>';
+      return;
+    }
+    var el = document.createElement("div");
+    el.setAttribute("data-whop-checkout-plan-id", j.planId);
+    el.setAttribute("data-whop-checkout-session", j.sessionId);
+    el.setAttribute("data-whop-checkout-return-url",
+      location.origin + location.pathname + "?intent=" + intent + "&whop=return");
+    el.setAttribute("data-whop-checkout-theme", "light");
+    el.setAttribute("data-whop-checkout-theme-accent-color", "#52284F");
+    el.setAttribute("data-whop-checkout-hide-price", "true"); // we already show the summary
+    el.setAttribute("data-whop-checkout-on-complete", "whopOnComplete");
+    mount.appendChild(el);
+    // If the loader ran before the div existed, poke it.
+    if (window.wco && typeof window.wco === "function") { try { window.wco(); } catch (e) {} }
+  })
+  .catch(function () {
+    mount.innerHTML = '<p style="color:#7A6E80">Could not start checkout — try again.</p>';
+  });
+
+  // Fired by the embed when the in-iframe payment completes. Fulfilment is
+  // server-side via whopWebhook; this only flips the page state.
+  window.whopOnComplete = function () { showDone(true); };
+})();
+</script>
+
+<!--
+  Notes
+  - hidePrice hides Whop's price line only; the vendor still sees the amount
+    inside the card form's pay button. Drop that attribute if you'd rather
+    Whop render the price itself.
+  - The on-complete attribute name follows the React prop (onComplete) — if
+    the HTML loader in production ignores it, the return-URL path above still
+    covers success/error, and the webhook covers fulfilment either way.
+    Check the Embedded checkout reference (docs.whop.com/payments/checkout-embed)
+    for the exact data-attribute list on the loader version that ships.
+  - Meta Pixel: fire fbq("track","Subscribe",{value:amountCents/100,currency:"USD"})
+    inside showDone(true) — this is the Subscribe event still on the to-do list.
+-->

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{#- JC-LAZO-LICENSE-0920-001: /marriage-license/<state>/ - the five answers, the
+    county offices for Lazo metros in the state, and a date calculator that
+    turns the wedding date into an application window. -#}
+{% block title %}{{ s.name }} Marriage License: Cost, Where to Apply, Waiting Period ({{ year }}) | Lazo{% endblock %}
+{% block desc %}A {{ s.name }} marriage license costs {{ s.fee_text|lower }}, issued by the {{ s.issuer|lower }}. {{ s.wait_text }}, {{ s.valid_text|lower }}, {{ 'no witnesses' if s.witnesses == 0 else (s.witnesses|string + ' witness' + ('es' if s.witnesses > 1 else '')) }} required. Where to apply and when.{% endblock %}
+{% block canonical %}{{ base }}/marriage-license/{{ s.slug }}/{% endblock %}
+{% block nav_key %}planning{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Marriage license","item":"{{ base }}/marriage-license/"},{"@type":"ListItem","position":3,"name":"{{ s.name }}","item":"{{ base }}/marriage-license/{{ s.slug }}/"}]},{"@type":"WebPage","@id":"{{ base }}/marriage-license/{{ s.slug }}/","url":"{{ base }}/marriage-license/{{ s.slug }}/","name":"{{ s.name }} marriage license","isPartOf":{"@type":"WebSite","name":"Lazo","url":"{{ base }}/"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How much does a marriage license cost in {{ s.name }}?","acceptedAnswer":{"@type":"Answer","text":"{{ s.fee_text }}, paid to the {{ s.issuer|lower }}.{% if s.course %} {{ s.course }}{% endif %} Fees change and differ by county; confirm with the office."}},{"@type":"Question","name":"Where do you get a marriage license in {{ s.name }}?","acceptedAnswer":{"@type":"Answer","text":"From the {{ s.issuer|lower }}. {{ s.notes }}"}},{"@type":"Question","name":"Is there a waiting period in {{ s.name }}?","acceptedAnswer":{"@type":"Answer","text":"{{ s.wait_text }}.{% if s.wait_days > 0 %} Apply at least {{ s.wait_days }} day{{ 's' if s.wait_days > 1 else '' }} before the ceremony.{% else %} You can marry the day the license is issued.{% endif %}"}},{"@type":"Question","name":"How long is a {{ s.name }} marriage license valid?","acceptedAnswer":{"@type":"Answer","text":"{{ s.valid_text }}.{% if s.valid_days > 0 %} Apply within {{ s.valid_days }} days of the wedding, after any waiting period.{% endif %}"}},{"@type":"Question","name":"Do you need witnesses in {{ s.name }}?","acceptedAnswer":{"@type":"Answer","text":"{% if s.witnesses == 0 %}No. Only the officiant signs.{% else %}Yes, {{ s.witnesses }} witness{{ 'es' if s.witnesses > 1 else '' }} over 18 sign{{ '' if s.witnesses > 1 else 's' }} at the ceremony.{% endif %}"}}]}]}</script>{% endblock %}
+{% block main %}
+<style>
+.lsh{max-width:860px;margin:0 auto;padding:54px 22px 10px;text-align:center}
+.lsh .k{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--plum);font-weight:600}
+.lsh .k a{color:inherit;text-decoration:none}
+.lsh h1{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(34px,5.2vw,52px);line-height:1.05;color:var(--plum);margin:14px 0 12px}
+.lsh .lede{color:var(--muted);max-width:58ch;margin:0 auto;font-size:17px}
+.lsf{max-width:1080px;margin:30px auto 0;padding:0 22px;display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:760px){.lsf{grid-template-columns:repeat(5,1fr)}}
+.lsf div{background:#fff;border:1px solid var(--gold-line);border-radius:16px;padding:16px 16px}
+.lsf b{display:block;font-family:"Cormorant Garamond",serif;font-weight:600;font-size:24px;color:var(--plum);line-height:1.1}
+.lsf span{display:block;font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+.lsb{max-width:820px;margin:34px auto 0;padding:0 22px}
+.lsb h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(26px,3.6vw,34px);color:var(--plum);margin:34px 0 8px}
+.lsb p{color:var(--muted);font-size:15.5px;line-height:1.6;margin:0 0 10px}
+.lsb .note{background:#fff;border:1px solid var(--gold-line);border-left:4px solid var(--gold);border-radius:12px;padding:14px 16px;color:var(--plum)}
+.lsc{background:#fff;border:1px solid var(--gold-line);border-radius:18px;padding:22px 20px;margin-top:14px}
+.lsc label{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.lsc input{font:inherit;font-size:16px;padding:11px 14px;border:1px solid var(--gold-line);border-radius:10px;background:#fff;color:inherit}
+.lsc .out{margin-top:14px;font-size:15.5px;color:var(--plum);line-height:1.6}
+.lsc .out b{font-weight:700}
+.lso{display:grid;gap:12px;margin-top:8px}
+.lso a{display:block;background:#fff;border:1px solid var(--gold-line);border-radius:14px;padding:14px 16px;text-decoration:none;color:inherit}
+.lso a b{display:block;color:var(--plum);font-weight:600}
+.lso a span{font-size:13.5px;color:var(--muted)}
+.lso a em{font-style:normal;color:var(--plum);font-size:13px}
+.lsx details{border-bottom:1px solid var(--gold-line);padding:14px 0}
+.lsx details:first-of-type{border-top:1px solid var(--gold-line);margin-top:10px}
+.lsx summary{cursor:pointer;color:var(--plum);font-weight:600;list-style:none}
+.lsx summary::-webkit-details-marker{display:none}
+.lsx details p{margin:8px 0 0;font-size:15px}
+.lsm{max-width:820px;margin:40px auto 70px;padding:0 22px;color:var(--muted);font-size:14px;line-height:1.6}
+.lsm a{color:var(--plum);font-weight:600}
+</style>
+<section class="lsh">
+  <p class="k"><a href="/marriage-license/">Marriage license</a> · {{ s.name }}</p>
+  <h1>{{ s.name }} marriage license: cost, where to apply, and when</h1>
+  <p class="lede">Issued by the {{ s.issuer|lower }}. {{ s.notes }}</p>
+</section>
+<div class="lsf">
+  <div><b>{{ s.fee_text.replace('About ', '') }}</b><span>Fee{% if s.course %} · less with a course{% endif %}</span></div>
+  <div><b>{{ 'None' if s.wait_days == 0 else (s.wait_days|string + ' day' + ('s' if s.wait_days > 1 else '')) }}</b><span>Waiting period</span></div>
+  <div><b>{{ s.valid_text.replace('Valid ', '') if s.valid_days > 0 else 'No expiry' }}</b><span>License lasts</span></div>
+  <div><b>{{ 'None' if s.witnesses == 0 else s.witnesses }}</b><span>Witnesses at the ceremony</span></div>
+  <div><b>{{ s.min_age }}+</b><span>Without parental consent</span></div>
+</div>
+<section class="lsb">
+  <h2>When to apply, for your date</h2>
+  <p>{% if s.valid_days > 0 and s.wait_days > 0 %}The license lasts {{ s.valid_days }} days and there is a {{ s.wait_days }}-day wait, so apply between {{ s.valid_days }} and {{ s.wait_days }} days before the wedding.{% elif s.valid_days > 0 %}The license lasts {{ s.valid_days }} days and there is no wait, so apply any time in the {{ s.valid_days }} days before the wedding, including the day itself.{% elif s.wait_days > 0 %}The license does not expire, but there is a {{ s.wait_days }}-day wait, so apply at least {{ s.wait_days }} day{{ 's' if s.wait_days > 1 else '' }} before.{% else %}No wait and no expiry: apply whenever suits you before the day.{% endif %} Enter your date and we will do the arithmetic.</p>
+  <div class="lsc">
+    <label for="lsd">Your wedding date</label>
+    <input id="lsd" type="date">
+    <div class="out" id="lso" aria-live="polite"></div>
+  </div>
+  {% if s.course %}
+  <h2>The course discount</h2>
+  <p>{{ s.course }} Ask the office which providers count before you sign up; the certificate has to come from a registered provider and be dated within a year of applying.</p>
+  {% endif %}
+  {% if offices %}
+  <h2>Where to apply{% if offices|length == 1 %} in {{ offices[0].metro }}{% endif %}</h2>
+  <p>The offices that serve the {{ s.name }} cities Lazo covers. Both of you go, with government photo ID; check the office's own page for hours, appointments and what to bring.</p>
+  <div class="lso">
+  {% for o in offices %}
+    <a href="{{ o.site }}" rel="noopener" target="_blank"><b>{{ o.county }} · {{ o.office }}</b><span>{{ o.metro }}{% if o.fee %} · about ${{ o.fee }}{% endif %}{% if o.note %} · {{ o.note }}{% endif %}</span><em>{{ o.site.replace('https://', '').replace('http://', '') }} ↗</em></a>
+  {% endfor %}
+  </div>
+  {% else %}
+  <h2>Where to apply</h2>
+  <p>At the {{ s.issuer|lower }} for the county or town. Search the office's name with your county to find its page, hours and whether it takes appointments.</p>
+  {% endif %}
+  <h2>What to bring</h2>
+  <p>Both of you, in person, with government photo ID such as a driver's license or passport. Know your parents' full names and birthplaces, which most applications ask. If either of you was married before, know the date and how it ended; some offices ask for the decree. Bring the fee; not every office takes cards.{% if s.abbr in ['LA', 'MS'] %} {{ s.name }} also asks for a certified birth certificate.{% endif %}</p>
+  <div class="lsx">
+    <h2>{{ s.name }} marriage license FAQ</h2>
+    <details open><summary>How much does a marriage license cost in {{ s.name }}?</summary><p>{{ s.fee_text }}, paid to the {{ s.issuer|lower }}.{% if s.course %} {{ s.course }}{% endif %} Fees change and differ by county; confirm with the office.</p></details>
+    <details><summary>Where do you get a marriage license in {{ s.name }}?</summary><p>From the {{ s.issuer|lower }}. {{ s.notes }}</p></details>
+    <details><summary>Is there a waiting period in {{ s.name }}?</summary><p>{{ s.wait_text }}.{% if s.wait_days > 0 %} Apply at least {{ s.wait_days }} day{{ 's' if s.wait_days > 1 else '' }} before the ceremony.{% else %} You can marry the day the license is issued.{% endif %}</p></details>
+    <details><summary>How long is a {{ s.name }} marriage license valid?</summary><p>{{ s.valid_text }}.{% if s.valid_days > 0 %} Apply within {{ s.valid_days }} days of the wedding, after any waiting period.{% endif %}</p></details>
+    <details><summary>Do you need witnesses in {{ s.name }}?</summary><p>{% if s.witnesses == 0 %}No. Only the officiant signs.{% else %}Yes, {{ s.witnesses }} witness{{ 'es' if s.witnesses > 1 else '' }} over 18 sign{{ '' if s.witnesses > 1 else 's' }} at the ceremony.{% endif %}</p></details>
+  </div>
+</section>
+<p class="lsm">Fees and rules are as published by the issuing offices for 2025 to 2026 and change without notice. This page is a planning aid, not legal advice; the office's own page is the last word. {% if metros %}Planning a wedding in {% for m in metros %}<a href="/{{ m.id }}/">{{ m.name }}</a>{% if not loop.last %}, {% endif %}{% endfor %}? Every vendor there is ranked by verified reviews, and your <a href="/wedding-websites/">free wedding website</a> is a click away.{% endif %} <a href="/marriage-license/">Every state</a>.</p>
+<script>
+(function(){var d=document.getElementById('lsd'),o=document.getElementById('lso'),V={{ s.valid_days }},W={{ s.wait_days }};
+function f(x){return x.toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})}
+function go(){if(!d.value){o.innerHTML='';return}var w=new Date(d.value+'T12:00:00');var latest=new Date(w);latest.setDate(latest.getDate()-W);var s='';
+if(V>0){var earliest=new Date(w);earliest.setDate(earliest.getDate()-V);s+='Apply between <b>'+f(earliest)+'</b> and <b>'+f(latest)+'</b>. ';}else{s+='Apply by <b>'+f(latest)+'</b>; the license does not expire. ';}
+var sw=new Date(w);sw.setDate(sw.getDate()-14);if(V>0&&sw>=new Date(w.getTime()-V*864e5))s+='A safe target: the week of <b>'+f(sw)+'</b>, two weeks out.';
+o.innerHTML=s}
+d.addEventListener('change',go);})();
+</script>
+{% endblock %}

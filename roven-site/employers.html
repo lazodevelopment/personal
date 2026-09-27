@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hire with Roven — Post free. Pay only when you hire.</title>
+<meta name="description" content="Roven for employers: verified candidates, zero posting fees, and a placement fee only when a hire actually happens. Founding employers hire with placement fees waived.">
+<link rel="canonical" href="https://rovenhr.com/employers.html">
+<meta property="og:title" content="Hire with Roven — pay only when you hire">
+<meta property="og:description" content="No posting fees. No sponsorship ladder. Verified candidates and a fee only on a real hire.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rovenhr.com/employers.html">
+<meta property="og:image" content="https://rovenhr.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+<style>
+/* ---- employer-page-scoped styles (self-contained; no styles.css deps) ---- */
+.emp-eyebrow{background:linear-gradient(90deg,#1CA45F,#158a4e);padding:9px 18px;text-align:center}
+.emp-eyebrow span{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;font-weight:700;color:#fff}
+.emp-hero{background:radial-gradient(1100px 480px at 78% -10%,rgba(28,164,95,.34),transparent 60%),radial-gradient(700px 420px at -8% 110%,rgba(28,164,95,.16),transparent 55%),linear-gradient(180deg,#101b14 0%,#0E141D 100%);border-bottom:1px solid rgba(58,219,139,.18);padding:72px 0 64px}
+.emp-hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:52px;align-items:center}
+.emp-plate{display:inline-flex;align-items:center;gap:8px;background:rgba(28,164,95,.16);border:1px solid rgba(58,219,139,.5);border-radius:100px;padding:7px 14px;margin-bottom:20px}
+.emp-plate span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;font-weight:700;color:#3ADB8B}
+.emp-hero h1{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(34px,4.6vw,54px);font-weight:800;letter-spacing:-1.8px;line-height:1.05;color:#fff;margin:0 0 18px}
+.emp-hero h1 .strike{position:relative;color:rgba(255,255,255,.45)}
+.emp-hero h1 .strike::after{content:"";position:absolute;left:-2%;right:-2%;top:52%;height:4px;background:#C0483B;transform:rotate(-2deg);border-radius:2px}
+.emp-hero h1 .accent{color:#3ADB8B}
+.emp-hero .lede{font-size:16.5px;line-height:1.65;color:rgba(255,255,255,.72);max-width:520px;margin:0 0 26px}
+.emp-cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.emp-btn{display:inline-block;background:#1CA45F;color:#fff;text-decoration:none;font-family:'Instrument Sans',sans-serif;font-weight:600;font-size:15px;padding:15px 28px;border-radius:100px;box-shadow:0 6px 26px rgba(28,164,95,.35);transition:transform .15s,box-shadow .15s}
+.emp-btn:hover{transform:translateY(-1px);box-shadow:0 10px 32px rgba(28,164,95,.45)}
+.emp-btn.ghost{background:transparent;border:1px solid rgba(255,255,255,.28);box-shadow:none;color:rgba(255,255,255,.9)}
+.emp-hero-note{margin-top:16px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.12em;font-weight:700;color:#3ADB8B}
+/* the VS table */
+.vs-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.vs-head{display:grid;grid-template-columns:1.15fr 1fr 1fr;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.1)}
+.vs-head div{padding:13px 14px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;font-weight:700;color:rgba(255,255,255,.55)}
+.vs-head .rov{color:#3ADB8B;background:rgba(28,164,95,.12)}
+.vs-row{display:grid;grid-template-columns:1.15fr 1fr 1fr;border-bottom:1px solid rgba(255,255,255,.07)}
+.vs-row:last-child{border-bottom:none}
+.vs-row div{padding:13px 14px;font-size:12.5px;line-height:1.45}
+.vs-row .q{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.1em;font-weight:700;color:rgba(255,255,255,.5);display:flex;align-items:center}
+.vs-row .them{color:rgba(255,255,255,.55)}
+.vs-row .rov{color:#fff;background:rgba(28,164,95,.10);font-weight:500}
+.vs-row .rov b{color:#3ADB8B;font-weight:700}
+@media(max-width:900px){.emp-hero .wrap{grid-template-columns:1fr;gap:36px}.emp-hero{padding:52px 0 48px}}
+/* ---- pricing block (self-contained) ---- */
+.emp-price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:30px 0 26px;align-items:stretch}
+.emp-price-card{position:relative;display:flex;flex-direction:column;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:20px;padding:24px 22px 22px}
+.emp-price-card.featured{background:linear-gradient(180deg,rgba(28,164,95,.16),rgba(28,164,95,.05));border-color:rgba(58,219,139,.55);box-shadow:0 0 46px rgba(28,164,95,.18)}
+.emp-price-ribbon{position:absolute;top:-11px;right:18px;background:#1CA45F;color:#fff;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.14em;font-weight:700;padding:5px 11px;border-radius:100px;box-shadow:0 4px 14px rgba(28,164,95,.4)}
+.emp-price-label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.13em;font-weight:700;color:rgba(255,255,255,.5);margin:0 0 14px;line-height:1.5}
+.emp-price-card.featured .emp-price-label{color:rgba(58,219,139,.9)}
+.emp-price-was{font-family:'IBM Plex Mono',monospace;font-size:14px;color:rgba(255,255,255,.35);text-decoration:line-through;margin:0 0 2px;height:20px}
+.emp-price-num{font-family:'Bricolage Grotesque',sans-serif;font-size:46px;font-weight:800;letter-spacing:-2.2px;line-height:1;color:#fff;margin:0}
+.emp-price-card.featured .emp-price-num{color:#3ADB8B}
+.emp-price-per{font-size:12.5px;line-height:1.55;color:rgba(255,255,255,.62);margin:8px 0 0}
+.emp-price-chip{display:inline-block;margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.12em;font-weight:700;padding:5px 11px;border-radius:100px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.7)}
+.emp-price-foot{margin-top:auto;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;line-height:1.55;color:rgba(255,255,255,.6)}
+.emp-price-card.featured .emp-price-foot{border-top-color:rgba(58,219,139,.3);color:rgba(255,255,255,.78)}
+.emp-price-foot b{color:#3ADB8B;font-weight:700}
+.emp-price-today{display:flex;align-items:center;gap:10px;margin:0 0 4px;padding:13px 18px;background:rgba(28,164,95,.1);border:1px solid rgba(58,219,139,.35);border-radius:14px}
+.emp-price-today .dot{width:8px;height:8px;border-radius:50%;background:#3ADB8B;box-shadow:0 0 10px rgba(58,219,139,.8);flex:none}
+.emp-price-today span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;font-weight:700;color:#3ADB8B;line-height:1.6}
+@media(max-width:980px){.emp-price-grid{grid-template-columns:1fr 1fr}.emp-price-card.featured{grid-column:1/-1}}
+@media(max-width:600px){.emp-price-grid{grid-template-columns:1fr}.emp-price-card.featured{grid-column:auto}.emp-price-num{font-size:40px}}
+
+@media(max-width:520px){.vs-head div,.vs-row div{padding:10px 9px;font-size:11px}.vs-row .q{font-size:8.5px}}
+
+/* ---- pricing card CTAs ---- */
+.emp-price-cta{display:block;margin-top:16px;text-align:center;padding:12px 16px;border-radius:100px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:600;text-decoration:none;color:#fff;border:1px solid rgba(255,255,255,.26);background:rgba(255,255,255,.04);transition:background .16s ease,border-color .16s ease,transform .16s ease}
+.emp-price-cta:hover{border-color:#1CA45F;background:rgba(28,164,95,.14);transform:translateY(-1px)}
+.emp-price-card.featured .emp-price-cta{background:#1CA45F;border-color:#1CA45F;box-shadow:0 6px 22px rgba(28,164,95,.34)}
+.emp-price-card.featured .emp-price-cta:hover{background:#178F52;border-color:#178F52;box-shadow:0 10px 28px rgba(28,164,95,.42)}
+.emp-price-note{margin:10px 0 0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.1em;font-weight:700;color:rgba(255,255,255,.38)}
+</style>
+</head>
+<body>
+<div class="emp-eyebrow"><span>FOR EMPLOYERS · POST FREE · PAY ONLY ON A HIRE · FOUNDING EMPLOYERS: $0</span></div>
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="logo-link" href="index.html" aria-label="Roven home"><img class="logo-img" src="logo.png" alt="Roven" width="640" height="293"></a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="navlinks">MENU</button>
+    <ul class="nav-links" id="navlinks">
+      <li><a href="how-it-works.html">How it works</a></li>
+      <li><a href="employers.html">For employers</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a class="nav-cta" href="https://app.rovenhr.com">Open the app</a></li>
+    </ul>
+  </div>
+</nav>
+<script src="motion.js" defer></script>
+<div class="scroll-progress" aria-hidden="true"><div class="bar"></div></div>
+
+<header class="emp-hero">
+  <div class="wrap">
+    <div>
+      <div class="emp-plate"><span>ROVEN FOR EMPLOYERS</span></div>
+      <h1><span class="strike">Pay per r&eacute;sum&eacute;.</span><br>Pay per <span class="accent">hire.</span></h1>
+      <p class="lede">Indeed charges you for every application that lands — qualified or not, hired or not. The big boards bill the flood; you drown in it either way. Roven charges one flat fee when someone you hired through us accepts your offer. Until that moment, it costs nothing.</p>
+      <div class="emp-cta-row">
+        <a class="emp-btn" href="https://app.rovenhr.com">Create your employer account</a>
+        <a class="emp-btn ghost" href="#pricing">See the pricing</a>
+      </div>
+      <p class="emp-hero-note">NOW LIVE NATIONWIDE · $0 WHILE WE GROW · FOUNDING TERMS: FIRST 100 EMPLOYERS</p>
+    </div>
+    <div class="vs-card" role="table" aria-label="Roven versus the big job boards">
+      <div class="vs-head"><div></div><div>THE BIG BOARDS</div><div class="rov">ROVEN</div></div>
+      <div class="vs-row"><div class="q">TO POST</div><div class="them">Pay per application received — the meter runs on the flood itself</div><div class="rov"><b>$0.</b> Always.</div></div>
+      <div class="vs-row"><div class="q">YOU PAY WHEN</div><div class="them">Whether or not you ever hire</div><div class="rov"><b>Only when your offer is accepted</b></div></div>
+      <div class="vs-row"><div class="q">APPLICANTS</div><div class="them">Bulk-apply scripts, bots, résumé floods</div><div class="rov"><b>Verified humans</b> — fewer, better</div></div>
+      <div class="vs-row"><div class="q">VISIBILITY</div><div class="them">Auction — outbid or disappear</div><div class="rov">Surfaces on <b>fit</b>, not budget</div></div>
+      <div class="vs-row"><div class="q">YOUR REPUTATION</div><div class="them">Anonymous reviews you can't control</div><div class="rov"><b>A record computed from behavior</b> — earned, never bought</div></div>
+      <div class="vs-row"><div class="q">IF IT FAILS</div><div class="them">The spend is gone</div><div class="rov"><b>30-day guarantee</b> — fee credited in full</div></div>
+    </div>
+  </div>
+</header>
+
+<section class="section tint">
+  <div class="wrap">
+    <p class="kicker">Why employers switch</p>
+    <h2>The big boards charge you for their problem.</h2>
+    <p class="sub">Résumé floods, unqualified clicks you paid for, and candidates who never respond — because the incentive is volume, not fit. Roven flips the model.</p>
+    <div class="feature-grid">
+      <div class="feature glass">
+        <p class="feature-num">$0</p>
+        <h3>To post, search, and message</h3>
+        <p>No posting fees. No sponsorship auction. No per-click meter. Your listings compete on the role, not your ad budget.</p>
+      </div>
+      <div class="feature glass">
+        <p class="feature-num">100%</p>
+        <h3>Verified candidates</h3>
+        <p>Applicants are identity-verified people, not bots or bulk-apply scripts. Fewer applications, dramatically higher signal.</p>
+      </div>
+      <div class="feature glass">
+        <p class="feature-num">1</p>
+        <h3>Fee — on a real hire</h3>
+        <p>You pay a placement fee when a Roven hire accepts your offer. If you don't hire, you don't pay. Our revenue depends on your outcome.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap two-col">
+    <div>
+      <p class="kicker">Verification</p>
+      <h2>A few minutes once. A trust badge forever.</h2>
+      <p>Every employer on Roven passes business identity verification before posting. It's fast, it's one-time, and it's why candidates take Roven listings seriously — they know a real, checked business is behind every role. Your verified badge appears on your profile and every job you post.</p>
+      <p>Your accountability score works the same way in your favor: respond to applicants, and the record shows it. A strong score is the cheapest recruiting advantage you'll ever get — and it can't be bought, only earned.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="step-num">01</span><div><h4>Verify your business</h4><p>Business identity verification — minutes, not days.</p></div></div>
+      <div class="step"><span class="step-num">02</span><div><h4>Post your open roles</h4><p>Free, with AI drafting the description from your rough notes. Each role is confirmed open when posted — that's what keeps ghost jobs off Roven.</p></div></div>
+      <div class="step"><span class="step-num">03</span><div><h4>Review matched applicants</h4><p>The engine pings fitting candidates the moment your role goes live. A pipeline built for answering: review, interview, offer, or pass — one click each.</p></div></div>
+      <div class="step"><span class="step-num">04</span><div><h4>Hire and pay once</h4><p>The placement fee applies when your offer is accepted. That's the whole bill.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section dark" id="pricing">
+  <div class="wrap">
+    <p class="kicker">Pricing</p>
+    <h2>Published now, so it never surprises you.</h2>
+    <p class="sub">Posting is free. Searching is free. Roven charges one placement fee when you actually hire — and right now, even that is <strong>waived entirely</strong> while the marketplace grows. List pricing is $249 and $499 per hire. Launch pricing cuts that to $99 and $199. Founding employers lock 50% off list, permanently. All of it published in writing, today:</p>
+    <div class="emp-price-today">
+      <span class="dot"></span>
+      <span>WHAT YOU PAY TODAY: $0. NO POSTING FEES, NO PLACEMENT FEES, NO CARD ON FILE.</span>
+    </div>
+    <div class="emp-price-grid">
+      <div class="emp-price-card">
+        <p class="emp-price-label">CONTRACT · PART-TIME · TEMP</p>
+        <p class="emp-price-was">$249</p>
+        <p class="emp-price-num">$99</p>
+        <p class="emp-price-per">per completed hire</p>
+        <span class="emp-price-chip">LAUNCH PRICING</span>
+        <p class="emp-price-foot">List price $249. Launch pricing published today and honored while it stands.</p>
+        <a class="emp-price-cta" href="https://app.rovenhr.com">Post a contract role &mdash; free</a>
+      </div>
+      <div class="emp-price-card">
+        <p class="emp-price-label">FULL-TIME (W-2)</p>
+        <p class="emp-price-was">$499</p>
+        <p class="emp-price-num">$199</p>
+        <p class="emp-price-per">per completed hire</p>
+        <span class="emp-price-chip">LAUNCH PRICING</span>
+        <p class="emp-price-foot">List price $499. One flat fee at the moment your offer is accepted.</p>
+        <a class="emp-price-cta" href="https://app.rovenhr.com">Post a full-time role &mdash; free</a>
+      </div>
+      <div class="emp-price-card featured">
+        <span class="emp-price-ribbon">FIRST 100 · NATIONWIDE</span>
+        <p class="emp-price-label">FOUNDING EMPLOYERS</p>
+        <p class="emp-price-was">&nbsp;</p>
+        <p class="emp-price-num">$0</p>
+        <p class="emp-price-per">today — and for 12 months after pricing activates</p>
+        <span class="emp-price-chip">LOCKED IN WRITING</span>
+        <p class="emp-price-foot">After that: <b>50% off list, for life</b> — $124.50 contract, $249.50 full-time. Once 100 spots fill, founding terms close permanently.</p>
+        <a class="emp-price-cta" href="https://app.rovenhr.com">Claim founding status</a>
+        <p class="emp-price-note">VERIFICATION TAKES MINUTES</p>
+      </div>
+    </div>
+    <ul class="metric-list glass metric-panel" style="width:100%;max-width:none">
+      <li><span class="m">THE MATH</span><span>A sponsored-listing campaign on the big boards typically burns $400–900 per actual hire — win or lose. A recruiter costs $6,000–15,000, or 15–25% of first-year salary. Roven's full list price is $249–$499, launch pricing is $99–$199, and today it is $0 until someone accepts your offer.</span></li>
+      <li><span class="m">30-DAY GUARANTEE</span><span>If a hire ends within 30 days, the fee is credited in full toward your next placement. We only get paid for hires that stick.</span></li>
+      <li><span class="m">NO SUBSCRIPTIONS</span><span>No monthly seats, no plans, no meter running. Roven costs nothing while you're not hiring.</span></li>
+      <li><span class="m">NO SPONSORING</span><span>Visibility can't be purchased — by you or your competitors. Roles surface on fit, and your accountability record is never for sale.</span></li>
+    </ul>
+    <p class="form-note" style="margin-top:18px">FULL FEE TERMS, GUARANTEE, AND ACTIVATION NOTICE PERIOD ARE IN THE <a href="terms.html" style="color:var(--green-bright)">TERMS OF SERVICE</a>. PRICING ACTIVATES ONLY AFTER THE PLATFORM'S FIRST 25 CONFIRMED HIRES, WITH 30 DAYS' PUBLISHED NOTICE.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <p class="kicker">Questions employers ask</p>
+    <h2>Straight answers.</h2>
+    <div class="faq">
+      <details>
+        <summary>Can I pay to have my listing seen first?</summary>
+        <p>No, and we will not build it. Visibility on Roven cannot be purchased by anyone, at any price. Roles surface on fit. The moment placement is for sale, every listing becomes a question about budget rather than about the job - which is the problem we exist to fix.</p>
+      </details>
+
+      <details>
+        <summary>What does verification require?</summary>
+        <p>Basic business details — legal name, EIN or registration info — run through business identity verification. Most employers clear it in minutes. We never ask you to upload documents by hand unless automated checks can't resolve your entity.</p>
+      </details>
+      <details>
+        <summary>When exactly do I pay?</summary>
+        <p>The moment your offer is accepted — not the start date, not a monthly bill. List pricing is $249 for contract, part-time, or temp hires and $499 for full-time W-2. Launch pricing, published today, is <strong>$99 and $199</strong>. Right now placement fees are waived entirely while the marketplace grows — and the first 100 verified employers lock <strong>50% off list for life</strong> ($124.50 and $249.50), on top of 12 months free after pricing activates.</p>
+      </details>
+      <details>
+        <summary>What if the hire doesn't work out?</summary>
+        <p>Every placement carries a guarantee window. If the hire ends inside it, the fee is credited toward your next placement. We only get paid for hires that stick.</p>
+      </details>
+      <details>
+        <summary>What is the accountability score?</summary>
+        <p>A published score computed from your actual behavior on Roven: how often you respond to applicants, how fast, and whether hires are confirmed. It isn't a review site — nothing is written by anonymous strangers, and nothing can be purchased. Respond to your applicants and the score takes care of itself.</p>
+      </details>
+      <details>
+        <summary>Can a bad score be removed or appealed?</summary>
+        <p>Scores can't be edited — by you or by us — because they're computed from the record. What you can always do is change the record: scores weight recent behavior most heavily, so improved responsiveness shows up quickly.</p>
+      </details>
+      <details>
+        <summary>Can I post contract or 1099 roles?</summary>
+        <p>Yes. Roven supports W-2 employment and 1099 contract roles equally — full-time, part-time, contract, and temporary. Every listing carries the same rules regardless of type: verified employer, confirmed open role, and a tracked answer for every applicant. The listing is labeled with its employment type so candidates know exactly what they're applying to.</p>
+      </details>
+      <details>
+        <summary>Are there actually candidates on Roven?</summary>
+        <p>Roven is free for job seekers forever, every listing appears in Google's job results with full structured data, and every applicant is a verified human — no scrapers, no bots, no résumé mills. The candidate side grows daily, and founding employers get concierge support filling their first roles. If we can't deliver applicants, you pay exactly what the platform cost you: nothing.</p>
+      </details>
+      <details>
+        <summary>Why is it free right now?</summary>
+        <p>Because charging you before we've delivered candidates would make us every other job board. The first 100 verified employers lock founding status: fee-free now, fee-free for 12 months after pricing activates, then 50% off list pricing for life — locked in writing in our Terms. After 100, founding terms close permanently and list pricing applies. The numbers are already published above, so nothing ever surprises you.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section cta-band" id="get-started">
+  <div class="wrap" style="text-align:center">
+    <p class="kicker" style="text-align:center">Founding employers — first 100, nationwide</p>
+    <h2 style="max-width:none">Hire free while the marketplace grows.</h2>
+    <p class="sub">The first 100 verified employers in the US lock founding status: verified onboarding, hands-on support, zero placement fees now, 12 months fee-free after pricing activates, and 50% off for life. Once 100 spots fill, founding terms close permanently. Verification takes minutes.</p>
+    <div class="emp-cta-row" style="justify-content:center">
+      <a class="emp-btn" href="https://app.rovenhr.com">Create your employer account</a>
+      <a class="emp-btn ghost" href="contact.html">Talk to us first</a>
+    </div>
+    <p class="form-note" style="margin-top:16px">QUESTIONS? WE REPLY PERSONALLY, USUALLY SAME DAY.</p>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <a href="index.html"><img class="logo-img" src="logo-white.png" alt="Roven" width="640" height="293" style="height:34px;width:auto"></a>
+        <p class="footer-tag">The hiring marketplace with receipts. Hiring, proven.</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="how-it-works.html">How it works</a></li>
+          <li><a href="employers.html">For employers</a></li>
+          <li><a href="https://app.rovenhr.com">Open the app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="terms.html">Terms of service</a></li>
+          <li><a href="privacy.html">Privacy policy</a></li>
+          <li><a href="accessibility.html">Accessibility</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-social" style="display:flex;gap:14px;align-items:center;margin:26px 0 18px">
+      <a href="https://facebook.com/hireroven" target="_blank" rel="noopener" aria-label="Roven on Facebook" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.7c0-.9.3-1.6 1.6-1.6h1.7V3.2c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.4V13h2.7v8h3.4z"/></svg>
+      </a>
+      <a href="https://instagram.com/hireroven" target="_blank" rel="noopener" aria-label="Roven on Instagram" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.8.1-1.1.1-1.5.2-1.7.3-.4.2-.7.4-1 .7-.3.3-.5.6-.7 1-.1.2-.3.6-.3 1.7-.1 1.3-.1 1.7-.1 4.8s0 3.5.1 4.8c.1 1.1.2 1.5.3 1.7.2.4.4.7.7 1 .3.3.6.5 1 .7.2.1.6.3 1.7.3 1.3.1 1.7.1 4.8.1s3.5 0 4.8-.1c1.1-.1 1.5-.2 1.7-.3.4-.2.7-.4 1-.7.3-.3.5-.6.7-1 .1-.2.3-.6.3-1.7.1-1.3.1-1.7.1-4.8s0-3.5-.1-4.8c-.1-1.1-.2-1.5-.3-1.7-.2-.4-.4-.7-.7-1-.3-.3-.6-.5-1-.7-.2-.1-.6-.3-1.7-.3-1.3-.1-1.7-.1-4.8-.1zm0 3.1a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8zm0 1.8a3.1 3.1 0 1 0 0 6.2 3.1 3.1 0 0 0 0-6.2zm5.1-3.1a1.1 1.1 0 1 1 0 2.3 1.1 1.1 0 0 1 0-2.3z"/></svg>
+      </a>
+      <a href="https://youtube.com/@hireroven" target="_blank" rel="noopener" aria-label="Roven on YouTube" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2s-.2-1.4-.8-2c-.7-.8-1.6-.8-2-.9C16 4 12 4 12 4s-4 0-6.8.3c-.4 0-1.2.1-2 .9-.6.6-.8 2-.8 2S2.2 8.9 2.2 10.5v1.5c0 1.6.2 3.3.2 3.3s.2 1.4.8 2c.7.8 1.7.8 2.1.9 1.6.1 6.7.3 6.7.3s4 0 6.8-.3c.4 0 1.2-.1 2-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.5c0-1.6-.2-3.3-.2-3.3zM9.9 14.9V8.6l5.4 3.2-5.4 3.1z"/></svg>
+      </a>
+      <a href="https://tiktok.com/@hireroven" target="_blank" rel="noopener" aria-label="Roven on TikTok" style="display:inline-flex;width:36px;height:36px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);align-items:center;justify-content:center;color:rgba(255,255,255,.75);text-decoration:none">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.8a5.4 5.4 0 0 1-1.2-3.3h-3v12.2a2.9 2.9 0 1 1-2.1-2.8V8.7a6 6 0 1 0 5.2 5.9V9.2a8.4 8.4 0 0 0 4.9 1.6V7.7a5.4 5.4 0 0 1-3.8-1.9z"/></svg>
+      </a>
+    </div>
+      <p style="font-size:11px;line-height:1.6;color:rgba(255,255,255,.4);max-width:640px;margin:0 0 14px">Roven is a hiring marketplace. Roven is not an employment agency, staffing firm, or recruiter, and is not a party to any employment relationship formed through the platform.</p>
+    <div class="footer-legal">
+      <span>© 2026 ROVEN · ROVEN HR, LLC</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

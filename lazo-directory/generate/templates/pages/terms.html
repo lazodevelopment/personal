@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service &mdash; Lazo{% endblock %}
+{% block canonical %}{{ base }}/terms/{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner"><p class="eyebrow">Legal</p><h1>Terms of Service</h1>
+<p class="hero-sub">Draft &mdash; effective date pending counsel review. Last updated July 17, 2026.</p></div></section>
+<section class="band prose legal doc">
+<h2>1. Who we are</h2>
+<p>Lazo ("Lazo," "we," "us") is operated by Lazo Weddings, LLC. Lazo is a directory and marketplace platform where couples can discover wedding vendors, read and submit verified reviews, and contact vendors; and where vendors can claim and manage business profiles. By using meetlazo.com or related Lazo services (the "Services"), you agree to these Terms.</p>
+<h2>2. Lazo is a platform, not a party to your wedding</h2>
+<p>Lazo lists independent businesses. We do not employ, endorse, broker, or guarantee any vendor, and we are not a party to any agreement between a couple and a vendor. Decisions about hiring, contracts, payments, and services are made solely between you and the vendor. Verification badges and Lazo Scores reflect the checks described in our policies at the time performed; they are informational and are not a warranty of quality, licensure, or future performance.</p>
+<h2>3. Accounts and verification</h2>
+<p>You must provide accurate information when creating an account, claiming a profile, or verifying a review. We may decline, suspend, or revoke accounts, claims, badges, or content that we reasonably believe are fraudulent, abusive, or violate these Terms. Business verification relies in part on third-party and government records; you authorize us to perform such checks when you claim a profile.</p>
+<h2>4. Reviews and user content</h2>
+<p>Reviews must describe your genuine experience and require verification (proof of contract or payment) before they are scored. You retain ownership of content you submit and grant Lazo a worldwide, non-exclusive, royalty-free license to host, display, reproduce, and distribute it in connection with the Services. We moderate only per our published policy; when a review is removed, the reason is logged in its place. We do not remove reviews because a vendor (or anyone) dislikes them.</p>
+<p><strong>Your right to review is protected.</strong> Under the Consumer Review Fairness Act, contract clauses that penalize or bar honest reviews are generally void. Lazo will not enforce, and does not permit vendors to demand, removal of honest verified reviews based on such clauses.</p>
+<h2>5. Vendor media submissions</h2>
+<p>Vendors submitting photos or videos represent and warrant that (a) they own or control all necessary rights in the media, and (b) every identifiable person depicted (including clients) has consented to its commercial display. Submitted media may be displayed across the Services with attribution to the submitting vendor. We may decline or remove media at our discretion.</p>
+<h2>6. Platform promises</h2>
+<p>Organic search order within the Services is determined by Lazo's reputation systems and is not sold. Any paid placement is labeled as such and displayed apart from organic results. Vendors are not charged for receiving or responding to inquiries, or for responding to reviews.</p>
+<h2>7. Acceptable use</h2>
+<p>You agree not to: submit false reviews or verification materials; scrape or bulk-harvest the Services; misrepresent your identity or business; harass users; interfere with the operation of the Services; or use the Services for unlawful purposes. We may suspend or terminate access for violations.</p>
+<h2>8. Disclaimers</h2>
+<p>THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE." TO THE MAXIMUM EXTENT PERMITTED BY LAW, LAZO DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. LAZO DOES NOT WARRANT THE ACCURACY OF LISTINGS, SCORES, OR REVIEWS, OR THE PERFORMANCE OF ANY VENDOR.</p>
+<h2>9. Limitation of liability</h2>
+<p>TO THE MAXIMUM EXTENT PERMITTED BY LAW, LAZO'S AGGREGATE LIABILITY ARISING OUT OF OR RELATING TO THE SERVICES SHALL NOT EXCEED THE GREATER OF $100 OR AMOUNTS YOU PAID LAZO IN THE 12 MONTHS PRECEDING THE CLAIM. LAZO SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR THE ACTS OR OMISSIONS OF ANY VENDOR OR USER.</p>
+<h2>10. Disputes; arbitration</h2>
+<p>Except for small-claims matters and injunctive relief, disputes arising out of these Terms or the Services shall be resolved by binding individual arbitration in Maricopa County, Arizona, under the rules of a recognized arbitration provider, and you and Lazo each waive any right to a jury trial or to participate in a class action. <em>[Counsel: confirm provider, opt-out window, and fee terms.]</em></p>
+<h2>11. General</h2>
+<p>These Terms are governed by Arizona law. We may update these Terms; material changes will be posted with a new effective date. If any provision is unenforceable, the remainder stays in effect. Questions about these Terms go through the form below; formal legal notices should be sent to Lazo Weddings, LLC, Phoenix, Arizona.</p>
+</section>
+
+{#- JC-LAZO-CFORM-0916-001: replaces the published legal@ address. -#}
+{% with
+  cf_id = 'legal-question',
+  cf_topic = 'legal',
+  cf_title = 'A question about these Terms',
+  cf_sub = 'Tell us which section and what is unclear. Formal legal notice under section 11 must still be served on Lazo Weddings, LLC in Phoenix, Arizona.',
+  cf_label = 'Your question'
+%}{% include "_contact_form.html" %}{% endwith %}
+{% endblock %}

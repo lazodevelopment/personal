@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Verified Apartment Reviews | LeaseReputation</title>
+<meta name="description" content="Verified apartment reviews from residents who actually lived there — reviews landlords can't buy or bury. Know a community's real reputation before you lease." />
+<!-- Open Graph (Facebook, LinkedIn, iMessage, etc.) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="LeaseReputation" />
+<meta property="og:title" content="Verified Apartment Reviews | LeaseReputation" />
+<meta property="og:description" content="Verified apartment reviews landlords can't buy or bury. Know a community's real reputation before you lease." />
+<meta property="og:url" content="https://leasereputation.com/" />
+<meta property="og:image" content="https://leasereputation.com/leasereputation-og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="LeaseReputation — verified apartment reviews. Know before you lease." />
+<!-- Twitter / X -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Verified Apartment Reviews | LeaseReputation" />
+<meta name="twitter:description" content="Verified apartment reviews landlords can't buy or bury. Know before you lease." />
+<meta name="twitter:image" content="https://leasereputation.com/leasereputation-og.png" />
+<meta name="theme-color" content="#4C4FE6" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%234C4FE6'/%3E%3Cpath d='M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z' fill='white'/%3E%3Cpath d='M210 240 L242 272 L304 206' fill='none' stroke='%234C4FE6' stroke-width='30' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>if(!window.matchMedia||!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('js');}</script>
+<style>
+  :root{
+    --indigo:#4C4FE6; --indigo-bright:#6E72F0; --deep:#1E1A5C; --ink:#15102E; --ink-deep:#0E0A20;
+    --lilac:#C4B5FD; --white:#FFFFFF; --warn:#FF8B8B;
+    --text:#EFEDFB; --text-dim:rgba(233,231,251,.64); --text-faint:rgba(233,231,251,.42);
+    --glass:rgba(255,255,255,.055); --glass-2:rgba(255,255,255,.09); --border:rgba(255,255,255,.12);
+    --maxw:1160px; --pad:clamp(20px,5vw,24px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+    background:var(--ink-deep); color:var(--text); line-height:1.6;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden; width:100%;
+  }
+  img,svg{display:block;max-width:100%}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);width:100%}
+  section[id]{scroll-margin-top:88px}
+  .eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);margin-bottom:18px}
+  h1,h2,h3{line-height:1.08;letter-spacing:-.02em;font-weight:800}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit;font-weight:700;
+    font-size:1rem;padding:14px 26px;border-radius:100px;border:0;cursor:pointer;white-space:nowrap;
+    background:var(--indigo);color:#fff;transition:transform .2s ease,box-shadow .2s ease,background .2s ease;
+    box-shadow:0 8px 24px rgba(76,79,230,.35);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(76,79,230,.5);background:var(--indigo-bright)}
+  .btn:focus-visible{outline:2px solid var(--lilac);outline-offset:3px}
+
+  /* progress bar */
+  .progress{position:fixed;top:0;left:0;height:3px;width:100%;transform:scaleX(0);transform-origin:0 50%;
+    background:linear-gradient(90deg,var(--indigo),var(--lilac));z-index:120;will-change:transform}
+
+  /* logo */
+  .logo{display:inline-flex;align-items:center;gap:11px;flex:none}
+  .logo svg{width:38px;height:38px;border-radius:11px;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+  .logo .wm{font-size:1.3rem;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+  .logo .wm .l{font-weight:500;color:rgba(255,255,255,.6)}
+  .logo .wm .r{font-weight:800;color:#fff}
+
+  /* nav */
+  header{position:sticky;top:0;z-index:100;transition:background .3s ease,border-color .3s ease;border-bottom:1px solid transparent}
+  header.scrolled{background:rgba(15,11,32,.72);backdrop-filter:blur(18px);border-bottom-color:var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;gap:18px;height:74px}
+  .nav-links{display:flex;align-items:center;gap:32px}
+  .nav-links a{color:var(--text-dim);font-weight:600;font-size:.95rem;transition:color .2s}
+  .nav-links a:hover{color:#fff}
+  .nav-cta{display:flex;align-items:center;gap:14px}
+  .menu-btn{display:none;background:none;border:0;cursor:pointer;padding:8px;border-radius:8px}
+  .menu-btn span{display:block;width:24px;height:2px;background:#fff;margin:5px 0;border-radius:2px;transition:.3s}
+  .mobile-menu{display:none}
+
+  /* hero */
+  .hero{position:relative;padding:clamp(56px,8vw,88px) 0 clamp(72px,9vw,100px);overflow:hidden}
+  .hero-glow{position:absolute;inset:-25% -10% auto -10%;height:130%;z-index:-1;will-change:transform;
+    background:
+      radial-gradient(closest-side at 22% 26%,rgba(76,79,230,.55),transparent 70%),
+      radial-gradient(closest-side at 84% 10%,rgba(196,181,253,.22),transparent 70%),
+      radial-gradient(closest-side at 60% 82%,rgba(30,26,92,.85),transparent 75%);}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(36px,5vw,54px);align-items:center}
+  .hero h1{font-size:clamp(2.5rem,7vw,4.4rem);margin-bottom:22px}
+  .hero h1 .accent{background:linear-gradient(120deg,#fff 30%,var(--lilac));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .hero .lead{font-size:clamp(1.05rem,2.3vw,1.2rem);color:var(--text-dim);max-width:560px;margin-bottom:32px}
+  .signup{display:flex;gap:10px;max-width:480px;flex-wrap:wrap}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+  .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);box-shadow:none}
+  .btn-ghost:hover{background:var(--glass-2);border-color:var(--lilac);box-shadow:none;transform:translateY(-2px)}
+  .cta-inner .cta-row{justify-content:center}
+  .signup input{flex:1 1 200px;min-width:0;font-family:inherit;font-size:1rem;color:#fff;padding:14px 18px;
+    border-radius:100px;border:1px solid var(--border);background:var(--glass);backdrop-filter:blur(12px);
+    outline:none;transition:border-color .2s,background .2s}
+  .signup input::placeholder{color:var(--text-faint)}
+  .signup input:focus{border-color:var(--indigo-bright);background:var(--glass-2)}
+  .signup .btn{flex:0 0 auto}
+  .microcopy{font-size:.85rem;color:var(--text-faint);margin-top:14px;display:flex;align-items:center;gap:7px}
+  .microcopy svg{width:15px;height:15px;flex:none;stroke:var(--lilac)}
+  .form-done{display:none;font-size:1rem;color:var(--lilac);font-weight:600;align-items:center;gap:9px;padding:8px 0}
+  .form-done svg{width:20px;height:20px;flex:none;stroke:currentColor}
+
+  /* hero preview */
+  .preview{background:linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.04));
+    border:1px solid var(--border);border-radius:24px;padding:20px;backdrop-filter:blur(20px);
+    box-shadow:0 30px 70px rgba(8,6,26,.6);position:relative;will-change:transform}
+  .preview-search{display:flex;align-items:center;gap:11px;background:rgba(15,11,32,.5);border:1px solid var(--border);
+    border-radius:14px;padding:13px 16px;margin-bottom:16px}
+  .preview-search svg{width:18px;height:18px;flex:none;opacity:.7}
+  .preview-search .q{font-weight:600;font-size:.96rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .preview-search .cursor{width:1.5px;height:18px;background:var(--lilac);animation:blink 1.1s steps(1) infinite;flex:none}
+  @keyframes blink{50%{opacity:0}}
+  .rev{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:15px 17px}
+  .rev+.rev{margin-top:12px}
+  .rev-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
+  .rev-who{display:flex;align-items:center;gap:9px;min-width:0}
+  .rev-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--deep),var(--indigo));
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;flex:none}
+  .rev-name{font-weight:700;font-size:.9rem;line-height:1.2}
+  .rev-badge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;color:var(--lilac);white-space:nowrap}
+  .rev-badge svg{width:12px;height:12px;flex:none}
+  .stars{display:flex;gap:2px;flex:none}
+  .stars svg{width:13px;height:13px}
+  .rev-text{font-size:.9rem;color:var(--text-dim);line-height:1.55}
+  .preview-tag{position:absolute;top:-12px;right:18px;background:var(--indigo);color:#fff;font-size:.68rem;
+    font-weight:700;letter-spacing:.05em;padding:6px 12px;border-radius:100px;box-shadow:0 6px 16px rgba(76,79,230,.45)}
+
+  /* generic section */
+  .section{padding:clamp(68px,9vw,116px) 0}
+  .section-head{max-width:680px}
+  .section-head h2{font-size:clamp(1.9rem,4.4vw,2.9rem);margin-bottom:12px}
+  .section-head .lead{font-size:clamp(1rem,2.2vw,1.12rem);color:var(--text-dim)}
+
+  /* problem */
+  .problem{position:relative;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    background:radial-gradient(closest-side at 88% 18%,rgba(76,79,230,.16),transparent 70%),var(--ink)}
+  .problem h2{font-size:clamp(1.95rem,5vw,3.1rem);max-width:780px;margin-bottom:20px}
+  .problem .lead{font-size:clamp(1.05rem,2.4vw,1.18rem);color:var(--text-dim);max-width:720px;margin-bottom:40px}
+  .tactics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:34px}
+  .tactic{display:flex;align-items:flex-start;gap:11px;padding:18px;border-radius:16px;background:var(--glass);border:1px solid var(--border)}
+  .tactic .x{width:26px;height:26px;border-radius:8px;background:rgba(255,139,139,.13);border:1px solid rgba(255,139,139,.3);
+    display:flex;align-items:center;justify-content:center;flex:none;margin-top:1px}
+  .tactic .x svg{width:14px;height:14px;stroke:var(--warn)}
+  .tactic p{font-size:.92rem;font-weight:600;line-height:1.4}
+  .ftc{display:flex;align-items:flex-start;gap:16px;padding:24px 26px;border-radius:18px;
+    background:linear-gradient(120deg,rgba(76,79,230,.16),rgba(196,181,253,.06));border:1px solid rgba(196,181,253,.28)}
+  .ftc .seal{width:44px;height:44px;border-radius:12px;background:rgba(196,181,253,.16);border:1px solid rgba(196,181,253,.3);
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .ftc .seal svg{width:24px;height:24px;stroke:var(--lilac)}
+  .ftc p{font-size:1.02rem;color:var(--text);line-height:1.55}
+  .ftc strong{color:#fff}
+
+  /* steps */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:52px}
+  .step{padding:30px 26px;border-radius:22px;background:var(--glass);border:1px solid var(--border)}
+  .step-n{font-size:.92rem;font-weight:800;color:var(--indigo-bright);letter-spacing:.05em;margin-bottom:18px;display:inline-block}
+  .step h3{font-size:1.3rem;margin-bottom:10px;font-weight:700}
+  .step p{color:var(--text-dim);font-size:.97rem}
+
+  /* benefits */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:52px}
+  .card{padding:clamp(26px,3vw,32px);border-radius:22px;border:1px solid var(--border);
+    background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.035));
+    transition:transform .25s ease,border-color .25s ease}
+  .card:hover{transform:translateY(-4px);border-color:rgba(196,181,253,.35)}
+  .card-ico{width:48px;height:48px;border-radius:13px;background:rgba(76,79,230,.16);border:1px solid rgba(196,181,253,.25);
+    display:flex;align-items:center;justify-content:center;margin-bottom:20px}
+  .card-ico svg{width:24px;height:24px;stroke:var(--lilac)}
+  .card h3{font-size:1.26rem;margin-bottom:11px;font-weight:700}
+  .card p{color:var(--text-dim);font-size:.98rem}
+
+  /* cta */
+  .cta-band{padding:clamp(72px,10vw,116px) 0}
+  .cta-inner{position:relative;overflow:hidden;text-align:center;max-width:720px;margin:0 auto;
+    background:linear-gradient(150deg,rgba(76,79,230,.22),rgba(30,26,92,.4));border:1px solid var(--border);
+    border-radius:30px;padding:clamp(40px,6vw,60px) clamp(24px,5vw,40px);backdrop-filter:blur(14px);
+    box-shadow:0 30px 80px rgba(8,6,26,.55)}
+  .cta-inner h2{font-size:clamp(2rem,5vw,3.2rem);margin-bottom:14px}
+  .cta-inner .lead{color:var(--text-dim);font-size:clamp(1.02rem,2.3vw,1.14rem);margin-bottom:30px}
+  .cta-inner .signup{margin:0 auto;justify-content:center}
+  .cta-inner .microcopy{justify-content:center}
+  .cta-inner .form-done{justify-content:center}
+
+  /* footer */
+  .site-footer{border-top:1px solid var(--border);background:var(--ink-deep);padding:54px 0 34px}
+  .footer-grid{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:32px}
+  .footer-brand .logo{margin-bottom:14px}
+  .footer-tag{color:var(--text-faint);font-size:.92rem;max-width:250px}
+  .footer-col h4{font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:14px;font-weight:700}
+  .footer-col a{display:block;color:var(--text-dim);font-size:.93rem;font-weight:500;padding:6px 0;transition:color .2s}
+  .footer-col a:hover{color:#fff}
+  .footer-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-top:38px;padding-top:22px;border-top:1px solid var(--border);color:var(--text-faint);font-size:.85rem}
+  .footer-social{display:flex;align-items:center;gap:16px}
+  .footer-social a{color:var(--text-faint);display:inline-flex;transition:color .2s,transform .2s}
+  .footer-social a:hover{color:#fff;transform:translateY(-2px)}
+  .footer-social svg{width:19px;height:19px;fill:currentColor;display:block}
+
+  /* reveal */
+  .reveal{transition:opacity .7s ease,transform .7s ease;transition-delay:var(--d,0s)}
+  html.js .reveal{opacity:0;transform:translateY(26px)}
+  html.js .reveal.in{opacity:1;transform:none}
+
+  /* ============ ATMOSPHERE / DECOR ============ */
+  .bg-grid{position:fixed;inset:0;z-index:-3;pointer-events:none;
+    background-image:radial-gradient(rgba(196,181,253,.5) 1px,transparent 1.5px);background-size:30px 30px;opacity:.045}
+  .bg-orb{position:fixed;border-radius:50%;filter:blur(80px);z-index:-3;pointer-events:none}
+  .bg-orb.o1{width:460px;height:460px;right:-150px;top:58%;background:radial-gradient(circle,rgba(76,79,230,.42),transparent 64%);animation:drift 30s ease-in-out infinite}
+  .bg-grain{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:.045;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+  @keyframes drift{50%{transform:translate(-44px,36px)}}
+
+  /* eyebrow lead-line */
+  .eyebrow{display:inline-flex;align-items:center;gap:11px}
+  .eyebrow::before{content:'';width:24px;height:2px;border-radius:2px;flex:none;background:linear-gradient(90deg,var(--indigo),var(--lilac))}
+
+  /* hero stage: rings + floating badges */
+  .preview-stage{position:relative}
+  .verify-rings{position:absolute;inset:0;z-index:-1;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .verify-rings span{position:absolute;border-radius:50%}
+  .verify-rings .r1{width:310px;height:310px;border:1px solid rgba(196,181,253,.18)}
+  .verify-rings .r2{width:450px;height:450px;border:1px solid rgba(196,181,253,.1)}
+  .verify-rings .r3{width:600px;height:600px;border:1px solid rgba(196,181,253,.055)}
+  .verify-rings .glow{width:330px;height:330px;background:radial-gradient(circle,rgba(76,79,230,.45),transparent 62%);filter:blur(34px);animation:pulse 6.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.42;transform:scale(1)}50%{opacity:.62;transform:scale(1.07)}}
+  .float-badge{position:absolute;z-index:3;background:linear-gradient(165deg,rgba(33,29,78,.94),rgba(19,15,44,.94));
+    border:1px solid rgba(196,181,253,.3);border-radius:16px;padding:12px 15px;backdrop-filter:blur(14px);
+    box-shadow:0 20px 44px rgba(8,6,26,.62);will-change:transform}
+  .fb-score{top:-28px;left:-34px;display:flex;align-items:center;gap:12px}
+  .fb-score .num{font-size:1.75rem;font-weight:800;line-height:1;letter-spacing:-.02em;color:#fff}
+  .fb-score .meta{display:flex;flex-direction:column;gap:4px}
+  .fb-score .mini-stars{display:flex;gap:2px}
+  .fb-score .mini-stars svg{width:11px;height:11px}
+  .fb-score .lbl{font-size:.64rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
+  .fb-verified{bottom:-24px;left:-28px;display:flex;align-items:center;gap:10px}
+  .fb-verified .tick{width:32px;height:32px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--indigo),var(--indigo-bright));box-shadow:0 6px 16px rgba(76,79,230,.55)}
+  .fb-verified .tick svg{width:18px;height:18px;stroke:#fff}
+  .fb-verified .t1{font-size:.84rem;font-weight:700;line-height:1.15;color:#fff}
+  .fb-verified .t2{font-size:.68rem;color:var(--text-faint);font-weight:600}
+
+  /* verify methods strip */
+  .verify-strip{border-bottom:1px solid var(--border);background:rgba(255,255,255,.014)}
+  .vs-inner{display:flex;align-items:center;gap:24px;padding:20px 0;flex-wrap:wrap;justify-content:center}
+  .vs-label{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);white-space:nowrap}
+  .vs-chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .vs-chip{display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:100px;background:var(--glass);
+    border:1px solid var(--border);font-size:.85rem;font-weight:600;color:var(--text-dim);transition:border-color .2s,color .2s,background .2s}
+  .vs-chip:hover{border-color:rgba(196,181,253,.42);color:#fff;background:var(--glass-2)}
+  .vs-chip svg{width:15px;height:15px;stroke:var(--lilac);fill:none;flex:none}
+
+  /* how-it-works nodes + connectors */
+  .steps{position:relative}
+  .step{position:relative}
+  .step-head{display:flex;align-items:center;gap:13px;margin-bottom:16px}
+  .step-node{width:42px;height:42px;border-radius:13px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:1.12rem;font-weight:800;color:#fff;background:linear-gradient(140deg,var(--indigo),var(--deep));
+    border:1px solid rgba(196,181,253,.32);box-shadow:0 8px 20px rgba(76,79,230,.42)}
+  .step-ico{width:38px;height:38px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:rgba(196,181,253,.1);border:1px solid var(--border)}
+  .step-ico svg{width:20px;height:20px;stroke:var(--lilac);fill:none}
+  .step-conn{display:none}
+
+  /* why-verified icon coins */
+  .card-ico{background:linear-gradient(140deg,rgba(76,79,230,.32),rgba(196,181,253,.08));
+    border:1px solid rgba(196,181,253,.32);box-shadow:0 8px 22px rgba(76,79,230,.22),inset 0 1px 0 rgba(255,255,255,.12)}
+  .card:hover .card-ico{box-shadow:0 12px 28px rgba(76,79,230,.4),inset 0 1px 0 rgba(255,255,255,.18)}
+
+  /* cta watermark */
+  .cta-shield{position:absolute;right:-46px;bottom:-58px;width:280px;height:280px;opacity:.06;pointer-events:none;z-index:0}
+  .cta-shield svg{width:100%;height:100%}
+  .cta-inner h2,.cta-inner .lead,.cta-inner .signup,.cta-inner .microcopy{position:relative;z-index:1}
+  .cta-pill{display:inline-flex;align-items:center;gap:8px;padding:7px 15px;border-radius:100px;margin-bottom:18px;position:relative;z-index:1;
+    background:rgba(196,181,253,.12);border:1px solid rgba(196,181,253,.3);color:var(--lilac);font-size:.76rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .cta-pill svg{width:14px;height:14px;stroke:currentColor;fill:none;flex:none}
+
+  @media (min-width:961px){
+    .step:not(:last-child) .step-conn{display:flex;align-items:center;justify-content:center;position:absolute;top:51px;right:-22px;width:24px;height:24px;transform:translateY(-50%);z-index:2}
+    .step-conn svg{width:22px;height:22px;stroke:rgba(196,181,253,.5);fill:none}
+  }
+  @media (max-width:960px){
+    .float-badge{display:none}
+    .verify-rings .r3{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .bg-orb,.verify-rings .glow{animation:none}
+  }
+  /* ============ end decor ============ */
+
+  /* ===== verified badge explainer ===== */
+  .verified-explain{position:relative;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    background:radial-gradient(closest-side at 14% 28%,rgba(76,79,230,.15),transparent 70%),var(--ink)}
+  .ve-grid{display:grid;grid-template-columns:.85fr 1.15fr;gap:clamp(38px,5vw,64px);align-items:center}
+  .ve-visual{display:flex;justify-content:center}
+  .credential{position:relative;width:100%;max-width:330px;text-align:center;padding:38px 30px 34px;border-radius:24px;
+    background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.035));border:1px solid rgba(196,181,253,.3);
+    backdrop-filter:blur(20px);box-shadow:0 30px 70px rgba(8,6,26,.55)}
+  .credential::before{content:'';position:absolute;inset:0;border-radius:24px;padding:1px;pointer-events:none;
+    background:linear-gradient(140deg,rgba(196,181,253,.55),transparent 46%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+  .cred-seal{width:92px;height:92px;margin:0 auto 18px;border-radius:24px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(140deg,var(--indigo),var(--deep));border:1px solid rgba(196,181,253,.35);box-shadow:0 14px 34px rgba(76,79,230,.5)}
+  .cred-seal svg{width:50px;height:50px;stroke:#fff;fill:none}
+  .cred-label{font-size:1.18rem;font-weight:800;letter-spacing:-.01em}
+  .cred-sub{font-size:.85rem;color:var(--text-faint);font-weight:600;margin-top:4px;margin-bottom:22px}
+  .cred-checks{display:flex;flex-direction:column;gap:11px;text-align:left;max-width:215px;margin:0 auto}
+  .cred-checks span{display:flex;align-items:center;gap:10px;font-size:.9rem;font-weight:600;color:var(--text-dim)}
+  .cred-checks svg{width:16px;height:16px;stroke:var(--lilac);fill:none;flex:none}
+  .ve-points{list-style:none;margin:24px 0 0;display:flex;flex-direction:column;gap:17px}
+  .ve-points li{display:flex;gap:14px;align-items:flex-start}
+  .vp-ico{width:30px;height:30px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:rgba(76,79,230,.2);border:1px solid rgba(196,181,253,.32);margin-top:1px}
+  .vp-ico svg{width:17px;height:17px;stroke:var(--lilac);fill:none}
+  .ve-points strong{color:#fff;font-weight:700}
+  .ve-points li>div{color:var(--text-dim);font-size:1rem;line-height:1.55}
+  .ve-note{margin-top:24px;padding:15px 20px;border-radius:14px;background:rgba(196,181,253,.08);
+    border:1px solid rgba(196,181,253,.24);font-size:.96rem;color:var(--text);font-weight:500;line-height:1.5}
+  @media (max-width:820px){
+    .ve-grid{grid-template-columns:1fr;gap:34px}
+    .ve-visual{order:2}
+    .ve-copy{order:1}
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:960px){
+    .hero-grid{grid-template-columns:1fr;gap:42px}
+    .preview{max-width:480px;margin:0 auto}
+    .tactics{grid-template-columns:repeat(2,1fr)}
+    .steps{grid-template-columns:1fr}
+  }
+  @media (max-width:760px){
+    .nav-links{display:none}
+    .nav-cta .btn{display:none}
+    .menu-btn{display:block}
+    .mobile-menu{display:block;max-height:0;overflow:hidden;transition:max-height .35s ease;
+      background:rgba(15,11,32,.97);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+    .mobile-menu.open{max-height:460px}
+    .mobile-menu .inner{display:flex;flex-direction:column;padding:8px var(--pad) 22px}
+    .mobile-menu a{padding:14px 0;color:var(--text-dim);font-weight:600;border-bottom:1px solid rgba(255,255,255,.06)}
+    .mobile-menu .btn{margin-top:16px}
+    .cards{grid-template-columns:1fr}
+    .footer-grid{grid-template-columns:1fr 1fr}
+    .footer-brand{grid-column:1/-1}
+  }
+  @media (max-width:430px){
+    .signup{flex-direction:column;align-items:stretch}
+    .signup input,.signup .btn{width:100%}
+    .signup input{flex:0 0 auto;height:auto}
+    .tactics{grid-template-columns:1fr}
+    .ftc{flex-direction:column;gap:12px;padding:22px}
+    .footer-grid{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .preview-search .cursor{animation:none}
+    .progress{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress" aria-hidden="true"></div>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-orb o1" aria-hidden="true"></div>
+<div class="bg-grain" aria-hidden="true"></div>
+
+<!-- ===== NAV ===== -->
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="logo" href="#top" aria-label="LeaseReputation home">
+      <svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E1A5C"/><stop offset="1" stop-color="#4C4FE6"/></linearGradient></defs><rect width="512" height="512" rx="115" fill="url(#lg)"/><path d="M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z" fill="#fff"/><path d="M210 240 L242 272 L304 206" fill="none" stroke="#4C4FE6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="wm"><span class="l">lease</span><span class="r">reputation</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Primary">
+      <a href="#problem">The problem</a>
+      <a href="#how">How it works</a>
+      <a href="#why">Why verified</a>
+      <a href="/community/">Browse communities</a>
+      <a href="/guides/">Renter guides</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn" href="https://app.leasereputation.com">Open the app</a>
+      <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <div class="inner">
+      <a href="#problem">The problem</a>
+      <a href="#how">How it works</a>
+      <a href="#why">Why verified</a>
+      <a href="/community/">Browse communities</a>
+      <a href="/guides/">Renter guides</a>
+      <a class="btn" href="https://app.leasereputation.com">Open the app</a>
+    </div>
+  </div>
+</header>
+<span id="top"></span>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-glow" data-parallax="0.12"></div>
+  <div class="wrap hero-grid">
+    <div class="reveal in">
+      <p class="eyebrow">Verified apartment reviews</p>
+      <h1>Know before<br><span class="accent">you lease.</span></h1>
+      <p class="lead">The community you're about to sign with curates its own reviews — buying the good ones, burying the bad ones. LeaseReputation shows you the honest reviews they'd rather hide, written by residents we've verified actually lived there.</p>
+      <div class="cta-row">
+        <a class="btn" href="https://app.leasereputation.com">Create your account</a>
+        <a class="btn btn-ghost" href="/community/">Browse communities</a>
+      </div>
+      <p class="microcopy">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Browsing the directory is free. Verify your residency to post your own review.
+      </p>
+      <p class="microcopy" style="color:#FFC83D;font-weight:700;align-items:flex-start">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" style="stroke:#FFC83D;flex:none;margin-top:2px"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" stroke-linejoin="round"/></svg>
+        <span style="min-width:0"><span id="community-count">19,400+</span> communities across the U.S. — growing daily.</span>
+      </p>
+    </div>
+
+    <div class="reveal in" data-parallax="-0.05">
+      <div class="preview-stage">
+        <div class="verify-rings" aria-hidden="true"><span class="glow"></span><span class="r1"></span><span class="r2"></span><span class="r3"></span></div>
+        <div class="float-badge fb-score" data-parallax="0.05" aria-hidden="true">
+          <span class="num">82</span>
+          <span class="meta">
+            <span class="mini-stars" style="color:#3DDC97;font-weight:800;font-size:.78rem;letter-spacing:.12em">GOOD</span>
+            <span class="lbl">Reputation Score</span>
+          </span>
+        </div>
+        <div class="float-badge fb-verified" data-parallax="-0.06" aria-hidden="true">
+          <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span><span class="t1">Identity verified</span><br><span class="t2">Real residents only</span></span>
+        </div>
+        <div class="preview">
+        <span class="preview-tag">PREVIEW</span>
+        <div class="preview-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg>
+          <span class="q">Sterling Court Apartments</span><span class="cursor"></span>
+        </div>
+        <div class="rev">
+          <div class="rev-top">
+            <div class="rev-who">
+              <div class="rev-av">MR</div>
+              <div>
+                <div class="rev-name">Maria R.</div>
+                <span class="rev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3l8 3v5c0 4.5-3.2 7-8 8.5C7.2 18 4 15.5 4 11V6z" stroke-linejoin="round"/><path d="M9.5 11.5l1.8 1.8 3.2-3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Verified resident · 2 yrs</span>
+              </div>
+            </div>
+            <div class="stars">
+              <svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="rgba(255,255,255,.2)"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            </div>
+          </div>
+          <p class="rev-text">"Maintenance shows up same-day and I got my full deposit back. Walls are a little thin, but honestly that's my only complaint."</p>
+        </div>
+        <div class="rev">
+          <div class="rev-top">
+            <div class="rev-who">
+              <div class="rev-av">DK</div>
+              <div>
+                <div class="rev-name">Devon K.</div>
+                <span class="rev-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 3l8 3v5c0 4.5-3.2 7-8 8.5C7.2 18 4 15.5 4 11V6z" stroke-linejoin="round"/><path d="M9.5 11.5l1.8 1.8 3.2-3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Verified resident · 1 yr</span>
+              </div>
+            </div>
+            <div class="stars">
+              <svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="#FFC83D"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="rgba(255,255,255,.2)"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg><svg viewBox="0 0 24 24" fill="rgba(255,255,255,.2)"><path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/></svg>
+            </div>
+          </div>
+          <p class="rev-text">"Looked great on the tour, but parking is a nightmare and they nickel-and-dime every fee. Glad I knew going in."</p>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VERIFY STRIP ===== -->
+<section class="verify-strip">
+  <div class="wrap vs-inner reveal">
+    <span class="vs-label">How we verify residents</span>
+    <div class="vs-chips">
+      <span class="vs-chip"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 17h4" stroke-linecap="round"/></svg>Proof of residency</span>
+      <span class="vs-chip"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 13h4M6.5 16c.5-1.5 4.5-1.5 5 0" stroke-linecap="round"/></svg>Identity check</span>
+      <span class="vs-chip"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M5 7h14M10 7V5h4v2M7 7l1 13h8l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>Docs deleted after verifying</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROBLEM ===== -->
+<!-- lrcoffee:start -->
+<section class="lrcoffee">
+  <style>
+    .lrcoffee{max-width:1060px;margin:30px auto 10px;padding:0 20px}
+    .lrcoffee .lrcoffee-card{position:relative;overflow:hidden;display:grid;
+      grid-template-columns:1fr 1.08fr;gap:clamp(22px,3.2vw,36px);align-items:center;
+      background:#17112E;border:1px solid rgba(196,181,253,.35);border-radius:26px;
+      padding:clamp(22px,3vw,32px) clamp(22px,3.4vw,40px)}
+    .lrcoffee .lrcoffee-card:before{content:"";position:absolute;inset:0 0 auto 0;
+      height:5px;background:linear-gradient(90deg,#4C4FE6,#C4B5FD)}
+    .lrcoffee .lrcoffee-card:after{content:"";position:absolute;right:-140px;top:-140px;
+      width:420px;height:420px;border-radius:50%;pointer-events:none;
+      background:radial-gradient(circle,rgba(76,79,230,.28),transparent 65%)}
+    .lrcoffee-eyebrow{display:inline-flex;align-items:center;gap:8px;
+      font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+      color:#C4B5FD;margin-bottom:10px}
+    .lrcoffee-eyebrow:before{content:"";width:22px;height:2px;
+      background:linear-gradient(90deg,#4C4FE6,#C4B5FD)}
+    .lrcoffee-body h2{margin:0 0 10px;font-size:clamp(1.7rem,3.6vw,2.5rem);
+      color:#fff;font-weight:800;line-height:1.12}
+    .lrcoffee-body h2 span{background:linear-gradient(120deg,#fff 25%,#C4B5FD);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .lrcoffee-body p{margin:0;color:#A6A0C4;font-size:clamp(.95rem,1.6vw,1.05rem);
+      line-height:1.6;max-width:460px}
+    .lrcoffee-count{display:inline-block;margin-top:13px;padding:6px 15px;
+      border-radius:20px;font-size:.82rem;font-weight:700;color:#3DDC97;
+      background:rgba(61,220,151,.10);border:1px solid rgba(61,220,151,.45)}
+    .lrcoffee-cta{margin-top:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .lrcoffee-cta a{display:inline-block;background:#4C4FE6;color:#fff;
+      text-decoration:none;font-weight:700;font-size:1rem;
+      padding:15px 30px;border-radius:14px;
+      box-shadow:0 10px 34px rgba(76,79,230,.4);transition:background .18s,transform .18s}
+    .lrcoffee-cta a:hover{background:#6D6FF0;transform:translateY(-1px)}
+    .lrcoffee-fine{margin-top:13px;color:#6E698C;font-size:.76rem;line-height:1.5;max-width:460px}
+    .lrcoffee-art{position:relative;z-index:1}
+    .lrcoffee-art img{display:block;width:104%;max-width:none;height:auto;border-radius:18px;
+      transform:rotate(2.5deg) translateX(-2%);
+      box-shadow:0 30px 70px rgba(14,10,32,.7),0 12px 40px rgba(76,79,230,.35);
+      animation:lrcoffee-float 6s ease-in-out infinite}
+    .lrcoffee-art:before{content:"";position:absolute;inset:12% -6% -8% -6%;z-index:-1;
+      background:radial-gradient(ellipse at center,rgba(196,181,253,.20),transparent 68%)}
+    @keyframes lrcoffee-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+    @media (prefers-reduced-motion:reduce){.lrcoffee-art img{animation:none}}
+    @media (max-width:820px){
+      .lrcoffee .lrcoffee-card{grid-template-columns:1fr;padding:26px 22px}
+      .lrcoffee-art{order:-1;max-width:380px;margin:4px auto 6px}
+      .lrcoffee-art img{transform:rotate(2.5deg)}
+      .lrcoffee-body p,.lrcoffee-fine{max-width:none}
+    }
+  </style>
+  <div class="lrcoffee-card">
+    <div class="lrcoffee-body">
+      <div class="lrcoffee-eyebrow">First 1,000 reviewers</div>
+      <h2>Coffee <span>on us.</span></h2>
+      <p>Write a verified review and we&rsquo;ll mail you a <b style="color:#fff">$5 coffee
+      card</b> — our thank-you for telling the truth about where you lived.</p>
+      <span class="lrcoffee-count" id="lrcoffee-count">First 1,000 reviewers</span>
+      <div class="lrcoffee-cta">
+        <a href="https://app.leasereputation.com">Write a verified review</a>
+      </div>
+      <div class="lrcoffee-fine">One per reviewer &middot; The gift is the same for
+      everyone and never conditioned on what your review says.</div>
+    </div>
+    <div class="lrcoffee-art">
+      <img src="/lr-coffee-card.png" alt="LeaseReputation $5 coffee card — coffee on us"
+           width="1100" height="693" loading="lazy">
+    </div>
+  </div>
+  <script>
+  (function(){
+    fetch('https://firestore.googleapis.com/v1/projects/lease-reputation/databases/(default)/documents/meta/coffeeCard')
+      .then(function(r){return r.ok?r.json():null})
+      .then(function(d){
+        if(!d||!d.fields)return;
+        var n=parseInt((d.fields.claimed&&d.fields.claimed.integerValue)||'0',10);
+        var left=Math.max(0,1000-n);
+        var el=document.getElementById('lrcoffee-count');
+        if(!el)return;
+        if(left>0){el.textContent=left+' of 1,000 still available';}
+        else{var card=document.querySelector('.lrcoffee');if(card)card.style.display='none';}
+      }).catch(function(){});
+  })();
+  </script>
+</section>
+<!-- lrcoffee:end -->
+
+<section class="section problem" id="problem">
+  <div class="wrap">
+    <div class="reveal">
+      <p class="eyebrow">The problem</p>
+      <h2>The reviews you're reading<br>were bought — or buried.</h2>
+      <p class="lead">A property manager's online reputation rents apartments, so they manage it like an asset. They pay for glowing five-star reviews, flag and remove the honest one-stars, and only ask their happiest residents to post. By the time the page reaches you, it's a highlight reel — and you sign a year-long lease based on it.</p>
+    </div>
+    <div class="tactics">
+      <div class="tactic reveal"><span class="x"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span><p>Buying fake 5-star reviews</p></div>
+      <div class="tactic reveal" style="--d:.08s"><span class="x"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span><p>Removing &amp; burying the bad ones</p></div>
+      <div class="tactic reveal" style="--d:.16s"><span class="x"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span><p>Only asking happy residents to post</p></div>
+      <div class="tactic reveal" style="--d:.24s"><span class="x"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18" stroke-linecap="round"/></svg></span><p>Trading perks for good ratings</p></div>
+    </div>
+    <div class="ftc reveal">
+      <span class="seal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <p><strong>The FTC outlawed every one of these tactics in 2024.</strong> But a rule on paper can't un-bury a review or refund your deposit. Verifying who actually lived there can — and that's the whole idea.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== EXPLAINER VIDEO ===== -->
+<section class="section" style="max-width:860px;margin-inline:auto;padding-left:20px;padding-right:20px;text-align:center;">
+  <h2 style="font-size:clamp(22px,4vw,30px);margin:0 0 8px;">See how LeaseReputation works</h2>
+  <p style="color:#A6A0C4;margin:0 0 22px;font-size:15px;">Verified residents. Scores that can't be bought. 60 seconds.</p>
+  <div id="lr-video" style="position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;cursor:pointer;background:#000 url('https://i.ytimg.com/vi/WjKOwDJykK4/maxresdefault.jpg') center/cover;box-shadow:0 20px 60px rgba(76,79,230,0.25);">
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+      <div style="width:72px;height:72px;border-radius:50%;background:rgba(76,79,230,0.92);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+        <svg width="26" height="30" viewBox="0 0 26 30" fill="none"><path d="M24 12.4c2 1.2 2 4 0 5.2L4.5 29.2C2.5 30.4 0 29 0 26.6V3.4C0 1 2.5-.4 4.5.8L24 12.4z" fill="#fff"/></svg>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('lr-video').addEventListener('click', function () {
+      this.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/WjKOwDJykK4?autoplay=1&rel=0" title="LeaseReputation explainer" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+      this.style.cursor = 'default';
+    }, { once: true });
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"VideoObject","name":"How LeaseReputation Works","description":"Verified-resident apartment reviews with Reputation Scores that can't be bought, boosted, or buried.","thumbnailUrl":"https://i.ytimg.com/vi/WjKOwDJykK4/maxresdefault.jpg","embedUrl":"https://www.youtube-nocookie.com/embed/WjKOwDJykK4","contentUrl":"https://www.youtube.com/watch?v=WjKOwDJykK4","uploadDate":"2026-07-21"}
+  </script>
+</section>
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2>Three steps to a lease you won't regret.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-head">
+          <span class="step-node">1</span>
+          <span class="step-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4" stroke-linecap="round"/></svg></span>
+          <span class="step-conn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <h3>Search the community</h3>
+        <p>Look up any apartment community by name or address — the place you're touring, the one you found online, all of them.</p>
+      </div>
+      <div class="step reveal" style="--d:.1s">
+        <div class="step-head">
+          <span class="step-node">2</span>
+          <span class="step-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="step-conn"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <h3>Read verified reviews</h3>
+        <p>Every review is from a resident we've confirmed actually lived there — including the honest ones a manager tried to bury.</p>
+      </div>
+      <div class="step reveal" style="--d:.2s">
+        <div class="step-head">
+          <span class="step-node">3</span>
+          <span class="step-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="7" cy="12" r="3.2"/><path d="M10.2 12h10M16.5 12v3.4M20.2 12v2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <h3>Lease with confidence</h3>
+        <p>Sign knowing exactly what's behind the tour — the good, the bad, and everything the leasing office left out.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHAT VERIFIED MEANS ===== -->
+<section class="section verified-explain" id="verified">
+  <div class="wrap ve-grid">
+    <div class="ve-visual reveal">
+      <div class="credential">
+        <div class="cred-seal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="cred-label">Verified resident</div>
+        <div class="cred-sub">· lived here 2 yrs</div>
+        <div class="cred-checks">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Residency confirmed</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Identity checked</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>Opinion unedited</span>
+        </div>
+      </div>
+    </div>
+    <div class="ve-copy reveal" style="--d:.1s">
+      <p class="eyebrow">The verified badge</p>
+      <h2>What "verified" actually means.</h2>
+      <p class="lead">Every review on a community has to earn this badge before it's published. Here's exactly what it certifies — before a single word reaches you.</p>
+      <ul class="ve-points">
+        <li>
+          <span class="vp-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" stroke-linejoin="round"/></svg></span>
+          <div><strong>They actually lived there.</strong> Residency is confirmed with a lease or other proof of address — like a utility bill or mail in their name — before they can post a word.</div>
+        </li>
+        <li>
+          <span class="vp-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="10" cy="8" r="3.5"/><path d="M4 20c0-3.3 2.7-5 6-5 .9 0 1.8.2 2.5.5" stroke-linecap="round"/><path d="M15 18l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <div><strong>They're a real, unique person.</strong> Every reviewer passes an identity check — so no bots, no staff in disguise, and no duplicate accounts padding a community's score.</div>
+        </li>
+        <li>
+          <span class="vp-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4V6a1 1 0 0 1 1-1z" stroke-linejoin="round"/></svg></span>
+          <div><strong>The opinion is theirs, untouched.</strong> We verify the person, never the words. Nothing gets edited, reordered, or taken down because a community didn't like how it read.</div>
+        </li>
+      </ul>
+      <p class="ve-note">Verified means the resident is real — not that we agree with them. The take stays 100% theirs.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== WHY VERIFIED ===== -->
+<section class="section" id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Why it's different</p>
+      <h2>Reviews that can't be bought or buried.</h2>
+      <p class="lead">Anyone can run a review site. The hard part — and the entire point — is keeping the reviews real.</p>
+    </div>
+    <div class="cards">
+      <div class="card reveal">
+        <div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h3>Verified residents only</h3>
+        <p>Every reviewer proves they actually lived there. No bought reviews, no bots, no staff in disguise, no competitors trashing the place.</p>
+      </div>
+      <div class="card reveal" style="--d:.08s">
+        <div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke-linecap="round"/></svg></div>
+        <h3>Negative reviews stay up</h3>
+        <p>Communities can't flag, bury, or pay to remove an honest review. The hard truths are exactly the ones you came here for.</p>
+      </div>
+      <div class="card reveal" style="--d:.16s">
+        <div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8" stroke-linecap="round" transform="rotate(45 12 12)"/></svg></div>
+        <h3>No pay-to-play, ever</h3>
+        <p>Property managers can't buy a higher score or sponsor their way up the rankings. Our ratings aren't for sale — so your trust is safe.</p>
+      </div>
+      <div class="card reveal" style="--d:.24s">
+        <div class="card-ico"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M4 4h16v16H4z" stroke-linejoin="round"/><path d="M8 9h8M8 13h5" stroke-linecap="round"/></svg></div>
+        <h3>The truth a tour hides</h3>
+        <p>Maintenance speed, real noise levels, surprise fees, and whether residents actually get their deposit back when they leave.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<!-- lrtrust:start -->
+<section class="lrtrust" id="trust">
+  <style>
+    .lrtrust{max-width:1060px;margin:56px auto 8px;padding:0 20px}
+    .lrtrust-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:.78rem;
+      font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#C4B5FD;margin-bottom:14px}
+    .lrtrust-eyebrow:before{content:"";width:22px;height:2px;background:linear-gradient(90deg,#4C4FE6,#C4B5FD)}
+    .lrtrust h2{margin:0 0 14px;font-size:clamp(1.9rem,4.2vw,2.9rem);color:#fff;font-weight:800;line-height:1.1}
+    .lrtrust h2 span{background:linear-gradient(120deg,#fff 25%,#C4B5FD);-webkit-background-clip:text;
+      background-clip:text;-webkit-text-fill-color:transparent}
+    .lrtrust-lede{margin:0 0 26px;color:#A6A0C4;font-size:1.05rem;line-height:1.6;max-width:640px}
+    .lrtrust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+    .lrtrust-pill{background:#17112E;border:1px solid rgba(196,181,253,.25);border-radius:18px;padding:20px 20px}
+    .lrtrust-pill h3{margin:0 0 8px;color:#fff;font-size:1.02rem;font-weight:800}
+    .lrtrust-pill p{margin:0;color:#A6A0C4;font-size:.9rem;line-height:1.55}
+    .lrtrust-pill .lrtrust-no{color:#3DDC97;font-weight:800}
+    .lrtrust-money{background:rgba(76,79,230,.10);border:1px solid rgba(76,79,230,.4);
+      border-radius:18px;padding:18px 22px;margin-bottom:34px}
+    .lrtrust-money b{color:#fff}
+    .lrtrust-money p{margin:0;color:#A6A0C4;font-size:.95rem;line-height:1.6}
+    .lrtrust-stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:40px}
+    .lrtrust-stat{padding:8px 16px;border-radius:20px;font-size:.85rem;font-weight:700;color:#C4B5FD;
+      background:rgba(196,181,253,.08);border:1px solid rgba(196,181,253,.3)}
+    .lrtrust-stat b{color:#fff}
+    .lrtrust-faq h3{margin:0 0 16px;color:#fff;font-size:1.4rem;font-weight:800}
+    .lrtrust-faq details{background:#17112E;border:1px solid rgba(196,181,253,.22);
+      border-radius:14px;margin-bottom:10px;overflow:hidden}
+    .lrtrust-faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;
+      align-items:center;gap:14px;padding:16px 20px;color:#fff;font-weight:700;font-size:.98rem}
+    .lrtrust-faq summary::-webkit-details-marker{display:none}
+    .lrtrust-faq summary:after{content:"+";color:#C4B5FD;font-size:1.4rem;font-weight:800;line-height:1;
+      transition:transform .18s}
+    .lrtrust-faq details[open] summary:after{transform:rotate(45deg)}
+    .lrtrust-faq details p{margin:0;padding:0 20px 18px;color:#A6A0C4;font-size:.92rem;line-height:1.6}
+    @media (max-width:820px){.lrtrust-grid{grid-template-columns:1fr}}
+  </style>
+
+  <div class="lrtrust-eyebrow">Why you can trust the score</div>
+  <h2>Reputation is <span>not for sale.</span></h2>
+  <p class="lrtrust-lede">Other review sites rank whoever pays the most and quietly bury what
+  paying customers don&rsquo;t like. We built LeaseReputation so that can&rsquo;t happen here
+  &mdash; structurally, not as a promise.</p>
+
+  <div class="lrtrust-grid">
+    <div class="lrtrust-pill">
+      <h3><span class="lrtrust-no">No</span> paid placement</h3>
+      <p>Communities are ranked by what verified residents report &mdash; never by
+      advertising budgets. There is no product a community can buy that changes its
+      position or its score.</p>
+    </div>
+    <div class="lrtrust-pill">
+      <h3><span class="lrtrust-no">No</span> pay-to-delete</h3>
+      <p>Operators can respond to any review &mdash; in public, under their name.
+      What they cannot do, at any price, is remove or bury what a verified resident
+      said.</p>
+    </div>
+    <div class="lrtrust-pill">
+      <h3><span class="lrtrust-no">No</span> anonymous noise</h3>
+      <p>Every review comes from a proven resident: lease or utility bill, plus a
+      matched ID &mdash; then the documents are deleted. One review per resident,
+      per community.</p>
+    </div>
+  </div>
+
+  <div class="lrtrust-money">
+    <p><b>How we make money:</b> optional paid features for renters and property
+    teams &mdash; never placement, never edits, never deletions. A community cannot
+    pay us to change what its residents said. There is nothing to buy, because the
+    score isn&rsquo;t for sale.</p>
+  </div>
+
+  <div class="lrtrust-stats">
+    <span class="lrtrust-stat"><b>19,000+</b>&nbsp;communities</span>
+    <span class="lrtrust-stat"><b>All 50</b>&nbsp;states</span>
+    <span class="lrtrust-stat"><b>50</b>&nbsp;statute-cited rights guides</span>
+    <span class="lrtrust-stat"><b>0</b>&nbsp;purchased placements &mdash; ever</span>
+  </div>
+
+  <div class="lrtrust-faq">
+    <h3>The honest answers.</h3>
+    <details>
+      <summary>Can a landlord pay to remove a bad review?</summary>
+      <p>No. Operators can post a public response under their own name, and anyone
+      can flag a review they believe violates our rules &mdash; flags are checked by a
+      human against the original verification record. Money is never part of that
+      process, and there is no channel through which it could be.</p>
+    </details>
+    <details>
+      <summary>What stops fake reviews?</summary>
+      <p>Verification. A review only carries the verified badge after the author
+      proves residency (lease or utility bill for that specific community) and
+      identity (government ID, matched). One review per resident per community
+      &mdash; enforced at the database level, not by policy.</p>
+    </details>
+    <details>
+      <summary>What happens to my documents after I verify?</summary>
+      <p>They&rsquo;re deleted &mdash; automatically, as part of the approval itself.
+      We keep the verification decision and the badge on your review. We do not keep
+      the paperwork.</p>
+    </details>
+    <details>
+      <summary>Isn&rsquo;t the coffee card paying for reviews?</summary>
+      <p>We pay for honesty, not praise. The first 1,000 verified reviewers get the
+      same $5 card whether their review is one star or five, glowing or brutal
+      &mdash; it&rsquo;s never conditioned on what a review says, and we disclose it
+      on every page. Paying for <i>positive</i> reviews is the industry practice we
+      exist to end.</p>
+    </details>
+    <details>
+      <summary>How does LeaseReputation make money?</summary>
+      <p>Optional paid features &mdash; for renters who want more, and for property
+      teams who want to engage with their residents in the open. Never placement,
+      never edits, never deletions. Our incentive is that you trust the score;
+      selling it would end us, and it should.</p>
+    </details>
+  </div>
+</section>
+<!-- lrtrust:end -->
+
+<section class="cta-band" id="get">
+  <div class="wrap">
+    <div class="cta-inner reveal">
+      <div class="cta-shield" aria-hidden="true"><svg viewBox="0 0 512 512"><path d="M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z" fill="none" stroke="#C4B5FD" stroke-width="9"/><path d="M210 240 L242 272 L304 206" fill="none" stroke="#C4B5FD" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="cta-pill"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9z" stroke-linejoin="round"/><circle cx="7.5" cy="7.5" r="1.3"/></svg>The cheapest part of moving</span>
+      <h2>Know before you lease.</h2>
+      <p class="lead">A lease is a year and tens of thousands of dollars — signed off a staged tour. The verified truth first is the cheapest insurance you'll buy all year, and because you pay for it, the reviews answer to you, not the landlord.</p>
+      <div class="cta-row">
+        <a class="btn" href="https://app.leasereputation.com">Create your account</a>
+        <a class="btn btn-ghost" href="https://app.leasereputation.com">Sign in</a>
+      </div>
+      <p class="microcopy">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Verified reviews from residents who actually lived there. Know before you sign.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+
+<!-- lrbrowse:start -->
+<section class="lrbrowse">
+  <style>
+    .lrbrowse{max-width:1060px;margin:26px auto 46px;padding:0 20px}
+    .lrbrowse h3{margin:0 0 14px;color:#fff;font-size:1.15rem;font-weight:800}
+    .lrbrowse-links{display:flex;flex-wrap:wrap;gap:10px}
+    .lrbrowse-links a{padding:9px 16px;border-radius:20px;font-size:.88rem;font-weight:600;
+      color:#C4B5FD;text-decoration:none;background:rgba(196,181,253,.07);
+      border:1px solid rgba(196,181,253,.28);transition:background .15s}
+    .lrbrowse-links a:hover{background:rgba(196,181,253,.16)}
+  </style>
+  <h3>Browse communities &amp; know your rights</h3>
+  <div class="lrbrowse-links">
+    <a href="/apartments/az/">Apartments in Arizona</a>
+    <a href="/apartments/tx/">Apartments in Texas</a>
+    <a href="/apartments/ca/">Apartments in California</a>
+    <a href="/apartments/co/">Apartments in Colorado</a>
+    <a href="/apartments/fl/">Apartments in Florida</a>
+    <a href="/community/">All communities</a>
+    <a href="/guides/tenant-rights/">Tenant rights in all 50 states</a>
+  </div>
+</section>
+<!-- lrbrowse:end -->
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="logo" href="#top" aria-label="LeaseReputation home"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="115" fill="url(#lg)"/><path d="M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z" fill="#fff"/><path d="M210 240 L242 272 L304 206" fill="none" stroke="#4C4FE6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm"><span class="l">lease</span><span class="r">reputation</span></span></a>
+        <p class="footer-tag">Verified apartment reviews. Know before you lease.</p>
+      </div>
+      <div class="footer-col"><h4>Product</h4><a href="#problem">The problem</a><a href="#how">How it works</a><a href="#why">Why verified</a><a href="/community/">Browse communities</a><a href="/guides/">Renter guides</a><a href="https://app.leasereputation.com">Open the app</a></div>
+      <div class="footer-col"><h4>Company</h4><a href="contact.html">Contact</a><a href="accessibility.html">Accessibility</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="cookies.html">Cookie Policy</a><a href="community-guidelines.html">Community Guidelines</a></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 LeaseReputation · Danbren Media LLC</span><div class="footer-social">
+      <a href="https://instagram.com/leasereputation" aria-label="LeaseReputation on Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.03.084c-1.277.06-2.148.264-2.91.563-.788.306-1.457.717-2.123 1.388C1.33 2.705.92 3.375.61 4.16c-.3.762-.504 1.634-.563 2.91C-.012 8.354 0 8.764 0 12.017c0 3.252-.012 3.662.048 4.94.06 1.277.264 2.148.563 2.91.306.788.717 1.457 1.388 2.123.665.665 1.335 1.078 2.122 1.388.762.299 1.634.503 2.911.563 1.279.06 1.688.073 4.94.073 3.252 0 3.662-.013 4.94-.073 1.277-.06 2.149-.264 2.911-.563.787-.31 1.457-.723 2.122-1.388.665-.666 1.078-1.335 1.388-2.123.299-.762.503-1.633.563-2.91.06-1.278.073-1.688.073-4.94 0-3.253-.013-3.663-.073-4.94-.06-1.277-.264-2.149-.563-2.911-.31-.788-.723-1.457-1.388-2.122C21.295 1.33 20.625.92 19.838.61c-.762-.299-1.634-.503-2.911-.563C15.65.012 15.24 0 11.987 0 8.735 0 8.325.012 7.047.072zm-.14 21.693c-1.17-.054-1.805-.25-2.228-.415-.56-.218-.96-.477-1.382-.896-.419-.42-.679-.819-.896-1.379-.164-.422-.36-1.057-.413-2.227-.058-1.265-.07-1.644-.07-4.849 0-3.205.012-3.583.07-4.849.054-1.169.25-1.804.413-2.227.218-.56.478-.96.896-1.382.42-.419.819-.679 1.379-.896.422-.164 1.057-.36 2.227-.413 1.265-.058 1.645-.07 4.849-.07 3.205 0 3.585.012 4.849.07 1.17.054 1.804.25 2.227.413.56.217.96.477 1.382.896.419.42.679.819.896 1.379.164.422.36 1.057.413 2.227.058 1.265.07 1.644.07 4.849 0 3.205-.012 3.583-.07 4.849-.054 1.169-.25 1.804-.413 2.227-.218.56-.478.96-.896 1.382-.42.419-.819.679-1.379.896-.422.164-1.057.36-2.227.413-1.265.058-1.645.07-4.849.07-3.205 0-3.583-.012-4.849-.07zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a>
+      <a href="https://facebook.com/leasereputation" aria-label="LeaseReputation on Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a>
+      <a href="https://youtube.com/@leasereputation" aria-label="LeaseReputation on YouTube" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2C0 8.09 0 12 0 12s0 3.91.5 5.8a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.91 24 12 24 12s0-3.91-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg></a>
+      <a href="https://tiktok.com/@leasereputation" aria-label="LeaseReputation on TikTok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>
+      <a href="https://linkedin.com/company/leasereputation" aria-label="LeaseReputation on LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zm1.78 13.02H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg></a>
+    </div></div>
+  </div>
+</footer>
+
+<script>
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var progress = document.getElementById('progress');
+  var hdr = document.getElementById('hdr');
+  var parallax = Array.prototype.slice.call(document.querySelectorAll('[data-parallax]'));
+  var ticking = false;
+
+  function frame(){
+    var y = window.scrollY || window.pageYOffset;
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(y / max, 1) : 0) + ')';
+    hdr.classList.toggle('scrolled', y > 12);
+    if(!reduce && window.innerWidth > 760){
+      for(var i=0;i<parallax.length;i++){
+        var f = parseFloat(parallax[i].getAttribute('data-parallax'));
+        parallax[i].style.transform = 'translate3d(0,' + (y * f) + 'px,0)';
+      }
+    }
+    ticking = false;
+  }
+  function onScroll(){ if(!ticking){ ticking = true; requestAnimationFrame(frame); } }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  window.addEventListener('resize', onScroll, {passive:true});
+  frame();
+
+  // mobile menu
+  var menuBtn = document.getElementById('menuBtn'), mobileMenu = document.getElementById('mobileMenu');
+  menuBtn.addEventListener('click', function(){
+    var open = mobileMenu.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded', open);
+  });
+  mobileMenu.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ mobileMenu.classList.remove('open'); }); });
+
+  // scroll reveal
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, {threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+    document.querySelectorAll('.reveal:not(.in)').forEach(function(el){ io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function(el){ el.classList.add('in'); });
+  }
+  // In Wix, point the form action at your Wix Form / contacts handler, or keep this endpoint and process it server-side.
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"765f59dc5e4049e78e3cc10492a12aa7","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script>
+(function () {
+  var el = document.getElementById('community-count');
+  if (!el) return;
+  fetch('https://6IU3SM5A9Z-dsn.algolia.net/1/indexes/communities/query', {
+    method: 'POST',
+    headers: {
+      'X-Algolia-Application-Id': '6IU3SM5A9Z',
+      'X-Algolia-API-Key': 'cba34b717de637e20365725b7ba0b159',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query: '', hitsPerPage: 0 })
+  }).then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || typeof d.nbHits !== 'number' || d.nbHits < 100) return;
+      var n = Math.floor(d.nbHits / 100) * 100;
+      el.textContent = n.toLocaleString('en-US') + '+';
+    }).catch(function () { /* fallback: nightly-written value stays */ });
+})();
+</script>
+</body>
+</html>

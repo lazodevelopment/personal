@@ -1,0 +1,19 @@
+{
+  "name": "lazo-functions-galleries",
+  "description": "Lazo post-wedding delivery galleries — R2 presign, manifest, settings",
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "deploy": "firebase deploy --only functions:galleries",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.706.0",
+    "@aws-sdk/s3-request-presigner": "^3.706.0",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.1"
+  },
+  "private": true
+}

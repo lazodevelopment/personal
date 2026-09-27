@@ -1,0 +1,122 @@
+<!-- ============================================================
+     LAZO AD — drop-in section for ataviaweddings.com
+     Paste before <section class="cta-band"…> on the home page
+     and before <section class="closing"> on /packages.
+     Needs /assets/img/lazo-logo.png (supplied).
+     The whole band is one link. All CSS is scoped under .lazo-ad.
+     ============================================================ -->
+<section class="lazo-ad-wrap" aria-label="Lazo — plan your wedding">
+<style>
+  .lazo-ad-wrap{ background:#52284F; }
+  .lazo-ad{
+    --lz-plum:#52284F; --lz-plum-deep:#3A1838; --lz-ivory:#FAF6F0; --lz-gold:#D9B77C; --lz-muted:#DCCFD8; --lz-line:rgba(217,183,124,.28);
+    display:block; position:relative; isolation:isolate; overflow:hidden;
+    background:var(--lz-plum); color:var(--lz-ivory); text-decoration:none;
+    padding:64px 24px 72px; text-align:center;
+  }
+  .lazo-ad::before{
+    content:""; position:absolute; inset:0; z-index:-1;
+    background:radial-gradient(80% 70% at 50% 0%, #63336A 0%, var(--lz-plum) 55%, var(--lz-plum-deep) 100%);
+  }
+  .lazo-ad__inner{ max-width:1040px; margin:0 auto; }
+  .lazo-ad__logo{ display:block; width:124px; height:auto; margin:0 auto 28px; }
+  .lazo-ad__title{
+    font-family:'Cormorant Garamond','Garamond',Georgia,serif; font-weight:300; font-style:italic;
+    font-size:36px; line-height:1.15; margin:0 0 18px; color:var(--lz-ivory);
+  }
+  .lazo-ad__t1,.lazo-ad__t2{ display:block; }
+  .lazo-ad__t1{ font-weight:600; font-style:normal; color:var(--lz-ivory); letter-spacing:-.01em; }
+  .lazo-ad__t2{ font-weight:300; font-style:italic; color:var(--lz-muted); font-size:.78em; line-height:1.25; margin-top:10px; }
+  .lazo-ad__lead{
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    font-weight:300; font-size:18px; line-height:1.6; color:var(--lz-muted);
+    margin:0 auto; max-width:32em;
+  }
+  .lazo-ad__hero{ display:grid; grid-template-columns:1fr; gap:40px; align-items:center; margin-bottom:44px; }
+  .lazo-ad__phone img{ display:block; width:min(440px,94vw); height:auto; margin:0 auto; }
+  .lazo-ad__why{
+    font-family:'Cormorant Garamond',Georgia,serif; font-weight:400; font-style:italic; font-size:26px;
+    color:var(--lz-gold); margin:0 0 22px;
+  }
+  .lazo-ad__list{
+    list-style:none; margin:0 0 40px; padding:0; text-align:left;
+    display:grid; grid-template-columns:1fr; gap:0;
+    border-top:1px solid var(--lz-line);
+  }
+  .lazo-ad__list li{
+    display:grid; grid-template-columns:28px 1fr; gap:14px; align-items:start;
+    padding:18px 4px; border-bottom:1px solid var(--lz-line);
+  }
+  .lazo-ad__list svg{ width:22px; height:22px; margin-top:3px; flex:none; }
+  .lazo-ad__list b{
+    display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:18px; line-height:1.3; color:var(--lz-ivory); margin-bottom:5px;
+  }
+  .lazo-ad__list span{
+    font-family:'Inter',sans-serif; font-weight:300; font-size:16.5px; line-height:1.55; color:var(--lz-muted);
+  }
+  .lazo-ad__cta{
+    display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:15px; letter-spacing:.08em; text-transform:uppercase;
+    background:var(--lz-gold); color:var(--lz-plum-deep); padding:19px 30px; border-radius:999px; line-height:1;
+    transition:background .18s ease,transform .18s ease;
+  }
+  .lazo-ad__sub{
+    font-family:'Inter',sans-serif; font-weight:300; font-size:14.5px; color:var(--lz-muted); opacity:.85; margin:20px 0 0;
+  }
+  .lazo-ad:hover .lazo-ad__cta{ background:var(--lz-ivory); transform:translateY(-1px); }
+  .lazo-ad:focus-visible{ outline:3px solid var(--lz-gold); outline-offset:-6px; }
+  @media (min-width:720px){
+    .lazo-ad{ padding:96px 24px 104px; }
+    .lazo-ad__logo{ width:156px; margin-bottom:34px; }
+    .lazo-ad__title{ font-size:54px; }
+    .lazo-ad__lead{ font-size:20px; }
+    .lazo-ad__hero{ grid-template-columns:minmax(0,1fr) 600px; gap:32px; text-align:left; margin-bottom:56px; }
+    .lazo-ad__hero .lazo-ad__logo{ margin-left:0; }
+    .lazo-ad__hero .lazo-ad__lead{ margin-left:0; }
+    .lazo-ad__phone img{ width:660px; max-width:none; margin-right:-60px; }
+    .lazo-ad__why{ font-size:30px; }
+    .lazo-ad__list{ grid-template-columns:1fr 1fr; column-gap:48px; border-top:0; }
+    .lazo-ad__list li{ padding:20px 0; }
+    .lazo-ad__list li:nth-child(-n+2){ border-top:1px solid var(--lz-line); }
+    .lazo-ad__cta{ display:inline-block; padding:20px 46px; font-size:14px; }
+  }
+  @media (prefers-reduced-motion:reduce){ .lazo-ad__cta{ transition:none; } .lazo-ad:hover .lazo-ad__cta{ transform:none; } }
+</style>
+
+  <a class="lazo-ad" href="https://meetlazo.com/?utm_source=ataviaweddings&utm_medium=site&utm_campaign=lazo-ad" rel="noopener" data-lazo-link>
+    <div class="lazo-ad__inner">
+      <div class="lazo-ad__hero">
+        <div class="lazo-ad__copy">
+          <img class="lazo-ad__logo" src="/assets/img/lazo-logo.png" alt="Lazo" width="520" height="322">
+          <h2 class="lazo-ad__title"><span class="lazo-ad__t1">The big sites give you a search box.</span><span class="lazo-ad__t2">Lazo gives you June — an assistant who plans your wedding.</span></h2>
+          <p class="lazo-ad__lead">Lazo is free for couples, and it does the planning the big sites leave to you.</p>
+        </div>
+        <div class="lazo-ad__phone">
+          <img src="/assets/img/lazo-app-trio.png" alt="The Lazo app: your wedding home with the countdown and budget, a conversation with June, and a vendor thread with the signed contract and paid retainer" width="1653" height="1247" loading="lazy">
+        </div>
+      </div>
+
+      <p class="lazo-ad__why">Why we'd send you to Lazo</p>
+      <ul class="lazo-ad__list">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Reviews you can trust</b><span>Every review is from a couple who actually booked. No vendor can pay for a higher spot in your results.</span></div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Real prices before you message</b><span>Packages and starting prices sit right on the profile, so you compare what things cost in your city first.</span></div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>June AI plans it with you</b><span>Tell her your date, city and budget once. She tells you what to book next, what’s overdue, and answers anything.</span></div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Message, sign and pay in one thread</b><span>Your note reaches the actual vendor. The proposal, contract and payment stay in that same conversation.</span></div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Share with your vendors</b><span>Build your timeline, guest list and photo groups once, then send them to the right vendors. Nobody asks twice.</span></div></li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>A free wedding website</b><span>Eight designs, RSVPs that land in your guest list, song requests and directions for guests. No ads.</span></div></li>
+      </ul>
+
+      <span class="lazo-ad__cta">Plan your wedding on Lazo — free</span>
+      <p class="lazo-ad__sub">Atavia Weddings is a verified vendor on Lazo — built by working wedding pros. Find our profile, packages and reviews there.</p>
+    </div>
+  </a>
+
+  <script>
+    (function(){
+      var page=(location.pathname.replace(/\/+$/,'')||'/home').replace(/^\//,'').replace(/\//g,'-');
+      var links=document.querySelectorAll('.lazo-ad-wrap [data-lazo-link]');
+      for(var i=0;i<links.length;i++){
+        try{ var u=new URL(links[i].href); u.searchParams.set('utm_content',page); links[i].href=u.toString(); }catch(e){}
+      }
+    })();
+  </script>
+</section>

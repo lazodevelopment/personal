@@ -1,0 +1,26 @@
+# lazo-healthcheck — deploy to the Lazo/LeaseReputation account (d16dd804...),
+# NOT the wedding-brands account (f2ddc254...). Run `wrangler whoami` first.
+
+name = "lazo-healthcheck"
+main = "src/worker.js"
+compatibility_date = "2026-08-01"
+
+# Every 5 minutes; per-check intervalMinutes in worker.js decides which checks run.
+[triggers]
+crons = ["*/5 * * * *"]
+
+# Create with:  wrangler kv namespace create HEALTH
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "HEALTH"
+id = "726a1b49a37549139fe2c6dbdbf0696e"
+
+[vars]
+SES_REGION = "us-east-1"   # set to your actual SES region
+
+# Secrets (set via `wrangler secret put <NAME>`):
+#   AWS_ACCESS_KEY_ID      — IAM key scoped to ses:SendEmail only
+#   AWS_SECRET_ACCESS_KEY
+#   ALERT_FROM             — alerts@send.meetlazo.com (verified SES identity)
+#   ALERT_TO               — john@meetlazo.com
+#   STATUS_KEY             — random string; God Mode sends it as Bearer token to /status

@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+{#- JC-LAZO-FORVENDORS-0907-003: the editorial system (photo hero, serif at scale, one accent), unsigned founder note. JC-LAZO-FORVENDORS-0907-002: price first. The hero answers "what does it cost" and lets a vendor
+    find their business without leaving the page (the search carries into the app as ?claim=, and a
+    vendor arriving from their own listing with ?vendor=&name= gets a claim button for that listing).
+    Pricing is the second screen. Then the why, the toolkit, a founder's note, the steps, the venue
+    showcase, an FAQ. Header CTA reads "Claim your profile"; #claim and #promise anchors exist now. -#}
+{% block title %}Lazo for Vendors &mdash; Free Forever, Leads Included{% endblock %}
+{% block desc %}Claim your listing free, forever. Verified leads, proposals, contracts and payments in one thread. Pro from $79/mo when you want more — it sharpens the tools, never the rankings.{% endblock %}
+{% block canonical %}{{ base }}/for-vendors/{% endblock %}
+{% block nav_key %}vendors{% endblock %}
+{% block nav_cta %}<a class="nav-cta" href="#claim">Claim your profile</a>{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What if my business isn't listed yet?","acceptedAnswer":{"@type":"Answer","text":"Search your name above. If we don't have you, request a listing from the same screen in the app - it takes two minutes and is reviewed the same day. Free either way."}},
+{"@type":"Question","name":"What does \"verified\" mean on Lazo?","acceptedAnswer":{"@type":"Answer","text":"A verified vendor proved ownership of the business (a license, insurance certificate or EIN letter). A verified review comes only from a couple who booked that vendor through Lazo. A verified lead is a signed-in couple with a real date."}},
+{"@type":"Question","name":"Do you take a cut of my bookings?","acceptedAnswer":{"@type":"Answer","text":"No. Contracts, invoices and payments run in your thread through your own processor. Lazo charges 0% on what couples pay you."}},
+{"@type":"Question","name":"Can I cancel Pro?","acceptedAnswer":{"@type":"Answer","text":"Any time, from Account in your dashboard. Your profile, leads and threads stay free; only the Pro tools switch off. Founding pricing is locked for life while you stay subscribed."}},
+{"@type":"Question","name":"Does paying for Pro improve my ranking?","acceptedAnswer":{"@type":"Answer","text":"No, and it never will. Rankings come from verified reviews, reply speed and real bookings. Pro buys tools that help you earn those; it cannot buy the position itself."}},
+{"@type":"Question","name":"Who sees my availability calendar?","acceptedAnswer":{"@type":"Answer","text":"Couples see which dates are booked on your public page, so they don't inquire about a date you can't take. They never see who booked it."}}
+]}
+</script>
+{% endblock %}
+{% block main %}
+<style>
+.fv *{box-sizing:border-box}
+.fv{font-family:Inter,sans-serif;color:#241E2B}
+.fv .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+.fv .serif{font-family:'Cormorant Garamond',serif;font-weight:500}
+/* HERO */
+.fv-hero{background:#22101F url('/assets/photos/atmo-toast.jpg') center/cover;position:relative;overflow:hidden;padding:110px 0 70px;text-align:left}
+.fv-hero:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(34,16,31,.85) 0%,rgba(34,16,31,.6) 50%,rgba(34,16,31,.3) 100%),linear-gradient(180deg,rgba(34,16,31,.2),rgba(34,16,31,.85))}
+.fv-hero .wrap{position:relative;z-index:2}
+.fv-eyebrow{color:#D9B77C;font-size:11.5px;letter-spacing:3.5px;text-transform:uppercase;font-weight:700;margin:0 0 18px}
+.fv-hero h1{color:#FAF6F0;font-family:'Cormorant Garamond',serif;font-size:clamp(44px,6vw,80px);line-height:.98;margin:0 0 10px;font-weight:500;letter-spacing:-.01em;max-width:12ch}
+.fv-hero h1 em{font-style:italic;font-weight:500;color:#D9B77C}
+.fv-hero .sub{color:rgba(250,246,240,.88);font-size:17px;line-height:1.6;max-width:52ch;margin:18px 0 0}
+.fv-live{display:none}
+/* the price, first */
+.fv-pricebar{display:flex;flex-wrap:wrap;margin:26px 0 0;border:1px solid rgba(217,183,124,.5);border-radius:12px;overflow:hidden;background:rgba(250,246,240,.06);max-width:760px}
+.fv-pricebar span{flex:1 1 140px;padding:14px 16px;font-size:12px;color:rgba(250,246,240,.78);border-right:1px solid rgba(217,183,124,.3);line-height:1.35}
+.fv-pricebar span:last-child{border-right:0}
+.fv-pricebar b{display:block;font-family:'Cormorant Garamond',serif;font-size:28px;line-height:1;color:#FAF6F0;font-weight:500;font-feature-settings:'lnum' 1;margin-bottom:4px}
+.fv-pricebar a{color:#D9B77C;text-decoration:none;font-weight:700}
+/* the claim box */
+.fv-claim{margin:22px 0 0;max-width:640px;background:#FAF6F0;border:0;border-radius:16px;padding:14px;text-align:left;box-shadow:0 30px 60px rgba(0,0,0,.4)}
+.fv-claim label{display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#8A6A2F;font-weight:800;margin:0 0 8px}
+.fv-hero .fv-eyebrow{margin-bottom:14px}
+.fv-claim form{display:flex;gap:10px}
+.fv-claim input{flex:1;min-width:0;border:1px solid rgba(217,183,124,.7);border-radius:12px;padding:13px 14px;font-size:15px;font-family:inherit;color:#241E2B;background:#fff}
+.fv-claim input:focus{outline:2px solid #D9B77C;outline-offset:1px}
+.fv-claim button,.fv-claim .go{border:0;border-radius:10px;padding:13px 22px;font-size:14.5px;font-weight:700;font-family:inherit;background:#D9B77C;color:#2E1530;cursor:pointer;text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center}
+.fv-claim .note{margin:8px 0 0;font-size:12px;color:#6B5F72}
+.fv-claim .note a{color:#52284F;font-weight:600}
+.fv-claim.named{border-width:2px}
+.fv-claim .named-h{font-family:'Cormorant Garamond',serif;font-size:22px;color:#3D1C3B;margin:0 0 4px;font-weight:600}
+.fv-claim .named-p{margin:0 0 12px;font-size:13.5px;color:#5C5164}
+@media(max-width:560px){.fv-claim form{flex-direction:column}}
+.fv-stats{display:none}
+/* SECTIONS */
+.fv-sec{padding:66px 0}
+.fv-sec.alt{background:#FAF6F0}
+.fv-kick{color:#8A6A2F;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin:0 0 10px}
+.fv-h2{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,4vw,54px);color:#3D1C3B;font-weight:500;line-height:1.04;margin:0 0 12px;letter-spacing:-.01em}
+.fv-lead{color:#5C5164;font-size:16px;line-height:1.7;max-width:660px;margin:0}
+.fv-center{text-align:center}.fv-center .fv-lead{margin:0 auto}
+/* PRICING */
+.fv-pro-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(24px,3.4vw,34px);color:#8A6A2F;margin:6px 0 14px}
+.fv-price{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:18px;margin-top:40px;align-items:stretch}
+.fv-tier{background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:24px;padding:30px 26px;display:flex;flex-direction:column;text-align:left;position:relative}
+.fv-tier.hot{border:2px solid #D9B77C;box-shadow:0 24px 60px rgba(61,28,59,.12)}
+.fv-tier .ribbon{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:#D9B77C;color:#3D1C3B;font-size:10px;font-weight:800;letter-spacing:1.8px;border-radius:999px;padding:6px 14px;white-space:nowrap}
+.fv-tier h3{margin:0 0 2px;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#8A6A2F;font-weight:800}
+.fv-tier .who{font-size:12px;color:#9A8FA0;margin:0 0 12px}
+.fv-tier .amt{font-family:'Cormorant Garamond',serif;font-size:46px;font-weight:600;color:#3D1C3B;line-height:1;font-feature-settings:'lnum' 1}
+.fv-tier .amt small{font-family:Inter,sans-serif;font-size:14px;color:#7A6E80;font-weight:600}
+.fv-tier .per{font-size:12px;color:#7A6E80;margin:4px 0 16px}
+.fv-tier ul{list-style:none;margin:0 0 18px;padding:0;flex:1}
+.fv-tier li{font-size:13.5px;color:#5C5164;line-height:1.5;padding:6px 0 6px 26px;position:relative}
+.fv-tier li:before{content:'';position:absolute;left:0;top:9px;width:16px;height:16px;border-radius:999px;background:rgba(46,139,107,.14);border:1px solid rgba(46,139,107,.5)}
+.fv-tier li:after{content:'';position:absolute;left:4.5px;top:13px;width:7px;height:4px;border-left:1.6px solid #2E8B6B;border-bottom:1.6px solid #2E8B6B;transform:rotate(-45deg)}
+.fv-tier .tcta{display:block;text-align:center;background:#3D1C3B;color:#FAF6F0;text-decoration:none;font-weight:700;font-size:14px;border-radius:999px;padding:14px}
+.fv-tier.hot .tcta{background:#D9B77C;color:#2E1530}
+.fv-tier .soon{text-align:center;font-size:11px;color:#9A8FA0;margin-top:8px}
+.fv-badge-demo{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#3D1C3B,#52284F);border:1px solid #D9B77C;color:#D9B77C;border-radius:999px;padding:5px 14px;font-size:10.5px;font-weight:800;letter-spacing:1.5px}
+.fv-roi{margin:22px auto 0;max-width:640px;font-size:13.5px;color:#5C5164;line-height:1.6}
+/* COMPARISON */
+.fv-vs{margin-top:36px;border-radius:24px;overflow:hidden;border:1px solid rgba(217,183,124,.55);box-shadow:0 24px 60px rgba(61,28,59,.12)}
+.fv-vs table{width:100%;border-collapse:collapse;background:#fff}
+.fv-vs th,.fv-vs td{padding:16px 20px;text-align:left;font-size:14.5px;border-bottom:1px solid #F1E7F0}
+.fv-vs th{background:#2E1530;color:#FAF6F0;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+.fv-vs th.lz{background:#52284F;color:#D9B77C}
+.fv-vs tr:last-child td{border-bottom:0}
+.fv-vs td:first-child{color:#5C5164;font-weight:600;width:38%}
+.fv-vs .bad{color:#A0522D}
+.fv-vs .good{color:#2E8B6B;font-weight:700}
+@media(max-width:640px){.fv-vs th,.fv-vs td{padding:12px 10px;font-size:12.5px}.fv-vs td:first-child{width:30%}}
+/* FEATURES */
+.fv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:38px}
+.fv-card{background:#fff;border:1px solid #E6D6B8;border-radius:18px;padding:24px;transition:transform .2s}
+.fv-card:hover{transform:translateY(-3px)}
+.fv-ic{width:46px;height:46px;border-radius:14px;background:#3D1C3B;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.fv-ic svg{width:22px;height:22px;stroke:#D9B77C;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fv-card h3{margin:0 0 7px;font-family:'Cormorant Garamond',serif;font-size:24px;color:#3D1C3B;font-weight:500;line-height:1.1}
+.fv-card p{margin:0;font-size:13.5px;line-height:1.6;color:#5C5164}
+.fv-tag{display:inline-block;background:linear-gradient(135deg,#E8CFA0,#D9B77C);color:#3D1C3B;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:1.8px;padding:4px 11px;margin-bottom:12px}
+.fv-tag.pro{background:#3D1C3B;color:#D9B77C;border:1px solid #3D1C3B}
+/* FOUNDER */
+.fv-founder{display:grid;grid-template-columns:1.3fr 1fr;gap:36px;align-items:center;margin-top:30px;background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:28px;padding:38px}
+.fv-founder blockquote{margin:0;font-family:'Cormorant Garamond',serif;font-size:clamp(22px,2.6vw,32px);line-height:1.3;color:#3D1C3B;font-weight:400}
+.fv-founder .sign{margin:18px 0 0;font-size:13.5px;color:#5C5164}
+.fv-founder .sign b{color:#3D1C3B}
+.fv-founder .photo{aspect-ratio:4/5;border-radius:18px;background:#3D1C3B;background-size:cover;background-position:center;border:1px solid #E6D6B8}
+@media(max-width:820px){.fv-founder{grid-template-columns:1fr;padding:26px}}
+/* STEPS */
+.fv-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:38px}
+.fv-step{background:#fff;border:1px solid rgba(217,183,124,.5);border-radius:20px;padding:26px 24px;position:relative}
+.fv-step .num{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:52px;color:rgba(217,183,124,.55);line-height:1;position:absolute;top:14px;right:20px}
+.fv-step h3{margin:0 0 8px;font-size:16px;color:#3D1C3B;font-weight:800}
+.fv-step p{margin:0;font-size:13.5px;line-height:1.6;color:#5C5164}
+/* SHOWCASE */
+.fv-show{background:#2E1530;border-radius:24px;padding:44px;color:#FAF6F0;display:grid;grid-template-columns:1fr 1.2fr;gap:36px;align-items:center;border:1px solid rgba(217,183,124,.4)}
+.fv-show .fv-h2{color:#FAF6F0}
+.fv-show p{color:#D8C9DA;font-size:14.5px;line-height:1.7}
+.fv-show .price{font-family:'Cormorant Garamond',serif;font-style:italic;color:#D9B77C;font-size:21px;margin-top:14px}
+.fv-frame{border-radius:18px;overflow:hidden;border:1px solid rgba(217,183,124,.7);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.fv-frame iframe{display:block;width:100%;aspect-ratio:16/10;border:0}
+@media(max-width:860px){.fv-show{grid-template-columns:1fr;padding:30px}}
+/* FAQ */
+.fv-faq{max-width:760px;margin:30px auto 0;text-align:left}
+.fv-faq details{background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:16px;padding:14px 18px;margin-bottom:10px}
+.fv-faq summary{cursor:pointer;font-weight:700;color:#3D1C3B;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.fv-faq summary::-webkit-details-marker{display:none}
+.fv-faq summary:after{content:'+';color:#8A6A2F;font-size:20px;font-weight:400}
+.fv-faq details[open] summary:after{content:'\2013'}
+.fv-faq p{margin:10px 0 0;font-size:14px;line-height:1.65;color:#5C5164}
+/* FINAL */
+.fv-final{background:#2E1530;text-align:left;padding:80px 0}
+.fv-final .fv-h2{color:#FAF6F0}
+.fv-final .sub{color:rgba(250,246,240,.8);font-size:16px;max-width:56ch;margin:10px 0 0;line-height:1.7}
+.fv-cta{display:inline-block;background:#D9B77C;color:#2E1530;font-weight:700;font-size:15.5px;text-decoration:none;border-radius:999px;padding:16px 34px;transition:transform .2s}
+.fv-cta:hover{transform:translateY(-2px)}
+.fv-cta.ghost{background:transparent;color:#FAF6F0;border:1px solid rgba(217,183,124,.6);box-shadow:none}
+.fv-ctas{display:flex;gap:14px;justify-content:flex-start;flex-wrap:wrap;margin-top:30px}
+</style>
+<div class="fv">
+
+<!-- ================= HERO: the price and the search, first ================= -->
+<section class="fv-hero"><div class="wrap">
+<span class="fv-live"><span class="dot"></span>Claiming is open &mdash; free forever</span>
+<p class="fv-eyebrow">For wedding professionals</p>
+<h1>Stop paying for leads. <em>Start earning your ranking.</em></h1>
+<p class="sub">Your listing, your leads and the booking tools are free, forever. Pro is optional, and it never touches the rankings.</p>
+<div class="fv-pricebar">
+  <span><b>Free</b>forever &middot; listing, leads &amp; booking tools</span>
+  <span><b>$0</b>per lead, ever</span>
+  <span><b>0%</b>of your bookings</span>
+  <span><b>$79</b>/mo Pro, optional &middot; <a href="#pricing">see pricing &darr;</a></span>
+</div>
+
+<div class="fv-claim" id="claim">
+  <div id="claim-named" hidden>
+    <p class="named-h">Is <span id="claim-name"></span> yours?</p>
+    <p class="named-p">Claim it in about a minute: prove it's your business, and the dashboard is yours the moment it clears.</p>
+    <a class="go" id="claim-go" href="https://app.meetlazo.com/">Claim this listing free &rarr;</a>
+    <p class="note">Not you? <a href="#claim" id="claim-other">Search for your business instead.</a></p>
+  </div>
+  <div id="claim-search">
+    <label for="claim-q">Find your business</label>
+    <form id="claim-form" action="https://app.meetlazo.com/" method="get">
+      <input id="claim-q" name="claim" type="search" placeholder="Your business name" autocomplete="organization" required>
+      <button type="submit">Find &amp; claim</button>
+    </form>
+    <p class="note">You're probably already listed &mdash; we index {{ vendor_total_display|default('70,000+') }} wedding businesses across {{ metro_count|default(45) }} markets. Not there? You can add yourself from the same screen.</p>
+  </div>
+</div>
+
+<div class="fv-stats">
+<div class="fv-stat"><b>{{ metro_count|default(45) }}</b><span>Markets nationwide</span></div>
+<div class="fv-stat"><b>$0</b><span>Per lead, ever</span></div>
+<div class="fv-stat"><b>0</b><span>Rankings for sale</span></div>
+</div>
+</div></section>
+
+<!-- ================= PRICING: second screen ================= -->
+<section class="fv-sec alt" id="pricing"><div class="wrap fv-center">
+<p class="fv-kick">Simple, honest pricing</p>
+<h2 class="fv-h2">Pro doesn't buy your ranking.</h2>
+<p class="fv-pro-tag">It buys the tools that earn it.</p>
+<p class="fv-lead" style="margin:0 auto">Photographers, videographers, planners, DJs, florists, caterers, officiants, bands &mdash; every category starts free and stays free. Pro sharpens the tools; it never touches the rankings.</p>
+<div class="fv-price">
+<div class="fv-tier"><h3>Free</h3><p class="who">Every vendor, every category</p><div class="amt">$0</div><p class="per">forever &mdash; not an intro rate</p>
+<ul><li>Claimed, verified profile with gallery, packages &amp; video</li><li>Unlimited verified leads &mdash; names, faces, real dates</li><li>In-thread messaging &amp; proposals couples can accept</li><li>Your ranking, earned &mdash; same playing field as everyone</li></ul>
+<a class="tcta" href="#claim">Claim your profile</a></div>
+<div class="fv-tier hot"><span class="ribbon">FOUNDING PRICE &middot; EVERY CATEGORY</span><h3>Lazo Pro</h3><p class="who">For vendors ready to grow</p><div class="amt">$79<small>/mo</small></div><p class="per">or $790/year &mdash; two months free</p>
+<p style="margin:0 0 12px"><span class="fv-badge-demo">&#10022; LAZO PRO</span> <span style="font-size:11.5px;color:#9A8FA0">&nbsp;badge on your public profile</span></p>
+<ul><li>Everything in Free, plus the Pro badge couples notice</li><li>Text alerts the moment a lead arrives &mdash; reply from the text</li><li>Auto-replies &amp; day-3/5 follow-up sequences</li><li>Availability calendar on your public page</li><li>Analytics &mdash; trends, response rate, your rank in your market</li><li>Unlimited gallery &amp; every market unlocked</li></ul>
+<a class="tcta" href="https://app.meetlazo.com/">Start free &mdash; upgrade inside</a><p class="soon">Founding billing is open &mdash; your rate locks for life the day you upgrade.</p></div>
+<div class="fv-tier"><h3>Pro Studio</h3><p class="who">Run the whole business in-thread</p><div class="amt">$129<small>/mo</small></div><p class="per">or $1,290/year &mdash; two months free</p>
+<ul><li><strong>June for Studio</strong> &mdash; your AI business copilot: pricing strategy, profile audits, review coaching, and replies she drafts for you</li><li>Everything in Lazo Pro</li><li>Contracts with legal e-signature &mdash; signed in the same thread</li><li>June converts your existing contract in about a minute</li><li>Wedding-day &amp; engagement questionnaires</li><li>Invoicing &mdash; itemized, tracked, in the thread; card payments arrive next</li><li>Instant Booking badge on your profile</li></ul>
+<a class="tcta" href="https://app.meetlazo.com/">Start free &mdash; upgrade inside</a><p class="soon">Founding price &mdash; locked for life.</p></div>
+<div class="fv-tier"><h3>Venue Showcase</h3><p class="who">Add-on for venues</p><div class="amt">$999<small>/yr</small></div><p class="per">captured by our team, hosted forever</p>
+<ul><li>Professional 360 capture of your space</li><li>Immersive tour embedded on your profile</li><li>Couples walk the room before they ever call</li><li>Updated when your space changes</li></ul>
+<a class="tcta" href="#showcase">See the live demo</a></div>
+</div>
+<p class="fv-roi">One booking a year pays for Pro nine times over. Most vendors on The Knot pay more than $79 a month for leads they share with five competitors &mdash; here, every lead is yours alone, and it's free at every tier.</p>
+</div></section>
+
+<!-- ================= THE DIFFERENCE ================= -->
+<section class="fv-sec" id="promise"><div class="wrap">
+<p class="fv-kick">The difference</p>
+<h2 class="fv-h2">You've seen how the other guys do it.</h2>
+<p class="fv-lead"><strong>They monetize the introduction &mdash; then they abandon the relationship.</strong> You pay to be seen. You pay again when a couple clicks. And the moment one actually reaches out, their job is done: the contract, the questions, the timeline, the money &mdash; all of it happens somewhere else, on tools you also pay for. Here's the same table we'd want to see:</p>
+<div class="fv-vs"><table>
+<tr><th></th><th>The Knot / Zola</th><th class="lz">Lazo</th></tr>
+<tr><td>Your listing</td><td class="bad">Paid tiers, annual contracts</td><td class="good">Free forever</td></tr>
+<tr><td>Leads</td><td class="bad">Pay per lead, shared with rivals</td><td class="good">Free, exclusive, verified couples</td></tr>
+<tr><td>Your ranking</td><td class="bad">Highest bidder rises</td><td class="good">Earned &mdash; never for sale, and you can see exactly where you stand</td></tr>
+<tr><td>Reviews</td><td class="bad">Anyone can post</td><td class="good">Booked couples only</td></tr>
+<tr><td>Booking tools</td><td class="bad">Rent HoneyBook + DocuSign too</td><td class="good">Threads, proposals, contracts &amp; invoices built in</td></tr>
+<tr><td>After the introduction</td><td class="bad">Their job is done &mdash; you're on your own</td><td class="good">The relationship stays &mdash; signed in the same thread it started</td></tr>
+</table></div>
+</div></section>
+
+<!-- ================= TOOLKIT ================= -->
+{% include "_features_vendors.html" %}
+
+<!-- ================= STEPS ================= -->
+<section class="fv-sec alt"><div class="wrap fv-center">
+<p class="fv-kick">Claiming is open</p>
+<h2 class="fv-h2">Yours in minutes, not days.</h2>
+<div class="fv-steps">
+<div class="fv-step"><span class="num">1</span><h3>Find your business</h3><p>Type your name in the box at the top. You're likely already listed &mdash; and if not, you add yourself from the same screen.</p></div>
+<div class="fv-step"><span class="num">2</span><h3>Prove it's yours</h3><p>Attach one document &mdash; license, insurance certificate or EIN letter. Verification runs while you watch; most claims clear in under a minute.</p></div>
+<div class="fv-step"><span class="num">3</span><h3>Walk into your dashboard</h3><p>Leads, threads, proposals, calendar, your rank in your market &mdash; live the moment you're approved.</p></div>
+</div>
+<div class="fv-ctas" style="margin-top:34px"><a class="fv-cta" href="#claim">Find &amp; claim your business</a></div>
+</div></section>
+
+<!-- ================= SHOWCASE ================= -->
+<section class="fv-sec" id="showcase"><div class="wrap">
+<div class="fv-show">
+<div>
+<p class="fv-kick" style="color:#D9B77C">Venue Showcase</p>
+<h2 class="fv-h2">Let couples walk your venue tonight.</h2>
+<p>Couples shortlist venues they can already picture themselves in. A Lazo 360 tour lives right on your profile &mdash; captured professionally by our team, hosted forever, working while you sleep. Drag the room and see for yourself.</p>
+<p class="price">$999/year for venues &mdash; every other tool above is free for every category.</p>
+</div>
+<div class="fv-frame"><iframe src="/showcase/" loading="lazy" title="Lazo Venue Showcase 360 demo"></iframe></div>
+</div>
+</div></section>
+
+<!-- ================= FAQ ================= -->
+<section class="fv-sec alt"><div class="wrap fv-center">
+<p class="fv-kick">Straight answers</p>
+<h2 class="fv-h2">The six things every vendor asks.</h2>
+<div class="fv-faq">
+<details><summary>What if my business isn't listed yet?</summary><p>Search your name at the top. If we don't have you, request a listing from the same screen in the app &mdash; it takes two minutes and is reviewed the same day. Free either way.</p></details>
+<details><summary>What does &ldquo;verified&rdquo; mean on Lazo?</summary><p>A verified vendor proved ownership of the business &mdash; a license, insurance certificate or EIN letter. A verified review comes only from a couple who booked that vendor through Lazo. A verified lead is a signed-in couple with a real date.</p></details>
+<details><summary>Do you take a cut of my bookings?</summary><p>No. Contracts, invoices and payments run in your thread through your own processor. Lazo charges 0% on what couples pay you.</p></details>
+<details><summary>Can I cancel Pro?</summary><p>Any time, from Account in your dashboard. Your profile, leads and threads stay free; only the Pro tools switch off. Founding pricing is locked for life while you stay subscribed.</p></details>
+<details><summary>Does paying for Pro improve my ranking?</summary><p>No, and it never will. Rankings come from verified reviews, reply speed and real bookings. Pro buys tools that help you earn those; it cannot buy the position itself &mdash; and your dashboard shows you exactly where you stand and why.</p></details>
+<details><summary>Who sees my availability calendar?</summary><p>Couples see which dates are booked on your public page, so they don't inquire about a date you can't take. They never see who booked it.</p></details>
+</div>
+</div></section>
+
+<!-- ================= FINAL ================= -->
+<section class="fv-final"><div class="wrap">
+<h2 class="fv-h2">Your couples are already searching here.</h2>
+<p class="sub">{{ vendor_total_display|default('70,000+') }} vendors across {{ metro_count|default(45) }} markets, and the rankings can't be bought &mdash; only earned. Be there when they look. And when a couple reaches out, that's not the end of Lazo's job &mdash; it's the beginning.</p>
+<div class="fv-ctas"><a class="fv-cta" href="#claim">Claim your profile &mdash; free forever</a></div>
+</div></section>
+</div>
+
+<script>
+// A vendor arriving from their own listing (?vendor=<id>&name=<name>) gets a
+// one-tap claim for that listing; everyone else gets the search. Either way
+// the app receives ?claim=<id or name> and opens the claim screen with it.
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var id=(p.get('vendor')||'').trim();
+    var nm=(p.get('name')||'').trim();
+    var named=document.getElementById('claim-named'),search=document.getElementById('claim-search');
+    if(id&&nm){
+      document.getElementById('claim-name').textContent=nm;
+      document.getElementById('claim-go').href='https://app.meetlazo.com/?claim='+encodeURIComponent(id);
+      named.hidden=false;search.hidden=true;
+      document.getElementById('claim-other').addEventListener('click',function(e){e.preventDefault();named.hidden=true;search.hidden=false;document.getElementById('claim-q').focus();});
+    }else if(nm){
+      document.getElementById('claim-q').value=nm;
+    }
+    var f=document.getElementById('claim-form');
+    f.addEventListener('submit',function(e){
+      e.preventDefault();
+      var q=(document.getElementById('claim-q').value||'').trim();
+      location.href='https://app.meetlazo.com/?claim='+encodeURIComponent(q);
+    });
+    if(window.fbq){document.getElementById('claim-form').addEventListener('submit',function(){try{fbq('trackCustom','ClaimSearch');}catch(e){}});}
+  }catch(e){}
+})();
+</script>
+{% endblock %}

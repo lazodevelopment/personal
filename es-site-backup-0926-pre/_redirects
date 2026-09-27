@@ -1,0 +1,6 @@
+# Elizabeth Scott — Cloudflare Pages redirects
+/home    /    301
+/index   /    301
+
+/contact /book/ 301
+/contact/ /book/ 301

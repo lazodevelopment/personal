@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Lazo &mdash; The Verified Wedding Marketplace{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Lazo",
+  "alternateName": "Lazo Weddings",
+  "url": "https://getlazo.com",
+  "logo": "https://getlazo.com/assets/brand.png",
+  "description": "The verified wedding marketplace. Every review verified, every couple real, rankings that can't be bought.",
+  "foundingDate": "2026",
+  "sameAs": [
+    "https://www.instagram.com/trylazo",
+    "https://www.facebook.com/getlazo",
+    "https://www.tiktok.com/@trylazo"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "email": "hello@getlazo.com",
+    "contactType": "customer service"
+  }
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-photo" style="background-image:linear-gradient(180deg,rgba(61,28,59,.35) 0%,rgba(61,28,59,.6) 55%,rgba(61,28,59,.88) 100%),url('/assets/photos/hero-3.jpg')">
+  <div class="hero-inner hero-home">
+    <style>
+    .hv-live{display:inline-flex;align-items:center;gap:8px;background:rgba(46,139,107,.2);border:1px solid rgba(126,200,170,.55);color:#8FE0BC;border-radius:999px;padding:7px 16px;font-size:10.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;backdrop-filter:blur(6px)}
+    .hv-live .dot{width:8px;height:8px;border-radius:999px;background:#5FCF9B;box-shadow:0 0 0 4px rgba(95,207,155,.22);animation:hvpulse 1.8s infinite}
+    @keyframes hvpulse{50%{box-shadow:0 0 0 7px rgba(95,207,155,.08)}}
+    .hv-stats{display:flex;justify-content:center;gap:0;margin-top:30px;flex-wrap:wrap}
+    .hv-stat{padding:0 26px;border-right:1px solid rgba(217,183,124,.3);text-align:center}
+    .hv-stat:last-child{border-right:0}
+    .hv-stat b{display:block;color:#FAF6F0;font-size:24px;font-weight:800}
+    .hv-stat span{color:#D8C9DA;font-size:9.5px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+    @media(max-width:560px){.hv-stat{padding:0 14px}.hv-stat b{font-size:19px}}
+    </style>
+    <span class="hv-live"><span class="dot"></span>The verified wedding marketplace</span>
+    <p class="eyebrow">Just engaged? Start here.</p>
+    <h1>Find the people worth<br><em>trusting</em> with your day.</h1>
+    <p class="hero-sub">Real reviews from verified couples. Rankings that can't be bought. One place to plan it all &mdash; without being sold to.</p>
+    <form class="finder glass" onsubmit="event.preventDefault();var m=this.metro.value,c=this.cat.value;if(m&&c)location.href='/'+m+'/'+c+'/';else if(m)location.href='/'+m+'/';">
+      <select name="cat" aria-label="Vendor type">
+        <option value="">What are you looking for?</option>
+        {% for c in categories %}<option value="{{ c.slug }}">{{ c.label }}</option>{% endfor %}
+      </select>
+      <select name="metro" aria-label="Metro">
+        {% for m in metros %}<option value="{{ m.id }}">{{ m.display }}</option>{% endfor %}
+      </select>
+      <button class="btn-gold" type="submit">Search</button>
+    </form>
+    <div class="hv-stats">
+      <div class="hv-stat"><b>{{ vendor_total_display }}</b><span>Verified vendors</span></div>
+      <div class="hv-stat"><b>{{ metro_count }}</b><span>Markets nationwide</span></div>
+      <div class="hv-stat"><b>0</b><span>Rankings for sale</span></div>
+    </div>
+  </div>
+</section>
+<section class="band">
+  <style>
+    .cmp-wrap{max-width:860px;margin:0 auto;border-radius:24px;overflow:hidden;box-shadow:0 18px 50px rgba(61,28,59,.14);border:1px solid rgba(217,183,124,.7)}
+    .cmp-head{display:grid;grid-template-columns:1.05fr 1fr 1.15fr;background:linear-gradient(135deg,#2E1530,#3D1C3B 45%,#52284F)}
+    .cmp-head div{padding:18px 20px;font-size:13px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;color:rgba(250,246,240,.55)}
+    .cmp-head .cmp-h-us{color:#D9B77C;display:flex;align-items:center;gap:8px;background:rgba(217,183,124,.08)}
+    .cmp-h-us svg{flex:0 0 auto}
+    .cmp-row{display:grid;grid-template-columns:1.05fr 1fr 1.15fr;background:#fff;border-top:1px solid #F0E7DB}
+    .cmp-row:nth-child(odd){background:#FDFBF7}
+    .cmp-row > div{padding:18px 20px;font-size:14px;display:flex;align-items:center;gap:9px}
+    .cmp-lab{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:600;color:#52284F}
+    .cmp-them{color:#9A8FA1}
+    .cmp-them svg,.cmp-us svg{flex:0 0 auto}
+    .cmp-us{color:#25735A;font-weight:600;background:linear-gradient(90deg,rgba(217,183,124,.14),rgba(217,183,124,.04));border-left:1px solid rgba(217,183,124,.5)}
+    .cmp-foot{background:linear-gradient(135deg,#2E1530,#3D1C3B 45%,#52284F);text-align:center;padding:16px 20px}
+    .cmp-foot a{color:#D9B77C;font-size:13.5px;font-weight:600;text-decoration:none;letter-spacing:.4px}
+    .cmp-foot a:hover{text-decoration:underline}
+    @media(max-width:680px){
+      .cmp-head div,.cmp-row > div{padding:12px 10px;font-size:11.5px}
+      .cmp-lab{font-size:13.5px}
+      .cmp-head div{font-size:9.5px;letter-spacing:.8px}
+    }
+    .cmp-anim .cmp-head,.cmp-anim .cmp-row,.cmp-anim .cmp-foot{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.22,.8,.32,1),transform .6s cubic-bezier(.22,.8,.32,1)}
+    .cmp-anim .cmp-row svg{transform:scale(0);transition:transform .38s cubic-bezier(.34,1.56,.64,1) .32s}
+    .cmp-anim .cmp-in{opacity:1;transform:translateY(0)}
+    .cmp-anim .cmp-in svg{transform:scale(1)}
+    @media(prefers-reduced-motion:reduce){.cmp-anim .cmp-head,.cmp-anim .cmp-row,.cmp-anim .cmp-foot{opacity:1;transform:none}.cmp-anim .cmp-row svg{transform:scale(1)}}
+  </style>
+  <h2 class="band-title">The site you make an account on <em>first</em></h2>
+  <p class="band-sub" style="max-width:640px;margin:0 auto 30px;text-align:center">The big wedding sites earn their money selling vendors access to you &mdash; your inbox, your attention, your search results. Lazo doesn't. That one difference changes everything you read, everything you're shown, and everyone who contacts you.</p>
+  <div class="cmp-wrap cmp-anim" id="cmpWrap">
+    <div class="cmp-head">
+      <div></div>
+      <div>The big-box sites</div>
+      <div class="cmp-h-us"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="2"><path d="M12 12 C9 6 2 6 2 12 C2 18 9 18 12 12 C15 6 22 6 22 12 C22 18 15 18 12 12" stroke-linecap="round"/></svg>Lazo</div>
+    </div>
+    <div class="cmp-row">
+      <div class="cmp-lab">Search rankings</div>
+      <div class="cmp-them"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9BFCF" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Sold to the highest bidder</div>
+      <div class="cmp-us"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E8B6B" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>Earned from verified couples only</div>
+    </div>
+    <div class="cmp-row">
+      <div class="cmp-lab">Reviews</div>
+      <div class="cmp-them"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9BFCF" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Anyone can post anything</div>
+      <div class="cmp-us"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E8B6B" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>Proof of a real wedding required</div>
+    </div>
+    <div class="cmp-row">
+      <div class="cmp-lab">Your contact info</div>
+      <div class="cmp-them"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9BFCF" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Sold as &ldquo;leads&rdquo; to dozens of vendors</div>
+      <div class="cmp-us"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E8B6B" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>You choose who hears from you</div>
+    </div>
+    <div class="cmp-row">
+      <div class="cmp-lab">Planning tools</div>
+      <div class="cmp-them"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C9BFCF" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>Built to sell ad placements</div>
+      <div class="cmp-us"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2E8B6B" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>Built to get you married</div>
+    </div>
+    <div class="cmp-foot"><a href="https://app.getlazo.com">Plan your wedding on the site that isn't selling you &rarr;</a></div>
+  </div>
+  <script>
+  (function(){
+    var wrap=document.getElementById('cmpWrap');
+    if(!wrap||!('IntersectionObserver' in window)){if(wrap)wrap.classList.remove('cmp-anim');return;}
+    var parts=wrap.querySelectorAll('.cmp-head,.cmp-row,.cmp-foot');
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting)return;
+        var el=en.target;
+        var i=Array.prototype.indexOf.call(parts,el);
+        setTimeout(function(){el.classList.add('cmp-in');},i*110);
+        io.unobserve(el);
+      });
+    },{threshold:.25,rootMargin:'0px 0px -8% 0px'});
+    parts.forEach(function(p){io.observe(p);});
+  })();
+  </script>
+</section>
+<div class="curve curve-plum-top" aria-hidden="true"><svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path d="M0,64 C360,0 1080,0 1440,64 L1440,64 L0,64 Z" fill="currentColor"/></svg></div>
+<section class="band band-plum">
+  <h2 class="band-title">One home for the whole engagement</h2>
+  <div class="promises">
+    <div class="promise"><h3>Your I-Do List</h3><p>Every vendor you need, tracked from &ldquo;searching&rdquo; to <em>booked</em> &mdash; with a little celebration every time you tie one down. (Yes, there's confetti.)</p></div>
+    <div class="promise"><h3>A budget that stays honest</h3><p>Planned vs. actual for every category, side by side &mdash; so the money conversation happens on purpose, not by surprise.</p></div>
+    <div class="promise"><h3>A vendor team you can trust</h3><p>Every inquiry you send arrives as a verified couple with a real date &mdash; so great vendors answer fast, and nobody buys their way into your results.</p></div>
+  </div>
+  <p style="text-align:center;margin-top:26px"><a class="btn-gold" href="https://app.getlazo.com">Start planning free</a></p>
+</section>
+<div class="curve curve-plum-bottom" aria-hidden="true"><svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path d="M0,0 C360,64 1080,64 1440,0 L1440,0 L0,0 Z" fill="currentColor"/></svg></div>
+<section class="band">
+  <h2 class="band-title">Browse by category</h2>
+  <div class="tile-grid">
+    {% for c in categories %}
+    <a class="tile" href="/{{ metros[0].id }}/{{ c.slug }}/" style="background-image:linear-gradient(180deg,rgba(36,30,43,0) 35%,rgba(36,30,43,.72) 100%),url('/assets/photos/{{ c.slug }}.jpg')">
+      <span class="tile-label">{{ c.label }}</span>
+    </a>
+    {% endfor %}
+    <a class="tile tile-cta" href="/{{ metros[0].id }}/" style="background-image:linear-gradient(180deg,rgba(61,28,59,.55) 0%,rgba(61,28,59,.82) 100%),url('/assets/photos/atmo-toast.jpg')">
+      <span class="tile-label tile-cta-label">All {{ metros[0].name }} vendors &rarr;</span>
+    </a>
+  </div>
+</section>
+<style>
+.promise,.step,.tile{transition:transform .15s ease,box-shadow .15s ease}
+.promise:hover,.step:hover{transform:translateY(-3px)}
+.tile:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(61,28,59,.28)}
+</style>
+<section class="band">
+  <h2 class="band-title">How Lazo works</h2>
+  <div class="steps">
+    <div class="step"><span class="step-n">1</span><h3>Search verified vendors</h3><p>Browse your metro's photographers, venues, planners and more &mdash; ranked by real reputation, not ad budgets.</p></div>
+    <div class="step"><span class="step-n">2</span><h3>Reach out as a verified couple</h3><p>Your inquiry arrives with your date, budget range and venue status &mdash; so vendors respond fast, to a real person.</p></div>
+    <div class="step"><span class="step-n">3</span><h3>Book with confidence</h3><p>Verified bookings unlock verified reviews &mdash; the flywheel that keeps every ranking honest.</p></div>
+  </div>
+</section>
+<section class="june" style="background-image:linear-gradient(120deg,rgba(61,28,59,.88),rgba(82,40,79,.82)),url('/assets/photos/atmo-candlelight.jpg')">
+  <div class="june-inner">
+    <span class="hv-live"><span class="dot"></span>Live in the Lazo app</span>
+    <h2>Meet June, your planning <em>copilot</em>.</h2>
+    <p>June knows your date, your budget, and your list. Ask her to find a photographer and she searches real verified vendors in your city &mdash; ranked by earned reputation. Tell her to set your flowers budget or add your sister to the guest list, and it's done before you finish typing. She reads your RSVPs, remembers every conversation, and writes you a brief every Monday morning.</p>
+    <p><strong style="color:#D9B77C">Zola gives you a search box. June plans your wedding.</strong></p>
+    <p style="margin-top:22px"><a class="btn-gold" href="https://app.getlazo.com">Start planning with June &mdash; free</a></p>
+  </div>
+</section>
+<section class="band band-claim">
+  <div class="claim-strip claim-wide">
+    <h2>Own a wedding business?</h2>
+    <p>Claim your profile free. Reply to reviews free. Receive verified leads free &mdash; forever. That's the deal, and it doesn't change.</p>
+    <a class="btn-gold" href="/for-vendors/">See how Lazo works for vendors</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+// ADD inside match /databases/{database}/documents { ... } — full rules otherwise unchanged:
+
+    // ---------- WEDDING WEBSITES (public couple sites) ----------
+    match /weddingSites/{slug} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.coupleUid == request.auth.uid;
+      allow update, delete: if signedIn()
+        && resource.data.coupleUid == request.auth.uid;
+
+      // Guest RSVPs: unauthenticated create (wedding guests have no accounts),
+      // strictly shaped; read/manage is couple-only.
+      match /rsvps/{rsvpId} {
+        allow create: if request.resource.data.keys().hasOnly(
+              ['name','attending','plusOnes','meal','note','createdAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() < 120
+          && request.resource.data.attending in ['yes','no'];
+        allow read, delete: if signedIn()
+          && get(/databases/$(database)/documents/weddingSites/$(slug))
+               .data.coupleUid == request.auth.uid;
+        allow update: if false;
+      }
+    }

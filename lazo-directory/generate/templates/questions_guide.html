@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{#- questions_guide.html - JC-LAZO-ASK-0916-001
+    /questions/<category>/. Content is config/questions.py.
+
+    The format is the product. Anyone can publish a list of questions; the value
+    is in the second half of each item - what a good answer sounds like and what
+    should worry you. That is also what makes these pages impossible for a
+    vendor-funded platform to copy, because half of it is telling couples how to
+    spot a vendor managing them.
+
+    Universal questions (contract, deposit, insurance, referral fees) are NOT
+    here. They are on the hub, once, and linked. Repeating them on fifteen pages
+    would make our own pages near-duplicates of each other. -#}
+{% block title %}Questions to Ask a {{ cat.singular }} (Before You Book) | Lazo{% endblock %}
+{% block desc %}{{ q.lede|striptags|truncate(150, True, '') }}{% endblock %}
+{% block canonical %}{{ base }}/questions/{{ cat.slug }}/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ ("Questions to ask a " ~ cat.singular ~ " before you book")|tojson }},
+  "description": {{ q.lede|tojson }},
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/questions/{{ cat.slug }}/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for qq, aa in q.faqs %}
+    { "@type": "Question", "name": {{ qq|tojson }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ aa|tojson }} } }{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow"><a href="/questions/">Questions to ask</a></p>
+  <h1>Questions to ask a {{ cat.singular|lower }}</h1>
+  <p class="hero-sub">Not just what to ask &mdash; what a good answer sounds like, and what should worry you.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="page-back"><a href="/questions/">All vendor questions</a></p>
+
+<p class="lede">{{ q.lede }}</p>
+<p>These are specific to {{ cat.label|lower }}. The questions worth asking <em>every</em> vendor &mdash; contracts, deposits, cancellation, insurance and referral fees &mdash; are on <a href="/questions/">the main questions page</a>, and you should ask those too.</p>
+
+{%- for heading, items in q.groups %}
+<h2>{{ heading }}</h2>
+<div class="ask-list">
+  {%- for item in items %}
+  <div class="ask-item">
+    <p class="ask-q">{{ item.q }}</p>
+    <p class="ask-l"><span class="ask-tag">What to listen for</span>{{ item.listen }}</p>
+  </div>
+  {%- endfor %}
+</div>
+{%- endfor %}
+
+<h2>Common questions</h2>
+<div class="faq-block">
+  {%- for qq, aa in q.faqs %}
+  <details class="faq"><summary>{{ qq }}</summary><p>{{ aa }}</p></details>
+  {%- endfor %}
+</div>
+
+<h2>Why we can publish this</h2>
+<p>Most wedding sites are paid by the vendors they list, which makes a page about spotting a vendor who is managing you a difficult thing to write. Lazo charges nothing per lead and nothing per booking, and <a href="/why-lazo/">rankings can't be bought at any price</a> &mdash; so we have no reason to soften any of the above. If a {{ q_short }} gives you one of the answers we've flagged, that is worth knowing before you pay a deposit.</p>
+</section>
+
+<section class="cost-cities">
+  <h2>{{ cat.label }} on Lazo</h2>
+  <p class="cc-sub">We index {{ cat_total_display }} {{ cat.label|lower }} across {{ metro_count }} markets. Every review comes from a couple who proved they actually got married with that vendor.</p>
+  <div class="cc-grid">
+    {%- for m in metro_counts %}
+    <a href="/{{ m.id }}/{{ cat.slug }}/"><b>{{ m.name }}</b><span>{{ "{:,}".format(m.count) }} listed</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/cost/{{ cat.slug }}/">What a {{ q_short }} costs &rarr;</a> &middot; <a href="/when-to-book/">When to book them &rarr;</a></p>
+</section>
+
+<section class="next-reads">
+  <h2>Ask these too</h2>
+  <div class="next-grid">
+    {%- for o in siblings %}
+    <a href="/questions/{{ o.slug }}/"><b>{{ o.singular }}</b><span>{{ o.n }} questions</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/questions/">All {{ guide_count }} vendor question guides &rarr;</a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>ES Image Picker</title>
+<style>body{background:#0E1830;color:#F4F7FC;font:14px system-ui;margin:0;padding:16px}
+h1{font-size:18px}#slots{position:sticky;top:0;background:#0E1830;padding:10px 0;z-index:5;border-bottom:1px solid #333}
+.slot{display:inline-block;margin:3px;padding:7px 12px;border:1px solid #D8C29A;border-radius:20px;cursor:pointer;font-size:12px}
+.slot.on{background:#D8C29A;color:#0E1830;font-weight:600}
+#out{width:100%;height:130px;background:#1A2744;color:#F4F7FC;border:1px solid #D8C29A;margin:10px 0;font:12px monospace;padding:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
+.cell{position:relative;cursor:pointer;border-radius:8px;overflow:hidden;background:#1A2744;aspect-ratio:3/4}
+.cell img{width:100%;height:100%;object-fit:cover;display:block}
+.cell .n{position:absolute;left:6px;top:6px;background:rgba(14,24,48,.85);padding:2px 7px;border-radius:10px;font-size:11px}
+.cell .tag{position:absolute;right:6px;bottom:6px;background:#D8C29A;color:#0E1830;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+.heroes{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin:8px 0 4px}
+</style></head><body>
+<h1>Elizabeth Scott &mdash; Image Picker</h1>
+<p>1) Click a slot &nbsp;2) Click a photo to assign it &nbsp;3) Copy the box below and send it to Claude (or paste the numbers yourself).</p>
+<div id="slots"></div>
+<textarea id="out" readonly onclick="this.select()"></textarea>
+<h3>Hero candidates (dedicated hero files)</h3><div class="heroes" id="heroes"></div>
+<h3>Gallery &mdash; ESCOTT_WED 1&ndash;463</h3><div class="grid" id="grid"></div>
+<script>
+var FB="https://firebasestorage.googleapis.com/v0/b/danbren-media.firebasestorage.app/o/";
+function ws(name,w){return "https://images.weserv.nl/?url="+encodeURIComponent(FB+encodeURIComponent(name)+"?alt=media")+"&w="+w+"&q=70&output=webp";}
+var SLOTS=["hero","photography","videography","combo","portfolio1","portfolio2","portfolio3","portfolio4","portfolio5","portfolio6"];
+var picks={hero:1,photography:25,videography:150,combo:275,portfolio1:10,portfolio2:85,portfolio3:160,portfolio4:235,portfolio5:310,portfolio6:385};
+var active="photography";
+var slotBox=document.getElementById("slots");
+SLOTS.forEach(function(k){var b=document.createElement("span");b.className="slot"+(k===active?" on":"");b.id="slot-"+k;
+ b.onclick=function(){active=k;SLOTS.forEach(function(x){document.getElementById("slot-"+x).className="slot"+(x===k?" on":"");});};
+ slotBox.appendChild(b);});
+function refresh(){SLOTS.forEach(function(k){document.getElementById("slot-"+k).textContent=k+": "+picks[k];});
+ document.querySelectorAll(".tag").forEach(function(t){t.remove();});
+ SLOTS.forEach(function(k){var c=document.getElementById(k==="hero"?"H"+picks[k]:"G"+picks[k]);
+  if(c){var t=document.createElement("span");t.className="tag";t.textContent=k;c.appendChild(t);}});
+ var o="hero "+picks.hero+", photography "+picks.photography+", videography "+picks.videography+", combo "+picks.combo+
+  ", portfolio "+[1,2,3,4,5,6].map(function(i){return picks["portfolio"+i];}).join("/");
+ document.getElementById("out").value=o;}
+var hz=document.getElementById("heroes");
+for(var h=1;h<=4;h++){(function(h){var c=document.createElement("div");c.className="cell";c.id="H"+h;
+ c.innerHTML='<img loading="lazy" src="'+ws("Elizabeth Scott Hero Image ("+h+").jpg",400)+'"><span class="n">hero '+h+'</span>';
+ c.onclick=function(){if(active!=="hero"){active="hero";SLOTS.forEach(function(x){document.getElementById("slot-"+x).className="slot"+(x==="hero"?" on":"");});}
+  picks.hero=h;refresh();};hz.appendChild(c);})(h);}
+var g=document.getElementById("grid");
+for(var i=1;i<=463;i++){(function(i){var c=document.createElement("div");c.className="cell";c.id="G"+i;
+ c.innerHTML='<img loading="lazy" src="'+ws("ESCOTT_WED ("+i+").jpg",300)+'"><span class="n">'+i+'</span>';
+ c.onclick=function(){if(active==="hero")return;picks[active]=i;refresh();};g.appendChild(c);})(i);}
+refresh();
+</script></body></html>

@@ -1,0 +1,78 @@
+<!doctype html>
+{#- JC-LAZO-BASE-0915-003: the footer moved to _footer.html so build.py and
+    deploy/swap_footer.py render the same markup from one source. -#}
+{#- JC-LAZO-BASE-0907-002: nav_cta block (vendor pages say "Claim your profile"), nav_key block for the current-page marker, ogimage block -#}
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Lazo &mdash; Tied Together{% endblock %}</title>
+<meta name="description" content="{% block desc %}Lazo is the verified wedding marketplace. Rankings can't be bought, every review is verified, every lead is a real couple.{% endblock %}">
+<link rel="canonical" href="{% block canonical %}{{ base }}/{% endblock %}">
+<meta property="og:site_name" content="Lazo">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.desc() }}">
+<meta property="og:image" content="{% block ogimage %}{{ base }}/assets/photos/hero-3.jpg{% endblock %}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazo.css?v={{ asset_v }}">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/assets/appicon.png">
+{% if noindex %}<meta name="robots" content="noindex,follow">{% endif %}
+<style>
+/* JC-LAZO-BASE-0907-002: current-page marker in the nav; pages set nav_key */
+.site-nav a.on{color:#52284F;font-weight:600;border-bottom:1.5px solid #D9B77C;padding-bottom:2px}
+@media(max-width:760px){
+  .site-head{padding:10px 14px}
+  .brand-lockup{height:34px;width:auto}
+  .site-nav{gap:12px}
+  .site-nav a:not(.nav-cta){display:none}
+  .site-nav .nav-cta{font-size:13.5px;padding:9px 16px}
+}
+</style>
+{% block jsonld %}{% endblock %}
+{#- nav_key names the current page for the header ('find','why','sites','vendors'); pages that don't
+    set it get no marker. Defined inside a never-true branch so the value is only read via self.nav_key(). -#}
+{% if false %}{% block nav_key %}{% endblock %}{% endif %}
+<!-- Meta Pixel Code (JC-LAZO-PIXEL-0903) -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1245257617279907');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1245257617279907&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+<header class="site-head">
+  <a class="brand" href="/">
+    <img src="/assets/brand.png" alt="Lazo &mdash; Tied together" class="brand-lockup">
+  </a>
+  <nav class="site-nav">
+    <a href="/phoenix/"{% if self.nav_key() == 'find' %} class="on"{% endif %}>Find vendors</a>
+    <a href="/why-lazo/"{% if self.nav_key() == 'why' %} class="on"{% endif %}>Why Lazo</a>
+    <a href="/wedding-websites/"{% if self.nav_key() == 'sites' %} class="on"{% endif %}>Wedding websites</a>
+    <a href="/for-vendors/"{% if self.nav_key() == 'vendors' %} class="on"{% endif %}>For vendors</a>
+    {% block nav_cta %}<a class="nav-cta" href="https://app.meetlazo.com">Start planning</a>{% endblock %}
+  </nav>
+</header>
+<main>
+{% block main %}{% endblock %}
+</main>
+{% include "_footer.html" %}
+<script defer src="/assets/lazo.js?v={{ asset_v }}"></script>
+</body>
+</html>

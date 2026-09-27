@@ -1,0 +1,2109 @@
+{
+ "abingdon-va": {
+  "name": "Abingdon",
+  "lat": 36.70983,
+  "lon": -81.97735,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "akron-oh": {
+  "name": "Akron",
+  "lat": 41.08144,
+  "lon": -81.51901,
+  "tz": "America/New_York",
+  "admin1": "Ohio"
+ },
+ "albany-ny": {
+  "name": "Albany",
+  "lat": 42.65258,
+  "lon": -73.75623,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "albuquerque-nm": {
+  "name": "Albuquerque",
+  "lat": 35.08449,
+  "lon": -106.65114,
+  "tz": "America/Denver",
+  "admin1": "New Mexico"
+ },
+ "amarillo-tx": {
+  "name": "Amarillo",
+  "lat": 35.222,
+  "lon": -101.8313,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "amelia-island-fl": {
+  "name": "Amelia Island",
+  "lat": 30.61147,
+  "lon": -81.4559,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "anchorage-ak": {
+  "name": "Anchorage",
+  "lat": 61.21806,
+  "lon": -149.90028,
+  "tz": "America/Anchorage",
+  "admin1": "Alaska"
+ },
+ "ann-arbor-mi": {
+  "name": "Ann Arbor",
+  "lat": 42.27756,
+  "lon": -83.74088,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "annapolis-md": {
+  "name": "Annapolis",
+  "lat": 38.97859,
+  "lon": -76.49184,
+  "tz": "America/New_York",
+  "admin1": "Maryland"
+ },
+ "asbury-park-nj": {
+  "name": "Asbury Park",
+  "lat": 40.22039,
+  "lon": -74.01208,
+  "tz": "America/New_York",
+  "admin1": "New Jersey"
+ },
+ "asheville-nc": {
+  "name": "Asheville",
+  "lat": 35.60095,
+  "lon": -82.55402,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "aspen-co": {
+  "name": "Aspen",
+  "lat": 39.1911,
+  "lon": -106.81754,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "athens-ga": {
+  "name": "Athens",
+  "lat": 33.96095,
+  "lon": -83.37794,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "atlanta-ga": {
+  "name": "Atlanta",
+  "lat": 33.749,
+  "lon": -84.38798,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "augusta-ga": {
+  "name": "Augusta",
+  "lat": 33.47097,
+  "lon": -81.97484,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "austin-tx": {
+  "name": "Austin",
+  "lat": 30.26715,
+  "lon": -97.74306,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "bakersfield-ca": {
+  "name": "Bakersfield",
+  "lat": 35.37329,
+  "lon": -119.01871,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "baltimore-md": {
+  "name": "Baltimore",
+  "lat": 39.29038,
+  "lon": -76.61219,
+  "tz": "America/New_York",
+  "admin1": "Maryland"
+ },
+ "bar-harbor-me": {
+  "name": "Bar Harbor",
+  "lat": 44.38758,
+  "lon": -68.2039,
+  "tz": "America/New_York",
+  "admin1": "Maine"
+ },
+ "baton-rouge-la": {
+  "name": "Baton Rouge",
+  "lat": 30.44332,
+  "lon": -91.18747,
+  "tz": "America/Chicago",
+  "admin1": "Louisiana"
+ },
+ "beaufort-sc": {
+  "name": "Beaufort",
+  "lat": 32.4317,
+  "lon": -80.66993,
+  "tz": "America/New_York",
+  "admin1": "South Carolina"
+ },
+ "bellingham-wa": {
+  "name": "Bellingham",
+  "lat": 48.75955,
+  "lon": -122.48822,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "bend-or": {
+  "name": "Bend",
+  "lat": 44.05817,
+  "lon": -121.31531,
+  "tz": "America/Los_Angeles",
+  "admin1": "Oregon"
+ },
+ "bentonville-ar": {
+  "name": "Bentonville",
+  "lat": 36.37285,
+  "lon": -94.20882,
+  "tz": "America/Chicago",
+  "admin1": "Arkansas"
+ },
+ "berea-ky": {
+  "name": "Berea",
+  "lat": 37.56869,
+  "lon": -84.29632,
+  "tz": "America/New_York",
+  "admin1": "Kentucky"
+ },
+ "berkshires-ma": {
+  "name": "Berkshires",
+  "lat": 42.16676,
+  "lon": -73.14955,
+  "tz": "America/New_York",
+  "admin1": "Massachusetts"
+ },
+ "big-sky-mt": {
+  "name": "Big Sky",
+  "lat": 45.28465,
+  "lon": -111.36829,
+  "tz": "America/Denver",
+  "admin1": "Montana"
+ },
+ "big-sur-ca": {
+  "name": "Big Sur",
+  "lat": 36.27024,
+  "lon": -121.80745,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "biloxi-ms": {
+  "name": "Biloxi",
+  "lat": 30.39603,
+  "lon": -88.88531,
+  "tz": "America/Chicago",
+  "admin1": "Mississippi"
+ },
+ "birmingham-al": {
+  "name": "Birmingham",
+  "lat": 33.52066,
+  "lon": -86.80249,
+  "tz": "America/Chicago",
+  "admin1": "Alabama"
+ },
+ "bismarck-nd": {
+  "name": "Bismarck",
+  "lat": 46.80833,
+  "lon": -100.78374,
+  "tz": "America/Chicago",
+  "admin1": "North Dakota"
+ },
+ "block-island-ri": {
+  "name": "Block Island",
+  "lat": 41.17374,
+  "lon": -71.58022,
+  "tz": "America/New_York",
+  "admin1": "Rhode Island"
+ },
+ "bloomington-in": {
+  "name": "Bloomington",
+  "lat": 39.16533,
+  "lon": -86.52639,
+  "tz": "America/Indiana/Indianapolis",
+  "admin1": "Indiana"
+ },
+ "blowing-rock-nc": {
+  "name": "Blowing Rock",
+  "lat": 36.13513,
+  "lon": -81.67761,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "boca-raton-fl": {
+  "name": "Boca Raton",
+  "lat": 26.35869,
+  "lon": -80.0831,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "boise-id": {
+  "name": "Boise",
+  "lat": 43.6135,
+  "lon": -116.20345,
+  "tz": "America/Boise",
+  "admin1": "Idaho"
+ },
+ "boone-nc": {
+  "name": "Boone",
+  "lat": 36.21679,
+  "lon": -81.67455,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "boston-ma": {
+  "name": "Boston",
+  "lat": 42.35843,
+  "lon": -71.05977,
+  "tz": "America/New_York",
+  "admin1": "Massachusetts"
+ },
+ "boulder-co": {
+  "name": "Boulder",
+  "lat": 40.01499,
+  "lon": -105.27055,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "bowling-green-ky": {
+  "name": "Bowling Green",
+  "lat": 36.99032,
+  "lon": -86.4436,
+  "tz": "America/Chicago",
+  "admin1": "Kentucky"
+ },
+ "bozeman-mt": {
+  "name": "Bozeman",
+  "lat": 45.67965,
+  "lon": -111.03856,
+  "tz": "America/Denver",
+  "admin1": "Montana"
+ },
+ "branson-mo": {
+  "name": "Branson",
+  "lat": 36.64367,
+  "lon": -93.21851,
+  "tz": "America/Chicago",
+  "admin1": "Missouri"
+ },
+ "breckenridge-co": {
+  "name": "Breckenridge",
+  "lat": 39.48165,
+  "lon": -106.03835,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "broken-arrow-ok": {
+  "name": "Broken Arrow",
+  "lat": 36.0526,
+  "lon": -95.79082,
+  "tz": "America/Chicago",
+  "admin1": "Oklahoma"
+ },
+ "brooklyn-ny": {
+  "name": "Brooklyn",
+  "lat": 40.6501,
+  "lon": -73.94958,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "buffalo-ny": {
+  "name": "Buffalo",
+  "lat": 42.88645,
+  "lon": -78.87837,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "burlington-vt": {
+  "name": "Burlington",
+  "lat": 44.47588,
+  "lon": -73.21207,
+  "tz": "America/New_York",
+  "admin1": "Vermont"
+ },
+ "camden-me": {
+  "name": "Camden",
+  "lat": 44.2098,
+  "lon": -69.06476,
+  "tz": "America/New_York",
+  "admin1": "Maine"
+ },
+ "cape-cod-ma": {
+  "name": "Cape Cod",
+  "lat": 41.6862,
+  "lon": -70.24308,
+  "tz": "America/New_York",
+  "admin1": "Massachusetts"
+ },
+ "cape-may-nj": {
+  "name": "Cape May",
+  "lat": 38.93511,
+  "lon": -74.90601,
+  "tz": "America/New_York",
+  "admin1": "New Jersey"
+ },
+ "carmel-ca": {
+  "name": "Carmel",
+  "lat": 36.55524,
+  "lon": -121.92329,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "carson-city-nv": {
+  "name": "Carson City",
+  "lat": 39.1638,
+  "lon": -119.7674,
+  "tz": "America/Los_Angeles",
+  "admin1": "Nevada"
+ },
+ "cedar-rapids-ia": {
+  "name": "Cedar Rapids",
+  "lat": 42.00833,
+  "lon": -91.64407,
+  "tz": "America/Chicago",
+  "admin1": "Iowa"
+ },
+ "chandler-az": {
+  "name": "Chandler",
+  "lat": 33.30616,
+  "lon": -111.84125,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "charleston-sc": {
+  "name": "Charleston",
+  "lat": 32.77632,
+  "lon": -79.93275,
+  "tz": "America/New_York",
+  "admin1": "South Carolina"
+ },
+ "charleston-wv": {
+  "name": "Charleston",
+  "lat": 38.34982,
+  "lon": -81.63262,
+  "tz": "America/New_York",
+  "admin1": "West Virginia"
+ },
+ "charlotte-nc": {
+  "name": "Charlotte",
+  "lat": 35.22709,
+  "lon": -80.84313,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "charlottesville-va": {
+  "name": "Charlottesville",
+  "lat": 38.02931,
+  "lon": -78.47668,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "chattanooga-tn": {
+  "name": "Chattanooga",
+  "lat": 35.04563,
+  "lon": -85.30968,
+  "tz": "America/New_York",
+  "admin1": "Tennessee"
+ },
+ "cheyenne-wy": {
+  "name": "Cheyenne",
+  "lat": 41.13998,
+  "lon": -104.82025,
+  "tz": "America/Denver",
+  "admin1": "Wyoming"
+ },
+ "chicago-il": {
+  "name": "Chicago",
+  "lat": 41.85003,
+  "lon": -87.65005,
+  "tz": "America/Chicago",
+  "admin1": "Illinois"
+ },
+ "cincinnati-oh": {
+  "name": "Cincinnati",
+  "lat": 39.12711,
+  "lon": -84.51439,
+  "tz": "America/New_York",
+  "admin1": "Ohio"
+ },
+ "clearwater-fl": {
+  "name": "Clearwater",
+  "lat": 27.96585,
+  "lon": -82.8001,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "cleveland-oh": {
+  "name": "Cleveland",
+  "lat": 41.4995,
+  "lon": -81.69541,
+  "tz": "America/New_York",
+  "admin1": "Ohio"
+ },
+ "cody-wy": {
+  "name": "Cody",
+  "lat": 44.52634,
+  "lon": -109.05653,
+  "tz": "America/Denver",
+  "admin1": "Wyoming"
+ },
+ "college-station-tx": {
+  "name": "College Station",
+  "lat": 30.62798,
+  "lon": -96.33441,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "colorado-springs-co": {
+  "name": "Colorado Springs",
+  "lat": 38.83388,
+  "lon": -104.82136,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "columbia-mo": {
+  "name": "Columbia",
+  "lat": 38.95171,
+  "lon": -92.33407,
+  "tz": "America/Chicago",
+  "admin1": "Missouri"
+ },
+ "columbia-sc": {
+  "name": "Columbia",
+  "lat": 34.00071,
+  "lon": -81.03481,
+  "tz": "America/New_York",
+  "admin1": "South Carolina"
+ },
+ "columbus-ga": {
+  "name": "Columbus",
+  "lat": 32.46098,
+  "lon": -84.98771,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "columbus-oh": {
+  "name": "Columbus",
+  "lat": 39.96118,
+  "lon": -82.99879,
+  "tz": "America/New_York",
+  "admin1": "Ohio"
+ },
+ "corpus-christi-tx": {
+  "name": "Corpus Christi",
+  "lat": 27.80058,
+  "lon": -97.39638,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "dallas-tx": {
+  "name": "Dallas",
+  "lat": 32.78306,
+  "lon": -96.80667,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "dayton-oh": {
+  "name": "Dayton",
+  "lat": 39.75895,
+  "lon": -84.19161,
+  "tz": "America/New_York",
+  "admin1": "Ohio"
+ },
+ "denver-co": {
+  "name": "Denver",
+  "lat": 39.73915,
+  "lon": -104.9847,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "des-moines-ia": {
+  "name": "Des Moines",
+  "lat": 41.60054,
+  "lon": -93.60911,
+  "tz": "America/Chicago",
+  "admin1": "Iowa"
+ },
+ "destin-fl": {
+  "name": "Destin",
+  "lat": 30.39353,
+  "lon": -86.49578,
+  "tz": "America/Chicago",
+  "admin1": "Florida"
+ },
+ "detroit-mi": {
+  "name": "Detroit",
+  "lat": 42.33143,
+  "lon": -83.04575,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "door-county-wi": {
+  "name": "Door County",
+  "lat": 44.6925,
+  "lon": -87.49176,
+  "tz": "America/Chicago",
+  "admin1": "Wisconsin"
+ },
+ "duluth-mn": {
+  "name": "Duluth",
+  "lat": 46.78327,
+  "lon": -92.10658,
+  "tz": "America/Chicago",
+  "admin1": "Minnesota"
+ },
+ "durango-co": {
+  "name": "Durango",
+  "lat": 37.27528,
+  "lon": -107.88007,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "durham-nc": {
+  "name": "Durham",
+  "lat": 35.99403,
+  "lon": -78.89862,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "el-paso-tx": {
+  "name": "El Paso",
+  "lat": 31.75872,
+  "lon": -106.48693,
+  "tz": "America/Denver",
+  "admin1": "Texas"
+ },
+ "erie-pa": {
+  "name": "Erie",
+  "lat": 42.12922,
+  "lon": -80.08506,
+  "tz": "America/New_York",
+  "admin1": "Pennsylvania"
+ },
+ "estes-park-co": {
+  "name": "Estes Park",
+  "lat": 40.37721,
+  "lon": -105.52167,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "eugene-or": {
+  "name": "Eugene",
+  "lat": 44.05207,
+  "lon": -123.08675,
+  "tz": "America/Los_Angeles",
+  "admin1": "Oregon"
+ },
+ "fairbanks-ak": {
+  "name": "Fairbanks",
+  "lat": 64.83778,
+  "lon": -147.71638,
+  "tz": "America/Anchorage",
+  "admin1": "Alaska"
+ },
+ "fargo-nd": {
+  "name": "Fargo",
+  "lat": 46.87719,
+  "lon": -96.7898,
+  "tz": "America/Chicago",
+  "admin1": "North Dakota"
+ },
+ "fayetteville-ar": {
+  "name": "Fayetteville",
+  "lat": 36.06258,
+  "lon": -94.15743,
+  "tz": "America/Chicago",
+  "admin1": "Arkansas"
+ },
+ "finger-lakes-ny": {
+  "name": "Finger Lakes",
+  "lat": 42.88038,
+  "lon": -76.78319,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "flagstaff-az": {
+  "name": "Flagstaff",
+  "lat": 35.19807,
+  "lon": -111.65127,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "fort-collins-co": {
+  "name": "Fort Collins",
+  "lat": 40.58526,
+  "lon": -105.08442,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "fort-lauderdale-fl": {
+  "name": "Fort Lauderdale",
+  "lat": 26.12231,
+  "lon": -80.14338,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "fort-wayne-in": {
+  "name": "Fort Wayne",
+  "lat": 41.1306,
+  "lon": -85.12886,
+  "tz": "America/Indiana/Indianapolis",
+  "admin1": "Indiana"
+ },
+ "fort-worth-tx": {
+  "name": "Fort Worth",
+  "lat": 32.72541,
+  "lon": -97.32085,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "franklin-tn": {
+  "name": "Franklin",
+  "lat": 35.92506,
+  "lon": -86.86889,
+  "tz": "America/Chicago",
+  "admin1": "Tennessee"
+ },
+ "frederick-md": {
+  "name": "Frederick",
+  "lat": 39.41427,
+  "lon": -77.41054,
+  "tz": "America/New_York",
+  "admin1": "Maryland"
+ },
+ "fredericksburg-tx": {
+  "name": "Fredericksburg",
+  "lat": 30.2752,
+  "lon": -98.87198,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "fresno-ca": {
+  "name": "Fresno",
+  "lat": 36.74773,
+  "lon": -119.77237,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "gainesville-fl": {
+  "name": "Gainesville",
+  "lat": 29.65163,
+  "lon": -82.32483,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "galveston-tx": {
+  "name": "Galveston",
+  "lat": 29.30135,
+  "lon": -94.7977,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "gatlinburg-tn": {
+  "name": "Gatlinburg",
+  "lat": 35.71453,
+  "lon": -83.51189,
+  "tz": "America/New_York",
+  "admin1": "Tennessee"
+ },
+ "gettysburg-pa": {
+  "name": "Gettysburg",
+  "lat": 39.83093,
+  "lon": -77.2311,
+  "tz": "America/New_York",
+  "admin1": "Pennsylvania"
+ },
+ "gilbert-az": {
+  "name": "Gilbert",
+  "lat": 33.35283,
+  "lon": -111.78903,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "girdwood-ak": {
+  "name": "Girdwood",
+  "lat": 60.9425,
+  "lon": -149.1664,
+  "tz": "America/Anchorage",
+  "admin1": "Alaska"
+ },
+ "grand-forks-nd": {
+  "name": "Grand Forks",
+  "lat": 47.92526,
+  "lon": -97.03285,
+  "tz": "America/Chicago",
+  "admin1": "North Dakota"
+ },
+ "grand-island-ne": {
+  "name": "Grand Island",
+  "lat": 40.92501,
+  "lon": -98.34201,
+  "tz": "America/Chicago",
+  "admin1": "Nebraska"
+ },
+ "grand-rapids-mi": {
+  "name": "Grand Rapids",
+  "lat": 42.96336,
+  "lon": -85.66809,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "green-bay-wi": {
+  "name": "Green Bay",
+  "lat": 44.51916,
+  "lon": -88.01983,
+  "tz": "America/Chicago",
+  "admin1": "Wisconsin"
+ },
+ "greenville-sc": {
+  "name": "Greenville",
+  "lat": 34.85262,
+  "lon": -82.39401,
+  "tz": "America/New_York",
+  "admin1": "South Carolina"
+ },
+ "greenwich-ct": {
+  "name": "Greenwich",
+  "lat": 41.02649,
+  "lon": -73.62846,
+  "tz": "America/New_York",
+  "admin1": "Connecticut"
+ },
+ "gulf-shores-al": {
+  "name": "Gulf Shores",
+  "lat": 30.24604,
+  "lon": -87.70082,
+  "tz": "America/Chicago",
+  "admin1": "Alabama"
+ },
+ "harpers-ferry-wv": {
+  "name": "Harpers Ferry",
+  "lat": 39.32538,
+  "lon": -77.73888,
+  "tz": "America/New_York",
+  "admin1": "West Virginia"
+ },
+ "hartford-ct": {
+  "name": "Hartford",
+  "lat": 41.76371,
+  "lon": -72.68509,
+  "tz": "America/New_York",
+  "admin1": "Connecticut"
+ },
+ "helena-mt": {
+  "name": "Helena",
+  "lat": 46.59271,
+  "lon": -112.03611,
+  "tz": "America/Denver",
+  "admin1": "Montana"
+ },
+ "henderson-nv": {
+  "name": "Henderson",
+  "lat": 36.0397,
+  "lon": -114.98194,
+  "tz": "America/Los_Angeles",
+  "admin1": "Nevada"
+ },
+ "hershey-pa": {
+  "name": "Hershey",
+  "lat": 40.28592,
+  "lon": -76.65025,
+  "tz": "America/New_York",
+  "admin1": "Pennsylvania"
+ },
+ "hill-country-tx": {
+  "name": "Hill Country",
+  "lat": 29.58245,
+  "lon": -98.49085,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "hilton-head-sc": {
+  "name": "Hilton Head",
+  "lat": 32.21632,
+  "lon": -80.75261,
+  "tz": "America/New_York",
+  "admin1": "South Carolina"
+ },
+ "honolulu-hi": {
+  "name": "Honolulu",
+  "lat": 21.30694,
+  "lon": -157.85834,
+  "tz": "Pacific/Honolulu",
+  "admin1": "Hawaii"
+ },
+ "hood-river-or": {
+  "name": "Hood River",
+  "lat": 45.7054,
+  "lon": -121.52146,
+  "tz": "America/Los_Angeles",
+  "admin1": "Oregon"
+ },
+ "hot-springs-ar": {
+  "name": "Hot Springs",
+  "lat": 34.5037,
+  "lon": -93.05518,
+  "tz": "America/Chicago",
+  "admin1": "Arkansas"
+ },
+ "houston-tx": {
+  "name": "Houston",
+  "lat": 29.76328,
+  "lon": -95.36327,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "hudson-valley-ny": {
+  "name": "Hudson Valley",
+  "lat": 41.54528,
+  "lon": -74.00972,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "huntsville-al": {
+  "name": "Huntsville",
+  "lat": 34.7304,
+  "lon": -86.58594,
+  "tz": "America/Chicago",
+  "admin1": "Alabama"
+ },
+ "idaho-falls-id": {
+  "name": "Idaho Falls",
+  "lat": 43.46658,
+  "lon": -112.03414,
+  "tz": "America/Boise",
+  "admin1": "Idaho"
+ },
+ "indianapolis-in": {
+  "name": "Indianapolis",
+  "lat": 39.76838,
+  "lon": -86.15804,
+  "tz": "America/Indiana/Indianapolis",
+  "admin1": "Indiana"
+ },
+ "iowa-city-ia": {
+  "name": "Iowa City",
+  "lat": 41.66113,
+  "lon": -91.53017,
+  "tz": "America/Chicago",
+  "admin1": "Iowa"
+ },
+ "jackson-ms": {
+  "name": "Jackson",
+  "lat": 32.29876,
+  "lon": -90.18481,
+  "tz": "America/Chicago",
+  "admin1": "Mississippi"
+ },
+ "jacksonville-fl": {
+  "name": "Jacksonville",
+  "lat": 30.33218,
+  "lon": -81.65565,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "jekyll-island-ga": {
+  "name": "Jekyll Island",
+  "lat": 31.07021,
+  "lon": -81.42272,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "jersey-city-nj": {
+  "name": "Jersey City",
+  "lat": 40.72816,
+  "lon": -74.07764,
+  "tz": "America/New_York",
+  "admin1": "New Jersey"
+ },
+ "juneau-ak": {
+  "name": "Juneau",
+  "lat": 58.30194,
+  "lon": -134.41972,
+  "tz": "America/Juneau",
+  "admin1": "Alaska"
+ },
+ "kailua-kona-hi": {
+  "name": "Kailua-Kona",
+  "lat": 19.64016,
+  "lon": -155.99911,
+  "tz": "Pacific/Honolulu",
+  "admin1": "Hawaii"
+ },
+ "kalamazoo-mi": {
+  "name": "Kalamazoo",
+  "lat": 42.29171,
+  "lon": -85.58723,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "kansas-city-mo": {
+  "name": "Kansas City",
+  "lat": 39.09973,
+  "lon": -94.57857,
+  "tz": "America/Chicago",
+  "admin1": "Missouri"
+ },
+ "kauai-hi": {
+  "name": "Kauai",
+  "lat": 22.04942,
+  "lon": -159.53099,
+  "tz": "Pacific/Honolulu",
+  "admin1": "Hawaii"
+ },
+ "kennebunkport-me": {
+  "name": "Kennebunkport",
+  "lat": 43.36175,
+  "lon": -70.47672,
+  "tz": "America/New_York",
+  "admin1": "Maine"
+ },
+ "key-west-fl": {
+  "name": "Key West",
+  "lat": 24.55524,
+  "lon": -81.78163,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "knoxville-tn": {
+  "name": "Knoxville",
+  "lat": 35.96064,
+  "lon": -83.92074,
+  "tz": "America/New_York",
+  "admin1": "Tennessee"
+ },
+ "lafayette-la": {
+  "name": "Lafayette",
+  "lat": 30.22409,
+  "lon": -92.01984,
+  "tz": "America/Chicago",
+  "admin1": "Louisiana"
+ },
+ "lake-arrowhead-ca": {
+  "name": "Lake Arrowhead",
+  "lat": 34.24834,
+  "lon": -117.18921,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "lake-charles-la": {
+  "name": "Lake Charles",
+  "lat": 30.21309,
+  "lon": -93.2044,
+  "tz": "America/Chicago",
+  "admin1": "Louisiana"
+ },
+ "lake-geneva-wi": {
+  "name": "Lake Geneva",
+  "lat": 42.59168,
+  "lon": -88.43343,
+  "tz": "America/Chicago",
+  "admin1": "Wisconsin"
+ },
+ "lake-placid-ny": {
+  "name": "Lake Placid",
+  "lat": 44.27962,
+  "lon": -73.98198,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "lake-tahoe-nv": {
+  "name": "Lake Tahoe",
+  "lat": 39.1713,
+  "lon": -119.89241,
+  "tz": "America/Los_Angeles",
+  "admin1": "Nevada"
+ },
+ "lancaster-pa": {
+  "name": "Lancaster",
+  "lat": 40.03788,
+  "lon": -76.30551,
+  "tz": "America/New_York",
+  "admin1": "Pennsylvania"
+ },
+ "las-cruces-nm": {
+  "name": "Las Cruces",
+  "lat": 32.31232,
+  "lon": -106.77834,
+  "tz": "America/Denver",
+  "admin1": "New Mexico"
+ },
+ "las-vegas-nv": {
+  "name": "Las Vegas",
+  "lat": 36.17497,
+  "lon": -115.13722,
+  "tz": "America/Los_Angeles",
+  "admin1": "Nevada"
+ },
+ "lawrence-ks": {
+  "name": "Lawrence",
+  "lat": 38.97167,
+  "lon": -95.23525,
+  "tz": "America/Chicago",
+  "admin1": "Kansas"
+ },
+ "leavenworth-wa": {
+  "name": "Leavenworth",
+  "lat": 47.59623,
+  "lon": -120.66148,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "lewes-de": {
+  "name": "Lewes",
+  "lat": 38.77456,
+  "lon": -75.13935,
+  "tz": "America/New_York",
+  "admin1": "Delaware"
+ },
+ "lewisburg-wv": {
+  "name": "Lewisburg",
+  "lat": 37.80179,
+  "lon": -80.44563,
+  "tz": "America/New_York",
+  "admin1": "West Virginia"
+ },
+ "lexington-ky": {
+  "name": "Lexington",
+  "lat": 37.98869,
+  "lon": -84.47772,
+  "tz": "America/New_York",
+  "admin1": "Kentucky"
+ },
+ "lincoln-ne": {
+  "name": "Lincoln",
+  "lat": 40.8,
+  "lon": -96.66696,
+  "tz": "America/Chicago",
+  "admin1": "Nebraska"
+ },
+ "litchfield-ct": {
+  "name": "Litchfield",
+  "lat": 41.74732,
+  "lon": -73.18872,
+  "tz": "America/New_York",
+  "admin1": "Connecticut"
+ },
+ "little-rock-ar": {
+  "name": "Little Rock",
+  "lat": 34.74648,
+  "lon": -92.28959,
+  "tz": "America/Chicago",
+  "admin1": "Arkansas"
+ },
+ "long-island-ny": {
+  "name": "Long Island",
+  "lat": 40.81677,
+  "lon": -73.06622,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "los-angeles-ca": {
+  "name": "Los Angeles",
+  "lat": 34.05223,
+  "lon": -118.24368,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "louisville-ky": {
+  "name": "Louisville",
+  "lat": 38.25424,
+  "lon": -85.75941,
+  "tz": "America/Kentucky/Louisville",
+  "admin1": "Kentucky"
+ },
+ "lubbock-tx": {
+  "name": "Lubbock",
+  "lat": 33.57786,
+  "lon": -101.85517,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "mackinac-island-mi": {
+  "name": "Mackinac Island",
+  "lat": 45.84918,
+  "lon": -84.61893,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "macon-ga": {
+  "name": "Macon",
+  "lat": 32.84069,
+  "lon": -83.6324,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "madison-wi": {
+  "name": "Madison",
+  "lat": 43.07305,
+  "lon": -89.40123,
+  "tz": "America/Chicago",
+  "admin1": "Wisconsin"
+ },
+ "manchester-nh": {
+  "name": "Manchester",
+  "lat": 42.99564,
+  "lon": -71.45479,
+  "tz": "America/New_York",
+  "admin1": "New Hampshire"
+ },
+ "manhattan-ks": {
+  "name": "Manhattan",
+  "lat": 39.18361,
+  "lon": -96.57167,
+  "tz": "America/Chicago",
+  "admin1": "Kansas"
+ },
+ "maui-hi": {
+  "name": "Maui",
+  "lat": 20.77024,
+  "lon": -156.26816,
+  "tz": "Pacific/Honolulu",
+  "admin1": "Hawaii"
+ },
+ "memphis-tn": {
+  "name": "Memphis",
+  "lat": 35.14953,
+  "lon": -90.04898,
+  "tz": "America/Chicago",
+  "admin1": "Tennessee"
+ },
+ "mesa-az": {
+  "name": "Mesa",
+  "lat": 33.42227,
+  "lon": -111.82264,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "miami-fl": {
+  "name": "Miami",
+  "lat": 25.77427,
+  "lon": -80.19366,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "milwaukee-wi": {
+  "name": "Milwaukee",
+  "lat": 43.0389,
+  "lon": -87.90647,
+  "tz": "America/Chicago",
+  "admin1": "Wisconsin"
+ },
+ "minneapolis-mn": {
+  "name": "Minneapolis",
+  "lat": 44.97997,
+  "lon": -93.26384,
+  "tz": "America/Chicago",
+  "admin1": "Minnesota"
+ },
+ "missoula-mt": {
+  "name": "Missoula",
+  "lat": 46.87215,
+  "lon": -113.994,
+  "tz": "America/Denver",
+  "admin1": "Montana"
+ },
+ "moab-ut": {
+  "name": "Moab",
+  "lat": 38.57332,
+  "lon": -109.54984,
+  "tz": "America/Denver",
+  "admin1": "Utah"
+ },
+ "mobile-al": {
+  "name": "Mobile",
+  "lat": 30.69436,
+  "lon": -88.04305,
+  "tz": "America/Chicago",
+  "admin1": "Alabama"
+ },
+ "monterey-ca": {
+  "name": "Monterey",
+  "lat": 36.60024,
+  "lon": -121.89468,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "montgomery-al": {
+  "name": "Montgomery",
+  "lat": 32.36681,
+  "lon": -86.29997,
+  "tz": "America/Chicago",
+  "admin1": "Alabama"
+ },
+ "morgantown-wv": {
+  "name": "Morgantown",
+  "lat": 39.62953,
+  "lon": -79.9559,
+  "tz": "America/New_York",
+  "admin1": "West Virginia"
+ },
+ "morristown-nj": {
+  "name": "Morristown",
+  "lat": 40.79677,
+  "lon": -74.48154,
+  "tz": "America/New_York",
+  "admin1": "New Jersey"
+ },
+ "myrtle-beach-sc": {
+  "name": "Myrtle Beach",
+  "lat": 33.68906,
+  "lon": -78.88669,
+  "tz": "America/New_York",
+  "admin1": "South Carolina"
+ },
+ "mystic-ct": {
+  "name": "Mystic",
+  "lat": 41.35427,
+  "lon": -71.96646,
+  "tz": "America/New_York",
+  "admin1": "Connecticut"
+ },
+ "nantucket-ma": {
+  "name": "Nantucket",
+  "lat": 41.28346,
+  "lon": -70.09946,
+  "tz": "America/New_York",
+  "admin1": "Massachusetts"
+ },
+ "napa-ca": {
+  "name": "Napa",
+  "lat": 38.29714,
+  "lon": -122.28553,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "naperville-il": {
+  "name": "Naperville",
+  "lat": 41.78586,
+  "lon": -88.14729,
+  "tz": "America/Chicago",
+  "admin1": "Illinois"
+ },
+ "naples-fl": {
+  "name": "Naples",
+  "lat": 26.14234,
+  "lon": -81.79596,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "nashville-tn": {
+  "name": "Nashville",
+  "lat": 36.16589,
+  "lon": -86.78444,
+  "tz": "America/Chicago",
+  "admin1": "Tennessee"
+ },
+ "new-haven-ct": {
+  "name": "New Haven",
+  "lat": 41.30815,
+  "lon": -72.92816,
+  "tz": "America/New_York",
+  "admin1": "Connecticut"
+ },
+ "new-orleans-la": {
+  "name": "New Orleans",
+  "lat": 29.95465,
+  "lon": -90.07507,
+  "tz": "America/Chicago",
+  "admin1": "Louisiana"
+ },
+ "new-york-city-ny": {
+  "name": "New York City",
+  "lat": 40.71427,
+  "lon": -74.00597,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "norfolk-va": {
+  "name": "Norfolk",
+  "lat": 36.84681,
+  "lon": -76.28522,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "norman-ok": {
+  "name": "Norman",
+  "lat": 35.22257,
+  "lon": -97.43948,
+  "tz": "America/Chicago",
+  "admin1": "Oklahoma"
+ },
+ "north-conway-nh": {
+  "name": "North Conway",
+  "lat": 44.05368,
+  "lon": -71.1284,
+  "tz": "America/New_York",
+  "admin1": "New Hampshire"
+ },
+ "oahu-north-shore-hi": {
+  "name": "Haleiwa",
+  "lat": 21.59284,
+  "lon": -158.1034,
+  "tz": "Pacific/Honolulu",
+  "admin1": "Hawaii"
+ },
+ "ocean-city-md": {
+  "name": "Ocean City",
+  "lat": 38.3365,
+  "lon": -75.08491,
+  "tz": "America/New_York",
+  "admin1": "Maryland"
+ },
+ "ocean-springs-ms": {
+  "name": "Ocean Springs",
+  "lat": 30.41131,
+  "lon": -88.82781,
+  "tz": "America/Chicago",
+  "admin1": "Mississippi"
+ },
+ "ogden-ut": {
+  "name": "Ogden",
+  "lat": 41.223,
+  "lon": -111.97383,
+  "tz": "America/Denver",
+  "admin1": "Utah"
+ },
+ "ojai-ca": {
+  "name": "Ojai",
+  "lat": 34.44805,
+  "lon": -119.24289,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "oklahoma-city-ok": {
+  "name": "Oklahoma City",
+  "lat": 35.46756,
+  "lon": -97.51643,
+  "tz": "America/Chicago",
+  "admin1": "Oklahoma"
+ },
+ "olympia-wa": {
+  "name": "Olympia",
+  "lat": 47.04491,
+  "lon": -122.90169,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "omaha-ne": {
+  "name": "Omaha",
+  "lat": 41.25626,
+  "lon": -95.94043,
+  "tz": "America/Chicago",
+  "admin1": "Nebraska"
+ },
+ "orange-beach-al": {
+  "name": "Orange Beach",
+  "lat": 30.29437,
+  "lon": -87.57359,
+  "tz": "America/Chicago",
+  "admin1": "Alabama"
+ },
+ "orange-county-ca": {
+  "name": "Orange County",
+  "lat": 33.66585,
+  "lon": -117.90228,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "orlando-fl": {
+  "name": "Orlando",
+  "lat": 28.53834,
+  "lon": -81.37924,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "outer-banks-nc": {
+  "name": "Outer Banks",
+  "lat": 35.56685,
+  "lon": -75.46849,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "overland-park-ks": {
+  "name": "Overland Park",
+  "lat": 38.98223,
+  "lon": -94.67079,
+  "tz": "America/Chicago",
+  "admin1": "Kansas"
+ },
+ "oxford-ms": {
+  "name": "Oxford",
+  "lat": 34.3665,
+  "lon": -89.51925,
+  "tz": "America/Chicago",
+  "admin1": "Mississippi"
+ },
+ "palm-beach-fl": {
+  "name": "Palm Beach",
+  "lat": 26.70562,
+  "lon": -80.03643,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "palm-springs-ca": {
+  "name": "Palm Springs",
+  "lat": 33.8303,
+  "lon": -116.54529,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "park-city-ut": {
+  "name": "Park City",
+  "lat": 40.64606,
+  "lon": -111.49797,
+  "tz": "America/Denver",
+  "admin1": "Utah"
+ },
+ "paso-robles-ca": {
+  "name": "Paso Robles",
+  "lat": 35.62664,
+  "lon": -120.691,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "pensacola-fl": {
+  "name": "Pensacola",
+  "lat": 30.42131,
+  "lon": -87.21691,
+  "tz": "America/Chicago",
+  "admin1": "Florida"
+ },
+ "peoria-il": {
+  "name": "Peoria",
+  "lat": 40.69365,
+  "lon": -89.58899,
+  "tz": "America/Chicago",
+  "admin1": "Illinois"
+ },
+ "petoskey-mi": {
+  "name": "Petoskey",
+  "lat": 45.37334,
+  "lon": -84.95533,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "philadelphia-pa": {
+  "name": "Philadelphia",
+  "lat": 39.95238,
+  "lon": -75.16362,
+  "tz": "America/New_York",
+  "admin1": "Pennsylvania"
+ },
+ "phoenix-az": {
+  "name": "Phoenix",
+  "lat": 33.44838,
+  "lon": -112.07404,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "pigeon-forge-tn": {
+  "name": "Pigeon Forge",
+  "lat": 35.78842,
+  "lon": -83.55433,
+  "tz": "America/New_York",
+  "admin1": "Tennessee"
+ },
+ "pikeville-ky": {
+  "name": "Pikeville",
+  "lat": 37.47927,
+  "lon": -82.51876,
+  "tz": "America/New_York",
+  "admin1": "Kentucky"
+ },
+ "pittsburgh-pa": {
+  "name": "Pittsburgh",
+  "lat": 40.44062,
+  "lon": -79.99589,
+  "tz": "America/New_York",
+  "admin1": "Pennsylvania"
+ },
+ "portland-me": {
+  "name": "Portland",
+  "lat": 43.65737,
+  "lon": -70.2589,
+  "tz": "America/New_York",
+  "admin1": "Maine"
+ },
+ "portland-or": {
+  "name": "Portland",
+  "lat": 45.52345,
+  "lon": -122.67621,
+  "tz": "America/Los_Angeles",
+  "admin1": "Oregon"
+ },
+ "portsmouth-nh": {
+  "name": "Portsmouth",
+  "lat": 43.07704,
+  "lon": -70.75766,
+  "tz": "America/New_York",
+  "admin1": "New Hampshire"
+ },
+ "prescott-az": {
+  "name": "Prescott",
+  "lat": 34.54002,
+  "lon": -112.4685,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "princeton-nj": {
+  "name": "Princeton",
+  "lat": 40.34872,
+  "lon": -74.65905,
+  "tz": "America/New_York",
+  "admin1": "New Jersey"
+ },
+ "providence-ri": {
+  "name": "Providence",
+  "lat": 41.82399,
+  "lon": -71.41283,
+  "tz": "America/New_York",
+  "admin1": "Rhode Island"
+ },
+ "provo-ut": {
+  "name": "Provo",
+  "lat": 40.23384,
+  "lon": -111.65853,
+  "tz": "America/Denver",
+  "admin1": "Utah"
+ },
+ "raleigh-nc": {
+  "name": "Raleigh",
+  "lat": 35.7721,
+  "lon": -78.63861,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "rapid-city-sd": {
+  "name": "Rapid City",
+  "lat": 44.08054,
+  "lon": -103.23101,
+  "tz": "America/Denver",
+  "admin1": "South Dakota"
+ },
+ "rehoboth-beach-de": {
+  "name": "Rehoboth Beach",
+  "lat": 38.72095,
+  "lon": -75.07601,
+  "tz": "America/New_York",
+  "admin1": "Delaware"
+ },
+ "reno-nv": {
+  "name": "Reno",
+  "lat": 39.52963,
+  "lon": -119.8138,
+  "tz": "America/Los_Angeles",
+  "admin1": "Nevada"
+ },
+ "richmond-va": {
+  "name": "Richmond",
+  "lat": 37.55376,
+  "lon": -77.46026,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "roanoke-va": {
+  "name": "Roanoke",
+  "lat": 37.27097,
+  "lon": -79.94143,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "rochester-mn": {
+  "name": "Rochester",
+  "lat": 44.02163,
+  "lon": -92.4699,
+  "tz": "America/Chicago",
+  "admin1": "Minnesota"
+ },
+ "rochester-ny": {
+  "name": "Rochester",
+  "lat": 43.15478,
+  "lon": -77.61556,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "rockford-il": {
+  "name": "Rockford",
+  "lat": 42.27113,
+  "lon": -89.094,
+  "tz": "America/Chicago",
+  "admin1": "Illinois"
+ },
+ "sacramento-ca": {
+  "name": "Sacramento",
+  "lat": 38.58157,
+  "lon": -121.4944,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "salem-or": {
+  "name": "Salem",
+  "lat": 44.9429,
+  "lon": -123.0351,
+  "tz": "America/Los_Angeles",
+  "admin1": "Oregon"
+ },
+ "salt-lake-city-ut": {
+  "name": "Salt Lake City",
+  "lat": 40.76078,
+  "lon": -111.89105,
+  "tz": "America/Denver",
+  "admin1": "Utah"
+ },
+ "san-antonio-tx": {
+  "name": "San Antonio",
+  "lat": 29.42412,
+  "lon": -98.49363,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "san-diego-ca": {
+  "name": "San Diego",
+  "lat": 32.71571,
+  "lon": -117.16472,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "san-francisco-ca": {
+  "name": "San Francisco",
+  "lat": 37.77493,
+  "lon": -122.41942,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "san-jose-ca": {
+  "name": "San Jose",
+  "lat": 37.33939,
+  "lon": -121.89496,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "san-juan-islands-wa": {
+  "name": "San Juan Islands",
+  "lat": 48.58316,
+  "lon": -122.96796,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "san-luis-obispo-ca": {
+  "name": "San Luis Obispo",
+  "lat": 35.28275,
+  "lon": -120.65962,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "santa-barbara-ca": {
+  "name": "Santa Barbara",
+  "lat": 34.42083,
+  "lon": -119.69819,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "santa-fe-nm": {
+  "name": "Santa Fe",
+  "lat": 35.68698,
+  "lon": -105.9378,
+  "tz": "America/Denver",
+  "admin1": "New Mexico"
+ },
+ "sarasota-fl": {
+  "name": "Sarasota",
+  "lat": 27.33643,
+  "lon": -82.53065,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "saratoga-springs-ny": {
+  "name": "Saratoga Springs",
+  "lat": 43.08313,
+  "lon": -73.78457,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "savannah-ga": {
+  "name": "Savannah",
+  "lat": 32.08354,
+  "lon": -81.09983,
+  "tz": "America/New_York",
+  "admin1": "Georgia"
+ },
+ "scottsdale-az": {
+  "name": "Scottsdale",
+  "lat": 33.50921,
+  "lon": -111.89903,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "seattle-wa": {
+  "name": "Seattle",
+  "lat": 47.60621,
+  "lon": -122.33207,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "sedona-az": {
+  "name": "Sedona",
+  "lat": 34.86974,
+  "lon": -111.76099,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "seward-ak": {
+  "name": "Seward",
+  "lat": 60.10426,
+  "lon": -149.4435,
+  "tz": "America/Anchorage",
+  "admin1": "Alaska"
+ },
+ "shenandoah-va": {
+  "name": "Shenandoah",
+  "lat": 38.48512,
+  "lon": -78.62502,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "shreveport-la": {
+  "name": "Shreveport",
+  "lat": 32.52515,
+  "lon": -93.75018,
+  "tz": "America/Chicago",
+  "admin1": "Louisiana"
+ },
+ "sioux-falls-sd": {
+  "name": "Sioux Falls",
+  "lat": 43.54369,
+  "lon": -96.72796,
+  "tz": "America/Chicago",
+  "admin1": "South Dakota"
+ },
+ "sonoma-ca": {
+  "name": "Sonoma",
+  "lat": 38.29186,
+  "lon": -122.45804,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "south-bend-in": {
+  "name": "South Bend",
+  "lat": 41.68338,
+  "lon": -86.25001,
+  "tz": "America/Indiana/Indianapolis",
+  "admin1": "Indiana"
+ },
+ "spokane-wa": {
+  "name": "Spokane",
+  "lat": 47.65966,
+  "lon": -117.42908,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "springfield-il": {
+  "name": "Springfield",
+  "lat": 39.80172,
+  "lon": -89.64371,
+  "tz": "America/Chicago",
+  "admin1": "Illinois"
+ },
+ "springfield-mo": {
+  "name": "Springfield",
+  "lat": 37.21533,
+  "lon": -93.29824,
+  "tz": "America/Chicago",
+  "admin1": "Missouri"
+ },
+ "st-louis-mo": {
+  "name": "St Louis",
+  "lat": 38.62727,
+  "lon": -90.19789,
+  "tz": "America/Chicago",
+  "admin1": "Missouri"
+ },
+ "st-petersburg-fl": {
+  "name": "St Petersburg",
+  "lat": 27.90699,
+  "lon": -82.69092,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "stowe-vt": {
+  "name": "Stowe",
+  "lat": 44.46533,
+  "lon": -72.68456,
+  "tz": "America/New_York",
+  "admin1": "Vermont"
+ },
+ "sun-valley-id": {
+  "name": "Sun Valley",
+  "lat": 43.69713,
+  "lon": -114.35172,
+  "tz": "America/Boise",
+  "admin1": "Idaho"
+ },
+ "syracuse-ny": {
+  "name": "Syracuse",
+  "lat": 43.04812,
+  "lon": -76.14742,
+  "tz": "America/New_York",
+  "admin1": "New York"
+ },
+ "tacoma-wa": {
+  "name": "Tacoma",
+  "lat": 47.25288,
+  "lon": -122.44429,
+  "tz": "America/Los_Angeles",
+  "admin1": "Washington"
+ },
+ "tallahassee-fl": {
+  "name": "Tallahassee",
+  "lat": 30.43826,
+  "lon": -84.28073,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "tampa-fl": {
+  "name": "Tampa",
+  "lat": 27.94752,
+  "lon": -82.45843,
+  "tz": "America/New_York",
+  "admin1": "Florida"
+ },
+ "taos-nm": {
+  "name": "Taos",
+  "lat": 36.40725,
+  "lon": -105.57307,
+  "tz": "America/Denver",
+  "admin1": "New Mexico"
+ },
+ "telluride-co": {
+  "name": "Telluride",
+  "lat": 37.93749,
+  "lon": -107.81229,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "temecula-ca": {
+  "name": "Temecula",
+  "lat": 33.49364,
+  "lon": -117.14836,
+  "tz": "America/Los_Angeles",
+  "admin1": "California"
+ },
+ "tempe-az": {
+  "name": "Tempe",
+  "lat": 33.41477,
+  "lon": -111.90931,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "toledo-oh": {
+  "name": "Toledo",
+  "lat": 41.66394,
+  "lon": -83.55521,
+  "tz": "America/New_York",
+  "admin1": "Ohio"
+ },
+ "topeka-ks": {
+  "name": "Topeka",
+  "lat": 39.04833,
+  "lon": -95.67804,
+  "tz": "America/Chicago",
+  "admin1": "Kansas"
+ },
+ "traverse-city-mi": {
+  "name": "Traverse City",
+  "lat": 44.76306,
+  "lon": -85.62063,
+  "tz": "America/Detroit",
+  "admin1": "Michigan"
+ },
+ "tucson-az": {
+  "name": "Tucson",
+  "lat": 32.22174,
+  "lon": -110.92648,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "tulsa-ok": {
+  "name": "Tulsa",
+  "lat": 36.15398,
+  "lon": -95.99277,
+  "tz": "America/Chicago",
+  "admin1": "Oklahoma"
+ },
+ "vail-co": {
+  "name": "Vail",
+  "lat": 39.64026,
+  "lon": -106.3742,
+  "tz": "America/Denver",
+  "admin1": "Colorado"
+ },
+ "virginia-beach-va": {
+  "name": "Virginia Beach",
+  "lat": 36.85293,
+  "lon": -75.97799,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "waco-tx": {
+  "name": "Waco",
+  "lat": 31.54933,
+  "lon": -97.14667,
+  "tz": "America/Chicago",
+  "admin1": "Texas"
+ },
+ "washington-dc": {
+  "name": "Washington",
+  "lat": 38.89511,
+  "lon": -77.03637,
+  "tz": "America/New_York",
+  "admin1": "District of Columbia"
+ },
+ "whitefish-mt": {
+  "name": "Whitefish",
+  "lat": 48.41108,
+  "lon": -114.33763,
+  "tz": "America/Denver",
+  "admin1": "Montana"
+ },
+ "wichita-ks": {
+  "name": "Wichita",
+  "lat": 37.69224,
+  "lon": -97.33754,
+  "tz": "America/Chicago",
+  "admin1": "Kansas"
+ },
+ "williamsburg-va": {
+  "name": "Williamsburg",
+  "lat": 37.2707,
+  "lon": -76.70746,
+  "tz": "America/New_York",
+  "admin1": "Virginia"
+ },
+ "wilmington-de": {
+  "name": "Wilmington",
+  "lat": 39.74595,
+  "lon": -75.54659,
+  "tz": "America/New_York",
+  "admin1": "Delaware"
+ },
+ "wilmington-nc": {
+  "name": "Wilmington",
+  "lat": 34.23556,
+  "lon": -77.94604,
+  "tz": "America/New_York",
+  "admin1": "North Carolina"
+ },
+ "woodstock-vt": {
+  "name": "Woodstock",
+  "lat": 43.62424,
+  "lon": -72.51843,
+  "tz": "America/New_York",
+  "admin1": "Vermont"
+ },
+ "worcester-ma": {
+  "name": "Worcester",
+  "lat": 42.26259,
+  "lon": -71.80229,
+  "tz": "America/New_York",
+  "admin1": "Massachusetts"
+ },
+ "yuma-az": {
+  "name": "Yuma",
+  "lat": 32.72532,
+  "lon": -114.6244,
+  "tz": "America/Phoenix",
+  "admin1": "Arizona"
+ },
+ "30a-fl": {
+  "name": "30A",
+  "lat": 30.396,
+  "lon": -86.229,
+  "tz": "America/Chicago",
+  "admin1": ""
+ },
+ "black-hills-sd": {
+  "name": "the Black Hills",
+  "lat": 44.081,
+  "lon": -103.231,
+  "tz": "America/Denver",
+  "admin1": ""
+ },
+ "coeur-dalene-id": {
+  "name": "Coeur d'Alene",
+  "lat": 47.678,
+  "lon": -116.78,
+  "tz": "America/Los_Angeles",
+  "admin1": ""
+ },
+ "jackson-wy": {
+  "name": "Jackson",
+  "lat": 43.48,
+  "lon": -110.762,
+  "tz": "America/Denver",
+  "admin1": ""
+ },
+ "marthas-vineyard-ma": {
+  "name": "Martha's Vineyard",
+  "lat": 41.389,
+  "lon": -70.513,
+  "tz": "America/New_York",
+  "admin1": ""
+ },
+ "newport-ri": {
+  "name": "Newport",
+  "lat": 41.49,
+  "lon": -71.313,
+  "tz": "America/New_York",
+  "admin1": ""
+ },
+ "poconos-pa": {
+  "name": "the Poconos",
+  "lat": 40.987,
+  "lon": -75.195,
+  "tz": "America/New_York",
+  "admin1": ""
+ },
+ "salem-ma": {
+  "name": "Salem",
+  "lat": 42.52,
+  "lon": -70.897,
+  "tz": "America/New_York",
+  "admin1": ""
+ },
+ "st-augustine-fl": {
+  "name": "St. Augustine",
+  "lat": 29.901,
+  "lon": -81.312,
+  "tz": "America/New_York",
+  "admin1": ""
+ },
+ "st-george-ut": {
+  "name": "St. George",
+  "lat": 37.096,
+  "lon": -113.568,
+  "tz": "America/Denver",
+  "admin1": ""
+ },
+ "st-paul-mn": {
+  "name": "St. Paul",
+  "lat": 44.954,
+  "lon": -93.09,
+  "tz": "America/Chicago",
+  "admin1": ""
+ },
+ "winston-salem-nc": {
+  "name": "Winston-Salem",
+  "lat": 36.1,
+  "lon": -80.244,
+  "tz": "America/New_York",
+  "admin1": ""
+ }
+}

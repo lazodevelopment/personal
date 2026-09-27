@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Atavia — Leads</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#1B1A18;--card:#2E2B29;--copper:#B08060;--copperlt:#CD9876;--cream:#F2EEE8;
+  --grey:#A8A49E;--dim:#7C7873;--line:#3A3733;--field:#42403F;
+  --ok:#8DB58A;--warn:#D6A85C;--bad:#D07A6A;
+  --glass:rgba(46,43,41,.42);--glass-line:rgba(242,238,232,.10);--glass-hi:rgba(242,238,232,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:'Lato',sans-serif;font-weight:300;color:var(--cream);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+/* ambient light the glass refracts */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(760px 460px at 10% -12%,rgba(205,152,118,.28),transparent 62%),
+    radial-gradient(1000px 640px at 104% 28%,rgba(176,128,96,.16),transparent 62%),
+    radial-gradient(700px 460px at 42% 112%,rgba(242,238,232,.06),transparent 62%)}
+/* fine grain so the glass has something to sit on */
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+a{color:var(--copperlt);text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit;color:var(--cream)}
+:focus-visible{outline:2px solid var(--copperlt);outline-offset:2px}
+
+.glass{position:relative;background:linear-gradient(160deg,rgba(242,238,232,.055) 0%,rgba(46,43,41,.42) 38%,rgba(27,26,24,.46) 100%);
+  border:1px solid var(--glass-line);border-top-color:rgba(242,238,232,.18);
+  backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
+  box-shadow:0 30px 60px -36px rgba(0,0,0,.85),0 1px 0 rgba(242,238,232,.03),inset 0 1px 0 var(--glass-hi)}
+.glass::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,rgba(205,152,118,.55) 18%,rgba(242,238,232,.35) 50%,transparent 85%);opacity:.55}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(1rem,3vw,2.25rem)}
+
+/* ---------- sign in ---------- */
+#gate{display:none;min-height:100vh;place-items:center;padding:1.5rem}
+#gate.show{display:grid}
+#gate .panel{padding:2.75rem 2.5rem;border-radius:18px;max-width:26.25rem;width:100%;text-align:center}
+#gate h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:2.5rem;line-height:1;margin-bottom:0.5rem}
+#gate h1 em{font-style:italic;font-weight:400;color:var(--copperlt)}
+#gate p{color:var(--grey);font-size:0.90625rem;line-height:1.6;margin-bottom:1.625rem}
+.btn{display:inline-flex;align-items:center;gap:0.625rem;padding:0.8125rem 1.375rem;border-radius:999px;background:var(--copper);color:#1B1A18;font-weight:700;font-size:0.84375rem;letter-spacing:.022em;transition:background .15s}
+.btn:hover{background:var(--copperlt)}
+.btn.ghost{background:transparent;color:var(--grey);border:1px solid var(--line);font-weight:400}
+.btn.ghost:hover{color:var(--cream);border-color:var(--grey)}
+#gateErr{color:var(--bad);font-size:0.8125rem;margin-top:1rem;display:none}
+
+/* ---------- app ---------- */
+#app{display:none;padding-bottom:5rem}
+header{display:flex;align-items:center;justify-content:space-between;padding:1.375rem 0 0.5rem}
+.brand{font-family:'Cormorant Garamond',serif;font-size:1.625rem;font-weight:500;letter-spacing:.019em;line-height:1}
+.brand small{display:block;font-family:'Lato';font-size:0.75rem;color:var(--dim);letter-spacing:0;margin-top:0.3125rem;font-weight:300}
+.brand em{font-style:italic;color:var(--copperlt);font-weight:400}
+.who{display:flex;align-items:center;gap:0.875rem;color:var(--dim);font-size:0.8125rem}
+.live{display:inline-flex;align-items:center;gap:0.375rem}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(141,181,138,.18)}
+.live.off i{background:var(--dim);box-shadow:none}
+
+/* header nav */
+.nav{display:flex;gap:0.25rem;margin-right:0.375rem}
+.nav a{padding:0.5rem 0.75rem;border-radius:999px;font-size:0.78125rem;color:var(--grey);border:1px solid transparent}
+.nav a:hover{color:var(--cream);border-color:var(--line)}
+.nav a.on{color:var(--copperlt);border-color:var(--line)}
+/* toolbar */
+.bar{display:flex;align-items:center;gap:0.625rem;flex-wrap:wrap;margin-top:1.625rem}
+.chips{display:flex;gap:0.375rem;flex-wrap:wrap}
+.chip{padding:0.5rem 0.875rem;border-radius:999px;border:1px solid var(--line);color:var(--grey);font-size:0.8125rem;transition:all .15s}
+.chip:hover{color:var(--cream);border-color:var(--grey)}
+.chip.on{background:var(--copper);border-color:var(--copper);color:#1B1A18;font-weight:700}
+.chip .k{opacity:.65;margin-left:0.3125rem;font-weight:400}
+.search{margin-left:auto;display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.875rem;border-radius:999px;border:1px solid var(--line);background:rgba(27,26,24,.5);min-width:15rem}
+.search input{background:none;border:0;outline:0;width:100%;font-size:0.84375rem}
+.search input::placeholder{color:var(--dim)}
+.tog{display:flex;align-items:center;gap:0.4375rem;color:var(--dim);font-size:0.78125rem;cursor:pointer;user-select:none}
+.tog input{accent-color:var(--copper)}
+
+/* table */
+.tbl{margin-top:0.875rem;border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:0.84375rem}
+thead th{text-align:left;font-weight:400;color:var(--dim);font-size:0.75rem;padding:0.875rem 1rem;border-bottom:1px solid var(--glass-line);white-space:nowrap}
+thead th.r,td.r{text-align:right}
+tbody tr.row{border-bottom:1px solid rgba(58,55,51,.5);cursor:pointer;transition:background .12s;box-shadow:inset 3px 0 0 transparent}
+tbody tr.row:hover{background:rgba(242,238,232,.03);box-shadow:inset 3px 0 0 var(--line)}
+tbody tr.row.open{background:rgba(176,128,96,.07);box-shadow:inset 3px 0 0 var(--copper)}
+tbody tr.row.test{opacity:.6}
+td{padding:0.8125rem 1rem;vertical-align:middle}
+td.when{white-space:nowrap}
+.date{font-family:'Cormorant Garamond',serif;font-size:1.1875rem;font-weight:500;color:#fff;line-height:1}
+.date small{font-family:'Lato';font-size:0.75rem;color:var(--dim);display:block;margin-top:0.1875rem;font-weight:300}
+.name{color:var(--cream);font-weight:400}
+.sub{color:var(--dim);font-size:0.78125rem;margin-top:0.125rem;max-width:21.25rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pkg{color:var(--grey)}
+.money{font-variant-numeric:tabular-nums;color:var(--cream)}
+.money small{display:block;color:var(--dim);font-size:0.71875rem}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:0.375rem;padding:0.25rem 0.625rem;border-radius:999px;font-size:0.71875rem;font-weight:400;white-space:nowrap;border:1px solid transparent}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+.p-ok{color:var(--ok);background:rgba(141,181,138,.10);border-color:rgba(141,181,138,.25)}
+.p-warn{color:var(--warn);background:rgba(214,168,92,.10);border-color:rgba(214,168,92,.28)}
+.p-bad{color:var(--bad);background:rgba(208,122,106,.12);border-color:rgba(208,122,106,.3)}
+.p-dim{color:var(--grey);background:rgba(168,164,158,.08);border-color:rgba(168,164,158,.2)}
+.p-cu{color:var(--copperlt);background:rgba(205,152,118,.10);border-color:rgba(205,152,118,.3)}
+.p-add{color:var(--cream);background:rgba(205,152,118,.16);border-color:rgba(205,152,118,.45)}
+.addons{display:flex;gap:0.25rem;flex-wrap:wrap;margin-top:0.3125rem}
+.days{font-variant-numeric:tabular-nums;white-space:nowrap}
+.days.soon{color:var(--copperlt)}.days.past{color:var(--dim)}
+
+.toast{display:none!important}
+  .modal{display:block!important;position:static;padding:0;background:none;backdrop-filter:none}
+  .modal .sheet{border:0;box-shadow:none;background:none;backdrop-filter:none;width:100%;padding:0;color:#000}
+  .modal .glass::before{display:none}.macts{display:none!important}
+  .modal h2,.modal h2 em,.qsec h3{color:#000}.qsec h3{border-bottom:1px solid #999;padding-bottom:0.25rem}
+  .qa{border-bottom:1px solid #ddd;break-inside:avoid}.qa .k{color:#555}.qa .a{color:#000}.qa .a.empty{color:#bbb}.qhint,.msub{color:#666}
+  .qsec{break-inside:avoid-page}
+}
+.toast{position:fixed;left:50%;bottom:1.625rem;transform:translateX(-50%) translateY(20px);opacity:0;padding:0.6875rem 1.125rem;border-radius:999px;font-size:0.8125rem;color:var(--cream);z-index:9;transition:opacity .2s,transform .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+/* action results */
+.acts .btn.busy{opacity:.6;pointer-events:none}
+.actbox{margin-top:0.625rem;font-size:0.78125rem;color:var(--grey);background:rgba(27,26,24,.5);border:1px solid var(--line);border-radius:10px;padding:0.625rem 0.75rem;display:none}
+.actbox.show{display:block}.actbox code{color:var(--copperlt);word-break:break-all}
+.actbox input{width:100%;background:rgba(27,26,24,.6);border:1px solid var(--line);border-radius:8px;padding:0.4375rem 0.625rem;font-size:0.8125rem;color:var(--cream);margin-top:0.375rem}
+.actbox .row{display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;align-items:center}
+.field label{display:block;font-size:0.6875rem;color:var(--dim);margin-bottom:0.25rem}
+.field select,.field input{width:100%;background:rgba(27,26,24,.5);border:1px solid var(--line);border-radius:8px;padding:0.5rem 0.625rem;font-size:0.8125rem;color:var(--cream)}
+.field select:focus,.field input:focus{outline:0;border-color:var(--copper)}
+.field select option{background:#2E2B29}
+
+/* leads page */
+.funnel{margin-top:1.375rem;border-radius:18px;padding:1.5rem 1.75rem 1.25rem}
+.funnel .top{display:flex;align-items:flex-end;justify-content:space-between;gap:1.125rem;flex-wrap:wrap}
+.funnel h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.375rem;color:var(--grey)}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0.625rem;margin-top:1rem}
+.step{padding:1rem 1.125rem;border-radius:12px;background:rgba(27,26,24,.45);border:1px solid var(--glass-line);position:relative}
+.step .v{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:500;line-height:1;color:#fff}
+.step .l{margin-top:0.375rem;font-size:0.8125rem;color:var(--grey)}
+.step .c{margin-top:0.25rem;font-size:0.75rem;color:var(--copperlt)}
+.step .barw{height:4px;background:var(--line);border-radius:2px;margin-top:0.625rem}.step .barw i{display:block;height:100%;background:var(--copper);border-radius:2px}
+.srcs{display:grid;grid-template-columns:1fr 1fr;gap:1.625rem;margin-top:1.125rem}
+.srcs h3{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.125rem;color:var(--copperlt);margin-bottom:0.5rem}
+.pages{list-style:none;font-size:0.8125rem}
+.pages li{display:grid;grid-template-columns:1fr auto auto;gap:0.75rem;align-items:center;padding:0.375rem 0;border-bottom:1px solid rgba(58,55,51,.5);color:var(--cream)}
+.pages li b{font-weight:400;color:var(--copperlt);font-variant-numeric:tabular-nums}
+.pages li i{font-style:normal;color:var(--dim);font-size:0.75rem;min-width:3.75rem;text-align:right}
+.pages .track{height:3px;background:var(--copper);border-radius:2px;margin-top:0.25rem;opacity:.7}
+.sec{margin-top:0.875rem;border-radius:16px;overflow:hidden}
+.sec .top{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;padding:1.125rem 1.25rem 0.375rem}
+.sec h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.375rem;color:var(--grey)}
+.sec h2 small{font-family:'Lato';font-size:0.75rem;color:var(--dim);margin-left:0.625rem;font-weight:300}
+.name{color:var(--cream);font-weight:400}
+.sub{color:var(--dim);font-size:0.78125rem;margin-top:0.125rem}
+.mini{display:flex;gap:0.375rem;flex-wrap:wrap}
+.mini .btn{padding:0.375rem 0.6875rem;font-size:0.75rem}
+.codeform{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:0.625rem;align-items:end;padding:0.375rem 1.25rem 1rem}
+.codeform .btn{height:2.3125rem}
+.paste{margin:0 1.25rem 1rem;padding:0.75rem 0.875rem;border-radius:10px;background:rgba(27,26,24,.5);border:1px solid var(--line);font-size:0.8125rem;color:var(--cream);line-height:1.5;display:none}
+.paste.show{display:block}.paste code{color:var(--copperlt);font-size:0.9375rem}
+.paste .row{display:flex;gap:0.5rem;margin-top:0.5rem}
+.dead{opacity:.5}
+
+/* ---- phone header: brand on top, segmented nav below, controls last ---- */
+@media(max-width:700px){
+  header{flex-wrap:wrap;gap:0.75rem 0;padding:1rem 0 0.375rem}
+  .brand{font-size:1.375rem}
+  .who{width:100%;display:grid;grid-template-columns:1fr auto;align-items:center;gap:0.5rem}
+  .who .nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem;margin:0}
+  .nav a{text-align:center;padding:0.5625rem 0;border-color:var(--line);background:rgba(27,26,24,.4);font-size:0.8125rem}
+  .nav a.on{background:var(--copper);color:#1B1A18;font-weight:700;border-color:var(--copper)}
+  #whoEmail{display:none}
+  .live{font-size:0.75rem}
+  #signout{padding:0.5rem 0.875rem;font-size:0.75rem;justify-self:end}
+  .wrap{padding:0 0.75rem}
+}
+@media(max-width:800px){.steps{grid-template-columns:repeat(2,minmax(0,1fr));gap:0.5rem}.step{padding:0.75rem 0.75rem}.step .v{font-size:1.875rem}.step .sub{font-size:0.6875rem}.srcs{grid-template-columns:1fr}.codeform{grid-template-columns:1fr 1fr}
+  .funnel{padding:1rem 0.875rem 0.875rem}.sec .top{padding:0.875rem 0.75rem 0.25rem}.codeform{padding:0.375rem 0.75rem 0.75rem}.paste{margin:0 0.75rem 0.75rem}
+  td{padding:0.6875rem 0.625rem}.mini .btn{padding:0.3125rem 0.5625rem;font-size:0.71875rem}
+  thead th:nth-child(3),td:nth-child(3),thead th:nth-child(5),td:nth-child(5){display:none}}
+</style>
+<link rel="stylesheet" href="/apple.css">
+</head>
+<body>
+<div id="gate"><div class="panel glass"><h1>Atavia <em>Leads</em></h1><p>Sign in with the studio Google account.</p><button class="btn" id="signin">Sign in with Google</button><div id="gateErr"></div></div></div>
+<div class="toast glass" id="toast"></div>
+<div id="app">
+  <div class="wrap">
+    <header>
+      <div class="brand">Atavia <em>Leads</em><small id="todayTxt"></small></div>
+      <div class="who"><nav class="nav"><a href="/">Bookings</a><a class="on" href="/leads.html">Leads</a><a href="/visitors.html">Visitors</a></nav><span class="live off" id="live"><i></i><span id="liveTxt">Connecting</span></span><span id="whoEmail"></span><button class="btn ghost" id="signout">Sign out</button></div>
+    </header>
+
+    <section class="funnel glass" id="funnel"></section>
+
+    <section class="sec glass" id="inqSec">
+      <div class="top"><h2>Inquiries <small id="inqCount"></small></h2><div class="chips" id="inqChips"></div></div>
+      <table><thead><tr><th>Who</th><th>Wedding</th><th>Interested in</th><th>Found us</th><th>Came in</th><th>Status</th><th></th></tr></thead><tbody id="inqRows"><tr><td colspan="7" class="state">Loading…</td></tr></tbody></table>
+    </section>
+
+    <section class="sec glass" id="leadSec">
+      <div class="top"><h2>Started booking <small id="leadCount"></small></h2><span class="sub">Couples who reached the card step on /book/ — the pipeline nudges them at day 1 and 3</span></div>
+      <table><thead><tr><th>Who</th><th>Wedding</th><th>Package</th><th>Attribution</th><th>Started</th><th>Status</th><th></th></tr></thead><tbody id="leadRows"><tr><td colspan="7" class="state">Loading…</td></tr></tbody></table>
+    </section>
+
+    <section class="sec glass" id="codeSec">
+      <div class="top"><h2>Discount codes <small id="codeCount"></small></h2></div>
+      <div class="codeform">
+        <div class="field"><label>For (note — their name or email)</label><input id="cNote" placeholder="jane@example.com"></div>
+        <div class="field"><label>Amount off ($)</label><input id="cAmt" type="number" value="200" min="1" max="500"></div>
+        <div class="field"><label>Valid for (hours)</label><input id="cHrs" type="number" value="48" min="1" max="336"></div>
+        <button class="btn" id="cMint">Issue code</button>
+      </div>
+      <div class="paste" id="paste"></div>
+      <table><thead><tr><th>Code</th><th>For</th><th>Amount</th><th>Expires</th><th>Status</th></tr></thead><tbody id="codeRows"><tr><td colspan="5" class="state">Loading…</td></tr></tbody></table>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, limit, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = { apiKey: "AIzaSyDpvsTc354O8aNZoRJbMFpAReah_t0xTsQ", authDomain: "atavia-c29cd.firebaseapp.com", projectId: "atavia-c29cd", storageBucket: "atavia-c29cd.firebasestorage.app", appId: "1:1078524760571:web:b6c828266f5cdf951f3b5e" };
+const ADMIN_EMAILS = ["info@ataviaweddings.com"];
+const ADMIN_ACTION_URL = "https://us-central1-atavia-c29cd.cloudfunctions.net/admin_action";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ts = v => v ? (v.toDate ? v.toDate() : new Date(v)) : null;
+const money = n => "$" + Number(n||0).toLocaleString();
+const fmtD = d => d ? d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
+const ago = d => { if(!d) return ""; const s=Math.round((Date.now()-d)/1000); return s<3600 ? `${Math.max(1,Math.round(s/60))}m ago` : s<86400 ? `${Math.round(s/3600)}h ago` : `${Math.round(s/86400)}d ago`; };
+const fmtPhone = p => { const d=String(p||"").replace(/\D/g,""); return d.length===10?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:p||""; };
+const pill = p => `<span class="pill ${p.cls}"><i></i>${esc(p.label)}</span>`;
+let toastT; function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600); }
+const gate = $("#gate"), appEl = $("#app");
+$("#todayTxt").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+const DEMO = new URLSearchParams(location.search).has("demo");
+
+let auth, db, INQ = [], LEADS = [], BOOK = [], CODES = [], RANGE = 90, INQ_TAB = "open", SHOW_EXPIRED = false;
+
+/* ====== auth ====== */
+function showGateErr(m){ const el=$("#gateErr"); el.textContent=m; el.style.display="block"; }
+function setLive(on){ $("#live").classList.toggle("off",!on); $("#liveTxt").textContent = on ? "Live" : "Offline"; }
+function wire(){
+  const app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app);
+  $("#signin").onclick = async () => { const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt:"select_account" });
+    try { await signInWithPopup(auth, p); } catch (e) { if (/popup/i.test(e.code||"")) return signInWithRedirect(auth, p); showGateErr(e.message); } };
+  $("#signout").onclick = () => signOut(auth);
+  getRedirectResult(auth).catch(e => showGateErr(e.message));
+  let unsub = [];
+  onAuthStateChanged(auth, user => {
+    unsub.forEach(u=>u()); unsub = [];
+    if (!user) { appEl.style.display="none"; gate.classList.add("show"); return; }
+    if (!ADMIN_EMAILS.includes((user.email||"").toLowerCase())) { gate.classList.add("show"); showGateErr(`${user.email} isn't on the admin list.`); signOut(auth); return; }
+    $("#whoEmail").textContent = user.email; gate.classList.remove("show"); appEl.style.display="block";
+    const sub = (col, set, q) => onSnapshot(q || collection(db, col), snap => { set(snap.docs.map(d=>({id:d.id, ...d.data()}))); setLive(true); render(); }, err => { console.warn(col, err.message); $("#"+({inquiries:"inqRows",leads:"leadRows",discount_codes:"codeRows"}[col]||"inqRows")).innerHTML = `<tr><td colspan="7" class="state">Couldn't read ${col}: ${esc(err.message)}</td></tr>`; });
+    unsub.push(sub("inquiries", v=>INQ=v), sub("leads", v=>LEADS=v), sub("bookings", v=>BOOK=v), sub("discount_codes", v=>CODES=v, query(collection(db,"discount_codes"), orderBy("created_at","desc"), limit(200))));
+  });
+}
+async function callAdmin(payload){
+  if (DEMO) { await new Promise(r=>setTimeout(r,400)); return {code:"ATAVIA-DEMO-"+payload.amount, amount:payload.amount, expires_at:new Date(Date.now()+payload.hours*36e5).toISOString(), paste_ready:`As a thank-you for reaching out, code ATAVIA-DEMO-${payload.amount} takes $${payload.amount} off any collection if you book at ataviaweddings.com/book before …`}; }
+  const tok = await auth.currentUser.getIdToken();
+  const res = await fetch(ADMIN_ACTION_URL, { method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok }, body: JSON.stringify(payload) });
+  const j = await res.json().catch(()=>({error:"bad response"})); if (!res.ok) throw new Error(j.error||res.statusText); return j;
+}
+
+/* ====== matching + funnel ====== */
+const norm = e => String(e||"").trim().toLowerCase();
+function render(){
+  const now = new Date(), since = RANGE ? new Date(now - RANGE*864e5) : new Date(0);
+  const inRange = x => { const d = ts(x.created_at); return d && d >= since; };
+  const bookByEmail = {}; for (const b of BOOK) if (!b.test_mode) bookByEmail[norm(b.email)] = b;
+  const leadByEmail = {}; for (const l of LEADS) leadByEmail[norm(l.email)] = l;
+  const inqs = INQ.filter(inRange).map(i => { const b = bookByEmail[norm(i.email)], l = leadByEmail[norm(i.email)];
+    const st = b ? (b.status==="confirmed"?"booked":b.signed_at?"signed":"started") : l ? "started" : (i.status||"new");
+    return {...i, _b:b, _l:l, _st:st}; }).sort((a,b)=>ts(b.created_at)-ts(a.created_at));
+  // one row per couple: latest attempt wins, earlier attempts are counted
+  const byEmail = {};
+  for (const l of LEADS.filter(inRange)) { const k = norm(l.email); const cur = byEmail[k]; if (!cur || ts(l.created_at) > ts(cur.created_at)) byEmail[k] = {...l, _attempts:(cur?cur._attempts:0)+1, _first: cur ? (ts(cur._first)<ts(l.created_at)?cur._first:l.created_at) : l.created_at}; else cur._attempts++; }
+  const leads = Object.values(byEmail).map(l => { const b = bookByEmail[norm(l.email)] || (l.booking_id ? BOOK.find(x=>x.id===l.booking_id) : null);
+    const st = l.status==="converted"||b ? (b&&b.status==="confirmed"?"booked":b&&b.signed_at?"signed":"converted") : l.status==="abandoned" ? "abandoned" : "open";
+    return {...l, _b:b, _st:st}; }).sort((a,b)=>ts(b.created_at)-ts(a.created_at));
+  const books = BOOK.filter(b=>!b.test_mode && ts(b.created_at) && ts(b.created_at)>=since);
+  const signed = books.filter(b=>b.signed_at), paid = books.filter(b=>b.status==="confirmed");
+  const startedEmails = new Set([...leads.map(l=>norm(l.email)), ...books.map(b=>norm(b.email))]);
+  const nStart = startedEmails.size;
+  const steps = [["Inquiries", inqs.length, "filled out /contact", null], ["Started booking", nStart, "reached the card step on /book/", inqs.length], ["Signed", signed.length, "contract signed", nStart], ["Paid", paid.length, "retainer or PIF collected", signed.length]];
+  const max = Math.max(1, ...steps.map(s=>s[1]));
+  // sources
+  const src = {}; for (const i of inqs) { const k = (i.found_us||"not answered").trim(); src[k]=src[k]||{n:0,booked:0}; src[k].n++; if (i._st==="booked") src[k].booked++; }
+  const srcTop = Object.entries(src).sort((a,b)=>b[1].n-a[1].n).slice(0,8);
+  const pk = {}; for (const i of inqs) { const k = (i.package||"not chosen").split("—")[0].trim(); pk[k]=pk[k]||0; pk[k]++; }
+  for (const l of leads) { const k = (l.package_name||"?").trim(); pk[k]=pk[k]||0; pk[k]++; }
+  const pkTop = Object.entries(pk).sort((a,b)=>b[1]-a[1]).slice(0,8), pkMax = Math.max(1,...pkTop.map(x=>x[1]));
+  const attr = {}; for (const l of leads) { const k = l.attr_venue ? "venue page" : "direct / other"; attr[k]=attr[k]||{n:0,c:0}; attr[k].n++; if (l._st!=="open"&&l._st!=="abandoned") attr[k].c++; }
+  $("#funnel").innerHTML = `<div class="top"><div><h2>Funnel <small style="font-family:'Lato';font-size:.75rem;color:var(--dim);margin-left:.5rem">${RANGE?`last ${RANGE} days`:"all time"}</small></h2></div>
+    <div class="chips">${[[30,"30 days"],[90,"90 days"],[365,"12 months"],[0,"All time"]].map(([v,l])=>`<button class="chip${RANGE===v?" on":""}" data-range="${v}">${l}</button>`).join("")}</div></div>
+    <div class="steps">${steps.map(([l,v,sub,prev],i)=>`<div class="step"><div class="v">${v}</div><div class="l">${l}</div><div class="c">${prev?`${prev?Math.round(v/prev*100):0}% of previous`:"&nbsp;"}</div><div class="barw"><i style="width:${v/max*100}%"></i></div><div class="sub">${sub}</div></div>`).join("")}</div>
+    <div class="srcs">
+      <div><h3>Where inquiries say they found you</h3><ul class="pages">${srcTop.length?srcTop.map(([k,v])=>`<li><span>${esc(k)}<div class="track" style="width:${v.n/inqs.length*100}%"></div></span><b>${v.n}</b><i>${v.booked?`${v.booked} booked`:"—"}</i></li>`).join(""):"<li>No inquiries in range.</li>"}</ul>
+        <h3 style="margin-top:1rem">Booking starts by attribution</h3><ul class="pages">${Object.entries(attr).map(([k,v])=>`<li><span>${esc(k)}</span><b>${v.n}</b><i>${v.c} converted</i></li>`).join("")||"<li>None in range.</li>"}</ul></div>
+      <div><h3>What they're asking about</h3><ul class="pages">${pkTop.map(([k,v])=>`<li><span>${esc(k)}<div class="track" style="width:${v/pkMax*100}%"></div></span><b>${v}</b><i></i></li>`).join("")||"<li>—</li>"}</ul>
+        <div class="sub" style="margin-top:.875rem;max-width:none;white-space:normal">Inquiries only appear here once the /contact form is forwarding to Firestore (see setup). Matching between inquiries, booking starts and bookings is by email address.</div></div>
+    </div>`;
+
+  // inquiries table
+  const tabs = [["open","Open", i=>!["booked","signed","started","contacted","closed"].includes(i._st)],["contacted","Contacted", i=>i._st==="contacted"],["converted","Converted", i=>["booked","signed","started"].includes(i._st)],["all","All", ()=>true]];
+  $("#inqChips").innerHTML = tabs.map(([k,l,f])=>`<button class="chip${INQ_TAB===k?" on":""}" data-inq="${k}">${l}<span class="k">${inqs.filter(f).length}</span></button>`).join("");
+  const shown = inqs.filter(tabs.find(t=>t[0]===INQ_TAB)[2]);
+  $("#inqCount").textContent = `${inqs.length} in range`;
+  const stPill = st => ({new:{label:"New",cls:"p-warn"},contacted:{label:"Contacted",cls:"p-cu"},closed:{label:"Closed",cls:"p-dim"},started:{label:"Started booking",cls:"p-cu"},signed:{label:"Signed",cls:"p-ok"},booked:{label:"Booked",cls:"p-ok"}})[st]||{label:st,cls:"p-dim"};
+  $("#inqRows").innerHTML = shown.length ? shown.map(i=>`<tr class="row${["closed"].includes(i._st)?" dead":""}">
+    <td><div class="name">${esc([i.first_name,i.last_name].filter(Boolean).join(" ")||i.email)}</div><div class="sub"><a href="mailto:${esc(i.email)}">${esc(i.email)}</a>${i.phone?` · <a href="tel:${esc(i.phone)}">${esc(fmtPhone(i.phone))}</a>`:""}</div></td>
+    <td>${i.event_date_raw?fmtD(new Date(i.event_date_raw+"T00:00:00")):"—"}</td>
+    <td>${esc(i.package||"—")}${i.venue?`<div class="sub">${esc(i.venue)}</div>`:""}</td>
+    <td>${esc(i.found_us||"—")}${i.referrer?`<div class="sub">${esc((()=>{try{return new URL(i.referrer).hostname.replace(/^www\./,"")}catch{return i.referrer}})())}</div>`:""}</td>
+    <td>${ago(ts(i.created_at))}<div class="sub">${fmtD(ts(i.created_at))}</div></td>
+    <td>${pill(stPill(i._st))}</td>
+    <td><div class="mini">${i._b?`<a class="btn ghost" href="/?open=${i._b.id}">Open booking</a>`:""}${!["booked","signed","started","closed"].includes(i._st)?`<button class="btn ghost" data-inqst="contacted" data-id="${i.id}"${i._st==="contacted"?" disabled":""}>Mark contacted</button><button class="btn ghost" data-code="${esc(i.email)}">Issue code</button>`:""}${i._st!=="closed"&&!i._b?`<button class="btn ghost" data-inqst="closed" data-id="${i.id}">Close</button>`:`${i._st==="closed"?`<button class="btn ghost" data-inqst="new" data-id="${i.id}">Reopen</button>`:""}`}</div></td>
+  </tr>`).join("") : `<tr><td colspan="7" class="state">${INQ.length?"Nothing in this tab.":"No inquiries yet — once the /contact form forwards to Firestore they land here."}</td></tr>`;
+
+  // leads table
+  $("#leadCount").textContent = `${leads.length} couple${leads.length===1?"":"s"} in range · ${leads.filter(l=>l._st==="open").length} open`;
+  const lPill = st => ({open:{label:"Open",cls:"p-warn"},abandoned:{label:"Gave up",cls:"p-dim"},converted:{label:"Converted",cls:"p-ok"},signed:{label:"Signed",cls:"p-ok"},booked:{label:"Booked",cls:"p-ok"}})[st]||{label:st,cls:"p-dim"};
+  $("#leadRows").innerHTML = leads.length ? leads.map(l=>`<tr class="row${l._st==="abandoned"?" dead":""}">
+    <td><div class="name">${esc(l.client_names||l.email)}</div><div class="sub"><a href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone?` · <a href="tel:${esc(l.phone)}">${esc(fmtPhone(l.phone))}</a>`:""}</div></td>
+    <td>${l.event_date_raw?fmtD(new Date(l.event_date_raw+"T00:00:00")):"—"}</td>
+    <td>${esc(l.package_name||"—")}<div class="sub">${l.payment_option==="pif"?"paid in full":"standard plan"}</div></td>
+    <td>${esc(l.attr_venue||"direct")}</td>
+    <td>${ago(ts(l.created_at))}<div class="sub">${fmtD(ts(l.created_at))}${l._attempts>1?` · ${l._attempts} attempts`:""}${l.nudge1_sent||l.nudge_1_sent?" · nudged":""}${l.nudge2_sent||l.nudge_2_sent?" ×2":""}</div></td>
+    <td>${pill(lPill(l._st))}</td>
+    <td><div class="mini">${l._b?`<a class="btn ghost" href="/?open=${l._b.id}">Open booking</a>`:`<button class="btn ghost" data-code="${esc(l.email)}">Issue code</button>`}${l.sid?`<a class="btn ghost" href="/visitors.html?sid=${encodeURIComponent(l.sid)}">Trail</a>`:""}</div></td>
+  </tr>`).join("") : `<tr><td colspan="7" class="state">No booking starts in range.</td></tr>`;
+
+  // codes
+  const live = CODES.filter(c=>c.active!==false);
+  $("#codeCount").textContent = `${CODES.filter(c=>c.redeemed_at).length} redeemed · ${live.filter(c=>!c.redeemed_at&&ts(c.expires_at)>now).length} live`;
+  const codeRow = c => { const exp=ts(c.expires_at), st = c.redeemed_at?{label:"Redeemed",cls:"p-ok"}:c.active===false?{label:"Off",cls:"p-dim"}:exp&&exp<now?{label:"Expired",cls:"p-dim"}:{label:"Live",cls:"p-cu"};
+    const who = c.redeemed_by ? (BOOK.find(b=>b.id===c.redeemed_by)?.client_names || c.redeemed_by) : "";
+    return `<tr class="row${st.label!=="Live"&&st.label!=="Redeemed"?" dead":""}"><td><code>${esc(c.code)}</code></td><td>${esc(c.note||"—")}</td><td>${money(c.amount)}</td><td>${fmtD(exp)}${c.redeemed_at?`<div class="sub">used ${fmtD(ts(c.redeemed_at))}</div>`:""}</td><td>${pill(st)}${who?`<div class="sub">${esc(who)}</div>`:""}</td></tr>`; };
+  const isExpired = c => !c.redeemed_at && (c.active===false || (ts(c.expires_at) && ts(c.expires_at) < now));
+  const keep = CODES.filter(c=>!isExpired(c)), gone = CODES.filter(isExpired);
+  $("#codeRows").innerHTML = CODES.length ? keep.map(codeRow).join("") + (gone.length ? `<tr><td colspan="5" class="state" style="padding:.75rem"><button class="btn ghost" id="showExpired">${SHOW_EXPIRED?"Hide":"Show"} ${gone.length} expired code${gone.length===1?"":"s"}</button></td></tr>` + (SHOW_EXPIRED ? gone.slice(0,80).map(codeRow).join("") : "") : "") : `<tr><td colspan="5" class="state">No codes yet.</td></tr>`;
+}
+
+/* ====== events ====== */
+document.addEventListener("click", async e => {
+  const r = e.target.closest("[data-range]"); if (r) { RANGE = Number(r.dataset.range); render(); return; }
+  const t = e.target.closest("[data-inq]"); if (t) { INQ_TAB = t.dataset.inq; render(); return; }
+  const st = e.target.closest("[data-inqst]"); if (st) {
+    if (DEMO) { const i = INQ.find(x=>x.id===st.dataset.id); i.status = st.dataset.inqst; render(); return; }
+    try { await updateDoc(doc(db,"inquiries",st.dataset.id), { status: st.dataset.inqst, status_at: new Date() }); toast("Updated"); } catch (err) { toast("Couldn't update: "+(err.code||err.message)); } return; }
+  const c = e.target.closest("[data-code]"); if (c) { $("#cNote").value = c.dataset.code; $("#codeSec").scrollIntoView({behavior:"smooth",block:"start"}); $("#cAmt").focus(); return; }
+  if (e.target.id==="showExpired") { SHOW_EXPIRED = !SHOW_EXPIRED; render(); return; }
+  const cp = e.target.closest("[data-copy]"); if (cp) { try { await navigator.clipboard.writeText(cp.dataset.copy); toast("Copied"); } catch { prompt("Copy:", cp.dataset.copy); } }
+});
+$("#cMint").onclick = async () => {
+  const b = $("#cMint"); b.textContent = "Issuing…"; b.disabled = true;
+  try {
+    const j = await callAdmin({ action:"issue_code", note:$("#cNote").value.trim(), amount:Number($("#cAmt").value), hours:Number($("#cHrs").value) });
+    const box = $("#paste"); box.classList.add("show");
+    box.innerHTML = `<code>${esc(j.code)}</code> — ${money(j.amount)} off, expires ${fmtD(new Date(j.expires_at))}<br><span class="sub" style="display:block;margin-top:.375rem;white-space:normal;max-width:none;color:var(--grey)">${esc(j.paste_ready)}</span><div class="row"><button class="btn ghost" data-copy="${esc(j.paste_ready)}">Copy the paste-ready sentence</button><button class="btn ghost" data-copy="${esc(j.code)}">Copy code only</button></div>`;
+    if (DEMO) { CODES.unshift({id:j.code, code:j.code, amount:j.amount, note:$("#cNote").value, active:true, created_at:new Date(), expires_at:new Date(j.expires_at)}); render(); }
+    toast("Code issued");
+  } catch (err) { toast("Couldn't issue: "+err.message); }
+  b.textContent = "Issue code"; b.disabled = false;
+};
+
+/* ====== start ====== */
+if (DEMO) {
+  const d = n => new Date(Date.now()-n*864e5);
+  INQ = [{id:"i1",first_name:"Morgan",last_name:"Robinson",email:"morganic27@yahoo.com",event_date_raw:"2027-06-26",found_us:"Zola",package:"The Reverie — 8 Hour Video",created_at:d(5),status:"new",referrer:"https://www.google.com/"},
+         {id:"i2",first_name:"Abbigayle",last_name:"Fielder",email:"abbi@example.com",event_date_raw:"2027-09-18",found_us:"Zola",package:"The Legacy",created_at:d(9),status:"contacted"},
+         {id:"i3",first_name:"Dana",last_name:"Ortiz",email:"dana@example.com",event_date_raw:"2027-03-12",found_us:"Google",package:"Not sure yet — help me choose",created_at:d(20),status:"new",venue:"Castle Hill Inn"},
+         {id:"i4",first_name:"Abigail",last_name:"Drinkwater",email:"abigailswedding2027@aol.com",event_date_raw:"2027-06-06",found_us:"Instagram",package:"The Reverie — 8 Hour Video",created_at:d(7),status:"new"}];
+  LEADS = [{id:"l1",client_names:"Abigail Drinkwater & Spencer Thomas",email:"abigailswedding2027@aol.com",event_date_raw:"2027-06-06",package_name:"The Reverie",payment_option:"pif",created_at:d(6),status:"converted",booking_id:"b1",attr_venue:""},
+           {id:"l2",client_names:"Kim Park & Leo Grant",email:"kim@example.com",event_date_raw:"2027-05-01",package_name:"The Verse",payment_option:"standard",created_at:d(2),status:"open",attr_venue:"The Adolphus",sid:"demo"},
+           {id:"l3",client_names:"Rae Lin & Tom Hu",email:"rae@example.com",event_date_raw:"2027-08-14",package_name:"The Heirloom",payment_option:"standard",created_at:d(12),status:"abandoned",attr_venue:""}];
+  BOOK = [{id:"b1",email:"abigailswedding2027@aol.com",status:"confirmed",signed_at:d(5),created_at:d(5)},{id:"b2",email:"other@example.com",status:"pending_signature",created_at:d(1)}];
+  CODES = [{id:"c1",code:"ATAVIA-23DS-200",amount:200,note:"dana@example.com",active:true,created_at:d(3),expires_at:d(-1)},{id:"c2",code:"ATAVIA-8ASR-200",amount:200,note:"kim@example.com",active:true,created_at:d(30),expires_at:d(28),redeemed_at:d(29),redeemed_by:"kim@example.com"}];
+  appEl.style.display="block"; setLive(false); $("#liveTxt").textContent="Demo data"; render();
+} else wire();
+</script>
+<script type="module" src="/apple.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+# Cities Elizabeth Scott has actually photographed.
+# One "City, ST" per line. Case-insensitive. Blank lines and # comments ignored.
+#
+# Listed cities get first-person copy ("We have shot in X before...").
+# Everything else gets honest scouting language instead.
+# Only add a city you can verify from a past booking.
+
+# Nashville, TN
+# Charleston, SC
+# Denver, CO

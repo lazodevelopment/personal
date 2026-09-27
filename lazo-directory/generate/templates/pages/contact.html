@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{#- JC-LAZO-CFORM-0916-001: the page used to be four published mailboxes and a
+    line of address. It is now a form (one inbox, one topic field), the answer
+    to "how fast will you reply", and the three questions that don't need us at
+    all - because the fastest support is the answer the reader didn't have to
+    wait for. -#}
+{% block title %}Contact Lazo &mdash; talk to a human{% endblock %}
+{% block desc %}Questions about your wedding planning, your vendor profile, a review, or your data. Send it here and a person reads it &mdash; same business day, always within two.{% endblock %}
+{% block canonical %}{{ base }}/contact/{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Contact</p>
+  <h1>Talk to a human.</h1>
+  <p class="hero-sub">No ticket number, no bot that loops you back to the help centre. Tell us what you need and the person who can fix it writes back.</p>
+</div></section>
+
+{% with
+  cf_title = 'Send us a note',
+  cf_sub = 'Pick what it\'s about so it lands with the right person the first time.'
+%}{% include "_contact_form.html" %}{% endwith %}
+
+<section class="band prose doc">
+  <p class="dek">What happens next</p>
+  <h2>When you'll hear back</h2>
+  <p>Every message goes to a real inbox a person opens. Most are answered the same business day; if something needs digging &mdash; a ranking question, a disputed review, a payment record &mdash; we'll tell you that on the first reply rather than going quiet. Nothing waits longer than two business days.</p>
+  <p>A few things move on their own clock, and we'd rather say so up front:</p>
+  <ul>
+    <li><strong>Profile claims</strong> clear in about a day once you've proved the business is yours. You don't need us to start &mdash; <a href="/for-vendors/#claim">find your listing</a> and the dashboard is yours the moment it clears.</li>
+    <li><strong>Review disputes</strong> get a decision within five business days, and our moderation policy logs a public reason any time a review comes down. We don't remove a verified review because it isn't flattering.</li>
+    <li><strong>Data and deletion requests</strong> are completed within 7 days, and we reply when it's done. <a href="/delete-account/">How account deletion works &rarr;</a></li>
+  </ul>
+
+  <h2>Things you can do faster than writing to us</h2>
+  <ul>
+    <li><strong>Delete your account.</strong> It's two taps inside Lazo, no conversation required. <a href="/delete-account/">Here's the whole process &rarr;</a></li>
+    <li><strong>Claim or fix your vendor listing.</strong> Hours, photos, packages and service area are all yours to edit once the profile is claimed. <a href="/for-vendors/">How claiming works &rarr;</a></li>
+    <li><strong>Understand a ranking.</strong> We publish the whole method &mdash; what counts, what doesn't, and why money never does. <a href="/why-lazo/">How our rankings work &rarr;</a></li>
+  </ul>
+
+  <h2>Where we are</h2>
+  <p>Lazo Weddings, LLC &middot; Phoenix, Arizona. We're a small team, which is the reason a person can still read every message &mdash; and the reason we ask for detail, so we can answer in one reply instead of three.</p>
+  <p>Press and partnerships: use the form above and pick <em>Press, partnerships, or investors</em>. Legal notices belong in our <a href="/terms/">Terms of Service</a>.</p>
+</section>
+
+<section class="next-reads">
+  <h2>While you're here</h2>
+  <div class="next-grid">
+    <a href="/about/"><b>About Lazo</b><span>Who built this, and the thing about the wedding industry that made it necessary.</span></a>
+    <a href="/why-lazo/"><b>How our rankings work</b><span>The whole method, published &mdash; including everything that can't buy a place in it.</span></a>
+    <a href="/for-vendors/"><b>For vendors</b><span>Free forever, $0 per lead, and a claim that takes about a minute.</span></a>
+  </div>
+</section>
+{% endblock %}

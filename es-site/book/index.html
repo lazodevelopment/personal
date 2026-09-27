@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, follow">
+<link rel="icon" href="/favicon/favicon-32.png" sizes="32x32">
+<link rel="icon" href="/favicon/favicon-16.png" sizes="16x16">
+<link rel="apple-touch-icon" href="/favicon/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Figtree:wght@300;400;500;600&family=Alex+Brush&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/site.css">
+<title>Reserve Your Date | Elizabeth Scott Weddings</title>
+<meta name="description" content="Reserve your wedding date with Elizabeth Scott — photography, film, or both. Sign online, pay securely, done in minutes.">
+<link rel="canonical" href="https://elizabethscottweddings.com/book">
+<style>
+/* JC-ES-BOOKPAGE-0818-013 — scoped booking-form styles on top of site.css */
+.bk-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+@media(max-width:900px){.bk-grid{grid-template-columns:1fr}}
+.bk-card{padding:26px 24px;border-radius:14px;margin-bottom:22px}
+.bk-card h2{font-family:var(--serif);font-weight:500;font-size:22px;margin:0 0 4px}
+.bk-card .bk-sub{color:var(--mist);font-size:13.5px;margin:0 0 18px}
+.bk-field{margin-bottom:14px}
+.bk-field label{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mist);margin-bottom:6px}
+.bk-field input,.bk-field select{width:100%;box-sizing:border-box;padding:12px 13px;border-radius:8px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);
+  color:var(--ice,#f4f1ea);font-family:inherit;font-size:15px}
+.bk-field input:focus,.bk-field select:focus{outline:none;border-color:var(--champagne)}
+.bk-field select option{color:#1a1a1a}
+.bk-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.bk-row{grid-template-columns:1fr}}
+.bk-err{color:#e88;font-size:13px;margin-top:5px;display:none}
+.bk-field input.invalid,.bk-field select.invalid{border-color:#e88!important;box-shadow:0 0 0 1px rgba(238,136,136,.35)}
+#gateMsg b{color:var(--champagne);font-weight:500}
+#gateMsg.ready{color:#8DBF93}
+.bk-choice{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.bk-choice .chip{flex:1;min-width:140px;padding:13px 14px;border-radius:10px;cursor:pointer;text-align:center;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.04);font-size:14px;user-select:none}
+.bk-choice .chip.on{border-color:var(--champagne);background:rgba(255,255,255,.09)}
+.bk-choice .chip.off{opacity:.38;cursor:not-allowed}
+.chip small{display:block;color:var(--mist);font-size:12px;margin-top:3px}
+.bk-note{font-size:13px;color:var(--champagne);margin:6px 0 0;display:none}
+.bk-bullets{columns:2;gap:18px;font-size:13.5px;color:var(--mist);padding-left:18px;margin:10px 0 0}
+@media(max-width:560px){.bk-bullets{columns:1}}
+.bk-sum{position:sticky;top:90px;padding:24px 22px;border-radius:14px}
+.bk-sum h3{font-family:var(--serif);font-weight:500;font-size:19px;margin:0 0 14px}
+.bk-line{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;color:var(--mist)}
+.bk-line b{color:var(--ice,#f4f1ea);font-weight:500}
+.bk-line.total{border-top:1px solid rgba(255,255,255,.15);margin-top:8px;padding-top:12px;font-size:16px}
+.bk-line.due b{color:var(--champagne)}
+.bk-fine{font-size:12px;color:var(--mist);margin-top:12px;line-height:1.55}
+.bk-cardwrap{margin-top:6px;padding:14px 16px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);transition:opacity .2s}
+.bk-cardwrap.busy{opacity:.5;pointer-events:none}
+.bk-cardwrap p{margin:0;font-size:13.5px;line-height:1.55;color:var(--mist)}
+.bk-cardwrap p b{color:var(--ice,#f4f1ea)}
+.bk-cardstatus{font-size:12.5px;color:var(--champagne);margin-top:8px;min-height:16px}
+.bk-cardstatus.bad{color:#e08a7a}
+.bk-submit{width:100%;margin-top:16px;font-size:15px;padding:15px 20px}
+.bk-alt{display:block;text-align:center;margin-top:12px;font-size:13px;color:var(--mist);text-decoration:underline;cursor:pointer}
+.bk-spin{display:none;text-align:center;color:var(--champagne);font-size:14px;margin-top:12px}
+.bk-submit.dim{opacity:.35;pointer-events:none}
+input[type=checkbox]{width:auto;accent-color:var(--champagne)}
+.bk-pac{display:none;position:absolute;left:0;right:0;top:100%;z-index:60;margin-top:4px;
+  background:#171512;border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.bk-pac-it{padding:11px 14px;font-size:14px;color:var(--ice,#f4f1ea);cursor:pointer;
+  border-bottom:1px solid rgba(255,255,255,.06)}
+.bk-pac-it:last-child{border-bottom:none}
+.bk-pac-it.hi,.bk-pac-it:hover{background:rgba(255,255,255,.08);color:var(--champagne)}
+.bk-pac-brand{padding:6px 14px;font-size:10px;color:var(--mist);text-align:right}
+</style>
+<script src="https://static.zohocdn.com/zpay/zpay-js/v1/zpayments.js"></script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="es-wordmark" viewBox="0 0 5605 1152"><g transform="translate(67.0,734.0) scale(1,-1)"><path fill="currentColor" d="M256 -80Q189 -80 131.5 -63.0Q74 -46 38.5 -11.0Q3 24 3 77Q3 118 29 159Q121 305 343 376Q310 414 310 462Q310 501 331 529Q372 585 455 622Q502 642 550.5 653.0Q599 664 649 664Q711 664 743.5 644.0Q776 624 776 588Q776 563 762.5 542.5Q749 522 729.0 509.5Q709 497 688 497Q657 497 657 512Q657 521 670 521Q674 521 680.5 519.5Q687 518 690 518Q711 518 727.0 540.0Q743 562 743 584Q743 616 712.5 630.0Q682 644 644 644Q549 644 458 583Q362 520 362 441Q362 412 382 387Q417 398 447.5 402.5Q478 407 506 407Q602 407 602 370Q602 353 588.0 340.5Q574 328 552.5 321.5Q531 315 509 315Q486 315 458.0 321.0Q430 327 404.0 337.0Q378 347 360 360Q266 333 193.5 276.5Q121 220 86 150Q67 112 67 76Q67 32 92.0 4.0Q117 -24 158.5 -37.0Q200 -50 250 -50Q333 -50 415.0 -23.5Q497 3 555 55Q634 125 634 202Q634 263 575 263Q544 263 506.0 247.5Q468 232 434.5 206.0Q401 180 379.0 149.0Q357 118 357 86Q357 54 385 47Q395 43 395 37Q395 29 380 29Q327 29 327 88Q327 127 350.0 162.0Q373 197 409.5 224.0Q446 251 489.0 266.5Q532 282 572 282Q619 282 645.0 261.5Q671 241 671 195Q671 102 568 20Q503 -33 424.0 -56.5Q345 -80 256 -80ZM500 337Q554 337 554 368Q554 382 500 382Q476 382 450.5 379.0Q425 376 399 371Q442 337 500 337Z M767 -2Q738 -2 713.0 12.5Q688 27 688 61Q688 108 721.5 173.0Q755 238 798 308Q915 498 964 498Q974 498 984.5 490.5Q995 483 996 474L926 380Q885 325 852.0 278.5Q819 232 795 195Q783 176 768.0 152.0Q753 128 741.5 102.5Q730 77 730 51Q730 39 737.0 29.5Q744 20 762 20Q794 20 846.0 54.5Q898 89 949 150Q954 156 960.0 161.0Q966 166 970 166Q975 166 975 160Q975 157 968.5 148.5Q962 140 958 135L934 108Q914 86 886.5 60.0Q859 34 828.5 16.0Q798 -2 767 -2Z M1155 344Q1138 344 1125.5 355.0Q1113 366 1113 380Q1113 408 1151 408Q1165 408 1179.0 398.5Q1193 389 1193 375Q1193 363 1180.0 353.5Q1167 344 1155 344ZM970 -11Q948 -11 933.5 3.5Q919 18 919 55Q919 76 928.5 103.5Q938 131 952.5 159.0Q967 187 981 209Q1037 300 1073 301Q1082 301 1095.0 293.5Q1108 286 1108 277Q1108 277 1032 179Q957 82 957 41Q957 9 982 9Q998 9 1023.5 22.5Q1049 36 1077.0 57.0Q1105 78 1130.5 102.0Q1156 126 1172 146Q1182 159 1189.5 164.0Q1197 169 1199 169Q1203 169 1203 163Q1203 158 1191.5 143.0Q1180 128 1160 108Q1136 84 1107.0 56.0Q1078 28 1044.0 8.5Q1010 -11 970 -11Z M1391 -22Q1362 -22 1333.5 -16.0Q1305 -10 1282 3Q1275 7 1261.5 16.0Q1248 25 1227 41Q1211 30 1197.0 21.5Q1183 13 1170 13Q1147 13 1147 38Q1147 46 1152.5 59.5Q1158 73 1165 73Q1170 73 1170 66Q1170 61 1169 58Q1169 57 1168.5 55.5Q1168 54 1168 53Q1168 43 1178 43Q1191 43 1207 55L1169 84Q1167 86 1167 89Q1167 96 1177.0 105.5Q1187 115 1195 115Q1198 115 1241 81Q1281 126 1324 170Q1356 204 1380.5 228.0Q1405 252 1423 265Q1344 289 1306 289Q1282 289 1267.0 278.5Q1252 268 1252 252Q1252 239 1266 228Q1274 222 1274 218Q1274 212 1269 212Q1259 212 1242 232Q1226 252 1226 273Q1226 294 1241.5 305.0Q1257 316 1280.0 320.0Q1303 324 1325 324Q1357 324 1395.0 312.0Q1433 300 1470 288Q1484 296 1500 296Q1542 296 1542 271Q1542 261 1529.5 252.5Q1517 244 1499 244Q1480 244 1465 251Q1371 193 1261 65L1297 37Q1320 20 1347.5 14.5Q1375 9 1402 9Q1446 9 1477.0 25.0Q1508 41 1508 73Q1508 86 1504 95Q1502 101 1502 102Q1502 109 1512 109Q1517 109 1519 104Q1527 86 1527 70Q1527 30 1489.5 4.0Q1452 -22 1391 -22Z M1613 -5Q1589 -5 1565.0 12.0Q1541 29 1538 52Q1528 129 1635 235Q1741 341 1826 341Q1849 341 1862 330Q1869 323 1872.5 311.0Q1876 299 1878 299Q1882 299 1885.0 300.5Q1888 302 1892 302Q1904 302 1913.0 293.0Q1922 284 1923 277Q1924 275 1859 178Q1794 83 1800 49Q1805 26 1822 26Q1874 26 2012 198Q2015 202 2018 202Q2023 202 2023 195Q2023 187 2014 175Q1887 4 1819 4Q1810 4 1802 7Q1758 24 1758 73Q1758 90 1762 107L1700 47Q1672 19 1649.5 7.0Q1627 -5 1613 -5ZM1604 17Q1662 17 1762 144L1868 290Q1860 304 1842 304Q1781 304 1677 206Q1569 106 1580 41Q1585 17 1604 17Z M2006 -1Q1953 -1 1953 79Q1953 142 2069 309Q2188 480 2250 480Q2262 480 2273.0 472.5Q2284 465 2284 453Q2284 454 2211 375Q2169 329 2135.0 289.0Q2101 249 2075 214Q2002 114 2002 68Q2002 55 2009.5 41.5Q2017 28 2030 28Q2053 28 2079.0 46.0Q2105 64 2129.0 91.0Q2153 118 2170.0 146.5Q2187 175 2193 197Q2186 218 2186 249Q2186 324 2237 316Q2247 315 2250.5 306.0Q2254 297 2254 285Q2254 260 2246.5 235.0Q2239 210 2235 193Q2239 170 2253.5 146.5Q2268 123 2290 123Q2312 123 2341 155Q2347 162 2353 162Q2358 162 2359 155Q2359 149 2351 138Q2320 101 2286 101Q2237 101 2207 173Q2188 129 2155.0 89.0Q2122 49 2083.5 24.0Q2045 -1 2006 -1Z M2374 -13Q2342 -13 2316.0 7.5Q2290 28 2290 62Q2290 133 2377 224Q2466 316 2536 316Q2559 316 2573.5 303.5Q2588 291 2588 273Q2588 217 2499 163Q2420 115 2366 115Q2358 115 2352 117Q2337 90 2337 60Q2337 8 2386 8Q2436 8 2515 75Q2576 124 2619 179Q2628 191 2635 191Q2641 191 2641 185Q2641 179 2633 168Q2605 131 2573.0 100.0Q2541 69 2504 43Q2427 -13 2374 -13ZM2380 137Q2418 137 2479 175Q2499 189 2518.5 206.5Q2538 224 2550.5 242.0Q2563 260 2563 274Q2563 287 2542 287Q2512 287 2458 242Q2432 220 2408.0 194.0Q2384 168 2367 139Q2373 137 2380 137Z M2642 -6Q2610 -6 2591.5 9.5Q2573 25 2573 65Q2573 88 2587.0 123.5Q2601 159 2622.0 200.0Q2643 241 2664 281Q2651 278 2641 278Q2611 278 2611 301Q2611 312 2619.5 318.0Q2628 324 2635 325Q2635 325 2637.5 325.0Q2640 325 2644 326H2702Q2720 349 2739 375Q2766 409 2782 415H2785Q2792 415 2805 408Q2821 399 2821 390Q2821 377 2773 323Q2782 322 2799.0 322.0Q2816 322 2841 322Q2853 322 2875.5 322.0Q2898 322 2922.5 322.5Q2947 323 2965.0 323.5Q2983 324 2985 324Q2988 323 2988 321Q2988 312 2870 297Q2803 288 2767.5 283.0Q2732 278 2729 277Q2715 265 2695.0 236.0Q2675 207 2655.0 171.0Q2635 135 2621.5 102.5Q2608 70 2608 52Q2608 36 2620.0 25.5Q2632 15 2659 15Q2677 15 2702.0 23.0Q2727 31 2749.5 41.5Q2772 52 2782 58Q2808 74 2839.5 100.5Q2871 127 2902 161Q2916 175 2921 175Q2924 175 2924 171Q2924 163 2909 145Q2885 116 2855.5 89.5Q2826 63 2790 41Q2749 16 2711.5 5.0Q2674 -6 2642 -6Z M2850 -5Q2821 -5 2821 12Q2821 22 2833 44Q2879 126 2915.5 189.5Q2952 253 2980 297Q3099 488 3148 504Q3150 504 3151.0 504.5Q3152 505 3153 505Q3166 505 3170 484Q3167 463 3066 332Q3013 265 2983.5 221.5Q2954 178 2947 158Q2980 182 3018.0 209.0Q3056 236 3092.0 260.5Q3128 285 3157.0 300.5Q3186 316 3202 318Q3204 318 3207.0 318.5Q3210 319 3211 319Q3239 319 3239 293Q3239 286 3221.0 262.0Q3203 238 3166 188Q3100 100 3100 56Q3100 33 3117 33Q3135 34 3158.5 49.0Q3182 64 3206.0 86.0Q3230 108 3249.5 129.5Q3269 151 3279 163Q3288 172 3293 172Q3297 172 3297 168Q3297 160 3289 149Q3277 134 3253.5 110.0Q3230 86 3202.5 61.5Q3175 37 3150.5 20.5Q3126 4 3114 4Q3055 4 3055 73Q3055 112 3091 175Q3105 199 3120.0 223.0Q3135 247 3150 271Q3022 207 2918 82Q2905 64 2891.0 43.5Q2877 23 2866.0 9.0Q2855 -5 2850 -5Z M3730 -95Q3689 -95 3628 -46Q3585 -39 3554.5 -27.5Q3524 -16 3504 0Q3476 24 3455.0 64.0Q3434 104 3434 141Q3434 169 3447 191Q3477 244 3523 244Q3558 244 3564 185Q3571 130 3575.5 97.5Q3580 65 3583 55Q3598 6 3634 -28Q3676 -37 3725 -37Q3833 -37 3932 4Q3974 22 4014.0 51.0Q4054 80 4080.0 115.0Q4106 150 4106 183Q4106 230 4023 256L3847 296Q3793 308 3760.5 338.5Q3728 369 3728 408Q3728 468 3803 528Q3841 559 3892.0 580.5Q3943 602 3999.5 613.5Q4056 625 4108 625Q4182 625 4234.5 602.0Q4287 579 4300 535Q4303 525 4303 513Q4303 452 4242 428Q4205 413 4179 413Q4163 413 4154 419Q4152 421 4152 424Q4152 431 4180 432Q4197 433 4208.0 435.0Q4219 437 4224 439Q4262 459 4262 498Q4262 518 4251 540Q4220 597 4096 597Q4051 597 4003.0 587.5Q3955 578 3912.0 559.5Q3869 541 3839 513Q3787 465 3787 427Q3787 398 3815.5 375.5Q3844 353 3902 342L4020 320Q4088 307 4130.0 281.5Q4172 256 4172 204Q4172 158 4149.0 118.0Q4126 78 4087.5 46.5Q4049 15 4000 -6Q3889 -55 3738 -55Q3719 -55 3700.0 -54.0Q3681 -53 3663 -51Q3677 -59 3698.5 -67.0Q3720 -75 3748 -82Q3751 -83 3751 -86Q3751 -95 3730 -95ZM3598 -18Q3571 12 3556 44Q3534 94 3523 167Q3515 220 3506 220Q3498 220 3484.5 208.0Q3471 196 3471 157Q3471 81 3525 25Q3552 -3 3598 -18Z M4275 -13Q4243 -13 4217.0 7.5Q4191 28 4191 62Q4191 133 4278 224Q4367 316 4437 316Q4461 316 4475.0 303.5Q4489 291 4489 273Q4489 248 4477 227Q4463 201 4437 201Q4411 201 4411 217Q4411 228 4424 250Q4438 273 4438 274Q4438 276 4435 276Q4407 273 4357 235Q4335 218 4318.5 203.0Q4302 188 4292 174L4253 117Q4247 108 4240.5 86.0Q4234 64 4234 53Q4234 33 4247.5 20.0Q4261 7 4282 7Q4332 7 4414 72Q4480 124 4520 177Q4525 183 4532 183Q4539 183 4539 179Q4539 176 4534 169Q4479 96 4405 43Q4326 -13 4275 -13Z M4525 -2Q4500 -2 4486.0 21.5Q4472 45 4472 67Q4472 127 4559 235Q4647 344 4701 344Q4752 344 4752 290Q4752 282 4750.5 273.0Q4749 264 4747 254Q4749 251 4757 251Q4784 251 4821 270Q4820 253 4742 221Q4753 188 4676 95Q4597 -2 4541 -2ZM4543 28Q4586 28 4653 107Q4718 184 4718 218Q4702 227 4678 264Q4644 264 4580 182Q4517 102 4519 59Q4520 28 4543 28Z M4825 -6Q4793 -6 4774.5 9.5Q4756 25 4756 65Q4756 88 4770.0 123.5Q4784 159 4805.0 200.0Q4826 241 4847 281Q4834 278 4824 278Q4794 278 4794 301Q4794 312 4802.5 318.0Q4811 324 4818 325Q4818 325 4820.5 325.0Q4823 325 4827 326H4885Q4903 349 4922 375Q4949 409 4965 415H4968Q4975 415 4988 408Q5004 399 5004 390Q5004 377 4956 323Q4965 322 4982.0 322.0Q4999 322 5024 322Q5036 322 5058.5 322.0Q5081 322 5105.5 322.5Q5130 323 5148.0 323.5Q5166 324 5168 324Q5171 323 5171 321Q5171 312 5053 297Q4986 288 4950.5 283.0Q4915 278 4912 277Q4898 265 4878.0 236.0Q4858 207 4838.0 171.0Q4818 135 4804.5 102.5Q4791 70 4791 52Q4791 36 4803.0 25.5Q4815 15 4842 15Q4860 15 4885.0 23.0Q4910 31 4932.5 41.5Q4955 52 4965 58Q4991 74 5022.5 100.5Q5054 127 5085 161Q5099 175 5104 175Q5107 175 5107 171Q5107 163 5092 145Q5068 116 5038.5 89.5Q5009 63 4973 41Q4932 16 4894.5 5.0Q4857 -6 4825 -6Z M5122 -6Q5090 -6 5071.5 9.5Q5053 25 5053 65Q5053 88 5067.0 123.5Q5081 159 5102.0 200.0Q5123 241 5144 281Q5131 278 5121 278Q5091 278 5091 301Q5091 312 5099.5 318.0Q5108 324 5115 325Q5115 325 5117.5 325.0Q5120 325 5124 326H5182Q5200 349 5219 375Q5246 409 5262 415H5265Q5272 415 5285 408Q5301 399 5301 390Q5301 377 5253 323Q5262 322 5279.0 322.0Q5296 322 5321 322Q5333 322 5355.5 322.0Q5378 322 5402.5 322.5Q5427 323 5445.0 323.5Q5463 324 5465 324Q5468 323 5468 321Q5468 312 5350 297Q5283 288 5247.5 283.0Q5212 278 5209 277Q5195 265 5175.0 236.0Q5155 207 5135.0 171.0Q5115 135 5101.5 102.5Q5088 70 5088 52Q5088 36 5100.0 25.5Q5112 15 5139 15Q5157 15 5182.0 23.0Q5207 31 5229.5 41.5Q5252 52 5262 58Q5288 74 5319.5 100.5Q5351 127 5382 161Q5396 175 5401 175Q5404 175 5404 171Q5404 163 5389 145Q5365 116 5335.5 89.5Q5306 63 5270 41Q5229 16 5191.5 5.0Q5154 -6 5122 -6Z M112,-215 Q2736,-300 5359,-205 Q2736,-348 112,-215 Z"/></g></symbol>
+    <symbol id="es-monogram" viewBox="0 0 1760 1760"><g transform="translate(155.4,1164.5) scale(1,-1)"><path fill="currentColor" d="M256 -80Q189 -80 131.5 -63.0Q74 -46 38.5 -11.0Q3 24 3 77Q3 118 29 159Q121 305 343 376Q310 414 310 462Q310 501 331 529Q372 585 455 622Q502 642 550.5 653.0Q599 664 649 664Q711 664 743.5 644.0Q776 624 776 588Q776 563 762.5 542.5Q749 522 729.0 509.5Q709 497 688 497Q657 497 657 512Q657 521 670 521Q674 521 680.5 519.5Q687 518 690 518Q711 518 727.0 540.0Q743 562 743 584Q743 616 712.5 630.0Q682 644 644 644Q549 644 458 583Q362 520 362 441Q362 412 382 387Q417 398 447.5 402.5Q478 407 506 407Q602 407 602 370Q602 353 588.0 340.5Q574 328 552.5 321.5Q531 315 509 315Q486 315 458.0 321.0Q430 327 404.0 337.0Q378 347 360 360Q266 333 193.5 276.5Q121 220 86 150Q67 112 67 76Q67 32 92.0 4.0Q117 -24 158.5 -37.0Q200 -50 250 -50Q333 -50 415.0 -23.5Q497 3 555 55Q634 125 634 202Q634 263 575 263Q544 263 506.0 247.5Q468 232 434.5 206.0Q401 180 379.0 149.0Q357 118 357 86Q357 54 385 47Q395 43 395 37Q395 29 380 29Q327 29 327 88Q327 127 350.0 162.0Q373 197 409.5 224.0Q446 251 489.0 266.5Q532 282 572 282Q619 282 645.0 261.5Q671 241 671 195Q671 102 568 20Q503 -33 424.0 -56.5Q345 -80 256 -80ZM500 337Q554 337 554 368Q554 382 500 382Q476 382 450.5 379.0Q425 376 399 371Q442 337 500 337Z M873.26 -95Q832.26 -95 771.26 -46Q728.26 -39 697.76 -27.5Q667.26 -16 647.26 0Q619.26 24 598.26 64.0Q577.26 104 577.26 141Q577.26 169 590.26 191Q620.26 244 666.26 244Q701.26 244 707.26 185Q714.26 130 718.76 97.5Q723.26 65 726.26 55Q741.26 6 777.26 -28Q819.26 -37 868.26 -37Q976.26 -37 1075.26 4Q1117.26 22 1157.26 51.0Q1197.26 80 1223.26 115.0Q1249.26 150 1249.26 183Q1249.26 230 1166.26 256L990.26 296Q936.26 308 903.76 338.5Q871.26 369 871.26 408Q871.26 468 946.26 528Q984.26 559 1035.26 580.5Q1086.26 602 1142.76 613.5Q1199.26 625 1251.26 625Q1325.26 625 1377.76 602.0Q1430.26 579 1443.26 535Q1446.26 525 1446.26 513Q1446.26 452 1385.26 428Q1348.26 413 1322.26 413Q1306.26 413 1297.26 419Q1295.26 421 1295.26 424Q1295.26 431 1323.26 432Q1340.26 433 1351.26 435.0Q1362.26 437 1367.26 439Q1405.26 459 1405.26 498Q1405.26 518 1394.26 540Q1363.26 597 1239.26 597Q1194.26 597 1146.26 587.5Q1098.26 578 1055.26 559.5Q1012.26 541 982.26 513Q930.26 465 930.26 427Q930.26 398 958.76 375.5Q987.26 353 1045.26 342L1163.26 320Q1231.26 307 1273.26 281.5Q1315.26 256 1315.26 204Q1315.26 158 1292.26 118.0Q1269.26 78 1230.76 46.5Q1192.26 15 1143.26 -6Q1032.26 -55 881.26 -55Q862.26 -55 843.26 -54.0Q824.26 -53 806.26 -51Q820.26 -59 841.76 -67.0Q863.26 -75 891.26 -82Q894.26 -83 894.26 -86Q894.26 -95 873.26 -95ZM741.26 -18Q714.26 12 699.26 44Q677.26 94 666.26 167Q658.26 220 649.26 220Q641.26 220 627.76 208.0Q614.26 196 614.26 157Q614.26 81 668.26 25Q695.26 -3 741.26 -18Z"/></g></symbol>
+  </defs>
+</svg>
+
+<nav>
+  <a class="nav-logo" href="/" aria-label="Elizabeth Scott home" style="color:var(--ice)">
+    <svg viewBox="0 0 5605 1152"><use href="#es-wordmark"/></svg>
+  </a>
+  <ul class="nav-links" id="navLinks">
+    <li><a data-nav="about" href="/about">About</a></li>
+    <li><a data-nav="packages" href="/packages">Packages</a></li>
+    <li><a data-nav="portfolio" href="/portfolio">Portfolio</a></li><li><a data-nav="films" href="/films">Films</a></li><li><a data-nav="locations" href="/locations/">Locations</a></li><li><a data-nav="blog" href="/blog/">Journal</a></li>
+    <li><a href="/#reviews">Reviews</a></li>
+    <li><a href="/book/">Contact</a></li>
+    <li class="nav-mobile-cta"><a class="btn btn-solid" href="/book/">Reserve Your Date</a></li>
+  </ul>
+  <div class="nav-cta-wrap"><a class="btn btn-solid nav-cta" href="/book/">Reserve</a></div>
+  <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<header class="hero" style="min-height:34vh">
+  <div class="hero-bg"><img data-img="hero4" alt=""></div>
+  <div class="wrap" style="text-align:center;padding-top:110px">
+    <span class="hero-badge">The 2026&ndash;2027 Collection</span>
+    <h1 style="font-family:var(--serif);font-weight:500;font-size:clamp(30px,4.4vw,48px);margin-top:14px">Reserve Your <em>Date</em></h1>
+    <p style="color:var(--mist);max-width:520px;margin:12px auto 0">Choose your collection, sign your agreement, and your date is held &mdash; usually in under five minutes.</p>
+  </div>
+</header>
+
+<section class="section"><div class="wrap bk-grid">
+<div><!-- left column -->
+
+  <div class="glass bk-card">
+    <h2>1 &middot; Your Collection</h2>
+    <p class="bk-sub">Listed prices are pay-in-full &mdash; that's $500 off every collection.</p>
+    <div class="bk-field"><label for="pkg">Collection</label>
+      <select id="pkg"></select></div>
+    <ul class="bk-bullets" id="pkgBullets"></ul>
+    <div class="bk-row" style="margin-top:16px">
+      <div class="bk-field"><label for="ss">Second Shooter (+$500)</label>
+        <select id="ss"><option value="no">No, thank you</option><option value="yes">Yes &mdash; add a second shooter</option></select></div>
+      <div class="bk-field"><label for="xh">Additional Hours ($175/hr)</label>
+        <select id="xh"><option value="0">None</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+    </div>
+  </div>
+
+  <div class="glass bk-card">
+    <h2>2 &middot; Your Day</h2>
+    <p class="bk-sub">Where and when we'll be capturing your story.</p>
+    <div class="bk-row">
+      <div class="bk-field"><label for="event_date">Wedding Date</label>
+        <input type="date" id="event_date" required>
+        <div class="bk-err" id="err_event_date"></div>
+        <p class="bk-note" id="rushNote">This date is within 14 days &mdash; short-notice dates are paid in full and include a $149 accommodation fee.</p></div>
+      <div class="bk-field"><label for="guest_count">Estimated Guests <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="number" id="guest_count" min="1" max="2000" placeholder="120"></div>
+    </div>
+    <div class="bk-field"><label for="ceremony_venue">Ceremony Venue</label>
+      <input id="ceremony_venue" placeholder="Venue name, city, state" required><div class="bk-err" id="err_ceremony_venue"></div></div>
+    <div class="bk-field"><label for="reception_venue">Reception Venue <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input id="reception_venue" placeholder="Same as ceremony, or venue name"></div>
+    <div class="bk-row">
+      <div class="bk-field"><label for="start_time">Coverage Start <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="time" id="start_time"></div>
+      <div class="bk-field"><label for="end_time">Coverage End <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="time" id="end_time"></div>
+    </div>
+  </div>
+
+  <div class="glass bk-card">
+    <h2>3 &middot; Your Details</h2>
+    <p class="bk-sub">Exactly as they should appear on your agreement.</p>
+    <div class="bk-row">
+      <div class="bk-field"><label for="p1">Partner 1 Full Name</label><input id="p1" required autocomplete="name"><div class="bk-err" id="err_p1"></div></div>
+      <div class="bk-field"><label for="p2">Partner 2 Full Name <span style="text-transform:none;letter-spacing:0">(optional)</span></label><input id="p2"></div>
+    </div>
+    <div class="bk-err" id="err_p2"></div>
+    <div class="bk-row">
+      <div class="bk-field"><label for="email">Email</label><input type="email" id="email" required autocomplete="email"><div class="bk-err" id="err_email"></div></div>
+      <div class="bk-field"><label for="phone">Phone</label><input type="tel" id="phone" required autocomplete="tel"><div class="bk-err" id="err_phone"></div></div>
+    </div>
+    <div class="bk-field"><label for="mailing_address">Mailing Address</label>
+      <input id="mailing_address" required autocomplete="street-address" placeholder="Street address"><div class="bk-err" id="err_mailing_address"></div></div>
+    <div class="bk-row">
+      <div class="bk-field"><label for="city_state_zip">City / State / ZIP</label>
+        <input id="city_state_zip" required placeholder="Fort Worth, TX 76102"><div class="bk-err" id="err_city_state_zip"></div></div>
+      <div class="bk-field"><label for="governing_state">State of Residence</label>
+        <select id="governing_state" required><option value="">Select&hellip;</option></select><div class="bk-err" id="err_governing_state"></div></div>
+    </div>
+  </div>
+
+  <div class="glass bk-card">
+    <h2>4 &middot; Payment</h2>
+    <p class="bk-sub">Nothing is charged until your agreement is signed.</p>
+    <div class="bk-choice" id="planChoice">
+      <div class="chip on" data-plan="pif"><b>Pay in Full</b><small>Listed price &mdash; $500 off</small></div>
+      <div class="chip" data-plan="standard" id="chipStandard"><b>Payment Plan</b><small>50% now &middot; balance 14 days before</small></div>
+    </div>
+    <div class="bk-field" style="margin-top:14px"><label for="discount_code">Inquiry Code <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <div style="display:flex;gap:10px"><input id="discount_code" placeholder="ESW-XXXX-000" style="flex:1">
+      <a class="btn" id="codeBtn" style="white-space:nowrap">Apply</a></div>
+      <div class="bk-err" id="err_discount_code"></div>
+      <p class="bk-note" id="codeOk"></p></div>
+    <div class="bk-field" style="margin-top:6px"><label>Card on File</label>
+      <div class="bk-cardwrap" id="cardwrap">
+        <p>Your card is the last step: once the form is complete, tap <b>Reserve This Date</b> and a secure card window from our payment processor opens on this page. Your card is saved for the retainer and your balance &mdash; nothing is charged until you sign.</p>
+        <div class="bk-cardstatus" id="cardstatus"></div>
+      </div></div>
+    <div class="bk-err" id="err_card"></div>
+    <p class="bk-fine">Your card details are entered directly into our payment processor&rsquo;s secure window and never touch our servers. Nothing is charged until you sign. Charges appear as <b>Elizabeth Scott Wed</b>.</p>
+    <div class="bk-field" style="margin-top:12px">
+      <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--mist)">
+        <input type="checkbox" id="agree_terms" style="margin-top:2px">
+        <span>I agree to the <a href="/terms" target="_blank" style="color:var(--champagne)">Terms of Service</a> and understand my date is reserved when my service agreement is signed and my retainer is paid.</span>
+      </label>
+      <div class="bk-err" id="err_agree_terms"></div></div>
+  </div>
+
+</div><!-- /left -->
+
+<aside class="glass bk-sum"><!-- summary rail -->
+  <h3>Your Reservation</h3>
+  <div id="sumLines"></div>
+  <a class="btn btn-solid bk-submit dim" id="submitBtn">Reserve This Date</a>
+  <p class="bk-fine" id="gateMsg" style="text-align:center;margin-top:10px" aria-live="polite"></p>
+  <div class="bk-spin" id="spin">Preparing your agreement&hellip;</div>
+  <div class="bk-err" id="err_top" style="text-align:center"></div>
+  <p class="bk-fine">You'll sign electronically in the next step. Standard plan: 50% due at signing, balance auto-charged 14 days before your wedding. Pay in full: listed price, nothing further due.</p>
+</aside>
+
+</div></section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <svg viewBox="0 0 5605 1152" style="color:var(--ice)"><use href="#es-wordmark"/></svg>
+      <p>National wedding photography &amp; videography.<br>Timeless imagery, cinematic films, one signature standard — coast to coast.</p>
+      <ul style="display:flex;gap:18px;margin-top:18px">
+        <li><a href="#" target="_blank" rel="noopener" data-social="instagram">Instagram</a></li>
+        <li><a href="#" target="_blank" rel="noopener" data-social="facebook">Facebook</a></li>
+        <li><a href="#" target="_blank" rel="noopener" data-social="linkedin">LinkedIn</a></li>
+        <li><a href="#" target="_blank" rel="noopener" data-social="youtube">YouTube</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="foot-h">Explore</div>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="/about">About</a></li>
+        <li><a href="/portfolio">Portfolio</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="/book/">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="foot-h">Services</div>
+      <ul>
+        <li><a href="/packages">Photography</a></li>
+        <li><a href="/packages">Videography</a></li>
+        <li><a href="/packages">Photo + Video</a></li>
+        <li><a href="#offers">Special Offers</a></li>
+        <li><a href="/book/">Check Availability</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="foot-h">Legal &amp; Support</div>
+      <ul>
+        <li><a href="/terms">Terms of Service</a></li>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a data-email href="/book/">Email us</a></li>
+        <li><a data-tel href="/book/">Call or text</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="copyright">© 2026 Elizabeth Scott. All rights reserved.</div>
+<div class="wrap" style="margin-top:26px;text-align:center;font-size:13px;color:var(--mist)"><a href="/locations/" style="color:var(--champagne)">Where we shoot &rarr;</a> &nbsp;&middot;&nbsp; <a href="/blog/" style="color:var(--champagne)">The Journal &rarr;</a></div>
+<div class="zola-vendor-badge" style="display:flex;justify-content:center;align-items:center;gap:22px;flex-wrap:wrap;padding:26px 0 4px"><a target="_blank" rel="noopener" href="https://www.zola.com/wedding-vendors/wedding-videographers/elizabeth-scott-weddings?utm_source=vendor&utm_medium=various&utm_content=badge"><img height="200" width="200" alt="Featured on Zola" src="https://d1tntvpcrzvon2.cloudfront.net/static-assets/images/badges/featured_on_zola_v3.png" style="width:110px;height:110px;opacity:.85" loading="lazy" /></a><a target="_blank" rel="noopener" href="https://meetlazo.com/dallas-fort-worth/wedding-photographers/elizabeth-scott-weddings/" title="Lazo Verified wedding photographer &amp; videographer"><img height="240" width="240" alt="Lazo Verified" src="/assets/img/lazo-verified.png" style="width:110px;height:110px;border-radius:14px;opacity:.9" loading="lazy" /></a></div>
+<script>
+(function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) { return; }
+  js = d.createElement(s);
+  js.id = id;
+  js.async = true;
+  js.src = 'https://d1tntvpcrzvon2.cloudfront.net/static-assets/js/marketplace/zolaVendorBadge.js';
+  fjs.parentNode.insertBefore(js, fjs);
+})(document, 'script', 'zola-mvjs');
+</script>
+</footer>
+
+<script src="/assets/js/site.js" defer></script>
+<script src="/assets/js/esw-track.js" defer></script>
+<script src="/assets/js/es-pixel.js" defer></script>
+<script>
+/* ============ JC-ES-BOOKPAGE-0818-015 — booking engine (Atavia-parity tokenize) (+Places, card-required, gated submit) ============ */
+const FN = "https://us-central1-elizabeth-scott-738e5.cloudfunctions.net";
+/* Zoho Payments — same Danbren Media account as Atavia. The API key is the
+   publishable one: it can open the card widget but cannot charge anything. */
+const ZOHO_ACCOUNT_ID = "937366965";
+const ZOHO_API_KEY = "1003.83e6499fc9de1c8789e32c8b2b691765.a643597f26c52ee5feda0e5343b4e570";
+const eswSid = function(){ try{ return window.atvSid || sessionStorage.getItem("atv_sid") || ""; }catch(e){ return ""; } };
+
+const PKGS = [
+ {id:"vignette",n:"The Vignette",st:"video",t:1700,h:4,b:["4 Hours of Coverage","One Videographer","HD Resolution","Professional Audio","Highlight Film","Raw Footage","Digital Delivery"]},
+ {id:"story",n:"The Story",st:"video",t:1900,h:6,pop:1,b:["6 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Raw Footage","Digital Delivery"]},
+ {id:"feature",n:"The Feature",st:"video",t:2000,h:8,b:["8 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Drone Footage","Raw Footage","Digital Delivery"]},
+ {id:"cinema",n:"The Cinema",st:"video",t:2500,h:10,b:["10 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Drone Footage","Raw Footage","Digital Delivery"]},
+ {id:"portrait",n:"The Portrait",st:"photo",t:2000,h:4,b:["4 Hours of Coverage","One Photographer","All Images Edited","Online Gallery","Full Ownership Rights","Engagement Session"]},
+ {id:"signature",n:"The Signature",st:"photo",t:2200,h:6,pop:1,b:["6 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session"]},
+ {id:"gallery",n:"The Gallery",st:"photo",t:2500,h:8,b:["8 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Sneak-Peek Gallery","Online Gallery","Full Ownership Rights","Engagement Session"]},
+ {id:"archive",n:"The Archive",st:"photo",t:3100,h:10,b:["10 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Sneak-Peek Gallery","Online Gallery","Full Ownership Rights","Engagement Session"]},
+ {id:"ensemble",n:"The Ensemble",st:"combined",t:3500,h:6,pop:1,b:["6 Hours of Coverage","One Photographer","One Videographer","All Images Edited","4K Video + Pro Audio","Highlight Film","Online Gallery","Full Ownership Rights","Engagement Session","Raw Footage"]},
+ {id:"keepsake",n:"The Keepsake",st:"combined",t:4000,h:8,b:["8 Hours of Coverage","One Photographer","One Videographer","All Images Edited","4K Video + Pro Audio","Highlight Film + Extended Edit","Drone Footage","Sneak-Peek + Online Gallery","Full Ownership Rights","Engagement Session","Raw Footage"]},
+ {id:"opus",n:"The Opus",st:"combined",t:4500,h:10,b:["10 Hours of Coverage","One Photographer","One Videographer","All Images Edited","4K Video + Pro Audio","Highlight Film + Extended Edit","Drone Footage","Sneak-Peek + Online Gallery","Full Ownership Rights","Engagement Session","Raw Footage"]}
+];
+const R = {pif:500, ss:500, xh:175, rushDays:14, rushFee:149};
+const FAM = {video:"Videography", photo:"Photography", combined:"Photography & Film"};
+const $ = id => document.getElementById(id);
+const money = n => "$" + n.toLocaleString("en-US");
+
+/* ---- populate selects ---- */
+(function init(){
+  const sel = $("pkg");
+  ["video","photo","combined"].forEach(st=>{
+    const og = document.createElement("optgroup"); og.label = FAM[st];
+    PKGS.filter(p=>p.st===st).forEach(p=>{
+      const o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = `${p.n} — ${p.h} hr · ${money(p.t-R.pif)} (plan ${money(p.t)})` + (p.pop?" · Most Popular":"");
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+  const q = new URLSearchParams(location.search).get("package");
+  if(q){
+    const k = q.toLowerCase().replace(/^the\s+/,"").trim();
+    const hit = PKGS.find(p=>p.id===k || p.n.toLowerCase().replace(/^the\s+/,"")===k);
+    if(hit) sel.value = hit.id;
+  } else sel.value = "ensemble";
+  const states="AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
+  states.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;$("governing_state").appendChild(o);});
+  const d = $("event_date"); const t = new Date(Date.now()+864e5); d.min = t.toISOString().slice(0,10);
+})();
+
+/* ---- state + summary ---- */
+let plan = "pif", disc = {code:"", amount:0};
+function daysOut(){
+  const v = $("event_date").value; if(!v) return null;
+  const ev = new Date(v+"T00:00:00");
+  return Math.floor((ev - new Date(new Date().toDateString()))/864e5);
+}
+function isRush(){ const d = daysOut(); return d!==null && d>0 && d<=R.rushDays; }
+function recalc(){
+  const p = PKGS.find(x=>x.id===$("pkg").value);
+  $("pkgBullets").innerHTML = p.b.map(x=>`<li>${x}</li>`).join("");
+  const rush = isRush();
+  $("rushNote").style.display = rush ? "block":"none";
+  const chip = $("chipStandard");
+  if(rush){ plan="pif"; chip.classList.add("off"); chip.classList.remove("on");
+    document.querySelector('[data-plan="pif"]').classList.add("on");
+  } else chip.classList.remove("off");
+  const ss = $("ss").value==="yes", xh = parseInt($("xh").value)||0;
+  const addons = (ss?R.ss:0) + xh*R.xh + (rush?R.rushFee:0);
+  const gross = p.t + addons;
+  if(disc.amount >= gross) disc = {code:"",amount:0};
+  const total = gross - disc.amount;
+  const lines = [[`${p.n} — ${FAM[p.st]}`, money(p.t)]];
+  if(ss) lines.push(["Second Shooter", money(R.ss)]);
+  if(xh) lines.push([`Additional Coverage — ${xh} hr`, money(xh*R.xh)]);
+  if(rush) lines.push(["Short-Notice Fee", money(R.rushFee)]);
+  if(disc.amount) lines.push([`Inquiry Code ${disc.code}`, "\u2212"+money(disc.amount)]);
+  let html = lines.map(l=>`<div class="bk-line"><span>${l[0]}</span><b>${l[1]}</b></div>`).join("");
+  if(plan==="pif"){
+    const due = total - R.pif;
+    html += `<div class="bk-line"><span>Pay-in-Full Discount</span><b>\u2212${money(R.pif)}</b></div>`;
+    html += `<div class="bk-line total due"><span>Due at signing</span><b>${money(due)}</b></div>`;
+  } else {
+    const due = Math.ceil(total/2), bal = total-due;   /* mirrors server (total+1)//2 */
+    html += `<div class="bk-line total"><span>Total Investment</span><b>${money(total)}</b></div>`;
+    html += `<div class="bk-line due"><span>50% due at signing</span><b>${money(due)}</b></div>`;
+    let when = "14 days before your wedding";
+    const v = $("event_date").value;
+    if(v){ const bd = new Date(v+"T00:00:00"); bd.setDate(bd.getDate()-14);
+      when = bd.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}); }
+    html += `<div class="bk-line"><span>Balance — auto-charged ${when}</span><b>${money(bal)}</b></div>`;
+  }
+  $("sumLines").innerHTML = html;
+  window.__eswDue = (plan==="pif") ? (total - R.pif) : Math.ceil(total/2);   /* for the Meta Pixel Lead/Purchase value */
+  window.__eswPkg = p.n;
+}
+document.querySelectorAll("#planChoice .chip").forEach(ch=>ch.addEventListener("click",()=>{
+  if(ch.classList.contains("off")) return;
+  plan = ch.dataset.plan;
+  document.querySelectorAll("#planChoice .chip").forEach(c=>c.classList.toggle("on", c===ch));
+  recalc();
+}));
+["pkg","ss","xh","event_date"].forEach(id=>$(id).addEventListener("change",recalc));
+recalc();
+
+/* ---- discount code ---- */
+$("codeBtn").addEventListener("click", async ()=>{
+  const code = $("discount_code").value.trim().toUpperCase();
+  $("err_discount_code").style.display="none"; $("codeOk").style.display="none";
+  if(!code) return;
+  try{
+    const r = await fetch(FN+"/check_code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code})});
+    const j = await r.json();
+    if(j.valid){ disc={code, amount:j.amount};
+      $("codeOk").textContent = `Code applied — ${money(j.amount)} off.`; $("codeOk").style.display="block";
+    } else { disc={code:"",amount:0};
+      $("err_discount_code").textContent = j.reason||"That code isn't valid."; $("err_discount_code").style.display="block"; }
+  }catch(e){ $("err_discount_code").textContent="Could not verify the code — try again."; $("err_discount_code").style.display="block"; }
+  recalc();
+});
+
+/* ---- Zoho Payments widget: the PAN and CVV live in the processor's modal ---- */
+function setCardStatus(msg,bad){ const el=$("cardstatus"); if(!el) return; el.textContent=msg||""; el.className="bk-cardstatus"+(bad?" bad":""); }
+let _zp=null, zohoReady=false;
+function zohoInstance(){ if(!_zp) _zp=new window.ZPayments({account_id:ZOHO_ACCOUNT_ID, domain:"US", otherOptions:{api_key:ZOHO_API_KEY}}); return _zp; }
+function zohoReadyCheck(){
+  if(typeof window.ZPayments==="undefined"){ zohoReady=false; setCardStatus("The secure card window didn\u2019t load. Please refresh, or email hello@elizabethscottweddings.com and we\u2019ll reserve your date personally.", true); try{gate();}catch(e){} return false; }
+  zohoReady=true; try{gate();}catch(e){} return true; }
+function cardTrouble(msg){ $("err_card").textContent = msg; $("err_card").style.display="block"; setCardStatus(msg, true); }
+/* Step 0: server creates the Zoho customer + save-card session; step 1: the modal tokenizes the card.
+   Resolves {customer_id,payment_method_id,session_id}, or null if the couple closed the window. */
+async function captureCard(names,email,phone,addr){
+  const r=await fetch(FN+"/zoho_session",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({client_names:names,email:email,phone:phone,package_id:$("pkg").value,payment_option:plan,event_date:$("event_date").value,
+      attr_venue:(new URLSearchParams(location.search).get("venue")||""),sid:eswSid()})});
+  if(!r.ok) throw new Error("Payment setup is unavailable right now.");
+  const sess=await r.json();
+  const inst=zohoInstance();
+  try{
+    const data=await inst.requestPaymentMethod({payment_method:"card",transaction_type:"add",
+      customer_id:String(sess.customer_id),payment_method_session_id:String(sess.payment_method_session_id),
+      address:Object.assign({name:names.split("&")[0].trim(),email:email},addr||{})});
+    if(!data||!data.payment_method_id) throw new Error((data&&data.message)||"We couldn't save that card.");
+    return {customer_id:String(sess.customer_id),payment_method_id:String(data.payment_method_id),session_id:String(sess.payment_method_session_id)};
+  }catch(err){
+    if(err&&err.code==="widget_closed") return null;
+    throw new Error((err&&err.message)||"We couldn't save that card.");
+  }finally{ try{ await inst.close(); }catch(e){} }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",zohoReadyCheck); else zohoReadyCheck();
+
+/* ---- attribution ---- */
+try{ if(!sessionStorage.getItem("es_landing")) sessionStorage.setItem("es_landing", location.href);
+     if(!sessionStorage.getItem("es_ref") && document.referrer) sessionStorage.setItem("es_ref", document.referrer);}catch(e){}
+
+/* ---- validation + submit ---- */
+const LABEL = {p1:"Partner 1 name", event_date:"Wedding date", ceremony_venue:"Ceremony venue", email:"Email", phone:"Phone",
+  mailing_address:"Mailing address", city_state_zip:"City / State / ZIP", governing_state:"State of residence", agree_terms:"Terms of Service"};
+const REQ = ["p1","event_date","ceremony_venue","email","phone","mailing_address","city_state_zip","governing_state"];
+/* One place decides whether a field is acceptable and what to say if it is not. */
+function fieldProblem(id){
+  const el=$(id); if(!el) return "";
+  const v=(el.value||"").trim();
+  if(id==="agree_terms") return el.checked ? "" : "Please accept the Terms of Service to continue.";
+  if(!v) return "Please enter your "+LABEL[id].toLowerCase()+".";
+  if(id==="email" && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return "That email doesn\u2019t look right \u2014 check for a typo.";
+  if(id==="phone" && v.replace(/\D/g,"").length<10) return "Please enter a full phone number with area code.";
+  if(id==="event_date"){ const d=daysOut(); if(d===null||d<=0) return "Your wedding date must be in the future."; }
+  return "";
+}
+function fail(id,msg){ const el=$("err_"+id)||$("err_top"); el.textContent=msg; el.style.display="block";
+  const f=$(id); if(f){ f.classList.add("invalid"); f.scrollIntoView({behavior:"smooth",block:"center"}); try{ f.focus({preventScroll:true}); }catch(e){} } }
+function clearErrs(){ document.querySelectorAll(".bk-err").forEach(e=>e.style.display="none"); document.querySelectorAll(".invalid").forEach(e=>e.classList.remove("invalid")); }
+/* Inline feedback as soon as a field is left, so problems surface where they are, not at the button. */
+const TOUCHED = new Set();
+function checkField(id, force){
+  const el=$(id); if(!el) return;
+  if(!force && !TOUCHED.has(id)) return;
+  const msg=fieldProblem(id), err=$("err_"+id);
+  el.classList.toggle("invalid", !!msg);
+  if(err){ err.textContent=msg; err.style.display=msg?"block":"none"; }
+}
+REQ.concat(["agree_terms"]).forEach(id=>{ const el=$(id); if(!el) return;
+  el.addEventListener("blur", ()=>{ TOUCHED.add(id); checkField(id,true); });
+  el.addEventListener("input", ()=>checkField(id)); el.addEventListener("change", ()=>{ TOUCHED.add(id); checkField(id,true); }); });
+
+async function submitBooking(){
+  clearErrs();
+  const p1=$("p1").value.trim(), p2=$("p2").value.trim();
+  for(const f of REQ.concat(["agree_terms"])){ const msg=fieldProblem(f); if(msg){ TOUCHED.add(f); return fail(f,msg); } }
+  if(p2 && p1.toLowerCase()===p2.toLowerCase()) return fail("p2","Partner names must be different — leave Partner 2 blank if booking solo.");
+  if(isRush()) plan="pif";
+
+  const payload = {
+    package_id: $("pkg").value,
+    payment_option: plan,
+    client_names: p2 ? `${p1} & ${p2}` : p1,
+    partner1_name: p1, partner2_name: p2,
+    email: $("email").value.trim(), phone: $("phone").value.trim(),
+    mailing_address: $("mailing_address").value.trim(),
+    city_state_zip: $("city_state_zip").value.trim(),
+    governing_state: $("governing_state").value,
+    event_date: $("event_date").value,
+    ceremony_venue: $("ceremony_venue").value.trim(),
+    reception_venue: $("reception_venue").value.trim(),
+    guest_count: $("guest_count").value.trim(),
+    start_time: $("start_time").value, end_time: $("end_time").value,
+    agree_terms: true,
+    second_shooter: $("ss").value==="yes",
+    extra_hours: parseInt($("xh").value)||0,
+    discount_code: disc.code || "",
+    attr_landing: (sessionStorage.getItem("es_landing")||"").slice(0,300),
+    attr_referrer: (sessionStorage.getItem("es_ref")||"").slice(0,300)
+  };
+
+  $("submitBtn").style.pointerEvents="none"; $("spin").style.display="block";
+
+  /* a saved card is required to book — the Zoho widget tokenizes it; nothing is charged until signature */
+  if(!zohoReadyCheck()){ done(); return fail("card","The secure card window hasn't loaded — please refresh the page and try again."); }
+  try{
+    setCardStatus(""); $("cardwrap").classList.add("busy");
+    const csz=payload.city_state_zip, parts=csz.split(",").map(x=>x.trim());
+    const addr={address_line1:payload.mailing_address||undefined, city:parts[0]||undefined,
+      state:(((parts[1]||"").match(/[A-Za-z]{2}/)||[$("governing_state").value])[0])||undefined,
+      postal_code:((csz.match(/\b\d{5}(?:-\d{4})?\b/)||[""])[0])||undefined, country:"US"};
+    const card=await captureCard(payload.client_names, payload.email, payload.phone.replace(/[^\d+]/g,""), addr);
+    $("cardwrap").classList.remove("busy");
+    if(!card){ done(); setCardStatus("Add a card to reserve your date \u2014 nothing is charged until you sign.", true); return fail("card","Please add a card to reserve your date."); }
+    setCardStatus("Card saved \u2713");
+    try{ const _due=Number(window.__eswDue)||0, _pk=window.__eswPkg||payload.package_id;
+      sessionStorage.setItem("esw_fb_value", String(_due)); sessionStorage.setItem("esw_fb_pkg", _pk); sessionStorage.removeItem("esw_fb_purchased");
+      if(window.eswPixel) window.eswPixel("Lead",{content_name:_pk, value:_due, currency:"USD"}); }catch(e){}
+    payload.zoho_customer_id = card.customer_id;
+    payload.zoho_payment_method_id = card.payment_method_id;
+    payload.zoho_pm_session_id = card.session_id;
+    payload.sid = eswSid();
+  }catch(e){
+    $("cardwrap").classList.remove("busy"); done();
+    console.error("zoho card capture:", e);
+    cardTrouble((e&&e.message)||"We couldn't save that card.");
+    return;
+  }
+
+  try{
+    const r = await fetch(FN+"/book_submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const j = await r.json();
+    if(!r.ok || j.error){
+      done();
+      if(j.field && $("err_"+j.field)) return fail(j.field, j.error);
+      return fail("top", j.error || "Something went wrong — please try again.");
+    }
+    location.href = j.signing_url || "/booked?via=email";
+  }catch(e){ done(); fail("top","Connection problem — please try again."); }
+}
+function done(){ $("submitBtn").style.pointerEvents=""; $("spin").style.display="none"; }
+$("submitBtn").addEventListener("click", ()=>submitBooking());
+
+/* ---- submit gate: illuminate only when everything required is complete --- */
+function missingFields(){ return REQ.concat(["agree_terms"]).filter(id=>fieldProblem(id)); }
+function gateOK(){ return zohoReady && missingFields().length===0; }
+function gate(){
+  const miss = missingFields(), ok = zohoReady && miss.length===0, msg=$("gateMsg");
+  $("submitBtn").classList.toggle("dim", !ok);
+  msg.classList.toggle("ready", ok);
+  if(ok) msg.innerHTML = "Everything\u2019s here. Tap <b>Reserve This Date</b> to add your card and sign \u2014 nothing is charged until you sign.";
+  else if(!zohoReady) msg.textContent = "The secure card window hasn\u2019t loaded yet \u2014 please refresh the page.";
+  else msg.innerHTML = "Still needed: " + miss.map(id=>"<b>"+LABEL[id]+"</b>").join(", ") + ". Your card is added after you tap Reserve.";
+  msg.style.display = "block";
+}
+document.addEventListener("input",  gate);
+document.addEventListener("change", gate);
+gate();
+
+/* ---- Google Places (New) autocomplete — venues + mailing address -------- */
+/* Key from elizabeth-scott-738e5, browser key restricted to this domain,
+   with Places API (New) + Maps JavaScript API enabled. */
+const GMAPS_KEY = "AIzaSyCfF1gY-F0JFv8yjlcbCqch5zushaGi_io";
+(function loadPlaces(){
+  if(!GMAPS_KEY || GMAPS_KEY.indexOf("PASTE") === 0) return;   /* graceful skip */
+  const sc = document.createElement("script");
+  sc.src = "https://maps.googleapis.com/maps/api/js?key=" + GMAPS_KEY +
+           "&v=weekly&loading=async&callback=__esInitPlaces";
+  sc.async = true;
+  sc.onerror = function(){ console.warn("Places failed to load — plain inputs."); };
+  document.head.appendChild(sc);
+})();
+
+window.__esInitPlaces = async function(){
+  let AutocompleteSuggestion, AutocompleteSessionToken;
+  try{
+    const lib = await google.maps.importLibrary("places");
+    AutocompleteSuggestion = lib.AutocompleteSuggestion;
+    AutocompleteSessionToken = lib.AutocompleteSessionToken;
+  }catch(e){ return; }
+  let token = new AutocompleteSessionToken();
+
+  function comp(place, type, short){
+    const c = (place.addressComponents||[]).find(x=>(x.types||[]).includes(type));
+    return c ? (short ? (c.shortText||c.longText) : (c.longText||c.shortText)) : "";
+  }
+
+  function attach(id, onPick){
+    const input = $(id); if(!input) return;
+    const wrap = input.parentNode;
+    wrap.style.position = "relative";
+    const box = document.createElement("div"); box.className = "bk-pac";
+    wrap.appendChild(box);
+    let items = [], hi = -1, timer = null;
+
+    function hide(){ box.style.display = "none"; hi = -1; }
+    function render(){
+      box.innerHTML = items.map((it,i)=>
+        `<div class="bk-pac-it${i===hi?" hi":""}" data-i="${i}">${it.placePrediction.text.text}</div>`
+      ).join("") + '<div class="bk-pac-brand">powered by Google</div>';
+      box.style.display = items.length ? "block" : "none";
+      box.querySelectorAll(".bk-pac-it").forEach(el=>{
+        el.addEventListener("mousedown", ev=>{ ev.preventDefault(); pick(+el.dataset.i); });
+      });
+    }
+    async function run(){
+      const q = input.value.trim();
+      if(q.length < 3){ hide(); return; }
+      try{
+        const {suggestions} = await AutocompleteSuggestion.fetchAutocompleteSuggestions(
+          { input:q, sessionToken:token, region:"us",
+            includedRegionCodes:["us"] });
+        items = (suggestions||[]).filter(x=>x.placePrediction).slice(0,6);
+        render();
+      }catch(e){ hide(); }
+    }
+    async function pick(i){
+      const it = items[i]; if(!it) return;
+      hide();
+      try{
+        const place = it.placePrediction.toPlace();
+        await place.fetchFields({fields:["displayName","formattedAddress","addressComponents"]});
+        token = new AutocompleteSessionToken();     /* selection closes the billing session */
+        onPick(place);
+      }catch(e){ /* leave whatever the user typed */ }
+    }
+    input.addEventListener("input", ()=>{ clearTimeout(timer); timer = setTimeout(run, 220); });
+    input.addEventListener("blur", ()=>setTimeout(hide, 160));
+    input.addEventListener("keydown", e=>{
+      if(box.style.display !== "block") return;
+      if(e.key === "ArrowDown"){ e.preventDefault(); hi = Math.min(hi+1, items.length-1); render(); }
+      else if(e.key === "ArrowUp"){ e.preventDefault(); hi = Math.max(hi-1, 0); render(); }
+      else if(e.key === "Enter"){ if(hi >= 0){ e.preventDefault(); pick(hi); } }
+      else if(e.key === "Escape"){ hide(); }
+    });
+  }
+
+  function venueLine(place){
+    const name = (place.displayName||"").trim();
+    const city = comp(place,"locality") || comp(place,"sublocality") || comp(place,"postal_town");
+    const st   = comp(place,"administrative_area_level_1", true);
+    const loc  = [city, st].filter(Boolean).join(", ");
+    if(name && loc) return name + ", " + loc;
+    return name || place.formattedAddress || "";
+  }
+
+  attach("ceremony_venue",  p=>{ $("ceremony_venue").value  = venueLine(p); });
+  attach("reception_venue", p=>{ $("reception_venue").value = venueLine(p); });
+  attach("mailing_address", p=>{
+    const num = comp(p,"street_number"), route = comp(p,"route");
+    const street = [num, route].filter(Boolean).join(" ") ||
+                   (p.formattedAddress||"").split(",")[0];
+    const city = comp(p,"locality") || comp(p,"sublocality") || comp(p,"postal_town");
+    const st   = comp(p,"administrative_area_level_1", true);
+    const zip  = comp(p,"postal_code");
+    $("mailing_address").value = street;
+    if(city || st || zip)
+      $("city_state_zip").value = (city ? city + ", " : "") + [st, zip].filter(Boolean).join(" ");
+    if(st && $("governing_state").querySelector(`option[value="${st}"]`))
+      $("governing_state").value = st;
+  });
+};
+</script>
+</body>
+</html>

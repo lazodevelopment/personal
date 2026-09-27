@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Folia Alternative (2026): Lazo, Free Forever, No Guest Cap{% endblock %}
+{% block desc %}Folia charges $11.99 a month and caps free plans at 500 guests and 10 vendors. Lazo gives couples the guest list, budget, seating, dream board, timeline and website free forever, plus verified vendors and June.{% endblock %}
+{% block canonical %}{{ base }}/folia-alternative/{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is Lazo free like Folia's free plan?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Lazo is free for couples with no caps. Folia's free plan stops at 500 guests and 10 vendors and puts ceremony seating, reception seating and to-do lists behind an $11.99 a month subscription. On Lazo every couple tool, including both seating charts, is free forever, with no card and no ads." } },
+    { "@type": "Question", "name": "Does Lazo have a seating chart with ceremony seating?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Reception seating with round, long, king's, serpentine and sweetheart tables, drag-and-drop guests, parties kept together, meal counts on every table and a live link for the caterer, plus ceremony seating with rows on both sides of the aisle, reserved front rows and a processional planner." } },
+    { "@type": "Question", "name": "Does Lazo have a dream board?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Pin from any link, including Pinterest and Etsy, upload photos, add notes and color swatches, drag everything around, comment with your partner, and share it with your florist, planner and photographer." } },
+    { "@type": "Question", "name": "What does Lazo have that Folia does not?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A verified vendor marketplace ranked only by real couple reviews, vendor messaging with proposals, contracts and card payments in the thread, a free wedding website with RSVPs that feed the guest list, and June, an AI planner that knows your date, budget and bookings." } },
+    { "@type": "Question", "name": "Can I move from Folia to Lazo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Export your guest list as a CSV and import it on Lazo in one step; June reads a pasted budget or vendor list. Registry links stay wherever they are." } }
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<style>
+.cmp{width:100%;max-width:860px;border-collapse:separate;border-spacing:0;margin:10px 0 6px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(217,183,124,.45);border-radius:18px;overflow:hidden;
+  font-size:14.5px}
+.cmp th,.cmp td{padding:13px 16px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(217,183,124,.28)}
+.cmp tr:last-child td{border-bottom:0}
+.cmp thead th{background:linear-gradient(120deg,#3D1C3B,#52284F);color:#FAF6F0;font-weight:600;font-size:13.5px;
+  letter-spacing:.4px}
+.cmp thead th:first-child{width:34%}
+.cmp td:first-child{font-weight:600;color:#52284F}
+.cmp .yes{color:#2E8B6B;font-weight:600}
+.cmp .meh{color:#7A6E80}
+.cmp-note{font-size:12px;color:#7A6E80;max-width:860px;margin:4px 0 0}
+.tm-note{font-size:11.5px;color:#8A7D90;max-width:860px;margin:26px 0 0;line-height:1.6}
+@media(max-width:640px){.cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}}
+</style>
+<section class="hero"><div class="hero-inner">
+<p class="eyebrow">The honest comparison</p>
+<h1>Looking for a Folia alternative?</h1>
+<p class="hero-sub">Folia is a tidy planner with a subscription and a guest cap. Lazo is the same tools and more &mdash; guest list, budget, both seating charts, dream board, timeline, website &mdash; free forever, no card, no cap, with a verified vendor marketplace and June behind them.</p>
+</div></section>
+
+<section class="band prose">
+<h2>The same planner, without the meter running</h2>
+<p>Folia&rsquo;s free plan is generous until it isn&rsquo;t: 500 guests, 10 vendors, and the two features most couples actually come for &mdash; ceremony seating and reception seating &mdash; sit behind $11.99 a month, $89 a year or $129 for two years. Lazo has no paid tier for couples. The seating charts, the dream board, the timeline, the guest list and the budget are free the day you sign up and free the day after the wedding, when the site flips to &ldquo;We&rsquo;re married&rdquo; and keeps going.</p>
+<h2>Where Lazo goes further</h2>
+<p><strong>Vendors you can trust, in the same place.</strong> Folia tracks the vendors you found elsewhere. Lazo is where you find them: 88,000+ vendor pages ranked only by verified couple reviews, with proposals, contracts and card payments inside the thread.</p>
+<p><strong>The website feeds the plan.</strong> Guests RSVP on your free Lazo website and land in the guest list with their meals, which show up on the seating chart table by table. Nothing is typed twice.</p>
+<p><strong>June.</strong> An AI planner who knows your date, budget, guest list and bookings. She seats everyone from your parties and sides, drafts vendor messages, and tells you what to book next and whether it is running late.</p>
+<h2>Side by side</h2>
+<table class="cmp">
+<thead><tr><th></th><th>Lazo</th><th>Folia</th></tr></thead>
+<tbody>
+<tr><td>Price for couples</td><td class="yes">Free forever, no card</td><td class="meh">$11.99/mo, $89/yr or $129/2 yr; free plan capped</td></tr>
+<tr><td>Guest list</td><td class="yes">Unlimited, RSVPs from your website, Knot/Zola import</td><td class="meh">Up to 500 on free</td></tr>
+<tr><td>Reception seating</td><td class="yes">Free: round, long, king&rsquo;s, serpentine, sweetheart; meals on every table; live caterer link</td><td class="meh">Paid; table shapes, meals on tables</td></tr>
+<tr><td>Ceremony seating</td><td class="yes">Free: two sides, reserved rows, processional, usher list</td><td class="meh">Paid; seating and processionals</td></tr>
+<tr><td>Dream board</td><td class="yes">Pin from any link incl. Pinterest, photos, notes, colors, partner comments</td><td class="yes">Pins and comments</td></tr>
+<tr><td>Budget</td><td class="yes">Allocation by category with real per-city ranges</td><td class="yes">Allocation by category</td></tr>
+<tr><td>Day-of timeline</td><td class="yes">Anchored to the ceremony, durations, one page per vendor</td><td class="yes">Timeline</td></tr>
+<tr><td>Vendor marketplace</td><td class="yes">Verified reviews, rankings never for sale</td><td class="meh">Track vendors you found elsewhere</td></tr>
+<tr><td>Wedding website</td><td class="yes">20 designs, RSVPs into the guest list, free</td><td class="meh">Not offered</td></tr>
+<tr><td>AI planner</td><td class="yes">June &mdash; knows your data, takes action</td><td class="meh">Not offered</td></tr>
+<tr><td>Marriage license help</td><td class="yes">Fee, office and application window for your state and county</td><td class="meh">Not offered</td></tr>
+</tbody>
+</table>
+<p class="cmp-note">Third-party details reflect publicly available information on foliaplanner.com as of September 2026 and may change; always check current offerings.</p>
+<h2>Being fair about it</h2>
+<p>Folia is well made, and if you already have every vendor booked and only want a seating tool with a subscription, it does that job. Where Lazo wins is the money and the connections: nothing to pay, no cap to hit, and a guest list, website, vendor threads and seating chart that are the same data instead of four copies of it.</p>
+</section>
+
+<section class="band band-plum">
+<h2 class="band-title">What you get on Lazo</h2>
+<div class="promises">
+<div class="promise"><h3>Every planning tool, free</h3><p>Guest list, budget, both seating charts, dream board, timeline, shopping list, website. No tier, no card, no cap.</p></div>
+<div class="promise"><h3>Vendors with verified reviews</h3><p>88,000+ pages across 58 metros, ranked only by real couples. Message, sign and pay in one thread.</p></div>
+<div class="promise"><h3>June, your AI copilot</h3><p>Seats your guests, drafts your messages, and keeps you on schedule from your real data.</p></div>
+</div>
+</section>
+
+<section class="band">
+<h2>Questions couples ask</h2>
+<details class="faq"><summary>Is Lazo free like Folia&rsquo;s free plan?</summary><p>Lazo is free for couples with no caps. Folia&rsquo;s free plan stops at 500 guests and 10 vendors and keeps both seating charts behind a subscription. On Lazo every couple tool is free forever, with no card and no ads.</p></details>
+<details class="faq"><summary>Does Lazo have ceremony seating?</summary><p>Yes. Rows on both sides of the aisle named for each of you, reserved front rows for parents and family, a processional planner, and an usher list to print.</p></details>
+<details class="faq"><summary>Does Lazo have a dream board?</summary><p>Yes. Pin from any link including Pinterest and Etsy, upload photos, add notes and colors, comment with your partner, and share it with your florist and planner.</p></details>
+<details class="faq"><summary>Can I move from Folia?</summary><p>Export your guest list as a CSV and import it on Lazo in one step. June reads a pasted budget or vendor list. Registry links stay where they are.</p></details>
+<div class="claim-strip" style="margin-top:34px">
+<h2>Same tools. No subscription. More behind them.</h2>
+<p>Start free, no card required, and keep it after the wedding.</p>
+<p><a class="btn-gold" href="https://app.meetlazo.com">Start planning free</a></p>
+</div>
+<div class="related-block" style="margin-top:30px">
+<h2>Keep comparing</h2>
+<div class="related-links">
+<a href="{{ base }}/zola-alternative/">Zola alternative</a>
+<a href="{{ base }}/the-knot-alternative/">The Knot alternative</a>
+<a href="{{ base }}/weddingwire-alternative/">WeddingWire alternative</a>
+<a href="{{ base }}/why-lazo/">Why Lazo</a>
+</div>
+</div>
+<p class="tm-note">Folia is a trademark of its owner. Lazo is not affiliated with, sponsored by, or endorsed by Folia. Names are used for identification and comparison only.</p>
+</section>
+{% endblock %}

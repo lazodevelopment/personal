@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Lazo for Vendors &mdash; Free Forever, Leads Included{% endblock %}
+{% block canonical %}{{ base }}/for-vendors/{% endblock %}
+{% block main %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,600&family=Inter:wght@400;600;700;800&display=swap');
+.fv *{box-sizing:border-box}
+.fv{font-family:Inter,sans-serif;color:#241E2B}
+.fv .wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+.fv .serif{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500}
+/* HERO */
+.fv-hero{background:linear-gradient(150deg,#241021 0%,#2E1530 34%,#3D1C3B 62%,#52284F 100%);position:relative;overflow:hidden;padding:84px 0 70px;text-align:center}
+.fv-hero:before{content:'';position:absolute;top:-180px;right:-140px;width:520px;height:520px;border-radius:999px;background:radial-gradient(circle,rgba(217,183,124,.22),transparent 65%)}
+.fv-hero:after{content:'';position:absolute;bottom:-220px;left:-160px;width:560px;height:560px;border-radius:999px;background:radial-gradient(circle,rgba(106,58,102,.5),transparent 65%)}
+.fv-hero .wrap{position:relative;z-index:2}
+.fv-eyebrow{color:#D9B77C;font-size:11.5px;letter-spacing:3.5px;text-transform:uppercase;font-weight:700;margin:0 0 18px}
+.fv-hero h1{color:#FAF6F0;font-size:clamp(34px,5.4vw,58px);line-height:1.08;margin:0 0 10px;font-weight:800;letter-spacing:-.5px}
+.fv-hero h1 em{display:block;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;color:#D9B77C;font-size:clamp(30px,4.8vw,52px)}
+.fv-hero .sub{color:#D8C9DA;font-size:16.5px;line-height:1.65;max-width:640px;margin:16px auto 0}
+.fv-cta{display:inline-block;background:linear-gradient(135deg,#E8CFA0,#D9B77C);color:#2E1530;font-weight:800;font-size:15.5px;text-decoration:none;border-radius:999px;padding:17px 38px;box-shadow:0 14px 38px rgba(217,183,124,.35);transition:transform .15s ease}
+.fv-cta:hover{transform:translateY(-2px)}
+.fv-cta.ghost{background:transparent;color:#FAF6F0;border:1px solid rgba(217,183,124,.6);box-shadow:none}
+.fv-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.fv-live{display:inline-flex;align-items:center;gap:8px;background:rgba(46,139,107,.16);border:1px solid rgba(126,200,170,.5);color:#8FE0BC;border-radius:999px;padding:7px 16px;font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px}
+.fv-live .dot{width:8px;height:8px;border-radius:999px;background:#5FCF9B;box-shadow:0 0 0 4px rgba(95,207,155,.22);animation:fvpulse 1.8s infinite}
+@keyframes fvpulse{50%{box-shadow:0 0 0 7px rgba(95,207,155,.08)}}
+.fv-stats{display:flex;justify-content:center;gap:0;margin-top:44px;flex-wrap:wrap}
+.fv-stat{padding:0 30px;border-right:1px solid rgba(217,183,124,.25);text-align:center}
+.fv-stat:last-child{border-right:0}
+.fv-stat b{display:block;color:#FAF6F0;font-size:27px;font-weight:800}
+.fv-stat span{color:#B79ABB;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
+/* SECTIONS */
+.fv-sec{padding:66px 0}
+.fv-sec.alt{background:#FAF6F0}
+.fv-kick{color:#8A6A2F;font-size:11px;letter-spacing:3px;text-transform:uppercase;font-weight:800;margin:0 0 10px}
+.fv-h2{font-size:clamp(26px,3.6vw,38px);color:#3D1C3B;font-weight:800;line-height:1.15;margin:0 0 12px;letter-spacing:-.4px}
+.fv-lead{color:#5C5164;font-size:16px;line-height:1.7;max-width:660px;margin:0}
+.fv-center{text-align:center}.fv-center .fv-lead{margin:0 auto}
+/* COMPARISON */
+.fv-vs{margin-top:36px;border-radius:24px;overflow:hidden;border:1px solid rgba(217,183,124,.55);box-shadow:0 24px 60px rgba(61,28,59,.12)}
+.fv-vs table{width:100%;border-collapse:collapse;background:#fff}
+.fv-vs th,.fv-vs td{padding:16px 20px;text-align:left;font-size:14.5px;border-bottom:1px solid #F1E7F0}
+.fv-vs th{background:#2E1530;color:#FAF6F0;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+.fv-vs th.lz{background:#52284F;color:#D9B77C}
+.fv-vs tr:last-child td{border-bottom:0}
+.fv-vs td:first-child{color:#5C5164;font-weight:600;width:38%}
+.fv-vs .bad{color:#A0522D}
+.fv-vs .good{color:#2E8B6B;font-weight:700}
+/* FEATURES */
+.fv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:38px}
+.fv-card{background:#fff;border:1px solid rgba(217,183,124,.5);border-radius:20px;padding:24px;transition:transform .15s ease,box-shadow .15s ease}
+.fv-card:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(61,28,59,.14)}
+.fv-ic{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,#3D1C3B,#52284F);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.fv-ic svg{width:22px;height:22px;stroke:#D9B77C;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fv-card h3{margin:0 0 7px;font-size:16.5px;color:#3D1C3B;font-weight:800}
+.fv-card p{margin:0;font-size:13.5px;line-height:1.6;color:#5C5164}
+.fv-tag{display:inline-block;background:linear-gradient(135deg,#E8CFA0,#D9B77C);color:#3D1C3B;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:1.8px;padding:4px 11px;margin-bottom:12px}
+.fv-tag.pro{background:linear-gradient(135deg,#3D1C3B,#52284F);color:#D9B77C;border:1px solid rgba(217,183,124,.6)}
+.fv-badge-demo{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#3D1C3B,#52284F);border:1px solid #D9B77C;color:#D9B77C;border-radius:999px;padding:5px 14px;font-size:10.5px;font-weight:800;letter-spacing:1.6px}
+/* STEPS */
+.fv-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:38px}
+.fv-step{background:#fff;border:1px solid rgba(217,183,124,.5);border-radius:20px;padding:26px 24px;position:relative}
+.fv-step .num{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:52px;color:rgba(217,183,124,.55);line-height:1;position:absolute;top:14px;right:20px}
+.fv-step h3{margin:0 0 8px;font-size:16px;color:#3D1C3B;font-weight:800}
+.fv-step p{margin:0;font-size:13.5px;line-height:1.6;color:#5C5164}
+/* SHOWCASE */
+.fv-show{background:linear-gradient(150deg,#241021,#3D1C3B 55%,#52284F);border-radius:28px;padding:44px;color:#FAF6F0;display:grid;grid-template-columns:1fr 1.2fr;gap:36px;align-items:center;border:1px solid rgba(217,183,124,.5);box-shadow:0 30px 70px rgba(36,16,33,.4)}
+.fv-show .fv-h2{color:#FAF6F0}
+.fv-show p{color:#D8C9DA;font-size:14.5px;line-height:1.7}
+.fv-show .price{font-family:'Cormorant Garamond',serif;font-style:italic;color:#D9B77C;font-size:21px;margin-top:14px}
+.fv-frame{border-radius:18px;overflow:hidden;border:1px solid rgba(217,183,124,.7);box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.fv-frame iframe{display:block;width:100%;aspect-ratio:16/10;border:0}
+@media(max-width:860px){.fv-show{grid-template-columns:1fr;padding:30px}}
+/* PRO + FINAL */
+.fv-pro-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(24px,3.4vw,34px);color:#8A6A2F;margin:6px 0 14px}
+.fv-price{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:40px;align-items:stretch}
+.fv-tier{background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:24px;padding:30px 26px;display:flex;flex-direction:column;text-align:left;position:relative}
+.fv-tier.hot{border:2px solid #D9B77C;box-shadow:0 24px 60px rgba(217,183,124,.28)}
+.fv-tier .ribbon{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#E8CFA0,#D9B77C);color:#3D1C3B;font-size:10px;font-weight:800;letter-spacing:1.8px;border-radius:999px;padding:5px 16px;white-space:nowrap}
+.fv-tier h3{margin:0 0 2px;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#8A6A2F;font-weight:800}
+.fv-tier .who{font-size:12px;color:#9A8FA0;margin:0 0 12px}
+.fv-tier .amt{font-size:40px;font-weight:800;color:#3D1C3B;line-height:1}
+.fv-tier .amt small{font-size:14px;color:#7A6E80;font-weight:600}
+.fv-tier .per{font-size:12px;color:#7A6E80;margin:4px 0 16px}
+.fv-tier ul{list-style:none;margin:0 0 18px;padding:0;flex:1}
+.fv-tier li{font-size:13.5px;color:#5C5164;line-height:1.5;padding:6px 0 6px 26px;position:relative}
+.fv-tier li:before{content:'';position:absolute;left:0;top:9px;width:16px;height:16px;border-radius:999px;background:rgba(46,139,107,.14);border:1px solid rgba(46,139,107,.5)}
+.fv-tier li:after{content:'';position:absolute;left:4.5px;top:13px;width:7px;height:4px;border-left:1.6px solid #2E8B6B;border-bottom:1.6px solid #2E8B6B;transform:rotate(-45deg)}
+.fv-tier .tcta{display:block;text-align:center;background:linear-gradient(135deg,#3D1C3B,#52284F);color:#FAF6F0;text-decoration:none;font-weight:800;font-size:14px;border-radius:999px;padding:14px}
+.fv-tier.hot .tcta{background:linear-gradient(135deg,#E8CFA0,#D9B77C);color:#2E1530}
+.fv-tier .soon{text-align:center;font-size:11px;color:#9A8FA0;margin-top:8px}
+.fv-final{background:linear-gradient(150deg,#241021,#2E1530 40%,#3D1C3B);text-align:center;padding:80px 0}
+.fv-final .fv-h2{color:#FAF6F0}
+.fv-final .sub{color:#D8C9DA;font-size:15.5px;max-width:560px;margin:10px auto 0;line-height:1.7}
+</style>
+<div class="fv">
+<section class="fv-hero"><div class="wrap">
+<span class="fv-live"><span class="dot"></span>Claiming is open &mdash; free forever</span>
+<p class="fv-eyebrow">For wedding professionals</p>
+<h1>Stop paying for leads.<em>Start earning your ranking.</em></h1>
+<p class="sub">Built by wedding professionals who paid The Knot, WeddingWire, HoneyBook and DocuSign every month &mdash; and decided one platform should do it all without charging you for your own customers.</p>
+<div class="fv-ctas"><a class="fv-cta" href="https://app.getlazo.com">Claim your profile free</a><a class="fv-cta ghost" href="#showcase">See the 360 showcase</a></div>
+<div class="fv-stats">
+<div class="fv-stat"><b>45</b><span>Markets nationwide</span></div>
+<div class="fv-stat"><b>$0</b><span>Per lead, ever</span></div>
+<div class="fv-stat"><b>0</b><span>Rankings for sale</span></div>
+</div>
+</div></section>
+<section class="fv-sec alt"><div class="wrap">
+<p class="fv-kick">The difference</p>
+<h2 class="fv-h2">You've seen how the other guys do it.</h2>
+<p class="fv-lead"><strong>They monetize the introduction &mdash; then they abandon the relationship.</strong> You pay to be seen. You pay again when a couple clicks. And the moment one actually reaches out, their job is done: the contract, the questions, the timeline, the money &mdash; all of it happens somewhere else, on tools you also pay for. Here's the same table we'd want to see:</p>
+<div class="fv-vs"><table>
+<tr><th></th><th>The Knot / Zola</th><th class="lz">Lazo</th></tr>
+<tr><td>Your listing</td><td class="bad">Paid tiers, annual contracts</td><td class="good">Free forever</td></tr>
+<tr><td>Leads</td><td class="bad">Pay per lead, shared with rivals</td><td class="good">Free, exclusive, verified couples</td></tr>
+<tr><td>Your ranking</td><td class="bad">Highest bidder rises</td><td class="good">Earned &mdash; never for sale</td></tr>
+<tr><td>Reviews</td><td class="bad">Anyone can post</td><td class="good">Contract-verified couples only</td></tr>
+<tr><td>Booking tools</td><td class="bad">Rent HoneyBook + DocuSign too</td><td class="good">Threads, proposals &amp; booking built in</td></tr>
+<tr><td>After the introduction</td><td class="bad">Their job is done &mdash; you're on your own</td><td class="good">The relationship stays &mdash; signed in the same thread it started</td></tr>
+</table></div>
+</div></section>
+<section class="fv-sec"><div class="wrap">
+<p class="fv-kick">The toolkit</p>
+<h2 class="fv-h2">Free to start. Pro to win.</h2>
+<p class="fv-lead">Claiming, leads, and booking are free forever. Pro adds the automation and polish that make you the fastest, sharpest vendor in your market:</p>
+<div class="fv-grid">
+<div class="fv-card"><div class="fv-ic"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div><span class="fv-tag">FREE</span><h3>Leads with names &amp; faces</h3><p>Every inquiry is a verified couple with a real date. See who they are and reply in-thread, one tap.</p></div>
+<div class="fv-card"><div class="fv-ic"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div><span class="fv-tag pro">PRO</span><h3>Text-message lead alerts</h3><p>A text the moment a couple inquires. First reply usually wins &mdash; you'll never be the slow one.</p></div>
+<div class="fv-card"><div class="fv-ic"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15l2 2 4-4"/></svg></div><span class="fv-tag">FREE</span><h3>Proposals couples accept</h3><p>Send a priced proposal inside the conversation. They tap accept &mdash; you're booked. No extra subscription.</p></div>
+<div class="fv-card"><div class="fv-ic"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg></div><span class="fv-tag pro">PRO</span><h3>Auto-replies &amp; follow-ups</h3><p>Your words, sent instantly &mdash; then day-3 and day-5 nudges if a couple goes quiet.</p></div>
+<div class="fv-card"><div class="fv-ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><span class="fv-tag pro">PRO</span><h3>Availability calendar</h3><p>Mark booked dates; couples see them before they inquire. Fewer dead ends, more real inquiries.</p></div>
+<div class="fv-card"><div class="fv-ic"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div><span class="fv-tag pro">PRO</span><h3>Analytics that coach you</h3><p>Inquiry trends, response rate, bookings &mdash; know exactly what's working and where the next booking comes from.</p></div>
+</div>
+</div></section>
+<section class="fv-sec alt"><div class="wrap fv-center">
+<p class="fv-kick">Claiming is open</p>
+<h2 class="fv-h2">Yours in minutes, not days.</h2>
+<div class="fv-steps">
+<div class="fv-step"><span class="num">1</span><h3>Find your business</h3><p>You're likely already listed &mdash; we index wedding professionals across 45 markets. Search your name in the app.</p></div>
+<div class="fv-step"><span class="num">2</span><h3>Prove it's yours</h3><p>Attach proof of ownership. Our verification runs while you watch &mdash; most claims clear in under a minute.</p></div>
+<div class="fv-step"><span class="num">3</span><h3>Walk into your dashboard</h3><p>Leads, threads, proposals, calendar, analytics &mdash; live the moment you're approved.</p></div>
+</div>
+<div class="fv-ctas" style="margin-top:34px"><a class="fv-cta" href="https://app.getlazo.com">Claim your profile</a></div>
+</div></section>
+<section class="fv-sec" id="showcase"><div class="wrap">
+<div class="fv-show">
+<div>
+<p class="fv-kick" style="color:#D9B77C">Venue Showcase</p>
+<h2 class="fv-h2">Let couples walk your venue tonight.</h2>
+<p>Couples shortlist venues they can already picture themselves in. A Lazo 360 tour lives right on your profile &mdash; captured professionally by our team, hosted forever, working while you sleep. Drag the room and see for yourself.</p>
+<p class="price">$999/year for venues &mdash; every other tool above is free for every category.</p>
+</div>
+<div class="fv-frame"><iframe src="/showcase/" loading="lazy" title="Lazo Venue Showcase 360 demo"></iframe></div>
+</div>
+</div></section>
+<section class="fv-sec alt"><div class="wrap fv-center">
+<p class="fv-kick">Simple, honest pricing</p>
+<h2 class="fv-h2">Pro doesn't buy your ranking.</h2>
+<p class="fv-pro-tag">It buys the tools that earn it.</p>
+<p class="fv-lead" style="margin:0 auto">Photographers, videographers, planners, DJs, florists, caterers, officiants, bands &mdash; every category starts free and stays free. Pro sharpens the tools; it never touches the rankings.</p>
+<div class="fv-price">
+<div class="fv-tier"><h3>Free</h3><p class="who">Every vendor, every category</p><div class="amt">$0</div><p class="per">forever &mdash; not an intro rate</p>
+<ul><li>Claimed, verified profile with gallery, packages &amp; video</li><li>Unlimited verified leads &mdash; names, faces, real dates</li><li>In-thread messaging &amp; proposals couples can accept</li><li>Your ranking, earned &mdash; same playing field as everyone</li></ul>
+<a class="tcta" href="https://app.getlazo.com">Claim your profile</a></div>
+<div class="fv-tier hot"><span class="ribbon">FOUNDING PRICE &middot; EVERY CATEGORY</span><h3>Lazo Pro</h3><p class="who">For vendors ready to grow</p><div class="amt">$79<small>/mo</small></div><p class="per">or $790/year &mdash; two months free</p>
+<p style="margin:0 0 12px"><span class="fv-badge-demo">&#10022; LAZO PRO</span> <span style="font-size:11.5px;color:#9A8FA0">&nbsp;badge on your public profile</span></p>
+<ul><li>Everything in Free, plus the Pro badge couples notice</li><li>Text alerts the moment a lead arrives</li><li>Auto-replies &amp; day-3/5 follow-up sequences</li><li>Availability calendar on your public page</li><li>Analytics &mdash; trends, response rate, bookings</li><li>Unlimited gallery &amp; every market unlocked</li><li>Invoicing, contracts with e-signature &amp; deposit collection</li></ul>
+<a class="tcta" href="https://app.getlazo.com">Start free &mdash; upgrade inside</a><p class="soon">Pro billing opens soon &mdash; free in your metro until vendors here are demonstrably booking from Lazo.</p></div>
+<div class="fv-tier"><h3>Venue Showcase</h3><p class="who">Add-on for venues</p><div class="amt">$999<small>/yr</small></div><p class="per">captured by our team, hosted forever</p>
+<ul><li>Professional 360 capture of your space</li><li>Immersive tour embedded on your profile</li><li>Couples walk the room before they ever call</li><li>Updated when your space changes</li></ul>
+<a class="tcta" href="#showcase">See the live demo</a></div>
+</div>
+</div></section>
+<section class="fv-final"><div class="wrap">
+<h2 class="fv-h2">Your couples are already searching here.</h2>
+<p class="sub">88,000+ pages across 45 markets, and the rankings can't be bought &mdash; only earned. Be there when they look. And when a couple reaches out, that's not the end of Lazo's job &mdash; it's the beginning.</p>
+<div class="fv-ctas"><a class="fv-cta" href="https://app.getlazo.com">Claim your profile &mdash; free forever</a></div>
+</div></section>
+</div>
+{% endblock %}

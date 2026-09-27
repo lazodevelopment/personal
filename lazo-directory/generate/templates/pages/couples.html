@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WWSEO-0919-009: /couples/ - find a couple's wedding website by name. The
+    search hits /api/couples?q= on the worker, which lists public (no-passcode)
+    weddingSites from Firestore. Guests Google "<names> wedding" more than couples
+    ever Google "wedding website"; this page and the couple sitemap catch that. -#}
+{% block title %}Find a Couple's Wedding Website | Lazo{% endblock %}
+{% block desc %}Search for a couple's wedding website on Lazo by name. Find the date, schedule, travel details, registry and RSVP, all on one link.{% endblock %}
+{% block canonical %}{{ base }}/couples/{% endblock %}
+{% block nav_key %}sites{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Find a couple","item":"{{ base }}/couples/"}]},{"@type":"WebPage","@id":"{{ base }}/couples/","url":"{{ base }}/couples/","name":"Find a couple's wedding website","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"{{ base }}/couples/?q={search_term_string}"},"query-input":"required name=search_term_string"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I find a couple's wedding website?","acceptedAnswer":{"@type":"Answer","text":"Type either partner's first name, or both names, in the search above. Public Lazo wedding websites appear as you type. If the couple set a passcode, their site will not appear here; ask them for the link and the passcode."}},{"@type":"Question","name":"Why can't I find the wedding website I'm looking for?","acceptedAnswer":{"@type":"Answer","text":"Either the couple made their site private with a passcode, they spelled their names differently on the site, or the site is not on Lazo. Check the invitation for the link."}},{"@type":"Question","name":"Can I RSVP from the wedding website?","acceptedAnswer":{"@type":"Answer","text":"Yes. Open the couple's site, tap RSVP, and reply with your attendance, meal choice and any notes. No account is needed."}}]}]}</script>{% endblock %}
+{% block main %}
+<style>
+.cp{max-width:760px;margin:0 auto;padding:56px 22px 24px;text-align:center}
+.cp h1{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(34px,5.4vw,54px);line-height:1.05;color:var(--plum);margin:0 0 12px}
+.cp .lede{color:var(--muted);max-width:52ch;margin:0 auto 28px;font-size:17px}
+.cs{display:flex;gap:10px;max-width:560px;margin:0 auto}
+.cs input{flex:1;font:inherit;font-size:17px;padding:14px 18px;border:1px solid var(--gold-line);border-radius:999px;background:#fff;color:inherit}
+.cs input:focus{outline:2px solid var(--gold);outline-offset:2px}
+.cr{max-width:560px;margin:22px auto 0;text-align:left}
+.cr a{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:14px 18px;border:1px solid var(--gold-line);border-radius:14px;background:#fff;text-decoration:none;color:inherit;margin-bottom:10px;transition:transform .15s}
+.cr a:hover{transform:translateY(-1px)}
+.cr b{font-family:"Cormorant Garamond",serif;font-size:21px;font-weight:600;color:var(--plum)}
+.cr span{font-size:13.5px;color:var(--muted);white-space:nowrap}
+.cr .none{color:var(--muted);text-align:center;padding:18px 0;font-size:15px}
+.cf{max-width:760px;margin:40px auto 60px;padding:0 22px}
+.cf h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(26px,3.6vw,34px);color:var(--plum);text-align:center;margin:0 0 6px}
+.cf details{border-bottom:1px solid var(--gold-line);padding:14px 0}
+.cf details:first-of-type{border-top:1px solid var(--gold-line);margin-top:18px}
+.cf summary{cursor:pointer;color:var(--plum);font-weight:600;list-style:none}
+.cf summary::-webkit-details-marker{display:none}
+.cf p{color:var(--muted);margin:8px 0 0;font-size:15px}
+.cmk{text-align:center;margin:0 auto 70px;max-width:60ch;padding:0 22px;color:var(--muted);font-size:15px}
+.cmk a{color:var(--plum);font-weight:600}
+</style>
+<section class="cp">
+  <h1>Find a couple's wedding website</h1>
+  <p class="lede">Type a name and the couple's site appears: the date, the schedule, where to stay, the registry, and the RSVP. All on one link.</p>
+  <form class="cs" id="cs" role="search" onsubmit="return false">
+    <input id="cq" type="search" placeholder="Search by first name, e.g. Charlotte or Charlotte and Henry" aria-label="Search couples by name" autocomplete="off">
+  </form>
+  <div class="cr" id="cr" aria-live="polite"></div>
+</section>
+<section class="cf">
+  <h2>Looking for a wedding website?</h2>
+  <details open><summary>How do I find a couple's wedding website?</summary><p>Type either partner's first name, or both names, in the search above. Public Lazo wedding websites appear as you type. If the couple set a passcode, their site will not appear here; ask them for the link and the passcode.</p></details>
+  <details><summary>Why can't I find the wedding website I'm looking for?</summary><p>Either the couple made their site private with a passcode, they spelled their names differently on the site, or the site is not on Lazo. Check the invitation for the link.</p></details>
+  <details><summary>Can I RSVP from the wedding website?</summary><p>Yes. Open the couple's site, tap RSVP, and reply with your attendance, meal choice and any notes. No account is needed.</p></details>
+</section>
+<p class="cmk">Getting married? <a href="/wedding-websites/">Make your own free wedding website</a> in minutes, with RSVPs, schedule and registry built in.</p>
+<script>
+(function(){
+ var q=document.getElementById("cq"),r=document.getElementById("cr"),t,last="";
+ function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+ function nice(d){if(!/^\d{4}-\d{2}-\d{2}$/.test(d||""))return "";var x=new Date(d+"T12:00:00");return x.toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}
+ function go(){
+  var v=q.value.trim();
+  if(v.length<2){r.innerHTML="";last="";return}
+  if(v===last)return;last=v;
+  fetch("/api/couples?q="+encodeURIComponent(v)).then(function(x){return x.ok?x.json():[]}).then(function(list){
+   if(q.value.trim()!==v)return;
+   if(!list.length){r.innerHTML='<p class="none">No public wedding website matches "'+esc(v)+'". Check the spelling, or ask the couple for their link.</p>';return}
+   r.innerHTML=list.map(function(c){return '<a href="/w/'+encodeURIComponent(c.slug)+'/"><b>'+esc(c.names)+'</b><span>'+esc(nice(c.dateIso)||"Wedding website")+'</span></a>'}).join("");
+  }).catch(function(){});
+ }
+ q.addEventListener("input",function(){clearTimeout(t);t=setTimeout(go,260)});
+ var p=new URLSearchParams(location.search).get("q");if(p){q.value=p;go()}
+})();
+</script>
+{% endblock %}

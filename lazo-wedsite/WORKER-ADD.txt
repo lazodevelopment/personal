@@ -1,0 +1,7 @@
+// lazo-site worker: add BEFORE the normal R2 lookup —
+// serves the single wedding shell for every /w/{slug}/ path:
+    if (url.pathname.startsWith('/w/')) {
+      const obj = await env.BUCKET.get('w/index.html');
+      if (obj) return new Response(obj.body, {headers: {'content-type':'text/html;charset=utf-8','cache-control':'public,max-age=300'}});
+    }
+// DEPLOY: upload wedding.html to R2 as object key  w/index.html  (after key install).

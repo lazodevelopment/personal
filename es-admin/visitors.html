@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- build JC-ATV-BOTGATE-0909-001 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Elizabeth Scott — Visitors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F1327;--card:#1A2039;--copper:#C9B080;--copperlt:#DCC697;--cream:#EEE9DD;
+  --grey:#A8B0C8;--dim:#7B84A3;--line:#2A3152;--field:#20264A;
+  --ok:#8DBF93;--warn:#E0B65C;--bad:#E08578;
+  --glass:rgba(26,32,57,.42);--glass-line:rgba(238,233,221,.10);--glass-hi:rgba(238,233,221,.05);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:'Figtree',sans-serif;font-weight:300;color:var(--cream);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(760px 460px at 10% -12%,rgba(220,198,151,.28),transparent 62%),
+    radial-gradient(1000px 640px at 104% 28%,rgba(201,176,128,.16),transparent 62%),
+    radial-gradient(700px 460px at 42% 112%,rgba(238,233,221,.06),transparent 62%)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+a{color:var(--copperlt);text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--copperlt);outline-offset:2px}
+.glass{position:relative;background:linear-gradient(160deg,rgba(238,233,221,.055) 0%,rgba(26,32,57,.42) 38%,rgba(15,19,39,.46) 100%);
+  border:1px solid var(--glass-line);border-top-color:rgba(238,233,221,.18);
+  backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
+  box-shadow:0 30px 60px -36px rgba(0,0,0,.85),0 1px 0 rgba(238,233,221,.03),inset 0 1px 0 var(--glass-hi)}
+.glass::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,rgba(220,198,151,.55) 18%,rgba(238,233,221,.35) 50%,transparent 85%);opacity:.55}
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(1rem,3vw,2.25rem)}
+
+#gate{display:none;min-height:100vh;place-items:center;padding:1.5rem}
+#gate.show{display:grid}
+#gate .panel{padding:2.75rem 2.5rem;border-radius:18px;max-width:26.25rem;width:100%;text-align:center}
+#gate h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:2.5rem;line-height:1;margin-bottom:0.5rem}
+#gate h1 em{font-style:italic;font-weight:400;color:var(--copperlt)}
+#gate p{color:var(--grey);font-size:0.90625rem;line-height:1.6;margin-bottom:1.625rem}
+.btn{display:inline-flex;align-items:center;gap:0.625rem;padding:0.8125rem 1.375rem;border-radius:999px;background:var(--copper);color:#0F1327;font-weight:700;font-size:0.84375rem;letter-spacing:.022em;transition:background .15s}
+.btn:hover{background:var(--copperlt)}
+.btn.ghost{background:transparent;color:var(--grey);border:1px solid var(--line);font-weight:400}
+.btn.ghost:hover{color:var(--cream);border-color:var(--grey)}
+#gateErr{color:var(--bad);font-size:0.8125rem;margin-top:1rem;display:none}
+
+#app{display:none;padding-bottom:5rem}
+header{display:flex;align-items:center;justify-content:space-between;padding:1.375rem 0 0.5rem}
+.brand{font-family:'Cormorant Garamond',serif;font-size:1.625rem;font-weight:500;letter-spacing:.019em;line-height:1}
+.brand small{display:block;font-family:'Figtree';font-size:0.75rem;color:var(--dim);letter-spacing:0;margin-top:0.3125rem;font-weight:300}
+.brand em{font-style:italic;color:var(--copperlt);font-weight:400}
+.who{display:flex;align-items:center;gap:0.875rem;color:var(--dim);font-size:0.8125rem}
+.nav{display:flex;gap:0.25rem;margin-right:0.375rem}
+.nav a{padding:0.5rem 0.75rem;border-radius:999px;font-size:0.78125rem;color:var(--grey);border:1px solid transparent}
+.nav a:hover{color:var(--cream);border-color:var(--line)}
+.nav a.on{color:var(--copperlt);border-color:var(--line)}
+.live{display:inline-flex;align-items:center;gap:0.375rem}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(141,191,147,.18)}
+.live.off i{background:var(--dim);box-shadow:none}
+
+/* map */
+.mapcard{margin-top:1.375rem;border-radius:18px;padding:1.625rem 1.75rem 1.125rem;overflow:hidden}
+.mapcard .top{display:flex;align-items:flex-end;justify-content:space-between;gap:1.125rem;flex-wrap:wrap}
+.mapcard h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.375rem;color:var(--grey)}
+.mapcard h2 small{font-family:'Figtree';font-size:0.75rem;color:var(--dim);font-weight:300;margin-left:0.625rem}
+.chips{display:flex;gap:0.375rem;flex-wrap:wrap}
+.chip{padding:0.5rem 0.875rem;border-radius:999px;border:1px solid var(--line);color:var(--grey);font-size:0.8125rem;transition:all .15s}
+.chip:hover{color:var(--cream);border-color:var(--grey)}
+.chip.on{background:var(--copper);border-color:var(--copper);color:#0F1327;font-weight:700}
+.vstats{display:flex;gap:1.75rem;margin-top:0.875rem;flex-wrap:wrap}
+.vstats .v{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:500;line-height:1;color:#fff}
+.vstats .v.copper{color:var(--copperlt)}
+.vstats .l{margin-top:0.375rem;font-size:0.8125rem;color:var(--grey)}
+.mapwrap{position:relative;margin-top:0.625rem}
+#map{width:100%;height:auto;display:block;cursor:grab;touch-action:none}
+#map.dragging{cursor:grabbing}
+.zoomctl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:0.25rem;z-index:2}
+.zoomctl button{width:2rem;height:2rem;border-radius:8px;background:rgba(15,19,39,.75);border:1px solid var(--glass-line);color:var(--cream);font-size:1.125rem;line-height:1;backdrop-filter:blur(6px)}
+.zoomctl button:hover{border-color:var(--copper);color:var(--copperlt)}
+.zoomctl button.reset{font-size:0.6875rem;font-family:'Figtree'}
+.regions{position:absolute;left:10px;top:10px;display:flex;gap:0.25rem;flex-wrap:wrap;z-index:2;max-width:60%}
+.regions .chip{padding:0.3125rem 0.625rem;font-size:0.71875rem;background:rgba(15,19,39,.75);backdrop-filter:blur(6px)}
+.zoomhint{position:absolute;left:10px;bottom:8px;font-size:0.6875rem;color:var(--dim);pointer-events:none}
+#map .state{fill:rgba(238,233,221,.045);stroke:rgba(238,233,221,.14);stroke-width:.6}
+#map .state:hover{fill:rgba(220,198,151,.10)}
+#map .dot{fill:var(--copper);fill-opacity:.55;stroke:var(--copperlt);stroke-width:1}
+#map .dot.now{fill:var(--ok);fill-opacity:.7;stroke:#fff}
+#map .pulse{fill:none;stroke:var(--ok);stroke-width:1.2;animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{r:6;opacity:.8}100%{r:22;opacity:0}}
+#map .lbl{font-family:'Figtree';font-size:0.625rem;fill:var(--cream);paint-order:stroke;stroke:#0F1327;stroke-width:3px;stroke-linejoin:round;pointer-events:none}
+.legend{display:flex;gap:1rem;font-size:0.71875rem;color:var(--dim);margin-top:0.375rem;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:0.3125rem;vertical-align:-1px;background:var(--copper)}
+.legend i.now{background:var(--ok)}
+.abroad{margin-top:0.5rem;font-size:0.8125rem;color:var(--grey)}
+.abroad span{display:inline-block;margin:0 0.875rem 0.375rem 0}
+.abroad b{font-weight:400;color:var(--copperlt);margin-left:0.3125rem}
+/* how they browse */
+.browse{margin-top:0.875rem;border-radius:18px;padding:1.375rem 1.625rem 1.25rem}
+.browse .top{display:flex;align-items:flex-end;justify-content:space-between;gap:1.125rem;flex-wrap:wrap}
+.browse h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.375rem;color:var(--grey)}
+.browse h2 small{font-family:'Figtree';font-size:0.75rem;color:var(--dim);font-weight:300;margin-left:0.625rem}
+.bgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:1.625rem;margin-top:0.5rem}
+.bcol h3{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.125rem;color:var(--copperlt);margin:1rem 0 0.5rem}
+.hist{display:flex;align-items:flex-end;gap:0.375rem;height:7.5rem;border-bottom:1px solid var(--line);margin-top:1.625rem}
+.hist .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;position:relative}
+.hist .bar{background:var(--copper);opacity:.85;border-radius:3px 3px 0 0}
+.hist .col:hover .bar{opacity:1}
+.hist .lbl{position:absolute;top:100%;left:0;right:0;text-align:center;font-size:0.65625rem;color:var(--dim);margin-top:0.375rem;white-space:nowrap}
+.hist .val{position:absolute;bottom:calc(100% + 2px);left:0;right:0;text-align:center;font-size:0.6875rem;color:var(--cream)}
+.hist{margin-bottom:1.75rem}
+.pages{list-style:none;font-size:0.8125rem}
+.pages li{display:grid;grid-template-columns:1fr auto auto;gap:0.75rem;align-items:center;padding:0.375rem 0;border-bottom:1px solid rgba(42,49,82,.5);color:var(--cream)}
+.pages li span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pages li b{font-weight:400;color:var(--copperlt);font-variant-numeric:tabular-nums}
+.pages li i{font-style:normal;color:var(--dim);font-size:0.75rem;font-variant-numeric:tabular-nums;min-width:3.25rem;text-align:right}
+.pages .track{height:3px;background:var(--copper);border-radius:2px;margin-top:0.25rem;opacity:.7}
+.split{display:flex;gap:1.125rem;flex-wrap:wrap;font-size:0.8125rem;color:var(--grey)}
+.split b{font-weight:400;color:var(--cream)}
+.bnote{font-size:0.75rem;color:var(--dim);margin-top:0.75rem}
+@media(max-width:800px){.bgrid{grid-template-columns:1fr}}
+.dur{font-variant-numeric:tabular-nums;white-space:nowrap}
+.trail li i{font-style:normal;color:var(--copperlt);margin-left:0.625rem;font-size:0.71875rem}
+.linked{margin-top:0.875rem;border-radius:14px;padding:0.875rem 1.125rem;font-size:0.8125rem;color:var(--grey);display:none}
+.linked.show{display:block}.linked b{font-weight:400;color:var(--cream)}
+.tip{position:fixed;pointer-events:none;padding:0.5rem 0.75rem;border-radius:10px;font-size:0.78125rem;color:var(--cream);z-index:9;display:none;white-space:nowrap}
+.tip.show{display:block}
+.tip small{display:block;color:var(--dim);font-size:0.71875rem;margin-top:0.125rem}
+
+/* list */
+.tbl{margin-top:0.875rem;border-radius:16px;overflow:hidden;padding:0 0.25rem}
+.tbl .top{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;padding:1.125rem 1.25rem 0.25rem}
+.tbl h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:1.375rem;color:var(--grey)}
+table{width:100%;border-collapse:collapse;font-size:0.84375rem}
+thead th{text-align:left;font-weight:400;color:var(--dim);font-size:0.75rem;padding:0.75rem 1rem;border-bottom:1px solid var(--glass-line);white-space:nowrap}
+thead th.r,td.r{text-align:right}
+td{padding:0.6875rem 1rem;vertical-align:top}
+tr.vrow{border-bottom:1px solid rgba(42,49,82,.5);cursor:pointer;transition:background .12s}
+tr.vrow:hover{background:rgba(238,233,221,.03)}
+tr.vrow.open{background:rgba(201,176,128,.07)}
+td.now i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(141,191,147,.18);margin-right:0.5rem;vertical-align:1px}
+.lead{color:var(--copperlt);font-weight:400}
+.sub{display:block;font-size:0.75rem;color:var(--dim);margin-top:0.125rem}
+.sub em.bot{font-style:normal;color:var(--warn)}
+.path{font-size:0.78125rem;color:var(--cream);overflow-wrap:anywhere}
+.mpage{display:none;font-size:0.71875rem;color:var(--copperlt);margin-top:0.1875rem;overflow-wrap:anywhere}
+tr.trail td{padding:0.375rem 1rem 1rem 2.75rem;background:rgba(15,19,39,.35)}
+.trail ol{list-style:none;font-size:0.78125rem}
+.trail li{padding:0.1875rem 0;color:var(--grey)}
+.trail li b{font-weight:400;color:var(--dim);margin-right:0.625rem;font-variant-numeric:tabular-nums}
+.trail .meta{font-size:0.75rem;color:var(--dim);margin-bottom:0.375rem}
+.state{color:var(--dim);font-size:0.84375rem;padding:1.375rem 1rem}
+.venues{margin-top:1rem;font-size:0.8125rem;color:var(--grey)}
+.venues span{display:inline-block;margin:0 0.875rem 0.375rem 0}
+.venues b{font-weight:400;color:var(--copperlt);margin-left:0.3125rem}
+@media(max-width:720px){thead th:nth-child(3),td:nth-child(3),thead th:nth-child(4),td:nth-child(4){display:none}.mapcard{padding:1.125rem 1rem 0.875rem}}
+
+/* ---- phone header: brand on top, segmented nav below, controls last ---- */
+@media(max-width:700px){
+  header{flex-wrap:wrap;gap:0.75rem 0;padding:1rem 0 0.375rem}
+  .brand{font-size:1.375rem}
+  .who{width:100%;display:grid;grid-template-columns:1fr auto;align-items:center;gap:0.5rem}
+  .who .nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:0.25rem;margin:0}
+  .nav a{text-align:center;padding:0.5625rem 0;border-color:var(--line);background:rgba(15,19,39,.4);font-size:0.8125rem}
+  .nav a.on{background:var(--copper);color:#0F1327;font-weight:700;border-color:var(--copper)}
+  #whoEmail{display:none}
+  .live{font-size:0.75rem}
+  #signout{padding:0.5rem 0.875rem;font-size:0.75rem;justify-self:end}
+  .wrap{padding:0 0.75rem}
+}
+@media(max-width:720px){
+  thead th:nth-child(2),td:nth-child(2),thead th:nth-child(5),td:nth-child(5){display:none}
+  .mpage{display:block!important}
+  .vstats{gap:1rem}.vstats .v{font-size:1.875rem}.vstats .l{font-size:0.71875rem}
+  .regions{max-width:70%;gap:0.1875rem}.regions .chip{padding:0.25rem 0.5rem;font-size:0.65625rem}.zoomhint{display:none}
+  .browse{padding:1rem 0.875rem 0.875rem}.browse .top{gap:0.5rem}.split{gap:0.625rem;font-size:0.75rem}
+  .trail li{flex-wrap:wrap}td{padding:0.6875rem 0.625rem}td.r{white-space:nowrap}
+}
+/* reduced motion is handled properly in apple.css - a blanket transition:none
+   here would also kill the cross-fades that replace the springs */
+
+/* ---- Elizabeth Scott skin (appended by clone_admin.py) ---- */
+:root{--sand:#8F7E58}
+.brand em{font-style:normal;color:var(--copperlt);font-weight:500;letter-spacing:3px;text-transform:uppercase;font-size:.62em;vertical-align:middle;margin-left:6px}
+.brand .script,#gate h1 .script{font-family:'Alex Brush',cursive;font-weight:400;font-size:1.45em;color:var(--copper);letter-spacing:0;line-height:1;vertical-align:middle}
+#gate h1 em{font-style:normal;letter-spacing:4px;text-transform:uppercase;font-size:.5em;display:block;margin-top:8px;color:var(--copperlt)}
+body::after{opacity:.28}
+</style>
+<link rel="stylesheet" href="/apple.css">
+</head>
+<body>
+
+<div id="gate">
+  <div class="panel glass">
+    <h1><span class="script">Elizabeth Scott</span> <em>Visitors</em></h1>
+    <p>Sign in with the studio Google account to see who is on the site.</p>
+    <button class="btn" id="signin">Sign in with Google</button>
+    <div id="gateErr"></div>
+  </div>
+</div>
+
+<div class="tip glass" id="tip"></div>
+
+<div id="app">
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="script">Elizabeth Scott</span> <em>Visitors</em><small id="todayTxt"></small></div>
+      <div class="who"><nav class="nav"><a href="/">Bookings</a><a href="/leads.html">Leads</a><a class="on" href="/visitors.html">Visitors</a></nav><span class="live off" id="live"><i></i><span id="liveTxt">Connecting</span></span><span id="whoEmail"></span><button class="btn ghost" id="signout">Sign out</button></div>
+    </header>
+
+    <section class="mapcard glass">
+      <div class="top">
+        <h2>Where they are <small id="vUpdated"></small></h2>
+        <div class="chips" id="rangeChips">
+          <button class="chip on" data-range="1">Today</button>
+          <button class="chip" data-range="7">7 days</button>
+          <button class="chip" data-range="30">30 days</button>
+        </div>
+      </div>
+      <div class="vstats">
+        <div><div class="v copper" id="vNow">–</div><div class="l">here now</div></div>
+        <div><div class="v" id="vRange">–</div><div class="l" id="vRangeL">visitors today</div></div>
+        <div><div class="v" id="vLeads">–</div><div class="l">started booking</div></div>
+        <div><div class="v" id="vCities">–</div><div class="l">cities</div></div>
+        <div><div class="v" id="vAvg">–</div><div class="l">avg visit length</div></div>
+      </div>
+      <div class="mapwrap">
+        <div class="regions" id="regions"></div>
+        <div class="zoomctl"><button id="zIn" title="Zoom in">+</button><button id="zOut" title="Zoom out">−</button><button id="zReset" class="reset" title="Reset">US</button></div>
+        <svg id="map" viewBox="0 0 975 610" role="img" aria-label="Map of visitor locations in the United States"></svg>
+        <div class="zoomhint">scroll or pinch to zoom · drag to pan · double-click a spot to zoom there</div>
+      </div>
+      <div class="legend"><span><i class="now"></i>on the site now</span><span><i></i>visited in range · larger = more visits</span></div>
+      <div class="abroad" id="abroad"></div>
+    </section>
+
+    <section class="browse glass" id="browse"></section>
+    <div class="linked glass" id="linked"></div>
+
+    <section class="tbl glass">
+      <div class="top">
+        <h2>Visitors</h2>
+        <div class="chips">
+          <button class="chip on" data-vtab="now">Right now</button>
+          <button class="chip" data-vtab="range">In range</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>Who / where</th><th>Page</th><th>Came from</th><th>Venue</th><th class="r">Pages</th><th class="r">Time</th><th class="r">Seen</th></tr></thead>
+        <tbody id="vRows"><tr><td colspan="7" class="state">Waiting for visitors…</td></tr></tbody>
+      </table>
+      <div class="venues" id="vVenues"></div>
+    </section>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, collectionGroup, doc, getDoc, query, where, orderBy, limit, onSnapshot, getDocs, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+import * as topojson from "https://cdn.jsdelivr.net/npm/topojson-client@3/+esm";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGLuSg0vXbqKhzJwvbAYzTD7Lo17FbJ28",
+  authDomain: "elizabeth-scott-738e5.firebaseapp.com",
+  projectId: "elizabeth-scott-738e5",
+  storageBucket: "elizabeth-scott-738e5.firebasestorage.app",
+  appId: "1:443752653013:web:7cba348946edd20d85c25c"
+};
+const ADMIN_EMAILS = ["info@elizabethscottweddings.com", "hello@elizabethscottweddings.com"];
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ts = v => v ? (v.toDate ? v.toDate() : new Date(v)) : null;
+const gate = $("#gate"), appEl = $("#app");
+$("#todayTxt").textContent = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+
+/* ====== auth ====== */
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app), db = getFirestore(app);
+$("#signin").onclick = async () => {
+  const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+  try { await signInWithPopup(auth, p); } catch (e) {
+    if (/popup/i.test(e.code || "")) return signInWithRedirect(auth, p);
+    showGateErr(e.message);
+  }
+};
+$("#signout").onclick = () => signOut(auth);
+getRedirectResult(auth).catch(e => showGateErr(e.message));
+function showGateErr(m){ const el=$("#gateErr"); el.textContent=m; el.style.display="block"; }
+function setLive(on){ $("#live").classList.toggle("off",!on); $("#liveTxt").textContent = on ? "Live" : "Offline"; }
+
+let unsub = null;
+const DEMO = new URLSearchParams(location.search).has("demo");
+onAuthStateChanged(auth, user => {
+  if (DEMO) return;
+  if (unsub) { unsub(); unsub = null; }
+  if (!user) { appEl.style.display="none"; gate.classList.add("show"); return; }
+  if (!ADMIN_EMAILS.includes((user.email||"").toLowerCase())) {
+    gate.classList.add("show"); showGateErr(`${user.email} isn't on the admin list.`); signOut(auth); return;
+  }
+  $("#whoEmail").textContent = user.email;
+  gate.classList.remove("show"); appEl.style.display="block";
+  unsub = startVisitors();
+  openLinked();
+});
+let LINKED = null;
+async function openLinked(){
+  const sid = new URLSearchParams(location.search).get("sid"); if (!sid) return;
+  try {
+    const snap = await getDoc(doc(db, "sessions", sid));
+    if (!snap.exists()) { $("#linked").innerHTML = `Visit <b>${esc(sid)}</b> isn't in the visitor log any more (sessions are kept 90 days).`; $("#linked").classList.add("show"); return; }
+    LINKED = { id: snap.id, ...snap.data() };
+    const days = Math.max(1, Math.ceil((Date.now() - ts(LINKED.first_seen)) / 864e5));
+    $("#linked").innerHTML = `Showing the visit that led to <b>${esc(LINKED.lead_name || LINKED.booking_id || "this booking")}</b> — ${esc(LINKED.city||"")}${LINKED.region?", "+esc(LINKED.region):""} · ${vDur(sessDur(LINKED))} · ${LINKED.page_count||"?"} pages · landed on ${esc(LINKED.landing||"/")} from ${esc(vFrom(LINKED))}`;
+    $("#linked").classList.add("show");
+    V_TAB = "range"; document.querySelectorAll("[data-vtab]").forEach(x => x.classList.toggle("on", x.dataset.vtab==="range"));
+    const rangeBtn = [...document.querySelectorAll("[data-range]")].find(b => Number(b.dataset.range) >= days) || document.querySelector('[data-range="30"]');
+    if (rangeBtn && Number(rangeBtn.dataset.range) !== RANGE) rangeBtn.click();
+    V_OPEN = sid; setTimeout(()=>{ if (!V_RANGE.some(d=>d.id===sid)) V_RANGE.unshift(LINKED); renderList(); $(`tr[data-sid="${CSS.escape(sid)}"]`)?.scrollIntoView({block:"center",behavior:"smooth"}); }, 900);
+  } catch (e) { console.warn("linked:", e.message); }
+}
+
+/* ====== data ====== */
+const V_ACTIVE_MS = 2 * 60 * 1000;
+/* Non-people, filtered client-side so history stays honest:
+   - bot:true — the tracker's own verdict (Meta's network, crawler UA, verified bot, or a page that was
+     only "sat on" from a hosting network / with no location). Written since Sep 9, 2026.
+   - crawler user-agents and data-center cities the older tracker let through.
+   - pre-Sep-9 rows from Meta's ad-link checks: a Meta utm (ig/fb/msg/an), no location, one page and no
+     `engaged` record — a person tapping an ad from a phone always geolocates. */
+const BOT_RE = /bot|crawl|spider|slurp|lighthouse|facebookexternalhit|facebot|meta-externalagent|whatsapp|twitterbot|linkedinbot|pinterest|slackbot|discordbot|telegrambot|applebot|bingpreview|headlesschrome|phantomjs|petalbot|ahrefs|semrush|mj12|screaming frog|gtmetrix|pingdom|uptimerobot|preview|snapchat|skypeuripreview|embedly|google-inspectiontool|yandex|baidu|duckduckbot/i;
+const DC_CITIES = new Set(["Boardman","Ashburn","The Dalles","Council Bluffs","Prineville","Umatilla","Forest City","Altoona","Hilliard","Papillion","Sterling","Quincy"]);
+const META_UTM = /^(ig|fb|msg|an)$/i;   // what Meta writes into utm_source={{site_source_name}}
+const noGeo = d => !d.city && typeof d.lat !== "number";
+const isBot = d => d.bot === true
+  || BOT_RE.test(d.ua||"")
+  || (DC_CITIES.has(d.city) && Number(d.page_count||1) <= 1 && (sessDur(d)||0) < 15000)
+  || (!d.engaged && noGeo(d) && META_UTM.test(d.utm_source||"") && Number(d.page_count||1) <= 1);
+const botWhy = d => d.bot === true ? (d.bot_why || "bot") : BOT_RE.test(d.ua||"") ? "crawler user-agent" : DC_CITIES.has(d.city) ? "data-center city" : "meta ad check";
+let HIDE_BOTS = true;
+const cleanPath = p => String(p||"/").split("?")[0].split("#")[0] || "/";
+const PAGE_CAP_MS = 20 * 60 * 1000;   // one page open longer than this counts as 20 min (tab left open)
+const vDur = ms => { if (ms==null||isNaN(ms)) return "—"; const s=Math.max(0,Math.round(ms/1000)); if (s<60) return s+"s"; const m=Math.floor(s/60), r=s%60; return m<60 ? `${m}m ${r.toString().padStart(2,"0")}s` : `${Math.floor(m/60)}h ${m%60}m`; };
+const sessDur = d => { const a=ts(d.first_seen), b=ts(d.last_seen); return (a&&b) ? Math.min(b-a, 3*60*60*1000) : null; };
+const isLead = d => !!(d.lead_name || d.booking_id);
+let HITS = [], HITS_MODE = "";
+let V_NOW = [], V_RANGE = [], V_ALL = [], BOTS = 0, RANGE = 1, V_TAB = "now", V_OPEN = null, stopRange = null;
+
+function startVisitors(){
+  let stopNow = null;
+  const watchNow = () => {
+    if (stopNow) stopNow();
+    const since = Timestamp.fromMillis(Date.now() - V_ACTIVE_MS);
+    stopNow = onSnapshot(query(collection(db, "sessions"), where("last_seen", ">=", since), orderBy("last_seen", "desc"), limit(100)),
+      snap => { V_NOW = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => !HIDE_BOTS || !isBot(d)); setLive(true);
+                $("#vNow").textContent = V_NOW.length; $("#vUpdated").textContent = "updated " + vTime(new Date()); renderAll(); },
+      err => { setLive(false); $("#vRows").innerHTML = `<tr><td colspan="7" class="state">Couldn't read sessions: ${esc(err.message)}</td></tr>`; });
+  };
+  watchNow();
+  const tick = setInterval(watchNow, 20000);
+  watchRange();
+  return () => { clearInterval(tick); if (stopNow) stopNow(); if (stopRange) stopRange(); };
+}
+
+function watchRange(){
+  if (DEMO) return;
+  if (stopRange) stopRange();
+  const start = new Date(); start.setHours(0,0,0,0); start.setDate(start.getDate() - (RANGE - 1));
+  stopRange = onSnapshot(query(collection(db, "sessions"), where("last_seen", ">=", Timestamp.fromDate(start)), orderBy("last_seen", "desc"), limit(1000)),
+    snap => { const all = snap.docs.map(d => ({ id: d.id, ...d.data() })); V_ALL = all;
+              V_RANGE = all.filter(d => !HIDE_BOTS || !isBot(d)); BOTS = all.length - V_RANGE.length;
+              $("#vRange").textContent = V_RANGE.length;
+              $("#vRangeL").textContent = RANGE === 1 ? "visitors today" : `visitors, last ${RANGE} days`;
+              $("#vLeads").textContent = V_RANGE.filter(isLead).length;
+              const durs = V_RANGE.map(sessDur).filter(x=>x!=null);
+              $("#vAvg").textContent = durs.length ? vDur(durs.reduce((a,b)=>a+b,0)/durs.length) : "–";
+              renderAll(); loadHits(start); },
+    err => console.warn("sessions range:", err.message));
+}
+
+/* ====== map ====== */
+const svg = d3.select("#map");
+const projection = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+const gRoot = svg.append("g");
+const gStates = gRoot.append("g"), gDots = gRoot.append("g"), gLbl = gRoot.append("g");
+let ZK = 1, LIST = [];
+const zoom = d3.zoom().scaleExtent([1, 14]).translateExtent([[0,0],[975,610]])
+  .on("start", () => svg.classed("dragging", true))
+  .on("end", () => svg.classed("dragging", false))
+  .on("zoom", e => { ZK = e.transform.k; gRoot.attr("transform", e.transform); restyleZoom(); });
+svg.call(zoom).on("dblclick.zoom", null);
+function restyleZoom(){
+  gStates.selectAll("path").attr("stroke-width", .6 / ZK);
+  gDots.selectAll(".dot").attr("r", d => rScale(d.n) / Math.sqrt(ZK)).attr("stroke-width", 1 / ZK);
+  gDots.selectAll(".pulse").attr("stroke-width", 1.2 / ZK);
+  const show = ZK >= 5 ? LIST.length : ZK >= 2.5 ? 30 : 8;
+  gLbl.selectAll("text").data(LIST.slice(0, show), d => d.key).join("text").attr("class", "lbl")
+    .attr("font-size", 10 / ZK).attr("stroke-width", 3 / ZK)
+    .attr("x", d => d.x + rScale(d.n) / Math.sqrt(ZK) + 4 / ZK).attr("y", d => d.y + 3 / ZK).text(d => d.key.split(",")[0]);
+}
+let rScale = d3.scaleSqrt().domain([1, 1]).range([5, 18]);
+function zoomTo(x0, y0, x1, y1){
+  const k = Math.min(14, Math.max(1, 0.9 / Math.max((x1 - x0) / 975, (y1 - y0) / 610)));
+  svg.transition().duration(600).call(zoom.transform, d3.zoomIdentity.translate(487.5, 305).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
+}
+function zoomToLngLat(w, s, e, nn){ // west, south, east, north
+  const a = projection([w, nn]), b = projection([e, s]); if (!a || !b) return;
+  zoomTo(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1]));
+}
+const REGIONS = [["New England", -73.8, 40.9, -66.8, 45.2], ["Northeast", -80.6, 38.6, -69.8, 45.2], ["Mid-Atlantic", -80.6, 36.4, -73.8, 41.5], ["Southeast", -89, 24.4, -75.4, 36.7], ["Texas", -106.7, 25.8, -93.4, 36.6], ["Arizona", -114.9, 31.3, -108.9, 37.1], ["Colorado", -109.1, 36.9, -102, 41.1], ["Midwest", -97.4, 36.9, -80.4, 49.1], ["West Coast", -124.6, 32.4, -114.1, 49.1]];
+$("#regions").innerHTML = REGIONS.map(([l]) => `<button class="chip" data-region="${l}">${l}</button>`).join("");
+$("#regions").addEventListener("click", e => { const b = e.target.closest("[data-region]"); if (!b) return; const r = REGIONS.find(x => x[0] === b.dataset.region); zoomToLngLat(r[1], r[2], r[3], r[4]); });
+$("#zIn").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1.7);
+$("#zOut").onclick = () => svg.transition().duration(250).call(zoom.scaleBy, 1 / 1.7);
+$("#zReset").onclick = () => svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+let mapReady = false;
+fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(r => r.json()).then(us => {
+  const path = d3.geoPath(projection);
+  gStates.selectAll("path").data(topojson.feature(us, us.objects.states).features).join("path").attr("class", "state").attr("d", path)
+    .append("title").text(d => d.properties.name);
+  mapReady = true; renderMap();
+}).catch(e => console.warn("map:", e.message));
+
+const tip = $("#tip");
+function renderMap(){
+  if (!mapReady) return;
+  const nowIds = new Set(V_NOW.map(d => d.id));
+  const all = [...V_RANGE, ...V_NOW.filter(d => !V_RANGE.some(x => x.id === d.id))];
+  const spots = new Map(), abroad = new Map();
+  for (const d of all) {
+    if (typeof d.lat !== "number" || typeof d.lng !== "number") continue;
+    const p = projection([d.lng, d.lat]);
+    const key = [d.city, d.region, d.country].filter(Boolean).join(", ") || `${d.lat.toFixed(1)},${d.lng.toFixed(1)}`;
+    if (!p) { abroad.set(key, (abroad.get(key) || 0) + 1); continue; }
+    const s = spots.get(key) || { key, x: p[0], y: p[1], n: 0, now: 0, leads: 0 };
+    s.n++; if (nowIds.has(d.id)) s.now++; if (d.lead_name) s.leads++;
+    spots.set(key, s);
+  }
+  const list = [...spots.values()].sort((a, b) => b.n - a.n);
+  $("#vCities").textContent = list.length + abroad.size;
+  rScale = d3.scaleSqrt().domain([1, Math.max(1, list[0]?.n || 1)]).range([5, 18]); const r = rScale; LIST = list;
+
+  gDots.selectAll("g.spot").data(list, d => d.key).join(enter => {
+    const g = enter.append("g").attr("class", "spot");
+    g.append("circle").attr("class", "pulse");
+    g.append("circle").attr("class", "dot");
+    return g;
+  }).attr("transform", d => `translate(${d.x},${d.y})`)
+    .each(function(d){
+      const g = d3.select(this);
+      g.select(".pulse").style("display", d.now ? null : "none");
+      g.select(".dot").attr("r", r(d.n)).classed("now", d.now > 0);
+    })
+    .on("mousemove", (e, d) => {
+      tip.innerHTML = `${esc(d.key)}<small>${d.n} visit${d.n === 1 ? "" : "s"}${d.now ? ` · ${d.now} here now` : ""}${d.leads ? ` · ${d.leads} started booking` : ""}</small>`;
+      tip.classList.add("show"); tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px";
+    })
+    .on("mouseleave", () => tip.classList.remove("show"))
+    .on("dblclick", (e, d) => { e.stopPropagation(); zoomTo(d.x - 45, d.y - 28, d.x + 45, d.y + 28); });
+
+  restyleZoom();
+
+  const ab = [...abroad.entries()].sort((a, b) => b[1] - a[1]);
+  $("#abroad").innerHTML = ab.length ? "Outside the US: " + ab.map(([k, n]) => `<span>${esc(k)}<b>${n}</b></span>`).join("") : "";
+}
+
+/* ====== list ====== */
+const vAgo = d => { if(!d) return ""; const s=Math.round((Date.now()-d)/1000);
+  return s<60 ? `${s}s ago` : s<3600 ? `${Math.round(s/60)}m ago` : s<86400 ? `${Math.round(s/3600)}h ago` : `${Math.round(s/86400)}d ago`; };
+const vTime = d => d ? d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : "";
+const vPlace = d => [d.city, d.region].filter(Boolean).join(", ") || (d.bot && d.org ? d.org : "") || d.country || "Unknown location";
+const vFrom = d => { if (d.utm_source) return d.utm_campaign ? `${d.utm_source} · ${d.utm_campaign}` : d.utm_source; if (/fbclid=/.test(d.landing||"")) return "facebook/instagram"; const r = d.referrer || "direct"; if (r === "direct") return "direct"; if (/^ig$|instagram/i.test(r)) return "instagram";
+  try { return new URL(r).hostname.replace(/^www\./, ""); } catch { return r; } };
+const vWho = d => d.lead_name
+  ? `<span class="lead">${esc(d.lead_name)}</span><span class="sub">${esc(vPlace(d))}</span>`
+  : `${esc(vPlace(d))}<span class="sub">${esc(d.device || "")}${d.lang ? " · " + esc(d.lang) : ""}${isBot(d) ? ` · <em class="bot">${esc(botWhy(d))}</em>` : ""}</span>`;
+
+function renderAll(){ renderMap(); renderList(); renderBrowse(); }
+
+/* ====== how they browse ====== */
+let hitsToken = 0;
+async function loadHits(start){
+  const my = ++hitsToken;
+  try {
+    const snap = await getDocs(query(collectionGroup(db, "hits"), where("t", ">=", Timestamp.fromDate(start)), orderBy("t", "asc"), limit(5000)));
+    if (my !== hitsToken) return;
+    HITS = snap.docs.map(h => ({ sid: h.ref.parent.parent.id, ...h.data() })); HITS_MODE = "group";
+  } catch (e) {
+    // no collection-group index/rule yet → fall back to per-session reads for the sessions in range (capped)
+    console.warn("hits collectionGroup:", e.message);
+    const out = []; const subset = V_RANGE.slice(0, 150);
+    await Promise.all(subset.map(async d => {
+      try { const snap = await getDocs(query(collection(db, "sessions", d.id, "hits"), orderBy("t", "asc"), limit(200)));
+            snap.docs.forEach(h => out.push({ sid: d.id, ...h.data() })); } catch (_) {}
+    }));
+    if (my !== hitsToken) return;
+    HITS = out; HITS_MODE = subset.length < V_RANGE.length ? `fallback (first ${subset.length} of ${V_RANGE.length} visits)` : "fallback";
+  }
+  renderBrowse();
+}
+/* per-session page dwell: gap to next hit; last page closes with the heartbeat's last_seen */
+function dwellFor(sid, hits, sess){
+  const h = hits.slice().sort((a,b)=>ts(a.t)-ts(b.t)); const out=[];
+  for (let i=0;i<h.length;i++){
+    const t0=ts(h[i].t), t1 = i+1<h.length ? ts(h[i+1].t) : ts(sess&&sess.last_seen);
+    let ms = (t0&&t1) ? t1-t0 : null; if (ms!=null) ms = Math.max(0, Math.min(ms, PAGE_CAP_MS));
+    out.push({ path:h[i].path, title:h[i].title, t:t0, ms });
+  }
+  return out;
+}
+function renderBrowse(){
+  const el = $("#browse"); if (!el) return;
+  const sessions = V_RANGE, byS = {}; for (const h of HITS) (byS[h.sid] = byS[h.sid] || []).push(h);
+  const sMap = Object.fromEntries(sessions.map(d=>[d.id,d]));
+  const n = sessions.length;
+  if (!n) { el.innerHTML = `<div class="top"><h2>How they browse</h2></div><div class="bnote">No visits in this range yet.</div>`; return; }
+  const durs = sessions.map(sessDur).filter(x=>x!=null).sort((a,b)=>a-b);
+  const avg = durs.length ? durs.reduce((a,b)=>a+b,0)/durs.length : 0, med = durs.length ? durs[Math.floor(durs.length/2)] : 0;
+  const pages = sessions.map(d=>Number(d.page_count||1));
+  const avgPages = pages.reduce((a,b)=>a+b,0)/n;
+  const bounce = sessions.filter(d=>Number(d.page_count||1)<=1).length;
+  const engaged = sessions.filter(d=>(sessDur(d)||0)>=60000 || Number(d.page_count||1)>=3).length;
+  const leads = sessions.filter(isLead).length;
+  const dev = {}; for (const d of sessions) dev[d.device||"?"]=(dev[d.device||"?"]||0)+1;
+  const ret = sessions.filter(d=>/elizabethscottweddings\.com/.test(d.referrer||"")).length;
+  // duration histogram
+  const buckets = [["<10s",0,10e3],["10–30s",10e3,30e3],["30s–1m",30e3,60e3],["1–3m",60e3,180e3],["3–10m",180e3,600e3],["10m+",600e3,Infinity]];
+  const hist = buckets.map(([l,a,b])=>({l, n: durs.filter(x=>x>=a&&x<b).length}));
+  const hmax = Math.max(1,...hist.map(x=>x.n));
+  // per-page stats from hits
+  const pg = {}; let dwellN = 0;
+  for (const sid in byS) { if (!sMap[sid]) continue; for (const x of dwellFor(sid, byS[sid], sMap[sid])) { const k=cleanPath(x.path); pg[k]=pg[k]||{views:0,ms:0,nms:0}; pg[k].views++; if (x.ms!=null){pg[k].ms+=x.ms; pg[k].nms++; dwellN++;} } }
+  const top = Object.entries(pg).sort((a,b)=>b[1].views-a[1].views).slice(0,10);
+  const stick = Object.entries(pg).filter(([,v])=>v.nms>=2).sort((a,b)=>(b[1].ms/b[1].nms)-(a[1].ms/a[1].nms)).slice(0,6);
+  const vmax = Math.max(1,...top.map(([,v])=>v.views));
+  // landing pages that turn into leads
+  const land = {}; for (const d of sessions){ const k=cleanPath(d.landing); land[k]=land[k]||{n:0,leads:0}; land[k].n++; if(isLead(d)) land[k].leads++; }
+  const landTop = Object.entries(land).sort((a,b)=>b[1].n-a[1].n).slice(0,6);
+  const pageName = p => p==="/" ? "Home" : p.replace(/^\/|\/$/g,"").replace(/-/g," ").replace(/\//g," › ").slice(0,48);
+  el.innerHTML = `
+    <div class="top"><h2>How they browse <small>${RANGE===1?"today":`last ${RANGE} days`} · ${n} visit${n===1?"":"s"}</small></h2>
+      <div class="split"><span>avg <b>${vDur(avg)}</b></span><span>median <b>${vDur(med)}</b></span><span>pages/visit <b>${avgPages.toFixed(1)}</b></span><span>bounced <b>${Math.round(bounce/n*100)}%</b></span><span>engaged <b>${Math.round(engaged/n*100)}%</b></span><span>started booking <b>${leads}</b>${n?` (${(leads/n*100).toFixed(1)}%)`:""}</span></div></div>
+    <div class="bgrid">
+      <div class="bcol">
+        <h3>How long they stay</h3>
+        <div class="hist">${hist.map(x=>`<div class="col"><div class="val">${x.n||""}</div><div class="bar" style="height:${(x.n/hmax)*100}%"></div><div class="lbl">${x.l}</div></div>`).join("")}</div>
+        <h3>Most viewed pages</h3>
+        <ul class="pages">${top.length?top.map(([k,v])=>`<li><span title="${esc(k)}">${esc(pageName(k))}<div class="track" style="width:${(v.views/vmax)*100}%"></div></span><b>${v.views}</b><i>${v.nms?vDur(v.ms/v.nms):"—"}</i></li>`).join(""):"<li>No page views recorded yet.</li>"}</ul>
+      </div>
+      <div class="bcol">
+        <h3>Pages they linger on</h3>
+        <ul class="pages">${stick.length?stick.map(([k,v])=>`<li><span title="${esc(k)}">${esc(pageName(k))}</span><b>${vDur(v.ms/v.nms)}</b><i>${v.nms} views</i></li>`).join(""):"<li>Needs a few more visits.</li>"}</ul>
+        <h3>Landing pages → booking starts</h3>
+        <ul class="pages">${landTop.map(([k,v])=>`<li><span title="${esc(k)}">${esc(pageName(k))}</span><b>${v.leads?`${v.leads} lead${v.leads===1?"":"s"}`:"—"}</b><i>${v.n} visits</i></li>`).join("")}</ul>
+        <h3>Devices</h3>
+        <div class="split">${Object.entries(dev).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<span>${esc(k)} <b>${Math.round(v/n*100)}%</b></span>`).join("")}<span>returning via site link <b>${ret}</b></span></div>
+      </div>
+    </div>
+    <div class="bnote"><label class="tog" style="display:inline-flex;gap:.375rem;align-items:center;margin-right:.875rem;cursor:pointer"><input type="checkbox" id="hideBots"${HIDE_BOTS?" checked":""} style="accent-color:var(--copper)"> hide bots, crawlers &amp; Meta's ad-link checks${BOTS?` <b style="font-weight:400;color:var(--copperlt)">(${BOTS} hidden)</b>`:""}</label>Visit length = first to last activity (heartbeat every 30s). Time on a page = until the next page, capped at 20 min; the last page of a visit is timed by the heartbeat.${dwellN?` Page times from ${dwellN} timed views.`:""}${HITS_MODE.startsWith("fallback")?` <span style="color:var(--warn)">Page stats are using the slower per-visit read (${esc(HITS_MODE)}) — add the collection-group rule and index for the full range.</span>`:""}</div>`;
+}
+function renderList(){
+  const list = V_TAB === "now" ? V_NOW : V_RANGE;
+  const rows = $("#vRows");
+  if (!list.length) {
+    rows.innerHTML = `<tr><td colspan="7" class="state">${V_TAB === "now" ? "Nobody on the site right now." : "No visitors in this range."}</td></tr>`;
+  } else {
+    rows.innerHTML = list.map(d => `
+      <tr class="vrow${V_OPEN === d.id ? " open" : ""}" data-sid="${esc(d.id)}">
+        <td class="${V_TAB === "now" ? "now" : ""}">${V_TAB === "now" ? "<i></i>" : ""}${vWho(d)}<span class="mpage">${esc(cleanPath(V_TAB === "now" ? d.page : d.landing))}${d.page_count?` · ${d.page_count} page${d.page_count===1?"":"s"}`:""} · ${esc(vFrom(d))}</span></td>
+        <td class="path">${esc(cleanPath(V_TAB === "now" ? d.page : d.landing))}</td>
+        <td>${esc(vFrom(d))}</td>
+        <td>${esc(d.venue || "")}</td>
+        <td class="r">${d.page_count ?? ""}</td>
+        <td class="r dur">${vDur(sessDur(d))}</td>
+        <td class="r">${V_TAB === "now" ? vTime(ts(d.first_seen)) : vAgo(ts(d.last_seen))}</td>
+      </tr>`).join("");
+    if (V_OPEN) { const tr = rows.querySelector(`tr[data-sid="${V_OPEN}"]`); if (tr) loadTrail(tr, V_OPEN); }
+  }
+  const counts = {};
+  for (const d of V_RANGE) if (d.venue) counts[d.venue] = (counts[d.venue] || 0) + 1;
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  $("#vVenues").innerHTML = top.length ? "Venue pages: " + top.map(([v, n]) => `<span>${esc(v)}<b>${n}</b></span>`).join("") : "";
+}
+
+async function loadTrail(tr, sid){
+  const trail = document.createElement("tr"); trail.className = "trail";
+  trail.innerHTML = `<td colspan="7" class="state">Loading…</td>`;
+  tr.after(trail);
+  try {
+    const snap = DEMO ? { docs: HITS.filter(h=>h.sid===sid).map(h=>({data:()=>h})) } : await getDocs(query(collection(db, "sessions", sid, "hits"), orderBy("t", "asc"), limit(200)));
+    const d = [...V_NOW, ...V_RANGE, LINKED].filter(Boolean).find(x => x.id === sid) || {};
+    const meta = [d.lead_email, d.device, d.screen, `visit ${vDur(sessDur(d))}`, d.engaged ? `first activity: ${d.engaged}` : "", d.org, d.ua].filter(Boolean).map(esc).join(" · ");
+    const steps = dwellFor(sid, snap.docs.map(h=>h.data()), d);
+    trail.innerHTML = `<td colspan="7"><div class="meta">${meta}</div><ol>${
+      steps.map((x,i) => `<li><b>${vTime(x.t)}</b>${esc(x.path)}${x.ms!=null?`<i>${vDur(x.ms)}${i===steps.length-1&&V_NOW.some(v=>v.id===sid)?" so far":""}</i>`:""}</li>`).join("") || "<li>No page trail recorded.</li>"
+    }</ol></td>`;
+  } catch (e) { trail.innerHTML = `<td colspan="7" class="state">${esc(e.message)}</td>`; }
+}
+
+document.addEventListener("change", e => { if (e.target.id==="hideBots") { HIDE_BOTS = e.target.checked; V_RANGE = V_ALL.filter(d => !HIDE_BOTS || !isBot(d)); BOTS = V_ALL.length - V_RANGE.length; $("#vRange").textContent = V_RANGE.length; renderAll(); } });
+document.querySelectorAll("[data-range]").forEach(b => b.onclick = () => {
+  RANGE = Number(b.dataset.range); V_OPEN = null;
+  document.querySelectorAll("[data-range]").forEach(x => x.classList.toggle("on", x === b));
+  watchRange();
+});
+document.querySelectorAll("[data-vtab]").forEach(b => b.onclick = () => {
+  V_TAB = b.dataset.vtab; V_OPEN = null;
+  document.querySelectorAll("[data-vtab]").forEach(x => x.classList.toggle("on", x === b));
+  renderList();
+});
+$("#vRows").addEventListener("click", e => {
+  const tr = e.target.closest("tr.vrow"); if (!tr) return;
+  V_OPEN = V_OPEN === tr.dataset.sid ? null : tr.dataset.sid;
+  renderList();
+});
+if (DEMO) {
+  const now = Date.now(), mk = (i,pc,dur,extra={}) => ({ id:"s"+i, first_seen:new Date(now-i*3.6e6-dur), last_seen:new Date(now-i*3.6e6), page_count:pc, device:i%3?"mobile":"desktop", landing:i%2?"/":"/venues/the-adolphus-dallas/", referrer:i%4?"https://www.google.com/":"direct", city:["Dallas","Plano","Austin","Phoenix"][i%4], region:"TX", country:"US", lat:32.8+i*0.1, lng:-96.8-i*0.1, page:"/book/", ...extra });
+  V_RANGE = [mk(1,4,140e3,{lead_name:"Morgan R."}), mk(2,1,6e3), mk(3,2,45e3), mk(4,6,420e3,{booking_id:"a3"}), mk(5,1,3e3), mk(6,3,95e3), mk(7,2,20e3), mk(8,5,300e3)];
+  HITS = []; for (const d of V_RANGE) { const t0 = +d.first_seen, step = (+d.last_seen - t0)/Math.max(1,d.page_count-1||1); const paths=[d.landing,"/packages/","/book/","/films/","/contact","/venues/"]; for (let k=0;k<d.page_count;k++) HITS.push({sid:d.id, path:paths[k%paths.length], t:new Date(t0+k*step)}); }
+  $("#whoEmail").textContent=""; appEl.style.display="block"; setLive(false); $("#liveTxt").textContent="Demo data";
+  $("#vRange").textContent=V_RANGE.length; $("#vLeads").textContent=V_RANGE.filter(isLead).length; $("#vNow").textContent="0";
+  const durs=V_RANGE.map(sessDur); $("#vAvg").textContent=vDur(durs.reduce((a,b)=>a+b,0)/durs.length);
+  V_TAB="range"; document.querySelectorAll("[data-vtab]").forEach(x=>x.classList.toggle("on",x.dataset.vtab==="range"));
+  setTimeout(renderAll, 0);
+}
+</script>
+<script type="module" src="/apple.js"></script>
+</body>
+</html>

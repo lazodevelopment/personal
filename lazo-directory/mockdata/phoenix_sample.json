@@ -1,0 +1,274 @@
+[
+ {
+  "placeId": "ChIJmock0001",
+  "name": "Desert Bloom Photography",
+  "address": "5405 E Indian School Rd, Phoenix, AZ",
+  "lat": 33.51844704892695,
+  "lng": -112.18551407291196,
+  "website": "",
+  "phone": "(602) 555-9779",
+  "categories": [
+   "wedding-photographers"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0002",
+  "name": "Saguaro Light Studio",
+  "address": "1642 E Bell Rd, Phoenix, AZ",
+  "lat": 33.574836401771,
+  "lng": -111.92708878105707,
+  "website": "",
+  "phone": "(602) 555-4517",
+  "categories": [
+   "wedding-photographers"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0003",
+  "name": "Camelback Captures",
+  "address": "714 E Camelback Rd, Phoenix, AZ",
+  "lat": 33.530093705098714,
+  "lng": -112.17904337292762,
+  "website": "",
+  "phone": "(602) 555-2486",
+  "categories": [
+   "wedding-photographers"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0004",
+  "name": "Golden Hour Phoenix",
+  "address": "9128 E Thomas Rd, Phoenix, AZ",
+  "lat": 33.4177331518237,
+  "lng": -112.03036389174208,
+  "website": "",
+  "phone": "(602) 555-4657",
+  "categories": [
+   "wedding-photographers"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0005",
+  "name": "Mesa Moments Photo",
+  "address": "9651 E Camelback Rd, Phoenix, AZ",
+  "lat": 33.57313088458525,
+  "lng": -112.08099585760476,
+  "website": "",
+  "phone": "(602) 555-4622",
+  "categories": [
+   "wedding-photographers"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0006",
+  "name": "The Paloma Estate",
+  "address": "863 E Baseline Rd, Phoenix, AZ",
+  "lat": 33.6575405377146,
+  "lng": -112.1131172141005,
+  "website": "",
+  "phone": "(602) 555-3363",
+  "categories": [
+   "wedding-venues"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": true,
+  "reviewCount": 11,
+  "score": 71
+ },
+ {
+  "placeId": "ChIJmock0007",
+  "name": "Encanterra Gardens",
+  "address": "9453 E Bell Rd, Phoenix, AZ",
+  "lat": 33.568077183103846,
+  "lng": -111.99539919157164,
+  "website": "",
+  "phone": "(602) 555-2688",
+  "categories": [
+   "wedding-venues"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0008",
+  "name": "Villa Siena",
+  "address": "9628 E Baseline Rd, Phoenix, AZ",
+  "lat": 33.59167404067785,
+  "lng": -112.08828073718229,
+  "website": "",
+  "phone": "(602) 555-9974",
+  "categories": [
+   "wedding-venues"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0009",
+  "name": "Desert Foothills Ranch",
+  "address": "1128 E Baseline Rd, Phoenix, AZ",
+  "lat": 33.41788035098987,
+  "lng": -112.13821238615421,
+  "website": "",
+  "phone": "(602) 555-9711",
+  "categories": [
+   "wedding-venues"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0010",
+  "name": "Valley Beats DJ Co",
+  "address": "7105 E Bell Rd, Phoenix, AZ",
+  "lat": 33.5396805597519,
+  "lng": -111.92296758490835,
+  "website": "",
+  "phone": "(602) 555-6924",
+  "categories": [
+   "wedding-djs"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0011",
+  "name": "Sonoran Sound",
+  "address": "5011 E Indian School Rd, Phoenix, AZ",
+  "lat": 33.638313844456746,
+  "lng": -111.99030166988113,
+  "website": "",
+  "phone": "(602) 555-4999",
+  "categories": [
+   "wedding-djs"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0012",
+  "name": "Desert Groove Entertainment",
+  "address": "1441 E Baseline Rd, Phoenix, AZ",
+  "lat": 33.49007473556369,
+  "lng": -112.05146509213343,
+  "website": "",
+  "phone": "(602) 555-6627",
+  "categories": [
+   "wedding-djs"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": true,
+  "reviewCount": 11,
+  "score": 78
+ },
+ {
+  "placeId": "ChIJmock0013",
+  "name": "Wildflower & Vine",
+  "address": "4817 E Baseline Rd, Phoenix, AZ",
+  "lat": 33.694052454247775,
+  "lng": -112.16458026652352,
+  "website": "",
+  "phone": "(602) 555-7850",
+  "categories": [
+   "wedding-florists"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0014",
+  "name": "Bloom House AZ",
+  "address": "2802 E Bell Rd, Phoenix, AZ",
+  "lat": 33.44559536039815,
+  "lng": -112.05331106985726,
+  "website": "",
+  "phone": "(602) 555-1642",
+  "categories": [
+   "wedding-florists"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0015",
+  "name": "Tied & True Events",
+  "address": "1371 E Baseline Rd, Phoenix, AZ",
+  "lat": 33.571907782083215,
+  "lng": -111.93735665645073,
+  "website": "",
+  "phone": "(602) 555-6140",
+  "categories": [
+   "wedding-planners"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ },
+ {
+  "placeId": "ChIJmock0016",
+  "name": "Paper Crane Planning",
+  "address": "5672 E Bell Rd, Phoenix, AZ",
+  "lat": 33.57831096313151,
+  "lng": -112.02603143871525,
+  "website": "",
+  "phone": "(602) 555-8474",
+  "categories": [
+   "wedding-planners"
+  ],
+  "metroId": "phoenix",
+  "claimStatus": "unclaimed",
+  "verified": false,
+  "reviewCount": 0,
+  "score": null
+ }
+]

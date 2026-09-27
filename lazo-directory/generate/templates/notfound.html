@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Page not found &mdash; Lazo{% endblock %}
+{% block main %}
+<section class="hero"><div class="hero-inner">
+<p class="eyebrow">404</p>
+<h1>This page slipped the knot.</h1>
+<p class="hero-sub">The page you're looking for doesn't exist &mdash; but every vendor we know is one search away.</p>
+</div></section>
+<section class="band">
+  <div class="metro-grid">
+    {% for m in metros %}
+    <a class="metro-card" href="/{{ m.id }}/"><span class="metro-name">{{ m.display }}</span><span class="metro-go">Browse vendors &rarr;</span></a>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

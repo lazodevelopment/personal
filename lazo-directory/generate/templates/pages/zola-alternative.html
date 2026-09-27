@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Zola Alternative (2026): Lazo, the Verified Wedding Marketplace{% endblock %}
+{% block desc %}Love Zola's registry? Keep it. Lazo is the Zola alternative for everything else: verified vendor reviews, rankings that can't be bought, a free wedding website, and June, your AI planning copilot.{% endblock %}
+{% block canonical %}{{ base }}/zola-alternative/{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Can I keep my Zola registry and still use Lazo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lazo lets you link registries from anywhere on the web, including Zola, Amazon, and honeymoon funds. Lazo never hosts or marks up a registry, so you keep whatever registry you love." } },
+    { "@type": "Question", "name": "What does Lazo do better than Zola for vendor search?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Lazo ranks vendors by the Lazo Score, built only from verified reviews from real weddings, weighted for recency. No vendor can pay for a better position, and every review is proven before it counts." } },
+    { "@type": "Question", "name": "Is Lazo's wedding website really free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Templates, digital RSVPs, registry links, travel details, and optional passcode privacy, free forever with no ads and no upsells." } },
+    { "@type": "Question", "name": "Does Lazo have anything like Zola's planning tools?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Lazo includes a budget tracker, guest list with RSVP import, seating chart, vendor messaging with in-app proposals, and June, an AI copilot that knows your date and budget and actively helps you plan." } }
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<style>
+.cmp{width:100%;max-width:860px;border-collapse:separate;border-spacing:0;margin:10px 0 6px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(217,183,124,.45);border-radius:18px;overflow:hidden;
+  font-size:14.5px}
+.cmp th,.cmp td{padding:13px 16px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(217,183,124,.28)}
+.cmp tr:last-child td{border-bottom:0}
+.cmp thead th{background:linear-gradient(120deg,#3D1C3B,#52284F);color:#FAF6F0;font-weight:600;font-size:13.5px;
+  letter-spacing:.4px}
+.cmp thead th:first-child{width:34%}
+.cmp td:first-child{font-weight:600;color:#52284F}
+.cmp .yes{color:#2E8B6B;font-weight:600}
+.cmp .meh{color:#7A6E80}
+.cmp-note{font-size:12px;color:#7A6E80;max-width:860px;margin:4px 0 0}
+.tm-note{font-size:11.5px;color:#8A7D90;max-width:860px;margin:26px 0 0;line-height:1.6}
+@media(max-width:640px){.cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}}
+</style>
+<section class="hero"><div class="hero-inner">
+<p class="eyebrow">The honest comparison</p>
+<h1>Looking for a Zola alternative?</h1>
+<p class="hero-sub">Here&rsquo;s the twist: keep your Zola registry if you love it &mdash; Lazo links registries from anywhere. Where Lazo changes the game is everything around it: verified vendor reviews, rankings no one can buy, and an AI copilot who actually plans with you.</p>
+</div></section>
+
+<section class="band prose">
+<h2>Registry first, marketplace second</h2>
+<p>Zola earned its reputation on the registry, and it&rsquo;s a good one. But when it comes to <em>finding and trusting vendors</em> &mdash; the decisions that actually make or break the day &mdash; most big platforms work the same way: monetization comes from vendors, and review systems are built for volume, not verification.</p>
+<h2>How Lazo approaches vendors differently</h2>
+<p><strong>Verified reviews only.</strong> Before a review counts toward a vendor&rsquo;s Lazo Score, the couple proves the wedding happened. No drive-by five-stars, no anonymous takedowns.</p>
+<p><strong>Rankings are never for sale.</strong> Search order is the Lazo Score &mdash; period. A vendor&rsquo;s budget buys nothing here.</p>
+<p><strong>Real planning help, not just checklists.</strong> June, Lazo&rsquo;s AI copilot, knows your date, your budget, and what you&rsquo;ve booked. Ask &ldquo;what should we book next?&rdquo; and she answers with your actual market data &mdash; then drafts the vendor message for you.</p>
+<h2>Side by side</h2>
+<table class="cmp">
+<thead><tr><th></th><th>Lazo</th><th>Zola</th></tr></thead>
+<tbody>
+<tr><td>Registry</td><td class="yes">Link any registry, incl. Zola &mdash; never marked up</td><td class="yes">Excellent native registry</td></tr>
+<tr><td>Vendor reviews</td><td class="yes">Verified couples only</td><td class="meh">Standard review submission</td></tr>
+<tr><td>How vendors rank</td><td class="yes">Verified-review score only</td><td class="meh">Platform-determined</td></tr>
+<tr><td>Wedding website + RSVPs</td><td class="yes">Free forever, no ads</td><td class="yes">Free</td></tr>
+<tr><td>AI planning copilot</td><td class="yes">June &mdash; knows your data, takes action</td><td class="meh">Limited</td></tr>
+<tr><td>Guest list, budget, seating</td><td class="yes">All free, all connected</td><td class="yes">Planning tools available</td></tr>
+<tr><td>Your contact info</td><td class="yes">Never sold, never shared</td><td class="meh">See platform policy</td></tr>
+</tbody>
+</table>
+<p class="cmp-note">Third-party details reflect publicly available information as of July 2026 and may change; always check current offerings.</p>
+<h2>Being fair about it</h2>
+<p>If the registry is the center of your planning universe, Zola does registries beautifully &mdash; and you can keep it while planning on Lazo. What you gain here is trust infrastructure for the expensive decisions: verified reviews, honest rankings, and a copilot doing real work. Use both. We built Lazo assuming you would.</p>
+</section>
+
+<section class="band band-plum">
+<h2 class="band-title">What you get on Lazo</h2>
+<div class="promises">
+<div class="promise"><h3>Trustworthy vendor search</h3><p>88,000+ vendor pages across 45 metros, ranked only by verified-review scores.</p></div>
+<div class="promise"><h3>June, your AI copilot</h3><p>Budget checks, next steps, vendor messages drafted &mdash; from your real planning data.</p></div>
+<div class="promise"><h3>Registry freedom</h3><p>Link Zola, Amazon, a honeymoon fund, anything. Lazo never hosts or marks up a registry.</p></div>
+</div>
+</section>
+
+<section class="band">
+<h2>Questions couples ask</h2>
+<details class="faq"><summary>Can I keep my Zola registry?</summary><p>Yes &mdash; link it on Lazo in about ten seconds. Your guests click straight through; we never touch or mark up your registry.</p></details>
+<details class="faq"><summary>Is Lazo free like Zola?</summary><p>Yes. Every couple tool on Lazo is free forever, with no ads and no upsells, and we never sell your contact information.</p></details>
+<details class="faq"><summary>What makes Lazo reviews different?</summary><p>Every review comes from a verified couple who proved the work happened. Vendors respond free and can never pay to bury a review.</p></details>
+<details class="faq"><summary>What is June?</summary><p>Your AI planning copilot. She knows your date, budget, guest list, and booked vendors &mdash; and she does real work: recommendations, budget math, drafted messages, weekly planning notes.</p></details>
+<div class="claim-strip" style="margin-top:34px">
+<h2>Keep the registry. Upgrade the rest.</h2>
+<p>Vendors you can trust, tools that are free forever, and June.</p>
+<p><a class="btn-gold" href="https://app.meetlazo.com">Start planning free</a></p>
+</div>
+<div class="related-block" style="margin-top:30px">
+<h2>Keep comparing</h2>
+<div class="related-links">
+<a href="{{ base }}/the-knot-alternative/">The Knot alternative</a>
+<a href="{{ base }}/weddingwire-alternative/">WeddingWire alternative</a>
+<a href="{{ base }}/folia-alternative/">Folia alternative</a>
+<a href="{{ base }}/why-lazo/">Why Lazo</a>
+</div>
+</div>
+<p class="tm-note">Zola&reg; is a registered trademark of Zola, Inc. Lazo is not affiliated with, sponsored by, or endorsed by Zola. Names are used for identification and comparison only.</p>
+</section>
+{% endblock %}

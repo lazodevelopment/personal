@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{#- JC-LAZO-METRO-0907-003: same claim tile + honest copy in the featured row; JC-LAZO-METRO-0907-003: the city page in the editorial system - photo hero with the city in the
+    serif, a row of that city's verified vendors (from build.py 004), the category grid, June, the
+    vendor strip. Every class here is styled by lazo.css v3. -#}
+{% block title %}{{ metro.display }} Wedding Vendors &mdash; Verified Reviews | Lazo{% endblock %}
+{% block desc %}Find wedding vendors in {{ metro.display }}. {{ total }} photographers, venues, planners and more &mdash; ranked by verified reputation, never by ad spend.{% endblock %}
+{% block canonical %}{{ base }}/{{ metro.id }}/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block main %}
+<style>
+  .mt-facts{display:flex;gap:28px;flex-wrap:wrap;margin-top:18px;font-size:13.5px;color:rgba(250,246,240,.85)}
+  .mt-facts b{font-family:var(--serif);font-size:22px;color:var(--ivory);margin-right:6px;font-weight:500;font-feature-settings:"lnum" 1}
+  .rowhead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:8px}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:28px}
+  .vf{background:var(--card);border:1px solid var(--gold-line);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:transform .18s ease,box-shadow .18s ease}
+  .vf:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(61,28,59,.14)}
+  .vf .ph{aspect-ratio:4/5;background:var(--plum-deep) center/cover}
+  .vf .b{padding:14px 16px 16px}
+  .vf .c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}
+  .vf h3{font-size:24px;margin:2px 0;line-height:1.1}
+  .vf .m{font-size:13px;color:var(--muted)}
+  .vf .pill{display:inline-block;margin-top:10px;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;background:var(--gold);color:var(--plum-deep)}
+  .cat-grid{margin-top:28px}
+  @media(max-width:900px){.vgrid{grid-template-columns:1fr 1fr}}
+  .vf.claim{background:var(--night);border-color:var(--night);color:var(--ivory);display:flex;flex-direction:column;justify-content:flex-end;padding:22px;min-height:100%}
+  .vf.claim .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .vf.claim h3{color:var(--ivory);font-size:28px;margin:6px 0 8px}
+  .vf.claim p{color:rgba(250,246,240,.78);font-size:13.5px;margin:0 0 14px}
+  .vf.claim .go{display:inline-block;background:var(--gold);color:var(--plum-deep);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700}
+</style>
+<section class="hero hero-metro hero-photo" style="background-image:url('/assets/photos/atmo-firstdance.jpg')">
+  <div class="hero-inner">
+    <p class="eyebrow">{{ metro.display }}</p>
+    <h1>{{ metro.name }} weddings, <em>tied together.</em></h1>
+    <p class="hero-sub">Every wedding professional in {{ metro.name }} we could find, in the order couples who booked them put them. Never in the order anyone paid for.</p>
+    <div class="mt-facts"><span><b>{{ total }}</b>vendors</span><span><b>{{ categories|length }}</b>categories</span><span><b>0</b>rankings for sale</span></div>
+  </div>
+</section>
+
+{% if featured %}
+<section class="band" style="padding-bottom:0">
+  <div class="rowhead">
+    <div>
+      <p class="eyebrow" style="color:var(--gold-ink)">{{ metro.name }}, this week</p>
+      <h2 class="band-title">Verified, and answering.</h2>
+      <p class="band-sub">{% if featured|length < 4 %}The first {{ featured|length }} {{ metro.name }} businesses to prove they're real. This row fills as vendors verify, and no one will ever pay to be on it.{% else %}Real {{ metro.name }} businesses who proved they're real. No one on this row paid to be here.{% endif %}</p>
+    </div>
+  </div>
+  <div class="vgrid">
+    {% for f in featured %}
+    <a class="vf" href="{{ f.path }}">
+      <div class="ph"{% if f.image %} style="background-image:url('{{ f.image }}')"{% endif %}></div>
+      <div class="b">
+        <div class="c">{{ f.category }}</div>
+        <h3>{{ f.name }}</h3>
+        <div class="m">{% if f.startingPrice %}from {{ f.startingPrice }}{% else %}{{ f.metro }}{% endif %}</div>
+        {% if f.verified %}<span class="pill">&#10003; Lazo verified</span>{% elif f.reviewCount %}<span class="pill">{{ f.reviewCount }} verified review{{ '' if f.reviewCount == 1 else 's' }}</span>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+    {% if featured|length < 4 %}
+    <a class="vf claim" href="/for-vendors/">
+      <span class="k">Claiming is open</span>
+      <h3>Own a {{ metro.name }} wedding business?</h3>
+      <p>Your listing is probably already here. Prove it's yours and you're on this row &mdash; free, forever.</p>
+      <span class="go">Claim your profile &rarr;</span>
+    </a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="band">
+  <h2 class="band-title">Browse {{ metro.name }} by category</h2>
+  <p class="band-sub">Pick a category to see every listing in {{ metro.name }}, ranked by the Lazo Score &mdash; verified reviews, reply speed and real bookings.</p>
+  <div class="cat-grid">
+    {% for c in categories %}
+    <a class="cat-card" href="/{{ metro.id }}/{{ c.slug }}/">
+      <span class="cat-name">{{ c.label }}</span>
+      <span class="cat-count">{{ c.count }} in {{ metro.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <p style="text-align:center;margin:0 auto;max-width:60ch;color:var(--muted)">Getting married in {{ metro.name }}? <a href="/{{ metro.id }}/wedding-websites/" style="color:var(--plum);font-weight:600">Make your free wedding website</a> and add your {{ metro.name }} vendors to it.</p>
+</section>
+<!-- lz-near -->
+{% if near %}
+<section class="band" style="padding-top:0">
+  <h2 class="band-title" style="font-size:28px">Nearby cities</h2>
+  <p class="band-sub">Getting married near {{ metro.name }}? Vendors from these cities travel for weddings here.</p>
+  <div class="cat-grid">
+    {% for m in near %}
+    <a class="cat-card" href="/{{ m.id }}/"><span class="cat-name">Wedding vendors in {{ m.name }}</span><span class="cat-count">{{ m.miles }} miles from {{ metro.name }}</span></a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<!-- /lz-near -->
+<section class="june" style="background-image:linear-gradient(120deg,rgba(46,21,48,.9),rgba(61,28,59,.82)),url('/assets/photos/atmo-candlelight.jpg')">
+  <div class="june-inner">
+    <p class="eyebrow">Meet June</p>
+    <h2>Planning a {{ metro.name }} wedding? <em>Start with June.</em></h2>
+    <p>She knows what {{ metro.name }} vendors actually charge, who books out first, and which three things matter this week. Free, and she never sells you anything.</p>
+    <p style="margin-top:22px"><a class="btn-gold" href="https://app.meetlazo.com">Start planning &mdash; free</a></p>
+  </div>
+</section>
+
+<section class="band band-claim">
+  <div class="claim-strip claim-wide">
+    <h2>A {{ metro.name }} wedding business?</h2>
+    <p>Your listing is probably already here. Claim it free, forever &mdash; leads, proposals, contracts and payments in one thread, and a ranking no competitor can buy out from under you.</p>
+    <a class="btn-gold" href="/for-vendors/">Claim your profile</a>
+  </div>
+</section>
+{% endblock %}

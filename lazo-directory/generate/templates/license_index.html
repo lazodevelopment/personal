@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{#- JC-LAZO-LICENSE-0920-001: /marriage-license/ - every state on one page: fee,
+    wait, validity, witnesses, who issues. Search filters the table client-side;
+    each row links to the state page. -#}
+{% block title %}Marriage License Cost & Where to Apply, by State ({{ year }}) | Lazo{% endblock %}
+{% block desc %}How much a marriage license costs in every state, the waiting period, how long it lasts, how many witnesses you need, and which office issues it. Search your state, then find the county office.{% endblock %}
+{% block canonical %}{{ base }}/marriage-license/{% endblock %}
+{% block nav_key %}planning{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Marriage license","item":"{{ base }}/marriage-license/"}]},{"@type":"CollectionPage","@id":"{{ base }}/marriage-license/","url":"{{ base }}/marriage-license/","name":"Marriage license cost and where to apply, by state","isPartOf":{"@type":"WebSite","name":"Lazo","url":"{{ base }}/"}},{"@type":"ItemList","numberOfItems":{{ states|length }},"itemListElement":[{% for s in states %}{"@type":"ListItem","position":{{ loop.index }},"name":"{{ s.name }} marriage license","url":"{{ base }}/marriage-license/{{ s.slug }}/"}{% if not loop.last %},{% endif %}{% endfor %}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How much does a marriage license cost?","acceptedAnswer":{"@type":"Answer","text":"Between about $24 and $125 depending on the state and county. Most fall between $30 and $90. Several states cut the fee by $40 to $75 if you complete a short premarital course."}},{"@type":"Question","name":"Where do you get a marriage license?","acceptedAnswer":{"@type":"Answer","text":"From a local government office, usually the county clerk, clerk of court, register of deeds or probate court, and in New England the town or city clerk. In most states any county's office works and the license is valid statewide; in some you must apply where you live or where the ceremony is."}},{"@type":"Question","name":"How long before the wedding should we get the license?","acceptedAnswer":{"@type":"Answer","text":"Inside the license's validity window and outside any waiting period. Most licenses last 30 to 90 days; a few last 10 to 20 days or a year. Waiting periods run from none to three days. For most couples that means applying two to four weeks before the wedding."}},{"@type":"Question","name":"Do we need witnesses?","acceptedAnswer":{"@type":"Answer","text":"About half the states require one or two witnesses over 18 to sign at the ceremony. The other half need only the officiant. Your state's page says which."}},{"@type":"Question","name":"Do we both need to be there to apply?","acceptedAnswer":{"@type":"Answer","text":"Almost always yes, in person with government photo ID. A few states let one partner apply with a notarized affidavit from the other, and several now take the application online with one in-person visit to be issued."}}]}]}</script>{% endblock %}
+{% block main %}
+<style>
+.mlh{max-width:860px;margin:0 auto;padding:54px 22px 10px;text-align:center}
+.mlh .k{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--plum);font-weight:600}
+.mlh h1{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(34px,5.4vw,54px);line-height:1.05;color:var(--plum);margin:14px 0 12px}
+.mlh .lede{color:var(--muted);max-width:58ch;margin:0 auto 22px;font-size:17px}
+.mls{display:flex;justify-content:center}
+.mls input{width:100%;max-width:520px;font:inherit;font-size:17px;padding:14px 20px;border:1px solid var(--gold-line);border-radius:999px;background:#fff;color:inherit}
+.mls input:focus{outline:2px solid var(--gold);outline-offset:2px}
+.mlt{max-width:1080px;margin:26px auto 0;padding:0 22px;overflow-x:auto}
+table.ml{width:100%;border-collapse:collapse;font-size:14px}
+.ml th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:10px 10px;border-bottom:1px solid var(--gold-line)}
+.ml td{padding:11px 10px;border-bottom:1px solid var(--gold-line);vertical-align:top}
+.ml td.n a{color:var(--plum);font-weight:600;text-decoration:none}
+.ml td.n a:hover{text-decoration:underline}
+.ml td.c{white-space:nowrap}
+.ml tr.hide{display:none}
+.mln{text-align:center;color:var(--muted);font-size:13px;padding:18px 22px}
+.mlx{max-width:820px;margin:44px auto 70px;padding:0 22px}
+.mlx h2{font-family:"Cormorant Garamond",serif;font-weight:500;font-size:clamp(26px,3.6vw,34px);color:var(--plum);margin:0 0 8px}
+.mlx p{color:var(--muted);font-size:15.5px;line-height:1.6}
+.mlx details{border-bottom:1px solid var(--gold-line);padding:14px 0}
+.mlx details:first-of-type{border-top:1px solid var(--gold-line);margin-top:18px}
+.mlx summary{cursor:pointer;color:var(--plum);font-weight:600;list-style:none}
+.mlx summary::-webkit-details-marker{display:none}
+.mlx details p{margin:8px 0 0;font-size:15px}
+</style>
+<section class="mlh">
+  <p class="k">Marriage license</p>
+  <h1>How much a marriage license costs, and where to get it, in every state</h1>
+  <p class="lede">The fee, the waiting period, how long it lasts, how many witnesses, and which office issues it. Pick your state for the county offices, and to plan the application around your wedding date.</p>
+  <div class="mls"><input id="mlq" type="search" placeholder="Search a state, e.g. Texas or Georgia" aria-label="Search states" autocomplete="off"></div>
+</section>
+<div class="mlt">
+  <table class="ml" id="mlt">
+    <thead><tr><th>State</th><th>Fee</th><th>Wait</th><th>Lasts</th><th>Witnesses</th><th>Issued by</th></tr></thead>
+    <tbody>
+    {% for s in states %}
+      <tr data-n="{{ s.name|lower }} {{ s.abbr|lower }}">
+        <td class="n"><a href="/marriage-license/{{ s.slug }}/">{{ s.name }}</a></td>
+        <td class="c">{{ s.fee_text }}</td>
+        <td class="c">{{ s.wait_text }}</td>
+        <td class="c">{{ s.valid_text }}</td>
+        <td class="c">{{ 'None' if s.witnesses == 0 else s.witnesses }}</td>
+        <td>{{ s.issuer }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="mln">Fees are the typical in-person fee as published by the issuing offices for 2025 to 2026. They change by a few dollars and differ by county. Confirm with the office before you go.</p>
+</div>
+<section class="mlx">
+  <h2>What every couple asks about the license</h2>
+  <details open><summary>How much does a marriage license cost?</summary><p>Between about $24 and $125 depending on the state and county. Most fall between $30 and $90. Several states cut the fee by $40 to $75 if you complete a short premarital course, and Texas waives its waiting period for the same course.</p></details>
+  <details><summary>Where do you get a marriage license?</summary><p>From a local government office, usually the county clerk, clerk of court, register of deeds or probate court, and in New England the town or city clerk. In most states any county's office works and the license is valid statewide. In some, you must apply where you live or where the ceremony is; your state's page says which.</p></details>
+  <details><summary>How long before the wedding should we get it?</summary><p>Inside the validity window and outside any waiting period. Most licenses last 30 to 90 days; a few last 10 to 20 days, and some a year. Waiting periods run from none to three days. For most couples that means applying two to four weeks before. Each state page works out your window from your date.</p></details>
+  <details><summary>Do we need witnesses?</summary><p>About half the states require one or two witnesses over 18 to sign at the ceremony. The other half need only the officiant. Colorado and Pennsylvania even let you marry without an officiant.</p></details>
+  <details><summary>Do we both need to be there to apply?</summary><p>Almost always yes, in person with government photo ID, and in a few states a certified birth certificate. Some states let one partner apply with a notarized affidavit from the other. Many now take the application online, with one in-person visit to be issued.</p></details>
+  <p style="margin-top:22px">Planning the rest of the day? <a href="/planning/" style="color:var(--plum);font-weight:600">The planning guides</a> cover the timeline, the ceremony order and what to put on your website, and every couple on Lazo gets a <a href="/wedding-websites/" style="color:var(--plum);font-weight:600">free wedding website</a>.</p>
+</section>
+<script>
+(function(){var q=document.getElementById('mlq'),rows=document.querySelectorAll('#mlt tbody tr');
+q.addEventListener('input',function(){var v=q.value.trim().toLowerCase();rows.forEach(function(r){r.classList.toggle('hide',v&&r.dataset.n.indexOf(v)<0)})});})();
+</script>
+{% endblock %}

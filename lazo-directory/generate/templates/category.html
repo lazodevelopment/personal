@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}Best {{ cat.label }} in {{ metro.display }} &mdash; Verified | Lazo{% endblock %}
+{% block desc %}{{ vendors|length }} {{ cat.label|lower }} in {{ metro.display }}, ranked by verified reputation. Rankings are never for sale on Lazo.{% endblock %}
+{% block canonical %}{{ base }}/{{ metro.id }}/{{ cat.slug }}/{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"ItemList","name":"{{ cat.label }} in {{ metro.display }}","numberOfItems":{{ vendors|length }},"itemListElement":[
+{%- for v in vendors[:25] -%}
+{"@type":"ListItem","position":{{ loop.index }},"url":"{{ base }}/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/"}{{ "," if not loop.last }}
+{%- endfor -%}
+]}
+</script>
+{% endblock %}
+{#- JC-LAZO-CAT-0915-007: the Lazo Score moves onto the card (it was only on the
+    vendor page), and the list says plainly that nothing on it is sponsored. -#}
+{% block main %}
+<section class="hero hero-cat hero-photo" style="background-image:linear-gradient(180deg,rgba(61,28,59,.55) 0%,rgba(61,28,59,.72) 60%,rgba(61,28,59,.9) 100%),url('/assets/photos/{{ cat.slug }}.jpg')">
+  <div class="hero-inner">
+    <p class="eyebrow"><a href="/{{ metro.id }}/">{{ metro.display }}</a></p>
+    <h1>{{ cat.label }} in {{ metro.name }}</h1>
+    <p class="hero-sub">Ranked by verified reputation &mdash; never by who paid. <span class="rank-note">New vendors start at the community baseline until verified reviews arrive.</span></p>
+    {%- if cost_typical %}
+    <p class="hero-cost">Typical cost: <strong>{{ cost_typical }}</strong> &middot; <a href="/cost/{{ cat.slug }}/">Read the {{ cat.singular|lower }} cost guide &rarr;</a></p>
+    {%- endif %}
+  </div>
+</section>
+<section class="band">
+  <style>
+    .cat-tools{background:#fff;border:1px solid rgba(217,183,124,.65);border-radius:20px;padding:22px 24px;margin:0 0 26px;box-shadow:0 10px 28px rgba(82,40,79,.06)}
+    .cat-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+    .cat-chip{display:inline-block;padding:6px 14px;border-radius:999px;font-size:12.5px;letter-spacing:.3px;background:#FAF6F0;border:1px solid rgba(217,183,124,.6);color:#52284F;font-weight:600}
+    .cat-chip-plum{background:linear-gradient(135deg,#3D1C3B,#52284F);color:#D9B77C;border-color:#D9B77C}
+    .cat-intro2{margin:0 0 16px;color:#7A6E80;font-size:14.5px;line-height:1.7}
+    .vsearch-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .vsearch-wrap{position:relative;flex:1;min-width:240px}
+    .vsearch-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.7}
+    #vsearch{width:100%;box-sizing:border-box;padding:13px 40px 13px 42px;font-size:15px;color:#241E2B;background:#FAF6F0;border:1.5px solid rgba(217,183,124,.75);border-radius:999px;outline:none;font-family:inherit}
+    #vsearch:focus{border-color:#52284F;background:#fff}
+    #vsearch::placeholder{color:#8A7D90}
+    #vclear{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#52284F;font-size:16px;cursor:pointer;padding:6px;display:none}
+    #vcount{font-size:13px;color:#7A6E80;white-space:nowrap}
+    #vnone{display:none;text-align:center;padding:44px 20px;background:#fff;border:1px solid rgba(217,183,124,.6);border-radius:20px;color:#7A6E80;font-size:14.5px}
+    #vnone b{color:#52284F;display:block;font-size:17px;margin-bottom:6px}
+    .vendor-card.vhide{display:none}
+    .fbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+    .fbar button{font:600 12px Inter,sans-serif;color:#52284F;background:rgba(255,255,255,.6);
+      border:1px solid rgba(217,183,124,.6);border-radius:999px;padding:8px 14px;cursor:pointer;
+      transition:background .15s,color .15s}
+    .fbar button.on{background:#52284F;color:#FAF6F0;border-color:#52284F}
+    .vc2{position:relative;display:flex;gap:16px;align-items:flex-start;background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:18px;padding:16px;margin-bottom:12px;transition:box-shadow .18s,transform .18s,border-color .18s}
+    .vc2:hover{box-shadow:0 12px 32px rgba(82,40,79,.12);transform:translateY(-2px);border-color:#D9B77C}
+    .vc2-claimed{border-left:4px solid #D9B77C}
+    .vc2-thumb{flex:0 0 96px;width:96px;height:96px;border-radius:14px;background-size:cover;background-position:center;border:1px solid rgba(217,183,124,.4)}
+    .vc2-main{flex:1;min-width:0}
+    .vc2-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;color:#52284F;text-decoration:none;display:inline-block;line-height:1.25}
+    .vc2-name::after{content:"";position:absolute;inset:0}
+    .vc2-meta{margin:3px 0 0;font-size:12.5px;color:#7A6E80;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .vc2-bio{margin:6px 0 0;font-size:12.5px;color:#8A7D90;line-height:1.5;font-style:italic;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .no-ads{margin:0 0 14px;padding:11px 16px;border-radius:12px;font-size:13px;line-height:1.55;
+      color:#3E3644;background:#FFFDF9;border:1px solid rgba(217,183,124,.55);
+      border-left:3px solid #D9B77C}
+    .no-ads b{color:#52284F}
+    .vc2-score{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 7px;margin:4px 0 0}
+    .vc2-score b{font-family:'Cormorant Garamond',Georgia,serif;font-size:17.5px;font-weight:600;color:#52284F}
+    .vc2-score em{font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.5px;color:#8A6A2F}
+    .vc2-score i{font-style:normal;font-size:12px;color:#7A6E80}
+    .vc2-chips{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px}
+    .vc2-chips span{font-size:10.5px;letter-spacing:.4px;font-weight:700;padding:4px 10px;border-radius:999px}
+    .ch-ver{background:linear-gradient(135deg,#3D1C3B,#52284F);color:#D9B77C;border:1px solid #D9B77C}
+    .ch-new{background:#F1E9E0;color:#7A6E80;border:1px solid rgba(217,183,124,.5)}
+    .ch-rev{background:#EAF5F0;color:#2E8B6B;border:1px solid rgba(46,139,107,.35)}
+    .ch-price{background:#fff;color:#52284F;border:1px solid rgba(217,183,124,.7)}
+    .ch-offer{background:#D9B77C;color:#3D1C3B;border:1px solid #D9B77C}
+    .ch-also{background:#FAF6F0;color:#7A6E80;border:1px solid #EFE6DA}
+    .ch-travel{background:#FAF6F0;color:#52284F;border:1px solid rgba(217,183,124,.5)}
+    .vc2-go{align-self:center;color:#D9B77C;font-size:20px;flex:0 0 auto;transition:transform .18s}
+    .vc2:hover .vc2-go{transform:translateX(4px)}
+    @media(max-width:560px){.vc2-thumb{flex-basis:72px;width:72px;height:72px}.vc2-name{font-size:16.5px}}
+  </style>
+  <div class="cat-tools">
+    <div class="cat-chips">
+      <span class="cat-chip cat-chip-plum">{{ vendors|length }} {{ cat.label|lower }}</span>
+      <span class="cat-chip">{{ metro.display }}</span>
+      <span class="cat-chip">Every review verified</span>
+      <span class="cat-chip">Rankings never sold</span>
+    </div>
+    {% if cat_intro %}<p class="cat-intro2">{{ cat_intro }}</p>{% endif %}
+    <div class="vsearch-row">
+      <div class="vsearch-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#52284F" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="vsearch" type="search" autocomplete="off" placeholder="Search by name or neighborhood &mdash; find anyone, even someone you&rsquo;ve already hired">
+        <button id="vclear" aria-label="Clear search">&#10005;</button>
+      </div>
+      <span id="vcount">Showing all {{ vendors|length }}</span>
+    </div>
+  </div>
+  <div class="fbar" id="fbar">
+    {% if cat.slug == 'wedding-venues' %}
+    <button data-f="set:indoor">Indoor</button>
+    <button data-f="set:outdoor">Outdoor</button>
+    <button data-f="set:garden">Garden</button>
+    <button data-f="set:barn / rustic">Barn</button>
+    <button data-f="set:ballroom">Ballroom</button>
+    <button data-f="set:desert">Desert</button>
+    <button data-f="set:waterfront">Waterfront</button>
+    <button data-f="catering">On-site catering</button>
+    <button data-f="byo">BYO vendors</button>
+    <button data-f="cerrec">Ceremony + reception</button>
+    <button data-f="lodging">Lodging</button>
+    <button data-f="pets">Pet friendly</button>
+    {% elif cat.slug in ['wedding-videographers', 'wedding-photographers'] %}
+    <button data-f="style:cinematic">Cinematic</button>
+    <button data-f="style:documentary">Documentary</button>
+    <button data-f="style:editorial">Editorial</button>
+    <button data-f="style:light & airy">Light &amp; Airy</button>
+    <button data-f="style:dark & moody">Dark &amp; Moody</button>
+    <button data-f="sde">Same-day edit</button>
+    <button data-f="film">Film capture</button>
+    <button data-f="drone">Drone</button>
+    <button data-f="lead:female-led">Female-led</button>
+    <button data-f="lead:male-led">Male-led</button>
+    <button data-f="lgbtq">LGBTQ+ welcomed</button>
+    {% else %}
+    <button data-f="lgbtq">LGBTQ+ welcomed</button>
+    {% endif %}
+  </div>
+  {#- JC-LAZO-CAT-0915-007 #4: The Knot opens this exact page with a block headed
+      "Sponsored results" - a national chain sitting above 800 local vendors. A
+      couple arriving from there should be told the opposite where the comparison
+      is live, not only in the footer. This is a statement of fact about the sort
+      on line "cvs.sort(key=lambda v: (-v.score, -v.reviewCount, name))" in
+      build.py: score, then reviews, then alphabetical. Never ad spend. -#}
+  <p class="no-ads"><b>No sponsored results.</b> This is every
+    {{ cat.singular|lower }} we list in {{ metro.name }}, ordered by what booked
+    couples said &mdash; nobody can pay to move up.</p>
+  <ol class="vendor-list" id="vlist">
+    {% for v in vendors %}
+    {% set at = v.attributes or {} %}
+    <li class="vendor-card vc2{% if v.claimedBy %} vc2-claimed{% endif %}" data-search="{{ (v.name ~ ' ' ~ (v.address or ''))|lower }}" data-styles="{{ (at.styles or [])|join('|')|lower }}" data-sde="{{ 1 if at.sameDayEdit else 0 }}" data-drone="{{ 1 if at.drone else 0 }}" data-film="{{ 1 if at.filmCapture else 0 }}" data-lead="{{ at.teamLead or '' }}" data-lgbtq="{{ 1 if at.lgbtqFriendly else 0 }}" data-set="{{ (at.settings or [])|join('|')|lower }}" data-catering="{{ 1 if at.onSiteCatering else 0 }}" data-byo="{{ 1 if at.byoVendors else 0 }}" data-cerrec="{{ 1 if at.ceremonyAndReception else 0 }}" data-lodging="{{ 1 if at.lodging else 0 }}" data-pets="{{ 1 if at.petFriendly else 0 }}">
+      {% if v.thumbUrl %}
+      <span class="vc2-thumb" style="background-image:url('{{ v.thumbUrl }}')" aria-hidden="true"></span>
+      {% else %}
+      <span class="vc2-thumb" style="background-image:linear-gradient(135deg,rgba(61,28,59,.66),rgba(82,40,79,.45)),url('/assets/photos/{{ cat.slug }}.jpg')" aria-hidden="true"></span>
+      {% endif %}
+      <div class="vc2-main">
+        <a class="vc2-name" href="/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/">{{ v.name }}</a>
+        {%- if v.reviewCount %}
+        <p class="vc2-score"><b>&#9733; {{ v.score|round|int }}</b><em>LAZO SCORE</em><i>&middot; {{ v.reviewCount }} verified review{{ '' if v.reviewCount == 1 else 's' }}</i></p>
+        {%- endif %}
+        <p class="vc2-meta">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="2.4"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+          {{ v.cardCity or v.address }}{% if v.website %} &nbsp;&middot;&nbsp; Has website{% endif %}
+        </p>
+        {% if v.bioSnippet %}<p class="vc2-bio">&ldquo;{{ v.bioSnippet }}&rdquo;</p>{% endif %}
+        <div class="vc2-chips">
+          {% if v.verified %}<span class="ch-ver">&#10022; LAZO VERIFIED</span>{% endif %}
+          {% if not v.reviewCount %}<span class="ch-new">NEW TO LAZO</span>{% endif %}
+          {% if v.priceRangeDisplay %}<span class="ch-price">{{ v.priceRangeDisplay }}</span>{% endif %}
+          {% if v.hasOffer %}<span class="ch-offer">SPECIAL OFFER</span>{% endif %}
+          {% if v.travelFrom %}<span class="ch-travel">TRAVELS FROM {{ v.travelFrom|upper }}</span>{% endif %}
+          {% for ac in (v.alsoCats or [])[:2] %}{% if ac != cat.singular %}<span class="ch-also">ALSO: {{ ac|upper }}</span>{% endif %}{% endfor %}
+        </div>
+      </div>
+      <span class="vc2-go" aria-hidden="true">&rarr;</span>
+    </li>
+    {% endfor %}
+  </ol>
+  <div id="vnone"><b>No matches for &ldquo;<span id="vnoneq"></span>&rdquo;</b>Check the spelling, or clear the search to browse all {{ vendors|length }} {{ cat.label|lower }}.</div>
+  <script>
+  (function(){
+    var input=document.getElementById('vsearch'),clear=document.getElementById('vclear'),
+        count=document.getElementById('vcount'),none=document.getElementById('vnone'),
+        noneq=document.getElementById('vnoneq'),
+        cards=Array.prototype.slice.call(document.querySelectorAll('#vlist .vendor-card')),
+        total=cards.length;
+    function apply(){
+      var q=input.value.trim().toLowerCase(),shown=0;
+      for(var i=0;i<cards.length;i++){
+        var hit=(!q||cards[i].getAttribute('data-search').indexOf(q)!==-1)
+            &&(!window.__lazoAttrPass||window.__lazoAttrPass(cards[i]));
+        cards[i].classList.toggle('vhide',!hit);
+        if(hit)shown++;
+      }
+      clear.style.display=q?'block':'none';
+      count.textContent=q?('Showing '+shown+' of '+total):('Showing all '+total);
+      none.style.display=(q&&shown===0)?'block':'none';
+      if(q)noneq.textContent=input.value.trim();
+    }
+    input.addEventListener('input',apply);
+    clear.addEventListener('click',function(){input.value='';apply();input.focus();});
+  })();
+  </script>
+</section>
+<script>
+(function(){
+  var bar=document.getElementById('fbar');
+  if(!bar)return;
+  var active={style:null,lead:null,setv:null,flags:{}};
+  window.__lazoAttrPass=function(card){
+    if(active.style&&(card.getAttribute('data-styles')||'').indexOf(active.style)===-1)return false;
+    if(active.setv&&(card.getAttribute('data-set')||'').indexOf(active.setv)===-1)return false;
+    if(active.lead&&(card.getAttribute('data-lead')||'')!==active.lead)return false;
+    for(var k in active.flags){if(active.flags[k]&&card.getAttribute('data-'+k)!=='1')return false;}
+    return true;
+  };
+  function refresh(){
+    var input=document.getElementById('vsearch');
+    if(input){var ev=document.createEvent('Event');ev.initEvent('input',true,true);input.dispatchEvent(ev);}
+  }
+  bar.addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    var f=b.getAttribute('data-f');
+    if(f.indexOf('style:')===0){var v=f.slice(6);active.style=(active.style===v)?null:v;
+      bar.querySelectorAll('[data-f^="style:"]').forEach(function(x){x.classList.toggle('on',x===b&&active.style!==null);});}
+    else if(f.indexOf('set:')===0){var v3=f.slice(4);active.setv=(active.setv===v3)?null:v3;
+      bar.querySelectorAll('[data-f^="set:"]').forEach(function(x){x.classList.toggle('on',x===b&&active.setv!==null);});}
+    else if(f.indexOf('lead:')===0){var v2=f.slice(5);active.lead=(active.lead===v2)?null:v2;
+      bar.querySelectorAll('[data-f^="lead:"]').forEach(function(x){x.classList.toggle('on',x===b&&active.lead!==null);});}
+    else{active.flags[f]=!active.flags[f];b.classList.toggle('on',active.flags[f]);}
+    refresh();
+  });
+})();
+</script>
+<!-- lz-near -->
+{% if near %}
+<section class="band" style="padding-top:0">
+  <h2 class="band-title" style="font-size:28px">{{ cat.label }} in nearby cities</h2>
+  <p class="band-sub">Many {{ cat.label|lower }} travel. If {{ metro.name }} is short on dates, these cities are close enough to book.</p>
+  <div class="cat-grid">
+    {% for m in near %}
+    <a class="cat-card" href="/{{ m.id }}/{{ cat.slug }}/"><span class="cat-name">{{ cat.label }} in {{ m.name }}</span><span class="cat-count">{{ m.miles }} miles away</span></a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<!-- /lz-near -->
+{% endblock %}

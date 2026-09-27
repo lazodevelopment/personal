@@ -1,0 +1,16 @@
+{
+  "name": "kurv-functions",
+  "description": "Kurv Health Firebase Cloud Functions",
+  "version": "1.0.0",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^4.9.0",
+    "axios": "^1.6.2",
+    "@sendgrid/mail": "^8.1.0"
+  },
+  "private": true
+}

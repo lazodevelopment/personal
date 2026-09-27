@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Lazo for Vendors &mdash; Claim Your Business Free, Forever{% endblock %}
+{% block desc %}Your business is already listed on Lazo. Claiming it is free forever — no pay-per-lead, no paid placement, rankings earned only from verified couples. Built by wedding professionals.{% endblock %}
+{% block canonical %}{{ base }}/for-vendors/{% endblock %}
+{% block main %}
+<section class="hero hero-photo" style="background-image:linear-gradient(180deg,rgba(61,28,59,.5) 0%,rgba(61,28,59,.75) 55%,rgba(61,28,59,.92) 100%),url('/assets/photos/atmo-toast.jpg')">
+  <div class="hero-inner hero-home">
+    <p class="eyebrow">For wedding professionals</p>
+    <h1>Your business is already here.<br><em>Claiming it is free &mdash; forever.</em></h1>
+    <p class="hero-sub">No pay-per-lead. No paid placement. No subscription to reach your own customers. Rankings earned only from verified couples &mdash; and a verification badge that means something.</p>
+    <p style="margin-top:18px"><a class="btn-gold" href="https://app.getlazo.com">Find &amp; claim your business</a></p>
+  </div>
+</section>
+
+<section class="band founder">
+  <div class="founder-grid">
+    <div>
+      <h2 class="band-title">Built inside the wedding industry,<br>not a tech boardroom.</h2>
+      <p>Lazo was created by working wedding professionals &mdash; people who have spent years at hundreds of weddings, and years paying The Knot, WeddingWire, HoneyBook, and DocuSign every month for the privilege of chasing leads that went nowhere. We built the platform this industry needed: one place where couples can trust what they read, and where vendors pay only for tools that grow their business &mdash; never for access to their own customers.</p>
+      <p class="founder-sign">&mdash; The Lazo team</p>
+    </div>
+    <div class="founder-photo" style="background-image:url('/assets/photos/atmo-rings.jpg')"></div>
+  </div>
+</section>
+
+<div class="curve curve-plum-top" aria-hidden="true"><svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path d="M0,64 C360,0 1080,0 1440,64 L1440,64 L0,64 Z" fill="currentColor"/></svg></div>
+<section class="band band-plum">
+  <h2 class="band-title">The math you already know</h2>
+  <div class="promises">
+    <div class="promise"><h3>&ldquo;Leads&rdquo; aren&rsquo;t bookings</h3><p>In one vendor's documented twelve months on a leading paid platform: 113 inquiries delivered at a perfect response rating&hellip; and one booking. You've lived some version of that math. It isn't your funnel &mdash; it's their business model.</p></div>
+    <div class="promise"><h3>Placement isn&rsquo;t reputation</h3><p>When search order goes to whoever pays most, being excellent stops mattering and couples know it. On Lazo, your rank comes from verified couples who actually hired you &mdash; and nothing else can move it. Not even money. Especially not money.</p></div>
+    <div class="promise"><h3>Your customers aren&rsquo;t inventory</h3><p>We will never charge you to be listed, to reply to a review, or to receive an inquiry from a couple who chose you. Lazo makes money on optional tools that grow your business &mdash; never on access to it.</p></div>
+  </div>
+</section>
+<div class="curve curve-plum-bottom" aria-hidden="true"><svg viewBox="0 0 1440 64" preserveAspectRatio="none"><path d="M0,0 C360,64 1080,64 1440,0 L1440,0 L0,0 Z" fill="currentColor"/></svg></div>
+
+<section class="band">
+  <h2 class="band-title">Free forever means all of this</h2>
+  <div class="steps">
+    <div class="step"><span class="step-n">&#10003;</span><h3>Your full profile</h3><p>Bio, services, pricing, announcements, badges, video, markets you serve &mdash; edit everything, publish to every couple browsing your metro.</p></div>
+    <div class="step"><span class="step-n">&#10003;</span><h3>Verified leads</h3><p>Every inquiry is a verified couple with a real date and budget range. You'll never pay for one. Ever.</p></div>
+    <div class="step"><span class="step-n">&#10003;</span><h3>Review replies</h3><p>Every review on your profile came from a proven wedding &mdash; and your reply sits right beside it, free.</p></div>
+  </div>
+</section>
+
+<section class="band">
+  <h2 class="band-title">Claiming takes minutes, not meetings</h2>
+  <div class="steps">
+    <div class="step"><span class="step-n">1</span><h3>Find your listing</h3><p>Open the Lazo app, search your business name &mdash; we've already listed {{ vendor_total_display }}+ wedding businesses across {{ metro_count }} metros.</p></div>
+    <div class="step"><span class="step-n">2</span><h3>Prove it's yours</h3><p>Upload one business document &mdash; a license, insurance certificate, or EIN letter. Our verification system reviews it in minutes, not days.</p></div>
+    <div class="step"><span class="step-n">3</span><h3>It's yours</h3><p>Edit your profile, answer verified couples, and start earning the ranking no competitor can buy out from under you.</p></div>
+  </div>
+</section>
+
+<section class="band band-claim">
+  <div class="claim-strip claim-wide">
+    <h2>Fourteen thousand of your competitors are already listed.</h2>
+    <p>The ones who claim first, rank first when reviews arrive. Claiming is free &mdash; forever &mdash; and takes about five minutes.</p>
+    <a class="btn-gold" href="https://app.getlazo.com">Claim your business now</a>
+    <p style="margin-top:14px;font-size:12.5px;opacity:.8">Questions? A working wedding professional answers vendors@getlazo.com &mdash; not a ticket queue.</p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Admin dashboard: let the studio account open signed contracts.
+    // Cloud Functions write via the Admin SDK and are unaffected.
+    match /contracts/{file} {
+      allow read: if request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in ['info@ataviaweddings.com'];
+      allow write: if false;
+    }
+  }
+}

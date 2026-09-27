@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Contact — LeaseReputation</title>
+<meta name="description" content="Contact for LeaseReputation — verified apartment reviews."/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%234C4FE6'/%3E%3Cpath d='M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z' fill='white'/%3E%3Cpath d='M210 240 L242 272 L304 206' fill='none' stroke='%234C4FE6' stroke-width='30' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#4C4FE6;--indigo-bright:#6E72F0;--deep:#1E1A5C;--ink:#15102E;--ink-deep:#0E0A20;
+    --lilac:#C4B5FD;--white:#fff;--text:#EFEDFB;--text-dim:rgba(233,231,251,.66);--text-faint:rgba(233,231,251,.42);
+    --glass:rgba(255,255,255,.055);--glass-2:rgba(255,255,255,.09);--border:rgba(255,255,255,.12);
+    --maxw:1100px;--pad:clamp(20px,5vw,24px);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--ink-deep);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  svg{display:block}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);width:100%}
+  .logo{display:inline-flex;align-items:center;gap:11px}
+  .logo svg{width:34px;height:34px;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+  .logo .wm{font-size:1.2rem;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+  .logo .wm .l{font-weight:500;color:rgba(255,255,255,.6)}
+  .logo .wm .r{font-weight:800;color:#fff}
+  header.docnav{position:sticky;top:0;z-index:50;background:rgba(15,11,32,.82);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+  .docnav .row{display:flex;align-items:center;justify-content:space-between;height:68px;gap:16px}
+  .back{color:var(--text-dim);font-weight:600;font-size:.92rem;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .back svg{width:16px;height:16px;stroke:currentColor;fill:none}
+  .back:hover{color:#fff}
+  .doc-hero{padding:clamp(44px,7vw,80px) 0 26px;border-bottom:1px solid var(--border);background:radial-gradient(closest-side at 86% -10%,rgba(76,79,230,.2),transparent 70%)}
+  .doc-hero .eyebrow{font-size:.76rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--lilac);margin-bottom:14px}
+  .doc-hero h1{font-size:clamp(2rem,5vw,3rem);font-weight:800;letter-spacing:-.02em;line-height:1.08;margin-bottom:12px}
+  .doc-hero .updated{color:var(--text-faint);font-size:.92rem}
+  .doc-hero .lead{color:var(--text-dim);font-size:1.06rem;max-width:700px;margin-top:16px}
+  .doc-wrap{display:grid;grid-template-columns:230px 1fr;gap:clamp(32px,5vw,56px);padding:46px 0 84px;align-items:start}
+  .doc-wrap.notoc{grid-template-columns:1fr;max-width:760px}
+  .toc{position:sticky;top:88px;border:1px solid var(--border);border-radius:16px;padding:20px 18px;background:var(--glass)}
+  .toc h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.13em;color:var(--text-faint);margin-bottom:12px;font-weight:700}
+  .toc a{display:block;color:var(--text-dim);padding:5px 0;font-weight:500;font-size:.9rem;line-height:1.4}
+  .toc a:hover{color:#fff}
+  .doc-content{max-width:760px;min-width:0}
+  .doc-content section{margin-bottom:36px;scroll-margin-top:84px}
+  .doc-content h2{font-size:1.4rem;font-weight:700;letter-spacing:-.01em;margin-bottom:13px}
+  .doc-content h3{font-size:1.06rem;font-weight:700;margin:22px 0 8px;color:var(--text)}
+  .doc-content p{color:var(--text-dim);margin-bottom:14px}
+  .doc-content ul{color:var(--text-dim);margin:0 0 16px 0;padding-left:22px}
+  .doc-content li{margin-bottom:8px}
+  .doc-content strong{color:var(--text);font-weight:700}
+  .doc-content a.inline{color:var(--lilac);text-decoration:underline;text-underline-offset:2px}
+  .callout{border:1px solid rgba(196,181,253,.28);background:linear-gradient(120deg,rgba(76,79,230,.14),rgba(196,181,253,.05));border-radius:14px;padding:18px 20px;margin-bottom:18px;color:var(--text)}
+  .callout p{color:var(--text)!important;margin-bottom:0}
+  .site-footer{border-top:1px solid var(--border);background:var(--ink-deep);padding:54px 0 34px}
+  .footer-grid{display:grid;grid-template-columns:1.7fr 1fr 1fr 1fr;gap:32px}
+  .footer-brand .logo{margin-bottom:14px}
+  .footer-tag{color:var(--text-faint);font-size:.92rem;max-width:250px}
+  .footer-col h4{font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-faint);margin-bottom:14px;font-weight:700}
+  .footer-col a{display:block;color:var(--text-dim);font-size:.93rem;font-weight:500;padding:6px 0;transition:color .2s}
+  .footer-col a:hover{color:#fff}
+  .footer-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-top:38px;padding-top:22px;border-top:1px solid var(--border);color:var(--text-faint);font-size:.85rem}
+  .footer-social{display:flex;align-items:center;gap:16px}
+  .footer-social a{color:var(--text-faint);display:inline-flex;transition:color .2s,transform .2s}
+  .footer-social a:hover{color:#fff;transform:translateY(-2px)}
+  .footer-social svg{width:19px;height:19px;fill:currentColor;display:block}
+  @media (max-width:880px){.doc-wrap{grid-template-columns:1fr;gap:0}.toc{display:none}}
+  @media (max-width:760px){.footer-grid{grid-template-columns:1fr 1fr}.footer-brand{grid-column:1/-1}}
+  @media (max-width:430px){.footer-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="docnav"><div class="wrap row">
+<a class="logo" href="index.html" aria-label="LeaseReputation home"><svg viewBox="0 0 512 512" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E1A5C"/><stop offset="1" stop-color="#4C4FE6"/></linearGradient></defs><rect width="512" height="512" rx="115" fill="url(#lg)"/><path d="M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z" fill="#fff"/><path d="M210 240 L242 272 L304 206" fill="none" stroke="#4C4FE6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm"><span class="l">lease</span><span class="r">reputation</span></span></a>
+<a class="back" href="index.html"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to home</a>
+</div></header>
+<section class="doc-hero"><div class="wrap"><p class="eyebrow">Get in touch</p><h1>Contact</h1><p class="updated">Last updated: July 7, 2026</p><p class="lead">We’d love to hear from you. Here’s how to reach the right team.</p></div></section>
+<div class="wrap"><div class="doc-wrap notoc"><div class="doc-content"><section id="general"><h2>General &amp; support</h2><p>For help, questions, or to report a review: info@leasereputation.com.</p></section><section id="privacy"><h2>Privacy requests</h2><p>To exercise your privacy rights or ask about your information: info@leasereputation.com.</p></section><section id="legal"><h2>Legal &amp; copyright</h2><p>For legal notices, including copyright/DMCA takedown requests: info@leasereputation.com.</p></section><section id="accessibility"><h2>Accessibility</h2><p>To report an accessibility issue: info@leasereputation.com. See our <a class='inline' href='accessibility.html'>Accessibility Statement</a>.</p></section><section id="mail"><h2>Mailing address</h2><p>Lease Reputation LLC — LeaseReputation<br/>[Business mailing address]</p></section><section id="response"><h2>Response times</h2><p>We read every message and aim to respond as quickly as we can, and within the timeframes required by law for privacy requests. Thanks for helping us keep apartment reviews honest.</p></section></div></div></div>
+<footer class="site-footer"><div class="wrap">
+<div class="footer-grid">
+<div class="footer-brand"><a class="logo" href="index.html"><svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="115" fill="url(#lg)"/><path d="M172 126 L340 126 Q362 126 362 148 L362 268 C362 330 300 372 256 388 C212 372 150 330 150 268 L150 148 Q150 126 172 126 Z" fill="#fff"/><path d="M210 240 L242 272 L304 206" fill="none" stroke="#4C4FE6" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm"><span class="l">lease</span><span class="r">reputation</span></span></a><p class="footer-tag">Verified apartment reviews. Know before you lease.</p></div>
+<div class="footer-col"><h4>Product</h4><a href="index.html#problem">The problem</a><a href="index.html#how">How it works</a><a href="index.html#why">Why verified</a><a href="index.html#get">Early access</a></div>
+<div class="footer-col"><h4>Company</h4><a href="contact.html">Contact</a><a href="accessibility.html">Accessibility</a></div>
+<div class="footer-col"><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="cookies.html">Cookie Policy</a><a href="community-guidelines.html">Community Guidelines</a></div>
+</div>
+<div class="footer-bottom"><span>© 2026 Lease Reputation LLC</span><div class="footer-social"><a href="https://instagram.com/leasereputation" aria-label="LeaseReputation on Instagram" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.03.084c-1.277.06-2.148.264-2.91.563-.788.306-1.457.717-2.123 1.388C1.33 2.705.92 3.375.61 4.16c-.3.762-.504 1.634-.563 2.91C-.012 8.354 0 8.764 0 12.017c0 3.252-.012 3.662.048 4.94.06 1.277.264 2.148.563 2.91.306.788.717 1.457 1.388 2.123.665.665 1.335 1.078 2.122 1.388.762.299 1.634.503 2.911.563 1.279.06 1.688.073 4.94.073 3.252 0 3.662-.013 4.94-.073 1.277-.06 2.149-.264 2.911-.563.787-.31 1.457-.723 2.122-1.388.665-.666 1.078-1.335 1.388-2.123.299-.762.503-1.633.563-2.91.06-1.278.073-1.688.073-4.94 0-3.253-.013-3.663-.073-4.94-.06-1.277-.264-2.149-.563-2.911-.31-.788-.723-1.457-1.388-2.122C21.295 1.33 20.625.92 19.838.61c-.762-.299-1.634-.503-2.911-.563C15.65.012 15.24 0 11.987 0 8.735 0 8.325.012 7.047.072zm-.14 21.693c-1.17-.054-1.805-.25-2.228-.415-.56-.218-.96-.477-1.382-.896-.419-.42-.679-.819-.896-1.379-.164-.422-.36-1.057-.413-2.227-.058-1.265-.07-1.644-.07-4.849 0-3.205.012-3.583.07-4.849.054-1.169.25-1.804.413-2.227.218-.56.478-.96.896-1.382.42-.419.819-.679 1.379-.896.422-.164 1.057-.36 2.227-.413 1.265-.058 1.645-.07 4.849-.07 3.205 0 3.585.012 4.849.07 1.17.054 1.804.25 2.227.413.56.217.96.477 1.382.896.419.42.679.819.896 1.379.164.422.36 1.057.413 2.227.058 1.265.07 1.644.07 4.849 0 3.205-.012 3.583-.07 4.849-.054 1.169-.25 1.804-.413 2.227-.218.56-.478.96-.896 1.382-.42.419-.819.679-1.379.896-.422.164-1.057.36-2.227.413-1.265.058-1.645.07-4.849.07-3.205 0-3.583-.012-4.849-.07zM12 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg></a><a href="https://facebook.com/leasereputation" aria-label="LeaseReputation on Facebook" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg></a><a href="https://youtube.com/@leasereputation" aria-label="LeaseReputation on YouTube" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M23.5 6.2a3.02 3.02 0 0 0-2.12-2.14C19.5 3.55 12 3.55 12 3.55s-7.5 0-9.38.51A3.02 3.02 0 0 0 .5 6.2C0 8.09 0 12 0 12s0 3.91.5 5.8a3.02 3.02 0 0 0 2.12 2.14c1.88.51 9.38.51 9.38.51s7.5 0 9.38-.51a3.02 3.02 0 0 0 2.12-2.14C24 15.91 24 12 24 12s0-3.91-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg></a><a href="https://tiktok.com/@leasereputation" aria-label="LeaseReputation on TikTok" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a><a href="https://linkedin.com/company/leasereputation" aria-label="LeaseReputation on LinkedIn" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zm1.78 13.02H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg></a></div></div>
+</div></footer>
+</body>
+</html>

@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in ['info@elizabethscottweddings.com','hello@elizabethscottweddings.com'];
+    }
+    function shortStr(v) {
+      return v is string && v.size() <= 500;
+    }
+
+    match /bookings/{id} {
+      allow read: if isAdmin();
+      // Dashboard may only touch these fields: test flag, private notes, post-production tracker.
+      // Money, status and contract fields are server-only (Cloud Functions use the Admin SDK).
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['test_mode', 'admin_notes', 'production'])
+        && (!('test_mode' in request.resource.data) || request.resource.data.test_mode is bool)
+        && (!('admin_notes' in request.resource.data) || (request.resource.data.admin_notes is list && request.resource.data.admin_notes.size() <= 200))
+        && (!('production' in request.resource.data) || request.resource.data.production is map);
+      // Delete only bookings already marked as test.
+      allow delete: if isAdmin() && resource.data.test_mode == true;
+      allow create: if false;
+      // Gratuities (tips) are a subcollection; the dashboard reads them for earnings.
+      match /gratuities/{g} {
+        allow read: if isAdmin();
+        allow write: if false;
+      }
+    }
+
+    // Card-window abandons (written by zoho_session / book_submit).
+    match /leads/{id} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // /contact inquiries (written by inquiry_webhook). Admin may only change triage status.
+    match /inquiries/{id} {
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'status_at'])
+        && request.resource.data.status in ['new', 'contacted', 'closed'];
+      allow create, delete: if false;
+    }
+
+    // Discount codes are minted by admin_action / issue_code; dashboard reads them.
+    match /discount_codes/{code} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Visitor sessions written by /assets/js/esw-track.js on the public site.
+    // Public traffic may only create/update shaped, size-capped docs; only the admin can read or delete.
+    // asn/org/bot/bot_why/engaged come from the tracker's bot gate (Sep 9, 2026): flagged visits are
+    // written with bot:true so the admin page can hide and count them.
+    match /sessions/{sid} {
+      allow read: if isAdmin();
+      allow create: if sid.matches('^[a-f0-9]{24}$')
+        && request.resource.data.sid == sid
+        && request.resource.data.keys().hasOnly(['sid','page','title','device','ua','screen','lang',
+             'landing','referrer','venue','venue_url','city','region','country','lat','lng',
+             'utm_source','utm_campaign','asn','org','bot','bot_why','engaged',
+             'first_seen','last_seen','page_count'])
+        && request.resource.data.last_seen == request.time
+        && request.resource.data.page_count is int
+        && request.resource.data.page_count <= 1000
+        && shortStr(request.resource.data.page)
+        && shortStr(request.resource.data.ua)
+        && (!('bot' in request.resource.data) || request.resource.data.bot is bool);
+      allow update: if sid.matches('^[a-f0-9]{24}$')
+        && request.resource.data.last_seen == request.time
+        && request.resource.data.page_count is int
+        && request.resource.data.page_count <= 1000
+        && shortStr(request.resource.data.page)
+        && (!('bot' in request.resource.data) || request.resource.data.bot is bool)
+        // Lead linkage is set server-side by book_submit; the browser can't touch it.
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['lead_name','lead_email','booking_id','lead_at','first_seen','sid']);
+      allow delete: if isAdmin();
+
+      // One doc per pageview — the trail the admin expands per session.
+      match /hits/{hit} {
+        allow read: if isAdmin();
+        allow create: if request.resource.data.keys().hasOnly(['path','title','t'])
+          && shortStr(request.resource.data.path)
+          && request.resource.data.t is timestamp;
+        allow update, delete: if isAdmin();
+      }
+    }
+
+    // Collection-group read so the Visitors page can pull every visit's hits in one query.
+    match /{path=**}/hits/{hit} {
+      allow read: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

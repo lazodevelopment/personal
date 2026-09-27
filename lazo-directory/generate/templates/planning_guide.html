@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{#- planning_guide.html - JC-LAZO-PLAN-0917-001
+    /planning/<slug>/. Content is config/planning.py.
+
+    This is the most contested material on the internet - every wedding site has
+    a vows page - so the `practical` block is what earns the URL: the specific
+    thing to tell a vendor, and which vendor. A generic vows page does not tell
+    you to give your officiant a spare copy of the card. -#}
+{% block title %}{{ t.question }} | Lazo{% endblock %}
+{% block desc %}{{ t.lede|striptags|truncate(152, True, '') }}{% endblock %}
+{% block canonical %}{{ base }}/planning/{{ slug }}/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ t.question|tojson }},
+  "description": {{ t.lede|striptags|tojson }},
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/planning/{{ slug }}/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for q, a in t.faqs %}
+    { "@type": "Question", "name": {{ q|tojson }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ a|tojson }} } }{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow"><a href="/planning/">Planning</a></p>
+  <h1>{{ t.question }}</h1>
+  <p class="hero-sub">{{ t.group }}</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="page-back"><a href="/planning/">All planning guides</a></p>
+
+<p class="lede">{{ t.lede }}</p>
+
+{%- for heading, paras in t.sections %}
+<h2>{{ heading }}</h2>
+{%- for para in paras %}
+<p>{{ para|safe }}</p>
+{%- endfor %}
+{%- endfor %}
+
+<h2>What to actually do about it</h2>
+<dl class="cost-drivers cost-save">
+  {%- for what, why in t.practical %}
+  <dt>{{ what }}</dt><dd>{{ why }}</dd>
+  {%- endfor %}
+</dl>
+
+<h2>Common questions</h2>
+<div class="faq-block">
+  {%- for q, a in t.faqs %}
+  <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+  {%- endfor %}
+</div>
+</section>
+
+{%- if vendor_cats %}
+<section class="cost-cities">
+  <h2>The vendors this depends on</h2>
+  <p class="cc-sub">Every review on Lazo comes from a couple who proved they actually got married with that vendor, and rankings can't be bought at any price.</p>
+  <div class="cc-grid">
+    {%- for c in vendor_cats %}
+    <a href="/{{ first_metro.id }}/{{ c.slug }}/"><b>{{ c.label }}</b><span>in {{ first_metro.name }}</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/cost/{{ vendor_cats[0].slug }}/">What a {{ vendor_cats[0].singular|lower }} costs &rarr;</a> &middot; <a href="/questions/{{ vendor_cats[0].slug }}/">What to ask them &rarr;</a></p>
+</section>
+{%- endif %}
+
+<section class="next-reads">
+  <h2>Next</h2>
+  <div class="next-grid">
+    {%- for r in related %}
+    <a href="{{ r.href }}"><b>{{ r.short }}</b><span>{{ r.group }}</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/planning/">All {{ guide_count }} planning guides &rarr;</a></p>
+</section>
+{% endblock %}

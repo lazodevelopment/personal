@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Lazo Pro</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Lato:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--plum:#52284F;--plumdeep:#3D1C3B;--gold:#D9B77C;--golddk:#C9A45C;--ivory:#FAF6F0;--ink:#241E2B;--muted:#8A7F90;--green:#2E8B6B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Lato',sans-serif;background:linear-gradient(160deg,var(--plumdeep),var(--plum));min-height:100vh;color:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:460px;background:var(--ivory);border-radius:22px;border:1px solid rgba(217,183,124,.6);box-shadow:0 30px 70px -30px rgba(0,0,0,.55);overflow:hidden}
+.head{background:linear-gradient(135deg,var(--plum),var(--plumdeep));padding:26px 28px;color:var(--ivory)}
+.head .brand{font-family:'Cormorant Garamond',serif;font-size:26px;letter-spacing:1px}
+.head .brand em{color:var(--gold);font-style:italic}
+.head .founding{display:inline-block;margin-top:8px;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(217,183,124,.7);border-radius:999px;padding:4px 12px;font-weight:800}
+.body{padding:26px 28px 30px}
+.plan{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px;background:#fff;border:1px solid rgba(82,40,79,.14);border-radius:14px;margin-bottom:6px}
+.plan b{font-size:15.5px}
+.plan .amt{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--plum);font-weight:600}
+.plan .cad{font-size:11.5px;color:var(--muted)}
+.founding-note{font-size:11.5px;color:var(--muted);margin:0 2px 18px;line-height:1.45}
+label{display:block;font-size:10.5px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);font-weight:800;margin:14px 2px 6px}
+.field,input{width:100%;height:44px;background:#fff;border:1px solid rgba(82,40,79,.22);border-radius:12px;padding:0 13px;font-size:14.5px;font-family:'Lato',sans-serif;color:var(--ink)}
+input:focus{outline:none;border-color:var(--plum)}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+#card-number,#card-cvv{padding:0 4px}
+#card-number iframe,#card-cvv iframe{border:none;width:100%;height:42px}
+.paybtn{width:100%;margin-top:22px;height:50px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--golddk));color:var(--plum);font-size:15px;font-weight:800;font-family:'Lato',sans-serif;letter-spacing:.5px;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.paybtn:hover{transform:translateY(-1px);box-shadow:0 10px 24px -10px rgba(217,183,124,.8)}
+.paybtn:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+.fine{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.5}
+.err{display:none;background:#FBEAEA;border:1px solid #D9A0A0;color:#7C2B2B;border-radius:12px;padding:11px 14px;font-size:12.5px;margin-top:14px}
+.state{display:none;padding:54px 30px;text-align:center}
+.state .big{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--plum);font-weight:600}
+.state .rule{width:52px;height:2px;background:var(--gold);margin:16px auto}
+.state p{color:var(--muted);font-size:14px;line-height:1.6}
+.spin{width:34px;height:34px;border:3px solid rgba(82,40,79,.15);border-top-color:var(--plum);border-radius:50%;margin:0 auto 18px;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.check{width:58px;height:58px;border-radius:50%;background:var(--green);color:#fff;font-size:30px;line-height:58px;margin:0 auto 18px}
+</style>
+<!-- Meta Pixel Code (JC-LAZO-PIXEL-0903) -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1245257617279907');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1245257617279907&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+<div class="card">
+  <div class="head">
+    <div class="brand">Lazo <em>Pro</em></div>
+    <span class="founding">Founding Member Pricing</span>
+  </div>
+
+  <!-- loading -->
+  <div class="state" id="st-loading" style="display:block">
+    <div class="spin"></div>
+    <p>Preparing your checkout…</p>
+  </div>
+
+  <!-- invalid / spent intent -->
+  <div class="state" id="st-bad">
+    <div class="big">This link has expired</div>
+    <div class="rule"></div>
+    <p>Head back to your Lazo dashboard and tap Upgrade to start a fresh checkout.</p>
+  </div>
+
+  <!-- payment form -->
+  <div class="body" id="st-form" style="display:none">
+    <div class="plan">
+      <div><b id="plan-name">—</b><div class="cad" id="plan-cad">—</div></div>
+      <div class="amt" id="plan-amt">—</div>
+    </div>
+    <p class="founding-note" id="founding-note">Founding pricing is locked to your account for as long as your subscription stays active.</p>
+
+    <label for="cc-email">Email for your receipt</label>
+    <input id="cc-email" type="email" autocomplete="email" placeholder="you@yourstudio.com">
+
+    <label for="cc-name">Name on card</label>
+    <input id="cc-name" autocomplete="cc-name" placeholder="As it appears on the card">
+
+    <label>Card number</label>
+    <div class="field" id="card-number"></div>
+
+    <div class="row">
+      <div>
+        <label for="cc-exp">Expiry (MM / YY)</label>
+        <input id="cc-exp" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY" maxlength="7">
+      </div>
+      <div>
+        <label>CVV</label>
+        <div class="field" id="card-cvv"></div>
+      </div>
+    </div>
+
+    <button class="paybtn" id="paybtn">Pay <span id="btn-amt"></span> securely</button>
+    <div class="err" id="err"></div>
+    <p class="fine">Payments are processed securely by Stax. Your card details never touch Lazo's servers.<br>Switching plans mid-cycle? Unused time on your current plan is credited automatically at checkout.<br>Lazo · Danbren Media LLC</p>
+  </div>
+
+  <!-- success -->
+  <div class="state" id="st-done">
+    <div class="check">✓</div>
+    <div class="big">Welcome to the founding circle</div>
+    <div class="rule"></div>
+    <p>Your payment went through. Head back to your Lazo tab — your dashboard is already updating. A receipt is on its way to your inbox.</p>
+  </div>
+</div>
+
+<script src="https://staxjs.staxpayments.com/stax.js"></script>
+<script>
+/* ================= CONFIG ================= */
+const WEBPAYMENTS_TOKEN = "Danbren-Media-LLC-6c64cf24750e";
+const FN_BASE = "https://us-central1-lazo-513ec.cloudfunctions.net";
+const INFO_URL   = FN_BASE + "/proIntentInfo";   // GET ?intent=<id> -> { tier, cadence, amountCents, ... }
+const CHARGE_URL = FN_BASE + "/proCharge";       // POST { intent, token, email, name }
+/* ========================================== */
+
+const qs = new URLSearchParams(location.search);
+const intentId = (qs.get("intent") || "").trim();
+const $ = (s) => document.querySelector(s);
+const show = (id) => {
+  ["st-loading","st-bad","st-form","st-done"].forEach(x => $("#"+x).style.display = "none");
+  $("#"+id).style.display = (id === "st-form") ? "block" : "block";
+};
+const money = (c) => "$" + (c/100).toLocaleString("en-US", {minimumFractionDigits: (c%100? 2:0), maximumFractionDigits: 2});
+
+async function getJson(url){
+  const r = await fetch(url);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || "Request failed"); e.status = r.status; throw e; }
+  return j;
+}
+async function postJson(url, body){
+  const r = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || "Request failed"); e.status = r.status; throw e; }
+  return j;
+}
+
+const TIER_LABEL = { pro: "Lazo Pro", studio: "Lazo Pro Studio" };
+const CAD_LABEL  = { monthly: "per month · founding rate", pif: "per year · paid in full (founding rate)" };
+
+let staxJs = null;
+let intent = null;
+
+async function init(){
+  if (!intentId) { show("st-bad"); return; }
+  try {
+    intent = await getJson(INFO_URL + "?intent=" + encodeURIComponent(intentId));
+  } catch (e) {
+    show("st-bad"); return;
+  }
+  if (!intent || !intent.amountCents) { show("st-bad"); return; }
+
+  $("#plan-name").textContent = TIER_LABEL[intent.tier] || "Lazo Pro";
+  $("#plan-cad").textContent  = CAD_LABEL[intent.cadence] || "";
+  $("#plan-amt").textContent  = money(intent.amountCents);
+  $("#btn-amt").textContent   = money(intent.amountCents);
+  show("st-form");
+
+  staxJs = new StaxJs(WEBPAYMENTS_TOKEN, {
+    number: {
+      id: "card-number",
+      placeholder: "0000 0000 0000 0000",
+      style: "height:42px;width:100%;border:none;background:transparent;font-size:14.5px;font-family:Lato,sans-serif;color:#241E2B;padding:0 9px;"
+    },
+    cvv: {
+      id: "card-cvv",
+      placeholder: "123",
+      style: "height:42px;width:100%;border:none;background:transparent;font-size:14.5px;font-family:Lato,sans-serif;color:#241E2B;padding:0 9px;"
+    }
+  });
+  try { await staxJs.showCardForm(); } catch(e){ fail("Could not load the secure card form — refresh and try again."); }
+}
+
+function fail(msg){
+  const e = $("#err"); e.textContent = msg; e.style.display = "block";
+  const b = $("#paybtn"); b.disabled = false; b.textContent = "Pay " + money(intent.amountCents) + " securely";
+}
+
+$("#cc-exp").addEventListener("input", (ev) => {
+  let v = ev.target.value.replace(/[^\d]/g, "").slice(0, 4);
+  ev.target.value = v.length > 2 ? v.slice(0,2) + " / " + v.slice(2) : v;
+});
+
+$("#paybtn").addEventListener("click", async () => {
+  $("#err").style.display = "none";
+  const email = $("#cc-email").value.trim();
+  const name = $("#cc-name").value.trim();
+  const exp  = $("#cc-exp").value.replace(/[^\d]/g, "");
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Please enter a valid email for your receipt.");
+  if (!name) return fail("Please enter the name on the card.");
+  if (exp.length !== 4) return fail("Please enter the card expiry as MM / YY.");
+  const month = exp.slice(0,2), year = "20" + exp.slice(2);
+  const parts = name.split(/\s+/);
+  const firstname = parts.shift(), lastname = parts.join(" ") || firstname;
+
+  const b = $("#paybtn"); b.disabled = true; b.textContent = "Processing…";
+  let pm;
+  try {
+    pm = await staxJs.tokenize({
+      firstname, lastname,
+      month, year,
+      method: "card",
+      validate: false
+    });
+  } catch (e) {
+    const m = (e && (e.message || (Array.isArray(e) && e.join(", ")))) || "Card details look incomplete — double-check and try again.";
+    return fail(typeof m === "string" ? m : "Card details look incomplete — double-check and try again.");
+  }
+
+  try {
+    await postJson(CHARGE_URL, { intent: intentId, token: pm.id, email: email, name: name });
+  } catch (e) {
+    if (e.status === 410) { show("st-bad"); return; }
+    return fail(e.message || "Payment could not be completed. Your card was not charged twice - try again.");
+  }
+  show("st-done");
+});
+
+init();
+</script>
+</body>
+</html>

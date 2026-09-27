@@ -1,0 +1,241 @@
+/* ============================================================================
+   apple.css — fluid-interface layer for the Atavia admin
+   Loaded after each page's inline <style>; overrides by source order.
+
+   Nothing here changes the brand (copper / cream / Cormorant + Lato). It adds
+   the craft layer: instant press response, size-specific typography, material
+   depth, scroll-edge chrome, and the accessibility switches motion needs.
+   All gesture-driven motion lives in apple.js — springs, not CSS transitions.
+   ============================================================================ */
+
+:root{
+  /* material weights — bigger surfaces read as thicker glass */
+  --mat-blur-lg:30px; --mat-blur-md:22px; --mat-blur-sm:12px;
+  --mat-sat:1.35;
+  /* press depth */
+  --press:.97;
+  /* the few non-gesture transitions that remain; -in is the inverse of -out so
+     reversible transitions mirror their own path */
+  --ease-out:cubic-bezier(.22,.61,.36,1);
+  --ease-in:cubic-bezier(.64,.39,.78,.4);
+}
+
+/* ---------------------------------------------------------------- response */
+/* Kill the ~300ms tap delay. Nothing on the input path that isn't essential. */
+html{-webkit-text-size-adjust:100%}
+button,a,.chip,.stat,.nx,.cev,.row,label.tog{touch-action:manipulation}
+
+/* Feedback lives on pointer-down (apple.js adds .is-pressed there), not on
+   click — short enough to read as instant, long enough not to strobe. */
+.is-pressed{transform:scale(var(--press))!important;transition:transform 90ms var(--ease-out)}
+.btn,.chip,.nav a,.stat,.nx,.cal .nav2 button,.zoomctl button,.note .x,.link{
+  transition:transform 160ms var(--ease-out),background-color .15s,border-color .15s,color .15s}
+/* Rows can't scale without shearing the table — flash the surface instead. */
+tbody tr.row.is-pressed{transform:none!important;background:rgba(238,233,221,.06)}
+/* Small controls take a shallower press than large cards. */
+.chip,.nav a,.cal .nav2 button,.zoomctl button,.note .x{--press:.94}
+.stat,.nx{--press:.985}
+
+/* --------------------------------------------------------------- materials */
+/* Weight encodes hierarchy: structural regions get thicker glass and a deeper
+   shadow than the chips and pills floating on top of them. */
+.glass{
+  backdrop-filter:blur(var(--mat-blur-md)) saturate(var(--mat-sat));
+  -webkit-backdrop-filter:blur(var(--mat-blur-md)) saturate(var(--mat-sat))}
+.nextup,.earn,.tbl,.cal,.sec,.mapcard,.funnel,.modal .sheet{
+  --mat-blur-md:var(--mat-blur-lg);
+  box-shadow:0 40px 80px -44px rgba(0,0,0,.9),0 2px 14px -8px rgba(0,0,0,.6),
+             0 1px 0 rgba(238,233,221,.03),inset 0 1px 0 var(--glass-hi)}
+.toast,.tip{--mat-blur-md:var(--mat-blur-sm)}
+
+/* Vibrancy: text over a translucent, moving backdrop needs more contrast and a
+   touch more weight than text on a solid panel — flat grey dissolves. */
+.stat .l,.stat .s,.earn .kpi .l,.qa .k,.note .when,.col .lbl,thead th,.cal .dow,
+.foot,.modal .msub,.qhint,.zone .hint,.field label,.brand small,.who{
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.stat .l,.earn .kpi .l,.qa .k,thead th{color:var(--grey)}
+/* Secondary text on the biggest, busiest glass surface needs the most help — at
+   --dim it dissolves into whatever is blurred behind it. */
+.modal .msub,.qhint{color:var(--grey)}
+
+/* ------------------------------------------------------------- typography */
+/* Tracking is size-specific — one letter-spacing is wrong somewhere. Large
+   display type reads too loose as it grows, so it tightens; small UI text opens
+   up. Leading moves inversely to size. */
+.brand,#gate h1,.nx .d,.stat .v,.earn .big,.earn .kpi .v,.modal h2,.cal h2,
+.date,.qsec h3,.dcol h4,.notes h4,.prod h4,.vstats .v{
+  font-optical-sizing:auto;font-variant-numeric:tabular-nums}
+
+.earn .big{letter-spacing:-.028em;line-height:.92}
+.nx .d,.stat .v,#gate h1,.vstats .v{letter-spacing:-.022em}
+.modal h2,.cal h2,.earn .kpi .v{letter-spacing:-.016em}
+.brand,.nextup h2,.earn h2,.sec .top h2{letter-spacing:-.008em}
+.qsec h3,.dcol h4,.notes h4,.prod h4,.date{letter-spacing:-.01em}
+.nx .d small,.earn .big small{letter-spacing:0}
+
+/* Small text: slight positive tracking, looser leading than the display sizes. */
+.stat .l,.stat .s,.earn .kpi .l,.col .lbl,.note .when,.field label,
+.cal .dow,.brand small{letter-spacing:.02em}
+thead th{letter-spacing:.055em;text-transform:uppercase;font-size:.65625rem}
+.qa .k{text-transform:uppercase;letter-spacing:.06em;font-size:.65625rem}
+.qa .a{line-height:1.55}
+.kv{line-height:1.6}
+#gate p,.modal .msub,.qhint{line-height:1.65}
+
+/* Hierarchy from weight as well as size — presence without more space. */
+.name,.qa .a,.kv dd,.note .txt{font-weight:400}
+.pill,.chip.on{letter-spacing:.015em}
+
+/* Scale the layout WITH the text, not against it. The table has nowrap cells and
+   a floor on how far it can compress, so at a large text size it outgrows its
+   card — and `overflow:hidden` (there to clip the rounded corners) would silently
+   cut the last column off with no way to reach it. Let it scroll instead; at
+   normal sizes there is nothing to scroll and nothing changes. */
+.tbl,.sec{overflow-x:auto}
+.tbl table,.sec table{min-width:100%}
+
+/* --------------------------------------------------- floating chrome + edge */
+/* The header is a translucent layer content scrolls *under*, not an opaque
+   strip that permanently eats a band of the viewport. */
+header{position:sticky;top:0;z-index:8;isolation:isolate}
+header::before{
+  content:"";position:absolute;inset:-14px 0 0;z-index:-1;pointer-events:none;
+  left:50%;width:100vw;transform:translateX(-50%);
+  background:linear-gradient(180deg,rgba(15,19,39,.82) 0%,rgba(15,19,39,.66) 62%,rgba(15,19,39,0) 100%);
+  backdrop-filter:blur(var(--mat-blur-md)) saturate(var(--mat-sat));
+  -webkit-backdrop-filter:blur(var(--mat-blur-md)) saturate(var(--mat-sat));
+  /* Scroll edge effect: the material fades where it meets content — a soft
+     edge only where floating chrome actually overlaps, not a 1px rule. */
+  -webkit-mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);
+  mask-image:linear-gradient(180deg,#000 0%,#000 66%,transparent 100%);
+  opacity:0;transition:opacity 260ms var(--ease-out)}
+/* The chrome only materializes once there is content behind it to separate. */
+body.at-edge header::before{opacity:1}
+
+/* On a phone the header stacks to three rows (~150px, nearly a fifth of the
+   viewport) — far too much to hold permanently. Let it scroll away there; the
+   segmented nav is one flick up. */
+@media (max-width:700px){
+  header{position:static}
+  header::before{display:none}
+}
+
+/* Horizontal scrollers fade at their live edges, so overflow reads as "there is
+   more this way" rather than as a card sliced in half. */
+.rail,.chips{
+  --edge-l:transparent; --edge-r:#000;
+  -webkit-mask-image:linear-gradient(90deg,var(--edge-l) 0,#000 26px,#000 calc(100% - 26px),var(--edge-r) 100%);
+  mask-image:linear-gradient(90deg,var(--edge-l) 0,#000 26px,#000 calc(100% - 26px),var(--edge-r) 100%)}
+.rail.edge-start,.chips.edge-start{--edge-l:#000}
+.rail.edge-end,.chips.edge-end{--edge-r:#000}
+.rail{cursor:grab}
+.rail.dragging{cursor:grabbing;scroll-snap-type:none}
+.rail.dragging .nx{cursor:grabbing}
+
+/* ------------------------------------------------------------ modal / sheet */
+/* apple.js drives --m (0 to 1 materialize) and --drag (live gesture offset in
+   px). Both resolve to compositor-only properties. */
+.modal{
+  --m:1; --drag:0px;
+  background:rgba(15,19,39,calc(.72 * var(--m)));
+  backdrop-filter:blur(calc(8px * var(--m))) saturate(1.1);
+  -webkit-backdrop-filter:blur(calc(8px * var(--m))) saturate(1.1)}
+.modal.a-exit{display:flex}
+/* Materialize, don't fade: blur and scale move together so the surface reads as
+   glass arriving. transform-origin is set from the trigger by apple.js, so the
+   sheet grows out of the control that opened it and returns the same way. */
+.modal .sheet{
+  transform:translate3d(0,calc(var(--drag) + (1 - var(--m)) * 22px),0) scale(calc(.94 + .06 * var(--m)));
+  opacity:var(--m);
+  backdrop-filter:blur(calc(var(--mat-blur-lg) * var(--m))) saturate(var(--mat-sat));
+  -webkit-backdrop-filter:blur(calc(var(--mat-blur-lg) * var(--m))) saturate(var(--mat-sat));
+  will-change:transform,opacity;
+  padding-top:2.125rem}
+/* Grab handle — says "this can be pulled down" before anyone has to try it. */
+.modal .sheet::after{
+  content:"";position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  width:40px;height:4px;border-radius:2px;background:rgba(238,233,221,.22);pointer-events:none;
+  transition:background 140ms var(--ease-out)}
+.modal.grabbing .sheet::after{background:rgba(220,198,151,.6)}
+.modal.grabbing{cursor:grabbing}
+.modal .mhead{cursor:grab;-webkit-user-select:none;user-select:none}
+.modal.grabbing .mhead{cursor:grabbing}
+.modal .mhead .btn{cursor:pointer;-webkit-user-select:auto;user-select:auto}
+
+/* Dim to focus: a modal task pushes the page back instead of stacking two
+   equally-present layers. The scrim above already does the dimming, so this only
+   has to supply the depth — and it stays a compositor-only transform, with no
+   standing will-change on a full-page element. */
+#app{transform-origin:50% 0;transition:transform 340ms var(--ease-out)}
+body.modal-open #app{transform:scale(.988)}
+
+/* ----------------------------------------------------------------- toast */
+/* Enters and exits along the same path — up from the bottom, back down. */
+.toast{--t:0;transition:none;
+  transform:translateX(-50%) translate3d(0,calc((1 - var(--t)) * 22px),0) scale(calc(.96 + .04 * var(--t)));
+  opacity:var(--t)}
+.toast.show{--t:1}
+
+/* The map tooltip is anchored at the cursor, so it grows out of the cursor —
+   origin at its own top-left, and no centring transform to fight its left/top. */
+.tip{--t:0;transition:none;transform-origin:0 0;
+  transform:scale(calc(.9 + .1 * var(--t)));opacity:var(--t)}
+.tip.show{--t:1}
+
+/* -------------------------------------------------------------- focus ring */
+:focus-visible{outline:2px solid var(--copperlt);outline-offset:3px;border-radius:6px}
+.chip:focus-visible,.btn:focus-visible,.nav a:focus-visible{border-radius:999px}
+
+/* ======================================================= accessibility ====== */
+
+/* Reduced motion is not "no feedback" — it is a non-vestibular equivalent.
+   Springs, slides and parallax become short opacity cross-fades; overshoot and
+   drag-tracking drop out (apple.js reads the same query). Colour and opacity
+   changes that aid comprehension stay. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    scroll-behavior:auto!important}
+  .is-pressed{transform:none!important;filter:brightness(1.18)}
+  tbody tr.row.is-pressed{filter:none}
+  .nx:hover,.stat:hover{transform:none}
+  .modal .sheet{transform:none!important;transition:opacity 180ms linear!important;
+    backdrop-filter:blur(var(--mat-blur-lg)) saturate(var(--mat-sat));
+    -webkit-backdrop-filter:blur(var(--mat-blur-lg)) saturate(var(--mat-sat))}
+  .toast{transform:translateX(-50%)!important;transition:opacity 180ms linear!important}
+  .tip{transform:none!important;transition:opacity 120ms linear!important}
+  body.modal-open #app{transform:none}
+  #app{transition:none}
+  header::before{transition:opacity 180ms linear}
+  .rail{cursor:default;scroll-behavior:auto}
+}
+
+/* Frostier and near-solid, not see-through, when transparency is turned down. */
+@media (prefers-reduced-transparency:reduce){
+  .glass,.modal .sheet{background:#26231F!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  header::before{background:#0F1327;backdrop-filter:none;-webkit-backdrop-filter:none;
+    -webkit-mask-image:none;mask-image:none;border-bottom:1px solid var(--line)}
+  .modal{background:rgba(15,19,39,.94)!important;backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important}
+  .nx,.cday,.actbox,.search,.noteform textarea,.field input,.field select{background:#1F1D1B!important}
+  .rail,.chips{-webkit-mask-image:none;mask-image:none}
+}
+
+/* Near-solid surfaces with defined, contrasting borders. */
+@media (prefers-contrast:more){
+  :root{--dim:#A39E98;--grey:#CDC8C1;--line:#5A5550}
+  .glass,.modal .sheet{background:#242120!important;border-color:rgba(238,233,221,.34)!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .glass::before{display:none}
+  .chip,.nav a,.pill{border-color:var(--line)}
+  .btn{background:var(--copperlt);color:#14120F}
+  :focus-visible{outline-width:3px}
+  thead th{color:var(--cream)}
+}
+
+@media print{
+  header{position:static}
+  header::before,.modal .sheet::after{display:none}
+  .modal .sheet{transform:none!important;opacity:1!important;padding-top:0}
+  body.modal-open #app{transform:none;filter:none}
+}

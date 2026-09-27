@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{#- cost_guide.html - JC-LAZO-COST-0916-001
+    /cost/<category>/ - the top-of-funnel layer the site did not have.
+
+    Every other page we publish assumes the reader already knows what they want:
+    metro and category pages answer "who is available", vendor pages answer "is
+    this one any good", the comparison pages answer "which platform". Nobody
+    reaches any of them until after they have asked "how much does this cost",
+    which is the higher-volume question by a wide margin and the one Zola answers
+    with 1,353 advice pages and we answered with none.
+
+    Content is config/cost_guides.py; ranges there must agree with
+    config/pricing.py, which renders the same figures as FAQs on vendor pages.
+
+    The "in your city" rail is the one part of this page that is ours alone: real
+    counts of vendors we actually index, per metro, linking into the grid. It is
+    also why this page is worth building NATIONALLY and not 15x58 times - we have
+    no per-metro price data yet, so a per-metro version would differ only by the
+    city name, which is a doorway page. When vendors start publishing packages,
+    that changes and the metro version becomes worth having. -#}
+{% block title %}{{ g.question }} ({{ year }} Price Guide) | Lazo{% endblock %}
+{% block desc %}{{ g.answer|striptags|truncate(150, True, '') }}{% endblock %}
+{% block canonical %}{{ base }}/cost/{{ cat.slug }}/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ (g.question ~ " A " ~ year ~ " price guide.")|tojson }},
+  "description": {{ g.answer|tojson }},
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/cost/{{ cat.slug }}/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for q, a in g.faqs %}
+    { "@type": "Question", "name": {{ q|tojson }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ a|tojson }} } }{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow"><a href="/cost/">Cost guides</a></p>
+  <h1>{{ g.question }}</h1>
+  <p class="hero-sub">Most couples pay <strong>{{ g.typical }}</strong>. Here is what moves that number, what you get at each level, and where to spend less without regretting it.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="page-back"><a href="/cost/">All cost guides</a></p>
+
+<p class="lede">{{ g.answer }}</p>
+
+<h2>What you get at each price</h2>
+<div class="cost-bands">
+  {%- for label, range, detail in g.bands %}
+  <div class="cost-band{{ ' is-typical' if loop.index == 2 }}">
+    <p class="cb-label">{{ label }}{% if loop.index == 2 %} <span class="cb-tag">most couples</span>{% endif %}</p>
+    <p class="cb-range">{{ range }}</p>
+    <p class="cb-detail">{{ detail }}</p>
+  </div>
+  {%- endfor %}
+</div>
+<p class="cost-note">These are what couples actually pay, not quotes we can make on a vendor's behalf. Every {{ g.short }} sets their own prices, and the ones on Lazo publish theirs where they choose to.</p>
+
+<h2>What actually drives the price</h2>
+<dl class="cost-drivers">
+  {%- for name, why in g.drivers %}
+  <dt>{{ name }}</dt><dd>{{ why }}</dd>
+  {%- endfor %}
+</dl>
+
+<h2>How to spend less without regretting it</h2>
+<dl class="cost-drivers cost-save">
+  {%- for tip, detail in g.save %}
+  <dt>{{ tip }}</dt><dd>{{ detail }}</dd>
+  {%- endfor %}
+</dl>
+
+<h2>When to book</h2>
+<p>{{ g.timing }}</p>
+
+<h2>What to ask before you book</h2>
+<ul class="cost-ask">
+  {%- for q in g.ask %}
+  <li>{{ q }}</li>
+  {%- endfor %}
+</ul>
+<p class="cc-more"><a href="/questions/{{ cat.slug }}/">More questions to ask a {{ g.short }} &mdash; and what a good answer sounds like &rarr;</a></p>
+
+<h2>Common questions</h2>
+<div class="faq-block">
+  {%- for q, a in g.faqs %}
+  <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+  {%- endfor %}
+</div>
+
+<h2>Why our prices aren't sponsored</h2>
+<p>Most wedding sites earn money from the vendors they list, which is why their "recommended" {{ cat.label|lower }} and their cost advice tend to point the same direction. Lazo takes nothing per lead and nothing per booking, and <a href="/why-lazo/">rankings can't be bought at any price</a>. Every review comes from a couple who proved they actually got married with that vendor. So the ranges above are what we believe couples pay &mdash; not what anyone paid us to say.</p>
+</section>
+
+{%- if metro_counts %}
+<section class="cost-cities">
+  <h2>{{ cat.label }} near you</h2>
+  <p class="cc-sub">We index {{ cat_total_display }} {{ cat.label|lower }} across {{ metro_count }} markets &mdash; every review verified, rankings never sold.</p>
+  <div class="cc-grid">
+    {%- for m in metro_counts %}
+    <a href="/{{ m.id }}/{{ cat.slug }}/"><b>{{ m.name }}</b><span>{{ "{:,}".format(m.count) }} listed</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/{{ metro_counts[0].id }}/">Browse every category in {{ metro_counts[0].name }} &rarr;</a></p>
+</section>
+{%- endif %}
+
+<section class="next-reads">
+  <h2>Other cost guides</h2>
+  <div class="next-grid">
+    {%- for o in siblings %}
+    <a href="/cost/{{ o.slug }}/"><b>{{ o.question }}</b><span>{{ o.typical }}</span></a>
+    {%- endfor %}
+  </div>
+  <p class="cc-more"><a href="/cost/">All {{ guide_count }} cost guides &rarr;</a></p>
+</section>
+{% endblock %}

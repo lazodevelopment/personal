@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Lazo &mdash; Tied Together{% endblock %}</title>
+<meta name="description" content="{% block desc %}Lazo is the verified wedding marketplace. Rankings can't be bought, every review is verified, every lead is a real couple.{% endblock %}">
+<link rel="canonical" href="{% block canonical %}{{ base }}/{% endblock %}">
+<meta property="og:site_name" content="Lazo">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ self.title() }}">
+<meta property="og:description" content="{{ self.desc() }}">
+<meta property="og:image" content="{{ base }}/assets/photos/hero-3.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/lazo.css?v={{ asset_v }}">
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/assets/appicon.png">
+{% if noindex %}<meta name="robots" content="noindex,follow">{% endif %}
+<style>
+@media(max-width:760px){
+  .site-head{padding:10px 14px}
+  .brand-lockup{height:34px;width:auto}
+  .site-nav{gap:12px}
+  .site-nav a:not(.nav-cta){display:none}
+  .site-nav .nav-cta{font-size:13.5px;padding:9px 16px}
+}
+</style>
+{% block jsonld %}{% endblock %}
+</head>
+<body>
+<header class="site-head">
+  <a class="brand" href="/">
+    <img src="/assets/brand.png" alt="Lazo &mdash; Tied together" class="brand-lockup">
+  </a>
+  <nav class="site-nav">
+    <a href="/phoenix/">Find vendors</a>
+    <a href="/why-lazo/">Why Lazo</a>
+    <a href="/for-vendors/">For vendors</a>
+    <a class="nav-cta" href="https://app.getlazo.com">Start planning</a>
+  </nav>
+</header>
+<main>
+{% block main %}{% endblock %}
+</main>
+<footer class="site-foot">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <img src="/assets/foot-logo.png" alt="Lazo" class="foot-mark-img">
+      <p class="foot-line">Tied together.</p>
+      <p class="foot-promise">Real couples. Real reviews. Rankings no one can buy.</p>
+    </div>
+    <nav class="foot-cols" aria-label="Footer">
+      <div class="foot-col"><h4>For couples</h4>
+        <a href="https://app.getlazo.com">Start planning</a>
+        <a href="/phoenix/">Find vendors</a>
+        <a href="/what-is-a-lazo/">The Lazo tradition</a>
+        <a href="/why-lazo/">Why Lazo</a>
+      </div>
+      <div class="foot-col"><h4>For vendors</h4>
+        <a href="/for-vendors/">How it works</a>
+        <a href="/for-vendors/#claim">Claim your profile</a>
+        <a href="/for-vendors/#promise">Our vendor promise</a>
+      </div>
+      <div class="foot-col"><h4>Company</h4>
+        <a href="/about/">About</a>
+        <a href="/contact/">Contact</a>
+        <a href="https://instagram.com/trylazo" rel="noopener">Instagram</a>
+        <a href="https://facebook.com/getlazo" rel="noopener">Facebook</a>
+        <a href="https://tiktok.com/@trylazo" rel="noopener">TikTok</a>
+      </div>
+      <div class="foot-col"><h4>Legal</h4>
+        <a href="/terms/">Terms of Service</a>
+        <a href="/privacy/">Privacy Policy</a>
+      </div>
+    </nav>
+  </div>
+  <p class="foot-legal">&copy; 2026 Lazo Weddings, LLC &middot; getlazo.com</p>
+</footer>
+<script defer src="/assets/lazo.js?v={{ asset_v }}"></script>
+</body>
+</html>

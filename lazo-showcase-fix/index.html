@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Venue Showcase Demo &mdash; Lazo</title>
+<meta name="description" content="Let couples walk your venue before they ever visit. Lazo Venue Showcase 360 tours.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--plum:#52284F;--plumDeep:#3D1C3B;--gold:#D9B77C;--ivory:#FAF6F0;--ink:#241E2B}
+*{box-sizing:border-box}
+body{margin:0;font:400 15px/1.6 Inter,sans-serif;background:#1A0E1B}
+#pano{position:fixed;inset:0}
+.brand{position:fixed;top:18px;left:18px;z-index:10;display:flex;align-items:center;gap:10px;
+ background:rgba(46,21,48,.72);backdrop-filter:blur(10px);border:1px solid rgba(217,183,124,.5);
+ border-radius:999px;padding:9px 18px;color:var(--ivory);text-decoration:none}
+.brand b{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:19px;color:var(--gold)}
+.pitch{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:10;max-width:520px;width:calc(100% - 32px);
+ background:rgba(46,21,48,.78);backdrop-filter:blur(14px);border:1px solid rgba(217,183,124,.55);
+ border-radius:22px;padding:20px 24px;color:var(--ivory);text-align:center;
+ box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.pitch .eyebrow{letter-spacing:3px;text-transform:uppercase;font-size:10.5px;color:var(--gold);font-weight:700}
+.pitch h1{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:500;font-size:27px;margin:6px 0 6px;color:var(--ivory)}
+.pitch p{margin:0 0 14px;font-size:13.5px;color:#EBDDEC}
+.pitch a.cta{display:inline-block;background:var(--gold);color:var(--plumDeep);font-weight:700;text-decoration:none;
+ border-radius:999px;padding:12px 26px;font-size:14px;box-shadow:0 8px 24px rgba(217,183,124,.35)}
+.hint{position:fixed;top:18px;right:18px;z-index:10;background:rgba(46,21,48,.72);backdrop-filter:blur(10px);
+ border:1px solid rgba(217,183,124,.4);border-radius:999px;padding:8px 16px;color:#EBDDEC;font-size:12px}
+@media(max-width:560px){.pitch h1{font-size:22px}.hint{display:none}}
+body.embedded .pitch,body.embedded .hint{display:none}
+body.embedded .brand{top:12px;left:12px;padding:7px 14px}
+body.embedded .brand b{font-size:16px}
+body.embedded .brand span{font-size:11px}
+</style></head>
+<body>
+<div id="pano"></div>
+<a class="brand" href="https://getlazo.com/for-vendors/"><b>Lazo</b><span style="font-size:12.5px">Venue Showcase</span></a>
+<div class="hint">Drag to look around &middot; scroll to zoom</div>
+<div class="pitch">
+<div class="eyebrow">Venue Showcase Demo</div>
+<h1>Let couples walk your venue tonight.</h1>
+<p>Couples shortlist venues they can already picture themselves in. A Lazo 360 tour lives right on your profile &mdash; captured professionally, hosted forever.</p>
+<a class="cta" href="https://getlazo.com/for-vendors/">See Venue Showcase &rarr;</a>
+</div>
+<script>
+try{if(window.self!==window.top){document.body.classList.add('embedded');}}catch(e){document.body.classList.add('embedded');}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+<script>
+pannellum.viewer('pano',{
+  type:'equirectangular',
+  panorama:'ballroom.jpg',
+  autoLoad:true,
+  autoRotate:-2,
+  compass:false,
+  showZoomCtrl:false,
+  showFullscreenCtrl:true,
+  hfov:100,
+  pitch:2
+});
+</script>
+</body></html>

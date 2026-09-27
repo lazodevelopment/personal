@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cost Per Hire Calculator (Free) | What Filling a Role Really Costs | Roven</title>
+<meta name="description" content="Free cost-per-hire calculator. Compare what a recruiter, a staffing agency, sponsored job ads and Roven actually cost to fill one role. No signup.">
+<link rel="canonical" href="https://rovenhr.com/tools/cost-per-hire-calculator.html">
+<meta property="og:title" content="Cost Per Hire Calculator | Roven">
+<meta property="og:description" content="Compare what a recruiter, staffing agency, sponsored ads and Roven cost to fill one role. Free, no signup.">
+<meta property="og:url" content="https://rovenhr.com/tools/cost-per-hire-calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://rovenhr.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700;800&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.cal-hero{background:radial-gradient(950px 440px at 78% -10%,rgba(28,164,95,.28),transparent 60%),linear-gradient(180deg,#101b14 0%,#0E141D 100%);border-bottom:1px solid rgba(58,219,139,.18);padding:56px 0 44px}
+.cal-plate{display:inline-flex;background:rgba(28,164,95,.16);border:1px solid rgba(58,219,139,.5);border-radius:100px;padding:7px 14px;margin-bottom:16px}
+.cal-plate span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;font-weight:700;color:#3ADB8B}
+.cal-hero h1{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1.3px;line-height:1.1;color:#fff;margin:0 0 14px;max-width:760px}
+.cal-lede{font-size:16px;line-height:1.65;color:rgba(255,255,255,.72);max-width:640px;margin:0}
+.cal-wrap{display:grid;grid-template-columns:340px 1fr;gap:26px;margin-top:8px;align-items:start}
+.cal-panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:20px;padding:24px}
+.cal-panel h3{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;font-weight:700;color:rgba(255,255,255,.55);margin:0 0 18px}
+.cal-field{margin-bottom:18px}
+.cal-field label{display:block;font-size:13px;color:rgba(255,255,255,.75);margin-bottom:7px;font-weight:500}
+.cal-field input,.cal-field select{width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:12px 14px;color:#fff;font-family:'Instrument Sans',sans-serif;font-size:15px}
+.cal-field input:focus,.cal-field select:focus{outline:none;border-color:#1CA45F}
+.cal-field .hint{font-size:11.5px;color:rgba(255,255,255,.4);margin-top:6px;line-height:1.5}
+.cal-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cal-results{display:flex;flex-direction:column;gap:12px}
+.cal-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.13);border-radius:18px;padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cal-card.win{background:linear-gradient(180deg,rgba(28,164,95,.18),rgba(28,164,95,.06));border-color:rgba(58,219,139,.55);box-shadow:0 0 40px rgba(28,164,95,.14)}
+.cal-card .who{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;font-weight:700;color:rgba(255,255,255,.55);margin-bottom:6px}
+.cal-card.win .who{color:#3ADB8B}
+.cal-card .note{font-size:12.5px;line-height:1.5;color:rgba(255,255,255,.55);margin:0;max-width:330px}
+.cal-card.win .note{color:rgba(255,255,255,.78)}
+.cal-card .amt{font-family:'Bricolage Grotesque',sans-serif;font-size:33px;font-weight:800;letter-spacing:-1.2px;color:rgba(255,255,255,.9);white-space:nowrap}
+.cal-card.win .amt{color:#3ADB8B;font-size:38px}
+.cal-save{margin-top:6px;padding:18px 22px;border-radius:18px;background:rgba(28,164,95,.1);border:1px solid rgba(58,219,139,.4)}
+.cal-save p{margin:0;font-size:14.5px;line-height:1.6;color:rgba(255,255,255,.85)}
+.cal-save b{color:#3ADB8B}
+.cal-fine{font-size:11.5px;line-height:1.7;color:rgba(255,255,255,.42);margin-top:22px;border-left:2px solid rgba(255,255,255,.16);padding-left:14px;max-width:760px}
+.cal-cta{display:inline-block;background:#1CA45F;color:#fff;text-decoration:none;font-weight:600;font-size:15px;padding:14px 28px;border-radius:100px;margin-top:20px;box-shadow:0 6px 24px rgba(28,164,95,.3)}
+@media(max-width:860px){.cal-wrap{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap nav-inner">
+    <a class="logo-link" href="/index.html" aria-label="Roven home"><img class="logo-img" src="/logo.png" alt="Roven" width="640" height="293"></a>
+    <button class="nav-toggle" aria-expanded="false" aria-controls="navlinks">MENU</button>
+    <ul class="nav-links" id="navlinks">
+      <li><a href="/how-it-works.html">How it works</a></li>
+      <li><a href="/employers.html">For employers</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+  </div>
+</nav>
+<script src="/motion.js" defer></script>
+<div class="scroll-progress" aria-hidden="true"><div class="bar"></div></div>
+
+<header class="cal-hero">
+  <div class="wrap">
+    <div class="cal-plate"><span>FREE TOOL &middot; NO SIGNUP</span></div>
+    <h1>What does one hire actually cost you?</h1>
+    <p class="cal-lede">Put in the salary and see the four ways employers usually pay for a hire, side by side. Nothing is stored, nothing is emailed to you, and you don't need an account.</p>
+  </div>
+</header>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cal-wrap">
+      <div class="cal-panel">
+        <h3>THE ROLE</h3>
+        <div class="cal-field">
+          <label for="pay">Annual salary or equivalent</label>
+          <input id="pay" type="number" min="0" step="1000" value="55000" inputmode="numeric">
+          <p class="hint">For hourly roles, use roughly hourly rate &times; 2,080.</p>
+        </div>
+        <div class="cal-field">
+          <label for="type">Employment type</label>
+          <select id="type">
+            <option value="full">Full-time (W-2)</option>
+            <option value="contract">Contract, part-time or temp</option>
+          </select>
+        </div>
+        <div class="cal-field">
+          <label for="fee">Recruiter / agency fee</label>
+          <select id="fee">
+            <option value="0.15">15% of first-year salary</option>
+            <option value="0.20" selected>20% of first-year salary</option>
+            <option value="0.25">25% of first-year salary</option>
+          </select>
+          <p class="hint">Contingency recruiters commonly quote in this range.</p>
+        </div>
+        <div class="cal-row">
+          <div class="cal-field">
+            <label for="spend">Job-ad spend</label>
+            <input id="spend" type="number" min="0" step="50" value="600" inputmode="numeric">
+            <p class="hint">Per hire.</p>
+          </div>
+          <div class="cal-field">
+            <label for="hires">Hires per year</label>
+            <input id="hires" type="number" min="1" step="1" value="5" inputmode="numeric">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="cal-results" id="results"></div>
+        <div class="cal-save" id="save"></div>
+        <a class="cal-cta" href="https://app.rovenhr.com">Post a role free &rarr;</a>
+        <p class="cal-fine">
+          The recruiter and staffing figures are calculated from the percentage you choose above &mdash; they are your inputs, not our claims about any specific firm. Job-ad spend is whatever you enter. Roven's figures are our real published prices: launch pricing of $99 per contract, part-time or temporary hire and $199 per full-time W-2 hire, against list pricing of $249 and $499. Placement fees are currently waived entirely while the marketplace grows, and the first 100 verified employers nationwide keep 50% off list pricing for life. Staffing-agency markup is modelled as an ongoing hourly uplift rather than a one-time fee, which is how that model normally works &mdash; check any quote you receive against your own numbers.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section tint">
+  <div class="wrap">
+    <p class="kicker">Why the comparison isn't apples to apples</p>
+    <h2>Three things the sticker price hides.</h2>
+    <div class="alt-points" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:20px">
+      <div class="cal-panel"><h3 style="color:#3ADB8B">YOU PAY EITHER WAY</h3><p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.68);margin:0">Sponsored job ads bill whether or not the role gets filled. A failed search still costs the full ad spend. Roven costs nothing until an offer is accepted.</p></div>
+      <div class="cal-panel"><h3 style="color:#3ADB8B">AGENCY MARKUP NEVER STOPS</h3><p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.68);margin:0">A staffing agency's markup applies to every hour worked, for as long as the placement lasts. A one-time fee ends. An hourly uplift doesn't.</p></div>
+      <div class="cal-panel"><h3 style="color:#3ADB8B">TIME IS A REAL COST</h3><p style="font-size:13.5px;line-height:1.6;color:rgba(255,255,255,.68);margin:0">Hours spent reading unqualified applications are the cost nobody puts on the invoice. It's also the one a verified, matched pipeline actually reduces.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <p class="kicker">Other free tools</p>
+    <h2>No signup, no download fee.</h2>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px">
+      <a href="/alternatives/free-resume-builder.html" style="display:inline-block;padding:10px 16px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.82);text-decoration:none;font-size:13.5px">Free resume builder</a>
+      <a href="/resume-examples/index.html" style="display:inline-block;padding:10px 16px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.82);text-decoration:none;font-size:13.5px">Resume examples by job</a>
+      <a href="/alternatives/index.html" style="display:inline-block;padding:10px 16px;border-radius:100px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.82);text-decoration:none;font-size:13.5px">Roven vs the big job boards</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <p style="font-size:11px;line-height:1.6;color:rgba(255,255,255,.4);max-width:640px;margin:0 0 14px">Roven is a hiring marketplace. Roven is not an employment agency, staffing firm, or recruiter, and is not a party to any employment relationship formed through the platform.</p>
+    <div class="footer-legal"><span>&copy; 2026 ROVEN &middot; ROVEN HR, LLC</span></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (n) {
+    return '$' + Math.round(n).toLocaleString('en-US');
+  };
+
+  function card(who, amount, note, win) {
+    return '<div class="cal-card' + (win ? ' win' : '') + '">' +
+      '<div><div class="who">' + who + '</div>' +
+      '<p class="note">' + note + '</p></div>' +
+      '<div class="amt">' + amount + '</div></div>';
+  }
+
+  function calc() {
+    var pay = Math.max(0, parseFloat($('pay').value) || 0);
+    var type = $('type').value;
+    var feePct = parseFloat($('fee').value) || 0.2;
+    var spend = Math.max(0, parseFloat($('spend').value) || 0);
+    var hires = Math.max(1, parseInt($('hires').value, 10) || 1);
+
+    var recruiter = pay * feePct;
+    // staffing markup: modelled at 45% uplift on wages for 6 months
+    var agency = pay * 0.45 * 0.5;
+    var rovenList = type === 'full' ? 499 : 249;
+    var rovenLaunch = type === 'full' ? 199 : 99;
+
+    var html = '';
+    html += card('CONTINGENCY RECRUITER', money(recruiter),
+      Math.round(feePct * 100) + '% of first-year salary, paid once on placement.', false);
+    html += card('STAFFING AGENCY', money(agency),
+      'Modelled as a 45% markup on wages over a six-month placement. It continues for as long as the placement does.', false);
+    html += card('SPONSORED JOB ADS', money(spend),
+      'Paid whether or not the role is filled. Your figure, entered above.', false);
+    html += card('ROVEN &mdash; LAUNCH PRICING', money(rovenLaunch),
+      'One flat fee, only when your offer is accepted. List price is ' + money(rovenList) + '. Right now placement fees are waived entirely.', true);
+    $('results').innerHTML = html;
+
+    var best = Math.min(recruiter, agency, spend > 0 ? spend : Infinity);
+    var diff = best - rovenLaunch;
+    var annual = (recruiter - rovenLaunch) * hires;
+    var msg;
+    if (diff > 0) {
+      msg = 'On this role, Roven is <b>' + money(diff) +
+        ' cheaper</b> than the next-cheapest option you entered. Across <b>' +
+        hires + ' hire' + (hires === 1 ? '' : 's') +
+        ' a year</b>, choosing Roven over a recruiter is a difference of <b>' +
+        money(annual) + '</b>.';
+    } else {
+      msg = 'On these inputs Roven is <b>' + money(rovenLaunch) +
+        '</b> per hire &mdash; and right now placement fees are waived entirely, so the real figure today is <b>$0</b>.';
+    }
+    msg += ' And unlike every other line above, you pay nothing at all if you don\'t hire.';
+    $('save').innerHTML = '<p>' + msg + '</p>';
+  }
+
+  ['pay', 'type', 'fee', 'spend', 'hires'].forEach(function (id) {
+    var el = $(id);
+    el.addEventListener('input', calc);
+    el.addEventListener('change', calc);
+  });
+  calc();
+})();
+</script>
+</body>
+</html>

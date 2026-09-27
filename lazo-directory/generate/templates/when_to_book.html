@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{#- when_to_book.html - JC-LAZO-ASK-0916-001
+    /when-to-book/ - ONE page, not fifteen.
+
+    "When to book a wedding florist" is a one-sentence answer. Fifteen pages of
+    one-sentence answers would be thin, and each would duplicate the "When to
+    book" section already on its own cost guide. As a single timeline across all
+    fifteen categories it becomes something neither of those pages can be: the
+    order you do things in, which is the actual question underneath.
+
+    The per-category lines come from config/cost_guides.py `timing`, so this page
+    and the cost guides can never drift apart. -#}
+{% block title %}When to Book Every Wedding Vendor ({{ year }} Timeline) | Lazo{% endblock %}
+{% block desc %}A month-by-month wedding booking timeline: what to book 12 months out, what can wait, and which vendors genuinely sell out. Built from the real lead times in {{ metro_count }} markets.{% endblock %}
+{% block canonical %}{{ base }}/when-to-book/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When to book every wedding vendor",
+  "description": "A month-by-month wedding booking timeline across every vendor category.",
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/when-to-book/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {%- for q, a in faqs %}
+    { "@type": "Question", "name": {{ q|tojson }},
+      "acceptedAnswer": { "@type": "Answer", "text": {{ a|tojson }} } }{{ "," if not loop.last }}
+    {%- endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Planning</p>
+  <h1>When to book every wedding vendor</h1>
+  <p class="hero-sub">The order matters more than the dates. Here is what genuinely sells out, what can wait, and what you cannot book until something else is signed.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="lede">Almost every wedding booking timeline you will read is a list of months. The more useful thing is the order, because several of these decisions are locked by earlier ones: you cannot book a photographer before you have a date, and you do not have a date until you have a venue.</p>
+<p>So the real sequence is short. <strong>Venue first</strong>, because it sets the date. Then the vendors who can only do one wedding a day and are booked by reputation &mdash; <strong>photographer, planner, band</strong>. Then everything that scales, which is most of the rest.</p>
+
+<h2>The only three rules that matter</h2>
+<ul>
+  <li><strong>One-per-day vendors go first.</strong> A photographer, a band, a planner and an officiant can each do exactly one wedding on your date. A florist, a caterer and a stationer can serve several. That distinction, not the category, is what determines urgency.</li>
+  <li><strong>Peak Saturdays are the constraint, not the year.</strong> Twelve months out for a June Saturday is late in a busy market. Eight months out for a Friday in February is early. Adjust everything below for your date.</li>
+  <li><strong>Being late is not the same as being locked out.</strong> Cancellations happen constantly, and vendors keep waitlists. If your date is inside six months, ask rather than assuming.</li>
+</ul>
+</section>
+
+<section class="cost-cities">
+  <h2>Book first &mdash; these sell out</h2>
+  <p class="cc-sub">One wedding per day each, and chosen by reputation. If your date is a peak Saturday, these are the bookings that decide whether you get your first choice or your fourth.</p>
+  <div class="wtb-list">
+    {%- for r in first_wave %}
+    <div class="wtb-row">
+      <p class="wtb-when">{{ r.when }}</p>
+      <div class="wtb-body">
+        <p class="wtb-cat"><a href="/cost/{{ r.slug }}/">{{ r.label }}</a> <span class="wtb-price">{{ r.typical }}</span></p>
+        <p class="wtb-note">{{ r.timing }}</p>
+        <p class="wtb-links"><a href="/questions/{{ r.slug }}/">What to ask them &rarr;</a></p>
+      </div>
+    </div>
+    {%- endfor %}
+  </div>
+</section>
+
+<section class="cost-cities">
+  <h2>Then everything else</h2>
+  <p class="cc-sub">These scale &mdash; a florist or caterer can take several weddings on one date &mdash; so being a few months later costs you far less.</p>
+  <div class="wtb-list">
+    {%- for r in second_wave %}
+    <div class="wtb-row">
+      <p class="wtb-when">{{ r.when }}</p>
+      <div class="wtb-body">
+        <p class="wtb-cat"><a href="/cost/{{ r.slug }}/">{{ r.label }}</a> <span class="wtb-price">{{ r.typical }}</span></p>
+        <p class="wtb-note">{{ r.timing }}</p>
+        <p class="wtb-links"><a href="/questions/{{ r.slug }}/">What to ask them &rarr;</a></p>
+      </div>
+    </div>
+    {%- endfor %}
+  </div>
+</section>
+
+<section class="band prose doc">
+<h2>If you are already inside six months</h2>
+<p>This is a more common position than the wedding industry likes to admit, and it is workable. What changes is the order of operations: availability now leads, and preference follows.</p>
+<ul>
+  <li><strong>Ask about the date, not the package.</strong> Lead with your date in the first message. It saves everyone the conversation that ends in "unfortunately".</li>
+  <li><strong>Ask about cancellations explicitly.</strong> Vendors hold waitlists and dates genuinely free up. This is the single most useful question available to a late booker.</li>
+  <li><strong>Move off Saturday if you can.</strong> A Friday or Sunday transforms availability across every category at once, and usually costs 20&ndash;40% less.</li>
+  <li><strong>Book the one-per-day vendors this week.</strong> Venue, photographer, officiant, band. The rest can wait another fortnight without much cost.</li>
+</ul>
+
+<h2>What you cannot rush</h2>
+<p>A few things have a fixed lead time regardless of how organised you are. Invitations need four to five months from design to mailbox. Alterations need six to eight weeks and several fittings. A ketubah or a made-to-order stationery suite is lettered by hand. Ordering these late does not cost more; it simply does not work.</p>
+</section>
+
+<section class="next-reads">
+  <h2>Next</h2>
+  <div class="next-grid">
+    <a href="/cost/"><b>What a wedding costs</b><span>Honest ranges for all {{ guide_count }} vendor categories.</span></a>
+    <a href="/questions/"><b>Questions to ask</b><span>And what a good answer sounds like.</span></a>
+    <a href="/{{ first_metro.id }}/"><b>Find vendors in {{ first_metro.name }}</b><span>Every review verified, rankings never sold.</span></a>
+  </div>
+</section>
+{% endblock %}

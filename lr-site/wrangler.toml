@@ -1,0 +1,17 @@
+﻿# LeaseReputation - KV-backed site Worker
+name = "leasereputation"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+[[kv_namespaces]]
+binding = "SITE"
+id = "9ff61a4f0e694e37ac439964e04e6ddf"
+
+[[routes]]
+pattern = "leasereputation.com/*"
+zone_name = "leasereputation.com"
+
+[[routes]]
+pattern = "www.leasereputation.com/*"
+zone_name = "leasereputation.com"
+

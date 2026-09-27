@@ -1,0 +1,341 @@
+{% extends "base.html" %}
+{% block title %}{{ v.name }} &mdash; {{ cat.singular }} in {{ metro.display }} | Lazo{% endblock %}
+{% block desc %}{{ v.name }}, {{ cat.singular|lower }} in {{ metro.display }}. Verified reviews and Lazo Score on the wedding marketplace where rankings are never for sale.{% endblock %}
+{% block canonical %}{% if v.homeCanonical %}{{ v.homeCanonical }}{% else %}{{ base }}/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/{% endif %}{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"LocalBusiness","name":{{ v.name|tojson }},"address":{{ v.address|tojson }}{% if v.phone %},"telephone":{{ v.phone|tojson }}{% endif %}{% if v.website %},"url":{{ v.website|tojson }}{% endif %},"areaServed":"{{ metro.display }}"{% if v.bio %},"description":{{ v.bio|tojson }}{% endif %}}
+</script>
+{% if v.faqs or v.vendorFaqs %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{%- set qa = (v.vendorFaqs or []) -%}
+{%- for f in qa -%}
+{"@type":"Question","name":{{ f.q|tojson }},"acceptedAnswer":{"@type":"Answer","text":{{ f.a|tojson }}}}{{ "," if not loop.last or v.faqs }}
+{%- endfor -%}
+{%- for q, a in (v.faqs or []) -%}
+{"@type":"Question","name":{{ q|tojson }},"acceptedAnswer":{"@type":"Answer","text":{{ a|tojson }}}}{{ "," if not loop.last }}
+{%- endfor -%}
+]}
+</script>
+{% endif %}
+{% endblock %}
+{% block main %}
+<section class="hero hero-vendor" id="hy-hero"{% if v.coverUrl %} style="background-image:linear-gradient(180deg,rgba(61,28,59,.45) 0%,rgba(61,28,59,.62) 55%,rgba(61,28,59,.88) 100%),url('{{ v.coverUrl }}');background-size:cover;background-position:center {{ v.coverFocusY if v.coverFocusY is not none else 50 }}%"{% endif %}>
+  <div class="hero-inner">
+    <p class="eyebrow"><a href="/{{ metro.id }}/">{{ metro.display }}</a> &middot; <a href="/{{ metro.id }}/{{ cat.slug }}/">{{ cat.label }}</a></p>
+    <div class="v-hero-row">
+      <div class="v-logo" id="hy-logo" {% if not v.logoUrl %}style="display:none"{% endif %}><img id="hy-logo-img" src="{{ v.logoUrl or '' }}" alt="{{ v.name }} logo"></div>
+      <h1>{{ v.name }}</h1>
+    </div>
+    <p class="vendor-flags">
+      <span class="badge badge-verified" id="hy-ver" {% if not v.verified %}style="display:none"{% endif %}>Lazo Verified</span><span class="badge badge-muted" id="hy-unver" {% if v.verified %}style="display:none"{% endif %}>Not yet verified</span>
+      {% if v.priceRangeDisplay %}<span class="badge">{{ v.priceRangeDisplay }}</span>{% endif %}
+      {% if v.travelFrom %}<span class="badge">Travels from {{ v.travelFrom }}</span>{% endif %}
+    </p>
+    <p class="v-cta"><a class="btn-gold" href="https://app.getlazo.com/?vendor={{ v.placeId }}">Check availability &mdash; free</a></p>
+  </div>
+</section>
+<section class="band vendor-body">
+  <style>
+    .v-ann{max-width:860px;margin:0 auto 24px;background:linear-gradient(135deg,#3D1C3B,#52284F);border:1px solid #D9B77C;border-radius:18px;padding:18px 22px}
+    .v-ann b{color:#D9B77C;font-size:15px;display:block;margin-bottom:4px}
+    .v-ann p{color:#FAF6F0;font-size:13.5px;margin:0}
+    .v-bio{max-width:760px;margin:0 auto 26px;font-size:15.5px;line-height:1.8;color:#241E2B}
+    .v-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 26px}
+    .v-badges span{background:#fff;border:1px solid #D9B77C;border-radius:999px;padding:7px 15px;font-size:12.5px;color:#52284F;font-weight:600}
+    .v-gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;max-width:920px;margin:0 auto 30px}
+    .v-gal a{display:block;aspect-ratio:4/3;border-radius:14px;overflow:hidden;border:1px solid rgba(217,183,124,.5)}
+    .v-gal img{width:100%;height:100%;object-fit:cover;display:block}
+    .v-gal a{content-visibility:auto;contain-intrinsic-size:210px 158px}
+    .v-video{max-width:760px;margin:0 auto 30px}
+    .v-video iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:16px}
+    .v-pack{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;max-width:920px;margin:0 auto 14px}
+    .v-pack-card{background:#fff;border:1px solid rgba(217,183,124,.65);border-radius:18px;padding:20px}
+    .v-pack-card h3{color:#52284F;font-size:16.5px;margin:0 0 4px}
+    .v-pack-card .p-price{color:#2E8B6B;font-weight:700;font-size:15px;margin:0 0 10px}
+    .v-pack-card p{color:#7A6E80;font-size:13px;line-height:1.6;margin:0;white-space:pre-line}
+    .v-sheet{text-align:center;margin:0 0 30px}
+    .v-serves{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 0 30px}
+    .v-serves span{background:#F1E9E0;border:1px solid rgba(217,183,124,.6);border-radius:999px;padding:6px 14px;font-size:12px;color:#52284F;font-weight:600}
+    .v-pref{max-width:760px;margin:0 auto 30px;text-align:center}
+    .v-pref a{display:inline-block;margin:4px 6px;color:#52284F;font-weight:600;font-size:13.5px;border-bottom:1px solid #D9B77C;text-decoration:none}
+    .v-h2{color:#52284F;text-align:center;font-size:21px;margin:34px 0 16px}
+    html,body{max-width:100%;overflow-x:hidden}
+    .vendor-body img,.vendor-body iframe{max-width:100%}
+    .v-films iframe,.v-video iframe{width:100%;max-width:760px;aspect-ratio:16/9;height:auto;border:0;border-radius:14px;display:block;margin:0 auto 18px}
+    .v-cta{text-align:center;margin:6px 0 0}
+    .v-hero-row{display:flex;align-items:center;gap:18px;justify-content:center}
+    .v-logo{flex:0 0 88px;width:88px;height:88px;background:#fff;border:2px solid #D9B77C;border-radius:18px;padding:8px;box-shadow:0 8px 24px rgba(46,21,48,.35)}
+    .v-logo img{width:100%;height:100%;object-fit:contain;display:block}
+    @media(max-width:640px){.v-hero-row{flex-direction:column;gap:10px}.v-logo{flex-basis:auto;width:72px;height:72px}}
+    .v-owner{max-width:560px;margin:0 auto 28px;display:flex;gap:14px;align-items:center;background:#fff;border:1px solid rgba(217,183,124,.6);border-radius:18px;padding:16px 20px}
+    .v-owner-av{flex:0 0 52px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#3D1C3B,#52284F);color:#D9B77C;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;border:2px solid #D9B77C}
+    .v-owner b{color:#52284F;font-size:15.5px;display:block}
+    .v-owner span{color:#7A6E80;font-size:12.5px}
+    .v-owner-links{margin-left:auto;display:flex;gap:10px}
+    .v-owner-links a{color:#52284F;font-size:12.5px;font-weight:600;border-bottom:1px solid #D9B77C;text-decoration:none}
+    .p-hours{color:#7A6E80;font-size:12px;margin:0 0 8px;font-weight:600;letter-spacing:.4px}
+    .v-cal-wrap{max-width:860px;margin:0 auto 8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+    .v-cal-month{background:#fff;border:1px solid rgba(217,183,124,.6);border-radius:16px;padding:14px}
+    .v-cal-month h4{margin:0 0 8px;color:#52284F;font-size:14px;text-align:center;font-family:'Cormorant Garamond',serif;font-weight:600}
+    .v-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+    .v-cal-grid span{font-size:10.5px;text-align:center;padding:5px 0;border-radius:6px;color:#241E2B}
+    .v-cal-grid .dow{color:#7A6E80;font-weight:700;font-size:9px}
+    .v-cal-grid .bk{background:#3D1C3B;color:#FAF6F0;font-weight:700}
+    .v-cal-grid .pd{color:#C9BFCF}
+    .v-cal-note{text-align:center;font-size:12px;color:#7A6E80;margin:8px 0 30px}
+    .v-ctabar{display:none}
+    @media(max-width:640px){
+      .vendor-body{padding-left:16px;padding-right:16px}
+      .hero-vendor h1{font-size:30px;line-height:1.2}
+      .hero-inner{padding-left:4px;padding-right:4px}
+      .vendor-facts{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+      .facts{width:100%;display:block}
+      .facts div{display:flex;justify-content:space-between;gap:12px;text-align:left;padding:8px 0;border-bottom:1px solid #F0E7DB}
+      .facts dt{flex:0 0 auto;white-space:nowrap}
+      .facts dd{margin:0;text-align:right;overflow-wrap:anywhere}
+      .v-owner{flex-wrap:wrap}
+      .v-owner-links{margin-left:0;width:100%;justify-content:flex-start;padding-top:4px}
+      .v-gal{grid-template-columns:repeat(2,1fr);gap:8px}
+      .v-pack{grid-template-columns:1fr}
+      .v-bio{font-size:14.5px;padding:0 2px}
+      .v-ann{margin-left:0;margin-right:0}
+      .v-badges{padding:0 2px}
+      .v-h2{font-size:19px;margin:26px 0 12px}
+      .v-serves{padding:0 2px}
+    }
+    @media(max-width:720px){
+      .v-ctabar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(46,21,48,.97);backdrop-filter:blur(8px);padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:10px;align-items:center;border-top:1px solid #D9B77C}
+      .v-ctabar p{color:#FAF6F0;font-size:12px;margin:0;flex:1;line-height:1.35}
+      .v-ctabar a{flex:0 0 auto}
+      body{padding-bottom:70px}
+    }
+  </style>
+
+  <div class="v-ann" id="hy-ann" {% if not (v.announcement and v.announcement.title) %}style="display:none"{% endif %}><b id="hy-ann-t">{{ v.announcement.title if v.announcement else '' }}</b><p id="hy-ann-x" {% if not (v.announcement and v.announcement.text) %}style="display:none"{% endif %}>{{ v.announcement.text if v.announcement else '' }}</p></div>
+
+  <p class="v-bio" id="hy-bio" {% if not v.bio %}style="display:none"{% endif %}>{{ v.bio or '' }}</p>
+  {% if not v.bio and v.intro %}<p class="vendor-intro" id="hy-intro">{{ v.intro }}</p>{% endif %}
+
+  {% if v.ownerName %}
+  <div class="v-owner">
+    <div class="v-owner-av">{{ v.ownerName[0]|upper }}</div>
+    <div><b>{{ v.ownerName }}</b><span>{{ v.ownerTitle or 'Owner' }}</span></div>
+    <div class="v-owner-links">
+      {% if v.instagramUrl %}<a href="{{ v.instagramUrl }}" rel="noopener nofollow" target="_blank">Instagram</a>{% endif %}
+      {% if v.website %}<a href="{{ v.website }}" rel="noopener nofollow" target="_blank">Website</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  <div id="hy-gal-wrap" {% if not v.gallery %}style="display:none"{% endif %}>
+  <h2 class="v-h2">Recent work</h2>
+  <div class="v-gal" id="hy-gal">
+    {% for g in (v.gallery or []) %}<a href="{{ (v.galleryFull or v.gallery)[loop.index0] }}" target="_blank" rel="noopener"><img src="{{ g }}" alt="{{ v.name }} wedding work" loading="lazy" decoding="async"></a>{% endfor %}
+  </div>
+
+    <div class="v-badges" id="hy-badges" {% if not v.badges %}style="display:none"{% endif %}>{% for b in (v.badges or []) %}<span>&#10022; {{ b }}</span>{% endfor %}</div>
+
+  <div class="vendor-facts">
+    {% if v.reviewCount %}
+    <div class="score-cord score-cord-lg" aria-label="Lazo score {{ v.score }}">
+      <svg viewBox="0 0 64 64" width="96" height="96" role="img"><circle cx="32" cy="32" r="27" fill="none" stroke="#EADFCB" stroke-width="4"/><circle cx="32" cy="32" r="27" fill="none" stroke="#D9B77C" stroke-width="4" stroke-linecap="round" stroke-dasharray="{{ (v.score/100*169.6)|round(1) }} 169.6" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" class="score-num">{{ v.score }}</text></svg>
+      <p class="score-label">Lazo Score</p>
+    </div>
+    {% else %}
+    <div class="new-chip-lg"><span class="badge badge-new">New to Lazo</span>
+      <p class="score-label">Score appears with first verified review</p></div>
+    {% endif %}
+    <dl class="facts">
+      {% if v.address %}<div><dt>Location</dt><dd>{{ v.address }}</dd></div>{% endif %}
+      {% if v.phone %}<div><dt>Phone</dt><dd>{{ v.phone }}</dd></div>{% endif %}
+      {% if v.website %}<div><dt>Website</dt><dd><a rel="nofollow" href="{{ v.website }}">Visit site</a></dd></div>{% endif %}
+      {% if v.publicEmail %}<div><dt>Email</dt><dd><a href="mailto:{{ v.publicEmail }}">{{ v.publicEmail }}</a></dd></div>{% endif %}
+      {% if v.startingPrice %}<div><dt>Pricing</dt><dd>{{ v.startingPrice }}</dd></div>{% endif %}
+      {% if v.servicesNote %}<div><dt>Services</dt><dd>{{ v.servicesNote }}</dd></div>{% endif %}
+      <div><dt>Verified reviews</dt><dd>{% if v.reviewCount %}{{ v.reviewCount }}{% else %}None yet &mdash; married couples who worked with {{ v.name }} can add the first{% endif %}</dd></div>
+    </dl>
+  </div>
+
+  </div>
+
+  {% if v.videoEmbeds %}
+  <h2 class="v-h2">Watch their films</h2>
+  {% for e in v.videoEmbeds %}
+  <div class="v-video"><iframe src="{{ e }}" title="{{ v.name }} film {{ loop.index }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+  {% endfor %}
+  {% elif v.videoEmbed %}
+  <h2 class="v-h2">Watch</h2>
+  <div class="v-video"><iframe src="{{ v.videoEmbed }}" title="{{ v.name }} video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+  {% endif %}
+
+  <div id="hy-pack-wrap" {% if not v.packages %}style="display:none"{% endif %}>
+  <h2 class="v-h2">Packages</h2>
+  <div class="v-pack" id="hy-pack">
+    {% for p in (v.packages or []) %}
+    <div class="v-pack-card"><h3>{{ p.name }}</h3>{% if p.hours %}<p class="p-hours">{{ p.hours }}</p>{% endif %}<p class="p-price">{% if p.offPeak %}Peak {{ p.price }} &middot; Off-peak {{ p.offPeak }}{% else %}{{ p.price }}{% endif %}</p>{% if p.includes %}<p>{{ p.includes }}</p>{% endif %}</div>
+    {% endfor %}
+  </div>
+  </div>
+  {% if v.priceSheetUrl %}
+  <p class="v-sheet"><a class="btn-gold" href="{{ v.priceSheetUrl }}" target="_blank" rel="noopener">Download full price sheet (PDF)</a></p>
+  {% endif %}
+
+  {% if v.claimedBy %}
+  <h2 class="v-h2">Availability</h2>
+  <div class="v-cal-wrap" id="hy-cal"></div>
+  <p class="v-cal-note">Dates marked in plum are already booked. <a href="https://app.getlazo.com/?vendor={{ v.placeId }}" style="color:#52284F;font-weight:600">Check your date &rarr;</a></p>
+  <script>
+  (function(){
+    var wrap=document.getElementById('hy-cal');
+    if(!wrap)return;
+    var BOOKED={{ (v.unavailableDates or [])|tojson }};
+    window.__lazoCal=function(bookedArr){
+      var booked={};(bookedArr||[]).forEach(function(d){booked[d]=1;});
+      var out='';var now=new Date();var mNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+      for(var mi=0;mi<3;mi++){
+        var y=now.getFullYear(),m=now.getMonth()+mi;var first=new Date(y,m,1);y=first.getFullYear();m=first.getMonth();
+        var days=new Date(y,m+1,0).getDate();var lead=first.getDay();
+        out+='<div class="v-cal-month"><h4>'+mNames[m]+' '+y+'</h4><div class="v-cal-grid">';
+        ['S','M','T','W','T','F','S'].forEach(function(d){out+='<span class="dow">'+d+'</span>';});
+        for(var b=0;b<lead;b++)out+='<span></span>';
+        for(var d=1;d<=days;d++){
+          var iso=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+          var isPast=new Date(y,m,d)<new Date(now.getFullYear(),now.getMonth(),now.getDate());
+          var cls=booked[iso]?'bk':(isPast?'pd':'');
+          out+='<span class="'+cls+'">'+d+'</span>';
+        }
+        out+='</div></div>';
+      }
+      wrap.innerHTML=out;
+    };
+    window.__lazoCal(BOOKED);
+  })();
+  </script>
+  {% endif %}
+  {% if v.serviceMetroNames %}
+  <h2 class="v-h2">Where {{ v.name }} works</h2>
+  <div class="v-serves">{% for m in v.serviceMetroNames %}<span>{{ m }}</span>{% endfor %}</div>
+  {% endif %}
+
+  {% if v.preferredResolved %}
+  <h2 class="v-h2">Vendors they love working with</h2>
+  <div class="v-pref">{% for p in v.preferredResolved %}<a href="{{ p.path }}">{{ p.name }}</a>{% endfor %}</div>
+  {% endif %}
+
+  {% if v.vendorFaqs %}
+  <div class="faq-block">
+    <h2>Questions, answered by {{ v.name }}</h2>
+    {% for f in v.vendorFaqs %}
+    <details class="faq"><summary>{{ f.q }}</summary><p>{{ f.a }}</p></details>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if v.near_venues and cat.slug != 'wedding-venues' %}
+  <div class="near-block">
+    <h2>Convenient to popular venues</h2>
+    <ul class="near-list">
+      {% for nv in v.near_venues %}<li>{{ nv.name }} <span class="near-mi">{{ nv.mi }} mi</span></li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+  {% if v.faqs %}
+  <div class="faq-block">
+    <h2>Planning questions, answered</h2>
+    {% for q, a in v.faqs %}
+    <details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% if v.related %}
+  <div class="related-block">
+    <h2>Couples also looked at</h2>
+    <div class="related-links">
+      {% for r in v.related %}<a href="/{{ metro.id }}/{{ r.cat }}/{{ r.slug }}/">{{ r.name }}</a>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  <script>
+  (function(){
+    var KEY='PASTE_WEB_API_KEY';
+    if(KEY.indexOf('PASTE')===0)return;
+    var url='https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/vendors/{{ v.placeId }}?key='+KEY;
+    function s(f){return f&&f.stringValue!==undefined?f.stringValue:'';}
+    function arr(f){return f&&f.arrayValue&&f.arrayValue.values?f.arrayValue.values:[];}
+    function m(f){return f&&f.mapValue&&f.mapValue.fields?f.mapValue.fields:null;}
+    function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+    function vnt(u){try{if(!u||u.indexOf('/o/')<0)return u;var p=u.split('/o/');var enc=p[1].split('?')[0];var path=decodeURIComponent(enc);var dot=path.lastIndexOf('.');var np=dot>path.lastIndexOf('/')?path.slice(0,dot)+'_1600x1600'+path.slice(dot):path+'_1600x1600';return p[0]+'/o/'+encodeURIComponent(np)+'?alt=media';}catch(e){return u;}}
+    fetch(url).then(function(r){return r.json();}).then(function(doc){
+      var f=doc.fields;if(!f)return;
+      var ann=m(f.announcement);
+      var annEl=document.getElementById('hy-ann');
+      if(annEl){
+        if(ann&&s(ann.title)){
+          annEl.style.display='';
+          document.getElementById('hy-ann-t').textContent=s(ann.title);
+          var ax=document.getElementById('hy-ann-x');
+          if(s(ann.text)){ax.style.display='';ax.textContent=s(ann.text);}else{ax.style.display='none';}
+        }else{annEl.style.display='none';}
+      }
+      var bio=s(f.bio),bioEl=document.getElementById('hy-bio');
+      if(bioEl&&bio){bioEl.style.display='';bioEl.textContent=bio;
+        var ie=document.getElementById('hy-intro');if(ie)ie.style.display='none';}
+      var badges=arr(f.badges),bEl=document.getElementById('hy-badges');
+      if(bEl){
+        if(badges.length){bEl.style.display='';bEl.innerHTML=badges.map(function(b){return '<span>\u2726 '+esc(s(b))+'</span>';}).join('');}
+        else{bEl.style.display='none';}
+      }
+      var gal=arr(f.gallery),gw=document.getElementById('hy-gal-wrap'),g=document.getElementById('hy-gal');
+      if(gw&&g){
+        if(gal.length){gw.style.display='';g.innerHTML=gal.map(function(u){u=s(u);var w=vnt(u);return '<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(w)+'" loading="lazy" decoding="async" alt="work" onerror="this.onerror=null;this.src=\''+esc(u)+'\'"></a>';}).join('');}
+        else{gw.style.display='none';}
+      }
+      var packs=arr(f.packages),pw=document.getElementById('hy-pack-wrap'),p=document.getElementById('hy-pack');
+      if(pw&&p){
+        if(packs.length){pw.style.display='';p.innerHTML=packs.map(function(pk){var pf=m(pk)||{};var inc=s(pf.includes);var hrs=s(pf.hours);var op=s(pf.offPeak);var priceLine=op?('Peak '+esc(s(pf.price))+' \u00b7 Off-peak '+esc(op)):esc(s(pf.price));return '<div class="v-pack-card"><h3>'+esc(s(pf.name))+'</h3>'+(hrs?'<p class="p-hours">'+esc(hrs)+'</p>':'')+'<p class="p-price">'+priceLine+'</p>'+(inc?'<p>'+esc(inc)+'</p>':'')+'</div>';}).join('');}
+        else{pw.style.display='none';}
+      }
+      var lg=s(f.logoUrl);
+      var lgBox=document.getElementById('hy-logo'),lgImg=document.getElementById('hy-logo-img');
+      if(lgBox&&lgImg){if(lg){lgImg.src=lg;lgBox.style.display='';}else{lgBox.style.display='none';}}
+      var cov=s(f.coverUrl);
+      var focus=(f.coverFocusY&&f.coverFocusY.integerValue!==undefined)?f.coverFocusY.integerValue:((f.coverFocusY&&f.coverFocusY.doubleValue!==undefined)?f.coverFocusY.doubleValue:50);
+      var hero=document.getElementById('hy-hero');
+      if(hero&&cov){
+        var hv=vnt(cov);
+        var himg=new Image();
+        himg.onload=function(){
+          hero.style.backgroundImage='linear-gradient(180deg,rgba(61,28,59,.45) 0%,rgba(61,28,59,.62) 55%,rgba(61,28,59,.88) 100%),url("'+hv+'")';
+          hero.style.backgroundSize='cover';
+          hero.style.backgroundPosition='center '+focus+'%';
+        };
+        himg.onerror=function(){
+          hero.style.backgroundImage='linear-gradient(180deg,rgba(61,28,59,.45) 0%,rgba(61,28,59,.62) 55%,rgba(61,28,59,.88) 100%),url("'+cov+'")';
+          hero.style.backgroundSize='cover';
+          hero.style.backgroundPosition='center '+focus+'%';
+        };
+        himg.src=hv;
+      }
+      var ud=arr(f.unavailableDates).map(function(x){return s(x);});
+      if(window.__lazoCal){window.__lazoCal(ud);}
+      var claimed=s(f.claimedBy);
+      var strip=document.getElementById('hy-claim');
+      if(strip){strip.style.display=claimed?'none':'';}
+      var isVer=f.verified&&f.verified.booleanValue===true;
+      var ve=document.getElementById('hy-ver'),uv=document.getElementById('hy-unver');
+      if(ve&&uv){ve.style.display=isVer?'':'none';uv.style.display=isVer?'none':'';}
+    }).catch(function(){});
+  })();
+  </script>
+  <div class="v-ctabar">
+    <p><b>{{ v.name }}</b><br>Verified couples inquire free</p>
+    <a class="btn-gold" href="https://app.getlazo.com/?vendor={{ v.placeId }}">Check availability</a>
+  </div>
+  <div class="claim-strip" id="hy-claim" {% if v.claimedBy %}style="display:none"{% endif %}>
+    <h2>Is this your business?</h2>
+    <p>Claim this profile free. Reply to reviews free. Receive verified leads free &mdash; forever.</p>
+    <a class="btn-gold" href="/for-vendors/?vendor={{ v.placeId }}&name={{ v.name|urlencode }}#claim">Claim this profile</a>
+  </div>
+</section>
+{% endblock %}

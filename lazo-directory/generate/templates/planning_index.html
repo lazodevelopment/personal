@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{#- planning_index.html - JC-LAZO-PLAN-0917-001
+    /planning/ - the hub, and the page that ties all five clusters together.
+    It is the natural landing point for "how do I plan a wedding", so it routes
+    outward to cost, booking and vendor questions rather than restating them. -#}
+{% block title %}How to Plan a Wedding &mdash; {{ guide_count }} Practical Guides | Lazo{% endblock %}
+{% block desc %}Wedding day timelines, seating charts, vows, speeches, guest lists, marriage licenses and more. {{ guide_count }} planning guides that say what actually goes wrong &mdash; and what to tell your vendors so it doesn't.{% endblock %}
+{% block canonical %}{{ base }}/planning/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Wedding planning guides",
+  "description": "Practical wedding planning guides covering the day, the people, the words and the logistics.",
+  "url": "{{ base }}/planning/",
+  "publisher": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" }
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Planning</p>
+  <h1>The parts nobody warns you about.</h1>
+  <p class="hero-sub">{{ guide_count }} guides to the wedding decisions that actually cause trouble &mdash; and the specific thing to tell your vendors so they don't.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="lede">Most wedding planning advice is written to be reassuring. These are written to be useful, which sometimes means telling you that a receiving line costs you twenty-five minutes nobody scheduled, that marriage licenses expire, and that the fastest way to lose an hour is family photographs without a written list.</p>
+<p>Every guide ends with what to do about it and which vendor to tell &mdash; because a planning problem you cannot hand to anyone is just a worry.</p>
+</section>
+
+{%- for group, items in groups %}
+<section class="cost-cities trad-group">
+  <h2>{{ group }}</h2>
+  <div class="cc-guides">
+    {%- for it in items %}
+    <a href="/planning/{{ it.slug }}/">
+      <b>{{ it.short }}</b>
+      <em>{{ it.question }}</em>
+      <span>{{ it.blurb }}</span>
+    </a>
+    {%- endfor %}
+  </div>
+</section>
+{%- endfor %}
+
+<section class="band prose doc">
+<h2>The rest of the planning we've published</h2>
+<p>These four questions have their own guides, because each one needed more room than a section:</p>
+<ul>
+  <li><strong><a href="/cost/">What everything costs.</a></strong> Honest ranges for all 15 vendor categories, what moves each number, and where to spend less without regretting it.</li>
+  <li><strong><a href="/when-to-book/">When to book each vendor.</a></strong> Ordered by what genuinely sells out, which is not the same as what you think of first.</li>
+  <li><strong><a href="/questions/">What to ask before you book.</a></strong> 134 questions, each with what a good answer sounds like and what should worry you.</li>
+  <li><strong><a href="/traditions/">Wedding traditions.</a></strong> 25 ceremonies explained as they are actually performed, and what to tell your officiant so yours goes well.</li>
+</ul>
+
+<h2>Why these read differently</h2>
+<p>Lazo earns nothing from vendors &mdash; no fee per lead, no fee per booking, and <a href="/why-lazo/">rankings that can't be bought at any price</a>. That means we have no reason to smooth over the parts of wedding planning that are genuinely annoying, and no reason to recommend spending where spending does not help. Where we think something is not worth the money, these guides say so.</p>
+</section>
+
+<section class="next-reads">
+  <h2>When you're ready for vendors</h2>
+  <div class="next-grid">
+    <a href="/{{ first_metro.id }}/"><b>Find vendors in {{ first_metro.name }}</b><span>Every review verified by a couple who was actually there.</span></a>
+    <a href="/cost/"><b>What a wedding costs</b><span>Honest ranges for every vendor you'll hire.</span></a>
+    <a href="/questions/"><b>Questions to ask</b><span>And what a good answer sounds like.</span></a>
+  </div>
+</section>
+{% endblock %}

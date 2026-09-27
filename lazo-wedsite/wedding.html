@@ -1,0 +1,259 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Our Wedding</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--plum:#52284F;--plumDeep:#3D1C3B;--gold:#D9B77C;--ivory:#FAF6F0;--ink:#241E2B;--muted:#7A6E80;--blush:#E8B4B8;
+ --bg:var(--ivory);--fg:var(--ink);--head:var(--plum);--card:#fff;--cardline:rgba(217,183,124,.55);--accent:var(--gold)}
+*{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}
+html{scroll-behavior:smooth}
+body{margin:0;font:400 16px/1.7 Inter,sans-serif;color:var(--fg);background:var(--bg)}
+h1,h2,h3{font-family:'Cormorant Garamond',serif;color:var(--head);font-weight:500;margin:0 0 .35em}
+::selection{background:var(--plum);color:var(--ivory)}
+/* ---- hero ---- */
+.hero{position:relative;min-height:88vh;display:flex;align-items:flex-end;justify-content:center;text-align:center;
+ color:var(--ivory);padding:0 20px 9vh;
+ background:linear-gradient(rgba(46,21,48,.18) 30%,rgba(46,21,48,.82)),var(--heroimg,linear-gradient(150deg,#2E1530,#52284F 60%,#6A3A66)) center 35%/cover}
+.hero::after{content:"";position:absolute;inset:0;pointer-events:none;
+ background:radial-gradient(560px 340px at 80% 18%,rgba(217,183,124,.20),transparent 65%)}
+.hero-in{position:relative;z-index:2;animation:rise 1s ease both}
+.mono{width:74px;height:74px;margin:0 auto 18px;border:1.5px solid var(--gold);border-radius:999px;
+ display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;
+ font-size:26px;color:var(--gold);letter-spacing:2px;background:rgba(46,21,48,.35);backdrop-filter:blur(6px)}
+.hero h1{color:var(--ivory);font-size:clamp(44px,9vw,86px);font-style:italic;line-height:1.04;letter-spacing:.5px}
+.hero .amp{color:var(--gold);font-style:italic}
+.hline{width:74px;height:1px;background:var(--gold);margin:20px auto;opacity:.9}
+.hero .date{letter-spacing:5px;text-transform:uppercase;font-size:12.5px;color:var(--gold)}
+.hero .place{margin-top:6px;font-size:14.5px;color:#EBDDEC;font-style:italic;font-family:'Cormorant Garamond',serif;font-size:17px}
+.hero .count{margin-top:14px;font-size:13px;color:#D9C4DB;letter-spacing:1px}
+.chev{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:var(--gold);font-size:22px;
+ animation:bob 2.2s ease-in-out infinite;z-index:2;text-decoration:none}
+@keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* ---- curve dividers ---- */
+.curve{height:52px;line-height:0;display:block}
+.curve svg{display:block;width:100%;height:100%}
+/* ---- bands ---- */
+.band{max-width:680px;margin:0 auto;padding:56px 22px}
+.band-wide{max-width:1000px}
+.eyebrow{text-align:center;letter-spacing:4px;text-transform:uppercase;font-size:11px;color:var(--accent);font-weight:600;margin-bottom:6px}
+.band h2{font-size:clamp(28px,5vw,38px);text-align:center}
+.h-orn{display:flex;align-items:center;gap:14px;justify-content:center;margin:2px 0 26px}
+.h-orn::before,.h-orn::after{content:"";height:1px;width:56px;background:var(--cardline)}
+.h-orn span{color:var(--accent);font-size:15px}
+.story{font-family:'Cormorant Garamond',serif;font-size:20px;line-height:1.75;color:var(--fg);text-align:center;white-space:pre-line;font-style:italic}
+/* ---- gallery ---- */
+.gal{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}
+.gal img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px;border:1px solid var(--cardline);
+ box-shadow:0 10px 28px rgba(46,21,48,.14);transition:transform .3s ease}
+.gal img:hover{transform:scale(1.025)}
+.gal img:nth-child(1){grid-column:span 2;grid-row:span 2;aspect-ratio:auto}
+@media(max-width:560px){.gal{grid-template-columns:repeat(2,1fr)}.gal img:nth-child(1){grid-column:span 2;grid-row:span 1;aspect-ratio:16/10}}
+/* ---- timeline ---- */
+.tl{position:relative;max-width:420px;margin:0 auto;padding-left:26px}
+.tl::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;
+ background:linear-gradient(var(--accent),var(--blush))}
+.tl-i{position:relative;padding:0 0 26px 16px}
+.tl-i:last-child{padding-bottom:0}
+.tl-i::before{content:"";position:absolute;left:-26px;top:5px;width:16px;height:16px;border-radius:999px;
+ background:var(--bg);border:2.5px solid var(--accent)}
+.tl-t{font:600 12px Inter;letter-spacing:2px;color:var(--accent);text-transform:uppercase}
+.tl-l{font-family:'Cormorant Garamond',serif;font-size:21px;color:var(--head)}
+/* ---- cards / kv ---- */
+.card{background:var(--card);border:1px solid var(--cardline);border-radius:22px;padding:26px;margin:12px 0;
+ box-shadow:0 12px 34px rgba(46,21,48,.08)}
+.kv{display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid var(--cardline);font-size:14.5px}
+.kv:last-child{border:none}.kv b{color:var(--head);flex:0 0 auto;font-weight:600}
+.kv span{text-align:right}
+/* ---- faq / registry ---- */
+.faq{border:1px solid var(--cardline);border-radius:16px;margin:10px 0;background:var(--card)}
+.faq summary{cursor:pointer;padding:14px 18px;font-weight:600;color:var(--head);font-size:15px;list-style:none}
+.faq summary::after{content:"+";float:right;color:var(--accent);font-size:17px}
+.faq[open] summary::after{content:"\2212"}
+.faq p{padding:0 18px 16px;margin:0;font-size:14.5px}
+.reg a{display:block;text-align:center;background:var(--head);color:var(--ivory);text-decoration:none;border-radius:999px;
+ padding:15px;margin:10px 0;font-weight:600;letter-spacing:.3px;transition:transform .15s ease,box-shadow .15s ease;
+ box-shadow:0 8px 22px rgba(46,21,48,.22)}
+.reg a:hover{transform:translateY(-2px)}
+/* ---- rsvp ---- */
+form{display:grid;gap:12px}
+input,select,textarea{font:inherit;padding:14px 16px;border:1.5px solid var(--cardline);border-radius:13px;background:var(--card);width:100%;color:var(--fg)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+button{font:600 15px Inter;background:var(--accent);color:var(--plumDeep);border:none;border-radius:999px;padding:16px;cursor:pointer;
+ box-shadow:0 8px 24px rgba(217,183,124,.4);transition:transform .15s ease}
+button:hover{transform:translateY(-1px)}
+.ok{background:#EAF6F0;border:1px solid #2E8B6B;color:#2E8B6B;border-radius:16px;padding:18px;text-align:center;font-weight:600;display:none}
+/* ---- gate ---- */
+.gate{position:fixed;inset:0;background:linear-gradient(150deg,#2E1530,var(--plumDeep),var(--plum));display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+.gate .g{max-width:360px;width:100%;text-align:center;color:var(--ivory)}
+.gate h1{color:var(--ivory);font-size:36px;font-style:italic}
+.gate input{text-align:center;letter-spacing:5px;background:rgba(250,246,240,.95)}
+/* ---- reveal ---- */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.4,0,.2,1)}
+.rv.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}.chev{animation:none}}
+.foot{text-align:center;padding:44px 20px 36px;color:var(--muted);font-size:12.5px}
+.foot .fm{width:44px;height:44px;margin:0 auto 10px;border:1px solid var(--cardline);border-radius:999px;
+ display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;color:var(--accent);font-size:17px}
+.foot a{color:var(--head);text-decoration:none;font-weight:600}
+/* ================= TEMPLATES ================= */
+body.t-evening{--bg:#241226;--fg:#EBDDEC;--head:var(--gold);--card:rgba(255,255,255,.055);--cardline:rgba(217,183,124,.4);--muted:#B79BB5}
+body.t-evening .tl-i::before{background:#241226}
+body.t-evening input,body.t-evening select,body.t-evening textarea{background:rgba(250,246,240,.94);color:var(--ink)}
+body.t-garden{--bg:#FBF3F1;--head:#A05A6E;--accent:#C98A97;--cardline:rgba(201,138,151,.5)}
+body.t-garden .hero{background:linear-gradient(rgba(122,60,90,.28) 30%,rgba(80,35,60,.82)),var(--heroimg,linear-gradient(150deg,#8A4A5E,#C98A97)) center 35%/cover}
+body.t-editorial{--bg:#FFFFFF;--head:#241E2B;--accent:#241E2B;--cardline:rgba(36,30,43,.18);--card:#FAFAF8}
+body.t-editorial .hero{background:linear-gradient(rgba(20,16,24,.25) 40%,rgba(20,16,24,.85)),var(--heroimg,linear-gradient(150deg,#241E2B,#4A4150)) center 35%/cover}
+body.t-editorial .mono,body.t-editorial .hero .date,body.t-editorial .chev{color:#fff;border-color:#fff}
+body.t-editorial .hline{background:#fff}
+body.t-editorial button{background:#241E2B;color:#fff;box-shadow:0 8px 24px rgba(36,30,43,.3)}
+body.t-midnight{--bg:#121019;--fg:#E8E4EF;--head:#D9B77C;--card:#1C1826;--cardline:rgba(217,183,124,.35);--muted:#8A7D90}
+body.t-midnight .hero{background:linear-gradient(rgba(10,8,14,.3) 30%,rgba(10,8,14,.9)),var(--heroimg,linear-gradient(150deg,#121019,#2E1530)) center 35%/cover}
+body.t-midnight .tl-i::before{background:#121019}
+body.t-midnight input,body.t-midnight select,body.t-midnight textarea{background:#F5F1EA;color:var(--ink)}
+body.t-desert{--bg:#FAF4EA;--head:#9A6A38;--accent:#C99453;--cardline:rgba(201,148,83,.5);--blush:#E0B48A}
+body.t-desert .hero{background:linear-gradient(rgba(90,55,25,.25) 30%,rgba(60,35,18,.82)),var(--heroimg,linear-gradient(150deg,#7A5228,#C99453)) center 35%/cover}
+</style></head>
+<body>
+<div class="gate" id="gate"><div class="g">
+<div class="mono" id="gmono">&hearts;</div>
+<h1>Welcome</h1>
+<p style="color:#EBDDEC">This celebration is private.<br>Enter the passcode from your invitation.</p>
+<input id="pw" placeholder="passcode" autocomplete="off">
+<div style="height:12px"></div><button onclick="tryPw()" style="width:100%">Enter</button>
+<p id="pwerr" style="color:var(--blush);display:none">That&rsquo;s not it &mdash; try again.</p>
+</div></div>
+
+<section class="hero"><div class="hero-in">
+<div class="mono" id="mono"></div>
+<h1 id="names">&nbsp;</h1>
+<div class="hline"></div>
+<div class="date" id="wdate"></div>
+<div class="place" id="wplace"></div>
+<div class="count" id="wcount"></div>
+</div><a class="chev" href="#c1">&#8595;</a></section>
+<span id="c1"></span>
+
+<section class="band rv" id="s-story" style="display:none">
+<div class="eyebrow">How we got here</div><h2>Our story</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<p class="story" id="story"></p></section>
+
+<section class="band band-wide rv" id="s-gal" style="display:none">
+<div class="eyebrow">A few favorites</div><h2>Us, in pictures</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<div class="gal" id="gal"></div></section>
+
+<section class="band rv" id="s-day" style="display:none">
+<div class="eyebrow">The celebration</div><h2>The day</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<div class="tl" id="tl"></div>
+<div class="card" id="details" style="margin-top:26px"></div></section>
+
+<section class="band rv" id="s-travel" style="display:none">
+<div class="eyebrow">From out of town</div><h2>Travel &amp; stay</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<div class="card" id="travel"></div></section>
+
+<section class="band rv" id="s-faq" style="display:none">
+<div class="eyebrow">Good to know</div><h2>Questions, answered</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<div id="faqs"></div></section>
+
+<section class="band rv" id="s-reg" style="display:none">
+<div class="eyebrow">If you feel moved</div><h2>Registry</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<p style="text-align:center;font-size:14px;color:var(--muted);margin-top:-10px">Your presence is the real present.</p>
+<div class="reg" id="reg"></div></section>
+
+<section class="band rv" id="s-rsvp" style="display:none">
+<div class="eyebrow">Kindly reply</div><h2>RSVP</h2>
+<div class="h-orn"><span>&#10087;</span></div>
+<div class="card"><form id="rsvpF" onsubmit="return sendRsvp(event)">
+<input id="rName" placeholder="Your full name" required>
+<select id="rAtt"><option value="yes">Joyfully accepts</option><option value="no">Regretfully declines</option></select>
+<input id="rPlus" type="number" min="0" max="10" value="0" placeholder="Guests coming with you">
+<input id="rMeal" placeholder="Meal preference (optional)">
+<textarea id="rNote" rows="2" placeholder="A note for the couple (optional)"></textarea>
+<button type="submit">Send our reply</button>
+</form><div class="ok" id="rsvpOk">Thank you &mdash; your reply is in. We can&rsquo;t wait. &#10087;</div></div></section>
+
+<div class="foot"><div class="fm" id="fmono"></div>
+Made with <a href="https://getlazo.com">Lazo</a> &mdash; the verified wedding marketplace</div>
+<script>
+var KEY='AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU';
+var slug=(location.pathname.match(/\/w\/([^\/]+)/)||[])[1]||new URLSearchParams(location.search).get('c')||'';
+var BASE='https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/';
+function s(f){return f&&f.stringValue||'';}
+function arr(f){return f&&f.arrayValue&&f.arrayValue.values||[];}
+function m(f){return f&&f.mapValue&&f.mapValue.fields||null;}
+function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML;}
+var SITE=null;
+function monoOf(n){var p=n.split(/\s*&\s*|\s+and\s+/i).map(function(x){return (x.trim()[0]||'').toUpperCase();}).filter(Boolean);
+ return p.length>=2?p[0]+' \u00b7 '+p[1]:(p[0]||'\u2665');}
+function render(f){
+  SITE=f;
+  var tpl=s(f.template);
+  if(['evening','garden','editorial','midnight','desert'].indexOf(tpl)>-1)document.body.className='t-'+tpl;
+  var pw=s(f.passcode);
+  if(pw&&sessionStorage.getItem('lw-'+slug)!==pw)document.getElementById('gate').style.display='flex';
+  var nm=s(f.names)||'Our Wedding';
+  document.getElementById('names').innerHTML=esc(nm).replace(/&amp;/g,'<span class="amp">&amp;</span>');
+  document.title=nm+' \u2014 Wedding';
+  var mono=monoOf(nm);
+  document.getElementById('mono').textContent=mono;
+  document.getElementById('fmono').textContent=mono;
+  if(s(f.coverUrl))document.querySelector('.hero').style.setProperty('--heroimg','url('+s(f.coverUrl)+')');
+  document.getElementById('wdate').textContent=s(f.dateDisplay);
+  if(s(f.venueName))document.getElementById('wplace').textContent=s(f.venueName);
+  var iso=s(f.dateIso);
+  if(iso){var days=Math.ceil((new Date(iso+'T00:00:00')-new Date())/(864e5));
+    document.getElementById('wcount').textContent=days>0?days+' days to go':(days===0?'Today':'Just married');}
+  if(s(f.story)){show('s-story');document.getElementById('story').textContent=s(f.story);}
+  var gal=arr(f.siteGallery).map(s).filter(Boolean);
+  if(gal.length){show('s-gal');
+    document.getElementById('gal').innerHTML=gal.slice(0,6).map(function(u){return '<img src="'+esc(u)+'" alt="" loading="lazy">';}).join('');}
+  var moments=[['Ceremony',s(f.ceremonyTime)],['Cocktail hour',s(f.cocktailTime)],['Reception',s(f.receptionTime)],['Send-off',s(f.sendOffTime)]].filter(function(x){return x[1];});
+  var det=[['Venue',s(f.venueName)],['Address',s(f.venueAddress)],['Dress code',s(f.dressCode)]].filter(function(x){return x[1];});
+  if(moments.length||det.length){show('s-day');
+    document.getElementById('tl').innerHTML=moments.map(function(x){return '<div class="tl-i"><div class="tl-t">'+esc(x[1])+'</div><div class="tl-l">'+x[0]+'</div></div>';}).join('');
+    document.getElementById('details').innerHTML=det.map(function(x){return '<div class="kv"><b>'+x[0]+'</b><span>'+esc(x[1])+'</span></div>';}).join('');
+    if(!det.length)document.getElementById('details').style.display='none';
+    if(!moments.length)document.getElementById('tl').style.display='none';}
+  var trv=[['Hotel block',s(f.hotelBlock)],['Getting there',s(f.transport)],['Parking',s(f.parking)],['Good to know',s(f.travelNotes)]].filter(function(x){return x[1];});
+  if(trv.length){show('s-travel');
+    document.getElementById('travel').innerHTML=trv.map(function(x){return '<div class="kv"><b>'+x[0]+'</b><span>'+esc(x[1])+'</span></div>';}).join('');}
+  var fq=arr(f.faqs).map(m).filter(Boolean);
+  if(fq.length){show('s-faq');
+    document.getElementById('faqs').innerHTML=fq.map(function(q){return '<details class="faq"><summary>'+esc(s(q.q))+'</summary><p>'+esc(s(q.a))+'</p></details>';}).join('');}
+  var rg=arr(f.registryLinks).map(m).filter(Boolean);
+  if(rg.length){show('s-reg');
+    document.getElementById('reg').innerHTML=rg.map(function(r){return '<a href="'+esc(s(r.url))+'" target="_blank" rel="noopener">'+esc(s(r.label))+'</a>';}).join('');}
+  if(f.rsvpOpen&&f.rsvpOpen.booleanValue===true)show('s-rsvp');
+  reveal();
+}
+function show(id){document.getElementById(id).style.display='';}
+function reveal(){var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{threshold:.12});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});}
+function tryPw(){var v=document.getElementById('pw').value.trim();
+  if(SITE&&v===s(SITE.passcode)){sessionStorage.setItem('lw-'+slug,v);document.getElementById('gate').style.display='none';}
+  else document.getElementById('pwerr').style.display='block';}
+function sendRsvp(e){e.preventDefault();
+  var body={fields:{name:{stringValue:document.getElementById('rName').value.trim()},
+    attending:{stringValue:document.getElementById('rAtt').value},
+    plusOnes:{integerValue:String(parseInt(document.getElementById('rPlus').value||'0',10))},
+    meal:{stringValue:document.getElementById('rMeal').value.trim()},
+    note:{stringValue:document.getElementById('rNote').value.trim()},
+    createdAt:{timestampValue:new Date().toISOString()}}};
+  fetch(BASE+encodeURIComponent(slug)+'/rsvps?key='+KEY,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){if(r.ok){document.getElementById('rsvpF').style.display='none';document.getElementById('rsvpOk').style.display='block';}
+      else alert('Something went wrong - try again?');});
+  return false;}
+if(slug){fetch(BASE+encodeURIComponent(slug)+'?key='+KEY).then(function(r){return r.json();})
+  .then(function(j){if(j.fields)render(j.fields);else document.getElementById('names').textContent='Site not found';});}
+</script></body></html>
+

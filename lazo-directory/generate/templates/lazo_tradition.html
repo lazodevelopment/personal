@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{#- JC-LAZO-CFORM-0916-001: this page was a standalone HTML file with its own
+    Georgia-serif stylesheet, no site header, no site footer and no link out
+    except the logo and one CTA - so a reader who arrived from search had no
+    way back into the site and no way back to where they came from. It is now
+    a page of the site like any other: real nav, real footer, real stylesheet,
+    a breadcrumb at the top and somewhere to go at the bottom.
+
+    build.py used to copy this file byte-for-byte; it now renders it, so the
+    asset stamp and the contextual footer stay correct without anyone having
+    to remember this page exists. -#}
+{% block title %}What Is the Lazo? The Wedding Tradition Behind Our Name | Lazo{% endblock %}
+{% block desc %}El lazo is the wedding lasso ceremony &mdash; a cord looped in a figure eight around a couple to bind them for life. It's the tradition our verified wedding marketplace is named for.{% endblock %}
+{% block canonical %}{{ base }}/what-is-a-lazo/{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "What Is the Lazo? The Wedding Tradition Behind Our Name",
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/what-is-a-lazo/"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "What is the lazo in a wedding?",
+      "acceptedAnswer": { "@type": "Answer", "text": "El lazo is a cord, rosary or flower garland looped in a figure eight around the shoulders of a couple after their vows, in Mexican, Filipino and Spanish wedding ceremonies. The figure eight is the symbol of infinity: two lives bound into one unending shape." } },
+    { "@type": "Question", "name": "Who puts the lazo on the couple?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The padrinos de lazo, the godparents of the lasso: a married couple chosen by the bride and groom to place the cord and, traditionally, to stand behind the marriage for life. Being asked is an honour." } },
+    { "@type": "Question", "name": "When in the ceremony does the lazo happen?",
+      "acceptedAnswer": { "@type": "Answer", "text": "After the vows and rings, usually just before the final blessing. The couple wears it through the remaining prayers, and the padrinos lift it away at the end of the ceremony." } },
+    { "@type": "Question", "name": "What happens to the lazo afterwards?",
+      "acceptedAnswer": { "@type": "Answer", "text": "It is kept: draped over a mirror, framed, or stored and passed down to the next couple in the family. It is a keepsake of the exact moment two people became one." } }
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">The tradition behind our name</p>
+  <h1>What is the lazo?</h1>
+  <p class="hero-sub">The wedding lasso ceremony: a single cord, looped in a figure eight, that makes a bond visible.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="page-back"><a href="/traditions/">All wedding traditions</a></p>
+
+<p class="lede">Midway through many Mexican, Filipino, and Spanish wedding ceremonies, after the vows have been spoken, something quietly beautiful happens. Family members &mdash; often the couple's padrinos, their chosen godparents for the marriage &mdash; step forward carrying a single long cord. Sometimes it's a strand of flowers, sometimes a beaded rope, often an oversized rosary. They loop it gently around the shoulders of the couple in the shape of a figure eight: one loop for each person, joined at the centre.</p>
+
+<p>That cord is <em>el lazo</em> &mdash; the lasso &mdash; and the figure eight is no accident. Turned on its side, it's the symbol of infinity. Two separate lives, bound into one unending shape. The couple wears it through the rest of the ceremony, through the prayers and the blessing, physically tied together as they hear the words that make them family. When it's lifted away, it's kept &mdash; draped over a mirror, framed on a wall, passed down &mdash; a keepsake of the exact moment two people became one.</p>
+
+<div class="pull">The lazo doesn't create the bond. It makes the bond visible.</div>
+
+<h2>Where the tradition comes from</h2>
+<p>The lazo ceremony has roots in Spanish Catholic practice and grew into one of the most beloved traditions of Mexican and Filipino weddings, alongside <em>las arras</em> (the thirteen coins) and the veil ceremony. Together these are often called the three ceremonial gifts, and they tend to appear in the same part of the service: the veil for protection, the coins for provision, the lazo for unity.</p>
+<p>Today couples of every background borrow it, because what it says needs no translation: marriage is a binding. Chosen, celebrated, witnessed, and meant to hold.</p>
+
+<h2>Who places the lazo</h2>
+<p>The <em>padrinos de lazo</em> &mdash; the godparents of the lasso &mdash; are a married couple the bride and groom choose: often parents, grandparents, or the couple whose marriage they'd most like theirs to resemble. They place the cord and, traditionally, they stand behind the marriage for life &mdash; the people you call when it's hard. Being asked is an honour, and it is usually asked in person.</p>
+
+<h2>When it happens, and what to expect</h2>
+<p>The lazo comes after the vows and rings, generally just before the final blessing. The couple kneels or stands close while the padrinos settle the cord over both sets of shoulders. It stays on through the remaining prayers &mdash; a few minutes, sometimes longer &mdash; and is lifted away at the end of the ceremony, at which point it belongs to the couple.</p>
+<p>If you're planning one: tell your officiant early so the order of service makes room for it, and tell your photographer earlier still. The placing and the lifting are two of the most photographed seconds of the whole day, and they happen once, from one angle, with no second take. It's the kind of moment worth choosing a photographer who has shot it before.</p>
+
+<h2>Choosing a lazo</h2>
+<p>There is no single correct object. A double rosary is the most traditional; a satin or silk cord is the most common; flowers woven the length of the loop are the most photographed. Families who have kept one for generations use that one, and a cord that has been on three marriages before yours carries a weight no florist can supply. If you're starting fresh, many couples ask a grandmother to make it, which is its own kind of beginning.</p>
+
+<h2>Why we named our company Lazo</h2>
+<p>We build a wedding marketplace, and we could have named it anything. We chose the lazo because the tradition is everything we believe about weddings &mdash; and everything we think wedding platforms forgot.</p>
+<p>A wedding is a set of bonds. The couple's, first and always. But also the bonds a couple forms with the people who make the day real &mdash; the photographer they trust with memories that can't be reshot, the planner who holds the whole day in her head, the venue where it all happens. Those relationships deserve to be built on something true.</p>
+<p>That's why every review on Lazo comes from a verified couple who actually held their wedding with that vendor. Why every claimed profile belongs to a verified owner. And why our rankings can never be bought &mdash; not with ads, not with subscriptions, not at any price. The bond between a couple and their vendors should be tied with a true cord.</p>
+<p><a href="/about/">More about who built Lazo and why &rarr;</a></p>
+</section>
+
+<section class="next-reads">
+  <h2>Where to next</h2>
+  <div class="next-grid">
+    <a href="/{{ trad_metro|default('phoenix') }}/"><b>Find your wedding vendors</b><span>Photographers, planners, venues and more, every review verified by a couple who was actually there.</span></a>
+    <a href="/traditions/"><b>More wedding traditions</b><span>Las arras, the veil, the padrinos and 20 more, explained properly.</span></a>
+    <a href="/why-lazo/"><b>How our rankings work</b><span>Published in full, and impossible to buy at any price.</span></a>
+  </div>
+</section>
+{% endblock %}

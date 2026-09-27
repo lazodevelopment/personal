@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{#- JC-LAZO-HOME-0907-005: the page follows the visitor - the worker injects window.LAZO_GEO (nearest metro from Cloudflare's request.cf), and this page swaps the finder default, every city link, the featured row (from /assets/featured.json) and the June strip to that city; a metro the visitor picks in the finder is remembered. JC-LAZO-HOME-0907-004: the featured row fills its empty slots with a claim tile and says how early it is; JC-LAZO-HOME-0907-004: the editorial home. The photo is the hero and the serif carries the
+    headline; the finder is one bar; real vendors from the build; the couple home shown in a frame
+    instead of described; June talking in her own voice; the stance said once in prose. -#}
+{% block title %}Lazo &mdash; Wedding Vendors You Can Actually Trust{% endblock %}
+{% block desc %}Verified wedding vendors in 108 cities. Every review from a couple who booked, rankings no one can buy, and June, a free AI planner. 119,000+ vendors, free for couples.{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"SoftwareApplication","name":"Lazo wedding planner","applicationCategory":"LifestyleApplication","operatingSystem":"Web, iOS, Android","url":"https://app.meetlazo.com","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free for couples: guest list, budget, seating charts, dream board, timeline, wedding website and June."}},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is Lazo really free for couples?","acceptedAnswer":{"@type":"Answer","text":"Yes. There is no paid tier for couples and nothing is capped. Lazo takes 0% of what couples pay vendors. The business is an optional Pro plan for vendors who want more tools, which sharpens the tools and never touches the rankings, so the couple tools stay free and the rankings stay honest."}},
+  {"@type":"Question","name":"How are vendors ranked?","acceptedAnswer":{"@type":"Answer","text":"By the Lazo Score, built only from verified reviews from couples who proved the wedding happened, weighted for recency. No vendor can pay for a better position."}},
+  {"@type":"Question","name":"What is June?","acceptedAnswer":{"@type":"Answer","text":"Your AI planning copilot. She knows your date, budget, guest list and bookings, seats your guests from your parties and sides, drafts vendor messages, and tells you what to book next."}},
+  {"@type":"Question","name":"Can I bring my guest list from The Knot, Zola or Folia?","acceptedAnswer":{"@type":"Answer","text":"Yes. Export it as a CSV and import it in one step; June reads a pasted budget or vendor list. Registry links stay wherever they are."}}
+ ]}
+]}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "Lazo",
+  "alternateName": "Lazo Weddings",
+  "url": "https://meetlazo.com",
+  "logo": "https://meetlazo.com/assets/brand.png",
+  "description": "The verified wedding marketplace. Every review verified, every couple real, rankings that can't be bought.",
+  "foundingDate": "2026",
+  "sameAs": [
+    "https://www.instagram.com/trylazo",
+    "https://www.facebook.com/getlazo",
+    "https://www.tiktok.com/@trylazo"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "url": "https://meetlazo.com/contact/",
+    "contactType": "customer service",
+    "availableLanguage": ["en", "es"]
+  }
+}
+</script>
+{% endblock %}
+{% block main %}
+{#- JC-LAZO-HOME-0921-002: the no-location fallback is the home market, not whichever metro sorts first -#}
+{% set home_metro = (metros|selectattr("id","equalto","phoenix")|list|first) or home_metro %}
+<style>
+  .hm-facts{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;font-size:13.5px;color:rgba(250,246,240,.85)}
+  .hm-facts b{font-family:var(--serif);font-size:22px;color:var(--ivory);margin-right:6px;font-weight:500;font-feature-settings:"lnum" 1}
+  @media(max-width:640px){.hm-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:0 10px;margin-top:22px;padding-top:16px;border-top:1px solid rgba(250,246,240,.22);text-align:center;font-size:12px;letter-spacing:.02em}.hm-facts span{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.25}.hm-facts b{font-size:24px;margin:0;min-width:0;text-align:center}}
+  .rowhead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .rowhead .more{color:var(--plum);font-weight:600;border-bottom:1px solid var(--gold);text-decoration:none;white-space:nowrap}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:36px}
+  .vf{background:var(--card);border:1px solid var(--gold-line);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:transform .18s ease,box-shadow .18s ease}
+  .vf:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(61,28,59,.14)}
+  .vf .ph{aspect-ratio:4/5;background:var(--plum-deep) center/cover}
+  .vf .b{padding:14px 16px 16px}
+  .vf .c{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}
+  .vf h3{font-size:24px;margin:2px 0;line-height:1.1}
+  .vf .m{font-size:13px;color:var(--muted)}
+  .vf .pill{display:inline-block;margin-top:10px;font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 10px;background:var(--gold);color:var(--plum-deep)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;max-width:1180px;margin:0 auto}
+  .product{background:var(--night);color:var(--ivory);padding:96px 28px}
+  .product h2{color:var(--ivory)}
+  .product .band-sub{color:rgba(250,246,240,.78)}
+  .frame{border-radius:16px;overflow:hidden;border:1px solid rgba(217,183,124,.5);box-shadow:0 40px 80px rgba(0,0,0,.45);background:#1B0C1E}
+  .frame img{display:block;width:100%}
+  .claims{margin:26px 0 0;padding:0;list-style:none}
+  .claims li{padding:12px 0;border-top:1px solid rgba(217,183,124,.25);font-size:16px;display:flex;gap:14px}
+  .claims li b{font-family:var(--serif);font-size:26px;color:var(--gold);line-height:1;min-width:34px;font-weight:500;font-feature-settings:"lnum" 1}
+  .chat{background:var(--card);border:1px solid var(--gold-line);border-radius:22px;padding:22px;max-width:520px}
+  .msg{padding:12px 16px;border-radius:14px;margin:8px 0;font-size:15px;max-width:88%}
+  .msg.u{background:#EFE4EE;margin-left:auto;color:var(--ink)}
+  .msg.j{background:var(--plum-deep);color:var(--ivory)}
+  .msg.j b{color:var(--gold);font-weight:600}
+  .msg small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:4px}
+  .stance{border-top:1px solid var(--gold-line);border-bottom:1px solid var(--gold-line)}
+  .stance .cols{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:28px}
+  .stance h3{font-size:30px;margin:0 0 10px}
+  .stance p{margin:0;color:var(--muted);font-size:16px}
+  .stance .them h3,.stance .them p{color:#9A8FA1}
+  .ww{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:center;background:var(--card);border:1px solid var(--gold-line);border-radius:24px;padding:36px}
+  .ww p{color:var(--muted);font-size:16px;margin:0 0 18px}
+  .ww .demo{border-radius:18px;background:var(--plum-deep);color:var(--ivory);padding:28px 26px;border:1px solid rgba(217,183,124,.6)}
+  .ww .demo .names{font-family:var(--serif);font-size:36px;line-height:1.05;font-weight:500}
+  .ww .demo .date{color:var(--gold);font-size:12px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-top:10px}
+  .ww .demo .row{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+  .ww .demo .row span{font-size:11.5px;border:1px solid rgba(217,183,124,.55);border-radius:999px;padding:5px 11px;color:rgba(250,246,240,.9)}
+  @media(max-width:900px){.split,.stance .cols,.ww{grid-template-columns:1fr}.vgrid{grid-template-columns:1fr 1fr}.product{padding:64px 20px}.ww{padding:24px}}
+  .vf.claim{background:var(--night);border-color:var(--night);color:var(--ivory);display:flex;flex-direction:column;justify-content:flex-end;padding:22px;min-height:100%}
+  .vf.claim .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .vf.claim h3{color:var(--ivory);font-size:28px;margin:6px 0 8px}
+  .vf.claim p{color:rgba(250,246,240,.78);font-size:13.5px;margin:0 0 14px}
+  .vf.claim .go{display:inline-block;background:var(--gold);color:var(--plum-deep);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700}
+</style>
+
+<section class="hero hero-photo hero-home" style="background-image:url('/assets/photos/hero-3.jpg')">
+  <div class="hero-inner">
+    <h1>Wedding vendors you can <em>actually</em> trust.</h1>
+    <p class="hero-sub">Every business verified. Every review from a couple who booked. Rankings no one can buy. And June, your free AI planner, from first inquiry to last dance.</p>
+    <form class="finder" onsubmit="event.preventDefault();var m=this.metro.value,c=this.cat.value;if(m&&c)location.href='/'+m+'/'+c+'/';else if(m)location.href='/'+m+'/';">
+      <select name="cat" aria-label="Vendor type">
+        <option value="">What are you looking for?</option>
+        {% for c in categories %}<option value="{{ c.slug }}">{{ c.label }}</option>{% endfor %}
+      </select>
+      <select name="metro" aria-label="Metro" id="geo-metro">
+        {% for m in metros %}<option value="{{ m.id }}" data-name="{{ m.name }}">{{ m.display }}</option>{% endfor %}
+      </select>
+      <button class="btn-gold" type="submit">Search</button>
+    </form>
+    <div class="hm-facts"><span><b>{{ vendor_total_display }}</b>vendors listed</span><span><b>{{ metro_count }}</b>markets</span><span><b>0</b>rankings for sale</span></div>
+  </div>
+</section>
+
+{% if featured %}
+<section class="band">
+  <div class="rowhead">
+    <div>
+      <p class="eyebrow" style="color:var(--gold-ink)"><span data-geo-name>{{ home_metro.name }}</span>, this week</p>
+      <h2 class="band-title">Verified, and answering.</h2>
+      <p class="band-sub" id="geo-featured-sub">{% if featured|length < 4 %}The first {{ featured|length }} {{ home_metro.name }} businesses to prove they're real. Claiming opened this month; this row fills as vendors verify, and no one will ever pay to be on it.{% else %}Real businesses who proved they're real, in the order couples who booked them put them. No one on this row paid to be here.{% endif %}</p>
+    </div>
+    <a class="more" href="/{{ home_metro.id }}/" data-geo-metro-link>All <span data-geo-name>{{ home_metro.name }}</span> vendors &rarr;</a>
+  </div>
+  <div class="vgrid" id="geo-featured">
+    {% for f in featured %}
+    <a class="vf" href="{{ f.path }}">
+      <div class="ph"{% if f.image %} style="background-image:url('{{ f.image }}')"{% endif %}></div>
+      <div class="b">
+        <div class="c">{{ f.category }}</div>
+        <h3>{{ f.name }}</h3>
+        <div class="m">{{ f.metro }}{% if f.startingPrice %} &middot; from {{ f.startingPrice }}{% endif %}</div>
+        {% if f.verified %}<span class="pill">&#10003; Lazo verified</span>{% elif f.reviewCount %}<span class="pill">{{ f.reviewCount }} verified review{{ '' if f.reviewCount == 1 else 's' }}</span>{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+    {% if featured|length < 4 %}
+    <a class="vf claim" href="/for-vendors/">
+      <span class="k">Claiming is open</span>
+      <h3>Own a <span data-geo-name>{{ home_metro.name }}</span> wedding business?</h3>
+      <p>Your listing is probably already here. Prove it's yours and you're on this row &mdash; free, forever.</p>
+      <span class="go">Claim your profile &rarr;</span>
+    </a>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section class="product">
+  <div class="split">
+    <div>
+      <p class="eyebrow">Your planning home</p>
+      <h2 class="band-title">Three things this week. <em>Not two hundred.</em></h2>
+      <p class="band-sub">June reads your date, your list and your budget every Monday and hands you what matters now. Your vendors sit on the road to your date. Your budget shows what things really cost in your city.</p>
+      <ul class="claims">
+        <li><b>01</b><span>One thread per vendor &mdash; contract, invoice, payment inside it.</span></li>
+        <li><b>02</b><span>Plan with your partner: same plan, same inbox, no forwarding.</span></li>
+        <li><b>03</b><span>A wedding website your guests will actually use. Free, no ads.</span></li>
+      </ul>
+      <p style="margin-top:26px"><a class="btn-gold" href="https://app.meetlazo.com">Start planning free</a></p>
+    </div>
+    <div class="frame"><img src="/assets/photos/product-couple-home.jpg" alt="The Lazo planning desk: 285 days to go, this week with June, vendor team, messages, day-of, website, and the rail with seating chart, music, shopping list and dream board" loading="lazy" decoding="async" onerror="this.parentNode.style.display='none'"></div>
+  </div>
+</section>
+
+{% include "_features.html" %}
+
+<section class="band">
+  <div class="split">
+    <div class="chat" aria-label="A conversation with June">
+      <div class="msg u">We're getting married July 2 in Sedona. Where do we even start?</div>
+      <div class="msg j"><small>June</small><b>Good news: you're early.</b> At ten months out most couples haven't booked anyone. Venue and photographer book out first in Sedona &mdash; I've shortlisted three photographers who've shot at Enchantment and L'Auberge, all under $3,400. Want to see them?</div>
+      <div class="msg u">Yes &mdash; and what should we budget for flowers?</div>
+      <div class="msg j"><small>June</small>Florists on Lazo in Sedona start between <b>$800 and $2,600</b>. I'd plan $1,500 and revisit once the venue's set &mdash; some include centerpieces.</div>
+    </div>
+    <div>
+      <p class="eyebrow" style="color:var(--gold-ink)">Meet June</p>
+      <h2 class="band-title">Zola gives you a search box. <em>June plans your wedding.</em></h2>
+      <p class="band-sub">She knows your date, your budget and your city. Ask her anything; she answers with real vendors, real prices and a next step &mdash; and she never sells you anything.</p>
+      <p style="margin-top:26px"><a class="btn-gold" href="https://app.meetlazo.com">Start planning with June &mdash; free</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="stance"><div class="band" style="padding-top:64px;padding-bottom:64px">
+  <p class="eyebrow" style="color:var(--gold-ink)">Why it feels different</p>
+  <h2 class="band-title">The site you make an account on <em>first.</em></h2>
+  <div class="cols">
+    <div class="them"><h3>The big sites sell you.</h3><p>Rankings go to the highest bidder. Anyone can post a review. Your inquiry becomes a &ldquo;lead&rdquo; sold to a dozen vendors, and the tools exist to place ads in front of you.</p></div>
+    <div><h3>Lazo can't.</h3><p>Rankings are earned from couples who booked. Reviews need a real wedding behind them. You choose who hears from you. And the tools exist to get you married &mdash; that's the whole business.</p></div>
+  </div>
+</div></section>
+
+{#- JC-LAZO-HOME-0920-VERIFIED: what the word means here, in three checks -#}
+<section class="band" id="verified">
+<style>
+.vf3{display:grid;gap:18px;grid-template-columns:1fr;margin-top:30px}
+@media(min-width:820px){.vf3{grid-template-columns:repeat(3,1fr)}}
+.vfc{background:var(--card);border:1px solid var(--gold-line);border-radius:20px;padding:24px 22px;position:relative}
+.vfc .n{width:34px;height:34px;border-radius:50%;background:var(--plum);color:var(--gold);display:grid;place-items:center;font-family:var(--serif);font-size:18px;font-weight:600;margin-bottom:12px}
+.vfc h3{font-family:var(--serif);font-weight:500;font-size:24px;color:var(--plum);margin:0 0 8px;line-height:1.15}
+.vfc p{margin:0;color:var(--muted);font-size:15px;line-height:1.55}
+.vfc .chk{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:700;color:#2E8B6B;background:#E7F3EC;border-radius:999px;padding:4px 10px}
+.vfx{max-width:760px;margin:22px auto 0;text-align:center;color:var(--muted);font-size:14.5px}
+.vfx a{color:var(--plum);font-weight:600}
+</style>
+  <div style="max-width:760px;margin:0 auto;text-align:center">
+    <p class="eyebrow" style="color:var(--gold-ink)">What &ldquo;verified&rdquo; means here</p>
+    <h2 class="band-title">Three checks, <em>every time.</em></h2>
+    <p class="band-sub">Other sites let anyone list a business and anyone leave a review. On Lazo the word means something specific.</p>
+  </div>
+  <div class="vf3">
+    <div class="vfc"><div class="n">1</div><h3>The business is real</h3><p>Before a vendor wears the verified mark, we confirm they are an operating wedding business: a real owner claims the profile and proves they are who they say they are. No ghost listings, no lead-gen fronts.</p><span class="chk">&#10003; Claimed and confirmed</span></div>
+    <div class="vfc"><div class="n">2</div><h3>The couple actually booked them</h3><p>A review only counts when the couple booked that vendor: through their Lazo thread, or by uploading the contract or receipt. No drive-by five stars, no anonymous takedowns, no reviews from people who never hired them.</p><span class="chk">&#10003; Booking on file</span></div>
+    <div class="vfc"><div class="n">3</div><h3>The ranking can&rsquo;t be bought</h3><p>Search order is the Lazo Score, built only from those verified reviews, reply speed and real bookings, weighted for recency. A vendor&rsquo;s ad budget buys nothing here, and every vendor can reply to every review, free.</p><span class="chk">&#10003; Earned, never sold</span></div>
+  </div>
+  <p class="vfx">That is the whole difference between a directory and a marketplace you can trust. <a href="/why-lazo/">How the Lazo Score works &rarr;</a></p>
+</section>
+
+<section class="band">
+  <h2 class="band-title">Browse by category</h2>
+  <p class="band-sub" style="margin-bottom:28px">Every listing in <span data-geo-name>{{ home_metro.name }}</span>, ranked by what booked couples said &mdash; never by who paid.</p>
+  <div class="tile-grid" id="geo-tiles">
+    {% for c in categories %}
+    <a class="tile" href="/{{ home_metro.id }}/{{ c.slug }}/" data-geo-cat="{{ c.slug }}" style="background-image:linear-gradient(180deg,rgba(36,30,43,0) 35%,rgba(36,30,43,.72) 100%),url('/assets/photos/{{ c.slug }}.jpg')">
+      <span class="tile-label">{{ c.label }}</span>
+    </a>
+    {% endfor %}
+    <a class="tile tile-cta" href="/{{ home_metro.id }}/" data-geo-metro-link style="background-image:linear-gradient(180deg,rgba(61,28,59,.55) 0%,rgba(61,28,59,.82) 100%),url('/assets/photos/atmo-toast.jpg')">
+      <span class="tile-label tile-cta-label">All <span data-geo-name>{{ home_metro.name }}</span> vendors &rarr;</span>
+    </a>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="ww">
+    <div>
+      <p class="eyebrow" style="color:var(--gold-ink)">Free wedding websites</p>
+      <h2 class="band-title" style="font-size:clamp(28px,3.4vw,40px)">A website your guests will actually use.</h2>
+      <p>Type your names and it's live. RSVPs, meals and song requests land in your dashboard; the hotel block and the schedule live where guests look for them. No ads, and no one is selling to your guest list.</p>
+      <a class="btn-gold" href="/wedding-websites/">See the templates</a>
+    </div>
+    <div class="demo" aria-hidden="true">
+      <div class="names">Mindy &amp; John</div>
+      <div class="date">July 2, 2027 &middot; Sedona, Arizona</div>
+      <div class="row"><span>Our story</span><span>Schedule</span><span>Where to stay</span><span>RSVP</span></div>
+    </div>
+  </div>
+</section>
+
+<script>
+// The page follows the visitor. The worker sets window.LAZO_GEO = {id, name}
+// for the nearest live metro; a city picked in the finder wins and is remembered.
+(function(){
+  var sel=document.getElementById('geo-metro');if(!sel)return;
+  var DEFAULT='{{ home_metro.id }}';
+  function nameOf(id){var o=sel.querySelector('option[value="'+id+'"]');return o?(o.getAttribute('data-name')||o.textContent):'';}
+  function apply(id){
+    if(!id||!nameOf(id))return;
+    var name=nameOf(id);
+    sel.value=id;
+    document.querySelectorAll('[data-geo-name]').forEach(function(e){e.textContent=name;});
+    document.querySelectorAll('[data-geo-metro-link]').forEach(function(a){a.setAttribute('href','/'+id+'/');});
+    document.querySelectorAll('[data-geo-cat]').forEach(function(a){a.setAttribute('href','/'+id+'/'+a.getAttribute('data-geo-cat')+'/');});
+    if(id===DEFAULT)return;
+    var grid=document.getElementById('geo-featured'),sub=document.getElementById('geo-featured-sub');
+    if(!grid)return;
+    fetch('/assets/featured.json?v={{ asset_v }}').then(function(r){return r.json();}).then(function(j){
+      var list=(j&&j.metros&&j.metros[id])||[];
+      var esc=function(s){return String(s||'').replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});};
+      var html=list.map(function(f){return '<a class="vf" href="'+esc(f.path)+'"><div class="ph"'+(f.image?' style="background-image:url(\''+esc(f.image)+'\')"':'')+'></div><div class="b"><div class="c">'+esc(f.category)+'</div><h3>'+esc(f.name)+'</h3><div class="m">'+esc(f.metro)+(f.startingPrice?' &middot; from '+esc(f.startingPrice):'')+'</div>'+(f.verified?'<span class="pill">&#10003; Lazo verified</span>':(f.reviewCount?'<span class="pill">'+f.reviewCount+' verified review'+(f.reviewCount===1?'':'s')+'</span>':''))+'</div></a>';}).join('');
+      if(list.length<4){html+='<a class="vf claim" href="/for-vendors/"><span class="k">Claiming is open</span><h3>Own a '+esc(name)+' wedding business?</h3><p>Your listing is probably already here. Prove it\'s yours and you\'re on this row &mdash; free, forever.</p><span class="go">Claim your profile &rarr;</span></a>';}
+      grid.innerHTML=html;
+      if(sub)sub.textContent=list.length?(list.length<4?('The first '+list.length+' '+name+' business'+(list.length===1?'':'es')+' to prove they\'re real. This row fills as vendors verify, and no one will ever pay to be on it.'):('Real '+name+' businesses who proved they\'re real, in the order couples who booked them put them. No one on this row paid to be here.')):('No '+name+' vendor has claimed yet - the first one is on this row the day they do. Claiming is free, forever.');
+    }).catch(function(){});
+  }
+  var chosen='';
+  // a city picked in the finder is remembered for 14 days, then the visitor's location leads again
+  try{var at=+(localStorage.getItem('lz_metro_at')||0);if(at&&Date.now()-at<14*864e5)chosen=localStorage.getItem('lz_metro')||'';else{localStorage.removeItem('lz_metro');localStorage.removeItem('lz_metro_at');}}catch(e){}
+  var geo=(window.LAZO_GEO&&window.LAZO_GEO.id)||'';
+  apply(chosen||geo||DEFAULT);
+  sel.addEventListener('change',function(){try{localStorage.setItem('lz_metro',sel.value);localStorage.setItem('lz_metro_at',String(Date.now()));}catch(e){}apply(sel.value);});
+})();
+</script>
+{#- JC-LAZO-SITE-0920-FOLIA: pricing (there is none) and the three questions, with schema -#}
+<section class="product" id="pricing" style="padding:84px 28px">
+<style>
+.pz{max-width:1080px;margin:0 auto;display:grid;gap:40px;grid-template-columns:1fr;align-items:center}
+@media(min-width:900px){.pz{grid-template-columns:1fr 1.15fr;gap:56px}}
+.pz .lead h2{font-family:var(--serif);font-weight:500;font-size:clamp(38px,5.2vw,58px);line-height:1.02;color:var(--ivory);margin:10px 0 14px}
+.pz .lead h2 em{color:var(--gold);font-style:italic}
+.pz .lead p{color:rgba(250,246,240,.8);font-size:16.5px;line-height:1.6;max-width:44ch;margin:0}
+.pz .facts{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:12px}
+.pz .facts li{display:flex;gap:12px;align-items:flex-start;color:rgba(250,246,240,.88);font-size:15px;line-height:1.45;padding:12px 0;border-top:1px solid rgba(217,183,124,.25)}
+.pz .facts li b{font-family:var(--serif);font-size:24px;color:var(--gold);font-weight:500;line-height:1;min-width:56px;font-feature-settings:"lnum" 1}
+.pz .facts li span small{display:block;color:rgba(250,246,240,.62);font-size:13px;margin-top:2px}
+.pcard{background:var(--card);border:1px solid rgba(217,183,124,.7);border-radius:26px;padding:30px 30px 26px;box-shadow:0 40px 80px rgba(0,0,0,.35);position:relative;overflow:hidden}
+.pcard::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:linear-gradient(90deg,var(--gold),#C9A45C)}
+.pcard .who{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}
+.pcard .price{display:flex;align-items:baseline;gap:10px;margin:6px 0 2px}
+.pcard .price b{font-family:var(--serif);font-size:72px;line-height:1;color:var(--plum);font-weight:500;font-feature-settings:"lnum" 1}
+.pcard .price span{font-size:15px;color:var(--muted)}
+.pcard .fine{color:var(--muted);font-size:14px;margin:0 0 18px}
+.pcard ul{list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
+.pcard li{font-size:14.5px;color:var(--ink);display:flex;gap:9px;align-items:flex-start;line-height:1.35}
+.pcard li::before{content:"¹3";flex:none;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--plum-deep);font-size:12px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.pcard .cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.pcard .cta a.more{color:var(--plum);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold)}
+.pcard .nope{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--gold-line);font-size:13px;color:var(--muted)}
+@media(max-width:560px){.pcard ul{grid-template-columns:1fr}.pcard .price b{font-size:60px}}
+</style>
+<div class="pz">
+  <div class="lead">
+    <p class="eyebrow">Pricing</p>
+    <h2>Free for couples. <em>Forever.</em></h2>
+    <p>Every planning tool on Lazo is free, with no card, no ads and no guest cap. There is no paid tier to grow into and no feature waiting behind a paywall.</p>
+    <ul class="facts">
+      <li><b>$0</b><span>for couples, every tool, always<small>The competition charges $12 a month and caps free guest lists at 500.</small></span></li>
+      <li><b>$0</b><span>for vendors to be listed and to reply<small>No ad spend buys a better spot. Rankings come from verified couples only.</small></span></li>
+      <li><b>0%</b><span>of what couples pay vendors<small>Payments run through the vendor’s own processor. Lazo’s business is an optional Pro plan for vendors who want more tools. It sharpens the tools, never the rankings.</small></span></li>
+    </ul>
+  </div>
+  <div class="pcard">
+    <div class="who">For couples</div>
+    <div class="price"><b>$0</b><span>forever · no card required</span></div>
+    <p class="fine">Everything below, from the day you sign up to long after the wedding.</p>
+    <ul>
+      <li>Guest list with RSVPs from your website</li>
+      <li>Budget with real ranges for your city</li>
+      <li>Reception seating, meals on every table</li>
+      <li>Ceremony seating and the processional</li>
+      <li>Dream board with partner comments</li>
+      <li>Day-of timeline, one page per vendor</li>
+      <li>Shopping list and the day-of kit</li>
+      <li>Marriage license for your county</li>
+      <li>Wedding website, 20 designs</li>
+      <li>June, your AI planner</li>
+      <li>Verified vendors, contracts and payments</li>
+      <li>Plan together with your partner</li>
+    </ul>
+    <div class="cta"><a class="btn-gold" href="https://app.meetlazo.com">Start planning free</a><a class="more" href="/folia-alternative/">Compare with paid planners &rarr;</a></div>
+    <p class="nope">No guest cap. No ads. No upsell. Your contact details are never sold.</p>
+  </div>
+</div>
+</section>
+<section class="band" id="faq" style="padding-top:48px">
+  <div style="max-width:760px;margin:0 auto">
+    <h2 class="band-title" style="text-align:center;margin-bottom:26px">Questions couples ask</h2>
+    <details class="faq"><summary>Is Lazo really free for couples?</summary><p>Yes. There is no paid tier for couples and nothing is capped. Lazo takes 0% of what couples pay vendors. The business is an optional Pro plan for vendors who want more tools, which sharpens the tools and never touches the rankings, so the couple tools stay free and the rankings stay honest.</p></details>
+    <details class="faq"><summary>How are vendors ranked?</summary><p>By the Lazo Score, built only from verified reviews from couples who proved the wedding happened, weighted for recency. No vendor can pay for a better position.</p></details>
+    <details class="faq"><summary>What is June?</summary><p>Your AI planning copilot. She knows your date, budget, guest list and bookings, seats your guests from your parties and sides, drafts vendor messages, and tells you what to book next.</p></details>
+    <details class="faq"><summary>Can I bring my guest list from The Knot, Zola or Folia?</summary><p>Yes. Export it as a CSV and import it in one step; June reads a pasted budget or vendor list. Registry links stay wherever they are.</p></details>
+  </div>
+</section>
+<section class="band band-claim" style="padding-top:0">
+  <div class="claim-strip claim-wide">
+    <h2>Own a wedding business?</h2>
+    <p>Claim your profile free. Reply to reviews free. Receive verified leads free &mdash; forever. That's the deal, and it doesn't change.</p>
+    <a class="btn-gold" href="/for-vendors/">See how Lazo works for vendors</a>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{#- cost_index.html - JC-LAZO-COST-0916-001
+    /cost/ - the hub the fifteen guides link back to, and the page that gives the
+    whole cluster somewhere to point. Also the only page on the site that shows
+    the wedding budget as one picture, which is the question underneath most of
+    the individual ones. -#}
+{% block title %}What a Wedding Actually Costs &mdash; {{ year }} Price Guides | Lazo{% endblock %}
+{% block desc %}Honest price ranges for every wedding vendor: photographers, venues, florists, caterers, DJs and more. What couples really pay, what moves the number, and where to spend less without regretting it.{% endblock %}
+{% block canonical %}{{ base }}/cost/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Wedding cost guides",
+  "description": "Honest price ranges for every category of wedding vendor.",
+  "url": "{{ base }}/cost/",
+  "publisher": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" }
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Cost guides</p>
+  <h1>What a wedding actually costs.</h1>
+  <p class="hero-sub">Honest ranges for every vendor you'll hire &mdash; what couples really pay, what moves the number, and what you can cut without wishing you hadn't.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="lede">Most wedding cost advice is written by companies that earn money from the vendors they recommend. Ours isn't: Lazo takes nothing per lead and nothing per booking, and <a href="/why-lazo/">rankings can't be bought at any price</a>. These are the ranges we believe couples actually pay.</p>
+<p>Pick the line you're working on. Each guide covers what you get at each price, what actually drives the number, when to book, and the questions that change a quote.</p>
+</section>
+
+<section class="cost-cities">
+  <div class="cc-guides">
+    {%- for row in rows %}
+    <a href="/cost/{{ row.slug }}/">
+      <b>{{ row.question }}</b>
+      <em>{{ row.typical }}</em>
+      <span>{{ row.hook }}</span>
+    </a>
+    {%- endfor %}
+  </div>
+</section>
+
+<section class="band prose doc">
+<h2>How the whole budget usually breaks down</h2>
+<p>Every wedding is different, but the proportions are surprisingly consistent. For most couples the venue and catering together take roughly half of everything, photography and video take another fifth, and the remaining thirty percent covers everyone else. If one line is running away from you, it is almost always the first one.</p>
+<p>Two things are worth knowing before you start allocating:</p>
+<ul>
+  <li><strong>Guest count is the real budget lever.</strong> Catering, bar, rentals, cake, invitations and transport are all priced per person. Twenty fewer guests usually saves more than any negotiation you will have with any vendor.</li>
+  <li><strong>The day of the week is the second lever.</strong> A Friday, a Sunday, or an off-season date routinely saves 20&ndash;40% at the same venue with the same vendors. Nobody has ever remembered which day of the week a wedding was.</li>
+</ul>
+
+<h2>A note on where these numbers come from</h2>
+<p>These ranges come from real operator pricing &mdash; our founder is a working wedding photographer and videographer &mdash; combined with broad market norms in the {{ metro_count }} markets we index. They are honest guidance, not quotes, and no vendor paid to appear in them.</p>
+<p>What they are not, yet, is verified. When vendors publish their packages on Lazo and couples confirm what they actually spent, these guides get to show something nobody else can: real prices from real weddings, by city. That is the version we are building toward, and we would rather say so than imply we are already there.</p>
+</section>
+
+<section class="next-reads">
+  <h2>Before you start spending</h2>
+  <div class="next-grid">
+    <a href="/why-lazo/"><b>How our rankings work</b><span>Published in full, and impossible to buy at any price.</span></a>
+    <a href="/{{ first_metro.id }}/"><b>Find vendors in {{ first_metro.name }}</b><span>Every review verified by a couple who was actually there.</span></a>
+    <a href="/what-is-a-lazo/"><b>The lazo tradition</b><span>The wedding lasso ceremony our name comes from.</span></a>
+  </div>
+</section>
+{% endblock %}

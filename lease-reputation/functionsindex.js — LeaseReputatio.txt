@@ -1,0 +1,100 @@
+// functions/index.js — LeaseReputation Cloud Functions
+//
+// createCommunityFromPlace: signed-in users pick their community via Places
+// Autocomplete in the app; this function does the Place Details lookup
+// server-side and creates the directory doc through the Admin SDK, so the
+// client-side "communities are never writable" rule stays fully locked.
+//
+// Doc ID = Google place ID → idempotent by construction: the same community
+// can never be created twice, and an existing doc is never overwritten
+// (protects reputation scores).
+
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { defineSecret } = require('firebase-functions/params');
+const admin = require('firebase-admin');
+
+admin.initializeApp();
+
+const PLACES_API_KEY = defineSecret('PLACES_API_KEY');
+
+// Only residential community types may enter the directory. Stops users
+// from adding restaurants, hotels, or their ex's house.
+const ALLOWED_TYPES = new Set([
+  'apartment_building',
+  'apartment_complex',
+  'condominium_complex',
+]);
+
+exports.createCommunityFromPlace = onCall(
+  { region: 'us-central1', secrets: [PLACES_API_KEY] },
+  async (request) => {
+    // ── Auth gate ──
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Sign in to add a community.');
+    }
+
+    // ── Input validation ──
+    const placeId = String((request.data && request.data.placeId) || '').trim();
+    if (!/^[A-Za-z0-9_-]{10,300}$/.test(placeId)) {
+      throw new HttpsError('invalid-argument', 'A valid placeId is required.');
+    }
+
+    const db = admin.firestore();
+    const docRef = db.collection('communities').doc(placeId);
+
+    // ── Dedupe: if it already exists, just hand back the ID ──
+    const existing = await docRef.get();
+    if (existing.exists) {
+      return {
+        communityId: placeId,
+        existed: true,
+        name: (existing.data() && existing.data().name) || '',
+      };
+    }
+
+    // ── Place Details lookup (server-side key, never exposed) ──
+    const res = await fetch(
+      `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`,
+      {
+        headers: {
+          'X-Goog-Api-Key': PLACES_API_KEY.value(),
+          'X-Goog-FieldMask':
+            'id,displayName,formattedAddress,location,photos,types',
+        },
+      }
+    );
+    if (!res.ok) {
+      console.error('Places lookup failed', res.status, await res.text());
+      throw new HttpsError('not-found', 'Could not look up that place.');
+    }
+    const p = await res.json();
+
+    // ── Residential-type guard ──
+    const types = Array.isArray(p.types) ? p.types : [];
+    if (!types.some((t) => ALLOWED_TYPES.has(t))) {
+      throw new HttpsError(
+        'failed-precondition',
+        "That place doesn't look like a residential community. If you think this is wrong, contact support."
+      );
+    }
+
+    // ── Create the directory doc (same shape as the metro seeder) ──
+    const name = (p.displayName && p.displayName.text) || 'Unnamed community';
+    await docRef.set({
+      name,
+      nameLower: name.toLowerCase(), // REQUIRED: app directory orders by this
+      address: p.formattedAddress || '',
+      placeId: p.id || placeId,
+      location: p.location
+        ? new admin.firestore.GeoPoint(p.location.latitude, p.location.longitude)
+        : null,
+      photoRef: (p.photos && p.photos[0] && p.photos[0].name) || '',
+      reviewCount: 0,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      source: 'user-added',
+      addedBy: request.auth.uid,
+    });
+
+    return { communityId: placeId, existed: false, name };
+  }
+);

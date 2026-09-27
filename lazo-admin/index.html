@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<!-- ============================================================
+     LAZO — GOD MODE ADMIN
+     Build ID: JC-LAZO-ADMIN-0916-018
+     Deploy:   Cloudflare Pages project "lazo-admin" → admin.meetlazo.com
+     Auth:     Firebase Auth (email/password) + custom claim admin:true
+     Data:     Firestore (lazo-513ec) direct reads — see CONFIG block
+     UI:       0916-017 rebuilt the presentation layer on Apple's design
+               foundations — material hierarchy, size-specific typography,
+               press-first feedback, motion/transparency/contrast prefs.
+               Class + CSS-variable names are load-bearing for the JS
+               renderers; keep them when editing.
+     Visitors: 0916-018 added the Visitors section (JC-LAZO-TRACK-0916-001).
+               Reads `sessions` + `sessions/{sid}/hits`, written by
+               lazo-track.js which the lazo-site Worker injects into every
+               HTML page on meetlazo.com. d3 loads on demand.
+     ============================================================ -->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Lazo · God Mode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script>/* GODMODE-0921-002: apply the remembered theme before first paint (no flash) */
+try{var t=localStorage.getItem("gm-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>
+/* ============================================================
+   LAZO · GOD MODE — design system · GODMODE-0921-001 neutral restyle
+   Apple-informed craft:
+     · one blur layer per stack; material weight encodes hierarchy
+     · size-specific tracking + leading (never one value for all sizes)
+     · instant feedback on pointer-down, critically-damped motion
+     · reduced-motion / reduced-transparency / high-contrast honored
+   Class + custom-property names are load-bearing (the JS writes markup
+   against .pill/.panel/.btn/.empty/--ivory-dim/etc) — do not rename.
+   ============================================================ */
+:root{
+  /* ---- GODMODE-0921-001 · neutral operations palette. Names are load-bearing
+     (the JS reads them); only values changed. --plum* are now the charcoal
+     grounds, --ivory* the text ramp, --gold the single brand accent. ---- */
+  --plum-deep:#0B0D12; --plum:#111318; --plum-lift:#171A21;
+  --ivory:#EDEFF3; --ivory-dim:rgba(237,239,243,.66); --ivory-faint:rgba(237,239,243,.42);
+  --gold:#A78BFA; --gold-soft:rgba(167,139,250,.12);
+  --ok:#34D399; --warn:#FBBF24; --bad:#F87171;
+
+  /* ---- materials · flat, bordered, no blur ---- */
+  --glass:rgba(255,255,255,.04);
+  --glass-hi:rgba(255,255,255,.07);
+  --edge:rgba(255,255,255,.08);
+  --edge-top:rgba(255,255,255,.10);
+  --edge-gold:rgba(167,139,250,.38);
+  --chrome:#0C0E13;                      /* structural: sidebar, sticky header */
+  --float:#14171E;                       /* floats over content: drawers, sheets */
+  --hairline:rgba(255,255,255,.06);
+  --panel:#141720;
+  /* GODMODE-0921-002 · the rest of the dark literals, so light mode can flip them */
+  --hover:rgba(255,255,255,.03); --press:rgba(255,255,255,.055); --inset:rgba(0,0,0,.20);
+  --field:#0F1116; --field-focus:#0B0D10; --on-accent:#0B0D12; --accent-hover:#B9A4FF;
+  --edge-hover:rgba(255,255,255,.18); --scroll:rgba(255,255,255,.16); --scroll-hover:rgba(255,255,255,.26);
+  --map-fill:rgba(255,255,255,.045); --map-stroke:rgba(255,255,255,.13); --map-halo:rgba(11,13,18,.85);
+  --backdrop:rgba(0,0,0,.52);
+  --chart-a1:rgba(167,139,250,.95); --chart-a2:rgba(167,139,250,.35);
+  --chart-b1:rgba(148,163,184,.9); --chart-b2:rgba(148,163,184,.3);
+  --chart-axis:rgba(237,239,243,.42); --chart-val:rgba(237,239,243,.88); --chart-base:rgba(255,255,255,.08);
+
+  /* ---- elevation · quiet ---- */
+  --sh-1:0 1px 2px rgba(0,0,0,.35);
+  --sh-2:0 1px 2px rgba(0,0,0,.30);
+  --sh-3:0 16px 40px -12px rgba(0,0,0,.6), 0 2px 6px rgba(0,0,0,.35);
+
+  /* ---- radii ---- */
+  --r:12px; --r-lg:14px; --r-md:9px; --r-sm:7px;
+
+  /* ---- motion · response .2–.34s, critically damped by default ---- */
+  --t-press:110ms; --t-ui:200ms; --t-surface:340ms;
+  --ease:cubic-bezier(.32,.72,0,1);      /* snappy, no overshoot — the default */
+  /* damping ~.8 · reserved for drawers the user throws open */
+  --ease-spring:linear(0,.0039,.0155 1.9%,.0629 3.9%,.2695 8.6%,.7259 16.4%,.9297 20.6%,
+    1.0141,1.0664 26%,1.0821,1.0898 30.3%,1.0834,1.0674 34.6%,1.0181 40.5%,.9985 44.2%,
+    .9892 48.4%,.9907 55.6%,1.0013 70.4%,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+html,body{height:100%}
+body{
+  /* body copy: system-tuned face, comfortable leading, tracking at 0 */
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-size:.9375rem; line-height:1.5; letter-spacing:0;
+  color:var(--ivory);
+  background:var(--plum-deep);
+  min-height:100dvh;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  text-rendering:optimizeLegibility;
+}
+::selection{background:rgba(167,139,250,.35);color:#fff}
+a{color:var(--gold);text-decoration:none;border-radius:4px}
+a:hover{text-decoration:underline;text-underline-offset:3px}
+button{font-family:inherit;font-size:inherit;cursor:pointer;color:inherit;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+img{display:block}
+svg{flex:none}
+
+/* keyboard users get a real ring; pointer users never see it */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:var(--r-sm)}
+
+/* scrollbars, quietly */
+*{scrollbar-width:thin;scrollbar-color:var(--scroll) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:99px;
+  border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--scroll-hover);background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- type scale · tracking tightens as size grows ---------- */
+.t-display{font-family:'Inter',system-ui,sans-serif;font-weight:600;
+  font-size:1.5rem;line-height:1.2;letter-spacing:-.02em}
+.t-title{font-family:'Inter',system-ui,sans-serif;font-weight:600;
+  font-size:1.0625rem;line-height:1.3;letter-spacing:-.01em}
+/* small text wants a touch more air between letters, not less */
+.t-label{font-size:.6875rem;line-height:1.4;letter-spacing:.06em;text-transform:uppercase;
+  font-weight:600;color:var(--ivory-faint)}
+.num{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1}
+
+/* ---------- auth gate ---------- */
+#gate{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background:var(--plum-deep);
+}
+.gate-card{width:min(400px,100%);padding:40px 36px 30px;border-radius:var(--r-lg);
+  background:var(--panel);border:1px solid var(--edge);
+  box-shadow:var(--sh-3);text-align:center}
+.gate-card .sub{color:var(--ivory-faint);font-size:.75rem;margin:10px 0 26px;
+  letter-spacing:.04em;font-weight:500}
+.gate-card input{width:100%;margin-bottom:10px;padding:13px 16px;border-radius:var(--r-md);
+  border:1px solid var(--edge);background:var(--field);color:var(--ivory);
+  font-size:.938rem;font-family:inherit;transition:border-color var(--t-ui) var(--ease),
+  background-color var(--t-ui) var(--ease)}
+.gate-card input::placeholder{color:var(--ivory-faint)}
+.gate-card input:hover{border-color:var(--edge-hover)}
+.gate-card input:focus-visible{outline:2px solid var(--gold);outline-offset:1px;
+  border-color:transparent;background:var(--field-focus)}
+.gate-card button{width:100%;margin-top:6px;padding:13px;border-radius:var(--r-md);
+  border:1px solid transparent;background:var(--gold);color:var(--on-accent);
+  font-size:.938rem;font-weight:600;letter-spacing:.01em;
+  transition:background-color var(--t-ui) var(--ease),color var(--t-ui) var(--ease),
+    transform var(--t-press) var(--ease)}
+.gate-card button:hover{background:var(--accent-hover);color:var(--on-accent)}
+.gate-card button:active{transform:scale(.978)}   /* feedback on press, not on release */
+.gate-card button[disabled]{opacity:.6;cursor:default}
+.gate-card button[disabled]:hover{background:var(--gold);color:var(--on-accent)}
+.gate-alt{font-size:.781rem;color:var(--ivory-faint)}
+.gate-alt:hover{color:var(--ivory-dim)}
+#gateErr{color:var(--bad);font-size:.813rem;line-height:1.45;min-height:19px;margin-top:12px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* ---------- shell ---------- */
+#app{display:none;min-height:100dvh}
+#app.on{display:grid;grid-template-columns:252px minmax(0,1fr)}
+
+nav{position:sticky;top:0;height:100dvh;display:flex;flex-direction:column;
+  padding:26px 14px calc(18px + env(safe-area-inset-bottom));
+  border-right:1px solid var(--edge);
+  background:var(--chrome)}
+.brand{padding:0 10px 2px}
+.godmode{font-size:.6875rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--ivory-faint);
+  padding:0 10px 18px;display:flex;align-items:center;gap:8px}
+.godmode .dot{width:6px;height:6px;border-radius:50%;background:var(--ok);
+  box-shadow:0 0 0 3px rgba(127,216,180,.16);animation:pulse 2.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.42}}
+
+.navscroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:2px;
+  /* scroll edge effect: content dissolves into the chrome, no hard rule */
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);
+          mask-image:linear-gradient(to bottom,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%)}
+.navgroup{display:flex;flex-direction:column;gap:2px;padding:10px 0 0}
+.navgroup:first-child{padding-top:0}
+.navgroup-label{font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;
+  color:var(--ivory-faint);opacity:.8;padding:8px 12px 4px}
+
+nav .item{position:relative;display:flex;align-items:center;gap:11px;
+  padding:8px 12px;border-radius:var(--r-md);
+  color:var(--ivory-dim);font-size:.875rem;font-weight:500;letter-spacing:0;
+  border:1px solid transparent;background:none;text-align:left;width:100%;
+  transition:color var(--t-ui) var(--ease),background-color var(--t-ui) var(--ease),
+    transform var(--t-press) var(--ease)}
+nav .item svg{width:17px;height:17px;opacity:.72;
+  transition:opacity var(--t-ui) var(--ease),color var(--t-ui) var(--ease)}
+nav .item:hover{color:var(--ivory);background:var(--glass)}
+nav .item:hover svg{opacity:1}
+nav .item:active{transform:scale(.982)}
+nav .item.on{color:var(--ivory);background:var(--glass-hi);border-color:transparent}
+nav .item.on svg{opacity:1}
+/* the rail grows from the item's own left edge — anchored, not floating in */
+nav .item.on::before{content:"";position:absolute;left:-14px;top:50%;translate:0 -50%;
+  width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--gold)}
+nav .item.on svg{color:var(--gold)}
+nav .item .badge{margin-left:auto;font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;font-size:.688rem;font-weight:600;
+  background:var(--bad);color:#2A0A10;border-radius:99px;padding:1px 7px;display:none}
+nav .item .badge.show{display:inline-block}
+nav .foot{margin-top:auto;padding:14px 12px 0;font-size:.75rem;line-height:1.5;
+  color:var(--ivory-faint);border-top:1px solid var(--hairline)}
+nav .foot button{background:none;border:none;color:var(--ivory-faint);font-size:.75rem;
+  padding:2px 0;text-decoration:underline;text-underline-offset:3px;
+  transition:color var(--t-ui) var(--ease)}
+nav .foot button:hover{color:var(--ivory)}
+
+main{padding:0 40px 72px;max-width:1500px;min-width:0}
+
+/* sticky page header — the material fades out, the words never do */
+header.page{position:sticky;top:0;z-index:20;
+  margin:0 -40px 22px;padding:22px 40px 14px;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+header.page::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:var(--plum-deep);border-bottom:1px solid var(--hairline)}
+header.page h2{font-family:'Inter',system-ui,sans-serif;font-weight:600;
+  font-size:1.5rem;line-height:1.2;letter-spacing:-.02em}
+header.page .crumb{color:var(--ivory-faint);font-size:.75rem;letter-spacing:.02em;
+  text-transform:none;margin-bottom:6px}
+.asof{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;
+  font-size:.75rem;color:var(--ivory-faint)}
+.asof button{background:var(--glass);border:1px solid var(--edge);color:var(--ivory-dim);
+  border-radius:var(--r-sm);padding:6px 12px;font-size:.75rem;font-family:inherit;
+  transition:border-color var(--t-ui) var(--ease),color var(--t-ui) var(--ease),
+    background-color var(--t-ui) var(--ease),transform var(--t-press) var(--ease)}
+.asof button:hover{border-color:var(--edge-hover);color:var(--ivory);background:var(--glass-hi)}
+.asof button:active{transform:scale(.96)}
+.asof label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
+  padding:4px 2px;border-radius:var(--r-sm);transition:color var(--t-ui) var(--ease)}
+.asof label:hover{color:var(--ivory-dim)}
+.asof input[type=checkbox]{accent-color:var(--gold);width:14px;height:14px;cursor:pointer}
+
+/* ---------- surfaces ---------- */
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* a wide table beside a narrow one: give the columns the room they actually need */
+.two.wide{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+@media(max-width:1240px){.two,.two.wide{grid-template-columns:minmax(0,1fr)}}
+
+.panel{position:relative;overflow:hidden;padding:18px 20px;border-radius:var(--r);
+  background:var(--panel);border:1px solid var(--edge);box-shadow:var(--sh-1)}
+.panel.gold{border-color:var(--edge-gold)}
+/* a table that outgrows its panel scrolls instead of being silently clipped */
+.panel:has(table){overflow-x:auto;overscroll-behavior-x:contain}
+.panel .k-label{font-size:.75rem;line-height:1.4;letter-spacing:0;text-transform:none;
+  font-weight:500;color:var(--ivory-dim)}
+.panel .k-num{font-family:'Inter',system-ui,sans-serif;font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;font-size:1.875rem;font-weight:600;line-height:1.1;letter-spacing:-.025em;margin-top:10px;
+  color:var(--ivory)}
+.panel .k-num.gold{color:var(--gold)}
+.panel .k-num .unit{font-size:1rem;color:var(--ivory-dim);font-weight:400;letter-spacing:0}
+.panel .k-sub{font-size:.75rem;line-height:1.45;color:var(--ivory-faint);margin-top:6px;min-height:17px}
+.section-title{font-family:'Inter',system-ui,sans-serif;font-weight:600;
+  font-size:1.0625rem;line-height:1.3;letter-spacing:-.01em;margin:30px 0 12px;color:var(--ivory)}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:.8125rem}
+th{font-size:.6875rem;letter-spacing:.02em;text-transform:none;color:var(--ivory-faint);
+  text-align:left;padding:0 10px 9px;font-weight:600;white-space:nowrap;border-bottom:1px solid var(--edge)}
+th:first-child,td:first-child{padding-left:2px}
+th:last-child,td:last-child{padding-right:2px}
+td{padding:10px 10px;border-top:1px solid var(--hairline);color:var(--ivory-dim);
+  line-height:1.45;vertical-align:baseline}
+td.strong{color:var(--ivory);font-weight:500}
+td.mono,.mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums;
+  font-size:.813rem}
+td.mono{white-space:nowrap}
+tbody tr{transition:background-color var(--t-ui) var(--ease)}
+tbody tr:hover>td{background:var(--hover)}
+/* rows that open a detail drawer behave like buttons, so they feel like buttons */
+tr.expandable>td{cursor:pointer}
+tr.expandable:active>td{background:var(--press)}
+tr.detail>td{background:var(--inset)}
+
+.pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.6875rem;
+  font-weight:600;letter-spacing:.01em;line-height:1.6;white-space:nowrap;
+  border:1px solid transparent;background:var(--glass-hi);color:var(--ivory-dim)}
+.pill.ok{background:rgba(52,211,153,.12);color:var(--ok);border-color:rgba(52,211,153,.2)}
+.pill.warn{background:rgba(251,191,36,.12);color:var(--warn);border-color:rgba(251,191,36,.2)}
+.pill.bad{background:rgba(248,113,113,.12);color:var(--bad);border-color:rgba(248,113,113,.2)}
+.pill.gold{background:var(--gold-soft);color:var(--gold);border-color:var(--edge-gold)}
+
+/* ---------- controls ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:8px 15px;border-radius:var(--r-sm);border:1px solid var(--edge);
+  background:var(--glass-hi);color:var(--ivory);font-size:.813rem;font-weight:500;
+  white-space:nowrap;
+  transition:border-color var(--t-ui) var(--ease),color var(--t-ui) var(--ease),
+    background-color var(--t-ui) var(--ease),transform var(--t-press) var(--ease)}
+.btn:hover{border-color:var(--edge-hover);background:var(--press);color:var(--ivory)}
+.btn:active{transform:scale(.96)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.approve{border-color:rgba(52,211,153,.35);color:var(--ok)}
+.btn.approve:hover{background:rgba(52,211,153,.14);border-color:rgba(52,211,153,.55);color:var(--ok)}
+.btn.reject{border-color:rgba(248,113,113,.32);color:var(--bad)}
+.btn.reject:hover{background:rgba(248,113,113,.13);border-color:rgba(248,113,113,.55);color:var(--bad)}
+.btn.tkf.on{border-color:var(--edge-gold);color:var(--gold);background:var(--gold-soft)}
+
+.empty{padding:34px 20px;text-align:center;color:var(--ivory-faint);font-size:.875rem;line-height:1.5}
+.tin{padding:9px 12px;border-radius:var(--r-md);border:1px solid var(--edge);
+  background:var(--field);color:var(--ivory);font-size:.875rem;font-family:inherit;
+  transition:border-color var(--t-ui) var(--ease),background-color var(--t-ui) var(--ease)}
+.tin::placeholder{color:var(--ivory-faint)}
+.tin:hover{border-color:var(--edge-hover)}
+.tin:focus-visible{outline:2px solid var(--gold);outline-offset:1px;border-color:transparent;
+  background:var(--field-focus)}
+select.tin{cursor:pointer}
+select.tin option{background:var(--float);color:var(--ivory)}
+canvas.chart{width:100%;height:196px;display:block}
+
+/* ---------- diagnostics drawer ---------- */
+/* floats over blurred panels, so it is near-opaque — light never stacks on light */
+#diag{position:fixed;right:0;bottom:0;z-index:40;
+  width:min(384px,100vw);max-height:46vh;overflow:auto;overscroll-behavior:contain;
+  padding:14px 18px calc(16px + env(safe-area-inset-bottom));
+  background:var(--float);border:1px solid var(--edge);border-top-color:var(--edge-top);
+  border-radius:var(--r) 0 0 0;box-shadow:var(--sh-3);
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.719rem;line-height:1.55;
+  transform:translateY(calc(100% - 40px));
+  transition:transform var(--t-surface) var(--ease-spring)}
+#diag.open{transform:translateY(0)}
+#diag.has-err{border-color:rgba(238,135,145,.34);border-top-color:rgba(238,135,145,.44)}
+#diag .dg-head{display:flex;align-items:center;gap:8px;
+  color:var(--ivory-dim);letter-spacing:.06em;text-transform:uppercase;font-size:.6875rem;
+  padding-bottom:10px}
+#diag .dg-head button{flex:1;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:none;border:0;color:inherit;font:inherit;letter-spacing:inherit;
+  text-transform:inherit;padding:2px 0;
+  transition:opacity var(--t-ui) var(--ease),transform var(--t-press) var(--ease)}
+#diag .dg-head #diagClose{flex:0 0 auto;padding:2px 2px 2px 10px;color:var(--ivory-faint)}
+#diag .dg-head button:hover{opacity:.7}
+#diag .dg-head button:active{transform:scale(.97)}
+#diag.has-err .dg-head #diagCount{color:var(--bad)}
+#diag .row{padding:5px 0;border-top:1px solid var(--hairline);display:flex;gap:10px}
+#diag .row .st{flex:0 0 13px}
+#diag .row.ok .st{color:var(--ok)}
+#diag .row.err .st{color:var(--bad)}
+#diag .row .msg{color:var(--ivory-dim);word-break:break-word}
+#diag .row.err .msg b{color:var(--bad)}
+
+/* views cross-fade in place — no travel, so switching never feels like a jump */
+.view{display:none}
+.view.on{display:block;animation:viewIn 260ms var(--ease) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ---------- visitors (JC-LAZO-TRACK-0916-001) ---------- */
+.vtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vtools+.vtools{margin-top:10px}
+.vtools .sep{flex:1}
+.chip{padding:6px 13px;border-radius:99px;border:1px solid var(--edge);background:var(--glass-hi);
+  color:var(--ivory-dim);font-size:.75rem;font-weight:500;white-space:nowrap;
+  transition:border-color var(--t-ui) var(--ease),color var(--t-ui) var(--ease),
+    background-color var(--t-ui) var(--ease),transform var(--t-press) var(--ease)}
+.chip:hover{border-color:var(--edge-hover);color:var(--ivory)}
+.chip:active{transform:scale(.95)}
+.chip.on{border-color:var(--edge-gold);color:var(--gold);background:var(--gold-soft)}
+.vtog{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;
+  font-size:.781rem;color:var(--ivory-dim)}
+.vtog input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer}
+
+/* the map reads as a surface, not a picture pasted on one */
+#vMapWrap{position:relative;margin:0 -6px}
+svg#vMap{width:100%;height:auto;aspect-ratio:975/610;display:block;
+  cursor:grab;touch-action:none;overflow:visible}
+svg#vMap.dragging{cursor:grabbing}
+#vMap .state{fill:var(--map-fill);stroke:var(--map-stroke)}
+#vMap .dot{fill:var(--gold);fill-opacity:.55;stroke:var(--gold);stroke-opacity:.95;cursor:pointer}
+#vMap .dot.now{fill:var(--ok);fill-opacity:.7;stroke:var(--ok)}
+#vMap .pulse{fill:none;stroke:var(--ok);stroke-opacity:.75;
+  transform-box:fill-box;transform-origin:center;animation:vpulse 2.4s ease-out infinite}
+@keyframes vpulse{0%{transform:scale(.45);opacity:.85}100%{transform:scale(2.4);opacity:0}}
+#vMap .lbl{fill:var(--ivory-dim);stroke:var(--map-halo);paint-order:stroke;
+  font-family:'Inter',system-ui,sans-serif;pointer-events:none}
+#vAbroad{margin-top:10px;font-size:.781rem;color:var(--ivory-faint);display:flex;flex-wrap:wrap;gap:12px}
+#vAbroad span{display:inline-flex;gap:5px}
+#vAbroad b{color:var(--ivory-dim);font-weight:600}
+#vTip{position:fixed;z-index:60;pointer-events:none;opacity:0;
+  padding:8px 11px;border-radius:var(--r-sm);background:var(--float);
+  border:1px solid var(--edge);border-top-color:var(--edge-top);box-shadow:var(--sh-3);
+  font-size:.781rem;color:var(--ivory);max-width:260px;
+  transition:opacity var(--t-ui) var(--ease)}
+#vTip.show{opacity:1}
+#vTip small{display:block;margin-top:2px;color:var(--ivory-faint);font-size:.719rem}
+
+/* how they browse */
+#vBrowse .bgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px}
+@media(max-width:900px){#vBrowse .bgrid{grid-template-columns:minmax(0,1fr);gap:20px}}
+#vBrowse h3{font-size:.688rem;letter-spacing:.17em;text-transform:uppercase;font-weight:600;
+  color:var(--ivory-faint);margin:20px 0 10px}
+#vBrowse h3:first-child{margin-top:0}
+#vBrowse .split{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.781rem;color:var(--ivory-faint)}
+#vBrowse .split b{color:var(--ivory);font-weight:600;font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums}
+#vBrowse .hist{display:flex;align-items:flex-end;gap:6px;height:112px;margin-bottom:4px}
+#vBrowse .hist .col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:center;height:100%;gap:4px}
+#vBrowse .hist .val{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.688rem;
+  font-variant-numeric:tabular-nums;color:var(--ivory-dim);min-height:14px}
+#vBrowse .hist .bar{width:100%;min-height:2px;border-radius:3px 3px 0 0;
+  background:var(--gold);opacity:.85}
+#vBrowse .hist .lbl{font-size:.625rem;color:var(--ivory-faint);white-space:nowrap}
+#vBrowse ul.pages{list-style:none;display:flex;flex-direction:column;gap:1px}
+#vBrowse ul.pages li{display:flex;align-items:baseline;gap:10px;padding:6px 0;
+  border-top:1px solid var(--hairline);font-size:.813rem;color:var(--ivory-dim)}
+#vBrowse ul.pages li:first-child{border-top:0}
+#vBrowse ul.pages li>span{position:relative;flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;padding-bottom:5px}
+#vBrowse ul.pages li .track{position:absolute;left:0;bottom:0;height:2px;border-radius:2px;
+  background:var(--gold);opacity:.42}
+#vBrowse ul.pages li b{font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;color:var(--ivory);font-weight:600;white-space:nowrap}
+#vBrowse ul.pages li i{font-style:normal;font-size:.719rem;color:var(--ivory-faint);
+  white-space:nowrap;min-width:54px;text-align:right}
+#vBrowse .bnote{margin-top:18px;padding-top:14px;border-top:1px solid var(--hairline);
+  font-size:.75rem;line-height:1.55;color:var(--ivory-faint)}
+#vBrowse .bnote .warn{color:var(--warn)}
+
+/* visit list */
+#vRows tr.vrow>td{cursor:pointer}
+#vRows tr.vrow:active>td{background:var(--press)}
+#vRows tr.vrow.open>td{background:var(--gold-soft)}
+#vRows .sub{display:block;font-size:.719rem;color:var(--ivory-faint);margin-top:2px}
+#vRows .sub em{font-style:normal;color:var(--warn)}
+#vRows td.now{padding-left:20px;position:relative}
+#vRows td.now::before{content:"";position:absolute;left:2px;top:15px;width:7px;height:7px;
+  border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(127,216,180,.16)}
+#vRows tr.trail>td{background:var(--inset)}
+#vRows tr.trail .meta{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.688rem;
+  line-height:1.7;color:var(--ivory-faint);word-break:break-word;padding:4px 2px 8px}
+#vRows tr.trail ol{list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:1px;
+  padding-bottom:6px}
+#vRows tr.trail ol li{display:flex;align-items:baseline;gap:12px;padding:4px 2px;
+  font-size:.813rem;color:var(--ivory-dim);border-top:1px solid var(--hairline)}
+#vRows tr.trail ol li b{flex:0 0 62px;font-family:'JetBrains Mono',ui-monospace,monospace;
+  font-size:.688rem;font-weight:400;color:var(--ivory-faint)}
+#vRows tr.trail ol li i{font-style:normal;margin-left:auto;
+  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.719rem;color:var(--gold)}
+
+@media (prefers-reduced-motion: reduce){
+  #vMap .pulse{animation:none;opacity:.5}
+}
+
+/* ---------- mobile ---------- */
+#topbar{display:none}
+#backdrop{display:none}
+@media(max-width:860px){
+  #app.on{grid-template-columns:minmax(0,1fr)}
+  #topbar{position:sticky;top:0;z-index:35;display:flex;align-items:center;gap:14px;
+    padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top));
+    background:var(--chrome);border-bottom:1px solid var(--edge)}
+  #topbar img{height:26px}
+  #burger{margin-left:auto;width:42px;height:38px;border-radius:var(--r-md);
+    border:1px solid var(--edge);background:var(--glass-hi);color:var(--ivory);
+    display:flex;align-items:center;justify-content:center;
+    transition:transform var(--t-press) var(--ease),background-color var(--t-ui) var(--ease)}
+  #burger:active{transform:scale(.94)}
+  /* enters from the left, leaves to the left — same path, both ways */
+  nav{position:fixed;inset:0 auto 0 0;width:min(302px,84vw);z-index:45;height:100dvh;
+    padding-top:calc(24px + env(safe-area-inset-top));
+    background:var(--float);box-shadow:var(--sh-3);
+    transform:translateX(-102%);
+    transition:transform var(--t-surface) var(--ease-spring)}
+  nav.open{transform:translateX(0)}
+  #backdrop{position:fixed;inset:0;z-index:44;background:var(--backdrop);
+    backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+    animation:fadeIn var(--t-ui) var(--ease) both}
+  #backdrop.show{display:block}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  main{padding:0 16px 72px}
+  header.page{margin:0 -16px 18px;padding:16px 16px 14px;
+    flex-direction:column;align-items:flex-start;gap:12px}
+  header.page h2{font-size:1.625rem}
+  .kpis{grid-template-columns:repeat(auto-fill,minmax(152px,1fr))}
+  .panel{padding:16px 16px}
+  .panel .k-num{font-size:1.625rem}
+  .panel table{min-width:540px}
+  #diag{width:100vw;border-radius:var(--r) var(--r) 0 0;max-height:54vh}
+}
+
+/* ---------- GODMODE-0921-002 · light mode ---------- */
+:root[data-theme="light"]{
+  --plum-deep:#F5F6F8; --plum:#FFFFFF; --plum-lift:#FFFFFF;
+  --ivory:#111318; --ivory-dim:rgba(17,19,24,.66); --ivory-faint:rgba(17,19,24,.46);
+  --gold:#6D4AFF; --gold-soft:rgba(109,74,255,.10);
+  --ok:#059669; --warn:#B45309; --bad:#DC2626;
+  --glass:rgba(17,19,24,.035); --glass-hi:rgba(17,19,24,.06);
+  --edge:rgba(17,19,24,.10); --edge-top:rgba(17,19,24,.12); --edge-gold:rgba(109,74,255,.38);
+  --chrome:#FFFFFF; --float:#FFFFFF; --hairline:rgba(17,19,24,.07); --panel:#FFFFFF;
+  --hover:rgba(17,19,24,.03); --press:rgba(17,19,24,.06); --inset:rgba(17,19,24,.035);
+  --field:#F5F6F8; --field-focus:#FFFFFF; --on-accent:#FFFFFF; --accent-hover:#5B3BE6;
+  --edge-hover:rgba(17,19,24,.22); --scroll:rgba(17,19,24,.18); --scroll-hover:rgba(17,19,24,.3);
+  --map-fill:rgba(17,19,24,.05); --map-stroke:rgba(17,19,24,.16); --map-halo:rgba(255,255,255,.9);
+  --backdrop:rgba(17,19,24,.35);
+  --sh-1:0 1px 2px rgba(17,19,24,.06); --sh-2:0 1px 2px rgba(17,19,24,.06);
+  --sh-3:0 16px 40px -12px rgba(17,19,24,.25), 0 2px 6px rgba(17,19,24,.08);
+  --chart-a1:rgba(109,74,255,.95); --chart-a2:rgba(109,74,255,.35);
+  --chart-b1:rgba(100,116,139,.85); --chart-b2:rgba(100,116,139,.3);
+  --chart-axis:rgba(17,19,24,.45); --chart-val:rgba(17,19,24,.85); --chart-base:rgba(17,19,24,.10);
+}
+:root[data-theme="light"]{
+  ::selection{background:rgba(109,74,255,.22);color:#111318}
+  img[src*="lazo-logo"]{filter:brightness(0);opacity:.9}
+  .pill{background:var(--glass-hi)}
+  .pill.ok{background:rgba(5,150,105,.10);border-color:rgba(5,150,105,.22)}
+  .pill.warn{background:rgba(180,83,9,.10);border-color:rgba(180,83,9,.22)}
+  .pill.bad{background:rgba(220,38,38,.10);border-color:rgba(220,38,38,.22)}
+  .btn.approve{border-color:rgba(5,150,105,.4)} .btn.approve:hover{background:rgba(5,150,105,.10)}
+  .btn.reject{border-color:rgba(220,38,38,.35)} .btn.reject:hover{background:rgba(220,38,38,.08)}
+  nav .item .badge{color:#fff}
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+  --plum-deep:#F5F6F8; --plum:#FFFFFF; --plum-lift:#FFFFFF;
+  --ivory:#111318; --ivory-dim:rgba(17,19,24,.66); --ivory-faint:rgba(17,19,24,.46);
+  --gold:#6D4AFF; --gold-soft:rgba(109,74,255,.10);
+  --ok:#059669; --warn:#B45309; --bad:#DC2626;
+  --glass:rgba(17,19,24,.035); --glass-hi:rgba(17,19,24,.06);
+  --edge:rgba(17,19,24,.10); --edge-top:rgba(17,19,24,.12); --edge-gold:rgba(109,74,255,.38);
+  --chrome:#FFFFFF; --float:#FFFFFF; --hairline:rgba(17,19,24,.07); --panel:#FFFFFF;
+  --hover:rgba(17,19,24,.03); --press:rgba(17,19,24,.06); --inset:rgba(17,19,24,.035);
+  --field:#F5F6F8; --field-focus:#FFFFFF; --on-accent:#FFFFFF; --accent-hover:#5B3BE6;
+  --edge-hover:rgba(17,19,24,.22); --scroll:rgba(17,19,24,.18); --scroll-hover:rgba(17,19,24,.3);
+  --map-fill:rgba(17,19,24,.05); --map-stroke:rgba(17,19,24,.16); --map-halo:rgba(255,255,255,.9);
+  --backdrop:rgba(17,19,24,.35);
+  --sh-1:0 1px 2px rgba(17,19,24,.06); --sh-2:0 1px 2px rgba(17,19,24,.06);
+  --sh-3:0 16px 40px -12px rgba(17,19,24,.25), 0 2px 6px rgba(17,19,24,.08);
+  --chart-a1:rgba(109,74,255,.95); --chart-a2:rgba(109,74,255,.35);
+  --chart-b1:rgba(100,116,139,.85); --chart-b2:rgba(100,116,139,.3);
+  --chart-axis:rgba(17,19,24,.45); --chart-val:rgba(17,19,24,.85); --chart-base:rgba(17,19,24,.10);
+  }
+  :root:not([data-theme="dark"]){
+  ::selection{background:rgba(109,74,255,.22);color:#111318}
+  img[src*="lazo-logo"]{filter:brightness(0);opacity:.9}
+  .pill{background:var(--glass-hi)}
+  .pill.ok{background:rgba(5,150,105,.10);border-color:rgba(5,150,105,.22)}
+  .pill.warn{background:rgba(180,83,9,.10);border-color:rgba(180,83,9,.22)}
+  .pill.bad{background:rgba(220,38,38,.10);border-color:rgba(220,38,38,.22)}
+  .btn.approve{border-color:rgba(5,150,105,.4)} .btn.approve:hover{background:rgba(5,150,105,.10)}
+  .btn.reject{border-color:rgba(220,38,38,.35)} .btn.reject:hover{background:rgba(220,38,38,.08)}
+  nav .item .badge{color:#fff}
+  }
+}
+
+/* ---------- accessibility preferences ---------- */
+/* reduced motion: keep the feedback, drop the travel */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important}
+  .view.on{animation:none}
+  .godmode .dot{animation:none}
+  nav,#diag{transition:transform .01ms !important}
+  .btn:active,nav .item:active,.gate-card button:active,.asof button:active,#burger:active{transform:none}
+}
+/* reduced transparency: frost the glass solid, drop the blur */
+@media (prefers-reduced-transparency: reduce){
+  .panel,.gate-card{background:#141720}
+  nav,#topbar{background:#0C0E13}
+  #diag{background:#14171E}
+  header.page::before{background:#0B0D12}
+  .navscroll{-webkit-mask-image:none;mask-image:none}
+}
+/* high contrast: solid grounds, defined borders */
+@media (prefers-contrast: more){
+  :root{--ivory-dim:rgba(237,239,243,.9);--ivory-faint:rgba(237,239,243,.72);
+    --edge:rgba(255,255,255,.34);--edge-top:rgba(255,255,255,.44);--hairline:rgba(255,255,255,.22);
+    --edge-gold:rgba(167,139,250,.75)}
+  .panel,.gate-card{background:#141720}
+  .pill{border-width:1px}
+  a:hover{text-decoration:underline}
+}
+@media print{
+  nav,#topbar,#diag,#backdrop,.asof{display:none !important}
+  body{background:#fff;color:#000}
+  .panel{background:#fff;border:1px solid #ccc;box-shadow:none;backdrop-filter:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH GATE ================= -->
+<div id="gate">
+  <form class="gate-card" id="gForm">
+    <img src="assets/lazo-logo.png" alt="Lazo — tied together" style="width:236px;max-width:80%;margin:0 auto 4px">
+    <div class="sub">God Mode · Admin</div>
+    <label class="sr-only" for="gEmail">Email</label>
+    <input id="gEmail" type="email" placeholder="Email" autocomplete="username" required>
+    <label class="sr-only" for="gPass">Password</label>
+    <input id="gPass" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button id="gGo" type="submit">Enter</button>
+    <div id="gateErr" role="status" aria-live="polite"></div>
+    <div style="margin-top:10px"><a href="#" id="gForgot" class="gate-alt">Forgot password?</a></div>
+  </form>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app">
+  <div id="topbar">
+    <img src="assets/lazo-logo.png" alt="Lazo">
+    <button id="burger" aria-label="Menu">☰</button>
+  </div>
+  <div id="backdrop"></div>
+  <nav aria-label="Sections">
+    <div class="brand"><img src="assets/lazo-logo.png" alt="Lazo" style="width:162px"></div>
+    <div class="godmode"><span class="dot"></span> God Mode</div>
+    <div class="navscroll">
+      <div class="navgroup">
+        <button class="item on" data-v="overview" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7.5" height="9" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="5.5" rx="1.6"/><rect x="13.5" y="12" width="7.5" height="9" rx="1.6"/><rect x="3" y="15.5" width="7.5" height="5.5" rx="1.6"/></svg>Overview</button>
+        <button class="item" data-v="visitors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.9"/></svg>Visitors</button>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-label">Queue</div>
+        <button class="item" data-v="claims"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12.5a8 8 0 1 1-3.2-6.4"/><path d="M9 12.2l2.6 2.6L20.5 6"/></svg>Claims <span class="badge" id="claimBadge">0</span></button>
+        <button class="item" data-v="tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 8.5V6.6A1.6 1.6 0 0 0 18.9 5H5.1A1.6 1.6 0 0 0 3.5 6.6v1.9a2.6 2.6 0 0 1 0 7v1.9A1.6 1.6 0 0 0 5.1 19h13.8a1.6 1.6 0 0 0 1.6-1.6v-1.9a2.6 2.6 0 0 1 0-7Z"/><path d="M13 8.5v7"/></svg>Tickets <span class="badge" id="ticketBadge">0</span></button>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-label">Directory</div>
+        <button class="item" data-v="vendors"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V9.2l8-5.2 8 5.2V21"/><path d="M4 21h16"/><path d="M9.5 21v-5.5h5V21"/></svg>Vendors</button>
+        <button class="item" data-v="couples"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.3s-7.2-4.3-7.2-9.3A4 4 0 0 1 12 8.4a4 4 0 0 1 7.2 2.6c0 5-7.2 9.3-7.2 9.3Z"/></svg>Couples</button>
+        <button class="item" data-v="inquiries"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12.6a7.4 7.4 0 0 1-8 7.4L4 21l1-3.7A7.4 7.4 0 1 1 20.5 12.6Z"/></svg>Inquiries</button>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-label">Business</div>
+        <button class="item" data-v="sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 17.5 9 11.4l3.7 3.4L20.5 6.5"/><path d="M20.5 11V6.5H16"/></svg>Sales</button>
+        <button class="item" data-v="metros"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 5 3.5 7.1v12L9.2 17l5.6 2 5.7-2.1v-12L14.8 7Z"/><path d="M9.2 5v12M14.8 7v12"/></svg>Metros</button>
+        <button class="item" data-v="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 3.2H6.8A1.8 1.8 0 0 0 5 5v14a1.8 1.8 0 0 0 1.8 1.8h10.4A1.8 1.8 0 0 0 19 19V8.7Z"/><path d="M13.5 3.2v5.5H19"/><path d="M8.6 13.2h6.8M8.6 16.7h4.5"/></svg>Reports</button>
+      </div>
+      <div class="navgroup">
+        <div class="navgroup-label">System</div>
+        <button class="item" data-v="team"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9.3" cy="8.2" r="3.3"/><path d="M3 20.2a6.3 6.3 0 0 1 12.6 0"/><path d="M16.4 5.3a3.3 3.3 0 0 1 0 5.9"/><path d="M17.6 14.6A6.3 6.3 0 0 1 21 20.2"/></svg>Team</button>
+        <button class="item" data-v="health"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12.5h4l2.2-5.3 3.6 9.6 2.3-4.3H21"/></svg>Health <span class="badge" id="healthBadge" style="display:none">!</span></button>
+      </div>
+    </div>
+    <div class="foot">
+      <div id="whoami" style="margin-bottom:6px"></div>
+      <button id="signout">Sign out</button>
+    </div>
+  </nav>
+
+  <main>
+    <header class="page">
+      <div>
+        <div class="crumb" id="crumb">meetlazo.com · live firestore</div>
+        <h2 id="pageTitle">Overview</h2>
+      </div>
+      <div class="asof">
+        <span>as of <span id="asof" aria-live="polite">—</span></span>
+        <button id="themeToggle" title="Switch between light and dark" aria-label="Toggle theme">Theme</button>
+        <button id="refresh" title="Reload every panel from Firestore">Refresh</button>
+        <button id="diagToggle" title="Show the per-query diagnostics log">Diag</button>
+        <label title="Reload automatically every 5 minutes"><input type="checkbox" id="autoRef"> auto 5m</label>
+      </div>
+    </header>
+
+    <!-- ============ OVERVIEW ============ -->
+    <section class="view on" id="v-overview">
+      <div class="grid kpis">
+        <div class="panel gold"><div class="k-label">Couples</div><div class="k-num gold" id="kCouples">—</div><div class="k-sub" id="kCouplesSub"></div></div>
+        <div class="panel"><div class="k-label">Vendors</div><div class="k-num" id="kVendors">—</div><div class="k-sub" id="kVendorsSub"></div></div>
+        <div class="panel"><div class="k-label">Claimed Vendors</div><div class="k-num" id="kClaimed">—</div><div class="k-sub" id="kClaimedSub"></div></div>
+        <div class="panel gold"><div class="k-label">Claims Pending Review</div><div class="k-num gold" id="kPending">—</div><div class="k-sub">live · human queue</div></div>
+        <div class="panel"><div class="k-label">Inquiries · 7d</div><div class="k-num" id="kInq7">—</div><div class="k-sub" id="kInqAll"></div></div>
+        <div class="panel"><div class="k-label">Bookings</div><div class="k-num" id="kBookings">—</div><div class="k-sub">contract-date commitments</div></div>
+        <div class="panel gold"><div class="k-label">Revenue · MTD</div><div class="k-num gold" id="kRev">—</div><div class="k-sub" id="kRevSub"></div></div>
+        <div class="panel"><div class="k-label">Wedding Websites</div><div class="k-num" id="kSites">—</div><div class="k-sub">published /w/ pages</div></div>
+        <div class="panel"><div class="k-label">Avg Time on Site</div><div class="k-num" id="kTime">—</div><div class="k-sub" id="kTimeSub">Cloudflare Web Analytics</div></div>
+        <div class="panel"><div class="k-label">Reviews · Total</div><div class="k-num" id="kReviews">—</div><div class="k-sub" id="kReviewsSub"></div></div>
+        <div class="panel"><div class="k-label">System Health</div>
+          <div style="margin-top:12px" id="hcPill"><span class="pill">—</span></div>
+          <div class="k-sub" id="hcRows" style="min-height:34px">connecting to monitor…</div>
+        </div>
+      </div>
+
+      <div class="section-title">Pulse</div>
+      <div class="grid two">
+        <div class="panel"><div class="k-label" style="margin-bottom:12px">Couple signups · last 30 days</div><canvas class="chart" id="chSignups"></canvas></div>
+        <div class="panel"><div class="k-label" style="margin-bottom:12px">Inquiry funnel · all time</div><canvas class="chart" id="chFunnel"></canvas></div>
+      </div>
+      <div class="section-title">The Wire</div>
+      <div class="panel gold">
+        <div class="k-label" style="margin-bottom:12px">Everything happening on Lazo, newest first</div>
+        <div id="wire"><div class="empty">Loading…</div></div>
+      </div>
+    </section>
+
+    <!-- ============ CLAIMS ============ -->
+    <section class="view" id="v-claims">
+      <div class="panel gold">
+        <div class="k-label" style="margin-bottom:14px">Pending human review — approving fires claimApprovedEmail automatically</div>
+        <table><thead><tr><th>Business</th><th>Contact</th><th>Vendor ID</th><th>Submitted</th><th></th></tr></thead>
+        <tbody id="claimsBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+      <div class="section-title">Listing requests</div>
+      <div class="panel gold">
+        <div class="k-label" style="margin-bottom:14px">New-vendor listing requests pending review (no email automation on approve — manual follow-up)</div>
+        <table><thead><tr><th>Business</th><th>Contact</th><th>Metro</th><th>Submitted</th><th></th></tr></thead>
+        <tbody id="listingBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+      <div class="section-title">Recently decided</div>
+      <div class="panel">
+        <table><thead><tr><th>Business</th><th>Status</th><th>Decided</th></tr></thead>
+        <tbody id="claimsDoneBody"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ VENDORS ============ -->
+    <section class="view" id="v-vendors">
+      <div class="panel" style="margin-bottom:18px">
+        <div style="display:flex;gap:12px;align-items:center">
+          <input id="vSearch" placeholder="Search vendors by business name (prefix, case-sensitive)…"
+            style="flex:1;padding:11px 15px;border-radius:11px;border:1px solid var(--edge);background:rgba(0,0,0,.25);color:var(--ivory);font-size:14px;font-family:inherit">
+          <button class="btn" id="vSearchGo">Search</button>
+        </div>
+        <table style="margin-top:14px"><tbody id="vSearchBody"></tbody></table>
+      </div>
+      <div class="grid two wide">
+        <div class="panel gold">
+          <div class="k-label" style="margin-bottom:14px">Most reviewed vendors</div>
+          <table><thead><tr><th>#</th><th>Vendor</th><th>Category</th><th>Metro</th><th>Reviews</th><th>Status</th></tr></thead>
+          <tbody id="topVendorsBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+        <div class="panel">
+          <div class="k-label" style="margin-bottom:14px">Newest claimed vendors</div>
+          <table><thead><tr><th>Vendor</th><th>Category</th><th>Claimed</th></tr></thead>
+          <tbody id="newVendorsBody"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+      <div class="section-title">Supply breakdown</div>
+      <div class="grid kpis">
+        <div class="panel"><div class="k-label">Verified</div><div class="k-num" id="vVerified">—</div></div>
+        <div class="panel"><div class="k-label">Pro subscribers</div><div class="k-num gold" id="vPro">—</div><div class="k-sub">$79/mo · $790/yr founding</div></div>
+        <div class="panel"><div class="k-label">Pro Studio</div><div class="k-num gold" id="vStudio">—</div><div class="k-sub">$149/mo</div></div>
+        <div class="panel"><div class="k-label">Claim rate</div><div class="k-num" id="vClaimRate">—<span class="unit">%</span></div></div>
+        <div class="panel"><div class="k-label">Delisted</div><div class="k-num" id="vDelisted">—</div><div class="k-sub">hidden from site at next build</div></div>
+      </div>
+    </section>
+
+    <!-- ============ COUPLES ============ -->
+    <section class="view" id="v-couples">
+      <div class="panel" style="margin-bottom:18px">
+        <input class="tin" id="cFilter" placeholder="Filter loaded couples by name, email, metro, venue…" style="width:100%">
+      </div>
+      <div class="grid two wide">
+        <div class="panel gold">
+          <div class="k-label" style="margin-bottom:14px">Newest couples — click any row for full profile & activity</div>
+          <table><thead><tr><th>Couple</th><th>Email</th><th>Wedding</th><th>Bookings</th><th>Joined</th><th>Last login</th></tr></thead>
+          <tbody id="newCouplesBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+        <div class="panel">
+          <div class="k-label" style="margin-bottom:14px">Weddings in the next 90 days</div>
+          <table><thead><tr><th>Couple</th><th>Date</th><th>Days out</th></tr></thead>
+          <tbody id="upcomingBody"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INQUIRIES ============ -->
+    <section class="view" id="v-inquiries">
+      <div class="panel gold">
+        <div class="k-label" style="margin-bottom:14px">Most recent inquiries</div>
+        <table><thead><tr><th>Vendor</th><th>Couple</th><th>Status</th><th>Sent</th></tr></thead>
+        <tbody id="inqBody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ SALES ============ -->
+    <section class="view" id="v-sales">
+      <div class="grid kpis">
+        <div class="panel gold"><div class="k-label">Revenue · MTD</div><div class="k-num gold" id="sMTD">—</div></div>
+        <div class="panel"><div class="k-label">Revenue · all time</div><div class="k-num" id="sAll">—</div></div>
+        <div class="panel"><div class="k-label">Charges · MTD</div><div class="k-num" id="sCount">—</div></div>
+        <div class="panel"><div class="k-label">Avg charge</div><div class="k-num" id="sAvg">—</div></div>
+      </div>
+      <div class="section-title">Revenue by month</div>
+      <div class="panel"><canvas class="chart" id="chRevenue"></canvas></div>
+      <div class="section-title">Charge ledger</div>
+      <div class="panel">
+        <table><thead><tr><th>Date</th><th>Vendor</th><th>Description</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody id="salesBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+        <div class="k-sub" style="margin-top:12px;color:var(--ivory-faint)">Reads CONFIG.billing.collection. Stripe Connect marketplace volume lives in the Stripe dashboard unless mirrored to Firestore.</div>
+      </div>
+    </section>
+
+    <!-- ============ METROS ============ -->
+    <section class="view" id="v-metros">
+      <div class="panel">
+        <table><thead><tr><th>Metro</th><th>Vendors</th><th>Couples</th><th>Inquiries</th><th>Monetization</th></tr></thead>
+        <tbody id="metrosBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ REPORTS ============ -->
+    <section class="view" id="v-reports">
+      <div class="panel gold">
+        <div class="k-label" style="margin-bottom:14px">analyticsRollup periods — monthly on the 1st, 9am Phoenix</div>
+        <table><thead><tr><th>Period</th><th>Computed</th><th></th></tr></thead>
+        <tbody id="reportsBody"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ TICKETS ============ -->
+    <section class="view" id="v-tickets">
+      <div class="panel gold">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="tkFilters">
+          <button class="btn tkf on" data-f="open">Open</button>
+          <button class="btn tkf" data-f="in_progress">In progress</button>
+          <button class="btn tkf" data-f="resolved">Resolved</button>
+          <button class="btn tkf" data-f="all">All</button>
+        </div>
+        <table><thead><tr><th>When</th><th>From</th><th>Category</th><th>Subject</th><th>Status</th></tr></thead>
+        <tbody id="ticketsBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+    </section>
+
+    <!-- ============ TEAM ============ -->
+    <section class="view" id="v-team">
+      <div class="panel gold" id="teamCreate">
+        <div class="k-label" style="margin-bottom:14px">Create admin user — they sign in at admin.meetlazo.com with this email + temp password</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <input class="tin" id="tName" placeholder="Full name (what couples & vendors will see)" style="flex:1.6;min-width:200px">
+          <input class="tin" id="tEmail" type="email" placeholder="email@company.com" style="flex:2;min-width:220px">
+          <input class="tin" id="tPass" placeholder="Temp password (8+ chars)" style="flex:1.4;min-width:180px">
+          <button class="btn" id="tGen">Generate</button>
+          <select class="tin" id="tRole" style="flex:0 0 auto">
+            <option value="admin">admin — full dashboard, no team control</option>
+            <option value="owner">owner — everything incl. team</option>
+          </select>
+          <button class="btn approve" id="tCreate">Create user</button>
+        </div>
+        <div class="k-sub" id="tMsg" style="margin-top:10px;min-height:16px"></div>
+      </div>
+      <div class="section-title">Team roster</div>
+      <div class="panel">
+        <table><thead><tr><th>Name</th><th>Role</th><th>Added</th><th></th></tr></thead>
+        <tbody id="teamBody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody></table>
+        <div class="k-sub" style="margin-top:12px;color:var(--ivory-faint)">The founder account holds owner via its auth claim and won't appear here unless also added to the roster. Revoking removes dashboard access only — it never disables the person's Lazo account.</div>
+      </div>
+    </section>
+
+    <!-- ============ VISITORS (JC-LAZO-TRACK-0916-001) ============ -->
+    <section class="view" id="v-visitors">
+      <div class="grid kpis">
+        <div class="panel gold"><div class="k-label">On the site now</div><div class="k-num gold" id="vNow">—</div><div class="k-sub" id="vUpdated">connecting…</div></div>
+        <div class="panel"><div class="k-label" id="vRangeL">Visitors today</div><div class="k-num" id="vRange">—</div><div class="k-sub" id="vBots"></div></div>
+        <div class="panel"><div class="k-label">Avg visit</div><div class="k-num" id="vAvg">—</div><div class="k-sub">first to last activity</div></div>
+        <div class="panel"><div class="k-label">Cities</div><div class="k-num" id="vCities">—</div><div class="k-sub">places they came from</div></div>
+        <div class="panel"><div class="k-label">Inquiries started</div><div class="k-num gold" id="vLeads">—</div><div class="k-sub">visits tied to an inquiry</div></div>
+      </div>
+
+      <div class="section-title">Where they are</div>
+      <div class="panel gold">
+        <div class="vtools">
+          <button class="chip on" data-range="1">Today</button>
+          <button class="chip" data-range="7">7 days</button>
+          <button class="chip" data-range="30">30 days</button>
+          <button class="chip" data-range="90">90 days</button>
+          <span class="sep"></span>
+          <button class="chip" id="vzIn" aria-label="Zoom in">+</button>
+          <button class="chip" id="vzOut" aria-label="Zoom out">−</button>
+          <button class="chip" id="vzReset">Reset</button>
+        </div>
+        <div class="vtools" id="vRegions"></div>
+        <div id="vMapWrap" style="margin-top:14px">
+          <svg id="vMap" viewBox="0 0 975 610" role="img" aria-label="Map of where visitors are"></svg>
+        </div>
+        <div id="vAbroad"></div>
+      </div>
+
+      <div class="section-title">How they browse</div>
+      <div class="panel" id="vBrowse"><div class="empty">Loading…</div></div>
+
+      <div class="section-title">Visits</div>
+      <div class="panel gold">
+        <div class="vtools" style="margin-bottom:14px">
+          <button class="chip on" data-vtab="now">Here now</button>
+          <button class="chip" data-vtab="range">In range</button>
+          <span class="sep"></span>
+          <label class="vtog"><input type="checkbox" id="vHideBots" checked> hide bots &amp; ad-link checks</label>
+        </div>
+        <table><thead><tr><th>Visitor</th><th>Page</th><th>From</th><th>Metro</th><th>Pages</th><th>Visit</th><th>When</th></tr></thead>
+        <tbody id="vRows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+      <div class="k-sub" style="margin-top:14px;color:var(--ivory-faint)">
+        Tracked first-party by <span class="mono">lazo-track.js</span>, injected at the edge by the lazo-site Worker — nothing is written until a visitor proves they're a person. Sessions are keyed to the browser tab, hold no name or email, and are only readable here.
+      </div>
+    </section>
+
+    <section class="view" id="v-health">
+      <div class="panel gold" style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+        <div>
+          <div class="k-label">Overall</div>
+          <div id="hvPill" style="margin-top:8px"><span class="pill">—</span></div>
+        </div>
+        <div style="flex:1;min-width:180px">
+          <div class="k-label">Monitor</div>
+          <div class="k-sub" id="hvMeta" style="margin-top:8px">connecting…</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" id="hvRun">Run all checks now</button>
+          <button class="btn" id="hvRefresh">Refresh</button>
+        </div>
+      </div>
+      <div class="section-title" style="margin-top:18px">Checks</div>
+      <div class="grid two" id="hvGrid"><div class="empty">loading…</div></div>
+      <div class="k-sub" style="margin-top:14px">Probes run every 5 minutes (full AI probe every 30) via external scheduler → lazo-healthcheck worker. Alerts email on 2 consecutive failures; recovery + 6h reminders automatic.</div>
+    </section>
+  </main>
+</div>
+
+<div id="vTip" role="presentation"></div>
+
+<!-- diagnostics drawer -->
+<div id="diag" aria-label="Diagnostics">
+  <div class="dg-head">
+    <button id="diagPeek" aria-expanded="false" aria-controls="diagRows">
+      <span>Diagnostics</span><span id="diagCount"></span>
+    </button>
+    <button id="diagClose" title="Close diagnostics" aria-label="Close diagnostics">✕</button>
+  </div>
+  <div id="diagRows"></div>
+</div>
+
+<script type="module">
+/* ============================================================
+   CONFIG — the only block you should ever need to touch
+   ============================================================ */
+const CONFIG = {
+  firebase: {
+    // Paste the lazo-513ec web app config from Firebase console → Project settings → Your apps
+    apiKey: "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU",
+    authDomain: "lazo-513ec.firebaseapp.com",
+    projectId: "lazo-513ec",
+  },
+  col: {
+    couples: "couples",
+    vendors: "vendors",
+    claims: "claimRequests",
+    inquiries: "inquiries",
+    bookings: "bookings",
+    metros: "metros",
+    analytics: "analytics",
+    weddingSites: "weddingSites",
+    proSubscriptions: "proSubscriptions",
+  },
+  fields: {
+    coupleCreated: "createdAt",          // Timestamp on couples docs
+    weddingDate: "weddingDate",
+    vendorClaimStatus: "claimStatus",    // 'claimed' when owned
+    vendorReviewCount: "reviewCount",    // denormalized count on vendor doc (see notes)
+    inquiryCreated: "createdAt",
+    inquiryStatus: "status",             // new / responded / booked (v23 stamps respondedAt/bookedAt)
+    claimStatus: "status",               // pending → approved/rejected (approved fires claimApprovedEmail)
+    claimCreated: "createdAt",
+  },
+  billing: {
+    collection: "proCharges",            // your Pro billing ledger (proCharge writes)
+    amountField: "amount",               // integer cents
+    createdField: "createdAt",
+    statusField: "status",
+    vendorField: "vendorName",
+    descField: "description",
+    divisor: 100,
+  },
+  // Visitor stats come from our own `sessions` collection, written by
+  // lazo-track.js on meetlazo.com (JC-LAZO-TRACK-0916-001). No third party.
+};
+
+/* ============================================================ */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, collectionGroup, query, where, orderBy, limit, startAt, endAt,
+         getDocs, getDoc, getCountFromServer, onSnapshot, updateDoc, doc, serverTimestamp, Timestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFunctions, httpsCallable }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+
+const app = initializeApp(CONFIG.firebase);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const fns = getFunctions(app);
+const $ = id => document.getElementById(id);
+const C = CONFIG.col, F = CONFIG.fields, B = CONFIG.billing;
+let myRole = null, myName = "";
+const stamp = () => myName ? `${myName} \u00b7 ${auth.currentUser.email}` : auth.currentUser.email;
+
+/* ---------- diagnostics ---------- */
+let diagOK = 0, diagErr = 0, diagHidden = false;
+function diag(name, ok, msg = "") {
+  ok ? diagOK++ : diagErr++;
+  $("diagCount").textContent = `${diagOK} ok · ${diagErr} err`;
+  const r = document.createElement("div");
+  r.className = "row " + (ok ? "ok" : "err");
+  r.innerHTML = `<span class="st">${ok ? "✓" : "✗"}</span><span class="msg"><b>${name}</b>${msg ? " — " + msg : ""}</span>`;
+  $("diagRows").prepend(r);
+  $("diag").classList.toggle("has-err", diagErr > 0);
+  if (!ok && !diagHidden) setDiagOpen(true);
+}
+function setDiagOpen(open) {
+  $("diag").classList.toggle("open", open);
+  $("diagPeek").setAttribute("aria-expanded", String(open));
+}
+document.addEventListener("DOMContentLoaded", () => {
+  $("diagCount").textContent = "0 ok · 0 err";
+  $("diagPeek").onclick = () => setDiagOpen(!$("diag").classList.contains("open"));
+  $("diagClose").onclick = () => { diagHidden = true; $("diag").style.display = "none"; };
+  $("diagToggle").onclick = () => {
+    const d = $("diag");
+    if (d.style.display === "none") { diagHidden = false; d.style.display = ""; setDiagOpen(true); }
+    else { diagHidden = true; d.style.display = "none"; }
+  };
+  // Esc closes whatever is floating, innermost first — never trap the user
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if ($("diag").classList.contains("open")) { setDiagOpen(false); return; }
+    if (document.querySelector("nav").classList.contains("open")) closeNav();
+  });
+});
+async function safe(name, fn) {
+  try { const r = await fn(); diag(name, true); return r; }
+  catch (e) { diag(name, false, e.message || String(e)); return null; }
+}
+
+/* ---------- helpers ---------- */
+const fmtN = n => n == null ? "—" : n.toLocaleString("en-US");
+const fmt$ = c => c == null ? "—" : "$" + (c / B.divisor).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const toDate = v => v?.toDate ? v.toDate() : (v ? new Date(v) : null);
+const fmtD = v => { const d = toDate(v); return d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"; };
+const esc = s => String(s ?? "").replace(/[<>&"]/g, m => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[m]));
+const daysAgo = n => Timestamp.fromDate(new Date(Date.now() - n * 864e5));
+const cnt = async q => (await getCountFromServer(q)).data().count;
+const rt = v => { const d = toDate(v); if (!d) return "—"; const s = (Date.now() - d.getTime()) / 1000;
+  if (s < 3600) return Math.max(1, Math.floor(s / 60)) + "m ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago";
+  return Math.floor(s / 86400) + "d ago"; };
+function setNum(el, n, prefix = "") { // count-up animation
+  if (n == null || !Number.isFinite(n)) { el.textContent = "—"; return; }
+  const t0 = performance.now(), dur = Math.min(900, 250 + n * 8);
+  (function tick(t) {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    el.textContent = prefix + Math.round(n * e).toLocaleString("en-US");
+    if (p < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+const vCat = x => x.category || (Array.isArray(x.categories) ? x.categories.join(", ") : "") || "\u2014";
+const vMetro = x => x.metroId || x.metro || (Array.isArray(x.metros) ? x.metros[0] : "") || x.city || "\u2014";
+function vendorDetailHTML(id, x) {
+  const rows = [
+    ["Category", vCat(x)], ["Metro", vMetro(x)],
+    ["Email", x.email || x.contactEmail || "\u2014"], ["Phone", x.phone || x.businessPhone || "\u2014"],
+    ["Website", x.website || "\u2014"], ["Verified", x.verified ? "yes" : "no"],
+    ["Claim status", x.claimStatus || "unclaimed"], ["Claimed by", x.claimedBy || "\u2014"],
+    ["Reviews", x.reviewCount ?? 0], ["Source", x.source || "\u2014"],
+    ["Price range", x.priceRange || x.priceRangeVerified || "\u2014"],
+    ["Listed on site", x.delisted ? "NO \u2014 delisted" : "yes"],
+  ];
+  const curated = rows.map(r => `<div style="display:flex;gap:10px"><span style="flex:0 0 110px;color:var(--ivory-faint)">${r[0]}</span><span style="color:var(--ivory-dim)">${esc(String(r[1]))}</span></div>`).join("");
+  const shown = new Set(["category","categories","metroId","metro","metros","city","email","contactEmail","phone","businessPhone","website","verified","claimStatus","claimedBy","reviewCount","source","priceRange","priceRangeVerified"]);
+  const rest = Object.entries(x)
+    .filter(([k, v]) => !shown.has(k) && (typeof v === "string" || typeof v === "number" || typeof v === "boolean"))
+    .slice(0, 24)
+    .map(([k, v]) => `<span style="margin-right:14px"><b style="color:var(--ivory-faint)">${esc(k)}</b>: ${esc(String(v)).slice(0, 80)}</span>`).join("");
+  return `<div style="padding:8px 4px 12px;display:flex;flex-direction:column;gap:5px;font-size:13px">${curated}
+    ${rest ? `<div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;color:var(--ivory-dim)">${rest}</div>` : ""}
+    <div style="margin-top:8px"><a href="https://console.firebase.google.com/project/${CONFIG.firebase.projectId}/firestore/data/~2Fvendors~2F${encodeURIComponent(id)}" target="_blank" rel="noopener">Open doc in Firestore console \u2192</a></div></div>`;
+}
+const cNames = x => x.display_name || x.names || x.displayName || x.coupleName || x.name
+  || [x.partner1Name || x.partner1, x.partner2Name || x.partner2].filter(Boolean).join(" & ")
+  || (x.email ? x.email.split("@")[0] : "") || "\u2014";
+async function joinUsers(entries) { // couples docs hold no identity \u2014 it lives on users/{uid}
+  await Promise.all(entries.map(async ([id, x]) => {
+    try {
+      const u = await getDoc(doc(db, "users", id));
+      if (u.exists()) {
+        const d = u.data();
+        x.display_name = d.display_name || x.display_name;
+        x.email = x.email || d.email;
+        x.phone = x.phone || d.phone_number;
+        x.photoUrl = x.photoUrl || d.photo_url;
+        x.lastSeenAt = x.lastSeenAt || d.lastSeenAt;
+      }
+    } catch (e) { /* user doc unreadable \u2014 fall back to couples fields */ }
+  }));
+  return entries;
+}
+const cLoc = x => x.metro || x.metroId || x.city || x.location || "\u2014";
+const fmtSeen = v => { const d = toDate(v); if (!d) return "\u2014";
+  const m = (Date.now() - d.getTime()) / 60000;
+  if (m < 60) return Math.round(m) + "m ago"; if (m < 1440) return Math.round(m/60) + "h ago";
+  return Math.round(m/1440) + "d ago"; };
+const cVenue = x => x.venue || x.venueName || x.weddingVenue || (x.venueDetails && x.venueDetails.name) || "\u2014";
+function coupleDetailHTML(id, x) {
+  const rows = [
+    ["Names", cNames(x)], ["Email", x.email || "\u2014"], ["Phone", x.phone || x.phoneNumber || "\u2014"],
+    ["Wedding date", x.weddingDate ? fmtD(x.weddingDate) : "\u2014"],
+    ["Celebrated bookings", x.celebratedBookings ?? 0],
+    ["Joined", x.createdAt ? fmtD(x.createdAt) : "\u2014"],
+    ["Last active", x.lastSeenAt ? fmtSeen(x.lastSeenAt) : "\u2014 (activity sync not yet run)"],
+  ];
+  const curated = rows.map(r => `<div style="display:flex;gap:10px"><span style="flex:0 0 110px;color:var(--ivory-faint)">${r[0]}</span><span style="color:var(--ivory-dim)">${esc(String(r[1]))}</span></div>`).join("");
+  const shown = new Set(["names","displayName","coupleName","name","partner1Name","partner1","partner2Name","partner2","email","phone","phoneNumber","metro","metroId","city","location","venue","venueName","weddingVenue","guestCount","guests","budget"]);
+  const rest = Object.entries(x)
+    .filter(([k, v]) => !shown.has(k) && (typeof v === "string" || typeof v === "number" || typeof v === "boolean"))
+    .slice(0, 24)
+    .map(([k, v]) => `<span style="margin-right:14px"><b style="color:var(--ivory-faint)">${esc(k)}</b>: ${esc(String(v)).slice(0, 80)}</span>`).join("");
+  return `<div style="padding:8px 4px 4px;display:flex;flex-direction:column;gap:5px;font-size:13px">${curated}
+    ${rest ? `<div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:2;color:var(--ivory-dim)">${rest}</div>` : ""}
+    <div style="margin-top:6px"><a href="https://console.firebase.google.com/project/${CONFIG.firebase.projectId}/firestore/data/~2Fcouples~2F${encodeURIComponent(id)}" target="_blank" rel="noopener">Open doc in Firestore console \u2192</a></div>
+    <div id="cx-${id}" style="margin-top:8px;color:var(--ivory-faint)">Loading activity\u2026</div></div>`;
+}
+async function loadCoupleActivity(id) {
+  const host = document.getElementById("cx-" + id);
+  if (!host) return;
+  try {
+    const [inq, sites, bks, revs] = await Promise.all([
+      getDocs(query(collection(db, C.inquiries), where("coupleUid", "==", id), limit(15))).catch(() => null),
+      getDocs(query(collection(db, C.weddingSites), where("coupleUid", "==", id), limit(3))).catch(() => null),
+      getDocs(query(collection(db, C.bookings), where("coupleUid", "==", id), limit(10))).catch(() => null),
+      getDocs(query(collection(db, "reviews"), where("coupleUid", "==", id), limit(10))).catch(() => null),
+    ]);
+    let h = "";
+    if (inq && inq.size) {
+      const rows = [];
+      inq.forEach(d => rows.push(d.data()));
+      rows.sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
+      h += `<div style="margin-top:4px"><b style="color:var(--gold);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase">Reached out to</b></div>`;
+      rows.forEach(q2 => {
+        const st = q2.status || "new", cls = st === "booked" ? "gold" : st === "responded" ? "ok" : "warn";
+        h += `<div style="display:flex;gap:10px;align-items:baseline;padding:3px 0">
+          <span style="flex:0 0 62px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ivory-faint)">${rt(q2.createdAt)}</span>
+          <span style="color:var(--ivory-dim)">${esc(q2.vendorName || q2.vendorId || "vendor")} <span class="pill ${cls}">${esc(st)}</span></span></div>`;
+      });
+    } else h += `<div>No inquiries yet</div>`;
+    if (sites && sites.size) sites.forEach(d =>
+      h += `<div style="margin-top:6px">Wedding site: <a href="https://meetlazo.com/w/${encodeURIComponent(d.id)}" target="_blank" rel="noopener">/w/${esc(d.id)}</a></div>`);
+    if (bks && bks.size) h += `<div style="margin-top:6px">Bookings: <b style="color:var(--ivory-dim)">${bks.size}</b></div>`;
+    if (revs && revs.size) h += `<div style="margin-top:2px">Reviews written: <b style="color:var(--ivory-dim)">${revs.size}</b></div>`;
+    host.innerHTML = h;
+  } catch (e) { host.textContent = "Activity load failed: " + (e.message || e); }
+}
+// A row that opens a drawer is a control: it takes focus, answers Enter/Space,
+// and reports its own open state. `expandable` carries the press feedback.
+function makeExpandable(tr, det, onFirstOpen) {
+  tr.classList.add("expandable");
+  det.classList.add("detail");
+  tr.tabIndex = 0;                      // focusable, but still a row to a screen reader
+  tr.setAttribute("aria-expanded", "false");
+  let loaded = false;
+  const toggle = () => {
+    const open = det.style.display === "none";
+    det.style.display = open ? "" : "none";
+    tr.setAttribute("aria-expanded", String(open));
+    if (open && !loaded) { loaded = true; onFirstOpen && onFirstOpen(); }
+  };
+  tr.onclick = toggle;
+  tr.onkeydown = e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+  };
+}
+function attachCoupleExpand(tr, id, x, colspan) {
+  const det = document.createElement("tr");
+  det.style.display = "none";
+  det.innerHTML = `<td colspan="${colspan}">${coupleDetailHTML(id, x)}</td>`;
+  makeExpandable(tr, det, () => loadCoupleActivity(id));
+  tr.after(det);
+}
+function attachVendorExpand(tr, id, x, colspan) {
+  const det = document.createElement("tr");
+  det.style.display = "none";
+  const render = () => {
+    det.innerHTML = `<td colspan="${colspan}">${vendorDetailHTML(id, x)}
+      <div style="display:flex;gap:8px;padding:0 4px 12px;flex-wrap:wrap">
+        ${x.delisted
+          ? '<button class="btn approve" data-va="relist">Relist on site</button>'
+          : '<button class="btn reject" data-va="delist">Delist from site</button>'}
+      </div></td>`;
+    det.querySelectorAll("button[data-va]").forEach(btn => btn.onclick = async e => {
+      e.stopPropagation();
+      if (btn.dataset.va === "delist") {
+        const reason = prompt("Reason for delisting (stored on the doc):", "Not a wedding business");
+        if (reason === null) return;
+        const ok = await safe(`delist vendor: ${id}`, () => updateDoc(doc(db, C.vendors, id),
+          { delisted: true, delistedAt: serverTimestamp(), delistedBy: stamp(), delistReason: reason }));
+        if (ok !== null) { x.delisted = true; x.delistReason = reason; render(); }
+      } else {
+        const ok = await safe(`relist vendor: ${id}`, () => updateDoc(doc(db, C.vendors, id),
+          { delisted: false, relistedAt: serverTimestamp(), relistedBy: stamp() }));
+        if (ok !== null) { x.delisted = false; render(); }
+      }
+    });
+  };
+  render();
+  makeExpandable(tr, det);
+  tr.after(det);
+}
+function delta(el, now, prev) {
+  if (prev === 0 && now === 0) { el.textContent = "quiet week"; return; }
+  const up = now >= prev, pct = prev === 0 ? 100 : Math.round(((now - prev) / prev) * 100);
+  el.innerHTML = `<span style="color:${up ? "var(--ok)" : "var(--bad)"}">${up ? "▲" : "▼"} ${Math.abs(pct)}%</span> vs prior 7d (${now} / ${prev})`;
+}
+
+/* ---------- auth ---------- */
+$("gForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const go = $("gGo");
+  if (go.disabled) return;
+  $("gateErr").textContent = "";
+  go.disabled = true; go.textContent = "Signing in…";
+  try { await signInWithEmailAndPassword(auth, $("gEmail").value.trim(), $("gPass").value); }
+  catch (err) { $("gateErr").textContent = err.code || err.message; }
+  finally { go.disabled = false; go.textContent = "Enter"; }
+});
+$("gForgot").onclick = async e => {
+  e.preventDefault();
+  const em = $("gEmail").value.trim();
+  if (!em) { $("gateErr").textContent = "Enter your email first, then click forgot."; return; }
+  try { await sendPasswordResetEmail(auth, em); $("gateErr").textContent = "Reset email sent — check the inbox."; }
+  catch (err) { $("gateErr").textContent = err.code || err.message; }
+};
+$("signout").onclick = () => signOut(auth).then(() => location.reload());
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return;
+  const tok = await user.getIdTokenResult();
+  myRole = tok.claims.admin === true ? "owner" : null;
+  if (!myRole) {
+    try {
+      const d = await getDoc(doc(db, "admins", user.uid));
+      if (d.exists()) myRole = d.data().role || "admin";
+    } catch (e) { /* not an admin */ }
+  }
+  if (!myRole) {
+    $("gateErr").textContent = "Signed in, but this account has no admin access.";
+    await signOut(auth); return;
+  }
+  try {
+    const me = await getDoc(doc(db, "admins", user.uid));
+    myName = (me.exists() && me.data().name) || user.displayName || "";
+  } catch (e) { myName = user.displayName || ""; }
+  $("gate").style.display = "none";
+  $("app").classList.add("on");
+  $("whoami").textContent = (myName ? myName + " · " : "") + user.email + " · " + myRole;
+  if (myRole !== "owner") $("teamCreate").style.display = "none";
+  loadAll();
+});
+
+/* ---------- nav ---------- */
+const navEl = document.querySelector("nav");
+const closeNav = () => { navEl.classList.remove("open"); $("backdrop").classList.remove("show"); };
+$("burger").onclick = () => { navEl.classList.toggle("open"); $("backdrop").classList.toggle("show", navEl.classList.contains("open")); };
+$("backdrop").onclick = closeNav;
+// the item's own text nodes — immune to the badge count and the icon
+const navLabel = b => [...b.childNodes].filter(n => n.nodeType === 3)
+  .map(n => n.textContent).join(" ").replace(/\s+/g, " ").trim() || b.dataset.v;
+document.querySelectorAll("nav .item").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav .item").forEach(x => { x.classList.remove("on"); x.removeAttribute("aria-current"); });
+  document.querySelectorAll(".view").forEach(x => x.classList.remove("on"));
+  b.classList.add("on");
+  b.setAttribute("aria-current", "page");
+  $("v-" + b.dataset.v).classList.add("on");
+  $("pageTitle").textContent = navLabel(b);
+  document.title = "Lazo · " + navLabel(b);
+  if (b.dataset.v === "visitors") openVisitors();   // d3 + the live listeners, on demand
+  closeNav();
+  window.scrollTo({ top: 0, behavior: "instant" });
+  requestAnimationFrame(redrawCharts);
+});
+$("refresh").onclick = () => loadAll();
+$("autoRef").onchange = e => {
+  clearInterval(autoTimer);
+  if (e.target.checked) autoTimer = setInterval(loadAll, 5 * 60 * 1000);
+};
+$("cFilter").addEventListener("input", () => drawCouples());
+const goSearch = () => { const t = $("vSearch").value.trim(); if (t) searchVendors(t); };
+$("vSearchGo").onclick = goSearch;
+$("vSearch").addEventListener("keydown", e => { if (e.key === "Enter") goSearch(); });
+
+/* ---------- tiny chart helpers (no deps) ---------- */
+const chartData = {};
+function bars(canvasId, labels, values, goldTop = true) {
+  chartData[canvasId] = { labels, values: values.map(v => Number(v) || 0), goldTop };
+  drawBars(canvasId);
+}
+// Drawn in CSS pixels at the display's real pixel ratio, so the type and the
+// 1px baseline stay crisp on every screen instead of assuming 2x.
+function drawBars(canvasId) {
+  const d = chartData[canvasId]; if (!d) return;
+  const cv = $(canvasId), ctx = cv.getContext("2d");
+  const W = cv.offsetWidth, H = cv.offsetHeight;
+  if (!W || !H) return;                       // not laid out; redrawn on view show
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  const { labels, values, goldTop } = d;
+  const AXIS = H - 22, TOP = 20;              // room for the value above each bar
+  const max = Math.max(1, ...values);
+  const pad = 8, bw = (W - pad * 2) / Math.max(1, values.length);
+  const mono = n => `${n}px 'JetBrains Mono', ui-monospace, monospace`;
+
+  // baseline instead of a grid — one quiet reference line is enough
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--chart-base").trim();
+  ctx.fillRect(pad, AXIS + .5, W - pad * 2, 1);
+
+  const themeVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();  // GODMODE-0921-002
+  const tint = goldTop ? [themeVar("--chart-a1"), themeVar("--chart-a2")] : [themeVar("--chart-b1"), themeVar("--chart-b2")];
+  const barW = Math.max(3, Math.min(bw * .62, 46));
+  const showValues = bw >= 22;
+
+  values.forEach((v, i) => {
+    const h = Math.max(v > 0 ? 2 : 0, (AXIS - TOP) * (v / max));
+    const cx = pad + i * bw + bw / 2, x = cx - barW / 2, y = AXIS - h;
+    if (![x, y, h].every(Number.isFinite)) return;
+    if (h > 0) {
+      const g = ctx.createLinearGradient(0, y, 0, AXIS);
+      g.addColorStop(0, tint[0]); g.addColorStop(1, tint[1]);
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.roundRect(x, y, barW, h, [Math.min(5, barW / 2), Math.min(5, barW / 2), 0, 0]);
+      ctx.fill();
+    }
+    if (labels[i] === undefined) return;
+    ctx.textAlign = "center";
+    ctx.fillStyle = themeVar("--chart-axis"); ctx.font = mono(10);
+    ctx.fillText(String(labels[i]), cx, H - 5);
+    if (v > 0 && showValues) {
+      ctx.fillStyle = themeVar("--chart-val"); ctx.font = mono(11);
+      ctx.fillText(v.toLocaleString("en-US"), cx, y - 7);
+    }
+  });
+}
+function redrawCharts() { Object.keys(chartData).forEach(drawBars); }
+window.addEventListener("resize", redrawCharts);
+
+/* ============================================================
+   LOADERS
+   ============================================================ */
+let claimsUnsub = null, autoTimer = null;
+
+async function loadAll() {
+  $("asof").textContent = new Date().toLocaleTimeString();
+  loadOverview(); loadClaims(); loadListings(); loadVendors(); loadCouples();
+  loadInquiries(); loadSales(); loadMetros(); loadReports(); loadTimeOnSite(); loadWire(); loadTeam(); loadTickets();
+}
+
+async function loadOverview() {
+  safe("count couples", async () => {
+    setNum($("kCouples"), await cnt(collection(db, C.couples)));
+    const [w1, w2] = await Promise.all([
+      cnt(query(collection(db, C.couples), where(F.coupleCreated, ">=", daysAgo(7)))),
+      cnt(query(collection(db, C.couples), where(F.coupleCreated, ">=", daysAgo(14)), where(F.coupleCreated, "<", daysAgo(7)))),
+    ]);
+    delta($("kCouplesSub"), w1, w2);
+  });
+  safe("count vendors", async () => { setNum($("kVendors"), await cnt(collection(db, C.vendors))); computeClaimRate(); });
+  safe("count claimed vendors", async () => {
+    const claimed = await cnt(query(collection(db, C.vendors), where(F.vendorClaimStatus, "==", "claimed")));
+    setNum($("kClaimed"), claimed);
+    window.__claimed = claimed; computeClaimRate();
+    const [w1, w2] = await Promise.all([
+      cnt(query(collection(db, C.vendors), where(F.vendorClaimStatus, "==", "claimed"), where("claimedAt", ">=", daysAgo(7)))),
+      cnt(query(collection(db, C.vendors), where(F.vendorClaimStatus, "==", "claimed"), where("claimedAt", ">=", daysAgo(14)), where("claimedAt", "<", daysAgo(7)))),
+    ]);
+    delta($("kClaimedSub"), w1, w2);
+  });
+  safe("count inquiries 7d", async () => {
+    const [w1, w2, all] = await Promise.all([
+      cnt(query(collection(db, C.inquiries), where(F.inquiryCreated, ">=", daysAgo(7)))),
+      cnt(query(collection(db, C.inquiries), where(F.inquiryCreated, ">=", daysAgo(14)), where(F.inquiryCreated, "<", daysAgo(7)))),
+      cnt(collection(db, C.inquiries)),
+    ]);
+    setNum($("kInq7"), w1);
+    delta($("kInqAll"), w1, w2);
+    $("kInqAll").innerHTML += ` · ${fmtN(all)} all time`;
+  });
+  safe("count bookings", async () => setNum($("kBookings"), await cnt(collection(db, C.bookings))));
+  safe("count wedding websites", async () => {
+    setNum($("kSites"), await cnt(collection(db, C.weddingSites)));
+  });
+  safe("count reviews (collectionGroup)", async () => {
+    setNum($("kReviews"), await cnt(collectionGroup(db, "reviews")));
+    $("kReviewsSub").textContent = "across all vendors";
+  });
+  safe("couples signups 30d chart", async () => {
+    const snap = await getDocs(query(collection(db, C.couples),
+      where(F.coupleCreated, ">=", daysAgo(30)), orderBy(F.coupleCreated, "asc"), limit(1000)));
+    const buckets = new Array(30).fill(0);
+    snap.forEach(d => {
+      const dt = toDate(d.get(F.coupleCreated)); if (!dt) return;
+      const i = 29 - Math.floor((Date.now() - dt.getTime()) / 864e5);
+      if (i >= 0 && i < 30) buckets[i]++;
+    });
+    const labels = buckets.map((_, i) => i % 5 === 0 ? new Date(Date.now() - (29 - i) * 864e5).getDate() : "");
+    bars("chSignups", labels, buckets);
+    const wk = buckets.slice(-7).reduce((a, b) => a + b, 0);
+    $("kCouplesSub").textContent = "+" + wk + " this week";
+  });
+  safe("inquiry funnel chart", async () => {
+    const statuses = ["new", "responded", "booked"];
+    const vals = [];
+    for (const s of statuses) vals.push(await cnt(query(collection(db, C.inquiries), where(F.inquiryStatus, "==", s))));
+    bars("chFunnel", statuses.map(s => s.toUpperCase()), vals, false);
+  });
+}
+
+function loadClaims() {
+  if (claimsUnsub) claimsUnsub();
+  const qPend = query(collection(db, C.claims), where(F.claimStatus, "in", ["pending", "needs_review"]),
+    orderBy(F.claimCreated, "desc"), limit(50));
+  claimsUnsub = onSnapshot(qPend, snap => {
+    diag("claims live listener", true);
+    $("kPending").textContent = snap.size;
+    const badge = $("claimBadge"); badge.textContent = snap.size;
+    badge.classList.toggle("show", snap.size > 0);
+    const tb = $("claimsBody");
+    if (!snap.size) { tb.innerHTML = `<tr><td colspan="5" class="empty">Queue is clear. God rests.</td></tr>`; return; }
+    tb.innerHTML = "";
+    snap.forEach(d => {
+      const x = d.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="strong">${esc(x.businessName || x.vendorName || d.id)}
+          ${x.claimantRole ? `<div style="margin-top:3px"><span class="pill gold">${esc(x.claimantRole)}</span></div>` : ""}
+          ${x.aiDecision ? `<div style="margin-top:3px"><span class="pill ${x.status === "needs_review" ? "warn" : "ok"}" title="${esc(x.aiNotes || "")}">AI: ${esc(x.aiDecision)}</span></div>` : ""}</td>
+        <td>${esc(x.email || x.contactEmail || "—")}
+          ${x.businessEmail && x.businessEmail !== x.email ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.businessEmail)}</div>` : ""}
+          ${x.businessPhone ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.businessPhone)}</div>` : ""}</td>
+        <td class="mono">${esc(x.vendorId || "—")}
+          ${x.proofPath ? `<div style="margin-top:3px"><span class="pill ok" title="${esc(x.proofPath)}">proof ✓</span></div>` : ""}</td>
+        <td class="mono">${fmtD(x[F.claimCreated])}</td>
+        <td style="white-space:nowrap">
+          <button class="btn approve">Approve</button>
+          <button class="btn reject">Reject</button></td>`;
+      tr.querySelector(".approve").onclick = () => decide(d.id, "approved", tr);
+      tr.querySelector(".reject").onclick = () => decide(d.id, "rejected", tr);
+      tb.appendChild(tr);
+    });
+  }, e => diag("claims live listener", false, e.message));
+
+  safe("recent decided claims", async () => {
+    const snap = await getDocs(query(collection(db, C.claims), where(F.claimStatus, "in", ["approved", "rejected"]),
+      orderBy(F.claimCreated, "desc"), limit(15)));
+    const tb = $("claimsDoneBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="3" class="empty">None yet</td></tr>`;
+    snap.forEach(d => {
+      const x = d.data();
+      tb.insertAdjacentHTML("beforeend", `<tr>
+        <td class="strong">${esc(x.businessName || x.vendorName || d.id)}</td>
+        <td><span class="pill ${x.status === "approved" ? "ok" : "bad"}">${esc(x.status)}</span></td>
+        <td class="mono">${fmtD(x.reviewedAt || x[F.claimCreated])}</td></tr>`);
+    });
+  });
+}
+
+async function decide(id, status, tr) {
+  tr.style.opacity = .4;
+  const ok = await safe(`claim ${status}: ${id}`, () =>
+    updateDoc(doc(db, C.claims, id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() }));
+  if (ok === null) tr.style.opacity = 1;
+}
+
+async function loadListings() {
+  safe("pending listing requests", async () => {
+    const snap = await getDocs(query(collection(db, "listingRequests"), where("status", "in", ["pending", "needs_review"]),
+      orderBy("createdAt", "desc"), limit(50)));
+    const tb = $("listingBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="5" class="empty">No listing requests awaiting review</td></tr>`;
+    snap.forEach(d => {
+      const x = d.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="strong">${esc(x.businessName || d.id)}
+          ${x.categories?.length ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.categories.slice(0, 3).join(", "))}</div>` : ""}
+          ${x.aiDecision ? `<div style="margin-top:3px"><span class="pill ${x.status === "needs_review" ? "warn" : "ok"}" title="${esc(x.aiNotes || "")}">AI: ${esc(x.aiDecision)}</span></div>` : ""}</td>
+        <td>${esc(x.email || "—")}
+          ${x.phone ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.phone)}</div>` : ""}
+          ${x.website ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.website)}</div>` : ""}</td>
+        <td class="mono">${esc(x.metroId || "—")}</td>
+        <td class="mono">${fmtD(x.createdAt)}</td>
+        <td style="white-space:nowrap">
+          <button class="btn approve">Approve</button>
+          <button class="btn reject">Reject</button></td>`;
+      tr.querySelector(".approve").onclick = () => decideListing(d.id, "approved", tr);
+      tr.querySelector(".reject").onclick = () => decideListing(d.id, "rejected", tr);
+      tb.appendChild(tr);
+    });
+  });
+}
+async function decideListing(id, status, tr) {
+  tr.style.opacity = .4;
+  const ok = await safe(`listing ${status}: ${id}`, () =>
+    updateDoc(doc(db, "listingRequests", id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() }));
+  if (ok === null) tr.style.opacity = 1;
+}
+
+async function loadWire() {
+  safe("the wire", async () => {
+    const pulls = await Promise.allSettled([
+      getDocs(query(collection(db, C.couples), orderBy(F.coupleCreated, "desc"), limit(6))),
+      getDocs(query(collection(db, C.inquiries), orderBy(F.inquiryCreated, "desc"), limit(6))),
+      getDocs(query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(6))),
+      getDocs(query(collection(db, C.claims), orderBy(F.claimCreated, "desc"), limit(6))),
+      getDocs(query(collection(db, C.weddingSites), limit(6))),
+    ]);
+    const ev = [];
+    const push = (t, ts, html) => { const d = toDate(ts); if (d) ev.push({ t: d.getTime(), ts, html }); };
+    if (pulls[0].status === "fulfilled") {
+      const ces = [];
+      pulls[0].value.forEach(d => ces.push([d.id, d.data()]));
+      await joinUsers(ces);
+      ces.forEach(([, x]) =>
+        push("couple", x[F.coupleCreated], `<span class="pill gold">couple</span> ${esc(cNames(x))} joined`));
+    }
+    if (pulls[1].status === "fulfilled") pulls[1].value.forEach(d => { const x = d.data();
+      push("inquiry", x[F.inquiryCreated], `<span class="pill warn">inquiry</span> ${esc(x.coupleName || "A couple")} → ${esc(x.vendorName || x.vendorId || "vendor")}${x.status && x.status !== "new" ? ` <span class="pill ${x.status === "booked" ? "gold" : "ok"}">${esc(x.status)}</span>` : ""}`); });
+    if (pulls[2].status === "fulfilled") pulls[2].value.forEach(d => { const x = d.data();
+      push("review", x.createdAt, `<span class="pill ok">review</span> ${"★".repeat(x.rating || 0)} ${esc(x.coupleName || "")} on ${esc(x.vendorId || "vendor")}`); });
+    if (pulls[3].status === "fulfilled") pulls[3].value.forEach(d => { const x = d.data();
+      push("claim", x[F.claimCreated], `<span class="pill bad">claim</span> ${esc(x.businessName || "Vendor")} · ${esc(x.status || "pending")}`); });
+    if (pulls[4].status === "fulfilled") pulls[4].value.forEach(d => { const x = d.data();
+      push("website", x.createdAt, `<span class="pill gold">website</span> /w/${esc(d.id)} created`); });
+    ev.sort((a, b) => b.t - a.t);
+    const w = $("wire");
+    w.innerHTML = ev.length ? "" : `<div class="empty">Nothing yet — the wire lights up as Lazo moves</div>`;
+    ev.slice(0, 14).forEach(e => {
+      w.insertAdjacentHTML("beforeend",
+        `<div style="display:flex;gap:12px;align-items:baseline;padding:9px 0;border-top:1px solid rgba(255,255,255,.06)">
+           <span style="flex:0 0 62px;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ivory-faint)">${rt(e.ts)}</span>
+           <span style="font-size:14px;color:var(--ivory-dim)">${e.html}</span></div>`);
+    });
+  });
+}
+
+let ticketsUnsub = null, tkFilter = "open", tkCache = [];
+function loadTickets() {
+  if (ticketsUnsub) ticketsUnsub();
+  ticketsUnsub = onSnapshot(query(collection(db, "supportTickets"), where("status", "==", "open")), snap => {
+    diag("tickets live badge", true);
+    const b = $("ticketBadge"); b.textContent = snap.size;
+    b.classList.toggle("show", snap.size > 0);
+  }, e => diag("tickets live badge", false, e.message));
+  renderTickets();
+}
+async function renderTickets() {
+  safe("tickets list", async () => {
+    const snap = await getDocs(query(collection(db, "supportTickets"), orderBy("createdAt", "desc"), limit(100)));
+    tkCache = [];
+    snap.forEach(d => tkCache.push({ id: d.id, ...d.data() }));
+    drawTickets();
+  });
+}
+function drawTickets() {
+  const rows = tkCache.filter(t => tkFilter === "all" || (t.status || "open") === tkFilter);
+  const tb = $("ticketsBody");
+  tb.innerHTML = rows.length ? "" : `<tr><td colspan="5" class="empty">No ${tkFilter === "all" ? "" : tkFilter.replace("_", " ") + " "}tickets</td></tr>`;
+  rows.forEach(t => {
+    const tr = document.createElement("tr");
+    const stCls = t.status === "resolved" ? "ok" : t.status === "in_progress" ? "warn" : "bad";
+    tr.innerHTML = `<td class="mono">${rt(t.createdAt)}</td>
+      <td class="strong">${esc(t.email || t.uid)}<div style="margin-top:2px"><span class="pill ${t.role === "vendor" ? "gold" : "ok"}">${esc(t.role || "?")}</span></div></td>
+      <td>${esc(t.category || "—")}</td>
+      <td>${esc(t.subject || "—")}</td>
+      <td><span class="pill ${stCls}">${esc((t.status || "open").replace("_", " "))}</span></td>`;
+    const detail = document.createElement("tr");
+    detail.style.display = "none";
+    detail.innerHTML = `<td colspan="5">
+      <div style="padding:6px 4px 10px;white-space:pre-wrap;color:var(--ivory)">${esc(t.message || "")}</div>
+      ${t.vendorName ? `<div class="k-sub">Vendor named: <b>${esc(t.vendorName)}</b></div>` : ""}
+      ${t.context?.vendorId ? `<div class="k-sub">vendorId: <span class="mono">${esc(t.context.vendorId)}</span></div>` : ""}
+      <div class="k-sub">uid: <span class="mono">${esc(t.uid || "")}</span> · from ${esc(t.context?.source || "?")} ${esc(t.context?.build || "")}</div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn" data-a="in_progress">Mark in progress</button>
+        <button class="btn approve" data-a="resolved">Resolve</button>
+        <button class="btn" data-a="open">Reopen</button>
+        <a class="btn" style="text-decoration:none" href="mailto:${encodeURIComponent(t.email || "")}?subject=${encodeURIComponent("Re: " + (t.subject || "your Lazo support ticket"))}">Reply by email</a>
+      </div></td>`;
+    makeExpandable(tr, detail);
+    detail.querySelectorAll("button[data-a]").forEach(btn => btn.onclick = async e => {
+      e.stopPropagation();
+      const status = btn.dataset.a;
+      const ok = await safe(`ticket ${status}: ${t.id}`, () =>
+        updateDoc(doc(db, "supportTickets", t.id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() }));
+      if (ok !== null) { t.status = status; drawTickets(); }
+    });
+    tb.appendChild(tr); tb.appendChild(detail);
+  });
+}
+document.querySelectorAll(".tkf").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tkf").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); tkFilter = b.dataset.f; drawTickets();
+});
+
+async function loadTeam() {
+  safe("team roster", async () => {
+    const snap = await getDocs(query(collection(db, "admins"), limit(50)));
+    const tb = $("teamBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="4" class="empty">No team members yet — just you and the claim</td></tr>`;
+    snap.forEach(d => {
+      const x = d.data();
+      const tr = document.createElement("tr");
+      const self = d.id === auth.currentUser.uid;
+      tr.innerHTML = `<td class="strong">${esc(x.name || "—")}${self ? ' <span class="pill ok">you</span>' : ""}<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.email || d.id)}</div></td>
+        <td><span class="pill ${x.role === "owner" ? "gold" : "warn"}">${esc(x.role || "admin")}</span></td>
+        <td class="mono">${fmtD(x.createdAt)}</td>
+        <td style="white-space:nowrap">${myRole === "owner" && !self ? '<button class="btn reject">Revoke</button>' : ""}</td>`;
+      const rv = tr.querySelector(".reject");
+      if (rv) rv.onclick = async () => {
+        if (!confirm(`Revoke dashboard access for ${x.email}?`)) return;
+        tr.style.opacity = .4;
+        const ok = await safe(`revoke ${x.email}`, () => httpsCallable(fns, "adminRevokeUser")({ uid: d.id }));
+        ok === null ? tr.style.opacity = 1 : loadTeam();
+      };
+      tb.appendChild(tr);
+    });
+  });
+}
+$("tGen").onclick = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+  const buf = new Uint32Array(14); crypto.getRandomValues(buf);
+  $("tPass").value = [...buf].map(n => chars[n % chars.length]).join("");
+};
+$("tCreate").onclick = async () => {
+  const email = $("tEmail").value.trim(), password = $("tPass").value, role = $("tRole").value, name = $("tName").value.trim();
+  $("tMsg").textContent = "Creating…";
+  try {
+    const r = await httpsCallable(fns, "adminCreateUser")({ email, password, role, name });
+    $("tMsg").innerHTML = r.data.existed
+      ? `<span style="color:var(--warn)">Existing Lazo account granted ${esc(role)} access — their current password still applies, the temp one was not used.</span>`
+      : `<span style="color:var(--ok)">Created ${esc(email)} as ${esc(role)}. Send them the temp password securely.</span>`;
+    $("tEmail").value = ""; $("tPass").value = ""; $("tName").value = "";
+    loadTeam();
+  } catch (e) {
+    $("tMsg").innerHTML = `<span style="color:var(--bad)">${esc(e.message || String(e))}</span>`;
+  }
+};
+
+async function searchVendors(term) {
+  safe(`vendor search: ${term}`, async () => {
+    term = term.trim();
+    const variants = [...new Set([term, term.toLowerCase(),
+      term.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()), term.toUpperCase()])];
+    const fields = ["businessName", "name"];
+    const jobs = [];
+    for (const f of fields) for (const v of variants)
+      jobs.push(getDocs(query(collection(db, C.vendors), orderBy(f), startAt(v), endAt(v + "\uf8ff"), limit(8))).catch(() => null));
+    const results = await Promise.all(jobs);
+    const seen = new Map();
+    results.forEach(snap => snap && snap.forEach(d => seen.set(d.id, d.data())));
+    const needle = term.toLowerCase();
+    const hits = [...seen.entries()]
+      .filter(([, x]) => (x.businessName || x.name || "").toLowerCase().includes(needle))
+      .sort((a, b) => (b[1][F.vendorReviewCount] || 0) - (a[1][F.vendorReviewCount] || 0))
+      .slice(0, 12);
+    const tb = $("vSearchBody");
+    tb.innerHTML = hits.length ? "" : `<tr><td colspan="6" class="empty">No vendors matching "${esc(term)}" by name prefix \u2014 mid-name matches need the full first word</td></tr>`;
+    hits.forEach(([id, x]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="strong">${esc(x.businessName || x.name || id)}</td>
+        <td>${esc(vCat(x))}</td>
+        <td>${esc(vMetro(x))}</td>
+        <td class="mono">${fmtN(x[F.vendorReviewCount] || 0)} reviews</td>
+        <td><span class="pill ${x[F.vendorClaimStatus] === "claimed" ? "gold" : "warn"}">${esc(x[F.vendorClaimStatus] || "unclaimed")}</span>
+            ${x.verified ? ' <span class="pill ok">verified</span>' : ""}${x.delisted ? ' <span class="pill bad">delisted</span>' : ""}</td>
+        <td class="mono" style="font-size:11.5px">${esc(id)}</td>`;
+      tb.appendChild(tr);
+      attachVendorExpand(tr, id, x, 6);
+    });
+  });
+}
+
+async function loadVendors() {
+  safe("top vendors by reviews", async () => {
+    const snap = await getDocs(query(collection(db, C.vendors),
+      orderBy(F.vendorReviewCount, "desc"), limit(10)));
+    const tb = $("topVendorsBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="6" class="empty">No vendors carry a ${F.vendorReviewCount} field yet — see setup notes</td></tr>`;
+    let i = 1;
+    snap.forEach(d => {
+      const x = d.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="mono">${i++}</td>
+        <td class="strong">${esc(x.businessName || x.name || d.id)}</td>
+        <td>${esc(vCat(x))}</td>
+        <td>${esc(vMetro(x))}</td>
+        <td class="mono">${fmtN(x[F.vendorReviewCount] || 0)}</td>
+        <td><span class="pill ${x[F.vendorClaimStatus] === "claimed" ? "gold" : "warn"}">${esc(x[F.vendorClaimStatus] || "unclaimed")}</span>${x.delisted ? ' <span class="pill bad">delisted</span>' : ""}</td>`;
+      tb.appendChild(tr);
+      attachVendorExpand(tr, d.id, x, 6);
+    });
+  });
+  safe("newest claimed vendors", async () => {
+    let snap = await getDocs(query(collection(db, C.vendors), where(F.vendorClaimStatus, "==", "claimed"),
+      orderBy("claimedAt", "desc"), limit(10)));
+    let noStamp = false;
+    if (!snap.size) { // docs without claimedAt vanish from orderBy — fall back unordered
+      snap = await getDocs(query(collection(db, C.vendors), where(F.vendorClaimStatus, "==", "claimed"), limit(10)));
+      noStamp = true;
+    }
+    const tb = $("newVendorsBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="3" class="empty">No claimed vendors</td></tr>`;
+    const rows = [];
+    snap.forEach(d => rows.push([d.id, d.data()]));
+    rows.sort((a, b) => (toDate(b[1].claimedAt || b[1].updatedAt || b[1].createdAt)?.getTime() || 0)
+                      - (toDate(a[1].claimedAt || a[1].updatedAt || a[1].createdAt)?.getTime() || 0));
+    rows.forEach(([id, x]) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="strong">${esc(x.businessName || x.name || id)}</td>
+        <td>${esc(vCat(x))}</td><td class="mono">${x.claimedAt ? fmtD(x.claimedAt) : "no stamp"}</td>`;
+      tb.appendChild(tr);
+      attachVendorExpand(tr, id, x, 3);
+    });
+    if (noStamp) diag("claimedAt stamps", true, "claimed docs lack claimedAt — showing unordered; stamp claimedAt in the claim-approval function to fix ordering");
+  });
+  safe("delisted vendor count", async () =>
+    setNum($("vDelisted"), await cnt(query(collection(db, C.vendors), where("delisted", "==", true)))));
+  safe("verified vendor count", async () =>
+    $("vVerified").textContent = fmtN(await cnt(query(collection(db, C.vendors), where("verified", "==", true)))));
+  safe("pro subscriber count", async () =>
+    $("vPro").textContent = fmtN(await cnt(collection(db, C.proSubscriptions))));
+  safe("pro studio count", async () =>
+    $("vStudio").textContent = fmtN(await cnt(query(collection(db, C.proSubscriptions), where("tier", "==", "studio")))));
+}
+function computeClaimRate() {
+  const total = parseInt(($("kVendors").textContent || "").replace(/,/g, ""));
+  if (!isNaN(total) && total > 0 && window.__claimed != null)
+    $("vClaimRate").innerHTML = ((window.__claimed / total) * 100).toFixed(2) + '<span class="unit">%</span>';
+}
+
+async function loadCouples() {
+  safe("newest couples", async () => {
+    const snap = await getDocs(query(collection(db, C.couples), orderBy(F.coupleCreated, "desc"), limit(40)));
+    const entries = [];
+    snap.forEach(d => entries.push([d.id, d.data()]));
+    window.__couples = await joinUsers(entries);
+    drawCouples();
+  });
+  safe("weddings next 90 days", async () => {
+    const now = Timestamp.now(), end = Timestamp.fromDate(new Date(Date.now() + 90 * 864e5));
+    const snap = await getDocs(query(collection(db, C.couples),
+      where(F.weddingDate, ">=", now), where(F.weddingDate, "<=", end),
+      orderBy(F.weddingDate, "asc"), limit(15)));
+    const tb = $("upcomingBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="3" class="empty">No weddings in window</td></tr>`;
+    const ups = [];
+    snap.forEach(d => ups.push([d.id, d.data()]));
+    await joinUsers(ups);
+    ups.forEach(([id, x]) => {
+      const dt = toDate(x[F.weddingDate]);
+      const days = dt ? Math.ceil((dt - Date.now()) / 864e5) : "\u2014";
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="strong">${esc(cNames(x))}</td>
+        <td class="mono">${fmtD(x[F.weddingDate])}</td>
+        <td class="mono">${days}</td>`;
+      tb.appendChild(tr);
+      attachCoupleExpand(tr, id, x, 3);
+    });
+  });
+}
+function drawCouples() {
+  const needle = ($("cFilter").value || "").trim().toLowerCase();
+  const rows = (window.__couples || []).filter(([id, x]) => !needle ||
+    [cNames(x), x.email, cLoc(x), cVenue(x), id].join(" ").toLowerCase().includes(needle));
+  const tb = $("newCouplesBody");
+  tb.innerHTML = rows.length ? "" : `<tr><td colspan="6" class="empty">No couples match "${esc(needle)}" in the loaded set</td></tr>`;
+  rows.forEach(([id, x]) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td class="strong"><span style="display:flex;align-items:center;gap:9px">${x.photoUrl ? `<img src="${esc(x.photoUrl)}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid var(--edge-gold)" onerror="this.style.display='none'">` : ""}${esc(cNames(x))}</span></td>
+      <td style="font-size:12.5px">${esc(x.email || "\u2014")}</td>
+      <td class="mono">${fmtD(x[F.weddingDate])}</td>
+      <td class="mono">${fmtN(x.celebratedBookings ?? 0)}</td>
+      <td class="mono">${fmtD(x[F.coupleCreated])}</td>
+      <td class="mono">${fmtSeen(x.lastSeenAt)}</td>`;
+    tb.appendChild(tr);
+    attachCoupleExpand(tr, id, x, 6);
+  });
+}
+async function loadInquiries() {
+  safe("recent inquiries", async () => {
+    const snap = await getDocs(query(collection(db, C.inquiries), orderBy(F.inquiryCreated, "desc"), limit(20)));
+    const tb = $("inqBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="4" class="empty">None yet</td></tr>`;
+    snap.forEach(d => {
+      const x = d.data();
+      const st = x[F.inquiryStatus] || "new";
+      const cls = st === "booked" ? "gold" : st === "responded" ? "ok" : "warn";
+      tb.insertAdjacentHTML("beforeend", `<tr>
+        <td class="strong">${esc(x.vendorName || x.vendorId || "—")}</td>
+        <td>${esc(x.coupleName || (x.coupleUid || "").slice(0, 8) || "—")}</td>
+        <td><span class="pill ${cls}">${esc(st)}</span></td>
+        <td class="mono">${fmtD(x[F.inquiryCreated])}</td></tr>`);
+    });
+  });
+}
+
+async function loadSales() {
+  safe("billing ledger", async () => {
+    const snap = await getDocs(query(collection(db, B.collection), orderBy(B.createdField, "desc"), limit(200)));
+    const tb = $("salesBody");
+    if (!snap.size) {
+      tb.innerHTML = `<tr><td colspan="5" class="empty">No docs in "${B.collection}" — point CONFIG.billing at the proCharge ledger collection</td></tr>`;
+      $("sMTD").textContent = $("kRev").textContent = "$0"; return;
+    }
+    const m0 = new Date(); m0.setDate(1); m0.setHours(0, 0, 0, 0);
+    let mtd = 0, all = 0, mtdN = 0;
+    const months = {}; // 'YYYY-MM' → cents
+    tb.innerHTML = "";
+    snap.forEach(d => {
+      const x = d.data(), amt = x[B.amountField] || 0, dt = toDate(x[B.createdField]);
+      all += amt;
+      if (dt) months[dt.toISOString().slice(0, 7)] = (months[dt.toISOString().slice(0, 7)] || 0) + amt;
+      if (dt && dt >= m0) { mtd += amt; mtdN++; }
+      tb.insertAdjacentHTML("beforeend", `<tr>
+        <td class="mono">${fmtD(x[B.createdField])}</td>
+        <td class="strong">${esc(x[B.vendorField] || "—")}</td>
+        <td>${esc(x[B.descField] || "—")}</td>
+        <td class="mono">${fmt$(amt)}</td>
+        <td><span class="pill ${(x[B.statusField] || "").match(/succ|paid/i) ? "ok" : "warn"}">${esc(x[B.statusField] || "—")}</span></td></tr>`);
+    });
+    $("sMTD").textContent = $("kRev").textContent = fmt$(mtd);
+    $("kRevSub").textContent = mtdN + " charges";
+    $("sAll").textContent = fmt$(all);
+    $("sCount").textContent = fmtN(mtdN);
+    $("sAvg").textContent = mtdN ? fmt$(Math.round(mtd / mtdN)) : "—";
+    const keys = [];
+    for (let i = 5; i >= 0; i--) { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i); keys.push(d.toISOString().slice(0, 7)); }
+    bars("chRevenue", keys.map(k => k.slice(5)), keys.map(k => Math.round((months[k] || 0) / B.divisor)));
+  });
+}
+
+async function loadMetros() {
+  safe("metros table", async () => {
+    const snap = await getDocs(query(collection(db, C.metros), limit(100)));
+    const tb = $("metrosBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="5" class="empty">No metro docs</td></tr>`;
+    snap.forEach(d => {
+      const x = d.data();
+      tb.insertAdjacentHTML("beforeend", `<tr>
+        <td class="strong">${esc(x.name || d.id)}</td>
+        <td class="mono">${fmtN(x.vendorCount ?? x.vendors ?? "—")}</td>
+        <td class="mono">${fmtN(x.coupleCount ?? x.couples ?? "—")}</td>
+        <td class="mono">${fmtN(x.inquiryCount ?? "—")}</td>
+        <td><span class="pill ${x.monetizationUnlocked ? "gold" : "warn"}">${x.monetizationUnlocked ? "unlocked" : "building"}</span></td></tr>`);
+    });
+  });
+}
+
+async function loadReports() {
+  safe("analytics periods", async () => {
+    const snap = await getDocs(query(collection(db, C.analytics), limit(48)));
+    const tb = $("reportsBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="3" class="empty">No rollups yet — analyticsRollup runs the 1st of each month</td></tr>`;
+    const rows = [];
+    snap.forEach(d => rows.push({ id: d.id, x: d.data() }));
+    rows.sort((a, b) => b.id.localeCompare(a.id));
+    rows.forEach(({ id, x }) => {
+      tb.insertAdjacentHTML("beforeend", `<tr>
+        <td class="strong mono">${esc(id)}</td>
+        <td class="mono">${fmtD(x.computedAt || x.createdAt)}</td>
+        <td><a href="https://console.firebase.google.com/project/${CONFIG.firebase.projectId}/storage" target="_blank" rel="noopener">HTML in Storage →</a></td></tr>`);
+    });
+  });
+}
+
+async function loadTimeOnSite() {
+  // JC-LAZO-TRACK-0916-001: this used to wait on a Cloudflare Web Analytics
+  // proxy that was never built. It now reads the same first-party sessions the
+  // Visitors section does, so the card is live whether or not you open it.
+  safe("avg time on site", async () => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const snap = await getDocs(query(collection(db, "sessions"),
+      where("last_seen", ">=", Timestamp.fromDate(start)), orderBy("last_seen", "desc"), limit(1000)));
+    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => !vIsBot(d));
+    const durs = rows.map(vDurOf).filter(x => x != null);
+    if (!durs.length) {
+      $("kTime").textContent = "—";
+      $("kTimeSub").textContent = rows.length ? "no timed visits yet" : "no visits yet today";
+      return;
+    }
+    const avg = durs.reduce((a, b) => a + b, 0) / durs.length;
+    const m = Math.floor(avg / 60000), sec = Math.round((avg % 60000) / 1000);
+    $("kTime").innerHTML = m
+      ? `${m}<span class="unit">m</span> ${sec}<span class="unit">s</span>`
+      : `${sec}<span class="unit">s</span>`;
+    $("kTimeSub").textContent = `${rows.length} visit${rows.length === 1 ? "" : "s"} today · first-party`;
+  });
+}
+
+/* ---- System Health · Overview card + Health tab + nav badge ---- */
+(function(){
+  const HC_URL = "https://lazo-healthcheck.floral-credit-e4f0.workers.dev";
+  const $id = x => document.getElementById(x);
+  const escH = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const rel = iso => { if (!iso) return "never"; const m = (Date.now() - new Date(iso)) / 60000;
+    if (m < 1) return "just now"; if (m < 60) return Math.round(m) + "m ago";
+    if (m < 1440) return Math.round(m/60) + "h ago"; return Math.round(m/1440) + "d ago"; };
+  const dot = up => `<span style="display:inline-block;width:8px;height:8px;border-radius:99px;background:${up ? "var(--ok)" : "var(--bad)"};margin-right:7px"></span>`;
+
+  async function hcTick(){
+    let j = null, err = null;
+    try {
+      const r = await fetch(HC_URL + "/status", { cache: "no-store" });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      j = await r.json();
+    } catch (e) { err = e; }
+
+    const pill = $id("hcPill"), rows = $id("hcRows");
+    const hvPill = $id("hvPill"), hvMeta = $id("hvMeta"), hvGrid = $id("hvGrid"), badge = $id("healthBadge");
+
+    if (err || !j) {
+      const off = `<span class="pill warn">MONITOR OFFLINE</span>`;
+      if (pill) pill.innerHTML = off;
+      if (rows) rows.textContent = "health worker unreachable";
+      if (hvPill) hvPill.innerHTML = off;
+      if (hvMeta) hvMeta.textContent = "worker unreachable · " + (err && err.message || "");
+      if (badge) { badge.style.display = ""; badge.textContent = "!"; }
+      return;
+    }
+
+    const up = j.overall === "up";
+    const downs = (j.checks || []).filter(c => c.status === "down");
+    const bigPill = `<span class="pill ${up ? "ok" : "bad"}">${up ? "ALL SYSTEMS UP" : "DEGRADED"}</span>`;
+
+    if (pill) pill.innerHTML = bigPill;
+    if (rows) rows.innerHTML = (j.checks || []).map(c => {
+      const cu = c.status !== "down";
+      const tail = cu ? rel(c.lastCheckedAt) : `${escH(c.lastError || "down")} · since ${rel(c.since)}`;
+      return `<div style="margin-top:5px">${dot(cu)}${escH(c.label || c.name)} <span style="color:var(--ivory-faint)">· ${tail}</span></div>`;
+    }).join("") || "no checks configured";
+
+    if (hvPill) hvPill.innerHTML = bigPill;
+    if (hvMeta) hvMeta.innerHTML = `state as of <span class="mono">${escH(rel(j.checkedAt))}</span> · ${ (j.checks||[]).length } checks · <a href="${HC_URL}/status" target="_blank" style="color:inherit">raw JSON</a>`;
+    if (hvGrid) hvGrid.innerHTML = (j.checks || []).map(c => {
+      const cu = c.status !== "down";
+      const lines = [
+        `<div class="k-sub" style="margin-top:8px">${dot(cu)}<span class="strong">${cu ? "UP" : "DOWN"}</span> · checked ${rel(c.lastCheckedAt)}</div>`,
+        cu ? "" : `<div class="k-sub" style="color:var(--bad)">error: <span class="mono">${escH(c.lastError || "?")}</span> · down since ${rel(c.since)} · ${c.fails} consecutive fails</div>`,
+        c.lastAlertAt ? `<div class="k-sub">last alert emailed ${rel(c.lastAlertAt)}</div>` : "",
+        cu && c.since ? `<div class="k-sub">up since ${rel(c.since)}</div>` : ""
+      ].join("");
+      return `<div class="panel ${cu ? "" : "gold"}"><div class="k-label">${escH(c.label || c.name)}</div>${lines}</div>`;
+    }).join("") || `<div class="empty">no checks configured</div>`;
+
+    if (badge) {
+      badge.style.display = downs.length ? "" : "none";
+      badge.textContent = downs.length || "";
+    }
+  }
+
+  const runBtn = $id("hvRun"), refBtn = $id("hvRefresh");
+  if (runBtn) runBtn.onclick = async () => {
+    runBtn.disabled = true; runBtn.textContent = "Running…";
+    try { await fetch(HC_URL + "/run?all=1"); } catch (e) {}
+    await hcTick();
+    runBtn.disabled = false; runBtn.textContent = "Run all checks now";
+  };
+  if (refBtn) refBtn.onclick = hcTick;
+
+  hcTick(); setInterval(hcTick, 60000);
+})();
+
+/* ============================================================
+   VISITORS — JC-LAZO-TRACK-0916-001
+
+   Reads what lazo-track.js writes from meetlazo.com: one doc per
+   visit in `sessions`, one doc per page view in `sessions/{sid}/hits`.
+   Mirrors admin.ataviaweddings.com's Visitors page.
+
+   d3 + topojson are ~250KB and only this section needs them, so they
+   load the first time you open it, not on sign-in.
+   ============================================================ */
+const V_ACTIVE_MS = 2 * 60 * 1000;      // "here now" = seen in the last two minutes
+const V_PAGE_CAP_MS = 20 * 60 * 1000;   // a page open longer than this counts as 20m (tab left open)
+
+/* Non-people, filtered client-side so the history stays honest:
+   - bot:true — the tracker's own verdict (Meta's network, crawler UA, verified
+     bot, or a page only "sat on" from a hosting network / with no location)
+   - crawler user-agents and data-centre cities, in case the verdict was missed
+   - a Meta utm with no location, one page and no `engaged` record: a person
+     tapping an ad from a phone always geolocates. */
+const V_BOT_RE = /bot|crawl|spider|slurp|lighthouse|facebookexternalhit|facebot|meta-externalagent|whatsapp|twitterbot|linkedinbot|pinterest|slackbot|discordbot|telegrambot|applebot|bingpreview|headlesschrome|phantomjs|petalbot|ahrefs|semrush|mj12|screaming frog|gtmetrix|pingdom|uptimerobot|preview|snapchat|skypeuripreview|embedly|google-inspectiontool|yandex|baidu|duckduckbot/i;
+const V_DC_CITIES = new Set(["Boardman","Ashburn","The Dalles","Council Bluffs","Prineville","Umatilla","Forest City","Altoona","Hilliard","Papillion","Sterling","Quincy"]);
+const V_META_UTM = /^(ig|fb|msg|an)$/i;   // what Meta writes into utm_source={{site_source_name}}
+
+const vNoGeo = d => !d.city && typeof d.lat !== "number";
+const vIsBot = d => d.bot === true
+  || V_BOT_RE.test(d.ua || "")
+  || (V_DC_CITIES.has(d.city) && Number(d.page_count || 1) <= 1 && (vDurOf(d) || 0) < 15000)
+  || (!d.engaged && vNoGeo(d) && V_META_UTM.test(d.utm_source || "") && Number(d.page_count || 1) <= 1);
+const vBotWhy = d => d.bot === true ? (d.bot_why || "bot")
+  : V_BOT_RE.test(d.ua || "") ? "crawler user-agent"
+  : V_DC_CITIES.has(d.city) ? "data-centre city" : "meta ad check";
+
+const vPath = p => String(p || "/").split("?")[0].split("#")[0] || "/";
+const vDurOf = d => { const a = toDate(d.first_seen), b = toDate(d.last_seen);
+  return (a && b) ? Math.min(b - a, 3 * 60 * 60 * 1000) : null; };
+const vDur = ms => { if (ms == null || isNaN(ms)) return "—";
+  const s = Math.max(0, Math.round(ms / 1000)); if (s < 60) return s + "s";
+  const m = Math.floor(s / 60), r = s % 60;
+  return m < 60 ? `${m}m ${String(r).padStart(2, "0")}s` : `${Math.floor(m / 60)}h ${m % 60}m`; };
+const vAgo = d => { if (!d) return ""; const s = Math.round((Date.now() - d) / 1000);
+  return s < 60 ? `${s}s ago` : s < 3600 ? `${Math.round(s / 60)}m ago`
+       : s < 86400 ? `${Math.round(s / 3600)}h ago` : `${Math.round(s / 86400)}d ago`; };
+const vClock = d => d ? d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+const vIsLead = d => !!(d.lead_name || d.inquiry_id);
+const vPlace = d => [d.city, d.region].filter(Boolean).join(", ")
+  || (d.bot && d.org ? d.org : "") || d.country || "Unknown location";
+const vFrom = d => {
+  if (d.utm_source) return d.utm_campaign ? `${d.utm_source} · ${d.utm_campaign}` : d.utm_source;
+  if (/fbclid=/.test(d.landing || "")) return "facebook/instagram";
+  const r = d.referrer || "direct";
+  if (r === "direct") return "direct";
+  if (/^ig$|instagram/i.test(r)) return "instagram";
+  try { return new URL(r).hostname.replace(/^www\./, ""); } catch { return r; }
+};
+const vPageName = p => p === "/" ? "Home"
+  : p.replace(/^\/|\/$/g, "").replace(/-/g, " ").replace(/\//g, " › ").slice(0, 52);
+
+let V_NOW = [], V_RANGE = [], V_ALL = [], V_HITS = [], V_HITS_MODE = "";
+let V_BOTS = 0, V_TAB = "now", V_OPEN = null, V_RANGE_DAYS = 1, V_HIDE_BOTS = true;
+let vStopNow = null, vStopRange = null, vTick = null, vBooted = false;
+let d3 = null, topojson = null, vMapReady = false, vProj = null, vZoom = null;
+let vSvg = null, vRoot = null, vStates = null, vDots = null, vLabels = null;
+let vZK = 1, vList = [], vRScale = null, vHitsToken = 0;
+
+async function openVisitors() {
+  if (vBooted) { requestAnimationFrame(vRenderMap); return; }
+  vBooted = true;
+  try {
+    [d3, topojson] = await Promise.all([
+      import("https://cdn.jsdelivr.net/npm/d3@7/+esm"),
+      import("https://cdn.jsdelivr.net/npm/topojson-client@3/+esm"),
+    ]);
+    diag("visitors: d3 loaded", true);
+  } catch (e) {
+    diag("visitors: d3 loaded", false, e.message);
+    $("vMapWrap").innerHTML = `<div class="empty">Map library didn't load — the numbers below still work.</div>`;
+  }
+  if (d3) vSetupMap();
+  vWire();
+  vWatchNow();
+  vTick = setInterval(vWatchNow, 20000);
+  vWatchRange();
+}
+
+/* ---------- live data ---------- */
+function vWatchNow() {
+  if (vStopNow) vStopNow();
+  const since = Timestamp.fromMillis(Date.now() - V_ACTIVE_MS);
+  vStopNow = onSnapshot(
+    query(collection(db, "sessions"), where("last_seen", ">=", since), orderBy("last_seen", "desc"), limit(100)),
+    snap => {
+      V_NOW = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(d => !V_HIDE_BOTS || !vIsBot(d));
+      $("vNow").textContent = V_NOW.length;
+      $("vUpdated").textContent = "updated " + vClock(new Date());
+      vRenderAll();
+    },
+    e => {
+      // vWatchNow re-subscribes every 20s to move the "last two minutes" window.
+      // Clobbering the table on each failure would wipe an open trail and flash
+      // the error four times a minute, so only say it where nothing is showing.
+      diag("visitors: live now", false, e.message);
+      $("vUpdated").textContent = "offline";
+      if (!$("vRows").querySelector("tr.vrow"))
+        $("vRows").innerHTML = `<tr><td colspan="7" class="empty">Couldn't read sessions: ${esc(e.message)}</td></tr>`;
+    });
+}
+
+function vWatchRange() {
+  if (vStopRange) vStopRange();
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - (V_RANGE_DAYS - 1));
+  vStopRange = onSnapshot(
+    query(collection(db, "sessions"), where("last_seen", ">=", Timestamp.fromDate(start)), orderBy("last_seen", "desc"), limit(1000)),
+    snap => {
+      V_ALL = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      vApplyBotFilter();
+      vRenderAll();
+      vLoadHits(start);
+    },
+    e => diag("visitors: range", false, e.message));
+}
+
+function vApplyBotFilter() {
+  V_RANGE = V_ALL.filter(d => !V_HIDE_BOTS || !vIsBot(d));
+  V_BOTS = V_ALL.length - V_RANGE.length;
+  $("vRange").textContent = V_RANGE.length;
+  $("vRangeL").textContent = V_RANGE_DAYS === 1 ? "Visitors today" : `Visitors · ${V_RANGE_DAYS} days`;
+  $("vBots").textContent = V_BOTS ? `${V_BOTS} bot visit${V_BOTS === 1 ? "" : "s"} hidden` : "";
+  $("vLeads").textContent = V_RANGE.filter(vIsLead).length;
+  const durs = V_RANGE.map(vDurOf).filter(x => x != null);
+  $("vAvg").textContent = durs.length ? vDur(durs.reduce((a, b) => a + b, 0) / durs.length) : "—";
+}
+
+async function vLoadHits(start) {
+  const my = ++vHitsToken;
+  try {
+    const snap = await getDocs(query(collectionGroup(db, "hits"),
+      where("t", ">=", Timestamp.fromDate(start)), orderBy("t", "asc"), limit(5000)));
+    if (my !== vHitsToken) return;
+    V_HITS = snap.docs.map(h => ({ sid: h.ref.parent.parent.id, ...h.data() }));
+    V_HITS_MODE = "group";
+  } catch (e) {
+    // No collection-group index yet → per-visit reads for a capped subset.
+    const out = [], subset = V_RANGE.slice(0, 150);
+    await Promise.all(subset.map(async d => {
+      try {
+        const s = await getDocs(query(collection(db, "sessions", d.id, "hits"), orderBy("t", "asc"), limit(200)));
+        s.docs.forEach(h => out.push({ sid: d.id, ...h.data() }));
+      } catch (_) { /* one unreadable trail shouldn't sink the panel */ }
+    }));
+    if (my !== vHitsToken) return;
+    V_HITS = out;
+    V_HITS_MODE = subset.length < V_RANGE.length ? `fallback (first ${subset.length} of ${V_RANGE.length})` : "fallback";
+  }
+  vRenderBrowse();
+}
+
+/* Per-page dwell: the gap to the next hit; the last page of a visit closes
+   with the heartbeat's last_seen. */
+function vDwell(hits, sess) {
+  const h = hits.slice().sort((a, b) => toDate(a.t) - toDate(b.t)), out = [];
+  for (let i = 0; i < h.length; i++) {
+    const t0 = toDate(h[i].t), t1 = i + 1 < h.length ? toDate(h[i + 1].t) : toDate(sess && sess.last_seen);
+    let ms = (t0 && t1) ? t1 - t0 : null;
+    if (ms != null) ms = Math.max(0, Math.min(ms, V_PAGE_CAP_MS));
+    out.push({ path: h[i].path, title: h[i].title, t: t0, ms });
+  }
+  return out;
+}
+
+/* ---------- map ---------- */
+const V_REGIONS = [
+  ["New England", -73.8, 40.9, -66.8, 45.2], ["Northeast", -80.6, 38.6, -69.8, 45.2],
+  ["Mid-Atlantic", -80.6, 36.4, -73.8, 41.5], ["Southeast", -89, 24.4, -75.4, 36.7],
+  ["Texas", -106.7, 25.8, -93.4, 36.6], ["Southwest", -114.9, 31.3, -108.9, 37.1],
+  ["Mountain", -109.1, 36.9, -102, 41.1], ["Midwest", -97.4, 36.9, -80.4, 49.1],
+  ["West Coast", -124.6, 32.4, -114.1, 49.1],
+];
+
+function vSetupMap() {
+  vSvg = d3.select("#vMap");
+  vProj = d3.geoAlbersUsa().scale(1300).translate([487.5, 305]);
+  vRoot = vSvg.append("g");
+  vStates = vRoot.append("g"); vDots = vRoot.append("g"); vLabels = vRoot.append("g");
+  vZoom = d3.zoom().scaleExtent([1, 14]).translateExtent([[0, 0], [975, 610]])
+    .on("start", () => vSvg.classed("dragging", true))
+    .on("end", () => vSvg.classed("dragging", false))
+    .on("zoom", e => { vZK = e.transform.k; vRoot.attr("transform", e.transform); vRestyleZoom(); });
+  vSvg.call(vZoom).on("dblclick.zoom", null);
+
+  $("vRegions").innerHTML = V_REGIONS.map(([l]) => `<button class="chip" data-vregion="${esc(l)}">${esc(l)}</button>`).join("");
+  $("vRegions").addEventListener("click", e => {
+    const b = e.target.closest("[data-vregion]"); if (!b) return;
+    const r = V_REGIONS.find(x => x[0] === b.dataset.vregion);
+    vZoomLngLat(r[1], r[2], r[3], r[4]);
+  });
+  $("vzIn").onclick = () => vSvg.transition().duration(250).call(vZoom.scaleBy, 1.7);
+  $("vzOut").onclick = () => vSvg.transition().duration(250).call(vZoom.scaleBy, 1 / 1.7);
+  $("vzReset").onclick = () => vSvg.transition().duration(500).call(vZoom.transform, d3.zoomIdentity);
+
+  fetch("https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json").then(r => r.json()).then(us => {
+    const path = d3.geoPath(vProj);
+    vStates.selectAll("path")
+      .data(topojson.feature(us, us.objects.states).features).join("path")
+      .attr("class", "state").attr("d", path)
+      .append("title").text(d => d.properties.name);
+    vMapReady = true; vRenderMap();
+    diag("visitors: us map", true);
+  }).catch(e => diag("visitors: us map", false, e.message));
+}
+
+function vRestyleZoom() {
+  if (!vMapReady) return;
+  vStates.selectAll("path").attr("stroke-width", .6 / vZK);
+  vDots.selectAll(".dot").attr("r", d => vRScale(d.n) / Math.sqrt(vZK)).attr("stroke-width", 1 / vZK);
+  vDots.selectAll(".pulse").attr("r", d => vRScale(d.n) / Math.sqrt(vZK)).attr("stroke-width", 1.2 / vZK);
+  const show = vZK >= 5 ? vList.length : vZK >= 2.5 ? 30 : 8;
+  vLabels.selectAll("text").data(vList.slice(0, show), d => d.key).join("text").attr("class", "lbl")
+    .attr("font-size", 10 / vZK).attr("stroke-width", 3 / vZK)
+    .attr("x", d => d.x + vRScale(d.n) / Math.sqrt(vZK) + 4 / vZK)
+    .attr("y", d => d.y + 3 / vZK)
+    .text(d => d.key.split(",")[0]);
+}
+function vZoomTo(x0, y0, x1, y1) {
+  const k = Math.min(14, Math.max(1, 0.9 / Math.max((x1 - x0) / 975, (y1 - y0) / 610)));
+  vSvg.transition().duration(600).call(vZoom.transform,
+    d3.zoomIdentity.translate(487.5, 305).scale(k).translate(-(x0 + x1) / 2, -(y0 + y1) / 2));
+}
+function vZoomLngLat(w, s, e, n) {
+  const a = vProj([w, n]), b = vProj([e, s]); if (!a || !b) return;
+  vZoomTo(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1]));
+}
+
+function vRenderMap() {
+  if (!vMapReady) return;
+  const nowIds = new Set(V_NOW.map(d => d.id));
+  const all = [...V_RANGE, ...V_NOW.filter(d => !V_RANGE.some(x => x.id === d.id))];
+  const spots = new Map(), abroad = new Map();
+  for (const d of all) {
+    if (typeof d.lat !== "number" || typeof d.lng !== "number") continue;
+    const p = vProj([d.lng, d.lat]);
+    const key = [d.city, d.region, d.country].filter(Boolean).join(", ") || `${d.lat.toFixed(1)},${d.lng.toFixed(1)}`;
+    if (!p) { abroad.set(key, (abroad.get(key) || 0) + 1); continue; }
+    const s = spots.get(key) || { key, x: p[0], y: p[1], n: 0, now: 0, leads: 0 };
+    s.n++; if (nowIds.has(d.id)) s.now++; if (vIsLead(d)) s.leads++;
+    spots.set(key, s);
+  }
+  vList = [...spots.values()].sort((a, b) => b.n - a.n);
+  $("vCities").textContent = vList.length + abroad.size;
+  vRScale = d3.scaleSqrt().domain([1, Math.max(1, vList[0]?.n || 1)]).range([5, 18]);
+
+  const tip = $("vTip");
+  vDots.selectAll("g.spot").data(vList, d => d.key).join(enter => {
+    const g = enter.append("g").attr("class", "spot");
+    g.append("circle").attr("class", "pulse");
+    g.append("circle").attr("class", "dot");
+    return g;
+  }).attr("transform", d => `translate(${d.x},${d.y})`)
+    .each(function (d) {
+      const g = d3.select(this);
+      g.select(".pulse").style("display", d.now ? null : "none");
+      g.select(".dot").attr("r", vRScale(d.n)).classed("now", d.now > 0);
+    })
+    .on("pointermove", (e, d) => {
+      tip.innerHTML = `${esc(d.key)}<small>${d.n} visit${d.n === 1 ? "" : "s"}` +
+        `${d.now ? ` · ${d.now} here now` : ""}${d.leads ? ` · ${d.leads} inquired` : ""}</small>`;
+      tip.classList.add("show");
+      tip.style.left = (e.clientX + 14) + "px"; tip.style.top = (e.clientY + 14) + "px";
+    })
+    .on("pointerleave", () => tip.classList.remove("show"))
+    .on("dblclick", (e, d) => { e.stopPropagation(); vZoomTo(d.x - 45, d.y - 28, d.x + 45, d.y + 28); });
+
+  vRestyleZoom();
+  const ab = [...abroad.entries()].sort((a, b) => b[1] - a[1]);
+  $("vAbroad").innerHTML = ab.length
+    ? "Outside the US: " + ab.map(([k, n]) => `<span>${esc(k)}<b>${n}</b></span>`).join("") : "";
+}
+
+/* ---------- panels ---------- */
+function vRenderAll() { vRenderMap(); vRenderList(); vRenderBrowse(); }
+
+function vRenderBrowse() {
+  const el = $("vBrowse"); if (!el) return;
+  const sessions = V_RANGE, n = sessions.length;
+  if (!n) { el.innerHTML = `<div class="empty">No visits in this range yet.</div>`; return; }
+  const byS = {}; for (const h of V_HITS) (byS[h.sid] = byS[h.sid] || []).push(h);
+  const sMap = Object.fromEntries(sessions.map(d => [d.id, d]));
+
+  const durs = sessions.map(vDurOf).filter(x => x != null).sort((a, b) => a - b);
+  const avg = durs.length ? durs.reduce((a, b) => a + b, 0) / durs.length : 0;
+  const med = durs.length ? durs[Math.floor(durs.length / 2)] : 0;
+  const pages = sessions.map(d => Number(d.page_count || 1));
+  const avgPages = pages.reduce((a, b) => a + b, 0) / n;
+  const bounced = sessions.filter(d => Number(d.page_count || 1) <= 1).length;
+  const engaged = sessions.filter(d => (vDurOf(d) || 0) >= 60000 || Number(d.page_count || 1) >= 3).length;
+  const leads = sessions.filter(vIsLead).length;
+  const dev = {}; for (const d of sessions) dev[d.device || "?"] = (dev[d.device || "?"] || 0) + 1;
+
+  const buckets = [["<10s", 0, 1e4], ["10–30s", 1e4, 3e4], ["30s–1m", 3e4, 6e4],
+                   ["1–3m", 6e4, 18e4], ["3–10m", 18e4, 6e5], ["10m+", 6e5, Infinity]];
+  const hist = buckets.map(([l, a, b]) => ({ l, n: durs.filter(x => x >= a && x < b).length }));
+  const hmax = Math.max(1, ...hist.map(x => x.n));
+
+  const pg = {}; let dwellN = 0;
+  for (const sid in byS) {
+    if (!sMap[sid]) continue;
+    for (const x of vDwell(byS[sid], sMap[sid])) {
+      const k = vPath(x.path);
+      pg[k] = pg[k] || { views: 0, ms: 0, nms: 0 };
+      pg[k].views++;
+      if (x.ms != null) { pg[k].ms += x.ms; pg[k].nms++; dwellN++; }
+    }
+  }
+  const top = Object.entries(pg).sort((a, b) => b[1].views - a[1].views).slice(0, 10);
+  const stick = Object.entries(pg).filter(([, v]) => v.nms >= 2)
+    .sort((a, b) => (b[1].ms / b[1].nms) - (a[1].ms / a[1].nms)).slice(0, 6);
+  const vmax = Math.max(1, ...top.map(([, v]) => v.views));
+
+  const src = {}; for (const d of sessions) { const k = vFrom(d); src[k] = (src[k] || 0) + 1; }
+  const srcTop = Object.entries(src).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const smax = Math.max(1, ...srcTop.map(([, v]) => v));
+
+  const metro = {}; for (const d of sessions) if (d.metro) metro[d.metro] = (metro[d.metro] || 0) + 1;
+  const metroTop = Object.entries(metro).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const mmax = Math.max(1, ...metroTop.map(([, v]) => v));
+
+  const pct = x => Math.round(x / n * 100);
+  el.innerHTML = `
+    <div class="split" style="margin-bottom:18px">
+      <span>avg <b>${vDur(avg)}</b></span><span>median <b>${vDur(med)}</b></span>
+      <span>pages/visit <b>${avgPages.toFixed(1)}</b></span>
+      <span>bounced <b>${pct(bounced)}%</b></span>
+      <span>engaged <b>${pct(engaged)}%</b></span>
+      <span>inquired <b>${leads}</b></span>
+    </div>
+    <div class="bgrid">
+      <div class="bcol">
+        <h3>How long they stay</h3>
+        <div class="hist">${hist.map(x => `<div class="col"><div class="val">${x.n || ""}</div><div class="bar" style="height:${(x.n / hmax) * 100}%"></div><div class="lbl">${x.l}</div></div>`).join("")}</div>
+        <h3>Most viewed pages</h3>
+        <ul class="pages">${top.length ? top.map(([k, v]) => `<li><span title="${esc(k)}">${esc(vPageName(k))}<div class="track" style="width:${(v.views / vmax) * 100}%"></div></span><b>${v.views}</b><i>${v.nms ? vDur(v.ms / v.nms) : "—"}</i></li>`).join("") : "<li>No page views recorded yet.</li>"}</ul>
+        <h3>Where they came from</h3>
+        <ul class="pages">${srcTop.map(([k, v]) => `<li><span title="${esc(k)}">${esc(k)}<div class="track" style="width:${(v / smax) * 100}%"></div></span><b>${v}</b><i>${pct(v)}%</i></li>`).join("")}</ul>
+      </div>
+      <div class="bcol">
+        <h3>Pages they linger on</h3>
+        <ul class="pages">${stick.length ? stick.map(([k, v]) => `<li><span title="${esc(k)}">${esc(vPageName(k))}</span><b>${vDur(v.ms / v.nms)}</b><i>${v.nms} views</i></li>`).join("") : "<li>Needs a few more visits.</li>"}</ul>
+        <h3>Metros they browsed</h3>
+        <ul class="pages">${metroTop.length ? metroTop.map(([k, v]) => `<li><span title="${esc(k)}">${esc(vPageName("/" + k))}<div class="track" style="width:${(v / mmax) * 100}%"></div></span><b>${v}</b><i>${pct(v)}%</i></li>`).join("") : "<li>No metro pages viewed yet.</li>"}</ul>
+        <h3>Devices</h3>
+        <div class="split">${Object.entries(dev).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<span>${esc(k)} <b>${pct(v)}%</b></span>`).join("")}</div>
+      </div>
+    </div>
+    <div class="bnote">Visit length is first to last activity (the tracker beats every 30s). Time on a page runs until the next page, capped at 20 minutes; the last page of a visit is timed by the heartbeat.${dwellN ? ` Page times from ${dwellN} timed views.` : ""}${V_HITS_MODE.startsWith("fallback") ? ` <span class="warn">Page stats are using the slower per-visit read (${esc(V_HITS_MODE)}) — deploy the collection-group index for the full range.</span>` : ""}</div>`;
+}
+
+function vRenderList() {
+  const list = V_TAB === "now" ? V_NOW : V_RANGE;
+  const rows = $("vRows");
+  if (!list.length) {
+    rows.innerHTML = `<tr><td colspan="7" class="empty">${V_TAB === "now" ? "Nobody on the site right now." : "No visitors in this range."}</td></tr>`;
+    return;
+  }
+  rows.innerHTML = list.map(d => {
+    const who = vIsLead(d)
+      ? `<span class="pill gold">${esc(d.lead_name || "inquiry")}</span><span class="sub">${esc(vPlace(d))}</span>`
+      : `${esc(vPlace(d))}<span class="sub">${esc(d.device || "")}${d.lang ? " · " + esc(d.lang) : ""}${vIsBot(d) ? ` · <em>${esc(vBotWhy(d))}</em>` : ""}</span>`;
+    const page = vPath(V_TAB === "now" ? d.page : d.landing);
+    return `<tr class="vrow${V_OPEN === d.id ? " open" : ""}" data-sid="${esc(d.id)}" tabindex="0" aria-expanded="${V_OPEN === d.id}">
+      <td class="strong${V_TAB === "now" ? " now" : ""}">${who}</td>
+      <td title="${esc(page)}">${esc(vPageName(page))}</td>
+      <td>${esc(vFrom(d))}</td>
+      <td>${esc(d.metro || "—")}</td>
+      <td class="mono">${d.page_count ?? ""}</td>
+      <td class="mono">${vDur(vDurOf(d))}</td>
+      <td class="mono">${V_TAB === "now" ? vClock(toDate(d.first_seen)) : vAgo(toDate(d.last_seen))}</td>
+    </tr>`;
+  }).join("");
+  if (V_OPEN) {
+    const tr = rows.querySelector(`tr[data-sid="${CSS.escape(V_OPEN)}"]`);
+    if (tr) vLoadTrail(tr, V_OPEN);
+  }
+}
+
+// The list re-renders on every snapshot and every 20s tick, but a visit's trail
+// changes at most once per page view — so re-use a recent read instead of
+// firing a query each time.
+const V_TRAIL_TTL = 20000;
+let vTrailCache = { sid: null, html: "", at: 0 };
+
+async function vLoadTrail(tr, sid) {
+  const trail = document.createElement("tr");
+  trail.className = "trail";
+  tr.after(trail);
+  if (vTrailCache.sid === sid && Date.now() - vTrailCache.at < V_TRAIL_TTL) {
+    trail.innerHTML = vTrailCache.html;
+    return;
+  }
+  trail.innerHTML = `<td colspan="7" class="empty">Loading…</td>`;
+  try {
+    const snap = await getDocs(query(collection(db, "sessions", sid, "hits"), orderBy("t", "asc"), limit(200)));
+    const d = [...V_NOW, ...V_RANGE].find(x => x.id === sid) || {};
+    const meta = [d.lead_email, d.device, d.screen, `visit ${vDur(vDurOf(d))}`,
+      d.engaged ? `first activity: ${d.engaged}` : "", d.org, d.ua]
+      .filter(Boolean).map(esc).join(" · ");
+    const steps = vDwell(snap.docs.map(h => h.data()), d);
+    const live = V_NOW.some(v => v.id === sid);
+    trail.innerHTML = `<td colspan="7"><div class="meta">${meta}</div><ol>${
+      steps.map((x, i) => `<li><b>${vClock(x.t)}</b>${esc(x.path)}${x.ms != null ? `<i>${vDur(x.ms)}${i === steps.length - 1 && live ? " so far" : ""}</i>` : ""}</li>`).join("")
+      || "<li>No page trail recorded.</li>"}</ol></td>`;
+    vTrailCache = { sid, html: trail.innerHTML, at: Date.now() };
+  } catch (e) {
+    trail.innerHTML = `<td colspan="7" class="empty">${esc(e.message)}</td>`;
+  }
+}
+
+/* ---------- controls ---------- */
+function vWire() {
+  document.querySelectorAll("[data-range]").forEach(b => b.onclick = () => {
+    V_RANGE_DAYS = Number(b.dataset.range); V_OPEN = null;
+    document.querySelectorAll("[data-range]").forEach(x => x.classList.toggle("on", x === b));
+    vWatchRange();
+  });
+  document.querySelectorAll("[data-vtab]").forEach(b => b.onclick = () => {
+    V_TAB = b.dataset.vtab; V_OPEN = null;
+    document.querySelectorAll("[data-vtab]").forEach(x => x.classList.toggle("on", x === b));
+    vRenderList();
+  });
+  $("vHideBots").onchange = e => { V_HIDE_BOTS = e.target.checked; vApplyBotFilter(); vRenderAll(); };
+  const toggleRow = tr => {
+    V_OPEN = V_OPEN === tr.dataset.sid ? null : tr.dataset.sid;
+    vTrailCache = { sid: null, html: "", at: 0 };   // opening one is an explicit ask for fresh
+    vRenderList();
+  };
+  $("vRows").addEventListener("click", e => {
+    const tr = e.target.closest("tr.vrow"); if (tr) toggleRow(tr);
+  });
+  $("vRows").addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const tr = e.target.closest("tr.vrow"); if (!tr) return;
+    e.preventDefault(); toggleRow(tr);
+  });
+}
+</script>
+<script>/* GODMODE-0921-002: theme toggle · light / dark, remembered per browser; default follows the OS */
+(function(){
+  var root=document.documentElement, btn=document.getElementById("themeToggle"); if(!btn) return;
+  var effective=function(){ return root.dataset.theme || (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"); };
+  var label=function(){ btn.textContent = effective()==="light" ? "\u263E Dark" : "\u2600 Light"; };
+  btn.addEventListener("click", function(){
+    var next = effective()==="light" ? "dark" : "light";
+    root.dataset.theme = next;
+    try{ localStorage.setItem("gm-theme", next); }catch(e){}
+    label();
+    window.dispatchEvent(new Event("resize"));   /* charts re-read their colours */
+  });
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", function(){ label(); window.dispatchEvent(new Event("resize")); });
+  label();
+})();
+</script>
+</body>
+</html>

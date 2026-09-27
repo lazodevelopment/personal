@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}HoneyBook Alternative for Wedding Vendors (2026): Lazo Brings the Clients{% endblock %}
+{% block desc %}HoneyBook manages the clients you already have. Lazo is where new couples find you — free verified leads, in-app proposals with one-tap accept, and rankings earned from verified reviews. No subscription.{% endblock %}
+{% block canonical %}{{ base }}/honeybook-alternative/{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Is Lazo a HoneyBook replacement?",
+      "acceptedAnswer": { "@type": "Answer", "text": "They solve different problems. HoneyBook is a subscription CRM for managing clients you already have. Lazo is a marketplace where new couples find you — with free verified leads, in-thread proposals, and one-tap booking. Many vendors use both; some find Lazo's built-in proposals and booking cover what they were paying a CRM for." } },
+    { "@type": "Question", "name": "Does Lazo charge a monthly subscription like HoneyBook?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Your Lazo profile, verified-couple leads, SMS alerts, messaging, and proposals are free forever. Lazo never charges a subscription for lead access." } },
+    { "@type": "Question", "name": "Can I send proposals through Lazo?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Send a proposal with title, price, and terms directly in the conversation thread; the couple accepts in one tap and the booking is confirmed on both dashboards." } },
+    { "@type": "Question", "name": "Where do Lazo leads come from?",
+      "acceptedAnswer": { "@type": "Answer", "text": "From verified couples planning on Lazo — 88,000+ vendor pages across 45 U.S. metros draw couples in, and inquiries arrive with the wedding date and planning details attached." } }
+  ]
+}
+</script>
+{% endblock %}
+{% block main %}
+<style>
+.cmp{width:100%;max-width:860px;border-collapse:separate;border-spacing:0;margin:10px 0 6px;
+  background:rgba(255,255,255,.55);border:1px solid rgba(217,183,124,.45);border-radius:18px;overflow:hidden;
+  font-size:14.5px}
+.cmp th,.cmp td{padding:13px 16px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(217,183,124,.28)}
+.cmp tr:last-child td{border-bottom:0}
+.cmp thead th{background:linear-gradient(120deg,#3D1C3B,#52284F);color:#FAF6F0;font-weight:600;font-size:13.5px;
+  letter-spacing:.4px}
+.cmp thead th:first-child{width:34%}
+.cmp td:first-child{font-weight:600;color:#52284F}
+.cmp .yes{color:#2E8B6B;font-weight:600}
+.cmp .meh{color:#7A6E80}
+.cmp-note{font-size:12px;color:#7A6E80;max-width:860px;margin:4px 0 0}
+.tm-note{font-size:11.5px;color:#8A7D90;max-width:860px;margin:26px 0 0;line-height:1.6}
+@media(max-width:640px){.cmp{font-size:13px}.cmp th,.cmp td{padding:10px 10px}}
+</style>
+<section class="hero"><div class="hero-inner">
+<p class="eyebrow">For wedding professionals</p>
+<h1>The HoneyBook alternative that brings the clients.</h1>
+<p class="hero-sub">HoneyBook is a fine CRM &mdash; for the clients you already have. Lazo works the other end of the funnel: verified couples find you, inquire with dates attached, and book through one-tap proposals. Free, no subscription.</p>
+</div></section>
+
+<section class="band prose">
+<h2>Different tools, different problems</h2>
+<p>A CRM organizes your pipeline; it doesn&rsquo;t fill it. You still pay a monthly subscription while sourcing every client yourself &mdash; through ads, referrals, or directories that charge for the privilege. The most expensive part of your business is still finding the next couple.</p>
+<h2>Where Lazo fits</h2>
+<p><strong>Demand, not just management.</strong> Lazo is a verified wedding marketplace: couples plan here, search here, and inquire here &mdash; and their inquiry lands in your inbox with the date attached, plus an SMS so you can answer first.</p>
+<p><strong>Proposals and booking, built in.</strong> Send price and terms in the thread; the couple accepts in one tap. For many vendors that covers the proposal-and-booking slice of what a paid CRM does &mdash; without the subscription.</p>
+<p><strong>A reputation engine on top.</strong> Verified reviews build your Lazo Score, and the score sets your search ranking. Your marketing compounds instead of renting.</p>
+<h2>Side by side</h2>
+<table class="cmp">
+<thead><tr><th></th><th>Lazo</th><th>HoneyBook</th></tr></thead>
+<tbody>
+<tr><td>What it is</td><td class="yes">Marketplace: couples find you</td><td class="meh">CRM: manage existing clients</td></tr>
+<tr><td>Brings you new leads</td><td class="yes">Yes &mdash; verified couples, free</td><td class="meh">No &mdash; you source clients</td></tr>
+<tr><td>Cost</td><td class="yes">Free forever</td><td class="meh">Monthly subscription</td></tr>
+<tr><td>Proposals</td><td class="yes">In-thread, one-tap accept</td><td class="yes">Yes, within its CRM</td></tr>
+<tr><td>Invoicing &amp; contracts</td><td class="meh">Keep your current tools</td><td class="yes">Core strength</td></tr>
+<tr><td>Public profile &amp; reviews</td><td class="yes">Verified reviews, earned ranking</td><td class="meh">Not a discovery platform</td></tr>
+</tbody>
+</table>
+<p class="cmp-note">Third-party details reflect publicly available information as of July 2026 and may change; check current offerings and pricing.</p>
+<h2>Being fair about it</h2>
+<p>If HoneyBook runs your contracts and invoices beautifully, keep it &mdash; Lazo isn&rsquo;t a CRM and doesn&rsquo;t pretend to be. The honest framing: Lazo replaces your lead costs, not your back office. Free demand plus whatever tools you love is strictly better than tools alone.</p>
+</section>
+
+<section class="band band-plum">
+<h2 class="band-title">What vendors get on Lazo</h2>
+<div class="promises">
+<div class="promise"><h3>New couples, free</h3><p>Verified inquiries with dates attached, SMS alerts, zero lead fees, zero subscription.</p></div>
+<div class="promise"><h3>Close in the thread</h3><p>Proposals with one-tap accept turn conversations into confirmed bookings.</p></div>
+<div class="promise"><h3>Compounding reputation</h3><p>Verified reviews build a ranking no competitor can outspend.</p></div>
+</div>
+</section>
+
+<section class="band">
+<h2>Questions vendors ask</h2>
+<details class="faq"><summary>Can Lazo replace my CRM?</summary><p>For proposals and booking confirmation, often yes. For invoicing, contracts, and workflows, keep the tools you love &mdash; Lazo plays the demand side.</p></details>
+<details class="faq"><summary>What does Lazo cost?</summary><p>Nothing &mdash; profile, leads, alerts, messaging, and proposals are free forever, with no subscription and no lead fees.</p></details>
+<details class="faq"><summary>How do couples find me?</summary><p>Lazo's marketplace spans 88,000+ vendor pages across 45 metros; couples search by category and metro, ranked by verified-review scores.</p></details>
+<details class="faq"><summary>How long does setup take?</summary><p>About five minutes to claim your profile. No card, no contract.</p></details>
+<div class="claim-strip" style="margin-top:34px">
+<h2>Stop paying to manage. Start getting found.</h2>
+<p>Claim your free Lazo profile in five minutes.</p>
+<p><a class="btn-gold" href="{{ base }}/for-vendors/">Claim your free profile</a></p>
+</div>
+<div class="related-block" style="margin-top:30px">
+<h2>Keep comparing</h2>
+<div class="related-links">
+<a href="{{ base }}/the-knot-alternative-for-vendors/">The Knot alternative for vendors</a>
+<a href="{{ base }}/weddingwire-alternative-for-vendors/">WeddingWire alternative for vendors</a>
+<a href="{{ base }}/for-vendors/">How Lazo works for vendors</a>
+</div>
+</div>
+<p class="tm-note">HoneyBook&reg; is a registered trademark of HoneyBook, Inc. Lazo is not affiliated with, sponsored by, or endorsed by HoneyBook. Names are used for identification and comparison only.</p>
+</section>
+{% endblock %}

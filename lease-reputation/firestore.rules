@@ -1,0 +1,212 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------- helpers ---------------------------------
+    function isSignedIn()       { return request.auth != null; }
+    function uid()              { return request.auth.uid; }
+    function role()             { return isSignedIn() ? request.auth.token.role : ''; }
+    function isAdmin() {
+      return role() == 'admin' || (isSignedIn() && request.auth.token.admin == true);
+    }
+    function isOperator()       { return role() == 'operator'; }
+    function isRenter()         { return role() == 'renter'; }
+    function isOwner(id)        { return isSignedIn() && uid() == id; }
+    function identityVerified() { return isSignedIn() && request.auth.token.identityVerified == true; }
+
+    function residencyConfirmed(communityId) {
+      return exists(/databases/$(database)/documents/users/$(uid())/residencies/$(communityId));
+    }
+
+    function operatorOwnsCommunity(communityId) {
+      return isOperator() &&
+        exists(/databases/$(database)/documents/communities/$(communityId)/claims/$(uid()));
+    }
+
+    function isValidStar(v) { return v is int && v >= 1 && v <= 5; }
+
+    // App writes stars into `ratings`. Current residents rate the five
+    // livability dimensions; former residents add moveout.
+    function validRatingsForStatus(dims, status) {
+      return isValidStar(dims.management) && isValidStar(dims.maintenance)
+        && isValidStar(dims.value) && isValidStar(dims.noise) && isValidStar(dims.safety)
+        && (
+          (status == 'current'
+             && dims.size() == 5
+             && dims.keys().hasOnly(['management','maintenance','value','noise','safety']))
+          || (status == 'former'
+             && dims.size() == 6
+             && dims.keys().hasOnly(['management','maintenance','value','noise','safety','moveout'])
+             && isValidStar(dims.moveout))
+        );
+    }
+
+    function validResidencyDates(rd) {
+      return rd.from is int
+        && (rd.to == null || rd.to is int);
+    }
+
+    function validReviewShape(d) {
+      return d.residentStatus in ['current', 'former']
+        && validRatingsForStatus(d.ratings, d.residentStatus)
+        && d.wouldRenew is bool
+        && validResidencyDates(d.residencyDates)
+        && d.authorName is string && d.authorName.size() <= 120
+        && (
+          (d.residentStatus == 'former' && d.depositOutcome in ['full', 'partial', 'none'])
+          || (d.residentStatus == 'current' && !('depositOutcome' in d))
+        )
+        && (!('text' in d) || (d.text is string && d.text.size() <= 5000))
+        && (!('photos' in d) || (d.photos is list && d.photos.size() <= 6))
+        && (!('monthlyRent' in d) || (d.monthlyRent is int && d.monthlyRent >= 200 && d.monthlyRent <= 20000))
+        && !d.keys().hasAny(['helpfulCount', 'verified', 'hidden', 'flagged',
+                             'contributorWeight', 'scoreContribution']);
+    }
+
+    function validReviewCreate(communityId) {
+      let d = request.resource.data;
+      return validReviewShape(d)
+        && d.authorId == uid()
+        && d.communityId == communityId
+        && d.status == 'published'
+        && d.createdAt == request.time;
+    }
+
+    function validReviewEdit() {
+      let d = request.resource.data;
+      let old = resource.data;
+      return validReviewShape(d)
+        && d.authorId == old.authorId
+        && d.communityId == old.communityId
+        && d.createdAt == old.createdAt
+        && d.status == old.status;
+    }
+
+    // ============================ COMMUNITIES ===============================
+    // Directory docs are seeded/enriched by the Admin SDK and scored by
+    // Cloud Functions. Clients never write them. Reputation is not for sale.
+    match /communities/{communityId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /reviews/{reviewId} {
+        allow read: if true;
+
+        // One review per verified resident per community: doc id == uid.
+        allow create: if isRenter()
+                      && identityVerified()
+                      && reviewId == uid()
+                      && residencyConfirmed(communityId)
+                      && validReviewCreate(communityId);
+
+        allow update: if (isOwner(reviewId) && validReviewEdit()) || isAdmin();
+
+        allow delete: if isOwner(reviewId) || isAdmin();
+
+        match /helpfulVotes/{voterUid} {
+          allow read: if true;
+          allow create: if isRenter()
+                        && voterUid == uid()
+                        && voterUid != reviewId
+                        && request.resource.data.keys().hasOnly(['createdAt']);
+          allow delete: if isOwner(voterUid);
+          allow update: if false;
+        }
+      }
+
+      match /operatorResponses/{responseId} {
+        allow read: if true;
+        allow create, update: if operatorOwnsCommunity(communityId)
+                              && responseId == uid()
+                              && request.resource.data.text is string
+                              && request.resource.data.text.size() <= 5000;
+        allow delete: if (isOwner(responseId) && isOperator()) || isAdmin();
+      }
+
+      match /claims/{claimUid} {
+        allow read: if isOwner(claimUid) || isAdmin();
+        allow write: if false;
+      }
+    }
+
+    // ============================== USERS ==================================
+    match /users/{userId} {
+      allow read: if true;
+
+      allow create: if isOwner(userId)
+                    && !request.resource.data.keys().hasAny(
+                         ['role','contributorLevel',
+                          'contributorScore','helpfulReceived','reviewsPublished']);
+
+      allow update: if isOwner(userId)
+                    && request.resource.data.get('contributorLevel', resource.data.get('contributorLevel', 0))
+                       == resource.data.get('contributorLevel', 0)
+                    && request.resource.data.get('contributorScore', resource.data.get('contributorScore', 0))
+                       == resource.data.get('contributorScore', 0)
+                    && request.resource.data.get('reviewsPublished', resource.data.get('reviewsPublished', 0))
+                       == resource.data.get('reviewsPublished', 0)
+                    && request.resource.data.get('identityVerified', resource.data.get('identityVerified', false))
+                       == resource.data.get('identityVerified', false)
+                    && request.resource.data.get('residencyVerified', resource.data.get('residencyVerified', false))
+                       == resource.data.get('residencyVerified', false);
+      allow delete: if isAdmin();
+
+      match /residencies/{communityId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if false;
+      }
+
+      match /private/{document=**} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // ========================== VERIFICATIONS ==============================
+    match /verifications/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+                    && request.resource.data.status == 'pending'
+                    && !request.resource.data.keys().hasAny(['docUrl','ssn','dob','idNumber']);
+      // Resubmission after rejection: owners may flip their own doc from
+      // rejected back to pending (fresh submission). All other transitions
+      // stay admin/pipeline-only.
+      allow update: if isAdmin()
+                    || (isOwner(userId)
+                        && resource.data.status == 'rejected'
+                        && request.resource.data.status == 'pending'
+                        && !request.resource.data.keys().hasAny(['docUrl','ssn','dob','idNumber']));
+      allow delete: if isAdmin();
+    }
+
+    // ============================= REPORTS =================================
+    // Any signed-in user can report a review once (doc id is deterministic:
+    // {communityId}_{reviewId}_{reporterUid}, so duplicates are denied).
+    // Only admins read and resolve.
+    match /reports/{reportId} {
+      allow create: if isSignedIn()
+                    && reportId == request.resource.data.communityId + '_'
+                                   + request.resource.data.reviewId + '_' + uid()
+                    && request.resource.data.reportedBy == uid()
+                    && request.resource.data.status == 'new'
+                    && request.resource.data.reason in
+                         ['fake', 'harassment', 'privacy', 'offtopic', 'other']
+                    && (!('detail' in request.resource.data)
+                        || (request.resource.data.detail is string
+                            && request.resource.data.detail.size() <= 1000));
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ====================== COLLECTION-GROUP READS =========================
+    // Powers the admin dashboard's cross-community recent-reviews feed.
+    // Reviews are already world-readable at their nested path; this only
+    // authorizes the collectionGroup('reviews') query form.
+    match /{path=**}/reviews/{reviewId} {
+      allow read: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

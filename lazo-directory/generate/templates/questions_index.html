@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{#- questions_index.html - JC-LAZO-ASK-0916-001
+    /questions/ - the hub, and the only place the UNIVERSAL questions appear.
+
+    That is the whole point of the cluster's shape: contract, deposit,
+    cancellation, insurance and referral-fee questions are identical for every
+    vendor, so they are written once here and linked from all fifteen category
+    pages. Publishing them fifteen times would have made our own pages
+    near-duplicates of each other. -#}
+{% block title %}Questions to Ask Wedding Vendors Before You Book | Lazo{% endblock %}
+{% block desc %}The questions to ask every wedding vendor about contracts, deposits, cancellation and referral fees &mdash; plus what a good answer sounds like and what should worry you. Vendor-specific guides for all {{ guide_count }} categories.{% endblock %}
+{% block canonical %}{{ base }}/questions/{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Questions to ask wedding vendors before you book",
+  "description": "The questions to ask every wedding vendor, and what a good answer sounds like.",
+  "author": { "@type": "Organization", "name": "Lazo", "url": "{{ base }}" },
+  "publisher": { "@type": "Organization", "name": "Lazo", "logo": { "@type": "ImageObject", "url": "{{ base }}/assets/brand.png" } },
+  "mainEntityOfPage": "{{ base }}/questions/"
+}
+</script>
+{% endblock %}
+{% block main %}
+<section class="hero hero-doc"><div class="hero-inner">
+  <p class="eyebrow">Questions to ask</p>
+  <h1>The questions that change the answer.</h1>
+  <p class="hero-sub">What to ask every wedding vendor before you pay a deposit &mdash; and, more usefully, what a good answer sounds like and what should worry you.</p>
+</div></section>
+
+<section class="band prose doc">
+<p class="lede">Most "questions to ask your vendor" lists are harmless and useless: twenty questions, no indication of what you are listening for. A question is only worth asking if you know how to read the reply.</p>
+<p>So every question below comes with what a good answer sounds like and what should make you pause. Start here &mdash; these apply to every vendor you will hire &mdash; then use the guide for the specific trade.</p>
+</section>
+
+{%- for heading, items in universal %}
+<section class="cost-cities ask-universal">
+  <h2>{{ heading }}</h2>
+  <div class="ask-list">
+    {%- for item in items %}
+    <div class="ask-item">
+      <p class="ask-q">{{ item.q }}</p>
+      <p class="ask-l"><span class="ask-tag">What to listen for</span>{{ item.listen }}</p>
+    </div>
+    {%- endfor %}
+  </div>
+</section>
+{%- endfor %}
+
+<section class="cost-cities">
+  <h2>Then ask the trade-specific ones</h2>
+  <p class="cc-sub">A photographer and a caterer fail in completely different ways. These cover what is particular to each.</p>
+  <div class="cc-guides">
+    {%- for row in rows %}
+    <a href="/questions/{{ row.slug }}/">
+      <b>{{ row.singular }}</b>
+      <em>{{ row.n }} questions</em>
+      <span>{{ row.hook }}</span>
+    </a>
+    {%- endfor %}
+  </div>
+</section>
+
+<section class="band prose doc">
+<h2>How to actually use these</h2>
+<ul>
+  <li><strong>Ask by email where you can.</strong> A written answer is a record, and vendors are more precise in writing. Verbal assurances about overtime and cancellation have a way of evaporating.</li>
+  <li><strong>Ask the awkward ones anyway.</strong> Referral fees, backup plans and what happens if they cannot make it are exactly the questions people skip because they feel rude. A professional expects them.</li>
+  <li><strong>Notice how they answer, not just what they answer.</strong> A vendor who is annoyed you asked about the cancellation clause is showing you how they will behave when something goes wrong.</li>
+  <li><strong>Get the answers into the contract.</strong> A promise made in an email is worth far less than the same promise as a clause. If it matters, ask for it in writing in the agreement.</li>
+</ul>
+
+<h2>Why a wedding site can publish this</h2>
+<p>Ours can, because vendors do not pay us for leads, for bookings, or for position. <a href="/why-lazo/">Rankings can't be bought on Lazo at any price</a>, and every review comes from a couple who proved they actually held their wedding with that vendor. A platform funded by vendor advertising would find a page about spotting a vendor who is managing you considerably harder to write.</p>
+</section>
+
+<section class="next-reads">
+  <h2>Before you book</h2>
+  <div class="next-grid">
+    <a href="/cost/"><b>What a wedding costs</b><span>Honest ranges for every vendor you'll hire.</span></a>
+    <a href="/when-to-book/"><b>When to book everything</b><span>The full timeline, vendor by vendor.</span></a>
+    <a href="/planning/"><b>How to plan a wedding</b><span>Timelines, seating, vows, licenses and the rest.</span></a>
+    <a href="/{{ first_metro.id }}/"><b>Find vendors in {{ first_metro.name }}</b><span>Every review verified, rankings never sold.</span></a>
+  </div>
+</section>
+{% endblock %}

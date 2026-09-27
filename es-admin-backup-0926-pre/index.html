@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Elizabeth Scott — Bookings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@400;500;600&family=Figtree:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F1327;--card:#1A2039;--copper:#C9B080;--copperlt:#DCC697;--cream:#EEE9DD;
+  --grey:#A8B0C8;--dim:#7B84A3;--line:#2A3152;--field:#20264A;--sand:#8F7E58;
+  --ok:#8DBF93;--warn:#E0B65C;--bad:#E08578;
+  --glass:rgba(26,32,57,.55);--glass-line:rgba(201,176,128,.16);--glass-hi:rgba(238,233,221,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:'Figtree',sans-serif;font-weight:300;color:var(--cream);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased}
+/* ambient light the glass refracts */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 12% -10%,rgba(201,176,128,.22),transparent 62%),
+    radial-gradient(1000px 640px at 104% 30%,rgba(60,72,130,.45),transparent 62%),
+    radial-gradient(800px 520px at 45% 112%,rgba(201,176,128,.10),transparent 62%)}
+/* fine grain so the glass has something to sit on */
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.28;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+a{color:var(--copperlt);text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit;color:var(--cream)}
+:focus-visible{outline:2px solid var(--copperlt);outline-offset:2px}
+
+.glass{position:relative;background:linear-gradient(160deg,rgba(238,233,221,.06) 0%,rgba(26,32,57,.55) 38%,rgba(15,19,39,.62) 100%);
+  border:1px solid var(--glass-line);border-top-color:rgba(201,176,128,.28);
+  backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);
+  box-shadow:0 30px 60px -36px rgba(0,0,0,.85),0 1px 0 rgba(201,176,128,.05),inset 0 1px 0 var(--glass-hi)}
+.glass::before{content:"";position:absolute;inset:0 0 auto 0;height:1px;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(90deg,transparent 0%,rgba(220,198,151,.7) 18%,rgba(238,233,221,.35) 50%,transparent 85%);opacity:.6}
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(16px,3vw,36px)}
+
+/* ---------- sign in ---------- */
+#gate{display:none;min-height:100vh;place-items:center;padding:24px}
+#gate.show{display:grid}
+#gate .panel{padding:44px 40px;border-radius:18px;max-width:420px;width:100%;text-align:center}
+#gate h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:40px;line-height:1;margin-bottom:8px}
+#gate h1 em{font-style:italic;font-weight:400;color:var(--copperlt)}
+#gate p{color:var(--grey);font-size:14.5px;line-height:1.6;margin-bottom:26px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;background:var(--copper);color:#0F1327;font-weight:700;font-size:13.5px;letter-spacing:.3px;transition:background .15s}
+.btn:hover{background:var(--copperlt)}
+.btn.ghost{background:transparent;color:var(--grey);border:1px solid var(--line);font-weight:400}
+.btn.ghost:hover{color:var(--cream);border-color:var(--grey)}
+#gateErr{color:var(--bad);font-size:13px;margin-top:16px;display:none}
+
+/* ---------- app ---------- */
+#app{display:none;padding-bottom:80px}
+header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 8px}
+.brand{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;letter-spacing:.5px;line-height:1}
+.brand small{display:block;font-family:'Figtree';font-size:12px;color:var(--dim);letter-spacing:0;margin-top:5px;font-weight:300}
+.brand em{font-style:normal;color:var(--copperlt);font-weight:500;letter-spacing:3px;text-transform:uppercase;font-size:.62em;vertical-align:middle;margin-left:6px}
+.brand .script,#gate h1 .script{font-family:'Alex Brush',cursive;font-weight:400;font-size:1.45em;color:var(--copper);letter-spacing:0;line-height:1;vertical-align:middle}
+#gate h1 em{font-style:normal;letter-spacing:4px;text-transform:uppercase;font-size:.5em;display:block;margin-top:8px;color:var(--copperlt)}
+.who{display:flex;align-items:center;gap:14px;color:var(--dim);font-size:13px}
+.live{display:inline-flex;align-items:center;gap:6px}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(141,191,147,.18)}
+.live.off i{background:var(--dim);box-shadow:none}
+
+/* next up — the hero: nearest weddings as big serif dates */
+.nextup{margin-top:22px;border-radius:18px;padding:26px 28px 22px;overflow:hidden;position:relative}
+.nextup h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:22px;color:var(--grey);margin-bottom:14px}
+.nextup h2 span{color:var(--cream)}
+.rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(230px,1fr);gap:14px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}
+.rail::-webkit-scrollbar{height:6px}.rail::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.nx{position:relative;scroll-snap-align:start;padding:16px 18px 16px 20px;border-radius:12px;background:rgba(15,19,39,.5);border:1px solid var(--glass-line);cursor:pointer;transition:border-color .15s,transform .15s;overflow:hidden}
+.nx:hover{border-color:var(--copper);transform:translateY(-1px)}
+.nx::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line)}
+.nx.week::before{background:var(--copper)}
+.nx.needs::before{background:var(--warn)}
+.nx .d{font-family:'Cormorant Garamond',serif;font-size:44px;line-height:.95;font-weight:500;color:#FFFFFF}
+.nx .d small{font-size:18px;color:var(--grey);font-weight:400;margin-left:6px}
+.nx .n{margin-top:10px;font-size:14.5px;color:var(--cream);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.6em}
+.nx .m{margin-top:4px;font-size:12.5px;color:var(--dim)}
+.nx .m b{font-weight:400;color:var(--copperlt)}
+.nx .flags{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.nextup .empty{color:var(--dim);font-size:14px;padding:6px 0}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+.stat{padding:18px 20px;border-radius:14px;cursor:pointer;transition:border-color .15s,transform .15s}
+.stat:hover{border-color:var(--copper);transform:translateY(-1px)}
+.stat.on{border-color:var(--copper);box-shadow:0 0 0 1px rgba(201,176,128,.35),0 30px 60px -36px rgba(0,0,0,.85)}
+.stat .v{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:500;line-height:1;color:#FFFFFF}
+.stat .v.copper{color:var(--copperlt)}
+.stat .l{margin-top:6px;font-size:13px;color:var(--grey)}
+.stat .s{margin-top:2px;font-size:12px;color:var(--dim)}
+
+/* earnings */
+.earn{margin-top:14px;border-radius:18px;padding:22px 26px 18px}
+.earn .top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.earn h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:22px;color:var(--grey)}
+.earn .big{font-family:'Cormorant Garamond',serif;font-size:54px;line-height:.95;font-weight:500;color:#FFFFFF;margin-top:6px}
+.earn .big small{font-family:'Figtree';font-size:13px;color:var(--dim);font-weight:300;margin-left:10px}
+.earn .kpis{display:flex;gap:26px;flex-wrap:wrap}
+.earn .kpi .v{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:500;color:var(--cream);line-height:1}
+.earn .kpi .v.cu{color:var(--copperlt)}
+.earn .kpi .l{font-size:12px;color:var(--dim);margin-top:4px}
+.earn .yr{display:flex;gap:4px}
+.earn .yr .chip{padding:6px 12px;font-size:12.5px}
+.chart{margin-top:18px;display:flex;align-items:flex-end;gap:6px;height:190px;border-bottom:1px solid var(--line);padding-bottom:0}
+.col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;height:100%;position:relative}
+.col .stack{display:flex;flex-direction:column;justify-content:flex-end;height:calc(100% - 34px)}
+.col .seg{background:var(--copperlt);opacity:.85;border-radius:3px 3px 0 0;transition:opacity .12s;min-height:0}
+.col .seg.tip{background:var(--sand);border-radius:3px 3px 0 0}
+.col .seg.tip+.seg{border-radius:0}
+.col.future .seg{background:var(--line)}
+.col:hover .seg{opacity:1}
+.col .lbl{font-size:11px;color:var(--dim);text-align:center;margin-top:8px;line-height:1.25;height:26px;white-space:nowrap}
+.col .lbl b{display:block;font-weight:300;font-size:10px;opacity:.8}
+.col .val{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% - 4px);font-size:12px;color:var(--cream);opacity:0;white-space:nowrap;pointer-events:none;transition:opacity .12s;background:rgba(15,19,39,.85);padding:2px 7px;border-radius:6px;border:1px solid var(--glass-line)}
+.col:hover .val{opacity:1}
+.col.best .seg:not(.tip){background:var(--copper);opacity:1}
+.col .ghost{position:absolute;left:0;right:0;bottom:34px;border:1px dashed rgba(238,233,221,.28);border-bottom:0;border-radius:3px 3px 0 0;pointer-events:none}
+.chartwrap{position:relative}
+.avg{position:absolute;left:0;right:0;border-top:1px dashed rgba(238,233,221,.35);pointer-events:none}
+.avg span{position:absolute;right:0;top:-18px;font-size:11px;color:var(--grey);background:rgba(15,19,39,.7);padding:1px 6px;border-radius:4px}
+.metrics{display:flex;gap:4px;flex-wrap:wrap}
+.metrics .chip{padding:6px 12px;font-size:12.5px}
+.earn .subrow{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.earn .bestline{font-size:13px;color:var(--grey);line-height:1.5}.earn .bestline b{font-weight:400;color:var(--copperlt)}
+@media(max-width:640px){.chart{gap:3px;height:160px}.col .lbl{font-size:9.5px}.col .lbl b{display:none}.col:nth-child(2n) .lbl{visibility:hidden}}
+.earn .legend{display:flex;gap:16px;font-size:11.5px;color:var(--dim);margin-top:8px}
+.earn .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--copperlt)}
+.earn .legend i.tip{background:var(--sand)}
+/* toolbar */
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid var(--line);color:var(--grey);font-size:12.5px;transition:all .15s}
+.chip:hover{color:var(--cream);border-color:var(--grey)}
+.chip.on{background:var(--copper);border-color:var(--copper);color:#0F1327;font-weight:700}
+.chip .k{opacity:.65;margin-left:4px;font-weight:400}
+.search{margin-left:auto;display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(15,19,39,.5);min-width:240px}
+.search input{background:none;border:0;outline:0;width:100%;font-size:13.5px}
+.search input::placeholder{color:var(--dim)}
+.tog{display:flex;align-items:center;gap:7px;color:var(--dim);font-size:12.5px;cursor:pointer;user-select:none}
+.tog input{accent-color:var(--copper)}
+
+/* table */
+.tbl{margin-top:14px;border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{text-align:left;font-weight:400;color:var(--dim);font-size:12px;padding:14px 16px;border-bottom:1px solid var(--glass-line);white-space:nowrap}
+thead th.r,td.r{text-align:right}
+tbody tr.row{border-bottom:1px solid rgba(42,49,82,.7);cursor:pointer;transition:background .12s;box-shadow:inset 3px 0 0 transparent}
+tbody tr.row:hover{background:rgba(238,233,221,.035);box-shadow:inset 3px 0 0 var(--line)}
+tbody tr.row.open{background:rgba(201,176,128,.07);box-shadow:inset 3px 0 0 var(--copper)}
+tbody tr.row.test{opacity:.6}
+td{padding:13px 16px;vertical-align:middle}
+td.when{white-space:nowrap}
+.date{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:#FFFFFF;line-height:1}
+.date small{font-family:'Figtree';font-size:12px;color:var(--dim);display:block;margin-top:3px;font-weight:300}
+.name{color:var(--cream);font-weight:400}
+.sub{color:var(--dim);font-size:12.5px;margin-top:2px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pkg{color:var(--grey)}
+.money{font-variant-numeric:tabular-nums;color:var(--cream)}
+.money small{display:block;color:var(--dim);font-size:11.5px}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11.5px;font-weight:400;white-space:nowrap;border:1px solid transparent}
+.pill i{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+.p-ok{color:var(--ok);background:rgba(141,191,147,.10);border-color:rgba(141,191,147,.25)}
+.p-warn{color:var(--warn);background:rgba(224,182,92,.10);border-color:rgba(224,182,92,.28)}
+.p-bad{color:var(--bad);background:rgba(224,133,120,.12);border-color:rgba(224,133,120,.3)}
+.p-dim{color:var(--grey);background:rgba(168,176,200,.08);border-color:rgba(168,176,200,.2)}
+.p-cu{color:var(--copperlt);background:rgba(201,176,128,.10);border-color:rgba(201,176,128,.3)}
+.p-add{color:var(--cream);background:rgba(201,176,128,.16);border-color:rgba(201,176,128,.45)}
+.addons{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.days{font-variant-numeric:tabular-nums;white-space:nowrap}
+.days.soon{color:var(--copperlt)}.days.past{color:var(--dim)}
+
+/* expanded detail */
+tr.detail td{padding:0 16px 18px;background:rgba(201,176,128,.05);border-bottom:1px solid rgba(42,49,82,.7)}
+.dgrid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:18px;padding-top:6px}
+.dcol h4{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--copperlt);margin-bottom:8px}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:4px 10px;font-size:13px;line-height:1.5}
+.kv dt{color:var(--dim)}.kv dd{color:var(--cream);overflow-wrap:anywhere;min-width:0}
+.dgrid>*{min-width:0}
+.kv dd.mute{color:var(--dim)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.acts .btn{padding:8px 14px;font-size:12.5px}
+.timeline{list-style:none;font-size:12.5px;line-height:1.7}
+.timeline li{display:flex;gap:10px;color:var(--grey)}
+.timeline li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--copper);margin-top:9px;flex:none}
+.timeline li.no{color:var(--dim)}.timeline li.no::before{background:var(--line)}
+.timeline b{font-weight:400;color:var(--cream)}
+.err{color:var(--bad);font-size:12px;margin-top:6px}
+
+.foot{margin-top:18px;color:var(--dim);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* danger zone in the detail panel */
+.zone{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.zone .btn.danger{background:transparent;color:var(--bad);border:1px solid rgba(224,133,120,.4)}
+.zone .btn.danger:hover{background:rgba(224,133,120,.12)}
+.zone .hint{font-size:12px;color:var(--dim);width:100%}
+.zone .confirm{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--cream)}
+/* header nav */
+.nav{display:flex;gap:4px;margin-right:6px}
+.nav a{padding:8px 12px;border-radius:999px;font-size:12.5px;color:var(--grey);border:1px solid transparent}
+.nav a:hover{color:var(--cream);border-color:var(--line)}
+.nav a.on{color:var(--copperlt);border-color:var(--line)}
+/* notes */
+.notes{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.notes h4{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--copperlt);margin-bottom:8px}
+.note{display:flex;gap:10px;align-items:flex-start;font-size:13px;padding:6px 0;border-bottom:1px solid rgba(42,49,82,.7)}
+.note .when{color:var(--dim);font-size:11.5px;white-space:nowrap;min-width:92px;padding-top:2px}
+.note .txt{flex:1;color:var(--cream);white-space:pre-wrap;line-height:1.45}
+.note .x{color:var(--dim);font-size:16px;line-height:1;padding:0 4px}.note .x:hover{color:var(--bad)}
+.noteform{display:flex;gap:8px;margin-top:8px;align-items:flex-end}
+.noteform textarea{flex:1;font:inherit;background:rgba(15,19,39,.5);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;min-height:38px;resize:vertical}
+.noteform textarea:focus{outline:0;border-color:var(--copper)}
+/* production */
+.prod{margin-top:14px;padding-top:12px;border-top:1px dashed var(--line)}
+.prod h4{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:17px;color:var(--copperlt);margin-bottom:8px}
+.prodrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.field label{display:block;font-size:11px;color:var(--dim);margin-bottom:4px}
+.field select,.field input{width:100%;background:rgba(15,19,39,.5);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--cream)}
+.field select:focus,.field input:focus{outline:0;border-color:var(--copper)}
+.field select option{background:#1A2039}
+.stages{display:flex;gap:0;margin-top:10px}
+.stages span{flex:1;height:4px;background:var(--line);border-radius:2px;margin-right:3px}
+.stages span.done{background:var(--copperlt)}.stages span.cur{background:var(--copper)}
+.p-late{color:var(--bad);background:rgba(224,133,120,.12);border-color:rgba(224,133,120,.3)}
+/* action results */
+.acts .btn.busy{opacity:.6;pointer-events:none}
+.actbox{margin-top:10px;font-size:12.5px;color:var(--grey);background:rgba(15,19,39,.5);border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:none}
+.actbox.show{display:block}.actbox code{color:var(--copperlt);word-break:break-all}
+.actbox input{width:100%;background:rgba(15,19,39,.6);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--cream);margin-top:6px}
+.actbox .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+/* calendar */
+.viewtog{display:flex;gap:4px}
+.cal{margin-top:14px;border-radius:16px;padding:18px 20px 20px}
+.cal .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.cal h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:26px;color:#FFFFFF}
+.cal h2 small{font-family:'Figtree';font-size:12px;color:var(--dim);margin-left:10px;font-weight:300}
+.cal .nav2{display:flex;gap:4px}
+.cal .nav2 button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);color:var(--grey);font-size:16px}
+.cal .nav2 button:hover{color:var(--cream);border-color:var(--grey)}
+.cgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cgrid .dow{font-size:11px;color:var(--dim);text-align:center;padding:4px 0 6px;letter-spacing:.5px}
+.cday{min-height:92px;border-radius:8px;background:rgba(15,19,39,.4);border:1px solid rgba(42,49,82,.7);padding:6px;font-size:12px;color:var(--dim)}
+.cday.out{opacity:.35}.cday.today{border-color:var(--copper)}
+.cday .dn{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--grey)}
+.cday.today .dn{color:var(--copperlt)}
+.cev{display:block;margin-top:4px;padding:3px 6px;border-radius:5px;font-size:11px;color:var(--cream);background:rgba(141,191,147,.14);border-left:2px solid var(--ok);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.cev.warn{background:rgba(224,182,92,.12);border-left-color:var(--warn)}
+.cev.bad{background:rgba(224,133,120,.12);border-left-color:var(--bad)}
+.cev.past{opacity:.55}
+.cev:hover{color:#FFFFFF}
+@media(max-width:760px){.cday{min-height:64px;padding:4px}.cev{font-size:9.5px;padding:2px 4px}.prodrow{grid-template-columns:1fr 1fr}}
+/* questionnaire modal */
+.modal{position:fixed;inset:0;z-index:20;display:none;align-items:flex-start;justify-content:center;padding:28px 16px;background:rgba(15,19,39,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);overflow:auto}
+.modal.show{display:flex}
+.modal .sheet{width:min(960px,100%);border-radius:18px;padding:26px 30px 30px;position:relative}
+.modal .mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--glass-line);padding-bottom:16px;margin-bottom:6px}
+.modal h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:30px;line-height:1}
+.modal h2 em{font-style:italic;font-weight:400;color:var(--copperlt)}
+.modal .msub{color:var(--dim);font-size:13px;margin-top:6px}
+.modal .macts{display:flex;gap:8px;flex-wrap:wrap}
+.modal .macts .btn{padding:9px 16px;font-size:12.5px}
+.qsec{margin-top:22px}
+.qsec h3{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:19px;color:var(--copperlt);margin-bottom:8px;display:flex;align-items:baseline;gap:10px}
+.qsec h3 small{font-family:'Figtree';font-size:11px;color:var(--dim);letter-spacing:1px}
+.qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 22px}
+.qa{padding:9px 0;border-bottom:1px solid rgba(42,49,82,.7)}
+.qa.wide{grid-column:1/-1}
+.qa .k{font-size:11.5px;color:var(--dim);letter-spacing:.2px}
+.qa .a{font-size:14px;color:var(--cream);margin-top:3px;white-space:pre-wrap;line-height:1.5}
+.qa .a.empty{color:var(--line)}
+.qa .a a{color:var(--copperlt)}
+.qhint{margin-top:16px;font-size:12px;color:var(--dim)}
+@media(max-width:700px){.qgrid{grid-template-columns:1fr}.modal .sheet{padding:20px 18px}}
+@media print{
+  body{background:#fff;color:#000}body::before,body::after,#app,.toast{display:none!important}
+  .modal{display:block!important;position:static;padding:0;background:none;backdrop-filter:none}
+  .modal .sheet{border:0;box-shadow:none;background:none;backdrop-filter:none;width:100%;padding:0;color:#000}
+  .modal .glass::before{display:none}.macts{display:none!important}
+  .modal h2,.modal h2 em,.qsec h3{color:#000}.qsec h3{border-bottom:1px solid #999;padding-bottom:4px}
+  .qa{border-bottom:1px solid #ddd;break-inside:avoid}.qa .k{color:#555}.qa .a{color:#000}.qa .a.empty{color:#bbb}.qhint,.msub{color:#666}
+  .qsec{break-inside:avoid-page}
+}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);opacity:0;padding:11px 18px;border-radius:999px;font-size:13px;color:var(--cream);z-index:9;transition:opacity .2s,transform .2s;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.state{padding:40px;text-align:center;color:var(--dim)}
+.link{color:var(--copperlt);text-decoration:underline;text-underline-offset:3px}.link:hover{color:var(--cream)}
+.btn:disabled{opacity:.6;cursor:default}
+
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.earn .big{font-size:42px}.dgrid{grid-template-columns:1fr}
+  thead th:nth-child(4),td:nth-child(4){display:none}}
+.mflags{display:none}.mtotal{display:none}
+@media(max-width:640px){.search{margin-left:0;width:100%}.nx .d{font-size:36px}
+  thead th:nth-child(3),td:nth-child(3),thead th:nth-child(5),td:nth-child(5),thead th:nth-child(6),td:nth-child(6){display:none}
+  thead th:nth-child(7),td:nth-child(7){display:none}
+  table{table-layout:fixed}thead th:first-child,td.when{width:88px}
+  .mflags{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+  .kv{grid-template-columns:84px 1fr}.acts .btn{padding:8px 12px}
+  td{padding:12px 12px}.date{font-size:17px}}
+
+/* ---- phone header: brand on top, segmented nav below, controls last ---- */
+@media(max-width:700px){
+  header{flex-wrap:wrap;gap:12px 0;padding:16px 0 6px}
+  .brand{font-size:22px}
+  .who{width:100%;display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
+  .who .nav{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:0}
+  .nav a{text-align:center;padding:9px 0;border-color:var(--line);background:rgba(15,19,39,.4);font-size:13px}
+  .nav a.on{background:var(--copper);color:#0F1327;font-weight:700;border-color:var(--copper)}
+  #whoEmail{display:none}
+  .live{font-size:12px}
+  #signout{padding:8px 14px;font-size:12px;justify-self:end}
+  .wrap{padding:0 12px}
+}
+@media(max-width:640px){
+  .chips{flex-wrap:nowrap;overflow-x:auto;width:100%;scrollbar-width:none;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .chips::-webkit-scrollbar{display:none}.chip{flex:none}
+  .bar{gap:8px}.viewtog{margin-left:auto}
+  .nextup{padding:18px 16px 14px}.rail{grid-auto-columns:minmax(220px,80%)}
+  .stats{gap:8px}.stat{padding:14px 14px}.stat .v{font-size:32px}.stat .s{display:none}
+  .earn{padding:16px 14px 14px}.earn .top{gap:12px}.earn .kpis{gap:14px}.earn .kpi .v{font-size:22px}
+  .earn .legend{gap:10px}.earn .legend span:last-child{display:none}
+  .mtotal{display:block;margin-top:5px;color:var(--cream);font-size:12.5px;font-variant-numeric:tabular-nums}
+  .acts .btn{padding:8px 12px;font-size:12px}
+  .cal{padding:12px 8px 14px}.cal h2{font-size:20px}.cgrid{gap:2px}.cday{min-height:54px;padding:3px;border-radius:5px}.cday .dn{font-size:13px}
+  .cev{font-size:0;padding:0;height:6px;margin-top:3px;border-radius:2px}
+  .cal .top .acts{width:100%;justify-content:space-between}
+  .dgrid{gap:14px}.kv{grid-template-columns:82px 1fr;font-size:12.5px}
+  .zone .hint{font-size:11.5px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="panel glass">
+    <h1><span class="script">Elizabeth Scott</span> <em>Bookings</em></h1>
+    <p>Sign in with the studio Google account to see live bookings, balances, and questionnaires.</p>
+    <button class="btn" id="signin">Sign in with Google</button>
+    <div id="gateErr"></div>
+  </div>
+</div>
+
+<div class="toast glass" id="toast"></div>
+<div class="modal" id="qmodal" role="dialog" aria-modal="true" aria-label="Wedding day questionnaire"><div class="sheet glass" id="qsheet"></div></div>
+<div id="app">
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="script">Elizabeth Scott</span> <em>Bookings</em><small id="todayTxt"></small></div>
+      <div class="who"><nav class="nav"><a class="on" href="/">Bookings</a><a href="/leads.html">Leads</a><a href="/visitors.html">Visitors</a></nav><span class="live off" id="live"><i></i><span id="liveTxt">Connecting</span></span><span id="whoEmail"></span><button class="btn ghost" id="signout">Sign out</button></div>
+    </header>
+
+    <section class="nextup glass">
+      <h2>Next up <span id="nextupCount"></span></h2>
+      <div class="rail" id="rail"></div>
+    </section>
+
+    <section class="stats" id="stats"></section>
+
+    <section class="earn glass" id="earn"></section>
+
+    <div class="bar">
+      <div class="chips" id="chips"></div>
+      <label class="tog"><input type="checkbox" id="showTest"> show test, abandoned &amp; cancelled</label>
+      <div class="viewtog"><button class="chip on" data-mode="list">List</button><button class="chip" data-mode="cal">Calendar</button></div>
+      <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search names, email, venue, booking id"></div>
+    </div>
+
+    <section class="cal glass" id="cal" style="display:none"></section>
+
+    <div class="tbl glass" id="tblwrap">
+      <table>
+        <thead><tr>
+          <th>Wedding</th><th>Couple</th><th>Status</th><th>Package</th><th>Balance</th><th>Questionnaire</th><th class="r">Total</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="7" class="state">Loading bookings…</td></tr></tbody>
+      </table>
+    </div>
+    <div class="foot"><span id="footCount"></span><span><button class="link" id="exportCsv">Export this view as CSV</button> · Times shown in your local time.</span></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, collectionGroup, onSnapshot, doc, updateDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref as sref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+/* ====== CONFIG — Elizabeth Scott (elizabeth-scott-738e5) web app config from Firebase console ====== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCGLuSg0vXbqKhzJwvbAYzTD7Lo17FbJ28",
+  authDomain: "elizabeth-scott-738e5.firebaseapp.com",
+  projectId: "elizabeth-scott-738e5",
+  storageBucket: "elizabeth-scott-738e5.firebasestorage.app",
+  appId: "1:443752653013:web:7cba348946edd20d85c25c"
+};
+const ADMIN_EMAILS = ["info@elizabethscottweddings.com", "hello@elizabethscottweddings.com"];
+const ADMIN_ACTION_URL = "https://us-central1-elizabeth-scott-738e5.cloudfunctions.net/admin_action";
+const PROD_STAGES = [["awaiting_footage","Awaiting footage"],["with_editor","With editor"],["review","In review"],["delivered","Delivered"],["gallery_sent","Gallery sent"]];
+const DELIVERY_WEEKS = { video: 8, photo: 6, combo: 8, combined: 8 };   // default due = wedding + this
+const RAIL_LIVE = true;    // Zoho Payments rail (same Danbren Media account as Atavia)
+/* Firestore rules must ALSO enforce this allowlist — see firestore.rules */
+/* ================================================================================= */
+
+const $ = s => document.querySelector(s);
+const gate = $("#gate"), appEl = $("#app");
+const DEMO = new URLSearchParams(location.search).has("demo");
+let auth, db, storage;
+function wireAuth(){
+
+$("#signin").onclick = async () => {
+  const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+  try { await signInWithPopup(auth, p); } catch (e) {
+    if (/popup/i.test(e.code || "")) return signInWithRedirect(auth, p);
+    showGateErr(e.message);
+  }
+};
+$("#signout").onclick = () => signOut(auth);
+getRedirectResult(auth).catch(e => showGateErr(e.message));
+
+let unsub = null;
+onAuthStateChanged(auth, user => {
+  if (unsub) { unsub(); unsub = null; }
+  if (!user) { appEl.style.display="none"; gate.classList.add("show"); return; }
+  if (!ADMIN_EMAILS.includes((user.email||"").toLowerCase())) {
+    gate.classList.add("show"); showGateErr(`${user.email} isn't on the admin list.`); signOut(auth); return;
+  }
+  $("#whoEmail").textContent = user.email;
+  gate.classList.remove("show"); appEl.style.display="block";
+  const u1 = onSnapshot(collection(db, "bookings"), snap => {
+    RAW = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    setLive(true); render();
+  }, err => { setLive(false); $("#rows").innerHTML = `<tr><td colspan="7" class="state">Couldn't read bookings: ${esc(err.message)}<br><small>Check the Firestore rules allow reads for ${esc(user.email)}.</small></td></tr>`; });
+  const u2 = onSnapshot(collectionGroup(db, "gratuities"), snap => {
+    TIPS = snap.docs.map(d => ({ id: d.id, booking: d.ref.parent.parent.id, ...d.data() }));
+    render();
+  }, err => { console.warn("gratuities:", err.message); });
+  unsub = () => { u1(); u2(); };
+});
+} /* wireAuth */
+function showGateErr(m){ const el=$("#gateErr"); el.textContent=m; el.style.display="block"; }
+function setLive(on){ $("#live").classList.toggle("off",!on); $("#liveTxt").textContent = on ? "Live" : "Offline"; }
+
+/* ====== derive ====== */
+var RAW = [], TIPS = [], VIEW = "upcoming", OPEN = null, EARN_YEAR = "all", METRIC = "collected";
+const DAY = 86400000;
+const ts = v => v ? (v.toDate ? v.toDate() : new Date(v)) : null;
+const today = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const money = n => "$" + Number(n||0).toLocaleString();
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtD = d => d ? d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
+const fmtDT = d => d ? d.toLocaleString("en-US",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : null;
+
+function derive(b){
+  const ev = b.event_date_raw ? new Date(b.event_date_raw + "T00:00:00") : null;
+  const days = ev ? Math.round((ev - today())/DAY) : null;
+  const st = b.status || "unknown";
+  const noise = b.test_mode === true || st.startsWith("abandoned") || st === "cancelled";
+  const signed = !!b.signed_at || ["signed","awaiting_payment","confirmed"].includes(st);
+  const retainerPaid = st === "confirmed" || !!b.deposit_paid_at;
+  const pif = b.payment_option === "pif";
+  const bal = Number(b.balance||0);
+  const due = ts(b.balance_due_at);
+  const attempts = Number(b.balance_attempts||0);
+  let balance;                    // {code,label,cls}
+  if (!retainerPaid)            balance = {code:"na",      label:"—",                 cls:"p-dim"};
+  else if (pif || b.balance_paid_at || bal===0)
+                                balance = {code:"paid",    label:pif?"Paid in full":"Balance paid", cls:"p-ok"};
+  else if (b.balance_link_sent_at || b.balance_payment_link_url)
+                                balance = {code:"link",    label:"Link sent "+fmtD(ts(b.balance_link_sent_at)||due), cls:"p-cu"};
+  else if (!RAIL_LIVE && due && due<=new Date())
+                                balance = {code:"overdue", label:"Due — collect manually", cls:"p-warn"};
+  else if (attempts>=3)         balance = {code:"failed",  label:"Charge failed ×3",  cls:"p-bad"};
+  else if (attempts>0)          balance = {code:"declined",label:`Declined (${attempts}/3)`, cls:"p-bad"};
+  else if (due && due<=new Date())
+                                balance = {code:"overdue", label:RAIL_LIVE?"Charging":"Due — collect manually", cls:"p-warn"};
+  else if (due)                 balance = {code:"due",     label:"Due "+fmtD(due),    cls:"p-cu"};
+  else                          balance = {code:"due",     label:"Due — no date",     cls:"p-warn"};
+
+  const status = ({
+    pending_signature:{label:"Awaiting signature",cls:"p-warn"},
+    signed:{label:"Signed — card pending",cls:"p-warn"},
+    awaiting_payment:{label:"Awaiting retainer",cls:"p-bad"},
+    confirmed:{label:"Booked",cls:"p-ok"},
+    abandoned_unsigned:{label:"Abandoned (unsigned)",cls:"p-dim"},
+    abandoned_unpaid:{label:"Abandoned (unpaid)",cls:"p-dim"},
+    cancelled:{label:"Cancelled",cls:"p-bad"},
+  })[st] || {label:st.replace(/_/g," "),cls:"p-dim"};
+
+  const value = pif ? Number(b.pif_total ?? b.total ?? 0) : Number(b.total||0);   // contract value
+  const addons = [];
+  if (b.second_shooter) addons.push({label:"Second shooter", amt:(b.addons||[]).find(a=>a&&a.id==="second_shooter")?.amount});
+  const eh = Number(b.extra_hours||0);
+  if (eh) addons.push({label:`+${eh} hour${eh===1?"":"s"}`, amt:(b.addons||[]).find(a=>a&&a.id==="extra_hours")?.amount});
+  const qDone = !!b.questionnaire_submitted_at;
+  const past = days!==null && days<0;
+  const prod = b.production || {};
+  const prodStage = prod.stage || (past && st==="confirmed" ? "awaiting_footage" : null);
+  const prodDone = ["gallery_sent"].includes(prodStage);
+  const prodDue = prod.due ? new Date(prod.due+"T00:00:00") : (ev ? new Date(ev.getTime() + (DELIVERY_WEEKS[b.service_type]||8)*7*DAY) : null);
+  const prodLate = !!(past && st==="confirmed" && !prodDone && prodDue && prodDue < today());
+  const inProd = past && st==="confirmed" && !noise && !prodDone;
+  const needs = !noise && ((!past && (st==="pending_signature" || st==="awaiting_payment" || ["declined","failed"].includes(balance.code) || (st==="confirmed" && !qDone && days!==null && days<=21))) || prodLate);
+  return {...b, _ev:ev, _days:days, _noise:noise, _signed:signed, _retainerPaid:retainerPaid, _pif:pif, _balance:balance, _status:status, _qDone:qDone, _past:past, _needs:needs, _value:value, _addons:addons, _prod:prod, _prodStage:prodStage, _prodDone:prodDone, _prodDue:prodDue, _prodLate:prodLate, _inProd:inProd};
+}
+
+const VIEWS = [
+  ["upcoming","Upcoming", r=>!r._past],
+  ["needs","Needs action", r=>r._needs],
+  ["sig","Awaiting signature", r=>r.status==="pending_signature"],
+  ["ret","Awaiting retainer", r=>r.status==="awaiting_payment"||r.status==="signed"],
+  ["bal","Balance open", r=>["due","overdue","declined","failed","link"].includes(r._balance.code)],
+  ["qn","Questionnaire pending", r=>r.status==="confirmed"&&!r._qDone&&!r._past],
+  ["addons","With add-ons", r=>r._addons.length>0&&!r._past],
+  ["prod","Post-production", r=>r._inProd],
+  ["past","Past", r=>r._past],
+  ["all","All", ()=>true],
+];
+
+function render(){
+  const showNoise = $("#showTest").checked;
+  const q = $("#q").value.trim().toLowerCase();
+  const all = RAW.map(derive).filter(r=>showNoise||!r._noise);
+
+  // hero: next 6 real weddings
+  const soon = all.filter(r=>!r._past && r._signed && !r._noise).sort((a,b)=>a._days-b._days).slice(0,6);
+  $("#nextupCount").textContent = soon.length ? `· ${all.filter(r=>!r._past&&r._signed).length} on the calendar` : "";
+  $("#rail").innerHTML = soon.length ? soon.map(r=>`
+    <div class="nx${r._days<=7?" week":""}${r._needs?" needs":""}" data-id="${r.id}">
+      <div class="d">${r._ev.getDate()}<small>${r._ev.toLocaleDateString("en-US",{month:"short"})} ${r._ev.getFullYear()}</small></div>
+      <div class="n">${esc(r.client_names)}</div>
+      <div class="m"><b>${r._days===0?"Today":r._days===1?"Tomorrow":"in "+r._days+" days"}</b> · ${esc(r.package_name||"")}${r.service_type?" · "+esc(r.service_type):""}</div>
+      <div class="flags">${pill(r._status)}${r._addons.map(a=>pill({label:a.label,cls:"p-add"})).join("")}${r._retainerPaid?pill(r._balance):""}${pill(r._qDone?{label:"Questionnaire in",cls:"p-ok"}:{label:"No questionnaire",cls:r._days<=21?"p-warn":"p-dim"})}</div>
+    </div>`).join("") : `<div class="empty">No signed weddings ahead yet.</div>`;
+
+  // stats
+  const live = all.filter(r=>!r._noise);
+  const n30 = live.filter(r=>r._signed&&!r._past&&r._days<=30).length;
+  const n90 = live.filter(r=>r._signed&&!r._past&&r._days<=90).length;
+  const openBal = live.filter(r=>["due","overdue","declined","failed","link"].includes(r._balance.code));
+  const openAmt = openBal.reduce((s,r)=>s+Number(r.balance||0),0);
+  const qPend = live.filter(r=>r.status==="confirmed"&&!r._qDone&&!r._past).length;
+  const needs = live.filter(r=>r._needs).length;
+  const booked = live.filter(r=>r.status==="confirmed"&&!r._past).reduce((s,r)=>s+r._value,0);
+  const retOpen = live.filter(r=>r.status==="awaiting_payment"||r.status==="signed").length;
+  $("#stats").innerHTML = [
+    ["needs", needs, needs?"copper":"", "Need your attention", `unsigned, unpaid retainer, declined balance, late questionnaire${live.filter(r=>r._prodLate).length?`, ${live.filter(r=>r._prodLate).length} late delivery`:""}`],
+    ["upcoming", n30, "", "Weddings in 30 days", `${n90} in the next 90`],
+    ["bal", money(openAmt), "", "Balances still to collect", `${openBal.length} booking${openBal.length===1?"":"s"}${retOpen?` · ${retOpen} retainer${retOpen===1?"":"s"} unpaid`:""}`],
+    ["qn", qPend, "", "Questionnaires outstanding", `${money(booked)} booked ahead`],
+  ].map(([v,val,cls,l,s])=>`<div class="stat glass${VIEW===v?" on":""}" data-view="${v}"><div class="v ${cls}">${val}</div><div class="l">${l}</div><div class="s">${s}</div></div>`).join("");
+
+  renderEarnings(live);
+
+  // chips
+  $("#chips").innerHTML = VIEWS.map(([k,l,f])=>`<button class="chip${VIEW===k?" on":""}" data-view="${k}">${l}<span class="k">${all.filter(f).length}</span></button>`).join("");
+
+  // rows
+  const f = VIEWS.find(v=>v[0]===VIEW)[2];
+  let rows = all.filter(f);
+  if (q) rows = rows.filter(r=>[r.client_names,r.email,r.ceremony_venue,r.reception_venue,r.booking_id,r.id,r.package_name,r.phone].join(" ").toLowerCase().includes(q));
+  rows.sort((a,b)=>VIEW==="past"?(b._days-a._days):((a._days??1e9)-(b._days??1e9)));
+  $("#footCount").textContent = `${rows.length} booking${rows.length===1?"":"s"} shown · ${RAW.length} total in Firestore`;
+  $("#rows").innerHTML = rows.length ? rows.map(row).join("") : `<tr><td colspan="7" class="state">Nothing here${q?" for “"+esc(q)+"”":""}.</td></tr>`;
+  renderCalendar(all);
+}
+
+/* Every dollar that actually landed, with the date it landed */
+function payments(rows){
+  const out = [];
+  for (const r of rows) {
+    const dep = ts(r.deposit_paid_at);
+    if (dep) out.push({at:dep, amt:Number(r.invoice_amount ?? (r._pif ? r.pif_total : r.retainer) ?? 0), kind:"pay", id:r.id});
+    const bal = ts(r.balance_paid_at);
+    if (bal && !r._pif) out.push({at:bal, amt:Number(r.balance||0), kind:"pay", id:r.id});
+  }
+  const ids = new Set(rows.map(r=>r.id));
+  for (const g of TIPS) { const at = ts(g.at); if (at && ids.has(g.booking)) out.push({at, amt:Number(g.amount||0), kind:"tip", id:g.booking}); }
+  return out;
+}
+function renderEarnings(live){
+  const pays = payments(live);
+  const years = [...new Set(pays.map(p=>p.at.getFullYear()))].sort();
+  const now = new Date(), thisYear = now.getFullYear();
+  const inYear = p => EARN_YEAR==="all" || p.at.getFullYear()===Number(EARN_YEAR);
+  const sel = pays.filter(inYear);
+  const total = sel.reduce((s,p)=>s+p.amt,0), tips = sel.filter(p=>p.kind==="tip").reduce((s,p)=>s+p.amt,0);
+  const ytd = pays.filter(p=>p.at.getFullYear()===thisYear).reduce((s,p)=>s+p.amt,0);
+  const openBal = live.filter(r=>["due","overdue","declined","failed","link"].includes(r._balance.code)).reduce((s,r)=>s+Number(r.balance||0),0);
+  const openRet = live.filter(r=>r.status==="awaiting_payment"||r.status==="signed").reduce((s,r)=>s+Number(r.invoice_amount ?? (r._pif?r.pif_total:r.retainer) ?? 0),0);
+  const contracted = live.filter(r=>["confirmed","awaiting_payment","signed"].includes(r.status)).reduce((s,r)=>s+r._value,0);
+  const weddingsDone = live.filter(r=>r.status==="confirmed"&&r._past).length;
+
+  // months: selected year → Jan–Dec; all → trailing 12
+  let months = [];
+  if (EARN_YEAR==="all") { for (let i=11;i>=0;i--){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); months.push(d);} }
+  else { for (let m=0;m<12;m++) months.push(new Date(Number(EARN_YEAR),m,1)); }
+  const key = d => d.getFullYear()+"-"+d.getMonth();
+
+  /* three ways to slice a month */
+  const METRICS = {
+    collected:{label:"Collected", unit:"$", fmt:money, hint:"by the date each payment landed",
+      build:()=>{ const m={}; for (const p of pays){ const k=key(p.at); m[k]=m[k]||{a:0,b:0}; m[k][p.kind==="tip"?"b":"a"]+=p.amt; } return m; },
+      legend:[["Retainers & balances",""],["Gratuities","tip"]]},
+    booked:{label:"New bookings", unit:"$", fmt:money, hint:"contract value by the month it was signed",
+      build:()=>{ const m={}; for (const r of live){ const d=ts(r.signed_at); if(!d||!r._signed) continue; const k=key(d); m[k]=m[k]||{a:0,b:0,n:0}; m[k].a+=r._value; m[k].n++; } return m; },
+      legend:[["Signed contract value",""]]},
+    weddings:{label:"Weddings", unit:"", fmt:v=>v+(v===1?" wedding":" weddings"), hint:"by wedding date — future months are what's on the books",
+      build:()=>{ const m={}; for (const r of live){ if(!r._ev||!r._signed) continue; const k=key(r._ev); m[k]=m[k]||{a:0,b:0}; m[k].a++; } return m; },
+      legend:[["Booked weddings",""]]},
+  };
+  const M = METRICS[METRIC], data = M.build();
+  const get = d => data[key(d)]||{a:0,b:0};
+  const series = months.map(d=>({d, ...get(d), future:d>now && METRIC!=="weddings"}));
+  const prior = EARN_YEAR==="all" ? null : months.map(d=>get(new Date(d.getFullYear()-1,d.getMonth(),1)));
+  const tot = x => x.a+x.b;
+  const max = Math.max(1, ...series.map(tot), ...(prior?prior.map(tot):[]));
+  const realized = series.filter(x=>!x.future && tot(x)>0);
+  const avg = realized.length ? realized.reduce((s,x)=>s+tot(x),0)/realized.length : 0;
+  const bestX = realized.length ? realized.reduce((b,x)=>tot(x)>tot(b)?x:b) : null;
+  const bars = series.map((x,i)=>{
+    const t=tot(x), p1=(x.a/max)*100, p2=(x.b/max)*100, g=prior?prior[i]:null, gp=g?(tot(g)/max)*100:0;
+    const isBest = bestX && x===bestX;
+    return `<div class="col${x.future?" future":""}${isBest?" best":""}" title="${x.d.toLocaleDateString("en-US",{month:"long",year:"numeric"})}: ${M.fmt(t)}${g&&tot(g)?` (prior year ${M.fmt(tot(g))})`:""}">
+      ${g&&tot(g)?`<div class="ghost" style="height:calc((100% - 34px) * ${gp/100})"></div>`:""}
+      ${t?`<div class="val">${M.fmt(t)}${x.b?` <span style="color:var(--copperlt)">+${money(x.b)} tips</span>`:""}${x.n?` · ${x.n} signed`:""}</div>`:""}
+      <div class="stack">${x.b?`<div class="seg tip" style="height:${p2}%"></div>`:""}<div class="seg" style="height:${t?Math.max(p1,1):(x.future?0:.8)}%"></div></div>
+      <div class="lbl">${x.d.toLocaleDateString("en-US",{month:"short"})}${x.d.getMonth()===0||i===0?`<b>${x.d.getFullYear()}</b>`:""}</div></div>`;
+  }).join("");
+  const avgPct = avg ? (avg/max)*100 : 0;
+  $("#earn").innerHTML = `
+    <div class="top">
+      <div><h2>Earned ${EARN_YEAR==="all"?"to date":"in "+EARN_YEAR}</h2>
+        <div class="big">${money(total)}${tips?`<small>incl. ${money(tips)} in gratuities</small>`:""}</div></div>
+      <div class="kpis">
+        <div class="kpi"><div class="v">${money(ytd)}</div><div class="l">collected in ${thisYear}</div></div>
+        <div class="kpi"><div class="v cu">${money(openBal+openRet)}</div><div class="l">still to collect on signed contracts</div></div>
+        <div class="kpi"><div class="v">${money(contracted)}</div><div class="l">total contracted · ${weddingsDone} wedding${weddingsDone===1?"":"s"} delivered</div></div>
+      </div>
+      <div class="yr">${["all",...years].map(y=>`<button class="chip${String(EARN_YEAR)===String(y)?" on":""}" data-year="${y}">${y==="all"?"Last 12 months":y}</button>`).join("")}</div>
+    </div>
+    <div class="subrow">
+      <div class="metrics">${Object.entries(METRICS).map(([k,m])=>`<button class="chip${METRIC===k?" on":""}" data-metric="${k}">${m.label}</button>`).join("")}</div>
+      <div class="bestline">${bestX?`Best month <b>${bestX.d.toLocaleDateString("en-US",{month:"long",year:"numeric"})}</b> at ${M.fmt(tot(bestX))}${avg?` · average ${M.unit==="$"?money(Math.round(avg)):avg.toFixed(1)} across ${realized.length} active month${realized.length===1?"":"s"}`:""}`:"No data for this range yet."}</div>
+    </div>
+    <div class="chartwrap">
+      <div class="chart" aria-label="${M.label} by month">${bars}</div>
+      ${avg?`<div class="avg" style="bottom:calc(34px + (100% - 34px) * ${avgPct/100})"><span>avg</span></div>`:""}
+    </div>
+    <div class="legend">${M.legend.map(([l,c])=>`<span><i class="${c}"></i>${l}</span>`).join("")}${bestX?`<span><i style="background:var(--copper)"></i>Best month</span>`:""}${prior?`<span><i style="background:none;border:1px dashed rgba(238,233,221,.4)"></i>Same month, prior year</span>`:""}<span>· ${M.hint}</span></div>`;
+}
+const pill = p => `<span class="pill ${p.cls}"><i></i>${esc(p.label)}</span>`;
+function row(r){
+  const d = r._days, dl = d===null?"no date":d===0?"today":d===1?"tomorrow":d<0?`${-d}d ago`:`in ${d}d`;
+  const dcls = d===null?"":d<0?"past":d<=30?"soon":"";
+  const open = OPEN===r.id;
+  return `<tr class="row${open?" open":""}${r.test_mode?" test":""}" data-id="${r.id}" tabindex="0" aria-expanded="${open}">
+    <td class="when"><div class="date">${r._ev?r._ev.toLocaleDateString("en-US",{month:"short",day:"numeric"}):"—"}<small>${r._ev?r._ev.getFullYear():""} · <span class="days ${dcls}">${dl}</span></small><span class="mtotal">${money(r._value)}</span></div></td>
+    <td><div class="name">${esc(r.client_names||"—")}</div><div class="sub">${esc(r.ceremony_venue||r.email||"")}</div><div class="mflags">${pill(r._status)}${r._addons.map(a=>pill({label:a.label,cls:"p-add"})).join("")}${r._retainerPaid?pill(r._balance):""}${r._qDone?pill({label:"Questionnaire in",cls:"p-ok"}):r.status==="confirmed"?pill({label:"No questionnaire",cls:(d!==null&&d<=21)?"p-warn":"p-dim"}):""}</div></td>
+    <td>${pill(r._status)}${r.test_mode?` ${pill({label:"Test",cls:"p-dim"})}`:""}${r._inProd?`<div class="addons">${pill({label:(PROD_STAGES.find(x=>x[0]===r._prodStage)||[])[1]||"Awaiting footage",cls:r._prodLate?"p-late":"p-cu"})}</div>`:""}</td>
+    <td class="pkg">${esc(r.package_name||r.package_id||"")}${r.coverage_hours?`<div class="sub">${r.coverage_hours}h ${esc(r.service_type||"")}</div>`:""}${r._addons.length?`<div class="addons">${r._addons.map(a=>pill({label:a.label,cls:"p-add"})).join("")}</div>`:""}</td>
+    <td>${r._retainerPaid?pill(r._balance):`<span class="sub">—</span>`}${r._retainerPaid&&r._balance.code!=="paid"?`<div class="sub">${money(r.balance)}</div>`:""}</td>
+    <td>${r._qDone?pill({label:"Submitted",cls:"p-ok"}):r.status==="confirmed"?pill({label:"Not yet",cls:(d!==null&&d<=21)?"p-warn":"p-dim"}):`<span class="sub">—</span>`}</td>
+    <td class="r money">${money(r._value)}${r._pif?"<small>paid in full</small>":r.discount?`<small>after ${money(r.discount)} code</small>`:""}</td>
+  </tr>${open?detail(r):""}`;
+}
+
+function detail(r){
+  const t = (label, at, no) => { const d = ts(at); return `<li class="${d?"":"no"}"><span>${label}${d?` <b>${fmtDT(d)}</b>`:` — ${no||"not yet"}`}</span></li>`; };
+  const addons = (r.addons||[]).map(a=>typeof a==="string"?a:`${a.label||a.id||""} ${a.amount?money(a.amount):""}`.trim()).join(", ");
+  return `<tr class="detail"><td colspan="7"><div class="dgrid">
+    <div class="dcol"><h4>Couple &amp; day</h4>
+      <dl class="kv">
+        <dt>Email</dt><dd><a href="mailto:${esc(r.email)}">${esc(r.email||"—")}</a></dd>
+        <dt>Phone</dt><dd>${r.phone?`<a href="tel:${esc(r.phone)}">${esc(fmtPhone(r.phone))}</a>`:"—"}</dd>
+        <dt>Ceremony</dt><dd>${esc(r.ceremony_venue||"—")}</dd>
+        <dt>Reception</dt><dd class="${r.reception_venue?"":"mute"}">${esc(r.reception_venue||"same / not given")}</dd>
+        <dt>Coverage</dt><dd>${r.start_time||"?"} – ${r.end_time||"?"} · ${r.coverage_hours||"?"}h${r.extra_hours?` (+${r.extra_hours} extra)`:""}${r.second_shooter?" · second shooter":""}</dd>
+        <dt>Guests</dt><dd>${esc(r.guest_count||"—")}</dd>
+        <dt>Mailing</dt><dd class="mute">${esc([r.mailing_address,r.city_state_zip].filter(Boolean).join(", ")||"—")}</dd>
+        <dt>Booking id</dt><dd><code>${esc(r.booking_id||r.id)}</code></dd>
+      </dl>
+      <div class="acts">
+        <a class="btn" href="mailto:${esc(r.email)}?subject=${encodeURIComponent("Your wedding — "+(r.event_date||""))}">Email couple</a>
+        ${actionButtons(r)}
+        ${r.signed_contract_path?`<button class="btn ghost" data-contract="${esc(r.signed_contract_path)}">Open signed contract</button>`:""}
+        ${r.questionnaire&&Object.keys(r.questionnaire).length?`<button class="btn ghost" data-quest="${r.id}">View questionnaire</button>`:""}
+        ${r.sid?`<a class="btn ghost" href="/visitors.html?sid=${encodeURIComponent(r.sid)}">Visitor trail</a>`:""}
+        <a class="btn ghost" href="https://console.firebase.google.com/project/elizabeth-scott-738e5/firestore/databases/-default-/data/~2Fbookings~2F${r.id}" target="_blank" rel="noopener">Open in Firestore</a>
+      </div>
+      <div class="actbox" id="actbox-${r.id}"></div>
+    </div>
+    <div class="dcol"><h4>Money</h4>
+      <dl class="kv">
+        <dt>Package</dt><dd>${esc(r.package_name||"")} · ${money(r.base_total)}</dd>
+        ${r._addons.length?`<dt>Add-ons</dt><dd>${r._addons.map(a=>`${esc(a.label)}${a.amt?` · ${money(a.amt)}`:""}`).join("<br>")}${r.addons_total?`<br><span class="mute">${money(r.addons_total)} total</span>`:""}</dd>`:`<dt>Add-ons</dt><dd class="mute">none</dd>`}
+        ${r.discount?`<dt>Discount</dt><dd>−${money(r.discount)} <span class="mute">${esc(r.discount_code||"")}</span></dd>`:""}
+        <dt>Contract</dt><dd>${money(r.total)}${r._pif?` → <b>${money(r.pif_total)}</b> paid in full`:""}</dd>
+        <dt>Plan</dt><dd>${r._pif?"Paid in full at signing":`${money(r.retainer)} retainer at signing, ${money(r.balance)} balance later`}</dd>
+        <dt>Balance due</dt><dd>${r._pif?"n/a":fmtD(ts(r.balance_due_at))}</dd>
+        ${r.balance_attempts?`<dt>Attempts</dt><dd>${r.balance_attempts}/3</dd>`:""}
+        <dt>Rail</dt><dd class="mute">${r.zoho_customer_id?"Zoho":r.stax_customer_id||r.stax_payment_method_id?"Stax (retired)":"—"}</dd>
+      </dl>
+      ${r.balance_last_error?`<div class="err">Last charge error: ${esc(r.balance_last_error)}</div>`:""}
+    </div>
+    <div class="dcol"><h4>Timeline</h4>
+      <ul class="timeline">
+        ${t("Submitted", r.created_at)}
+        ${t("Signed", r.signed_at, "unsigned")}
+        ${t("Retainer paid", r.deposit_paid_at, r.status==="awaiting_payment"?"invoice open":"not yet")}
+        ${r._pif?"":t("Balance paid", r.balance_paid_at, r._balance.label.toLowerCase())}
+        ${t("Questionnaire", r.questionnaire_submitted_at, "not submitted")}
+        ${t("Gratuity invite", r.gratuity_invite_sent_at, "after the wedding")}
+        ${r.abandoned_at?t("Marked abandoned", r.abandoned_at):""}
+      </ul>
+    </div>
+  </div>
+  ${r._past && r.status==="confirmed" ? productionPanel(r) : ""}
+  ${notesPanel(r)}
+  <div class="zone">
+    ${r.status!=="cancelled"&&!r.test_mode?`<button class="btn danger" data-act="cancel" data-id="${r.id}">Cancel booking</button>`:""}
+    ${r.test_mode
+      ? `<button class="btn ghost" data-act="untest" data-id="${r.id}">Mark as real booking</button>
+         <button class="btn danger" data-act="del" data-id="${r.id}">Delete this test booking</button>
+         <span class="hint">Marked as test — hidden from the numbers. Deleting removes the Firestore document permanently; the signed PDF and any processor and SignWell records stay where they are.</span>`
+      : `<button class="btn ghost" data-act="test" data-id="${r.id}">Mark as test booking</button>
+         <span class="hint">Marking as test hides this booking from the stats and the default views. It's reversible, and it's the only way to enable delete.</span>`}
+  </div></td></tr>`;
+}
+function demoBookings(){
+  const d = n => { const x=new Date(); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
+  const t = n => { const x=new Date(); x.setDate(x.getDate()+n); return x; };
+  const base = {retainer:500, guest_count:"120", start_time:"13:00", end_time:"21:00", coverage_hours:8, second_shooter:false, extra_hours:0, addons:[], addons_total:0, discount:0, discount_code:"", test_mode:false, reception_venue:"", mailing_address:"12 Example Ln", city_state_zip:"Scottsdale, AZ 85251"};
+  return [
+    {id:"a1", ...base, client_names:"Karissa Brunelle & Tanner Houle", email:"karissa@example.com", phone:"5185550100", event_date_raw:d(29), package_id:"reverie", package_name:"The Reverie", service_type:"video", base_total:1500, total:1500, pif_total:1400, balance:1000, payment_option:"pif", status:"awaiting_payment", created_at:t(-27), signed_at:t(-27), ceremony_venue:"The Envio, Portsmouth, NH", stax_customer_id:"x"},
+    {id:"a2", ...base, client_names:"Morgan Robinson & Alex Reyes", email:"morgan@example.com", phone:"4805550101", event_date_raw:d(12), package_id:"heirloom", package_name:"The Heirloom", service_type:"combo", base_total:3200, addons:[{id:"second_shooter",label:"Second shooter",amount:500}], addons_total:500, second_shooter:true, total:3700, pif_total:3600, balance:3200, payment_option:"standard", status:"confirmed", created_at:t(-40), signed_at:t(-40), deposit_paid_at:t(-40), balance_due_at:t(-21), balance_attempts:2, balance_last_error:"card_declined: insufficient funds", ceremony_venue:"Desert Botanical Garden, Phoenix, AZ", zoho_customer_id:"x"},
+    {id:"a3", ...base, client_names:"Priya Natarajan & Sam Okafor", email:"priya@example.com", phone:"2145550102", event_date_raw:d(3), package_id:"verse", package_name:"The Verse", service_type:"video", coverage_hours:6, base_total:1200, total:1200, pif_total:1100, balance:700, payment_option:"standard", status:"confirmed", created_at:t(-90), signed_at:t(-90), deposit_paid_at:t(-90), balance_due_at:t(-75), balance_paid_at:t(-75), questionnaire_submitted_at:t(-10), questionnaire_updated_at:t(-10), sid:"demo-sid", questionnaire:{p1_name:"Priya Natarajan",p2_name:"Sam Okafor",contact_phone:"2145550102",contact_email:"priya@example.com",wedding_date:d(3),cer_venue:"The Adolphus",cer_address:"1321 Commerce St, Dallas, TX 75202",cer_start:"4:00 PM",cer_end:"4:30 PM",cer_contact_name:"Dana",cer_contact_phone:"2145550199",indoor_outdoor:"Indoor",same_venue:"Yes — same venue",cocktail_start:"5:00 PM",rec_start:"6:00 PM",rec_end:"11:00 PM",grand_exit:"10:45 PM — sparklers",ready_location:"Adolphus suite 1902",arrival_time:"1:00 PM",ready_start:"12:00 PM",firstlook_time:"2:30 PM",firstlook_loc:"French Room",moh:"Anjali N.",best_man:"Tunde O.",parents:"Both sets — Priya's grandmother is 91 and will be seated front left",must_haves:"Priya's grandmother's blessing before the ceremony\nSam's brothers' toast",traditions:"Handfasting, Other",traditions_desc:"Nigerian money spray during the reception",dj_name:"DJ Kev",dj_phone:"2145550177",avoid:"Priya's uncle Raj prefers not to be photographed",anything_else:"We'd love a 60-second teaser for Instagram"}, ceremony_venue:"The Adolphus, Dallas, TX", zoho_customer_id:"x"},
+    {id:"a4", ...base, client_names:"Elena Marsh & Jordan Lee", email:"elena@example.com", phone:"6175550103", event_date_raw:d(64), package_id:"garden", package_name:"The Garden", service_type:"photo", base_total:2400, discount:150, discount_code:"ATV-7K2Q", total:2250, pif_total:2150, balance:1750, payment_option:"standard", status:"confirmed", created_at:t(-5), signed_at:t(-5), deposit_paid_at:t(-5), balance_due_at:t(15), ceremony_venue:"Castle Hill Inn, Newport, RI", zoho_customer_id:"x"},
+    {id:"a5", ...base, client_names:"Dev Patel & Rosa Alvarez", email:"dev@example.com", phone:"3055550104", event_date_raw:d(140), package_id:"sonnet", package_name:"The Sonnet", service_type:"video", coverage_hours:10, extra_hours:1, addons:[{id:"extra_hours",label:"1 extra hour",amount:125}], addons_total:125, base_total:1900, total:2025, pif_total:1925, balance:1525, payment_option:"standard", status:"pending_signature", created_at:t(-2), ceremony_venue:"Vizcaya Museum, Miami, FL", zoho_customer_id:"x"},
+    {id:"a6", ...base, client_names:"Hannah Cole & Ben Whitaker", email:"hannah@example.com", phone:"7205550105", event_date_raw:d(-20), package_id:"duet", package_name:"The Duet", service_type:"combo", coverage_hours:6, base_total:2600, total:2600, pif_total:2500, balance:2100, payment_option:"pif", status:"confirmed", created_at:t(-120), signed_at:t(-120), deposit_paid_at:t(-120), questionnaire_submitted_at:t(-30), gratuity_invite_sent_at:t(-18), production:{stage:"with_editor",editor:"Mike",updated_at:t(-12)}, admin_notes:[{at:t(-14),text:"Footage drive arrived, 2 cards. Ceremony audio on lav 2.",by:"demo"}], zoho_payment_id:"pay_1", ceremony_venue:"Red Rocks, Morrison, CO", zoho_customer_id:"x"},
+    {id:"a7", ...base, client_names:"Test Booking", email:"test@example.com", phone:"", event_date_raw:d(50), package_id:"aubade", package_name:"The Aubade", service_type:"video", coverage_hours:4, base_total:900, total:900, pif_total:800, balance:400, payment_option:"standard", status:"abandoned_unsigned", created_at:t(-45), abandoned_at:t(-15), test_mode:true, ceremony_venue:"Nowhere"},
+  ];
+}
+/* Questionnaire schema — mirrors /questionnaire/ on the site, section by section */
+const Q_SCHEMA = [
+  ["Client Information",[["p1_name","Partner 1 — Full Name"],["p2_name","Partner 2 — Full Name"],["contact_phone","Best Contact Phone"],["contact_email","Email Address"],["wedding_date","Wedding Date"]]],
+  ["Ceremony Details",[["cer_venue","Ceremony Venue Name"],["cer_address","Ceremony Venue Address"],["cer_start","Ceremony Start Time"],["cer_end","Estimated End Time"],["cer_contact_name","Venue Contact Name"],["cer_contact_phone","Venue Contact Phone"],["officiant","Officiant / Ceremony Coordinator — Name & Phone"],["indoor_outdoor","Indoor / Outdoor"],["parking_notes","Parking & Vendor Access Notes"]]],
+  ["Reception Details",[["same_venue","Reception at the same venue?"],["rec_venue","Reception Venue Name"],["rec_address","Reception Venue Address"],["cocktail_start","Cocktail Hour Start Time"],["rec_start","Reception Start Time"],["rec_end","Reception End Time"],["grand_exit","Grand Exit Time"],["rec_contact_name","Reception Venue Contact Name"],["rec_contact_phone","Reception Venue Contact Phone"],["coordinator","Day-Of Coordinator / Planner — Name & Phone"]]],
+  ["Day-Of Timeline",[["ready_location","Getting Ready — Full Address / Location"],["arrival_time","Photographer / Videographer Arrival Time"],["ready_start","Getting Ready Start Time"],["firstlook_time","First Look — Time"],["firstlook_loc","First Look — Location"],["party_time","Bridal Party Photos — Time"],["party_loc","Bridal Party Photos — Location"],["formals_time","Family Formals — Time"],["formals_loc","Family Formals — Location"],["portraits_time","Couple Portraits — Time"],["portraits_loc","Couple Portraits — Location"]]],
+  ["Key People & Family",[["moh","Maid / Matron of Honor"],["best_man","Best Man"],["parents","Parents to be Featured"],["vips","Other VIPs to Watch For"]]],
+  ["Must-Have Shots & Special Moments",[["must_haves","Must-Have Photo / Video Moments"],["traditions","Traditions / Special Ceremonies"],["traditions_desc","Describe Any Traditions or Special Moments"]]],
+  ["Other Vendors",[["dj_name","DJ / Band"],["dj_phone","DJ / Band Phone"],["florist_name","Florist"],["florist_phone","Florist Phone"],["planner_name","Wedding Planner / Coordinator"],["planner_phone","Planner Phone"],["caterer_name","Caterer"],["caterer_phone","Catering Phone"],["hmua_name","Hair & Makeup Artist(s)"],["hmua_phone","Hair & Makeup Phone"]]],
+  ["Special Requests & Additional Notes",[["requests","Specific Requests for Photography / Videography"],["avoid","Areas or People to AVOID Photographing"],["anything_else","Anything Else We Should Know?"]]],
+];
+const Q_WIDE = new Set(["parking_notes","ready_location","parents","vips","must_haves","traditions_desc","requests","avoid","anything_else","officiant","coordinator","cer_address","rec_address"]);
+function qval(k, v){
+  v = String(v ?? "").trim(); if (!v) return `<div class="a empty">—</div>`;
+  if (/phone/.test(k)) { const d=v.replace(/\D/g,""); return `<div class="a"><a href="tel:${esc(d||v)}">${esc(fmtPhone(v))}</a></div>`; }
+  if (/email/.test(k)) return `<div class="a"><a href="mailto:${esc(v)}">${esc(v)}</a></div>`;
+  return `<div class="a">${esc(v)}</div>`;
+}
+function openQuestionnaire(r){
+  const q = r.questionnaire || {}, known = new Set(Q_SCHEMA.flatMap(([,f])=>f.map(x=>x[0])));
+  const extra = Object.keys(q).filter(k=>!known.has(k) && String(q[k]||"").trim());
+  const filled = Object.values(q).filter(v=>String(v||"").trim()).length;
+  const sub = ts(r.questionnaire_submitted_at), upd = ts(r.questionnaire_updated_at);
+  $("#qsheet").innerHTML = `
+    <div class="mhead">
+      <div><h2>Wedding Day <em>Questionnaire</em></h2>
+        <div class="msub">${esc(r.client_names||"")} · ${esc(r.event_date||r.event_date_raw||"")} · ${esc(r.package_name||"")}${r.coverage_hours?` · ${r.coverage_hours}h`:""}<br>
+        ${sub?`Submitted ${fmtDT(sub)}`:""}${upd&&sub&&Math.abs(upd-sub)>60000?` · updated ${fmtDT(upd)}`:""} · ${filled} of ${known.size} answered</div></div>
+      <div class="macts"><button class="btn" id="qprint">Print / save PDF</button><button class="btn ghost" id="qclose">Close</button></div>
+    </div>
+    ${Q_SCHEMA.map(([title,fields],i)=>`<div class="qsec"><h3><small>0${i+1}</small>${esc(title)}</h3><div class="qgrid">${
+      fields.map(([k,l])=>`<div class="qa${Q_WIDE.has(k)?" wide":""}"><div class="k">${esc(l)}</div>${qval(k,q[k])}</div>`).join("")}</div></div>`).join("")}
+    ${extra.length?`<div class="qsec"><h3>Other answers</h3><div class="qgrid">${extra.map(k=>`<div class="qa wide"><div class="k">${esc(k.replace(/_/g," "))}</div>${qval(k,q[k])}</div>`).join("")}</div></div>`:""}
+    <div class="qhint">Answers are exactly as the couple typed them. To change anything, send them back to the questionnaire link — edits overwrite in place.</div>`;
+  $("#qmodal").classList.add("show"); document.body.style.overflow="hidden";
+  $("#qclose").onclick = closeQ; $("#qprint").onclick = () => window.print();
+}
+function closeQ(){ $("#qmodal").classList.remove("show"); document.body.style.overflow=""; }
+$("#qmodal").addEventListener("click", e => { if (e.target===$("#qmodal")) closeQ(); });
+document.addEventListener("keydown", e => { if (e.key==="Escape" && $("#qmodal").classList.contains("show")) closeQ(); });
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-quest]"); if (!b) return;
+  const r = RAW.find(x=>x.id===b.dataset.quest); if (r) openQuestionnaire(derive(r));
+});
+/* ---------- action buttons per state ---------- */
+function actionButtons(r){
+  const b = [];
+  if (r.status==="pending_signature") b.push(["resend_contract","Resend signing link"]);
+  if (RAIL_LIVE && (r.status==="awaiting_payment"||r.status==="signed")) b.push(["payment_link","Send retainer payment link"]);
+  if (RAIL_LIVE && r.status==="confirmed" && !r._pif && !r.balance_paid_at) {
+    if (r.zoho_payment_method_id) b.push(["retry_balance",`Charge balance now (${money(r.balance)})`]);
+    b.push(["payment_link","Send balance payment link"]);
+  }
+  if (r.status==="confirmed" && !r._pif && !r.balance_paid_at) b.push(["mark_paid_balance","Mark balance paid (charged manually)"]);
+  if ((r.status==="awaiting_payment"||r.status==="signed") && r.signed_at) b.push(["mark_paid_retainer","Mark retainer paid (charged manually)"]);
+  if (r.status==="confirmed" && !r._qDone) b.push(["resend_questionnaire","Resend questionnaire"]);
+  if (r.status==="confirmed" && r._past && !r.gratuity_invite_sent_at) b.push(["send_gratuity","Send thank-you + gratuity link"]);
+  if (RAIL_LIVE && r.status==="confirmed" && (r.zoho_payment_id||r.balance_payment_id)) b.push(["refund","Refund…"]);
+  return b.map(([a,l])=>`<button class="btn ghost" data-srv="${a}" data-id="${r.id}">${l}</button>`).join("");
+}
+function productionPanel(r){
+  const p = r._prod, stage = r._prodStage || "awaiting_footage", idx = PROD_STAGES.findIndex(x=>x[0]===stage);
+  const due = p.due || (r._prodDue ? r._prodDue.toISOString().slice(0,10) : "");
+  return `<div class="prod"><h4>Post-production ${r._prodLate?pill({label:"Late",cls:"p-late"}):r._prodDone?pill({label:"Done",cls:"p-ok"}):""}</h4>
+    <div class="prodrow">
+      <div class="field"><label>Stage</label><select data-prod="stage" data-id="${r.id}">${PROD_STAGES.map(([k,l])=>`<option value="${k}"${k===stage?" selected":""}>${l}</option>`).join("")}</select></div>
+      <div class="field"><label>Editor</label><input data-prod="editor" data-id="${r.id}" value="${esc(p.editor||"")}" placeholder="Editor" list="editors"><datalist id="editors"><option>Mike</option><option>Jesse</option></datalist></div>
+      <div class="field"><label>Due</label><input type="date" data-prod="due" data-id="${r.id}" value="${esc(due)}"></div>
+      <div class="field"><label>Delivery link / note</label><input data-prod="note" data-id="${r.id}" value="${esc(p.note||"")}" placeholder="Gallery URL, drive folder…"></div>
+    </div>
+    <div class="stages">${PROD_STAGES.map((x,i)=>`<span class="${i<idx?"done":i===idx?"cur":""}" title="${x[1]}"></span>`).join("")}</div>
+    <div class="sub" style="max-width:none;white-space:normal;margin-top:6px">${p.updated_at?`Updated ${fmtDT(ts(p.updated_at))}`:"Not started"}${p.delivered_at?` · delivered ${fmtD(ts(p.delivered_at))}`:""} · default due is the wedding + ${DELIVERY_WEEKS[r.service_type]||8} weeks</div>
+  </div>`;
+}
+function notesPanel(r){
+  const all = r.admin_notes||[];
+  const notes = all.map((x,i)=>({...x,_i:i})).sort((a,b)=>ts(b.at)-ts(a.at));
+  return `<div class="notes"><h4>Notes <span class="sub" style="display:inline">only you see these</span></h4>
+    ${notes.map(x=>`<div class="note"><span class="when">${fmtDT(ts(x.at))||""}</span><span class="txt">${esc(x.text)}</span><button class="x" data-delnote="${r.id}" data-i="${x._i}" title="Delete note">×</button></div>`).join("")}
+    <div class="noteform"><textarea data-note="${r.id}" placeholder="Add a note… (⌘/Ctrl+Enter to save)"></textarea><button class="btn" data-addnote="${r.id}">Save</button></div>
+  </div>`;
+}
+/* ---------- server actions ---------- */
+async function callAdmin(payload){
+  if (DEMO) { await new Promise(r=>setTimeout(r,500)); return {ok:true, url:"https://payments.zoho.com/link/demo", demo:true, amount:0}; }
+  const tok = await auth.currentUser.getIdToken();
+  const res = await fetch(ADMIN_ACTION_URL, { method:"POST", headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+tok }, body: JSON.stringify(payload) });
+  const j = await res.json().catch(()=>({error:"bad response"}));
+  if (!res.ok) throw new Error(j.error || res.statusText);
+  return j;
+}
+const ACT_CONFIRM = { retry_balance:"Charge the card on file for the full balance right now?", cancel:"Cancel this booking? Open payment links are voided. The contract and any payments stay as they are." };
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-srv],[data-act='cancel']"); if (!b) return;
+  const action = b.dataset.srv || b.dataset.act, id = b.dataset.id, rec = RAW.find(x=>x.id===id); if (!rec) return;
+  const box = document.getElementById("actbox-"+id);
+  const show = html => { if (box){ box.innerHTML = html; box.classList.add("show"); } else toast(html.replace(/<[^>]+>/g,"")); };
+  const payload = { action, booking_id:id };
+  if (action==="mark_paid_balance" || action==="mark_paid_retainer") {
+    const which = action==="mark_paid_balance" ? "balance" : "retainer";
+    const amt = which==="balance" ? rec.balance : (rec.invoice_amount || (rec.payment_option==="pif" ? rec.pif_total : rec.retainer));
+    const pid = prompt(`Mark the ${which} (${money(amt)}) as paid.\n\nPaste the Zoho payment ID from the manual charge (starts 3361…). Leave blank if it was paid another way.`, ""); if (pid==null) return;
+    const note = prompt("Note for the record (how it was paid):", "Card run manually in Zoho") || "";
+    if (!confirm(`Record ${money(amt)} as received for ${rec.client_names} and void any open payment link?`)) return;
+    Object.assign(payload, { action:"mark_paid", payment:which, payment_id:pid.trim(), note });
+  } else if (action==="refund") {
+    const which = rec.balance_payment_id && confirm("Refund the BALANCE payment? (Cancel = refund the retainer/PIF payment instead)") ? "balance" : "retainer";
+    const max = which==="balance" ? rec.balance : (rec.invoice_amount || (rec.payment_option==="pif" ? rec.pif_total : rec.retainer));
+    const amt = prompt(`Refund how much from the ${which} payment? (max ${money(max)})`, max); if (amt==null) return;
+    const reason = prompt("Reason (goes on the refund):", "Requested by couple") || "";
+    Object.assign(payload, { amount:Number(amt), payment:which, reason });
+    if (!confirm(`Refund ${money(Number(amt))} to ${rec.client_names}? This cannot be undone.`)) return;
+  } else if (ACT_CONFIRM[action] && !confirm(ACT_CONFIRM[action])) return;
+  if (action==="cancel") payload.reason = prompt("Reason for cancelling (optional):", "") || "";
+  b.classList.add("busy"); const was = b.textContent; b.textContent = "Working…";
+  try {
+    const j = await callAdmin(payload);
+    const labels = { payment_link:`Payment link ${j.kind==="balance"?"for the balance":"for the retainer"} (${money(j.amount)}) emailed to the couple.`, retry_balance:`Balance charged — ${money(j.amount)}. payment ${j.payment_id||""}.`, resend_contract:"Signing link re-sent.", resend_questionnaire:"Questionnaire link re-sent.", send_gratuity:"Thank-you email with gratuity link sent.", cancel:"Booking cancelled.", mark_paid:`Recorded as paid.${j.voided_link?" Open payment link voided.":""}`, refund:`Refund ${j.status||"submitted"} (${j.refund_id||""}).` };
+    show(`${labels[action]||"Done."}${j.url?`<br>Link: <code>${esc(j.url)}</code><div class="row"><button class="btn ghost" data-copy="${esc(j.url)}">Copy link</button></div>`:""}${j.demo?" <i>(demo)</i>":""}`);
+    toast(labels[action]||"Done");
+  } catch (err) { show(`<span style="color:var(--bad)">${esc(err.message)}</span>`); }
+  b.classList.remove("busy"); b.textContent = was;
+});
+document.addEventListener("click", async e => {
+  const c = e.target.closest("[data-copy]"); if (!c) return;
+  try { await navigator.clipboard.writeText(c.dataset.copy); toast("Copied"); } catch { prompt("Copy:", c.dataset.copy); }
+});
+/* ---------- production + notes writes ---------- */
+async function saveProd(id, patch){
+  const rec = RAW.find(x=>x.id===id); if (!rec) return;
+  const cur = { ...(rec.production||{}), ...patch, updated_at: new Date() };
+  if (patch.stage && ["delivered","gallery_sent"].includes(patch.stage) && !cur.delivered_at) cur.delivered_at = new Date();
+  if (DEMO) { rec.production = cur; render(); return; }
+  try { await updateDoc(doc(db,"bookings",id), { production: cur }); toast("Saved"); }
+  catch (err) { toast("Couldn't save: " + (err.code||err.message)); }
+}
+document.addEventListener("change", e => {
+  const f = e.target.closest("[data-prod]"); if (!f) return;
+  saveProd(f.dataset.id, { [f.dataset.prod]: f.value });
+});
+async function addNote(id){
+  const ta = document.querySelector(`textarea[data-note="${id}"]`); const text = (ta?.value||"").trim(); if (!text) return;
+  const entry = { at: new Date(), text, by: auth?.currentUser?.email || "demo" };
+  const rec = RAW.find(x=>x.id===id);
+  if (DEMO) { rec.admin_notes = [...(rec.admin_notes||[]), entry]; render(); return; }
+  try { await updateDoc(doc(db,"bookings",id), { admin_notes: arrayUnion(entry) }); ta.value=""; toast("Note saved"); }
+  catch (err) { toast("Couldn't save: " + (err.code||err.message)); }
+}
+document.addEventListener("click", async e => {
+  const a = e.target.closest("[data-addnote]"); if (a) return addNote(a.dataset.addnote);
+  const d = e.target.closest("[data-delnote]"); if (!d) return;
+  const rec = RAW.find(x=>x.id===d.dataset.delnote), entry = (rec.admin_notes||[])[Number(d.dataset.i)]; if (!entry) return;
+  if (!confirm("Delete this note?")) return;
+  if (DEMO) { rec.admin_notes = rec.admin_notes.filter(x=>x!==entry); render(); return; }
+  try { await updateDoc(doc(db,"bookings",rec.id), { admin_notes: arrayRemove(entry) }); toast("Note deleted"); }
+  catch (err) { toast("Couldn't delete: " + (err.code||err.message)); }
+});
+document.addEventListener("keydown", e => { if ((e.metaKey||e.ctrlKey) && e.key==="Enter" && e.target.matches("textarea[data-note]")) addNote(e.target.dataset.note); });
+/* ---------- calendar ---------- */
+let MODE = "list", CAL = (()=>{ const d=new Date(); return {y:d.getFullYear(), m:d.getMonth()}; })();
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function renderCalendar(all){
+  const el = $("#cal"); $("#tblwrap").style.display = MODE==="cal" ? "none" : ""; el.style.display = MODE==="cal" ? "" : "none";
+  if (MODE!=="cal") return;
+  const first = new Date(CAL.y, CAL.m, 1), start = new Date(first); start.setDate(1 - first.getDay());
+  const t0 = today(), byDay = {};
+  for (const r of all) if (r._ev && !r._noise) (byDay[r.event_date_raw] = byDay[r.event_date_raw]||[]).push(r);
+  const cells = [];
+  for (let i=0;i<42;i++){ const d = new Date(start); d.setDate(start.getDate()+i); const k = ymd(d);
+    const evs = (byDay[k]||[]).map(r=>`<span class="cev${r.status==="confirmed"?"":r.status==="pending_signature"?" warn":" bad"}${d<t0?" past":""}" data-open="${r.id}" title="${esc(r.client_names)} · ${esc(r.package_name||"")}${r.ceremony_venue?" · "+esc(r.ceremony_venue):""}">${esc((r.client_names||"").split("&")[0].trim())}${r._addons.length?" +":""}</span>`).join("");
+    cells.push(`<div class="cday${d.getMonth()!==CAL.m?" out":""}${d.getTime()===t0.getTime()?" today":""}"><div class="dn">${d.getDate()}</div>${evs}</div>`); }
+  const monthEvs = all.filter(r=>r._ev && !r._noise && r._ev.getMonth()===CAL.m && r._ev.getFullYear()===CAL.y);
+  el.innerHTML = `<div class="top"><h2>${first.toLocaleDateString("en-US",{month:"long",year:"numeric"})}<small>${monthEvs.length} wedding${monthEvs.length===1?"":"s"} · ${money(monthEvs.reduce((s,r)=>s+r._value,0))}</small></h2>
+    <div class="acts" style="margin:0"><button class="btn ghost" id="icalBtn">Subscribe in Google / Apple Calendar</button><div class="nav2"><button data-cal="-1">‹</button><button data-cal="0" title="This month">•</button><button data-cal="1">›</button></div></div></div>
+    <div class="actbox" id="icalbox"></div>
+    <div class="cgrid">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<div class="dow">${d}</div>`).join("")}${cells.join("")}</div>
+    <div style="margin-top:10px;display:flex;gap:16px;font-size:11.5px;color:var(--dim);flex-wrap:wrap"><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--ok);margin-right:5px"></i>Booked</span><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--warn);margin-right:5px"></i>Awaiting signature</span><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--bad);margin-right:5px"></i>Retainer unpaid</span><span>+ = has add-ons · click a name to open it</span></div>`;
+}
+document.addEventListener("click", async e => {
+  const m = e.target.closest("[data-mode]"); if (m) { MODE = m.dataset.mode; document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("on",x===m)); render(); return; }
+  const c = e.target.closest("[data-cal]"); if (c) { const d = Number(c.dataset.cal); if (d===0){ const t=new Date(); CAL={y:t.getFullYear(),m:t.getMonth()}; } else { const t=new Date(CAL.y, CAL.m+d, 1); CAL={y:t.getFullYear(),m:t.getMonth()}; } render(); return; }
+  const o = e.target.closest("[data-open]"); if (o) { MODE="list"; document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("on",x.dataset.mode==="list")); VIEW="all"; OPEN=o.dataset.open; render(); document.querySelector(`tr.row[data-id="${OPEN}"]`)?.scrollIntoView({block:"center",behavior:"smooth"}); return; }
+  if (e.target.id==="icalBtn") {
+    const box = $("#icalbox"); box.classList.add("show"); box.textContent = "Fetching your private calendar link…";
+    try { const j = await callAdmin({action:"ical_url"}); const web = j.url.replace(/^https:/,"webcal:");
+      box.innerHTML = `Private feed — anyone with this link can see your weddings, so don't share it.<input readonly value="${esc(j.url)}"><div class="row"><button class="btn ghost" data-copy="${esc(j.url)}">Copy URL</button><a class="btn ghost" href="${esc(web)}">Open in Apple Calendar</a><a class="btn ghost" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/u/0/r/settings/addbyurl">Google: Settings → Add by URL</a></div>`; }
+    catch (err) { box.innerHTML = `<span style="color:var(--bad)">${esc(err.message)}</span>`; }
+  }
+});
+const fmtPhone = p => { const d=String(p).replace(/\D/g,""); return d.length===10?`(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`:p; };
+
+/* ====== events ====== */
+document.addEventListener("click", e => {
+  const mt = e.target.closest("[data-metric]");
+  if (mt) { METRIC = mt.dataset.metric; render(); return; }
+  const yr = e.target.closest("[data-year]");
+  if (yr) { EARN_YEAR = yr.dataset.year; render(); return; }
+  const chip = e.target.closest("[data-view]");
+  if (chip) { VIEW = chip.dataset.view; OPEN=null; render(); return; }
+  const nx = e.target.closest(".nx");
+  if (nx) { VIEW="all"; OPEN=nx.dataset.id; $("#q").value=""; render(); document.querySelector(`tr.row[data-id="${OPEN}"]`)?.scrollIntoView({block:"center",behavior:"smooth"}); return; }
+  const tr = e.target.closest("tr.row");
+  if (tr && !e.target.closest("a")) { OPEN = OPEN===tr.dataset.id ? null : tr.dataset.id; render(); }
+});
+document.addEventListener("keydown", e => {
+  if ((e.key==="Enter"||e.key===" ") && e.target.matches("tr.row")) { e.preventDefault(); e.target.click(); }
+});
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-contract]"); if (!b) return;
+  b.disabled = true; const was = b.textContent; b.textContent = "Fetching…";
+  try {
+    if (DEMO) throw new Error("not available in demo mode");
+    const id = b.closest("tr.detail")?.previousElementSibling?.dataset.id;   // the booking row above the detail panel
+    const j = await callAdmin({ action:"contract_url", booking_id:id });
+    window.open(j.url, "_blank", "noopener");
+  } catch (err) { b.textContent = "Couldn't open: " + (err.code || err.message); return; }
+  b.disabled = false; b.textContent = was;
+});
+let toastT; function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2600); }
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act, rec = RAW.find(x=>x.id===id); if (!rec) return;
+  const name = rec.client_names || id;
+  try {
+    if (act==="test" || act==="untest") {
+      const v = act==="test";
+      if (DEMO) rec.test_mode = v; else await updateDoc(doc(db,"bookings",id), { test_mode: v });
+      toast(v ? `${name} marked as test` : `${name} marked as real`);
+      if (v && !$("#showTest").checked) OPEN = null;
+      if (DEMO) render();
+    } else if (act==="del") {
+      if (b.dataset.armed !== "1") {
+        b.dataset.armed = "1"; b.textContent = `Really delete ${name}? Click again to confirm`;
+        setTimeout(()=>{ if (b.isConnected){ b.dataset.armed=""; b.textContent="Delete this test booking"; } }, 6000);
+        return;
+      }
+      b.disabled = true; b.textContent = "Deleting…";
+      if (DEMO) RAW = RAW.filter(x=>x.id!==id); else await deleteDoc(doc(db,"bookings",id));
+      OPEN = null; toast(`Deleted ${name}`); if (DEMO) render();
+    }
+  } catch (err) {
+    toast(`Couldn't ${act==="del"?"delete":"update"}: ${err.code || err.message}`);
+    b.disabled = false;
+  }
+});
+$("#exportCsv").onclick = () => {
+  const showNoise = $("#showTest").checked, f = VIEWS.find(v=>v[0]===VIEW)[2];
+  const rows = RAW.map(derive).filter(r=>showNoise||!r._noise).filter(f).sort((a,b)=>(a._days??1e9)-(b._days??1e9));
+  const cols = [["Wedding",r=>r.event_date_raw],["Days out",r=>r._days],["Couple",r=>r.client_names],["Email",r=>r.email],["Phone",r=>r.phone],
+    ["Status",r=>r._status.label],["Package",r=>r.package_name],["Service",r=>r.service_type],["Hours",r=>r.coverage_hours],["Second shooter",r=>r.second_shooter?"yes":""],["Extra hours",r=>r.extra_hours||""],["Add-ons total",r=>r.addons_total||""],
+    ["Plan",r=>r.payment_option],["Contract value",r=>r._value],["Retainer paid",r=>fmtD(ts(r.deposit_paid_at))],["Balance",r=>r._pif?"":r.balance],["Balance status",r=>r._balance.label],
+    ["Balance due",r=>fmtD(ts(r.balance_due_at))],["Balance paid",r=>fmtD(ts(r.balance_paid_at))],["Questionnaire",r=>r._qDone?fmtD(ts(r.questionnaire_submitted_at)):"no"],
+    ["Ceremony",r=>r.ceremony_venue],["Reception",r=>r.reception_venue],["Start",r=>r.start_time],["End",r=>r.end_time],["Guests",r=>r.guest_count],["Booking id",r=>r.booking_id||r.id]];
+  const cell = v => { v = v==null?"":String(v); return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v; };
+  const csv = [cols.map(c=>c[0]).join(",")].concat(rows.map(r=>cols.map(c=>cell(c[1](r))).join(","))).join("\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv"}));
+  a.download = `elizabethscott-bookings-${VIEW}-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+};
+$("#q").addEventListener("input", render);
+$("#showTest").addEventListener("change", render);
+
+$("#todayTxt").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"});
+const OPEN_PARAM = new URLSearchParams(location.search).get("open");
+if (OPEN_PARAM) { VIEW = "all"; OPEN = OPEN_PARAM; }
+/* ====== start ====== */
+if (DEMO) {
+  /* ?demo — preview with sample data, no Firebase needed */
+  RAW = demoBookings(); TIPS = [{id:"g1",booking:"a6",amount:150,at:new Date(Date.now()-15*864e5)},{id:"g2",booking:"a3",amount:75,at:new Date(Date.now()-70*864e5)}]; $("#whoEmail").textContent = "";
+  appEl.style.display = "block"; setLive(false); $("#liveTxt").textContent = "Demo data"; render();
+} else if (firebaseConfig.apiKey === "PASTE_ME") {
+  gate.classList.add("show"); showGateErr("Firebase config hasn't been filled in yet. Add ?demo to the URL to preview with sample data.");
+} else {
+  const app = initializeApp(firebaseConfig);
+  auth = getAuth(app); db = getFirestore(app); storage = getStorage(app);
+  wireAuth();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+{
+  "brand": {
+    "name": "Atavia Weddings",
+    "phone": "(336) 537-9590",
+    "email": "info@ataviaweddings.com",
+    "website": "ataviaweddings.com",
+    "parent_company": "Danbren Media LLC"
+  },
+  "pricing_rules": {
+    "retainer": 500,
+    "pif_discount": 100,
+    "balance_due_days_from_booking": 14,
+    "overtime_day_of_rate": 175,
+    "overtime_prearranged_rate": 125,
+    "addon_second_shooter": 500,
+    "addon_extra_hour": 125,
+    "max_extra_hours": 6,
+    "rush_fee": 149,
+    "rush_days": 14
+  },
+  "packages": [
+    {
+      "id": "petite",
+      "name": "The Petite",
+      "service_type": "photo",
+      "collection_label": "Four Hours Photography Collection",
+      "hours": 4,
+      "total": 1500,
+      "bullets": [
+        "4 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session"
+      ]
+    },
+    {
+      "id": "bloom",
+      "name": "The Bloom",
+      "service_type": "photo",
+      "collection_label": "Six Hours Photography Collection",
+      "hours": 6,
+      "total": 1700,
+      "bullets": [
+        "6 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session"
+      ]
+    },
+    {
+      "id": "garden",
+      "name": "The Garden",
+      "service_type": "photo",
+      "collection_label": "Eight Hours Photography Collection",
+      "hours": 8,
+      "total": 2000,
+      "bullets": [
+        "8 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session"
+      ]
+    },
+    {
+      "id": "estate",
+      "name": "The Estate",
+      "service_type": "photo",
+      "collection_label": "Ten Hours Photography Collection",
+      "hours": 10,
+      "total": 2600,
+      "bullets": [
+        "10 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session"
+      ]
+    },
+    {
+      "id": "aubade",
+      "name": "The Aubade",
+      "service_type": "video",
+      "collection_label": "Four Hours Videography Collection",
+      "hours": 4,
+      "total": 1200,
+      "bullets": [
+        "4 Hours of Coverage",
+        "One Videographer",
+        "HD Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Raw Footage",
+        "Digital Delivery"
+      ]
+    },
+    {
+      "id": "verse",
+      "name": "The Verse",
+      "service_type": "video",
+      "collection_label": "Six Hours Videography Collection",
+      "hours": 6,
+      "total": 1400,
+      "bullets": [
+        "6 Hours of Coverage",
+        "One Videographer",
+        "4K Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Raw Footage",
+        "Digital Delivery"
+      ]
+    },
+    {
+      "id": "reverie",
+      "name": "The Reverie",
+      "service_type": "video",
+      "collection_label": "Eight Hours Videography Collection",
+      "hours": 8,
+      "total": 1500,
+      "bullets": [
+        "8 Hours of Coverage",
+        "One Videographer",
+        "4K Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Instagram Highlight",
+        "Drone Footage of Venue",
+        "Raw Footage",
+        "Digital Delivery"
+      ]
+    },
+    {
+      "id": "sonnet",
+      "name": "The Sonnet",
+      "service_type": "video",
+      "collection_label": "Ten Hours Videography Collection",
+      "hours": 10,
+      "total": 2000,
+      "bullets": [
+        "10 Hours of Coverage",
+        "One Videographer",
+        "4K Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Instagram Highlight",
+        "Drone Footage of Venue",
+        "Raw Footage",
+        "Digital Delivery"
+      ]
+    },
+    {
+      "id": "duet",
+      "name": "The Duet",
+      "service_type": "combined",
+      "collection_label": "Six Hours Combined Collection",
+      "hours": 6,
+      "total": 3000,
+      "bullets": [
+        "6 Hours of Coverage",
+        "One Photographer",
+        "One Videographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "4K Resolution Video",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Raw Footage",
+        "Digital Delivery",
+        "Lifetime Cloud Storage"
+      ]
+    },
+    {
+      "id": "heirloom",
+      "name": "The Heirloom",
+      "service_type": "combined",
+      "collection_label": "Eight Hours Combined Collection",
+      "hours": 8,
+      "total": 3500,
+      "bullets": [
+        "8 Hours of Coverage",
+        "One Photographer",
+        "One Videographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "4K Resolution Video",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Raw Footage",
+        "Digital Delivery",
+        "Lifetime Cloud Storage"
+      ]
+    },
+    {
+      "id": "legacy",
+      "name": "The Legacy",
+      "service_type": "combined",
+      "collection_label": "Ten Hours Combined Collection",
+      "hours": 10,
+      "total": 4000,
+      "bullets": [
+        "10 Hours of Coverage",
+        "Two Photographers",
+        "Two Videographers",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "4K Resolution Video",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Instagram Highlight",
+        "Drone Footage of Venue",
+        "Raw Footage",
+        "Digital Delivery",
+        "Lifetime Cloud Storage"
+      ]
+    }
+  ]
+}
