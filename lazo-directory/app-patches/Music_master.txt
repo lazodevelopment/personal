@@ -1,0 +1,4135 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+// lazo_music.dart
+// Build ID: JC-LAZO-MUSIC-0915-007
+// (v2.4.1: the playback timer is now _posTimer - as _tick it shadowed the haptic helper and broke the build. v2.4: FEEL - every play button, the +, the tab chips, the moment tiles, the back button and the player's controls answer on pointer-down (_Press; InkWell's ripple was painting under their opaque circles and never showed); haptics in tiers - light when a preview starts or pauses and on ordinary buttons, select on tabs, the scrubber and the close, medium when a song lands in the plan (must play, do not play, a moment - however it got there), on pickup when reordering must-plays and on Send to your DJ; the play/pause glyph cross-fades and scales instead of snapping; the player bar rises from the bottom edge and leaves the same way; the scrubber's thumb grows under the finger while you drag and the track thickens with it; picked-up must-plays lift with a shadow; on phones the Search tab slides in over the plan; every list rubber-bands at its edges; display type tightens with size; all of it honours Reduce Motion. Autosave, previews, the equalizer, requests and June are untouched. base v2.3)
+// (v2.3: MOBILE COMPILE FIX. package:web and dart:js_interop are NOT importable on iOS/Android (the Android AAB failed on them); the web-only audio element is now universal_html's AudioElement and the Web Audio analyser is reached through package:universal_html/js_util (dart:js_util on web, a stub on phones), all behind kIsWeb. Same behaviour on web; drop the `web` dependency. Dependencies on this widget in FlutterFlow: audioplayers, universal_html, http. v2.2: THE EQUALIZER LISTENS AGAIN. On web, previews play through a browser audio element wired to a Web Audio AnalyserNode via package:web (wrong - see v2.3), fed through meetlazo.com/music/preview so the clip carries CORS and the spectrum is readable; if the relay fails the clip plays direct and the bars fall back to the beat animation. Phones keep package:audioplayers with the beat animation. Add `web` to the widget's dependencies. v2.1 MOBILE BUILD: compiles for iOS and Android. Previews play through package:audioplayers on every platform (dart:html audio removed), search goes through package:http, dart:web_audio is gone so the equalizer is the beat-driven animation everywhere (the signal-reading version needs a web-only file FlutterFlow can't hold; it can come back as a stub pair later), print opens a tab on web and copies the plan on phones. Dependencies to add on this widget in FlutterFlow: audioplayers, universal_html. v2: THE CONVERSATION. Guest requests - a link (meetlazo.com/w/{slug}/requests)
+// guests use from the invitation or the website; requests land in an inbox
+// here with who asked and why, approve files the song (searched and playable)
+// into must-play, decline hides it. From your DJ - once the plan is sent, the
+// DJ's replies in the thread show on this page, newest first. June - every
+// empty moment has an Ask June button: three real songs with one plain line
+// each, hear it, use it (juneMusic callable). Timeline - a moment can be pinned
+// to a Day-Of event so the DJ's file carries the time. Explicit flags on every
+// result (Deezer/iTunes), a warning when the vibe says clean, and a one-tap
+// search for the clean edit. Running time - must-plays totalled against the
+// reception's length from the Day-Of timeline. Custom moments (hora, money
+// dance, anniversary dance...). Avoid list for artists and genres. A persistent
+// player with a live equalizer (Web Audio through meetlazo.com/music/preview,
+// which relays the clip with CORS; falls back to a beat-driven animation when
+// the clip can't be analysed). Store links now say Listen (Deezer or Apple).
+// v1: search + 30-second previews, moments, must/do-not-play, vibe, notes,
+// send to DJ, print. Data: couples/{cid}/music/main; requests in
+// couples/{cid}/musicRequests. Page: Music, route /music.)
+
+import 'dart:async';
+import 'dart:convert';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:universal_html/js_util.dart' as jsu;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as httpc;
+import 'package:universal_html/html.dart' as html;
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class LazoMusic extends StatefulWidget {
+  const LazoMusic({Key? key, this.width, this.height}) : super(key: key);
+  final double? width;
+  final double? height;
+
+  @override
+  State<LazoMusic> createState() => _LazoMusicState();
+}
+
+class _Song {
+  _Song({
+    required this.id,
+    required this.title,
+    required this.artist,
+    this.album = '',
+    this.art = '',
+    this.preview = '',
+    this.ms = 0,
+    this.link = '',
+    this.note = '',
+    this.explicit = false,
+    this.time = '',
+    this.eventLabel = '',
+    this.requestedBy = '',
+  });
+  final String id;
+  final String title;
+  final String artist;
+  final String album;
+  final String art;
+  final String preview;
+  final int ms;
+  final String link;
+  final bool explicit;
+  String note;
+  String time; // moments only: HH:MM pinned from the Day-Of timeline
+  String eventLabel;
+  String requestedBy;
+
+  Map<String, dynamic> toMap() => <String, dynamic>{
+        'id': id,
+        'title': title,
+        'artist': artist,
+        'album': album,
+        'art': art,
+        'preview': preview,
+        'ms': ms,
+        'link': link,
+        'note': note,
+        'explicit': explicit,
+        if (time.isNotEmpty) 'time': time,
+        if (eventLabel.isNotEmpty) 'eventLabel': eventLabel,
+        if (requestedBy.isNotEmpty) 'requestedBy': requestedBy,
+      };
+
+  static _Song? fromMap(dynamic m) {
+    if (m is! Map) return null;
+    final String t = (m['title'] ?? '').toString();
+    if (t.isEmpty) return null;
+    return _Song(
+      id: (m['id'] ?? '').toString(),
+      title: t,
+      artist: (m['artist'] ?? '').toString(),
+      album: (m['album'] ?? '').toString(),
+      art: (m['art'] ?? '').toString(),
+      preview: (m['preview'] ?? '').toString(),
+      ms: m['ms'] is num ? (m['ms'] as num).toInt() : 0,
+      link: (m['link'] ?? '').toString(),
+      note: (m['note'] ?? '').toString(),
+      explicit: m['explicit'] == true,
+      time: (m['time'] ?? '').toString(),
+      eventLabel: (m['eventLabel'] ?? '').toString(),
+      requestedBy: (m['requestedBy'] ?? '').toString(),
+    );
+  }
+
+  _Song copy() => _Song.fromMap(toMap())!;
+
+  String get spotify =>
+      'https://open.spotify.com/search/${Uri.encodeComponent('$title $artist')}';
+  String get length {
+    if (ms <= 0) return '';
+    final int s = ms ~/ 1000;
+    return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+  }
+}
+
+class _LazoMusicState extends State<LazoMusic> {
+  static const Color plum = Color(0xFF52284F);
+  static const Color plumDeep = Color(0xFF3D1C3B);
+  static const Color gold = Color(0xFFD9B77C);
+  static const Color ivory = Color(0xFFFAF6F0);
+  static const Color ink = Color(0xFF241E2B);
+  static const Color vGreen = Color(0xFF2E8B6B);
+  static const Color muted = Color(0xFF6B5F72);
+  static const Color card = Color(0xFFFFFDF9);
+  static const Color goldLine = Color(0xFFE6D6B8);
+  static const Color rose = Color(0xFFB04343);
+  static const Color amber = Color(0xFF8A6A2F);
+  static const String kHomePage = 'CoupleHome';
+  static const String kSearchProxy = 'https://meetlazo.com/music/search';
+  static const String kPreviewProxy = 'https://meetlazo.com/music/preview';
+  static const String kVibeClean = 'No explicit lyrics';
+
+  // key, label, hint - the moments a DJ asks about, in day order.
+  static const List<List<String>> kMoments = <List<String>>[
+    <String>['processional', 'Processional', 'Walking in'],
+    <String>['recessional', 'Recessional', 'Walking out, married'],
+    <String>['partyEntrance', 'Wedding party entrance', 'Into the reception'],
+    <String>['entrance', 'Grand entrance', 'The two of you'],
+    <String>['firstDance', 'First dance', ''],
+    <String>[
+      'parentDance1',
+      'Parent dance',
+      'Father-daughter, mother-son\u2026'
+    ],
+    <String>['parentDance2', 'Parent dance 2', 'Optional'],
+    <String>['cake', 'Cake cutting', ''],
+    <String>['bouquet', 'Bouquet / garter', 'Optional'],
+    <String>['lastDance', 'Last dance', ''],
+    <String>['sendOff', 'Send-off', 'Sparklers, the getaway car'],
+  ];
+  static const List<String> kCustomIdeas = <String>[
+    'Hora',
+    'Money dance',
+    'Anniversary dance',
+    'Shoe game',
+    'Dollar dance',
+    'Toasts walk-up',
+    'Sunset portraits',
+    'After-party opener',
+  ];
+
+  static const List<String> kVibes = <String>[
+    'Get everyone dancing',
+    'Keep it classy',
+    kVibeClean,
+    'No line dances',
+    'Lots of throwbacks',
+    'Country welcome',
+    'Latin & reggaeton',
+    'Hip-hop & R&B',
+    'Indie & alternative',
+    'Slow songs early, bangers late',
+    'Read the room',
+  ];
+
+  String? _uid;
+  String _cid = '';
+  bool _ready = false;
+  String _coupleLabel = '';
+  String _weddingDate = '';
+  String _siteSlug = '';
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _sub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _reqSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _djSub;
+  Timer? _saveT;
+  bool _saving = false;
+  bool _dirty = false;
+
+  final Map<String, _Song> _moments = <String, _Song>{};
+  final List<List<String>> _custom = <List<String>>[]; // [key, label]
+  final List<_Song> _must = <_Song>[];
+  final List<_Song> _dont = <_Song>[];
+  final List<String> _avoid = <String>[];
+  final Set<String> _vibe = <String>{};
+  String _notes = '';
+  Map<String, dynamic> _sentTo = <String, dynamic>{};
+  final TextEditingController _notesC = TextEditingController();
+  final TextEditingController _avoidC = TextEditingController();
+
+  // guest requests + DJ replies
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _requests =
+      <QueryDocumentSnapshot<Map<String, dynamic>>>[];
+  bool _showDeclined = false;
+  List<Map<String, dynamic>> _djReplies = <Map<String, dynamic>>[];
+  String _djSubFor = '';
+
+  // day-of events for pinning + reception length
+  List<Map<String, dynamic>> _events = <Map<String, dynamic>>[];
+
+  // search
+  final TextEditingController _searchC = TextEditingController();
+  Timer? _searchT;
+  int _searchToken = 0;
+  bool _searching = false;
+  List<_Song> _results = <_Song>[];
+  String _searchErr = '';
+  String _searchFor = ''; // a moment key: the next + files straight there
+  String _reqFor = ''; // a request id: the next + approves it with that song
+
+  // playback (30-second previews) + equalizer
+  AudioPlayer? _player;
+  // web path: element + analyser
+  html.AudioElement? _el;
+  Object? _actx; // JS AudioContext (via universal_html/js_util, web only)
+  Object? _an; // JS AnalyserNode
+  final Uint8List _fft = Uint8List(32);
+  bool _vizReal = false;
+  int _silentTicks = 0;
+  bool _playing = false;
+  String _playingId = '';
+  double _pos = 0;
+  double _dur = 30;
+  Timer? _posTimer;
+  final List<double> _bars = List<double>.filled(28, 0.05);
+  StreamSubscription<Duration>? _posSub;
+  StreamSubscription<Duration>? _durSub;
+  StreamSubscription<PlayerState>? _stateSub;
+
+  int _tab = 0; // phone: 0 plan, 1 search
+  bool _juneBusy = false;
+  bool _scrubbing = false; // v2.4: the thumb grows while a finger holds it
+
+  DocumentReference<Map<String, dynamic>> get _coupleRef =>
+      FirebaseFirestore.instance.collection('couples').doc(_cid);
+  DocumentReference<Map<String, dynamic>> get _ref =>
+      _coupleRef.collection('music').doc('main');
+  CollectionReference<Map<String, dynamic>> get _reqRef =>
+      _coupleRef.collection('musicRequests');
+
+  // ---------------- lifecycle ----------------
+
+  ErrorWidgetBuilder? _prevErrorBuilder;
+
+  @override
+  void initState() {
+    super.initState();
+    _prevErrorBuilder = ErrorWidget.builder;
+    ErrorWidget.builder = (FlutterErrorDetails d) {
+      debugPrint('LAZO music build error: ' + d.exceptionAsString());
+      debugPrint(d.stack.toString());
+      return Container(
+        padding: const EdgeInsets.all(10),
+        alignment: Alignment.topLeft,
+        color: const Color(0xFFFBECEC),
+        child: Text(
+            'Something on the Music page failed to draw:\n' +
+                d.exceptionAsString(),
+            style: const TextStyle(color: rose, fontSize: 11)),
+      );
+    };
+    _uid = FirebaseAuth.instance.currentUser?.uid;
+    if (_uid != null) _resolveCouple();
+  }
+
+  @override
+  void dispose() {
+    if (_prevErrorBuilder != null) ErrorWidget.builder = _prevErrorBuilder!;
+    _saveT?.cancel();
+    _searchT?.cancel();
+    _posTimer?.cancel();
+    _sub?.cancel();
+    _reqSub?.cancel();
+    _djSub?.cancel();
+    _stop();
+    _posSub?.cancel();
+    _durSub?.cancel();
+    _stateSub?.cancel();
+    _player?.dispose();
+    try {
+      final Object? ctx = _actx;
+      if (kIsWeb && ctx != null) jsu.callMethod(ctx, 'close', <Object?>[]);
+      _actx = null;
+    } catch (_) {}
+    _searchC.dispose();
+    _notesC.dispose();
+    _avoidC.dispose();
+    super.dispose();
+  }
+
+  Future<void> _resolveCouple() async {
+    String cid = _uid!;
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> u =
+          await FirebaseFirestore.instance.collection('users').doc(_uid).get();
+      final String shared = (u.data()?['coupleUid'] ?? '').toString();
+      if (shared.isNotEmpty) cid = shared;
+    } catch (e) {
+      debugPrint('LAZO music cid: ' + e.toString());
+    }
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> c =
+          await FirebaseFirestore.instance.collection('couples').doc(cid).get();
+      final Map<String, dynamic> d = c.data() ?? <String, dynamic>{};
+      final dynamic names = d['names'];
+      if (names is String && names.trim().isNotEmpty) {
+        _coupleLabel = names.trim();
+      } else if (names is List && names.isNotEmpty) {
+        _coupleLabel = names.map((dynamic e) => e.toString()).join(' & ');
+      }
+      final dynamic wd = d['weddingDate'];
+      if (wd is Timestamp) _weddingDate = _longDate(wd.toDate());
+    } catch (_) {}
+    if (!mounted) return;
+    _cid = cid;
+    _sub = _ref.snapshots().listen((DocumentSnapshot<Map<String, dynamic>> s) {
+      if (!mounted) return;
+      if (_dirty) {
+        if (!_ready) setState(() => _ready = true);
+        return;
+      }
+      _load(s.data() ?? <String, dynamic>{});
+      setState(() => _ready = true);
+      _watchDj();
+    }, onError: (Object e) {
+      debugPrint('LAZO music load: ' + e.toString());
+      if (mounted) setState(() => _ready = true);
+    });
+    _reqSub = _reqRef.snapshots().listen(
+        (QuerySnapshot<Map<String, dynamic>> s) {
+      if (!mounted) return;
+      final List<QueryDocumentSnapshot<Map<String, dynamic>>> l = s.docs
+          .toList()
+        ..sort((QueryDocumentSnapshot<Map<String, dynamic>> a,
+            QueryDocumentSnapshot<Map<String, dynamic>> b) {
+          final dynamic ta = a.data()['createdAt'];
+          final dynamic tb = b.data()['createdAt'];
+          final int ma = ta is Timestamp ? ta.millisecondsSinceEpoch : 0;
+          final int mb = tb is Timestamp ? tb.millisecondsSinceEpoch : 0;
+          return mb.compareTo(ma);
+        });
+      setState(() => _requests = l);
+    },
+        onError: (Object e) =>
+            debugPrint('LAZO music requests: ' + e.toString()));
+    // Day-Of events: pin moments to times, and size the reception.
+    try {
+      final QuerySnapshot<Map<String, dynamic>> q =
+          await _coupleRef.collection('dayof').orderBy('time').get();
+      _events = q.docs
+          .map((QueryDocumentSnapshot<Map<String, dynamic>> d) => d.data())
+          .toList();
+    } catch (_) {}
+    try {
+      final QuerySnapshot<Map<String, dynamic>> q = await FirebaseFirestore
+          .instance
+          .collection('weddingSites')
+          .where('coupleUid', isEqualTo: cid)
+          .limit(1)
+          .get();
+      if (q.docs.isNotEmpty) _siteSlug = q.docs.first.id;
+    } catch (_) {}
+    if (mounted) setState(() {});
+  }
+
+  void _watchDj() {
+    final String inq = (_sentTo['inquiryId'] ?? '').toString();
+    if (inq.isEmpty || inq == _djSubFor) return;
+    _djSub?.cancel();
+    _djSubFor = inq;
+    _djSub = FirebaseFirestore.instance
+        .collection('inquiries')
+        .doc(inq)
+        .collection('messages')
+        .orderBy('at', descending: true)
+        .limit(25)
+        .snapshots()
+        .listen((QuerySnapshot<Map<String, dynamic>> s) {
+      if (!mounted) return;
+      final dynamic sentAt = _sentTo['at'];
+      final int since = sentAt is Timestamp ? sentAt.millisecondsSinceEpoch : 0;
+      final List<Map<String, dynamic>> out = <Map<String, dynamic>>[];
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> d in s.docs) {
+        final Map<String, dynamic> m = d.data();
+        if ((m['senderRole'] ?? '') != 'vendor') continue;
+        final dynamic at = m['at'];
+        final int ms = at is Timestamp ? at.millisecondsSinceEpoch : 0;
+        if (ms < since - 60000) continue;
+        final String text = (m['text'] ?? '').toString().trim();
+        if (text.isEmpty) continue;
+        out.add(<String, dynamic>{'text': text, 'at': at});
+      }
+      setState(() => _djReplies = out.take(6).toList());
+    }, onError: (Object e) => debugPrint('LAZO music dj: ' + e.toString()));
+  }
+
+  void _load(Map<String, dynamic> d) {
+    _moments.clear();
+    if (d['moments'] is Map) {
+      (d['moments'] as Map).forEach((dynamic k, dynamic v) {
+        final _Song? s = _Song.fromMap(v);
+        if (s != null) _moments[k.toString()] = s;
+      });
+    }
+    _custom.clear();
+    if (d['custom'] is List) {
+      for (final dynamic c in d['custom'] as List) {
+        if (c is Map && (c['key'] ?? '').toString().isNotEmpty) {
+          _custom.add(
+              <String>[c['key'].toString(), (c['label'] ?? '').toString()]);
+        }
+      }
+    }
+    _must
+      ..clear()
+      ..addAll(_songList(d['mustPlay']));
+    _dont
+      ..clear()
+      ..addAll(_songList(d['doNotPlay']));
+    _avoid
+      ..clear()
+      ..addAll(d['avoid'] is List
+          ? (d['avoid'] as List).map((dynamic e) => e.toString())
+          : const <String>[]);
+    _vibe
+      ..clear()
+      ..addAll(d['vibe'] is List
+          ? (d['vibe'] as List).map((dynamic e) => e.toString())
+          : const <String>[]);
+    _notes = (d['notes'] ?? '').toString();
+    if (_notesC.text != _notes) _notesC.text = _notes;
+    _sentTo = d['sentTo'] is Map
+        ? Map<String, dynamic>.from(d['sentTo'] as Map)
+        : <String, dynamic>{};
+  }
+
+  List<_Song> _songList(dynamic v) {
+    if (v is! List) return <_Song>[];
+    return v.map(_Song.fromMap).whereType<_Song>().toList();
+  }
+
+  void _scheduleSave() {
+    _dirty = true;
+    _saveT?.cancel();
+    _saveT = Timer(const Duration(milliseconds: 700), _save);
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _save() async {
+    if (_cid.isEmpty) return;
+    setState(() => _saving = true);
+    try {
+      await _ref.set(<String, dynamic>{
+        'moments': <String, dynamic>{
+          for (final MapEntry<String, _Song> e in _moments.entries)
+            e.key: e.value.toMap(),
+        },
+        'custom': _custom
+            .map((List<String> c) =>
+                <String, String>{'key': c[0], 'label': c[1]})
+            .toList(),
+        'mustPlay': _must.map((_Song s) => s.toMap()).toList(),
+        'doNotPlay': _dont.map((_Song s) => s.toMap()).toList(),
+        'avoid': _avoid,
+        'vibe': _vibe.toList(),
+        'notes': _notes,
+        'coupleUid': _cid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      _dirty = false;
+    } catch (e) {
+      _toast('Could not save: ' + _errText(e));
+    }
+    if (mounted) setState(() => _saving = false);
+  }
+
+  // ---------------- search ----------------
+
+  void _onSearchChanged(String q) {
+    _searchT?.cancel();
+    final String t = q.trim();
+    if (t.length < 2) {
+      setState(() {
+        _results = <_Song>[];
+        _searching = false;
+        _searchErr = '';
+      });
+      return;
+    }
+    _searchT = Timer(const Duration(milliseconds: 350), () => _search(t));
+  }
+
+  Future<List<_Song>> _fetchSongs(String q) async {
+    final String enc = Uri.encodeComponent(q);
+    final List<String> urls = <String>[
+      '$kSearchProxy?q=$enc',
+      'https://itunes.apple.com/search?term=$enc&entity=song&limit=25&country=US',
+    ];
+    String body = '';
+    for (final String u in urls) {
+      try {
+        final httpc.Response r =
+            await httpc.get(Uri.parse(u)).timeout(const Duration(seconds: 8));
+        if (r.statusCode == 200 && r.body.contains('trackName')) {
+          body = r.body;
+          break;
+        }
+      } catch (e) {
+        debugPrint('LAZO music search ($u): ' + e.toString());
+      }
+    }
+    if (body.isEmpty) throw Exception('unavailable');
+    final Map<String, dynamic> j = json.decode(body) as Map<String, dynamic>;
+    final List<dynamic> rs =
+        j['results'] is List ? j['results'] as List : <dynamic>[];
+    final List<_Song> out = <_Song>[];
+    for (final dynamic r in rs) {
+      if (r is! Map) continue;
+      final String t = (r['trackName'] ?? '').toString();
+      if (t.isEmpty) continue;
+      out.add(_Song(
+        id: (r['trackId'] ?? t.hashCode).toString(),
+        title: t,
+        artist: (r['artistName'] ?? '').toString(),
+        album: (r['collectionName'] ?? '').toString(),
+        art: (r['artworkUrl100'] ?? '')
+            .toString()
+            .replaceAll('100x100bb', '200x200bb'),
+        preview: (r['previewUrl'] ?? '').toString(),
+        ms: r['trackTimeMillis'] is num
+            ? (r['trackTimeMillis'] as num).toInt()
+            : 0,
+        link: (r['trackViewUrl'] ?? '').toString(),
+        explicit: r['explicit'] == true ||
+            (r['trackExplicitness'] ?? '') == 'explicit',
+      ));
+    }
+    return out;
+  }
+
+  Future<void> _search(String q) async {
+    if (q.trim().length < 2) return;
+    final int token = ++_searchToken;
+    setState(() {
+      _searching = true;
+      _searchErr = '';
+      _tab = 1;
+    });
+    try {
+      final List<_Song> out = await _fetchSongs(q.trim());
+      if (token != _searchToken || !mounted) return;
+      setState(() {
+        _results = out;
+        _searching = false;
+        _searchErr = out.isEmpty
+            ? 'Nothing for \u201c$q\u201d - try the artist and title.'
+            : '';
+      });
+    } catch (e) {
+      if (token != _searchToken || !mounted) return;
+      setState(() {
+        _searching = false;
+        _searchErr = 'Search is unavailable right now - try again in a moment.';
+      });
+    }
+  }
+
+  // Best single match for "title artist" - used by requests and June.
+  Future<_Song?> _lookup(String title, String artist) async {
+    try {
+      final List<_Song> r = await _fetchSongs('$title $artist'.trim());
+      if (r.isEmpty) return null;
+      final String t = title.toLowerCase();
+      final String a = artist.toLowerCase();
+      for (final _Song s in r) {
+        if (s.title.toLowerCase().contains(t) &&
+            (a.isEmpty || s.artist.toLowerCase().contains(a))) {
+          return s;
+        }
+      }
+      return r.first;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ---------------- playback + equalizer ----------------
+
+  bool get _isPlaying => _playingId.isNotEmpty && _playing;
+
+  AudioPlayer _ensurePlayer() {
+    if (_player != null) return _player!;
+    final AudioPlayer p = AudioPlayer();
+    p.setReleaseMode(ReleaseMode.stop);
+    p.setVolume(0.9);
+    _posSub = p.onPositionChanged.listen((Duration d) {
+      if (!mounted) return;
+      _pos = d.inMilliseconds / 1000.0;
+    });
+    _durSub = p.onDurationChanged.listen((Duration d) {
+      if (!mounted || d.inMilliseconds <= 0) return;
+      _dur = d.inMilliseconds / 1000.0;
+    });
+    _stateSub = p.onPlayerStateChanged.listen((PlayerState st) {
+      if (!mounted) return;
+      setState(() {
+        _playing = st == PlayerState.playing;
+        if (st == PlayerState.completed) {
+          _pos = 0;
+        }
+      });
+    });
+    _player = p;
+    return p;
+  }
+
+  Future<void> _togglePlay(_Song s) async {
+    if (s.preview.isEmpty) {
+      _toast('No preview for this one - open it with Listen.');
+      return;
+    }
+    _tick(_Tick.light); // v2.4: playback is about to change
+    if (_playingId == s.id) {
+      try {
+        if (kIsWeb) {
+          if (_el != null) {
+            if (_elPaused(_el!)) {
+              _el!.play().catchError((Object _) {});
+              _resumeCtx();
+            } else {
+              _el!.pause();
+            }
+          }
+        } else {
+          final AudioPlayer p = _ensurePlayer();
+          if (_playing) {
+            await p.pause();
+          } else {
+            await p.resume();
+          }
+        }
+      } catch (e) {
+        debugPrint('LAZO music toggle: ' + e.toString());
+      }
+      if (mounted) setState(() {});
+      return;
+    }
+    _stop();
+    _playingId = s.id;
+    _pos = 0;
+    _dur = 30;
+    _posTimer?.cancel();
+    _posTimer =
+        Timer.periodic(const Duration(milliseconds: 40), (_) => _onTick());
+    if (mounted) setState(() {});
+    if (kIsWeb) {
+      _startWeb(s, viaProxy: true);
+      return;
+    }
+    try {
+      final AudioPlayer p = _ensurePlayer();
+      await p.stop();
+      await p.play(UrlSource(s.preview));
+    } catch (e) {
+      debugPrint('LAZO music play: ' + e.toString());
+      _toast('That preview would not play.');
+      _stop();
+      if (mounted) setState(() => _playingId = '');
+    }
+  }
+
+  // Web: an <audio> element we own, so an AnalyserNode can read it. The
+  // relay adds CORS to the clip; without CORS the analyser reads silence.
+  // v2.3: package:universal_html's AudioElement (dart:html on web, inert on
+  // phones) + Web Audio through universal_html/js_util - both compile on
+  // iOS/Android; package:web / dart:js_interop do not.
+  void _startWeb(_Song s, {required bool viaProxy}) {
+    try {
+      final html.AudioElement a = html.AudioElement();
+      a.preload = 'auto';
+      a.volume = 0.9;
+      if (viaProxy) {
+        a.crossOrigin = 'anonymous';
+        a.src = '$kPreviewProxy?u=${Uri.encodeComponent(s.preview)}';
+      } else {
+        a.src = s.preview;
+      }
+      a.onEnded.listen((html.Event e) {
+        if (!mounted || _el != a) return;
+        _elSet(a, 'currentTime', 0);
+        setState(() {
+          _pos = 0;
+          _playing = false;
+        });
+      });
+      a.onError.listen((html.Event e) {
+        if (!mounted || _el != a) return;
+        if (viaProxy) {
+          // Relay down or host not allowed: play it straight, bars on the beat.
+          _vizReal = false;
+          _an = null;
+          _startWeb(s, viaProxy: false);
+          return;
+        }
+        _toast('That preview would not play.');
+        _stop();
+        setState(() => _playingId = '');
+      });
+      a.onPlay.listen((html.Event e) {
+        if (mounted && _el == a) setState(() => _playing = true);
+      });
+      a.onPause.listen((html.Event e) {
+        if (mounted && _el == a) setState(() => _playing = false);
+      });
+      _el = a;
+      _vizReal = false;
+      _an = null;
+      if (viaProxy) _wireAnalyser(a);
+      a.play().catchError((Object _) {});
+      _resumeCtx();
+    } catch (e) {
+      debugPrint('LAZO music web play: ' + e.toString());
+      _toast('Could not play the preview.');
+    }
+  }
+
+  // universal_html's phone stub of the audio element has no currentTime /
+  // duration / paused, so the web path reads them through js_util (these
+  // only ever run behind kIsWeb).
+  static double _elNum(html.AudioElement el, String prop) {
+    try {
+      final Object? v = jsu.getProperty(el, prop);
+      return v is num ? v.toDouble() : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  static bool _elPaused(html.AudioElement el) {
+    try {
+      return jsu.getProperty(el, 'paused') == true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  static void _elSet(html.AudioElement el, String prop, Object? v) {
+    try {
+      jsu.setProperty(el, prop, v);
+    } catch (_) {}
+  }
+
+  void _resumeCtx() {
+    final Object? ctx = _actx;
+    if (!kIsWeb || ctx == null) return;
+    try {
+      jsu.callMethod(ctx, 'resume', <Object?>[]);
+    } catch (_) {}
+  }
+
+  void _wireAnalyser(html.AudioElement a) {
+    try {
+      if (_actx == null) {
+        Object? ctor;
+        if (jsu.hasProperty(html.window, 'AudioContext')) {
+          ctor = jsu.getProperty(html.window, 'AudioContext');
+        } else if (jsu.hasProperty(html.window, 'webkitAudioContext')) {
+          ctor = jsu.getProperty(html.window, 'webkitAudioContext');
+        }
+        if (ctor == null) throw StateError('no AudioContext');
+        _actx = jsu.callConstructor(ctor as Function, <Object?>[]);
+      }
+      final Object ctx = _actx!;
+      final Object src =
+          jsu.callMethod(ctx, 'createMediaElementSource', <Object?>[a]);
+      final Object an = jsu.callMethod(ctx, 'createAnalyser', <Object?>[]);
+      jsu.setProperty(an, 'fftSize', 64);
+      jsu.setProperty(an, 'smoothingTimeConstant', 0.78);
+      jsu.callMethod(src, 'connect', <Object?>[an]);
+      jsu.callMethod(
+          an, 'connect', <Object?>[jsu.getProperty(ctx, 'destination')]);
+      _an = an;
+      _vizReal = true;
+      _silentTicks = 0;
+    } catch (e) {
+      debugPrint('LAZO music analyser: ' + e.toString());
+      _vizReal = false;
+      _an = null;
+    }
+  }
+
+  void _onTick() {
+    if (!mounted || _playingId.isEmpty) return;
+    bool playing = _playing;
+    if (kIsWeb && _el != null) {
+      try {
+        _pos = _elNum(_el!, 'currentTime');
+        final double d = _elNum(_el!, 'duration');
+        if (d.isFinite && d > 0) _dur = d;
+        playing = !_elPaused(_el!);
+        _playing = playing;
+      } catch (_) {}
+    }
+    final Object? an = _an;
+    if (_vizReal && an != null) {
+      try {
+        // On dart2js a Uint8List is a JS Uint8Array: filled in place.
+        jsu.callMethod(an, 'getByteFrequencyData', <Object?>[_fft]);
+        final Uint8List d = _fft;
+        int sum = 0;
+        for (int i = 0; i < d.length; i++) {
+          sum += d[i];
+        }
+        if (playing && sum == 0) {
+          _silentTicks++;
+          if (_silentTicks > 40)
+            _vizReal = false; // tainted or muted: fall back
+        } else {
+          _silentTicks = 0;
+        }
+        if (_vizReal) {
+          for (int i = 0; i < _bars.length; i++) {
+            final int bin = 1 + (i * (d.length - 2) ~/ _bars.length);
+            final double v = d[bin] / 255.0;
+            _bars[i] = math.max(0.04, _bars[i] * 0.55 + v * 0.45);
+          }
+        }
+      } catch (_) {
+        _vizReal = false;
+      }
+    }
+    if (!_vizReal) {
+      // Beat-driven fallback: a 120 bpm pulse with a slow drift per bar.
+      final double t = _pos;
+      final double pulse = playing
+          ? 0.55 +
+              0.45 *
+                  math.pow(math.max(0, math.sin(t * math.pi * 2)), 3).toDouble()
+          : 0.0;
+      for (int i = 0; i < _bars.length; i++) {
+        final double envelope = 0.35 +
+            0.65 *
+                math.exp(-math.pow(
+                    (i - _bars.length * 0.42) / (_bars.length * 0.36), 2));
+        final double wobble =
+            0.6 + 0.4 * math.sin(t * (2.3 + i * 0.37) + i * 1.7);
+        final double target = playing
+            ? (0.08 + 0.85 * envelope * wobble * (0.55 + 0.45 * pulse))
+            : 0.05;
+        _bars[i] = _bars[i] * 0.7 + target * 0.3;
+      }
+    }
+    setState(() {});
+  }
+
+  void _stop() {
+    _posTimer?.cancel();
+    _posTimer = null;
+    try {
+      _player?.stop();
+    } catch (_) {}
+    if (kIsWeb) {
+      try {
+        _el?.pause();
+        _el?.src = '';
+      } catch (_) {}
+      _el = null;
+      _an = null;
+      _vizReal = false;
+    }
+    _playing = false;
+    _playingId = '';
+    _pos = 0;
+    for (int i = 0; i < _bars.length; i++) {
+      _bars[i] = 0.05;
+    }
+  }
+
+  _Song? get _playingSong {
+    if (_playingId.isEmpty) return null;
+    for (final _Song s in _results) {
+      if (s.id == _playingId) return s;
+    }
+    for (final _Song s in _must) {
+      if (s.id == _playingId) return s;
+    }
+    for (final _Song s in _dont) {
+      if (s.id == _playingId) return s;
+    }
+    for (final _Song s in _moments.values) {
+      if (s.id == _playingId) return s;
+    }
+    return _juneSong.containsKey(_playingId) ? _juneSong[_playingId] : null;
+  }
+
+  final Map<String, _Song> _juneSong = <String, _Song>{}; // resolved June picks
+
+  // ---------------- moments ----------------
+
+  List<List<String>> get _allMoments => <List<String>>[
+        ...kMoments,
+        for (final List<String> c in _custom)
+          <String>[c[0], c[1], 'Your moment'],
+      ];
+
+  String _momentLabel(String key) {
+    for (final List<String> m in _allMoments) {
+      if (m[0] == key) return m[1];
+    }
+    return key;
+  }
+
+  String _momentHint(String key) {
+    for (final List<String> m in _allMoments) {
+      if (m[0] == key) return m[2];
+    }
+    return '';
+  }
+
+  Future<void> _addCustomMoment() async {
+    final TextEditingController c = TextEditingController();
+    String? chosen;
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => StatefulBuilder(
+        builder: (BuildContext ctx, StateSetter setD) => AlertDialog(
+          backgroundColor: card,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text('Add a moment', style: _serif(size: 26)),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: kCustomIdeas
+                        .where((String i) =>
+                            !_custom.any((List<String> c) => c[1] == i))
+                        .map((String i) => ActionChip(
+                              label: Text(i,
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: chosen == i ? ivory : plum,
+                                      fontWeight: FontWeight.w700)),
+                              backgroundColor:
+                                  chosen == i ? plum : gold.withOpacity(.16),
+                              side: const BorderSide(color: goldLine),
+                              onPressed: _h(() => setD(() {
+                                    chosen = i;
+                                    c.text = i;
+                                  })),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: c,
+                    autofocus: true,
+                    style: const TextStyle(color: ink),
+                    onChanged: (_) => setD(() => chosen = null),
+                    decoration: const InputDecoration(
+                        labelText: 'Or name your own',
+                        hintText: 'Grandma\u2019s waltz',
+                        labelStyle: TextStyle(color: muted),
+                        border: OutlineInputBorder()),
+                  ),
+                ]),
+          ),
+          actions: <Widget>[
+            TextButton(
+                onPressed: _h(() => Navigator.of(ctx).pop(false)),
+                child: const Text('Cancel', style: TextStyle(color: muted))),
+            FilledButton(
+                style: FilledButton.styleFrom(
+                    backgroundColor: plum, foregroundColor: ivory),
+                onPressed: _h(() => Navigator.of(ctx).pop(true)),
+                child: const Text('Add')),
+          ],
+        ),
+      ),
+    );
+    final String label = c.text.trim();
+    if (ok != true || label.isEmpty) return;
+    final String key =
+        'c_${DateTime.now().millisecondsSinceEpoch.toRadixString(36)}';
+    setState(() => _custom.add(<String>[key, label]));
+    _scheduleSave();
+  }
+
+  void _removeCustomMoment(String key) {
+    setState(() {
+      _custom.removeWhere((List<String> c) => c[0] == key);
+      _moments.remove(key);
+    });
+    _scheduleSave();
+  }
+
+  // ---------------- filing ----------------
+
+  bool _inList(List<_Song> l, _Song s) => l.any((_Song x) => x.id == s.id);
+
+  String _whereIs(_Song s) {
+    for (final MapEntry<String, _Song> e in _moments.entries) {
+      if (e.value.id == s.id) return _momentLabel(e.key);
+    }
+    if (_inList(_must, s)) return 'Must play';
+    if (_inList(_dont, s)) return 'Do not play';
+    return '';
+  }
+
+  // v2.4: the haptic lives on the commit - a song landing in the plan -
+  // however it got there (the +, a request approval, a June pick).
+  void _addMust(_Song s, {bool quiet = false}) {
+    _dont.removeWhere((_Song x) => x.id == s.id);
+    if (!_inList(_must, s)) _must.add(s.copy());
+    _scheduleSave();
+    _tick(_Tick.medium);
+    if (!quiet) _toast('${s.title} \u2192 must play \u2713');
+  }
+
+  void _addDont(_Song s) {
+    _must.removeWhere((_Song x) => x.id == s.id);
+    _moments.removeWhere((String k, _Song x) => x.id == s.id);
+    if (!_inList(_dont, s)) _dont.add(s.copy());
+    _scheduleSave();
+    _tick(_Tick.medium);
+    _toast('${s.title} \u2192 do not play \u2713');
+  }
+
+  void _setMoment(String key, _Song s) {
+    _dont.removeWhere((_Song x) => x.id == s.id);
+    final _Song prev = _moments[key] ?? _Song(id: '', title: '', artist: '');
+    final _Song n = s.copy()
+      ..time = prev.time
+      ..eventLabel = prev.eventLabel;
+    _moments[key] = n;
+    _scheduleSave();
+    _tick(_Tick.medium);
+    _toast('${s.title} \u2192 ${_momentLabel(key)} \u2713');
+  }
+
+  void _remove(_Song s) {
+    _must.removeWhere((_Song x) => x.id == s.id);
+    _dont.removeWhere((_Song x) => x.id == s.id);
+    _moments.removeWhere((String k, _Song x) => x.id == s.id);
+    _scheduleSave();
+    _tick(_Tick.light);
+    if (mounted) setState(() {});
+  }
+
+  bool get _wantsClean => _vibe.contains(kVibeClean);
+
+  // The "+" on a result.
+  Future<void> _fileSong(_Song s) async {
+    if (_reqFor.isNotEmpty) {
+      final String id = _reqFor;
+      setState(() {
+        _reqFor = '';
+        _tab = 0;
+      });
+      await _approveWith(id, s);
+      return;
+    }
+    if (_searchFor.isNotEmpty) {
+      final String key = _searchFor;
+      setState(() {
+        _searchFor = '';
+        _tab = 0;
+      });
+      _setMoment(key, s);
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext ctx) => Container(
+        constraints: const BoxConstraints(maxWidth: 520),
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+        decoration: BoxDecoration(
+            color: card,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: goldLine)),
+        child: SingleChildScrollView(
+          child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  _art(s, 48),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(s.title,
+                              style: _serif(size: 22),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                          Text(s.artist,
+                              style: const TextStyle(
+                                  fontSize: 12.5, color: muted)),
+                        ]),
+                  ),
+                ]),
+                if (s.explicit && _wantsClean) ...<Widget>[
+                  const SizedBox(height: 10),
+                  _cleanWarning(s, ctx),
+                ],
+                const SizedBox(height: 14),
+                Row(children: <Widget>[
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                          backgroundColor: plum,
+                          foregroundColor: ivory,
+                          padding: const EdgeInsets.symmetric(vertical: 12)),
+                      onPressed: _h(() {
+                        Navigator.of(ctx).pop();
+                        _addMust(s);
+                      }),
+                      icon: const Icon(Icons.favorite_rounded, size: 16),
+                      label: const Text('Must play',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: rose,
+                          side: const BorderSide(color: rose),
+                          padding: const EdgeInsets.symmetric(vertical: 12)),
+                      onPressed: _h(() {
+                        Navigator.of(ctx).pop();
+                        _addDont(s);
+                      }),
+                      icon: const Icon(Icons.block_rounded, size: 16),
+                      label: const Text('Do not play',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 14),
+                const Text('OR SET AS A MOMENT',
+                    style: TextStyle(
+                        fontSize: 10.5,
+                        letterSpacing: 2,
+                        color: plum,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: _allMoments.map((List<String> m) {
+                    final bool taken = _moments.containsKey(m[0]);
+                    return ActionChip(
+                      label: Text(m[1] + (taken ? ' \u00b7 replace' : ''),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: taken ? muted : plum,
+                              fontWeight: FontWeight.w700)),
+                      backgroundColor: taken ? ivory : gold.withOpacity(.18),
+                      side: const BorderSide(color: goldLine),
+                      onPressed: _h(() {
+                        Navigator.of(ctx).pop();
+                        _setMoment(m[0], s);
+                      }),
+                    );
+                  }).toList(),
+                ),
+              ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _cleanWarning(_Song s, BuildContext ctx) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      decoration: BoxDecoration(
+          color: const Color(0xFFFFF4E5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF0D9A8))),
+      child: Row(children: <Widget>[
+        const Icon(Icons.explicit_rounded, color: amber, size: 18),
+        const SizedBox(width: 8),
+        const Expanded(
+            child: Text(
+                'This version has explicit lyrics and your vibe says clean.',
+                style: TextStyle(
+                    fontSize: 12, color: amber, fontWeight: FontWeight.w700))),
+        TextButton(
+          onPressed: _h(() {
+            Navigator.of(ctx).pop();
+            _searchC.text = '${s.title} ${s.artist} clean';
+            _search(_searchC.text);
+          }),
+          child: const Text('Find the clean edit',
+              style: TextStyle(
+                  color: plum, fontWeight: FontWeight.w800, fontSize: 12)),
+        ),
+      ]),
+    );
+  }
+
+  Future<void> _editNote(_Song s) async {
+    final TextEditingController c = TextEditingController(text: s.note);
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        backgroundColor: card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(s.title, style: _serif(size: 24)),
+        content: TextField(
+          controller: c,
+          autofocus: true,
+          minLines: 1,
+          maxLines: 3,
+          style: const TextStyle(color: ink),
+          decoration: const InputDecoration(
+              labelText: 'Note for the DJ',
+              hintText: 'Play this right after the toasts\u2026',
+              labelStyle: TextStyle(color: muted),
+              border: OutlineInputBorder()),
+        ),
+        actions: <Widget>[
+          TextButton(
+              onPressed: _h(() => Navigator.of(ctx).pop(false)),
+              child: const Text('Cancel', style: TextStyle(color: muted))),
+          FilledButton(
+              style: FilledButton.styleFrom(
+                  backgroundColor: plum, foregroundColor: ivory),
+              onPressed: _h(() => Navigator.of(ctx).pop(true)),
+              child: const Text('Save')),
+        ],
+      ),
+    );
+    if (ok == true) {
+      s.note = c.text.trim();
+      _scheduleSave();
+    }
+  }
+
+  // ---------------- pin a moment to the timeline ----------------
+
+  Future<void> _pinMoment(String key) async {
+    final _Song? s = _moments[key];
+    if (s == null) return;
+    if (_events.isEmpty) {
+      _toast('Build your Day-Of timeline first, then pin moments to it.');
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext ctx) => Container(
+        constraints: const BoxConstraints(maxWidth: 480, maxHeight: 520),
+        margin: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
+        decoration: BoxDecoration(
+            color: card,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: goldLine)),
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('When is the ${_momentLabel(key).toLowerCase()}?',
+                  style: _serif(size: 24)),
+              const Text(
+                  'From your Day-Of timeline. The DJ\u2019s copy shows the time.',
+                  style: TextStyle(fontSize: 12, color: muted)),
+              const SizedBox(height: 8),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: <Widget>[
+                    for (final Map<String, dynamic> ev in _events)
+                      ListTile(
+                        dense: true,
+                        leading: Container(
+                          width: 60,
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          decoration: BoxDecoration(
+                              color: gold.withOpacity(.16),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: gold.withOpacity(.55))),
+                          child: Text(_fmtClock((ev['time'] ?? '').toString()),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  color: amber,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800)),
+                        ),
+                        title: Text((ev['label'] ?? '').toString(),
+                            style: const TextStyle(
+                                color: ink,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700)),
+                        trailing: s.time == (ev['time'] ?? '').toString()
+                            ? const Icon(Icons.check_rounded, color: vGreen)
+                            : null,
+                        onTap: () {
+                          Navigator.of(ctx).pop();
+                          setState(() {
+                            s.time = (ev['time'] ?? '').toString();
+                            s.eventLabel = (ev['label'] ?? '').toString();
+                          });
+                          _scheduleSave();
+                        },
+                      ),
+                    if (s.time.isNotEmpty)
+                      TextButton(
+                        onPressed: _h(() {
+                          Navigator.of(ctx).pop();
+                          setState(() {
+                            s.time = '';
+                            s.eventLabel = '';
+                          });
+                          _scheduleSave();
+                        }),
+                        child:
+                            const Text('Unpin', style: TextStyle(color: muted)),
+                      ),
+                  ],
+                ),
+              ),
+            ]),
+      ),
+    );
+  }
+
+  String _fmtClock(String hhmm) {
+    final List<String> p = hhmm.split(':');
+    final int h = int.tryParse(p[0]) ?? 0;
+    final int m = p.length > 1 ? int.tryParse(p[1]) ?? 0 : 0;
+    final int h12 = h % 12 == 0 ? 12 : h % 12;
+    return '$h12:${m.toString().padLeft(2, '0')} ${h < 12 ? 'AM' : 'PM'}';
+  }
+
+  // Reception length from the timeline: first event that reads like the
+  // reception to the last event. Falls back to four hours.
+  int get _receptionMinutes {
+    int toMin(String t) {
+      final List<String> p = t.split(':');
+      return (int.tryParse(p[0]) ?? 0) * 60 +
+          (p.length > 1 ? int.tryParse(p[1]) ?? 0 : 0);
+    }
+
+    if (_events.length < 2) return 240;
+    int start = -1;
+    for (final Map<String, dynamic> ev in _events) {
+      final String l = (ev['label'] ?? '').toString().toLowerCase();
+      if (l.contains('reception') ||
+          l.contains('cocktail') ||
+          l.contains('dinner') ||
+          l.contains('entrance')) {
+        start = toMin((ev['time'] ?? '').toString());
+        break;
+      }
+    }
+    if (start < 0) start = toMin((_events.first['time'] ?? '').toString());
+    final int end = toMin((_events.last['time'] ?? '').toString());
+    final int mins = end - start;
+    return mins >= 60 ? mins : 240;
+  }
+
+  int get _mustMinutes {
+    int ms = 0;
+    for (final _Song s in _must) {
+      ms += s.ms > 0 ? s.ms : 210000;
+    }
+    return (ms / 60000).round();
+  }
+
+  // ---------------- guest requests ----------------
+
+  String get _requestLink =>
+      _siteSlug.isEmpty ? '' : 'https://meetlazo.com/w/$_siteSlug/requests';
+
+  int get _newRequests => _requests
+      .where((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+          (d.data()['status'] ?? 'new') == 'new')
+      .length;
+
+  Future<void> _approve(QueryDocumentSnapshot<Map<String, dynamic>> d) async {
+    final Map<String, dynamic> r = d.data();
+    final String title = (r['song'] ?? '').toString();
+    final String artist = (r['artist'] ?? '').toString();
+    _toast('Finding $title\u2026');
+    final _Song? found = await _lookup(title, artist);
+    if (!mounted) return;
+    if (found == null) {
+      // No catalog match: file it as typed so the DJ still sees it.
+      await _approveWith(
+          d.id, _Song(id: 'req:${d.id}', title: title, artist: artist));
+      return;
+    }
+    await _approveWith(d.id, found);
+  }
+
+  Future<void> _approveWith(String reqId, _Song s) async {
+    String who = '';
+    for (final QueryDocumentSnapshot<Map<String, dynamic>> d in _requests) {
+      if (d.id == reqId) who = (d.data()['guest'] ?? '').toString();
+    }
+    final _Song n = s.copy()..requestedBy = who;
+    if (n.note.isEmpty && who.isNotEmpty) n.note = 'Requested by $who';
+    _addMust(n, quiet: true);
+    try {
+      await _reqRef.doc(reqId).set(<String, dynamic>{
+        'status': 'approved',
+        'songId': s.id,
+        'decidedAt': FieldValue.serverTimestamp()
+      }, SetOptions(merge: true));
+    } catch (e) {
+      _toast('Could not mark it: ' + _errText(e));
+    }
+    _toast(
+        '${n.title} \u2192 must play${who.isEmpty ? '' : ' (from $who)'} \u2713');
+  }
+
+  Future<void> _decline(QueryDocumentSnapshot<Map<String, dynamic>> d) async {
+    try {
+      await d.reference.set(<String, dynamic>{
+        'status': 'declined',
+        'decidedAt': FieldValue.serverTimestamp()
+      }, SetOptions(merge: true));
+    } catch (e) {
+      _toast('Could not mark it: ' + _errText(e));
+    }
+  }
+
+  void _pickForRequest(QueryDocumentSnapshot<Map<String, dynamic>> d) {
+    final Map<String, dynamic> r = d.data();
+    setState(() {
+      _reqFor = d.id;
+      _searchFor = '';
+      _tab = 1;
+      _searchC.text = '${r['song'] ?? ''} ${r['artist'] ?? ''}'.trim();
+    });
+    _search(_searchC.text);
+  }
+
+  Future<void> _copyRequestLink() async {
+    if (_requestLink.isEmpty) {
+      _toast('Make your wedding website first - the request link lives on it.');
+      return;
+    }
+    await Clipboard.setData(ClipboardData(text: _requestLink));
+    _toast('Copied. Put it on the invitation or the website.');
+  }
+
+  // ---------------- June ----------------
+
+  Future<void> _askJune(String key) async {
+    if (_juneBusy) return;
+    setState(() => _juneBusy = true);
+    List<Map<String, dynamic>> sugg = <Map<String, dynamic>>[];
+    try {
+      final HttpsCallable f =
+          FirebaseFunctions.instanceFor(region: 'us-central1')
+              .httpsCallable('juneMusic');
+      final HttpsCallableResult<dynamic> r = await f.call(<String, dynamic>{
+        'moment': key,
+        'momentLabel': _momentLabel(key),
+        'hint': _momentHint(key),
+        'vibe': _vibe.toList(),
+        'picked': <Map<String, String>>[
+          for (final MapEntry<String, _Song> e in _moments.entries)
+            <String, String>{
+              'title': e.value.title,
+              'artist': e.value.artist,
+              'moment': _momentLabel(e.key)
+            },
+          for (final _Song s in _must)
+            <String, String>{
+              'title': s.title,
+              'artist': s.artist,
+              'moment': 'must play'
+            },
+        ],
+        'doNotPlay': _dont
+            .map((_Song s) =>
+                <String, String>{'title': s.title, 'artist': s.artist})
+            .toList(),
+        'avoid': _avoid,
+        'notes': _notes,
+      });
+      final dynamic data = r.data;
+      if (data is Map && data['suggestions'] is List) {
+        sugg = (data['suggestions'] as List)
+            .whereType<Map>()
+            .map((Map m) => Map<String, dynamic>.from(m))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('LAZO juneMusic: ' + e.toString());
+      _toast('June couldn\u2019t think of one - try again in a moment.');
+    }
+    if (!mounted) return;
+    setState(() => _juneBusy = false);
+    if (sugg.isEmpty) return;
+    final Map<String, _Song?> resolved = <String, _Song?>{};
+    final Map<String, bool> busy = <String, bool>{};
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext ctx) => StatefulBuilder(
+        builder: (BuildContext ctx, StateSetter setS) {
+          Future<_Song?> resolve(Map<String, dynamic> m) async {
+            final String k = '${m['title']}|${m['artist']}';
+            if (resolved.containsKey(k)) return resolved[k];
+            setS(() => busy[k] = true);
+            final _Song? s = await _lookup(
+                (m['title'] ?? '').toString(), (m['artist'] ?? '').toString());
+            resolved[k] = s;
+            if (s != null) _juneSong[s.id] = s;
+            if (ctx.mounted) setS(() => busy[k] = false);
+            return s;
+          }
+
+          return Container(
+            constraints: const BoxConstraints(maxWidth: 560),
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+            decoration: BoxDecoration(
+                color: card,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: goldLine)),
+            child: SingleChildScrollView(
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(children: <Widget>[
+                      const Icon(Icons.auto_awesome_rounded,
+                          color: gold, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                          child: Text(
+                              'June\u2019s picks for the ${_momentLabel(key).toLowerCase()}',
+                              style: _serif(size: 24))),
+                      IconButton(
+                          onPressed: _h(() => Navigator.of(ctx).pop()),
+                          icon: const Icon(Icons.close_rounded, color: muted)),
+                    ]),
+                    const Text(
+                        'Three real songs that fit your vibe. Hear each one before you decide.',
+                        style: TextStyle(fontSize: 12, color: muted)),
+                    const SizedBox(height: 10),
+                    for (final Map<String, dynamic> m in sugg)
+                      Builder(builder: (BuildContext c) {
+                        final String k = '${m['title']}|${m['artist']}';
+                        final _Song? s = resolved[k];
+                        final bool b = busy[k] == true;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                              color: ivory,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: goldLine)),
+                          child: Row(children: <Widget>[
+                            if (s != null)
+                              _art(s, 44)
+                            else
+                              Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                      color: gold.withOpacity(.25),
+                                      borderRadius: BorderRadius.circular(9)),
+                                  child: const Icon(Icons.music_note_rounded,
+                                      color: plum)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text((m['title'] ?? '').toString(),
+                                        style: const TextStyle(
+                                            color: ink,
+                                            fontSize: 13.5,
+                                            fontWeight: FontWeight.w800)),
+                                    Text((m['artist'] ?? '').toString(),
+                                        style: const TextStyle(
+                                            fontSize: 11.5, color: muted)),
+                                    const SizedBox(height: 2),
+                                    Text((m['why'] ?? '').toString(),
+                                        style: const TextStyle(
+                                            fontSize: 11.5,
+                                            color: amber,
+                                            fontStyle: FontStyle.italic,
+                                            height: 1.3)),
+                                  ]),
+                            ),
+                            const SizedBox(width: 6),
+                            if (b)
+                              const SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child: Padding(
+                                      padding: EdgeInsets.all(7),
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: gold)))
+                            else
+                              _Press(
+                                scale: .86,
+                                tick: _Tick.none,
+                                onTap: () async {
+                                  final _Song? r = await resolve(m);
+                                  if (r == null) {
+                                    _toast(
+                                        'Couldn\u2019t find a preview for that one.');
+                                    return;
+                                  }
+                                  _togglePlay(r);
+                                  setS(() {});
+                                },
+                                child: Container(
+                                  width: 30,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: (s != null &&
+                                              _playingId == s.id &&
+                                              _isPlaying)
+                                          ? plum
+                                          : card,
+                                      border: Border.all(color: goldLine)),
+                                  child: Icon(
+                                      (s != null &&
+                                              _playingId == s.id &&
+                                              _isPlaying)
+                                          ? Icons.pause_rounded
+                                          : Icons.play_arrow_rounded,
+                                      color: (s != null &&
+                                              _playingId == s.id &&
+                                              _isPlaying)
+                                          ? ivory
+                                          : plum,
+                                      size: 18),
+                                ),
+                              ),
+                            const SizedBox(width: 6),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                  backgroundColor: gold,
+                                  foregroundColor: plumDeep,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(9))),
+                              onPressed: _h(b
+                                  ? null
+                                  : () async {
+                                      final _Song? r = await resolve(m);
+                                      if (!ctx.mounted) return;
+                                      Navigator.of(ctx).pop();
+                                      _setMoment(
+                                          key,
+                                          r ??
+                                              _Song(
+                                                  id: 'june:${k.hashCode}',
+                                                  title: (m['title'] ?? '')
+                                                      .toString(),
+                                                  artist: (m['artist'] ?? '')
+                                                      .toString()));
+                                    }),
+                              child: const Text('Use it',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800)),
+                            ),
+                          ]),
+                        );
+                      }),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: _h(() {
+                          Navigator.of(ctx).pop();
+                          _askJune(key);
+                        }),
+                        icon: const Icon(Icons.refresh_rounded,
+                            color: plum, size: 16),
+                        label: const Text('Three more',
+                            style: TextStyle(
+                                color: plum, fontWeight: FontWeight.w800)),
+                      ),
+                    ),
+                  ]),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // ---------------- helpers ----------------
+
+  static const List<String> _kMoLong = <String>[
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ];
+  static const List<String> _kMo = <String>[
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec'
+  ];
+  String _longDate(DateTime d) =>
+      '${_kMoLong[d.month - 1]} ${d.day}, ${d.year}';
+  String _shortDate(DateTime d) => '${_kMo[d.month - 1]} ${d.day}';
+
+  String _errText(Object e) {
+    String s = e.toString();
+    if (s.contains('permission') || s.contains('PERMISSION'))
+      return 'permission denied - the rules may need updating.';
+    if (s.length > 90) s = s.substring(0, 90);
+    return s;
+  }
+
+  static String _esc(String s) => s
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;');
+
+  void _toast(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      backgroundColor: plumDeep,
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(milliseconds: 1800),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      content: Text(message, style: const TextStyle(color: ivory)),
+    ));
+  }
+
+  TextStyle _serif(
+      {double size = 24,
+      FontWeight weight = FontWeight.w600,
+      Color color = plum,
+      double height = 1.05}) {
+    // v2.4: display sizes tighten as they grow; body stays at 0.
+    final double track = size >= 26 ? -0.015 * size : 0;
+    try {
+      return GoogleFonts.cormorantGaramond(
+          fontSize: size,
+          fontWeight: weight,
+          color: color,
+          height: height,
+          letterSpacing: track,
+          fontFeatures: const <FontFeature>[FontFeature.liningFigures()]);
+    } catch (_) {
+      return TextStyle(
+          fontFamily: 'serif',
+          fontSize: size,
+          fontWeight: weight,
+          color: color,
+          height: height,
+          letterSpacing: track);
+    }
+  }
+
+  // v2.4: on phones the Search tab slides in over the plan and leaves the
+  // way it came; the plan - the thing underneath - only fades.
+  Widget _viewSwitch(Widget child) {
+    final bool reduced = _reducedMotion(context);
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: reduced ? 140 : 260),
+      reverseDuration: Duration(milliseconds: reduced ? 140 : 200),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (Widget? current, List<Widget> previous) => Stack(
+        fit: StackFit.expand,
+        children: <Widget>[...previous, if (current != null) current],
+      ),
+      transitionBuilder: (Widget c, Animation<double> a) {
+        final Key? k = c.key;
+        final bool root = k is ValueKey<String> && k.value.endsWith(':root');
+        final Widget faded = FadeTransition(opacity: a, child: c);
+        if (reduced || root) return faded;
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(.04, 0), end: Offset.zero)
+              .animate(a),
+          child: faded,
+        );
+      },
+      child: child,
+    );
+  }
+
+  // The play/pause glyph cross-fades and scales instead of snapping.
+  Widget _glyphSwitch(Widget child) => AnimatedSwitcher(
+        duration: Duration(milliseconds: _reducedMotion(context) ? 0 : 160),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeIn,
+        transitionBuilder: (Widget w, Animation<double> a) => ScaleTransition(
+            scale: Tween<double>(begin: .7, end: 1).animate(a),
+            child: FadeTransition(opacity: a, child: w)),
+        child: child,
+      );
+
+  void _goBack() {
+    _stop();
+    try {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.goNamed(kHomePage);
+      }
+    } catch (e) {
+      debugPrint('LAZO music back: ' + e.toString());
+    }
+  }
+
+  Future<void> _openLink(String url) async {
+    if (url.isEmpty) return;
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (_) {
+      _toast('Could not open that link.');
+    }
+  }
+
+  // ---------------- build ----------------
+
+  @override
+  Widget build(BuildContext context) {
+    Widget body;
+    if (_uid == null) {
+      body = const Center(
+          child: Text('Sign in to plan your music.',
+              style: TextStyle(color: muted)));
+    } else if (!_ready) {
+      body = const Center(child: CircularProgressIndicator(color: gold));
+    } else {
+      body = LayoutBuilder(builder: (BuildContext c, BoxConstraints cons) {
+        final bool wide = cons.maxWidth >= 900;
+        return Column(children: <Widget>[
+          _header(wide),
+          Expanded(child: wide ? _wideBody() : _phoneBody()),
+          // v2.4: the player rises from the bottom edge and leaves the same way.
+          AnimatedSize(
+            duration: Duration(milliseconds: _reducedMotion(context) ? 0 : 320),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: _playingSong == null
+                ? const SizedBox(width: double.infinity, height: 0)
+                : _playerBar(_playingSong!, wide),
+          ),
+        ]);
+      });
+    }
+    // This page is ivory, so the phone's clock, wifi and battery must be DARK.
+    // The two brightness fields read as opposites and both are required:
+    //   statusBarIconBrightness  the ICONS   (Android) - .dark = dark icons
+    //   statusBarBrightness      the BACKDROP (iOS)    - .light = dark icons
+    // Declared rather than inherited, so arriving from the dark couple
+    // dashboard cannot leave white icons on this light page.
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: ivory,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
+      child: ScrollConfiguration(
+        // v2.4: edges resist instead of stopping dead; no Android glow.
+        behavior: ScrollConfiguration.of(context).copyWith(
+            physics: const BouncingScrollPhysics(), overscroll: false),
+        child: Container(
+            width: widget.width,
+            height: widget.height,
+            color: ivory,
+            // Same as the seating chart: the header drew under the status bar
+            // and the player bar under the home indicator.
+            child: SafeArea(child: body)),
+      ),
+    );
+  }
+
+  int get _momentsSet => _moments.length;
+
+  String get _subline {
+    final List<String> bits = <String>[
+      '$_momentsSet of ${_allMoments.length} moments',
+      '${_must.length} must-play${_must.length == 1 ? '' : 's'}',
+      if (_dont.isNotEmpty)
+        '${_dont.length} do-not-play${_dont.length == 1 ? '' : 's'}',
+      if (_newRequests > 0)
+        '$_newRequests new request${_newRequests == 1 ? '' : 's'}',
+    ];
+    return bits.join(' \u00b7 ');
+  }
+
+  Widget _header(bool wide) {
+    final Widget title = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Text('Music', style: _serif(size: wide ? 30 : 26)),
+          Text(_saving ? 'Saving\u2026' : _subline,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, color: muted)),
+        ]);
+    final List<Widget> actions = <Widget>[
+      OutlinedButton.icon(
+        style: OutlinedButton.styleFrom(
+            foregroundColor: plum,
+            side: const BorderSide(color: goldLine),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12))),
+        onPressed: _h(_print),
+        icon: const Icon(Icons.print_rounded, size: 16),
+        label: Text(wide ? 'Print / PDF' : 'Print',
+            style: const TextStyle(fontWeight: FontWeight.w700)),
+      ),
+      const SizedBox(width: 8),
+      FilledButton.icon(
+        style: FilledButton.styleFrom(
+            backgroundColor: gold,
+            foregroundColor: plumDeep,
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12))),
+        onPressed: _h(_sendSheet, _Tick.medium),
+        icon: const Icon(Icons.send_rounded, size: 16),
+        label: Text(wide ? 'Send to your DJ' : 'Send',
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+      ),
+    ];
+    return Container(
+      padding: EdgeInsets.fromLTRB(wide ? 18 : 12, 10, wide ? 18 : 12, 10),
+      decoration: const BoxDecoration(
+          color: card, border: Border(bottom: BorderSide(color: goldLine))),
+      child: Builder(builder: (BuildContext _) {
+        // Back at 44, same disc as the seating chart and the dashboard.
+        final Widget back = _Press(
+          scale: .9,
+          dim: 1,
+          tickOnDown: true,
+          onTap: _goBack,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Center(
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  // Lit from above: near-white at the top edge falling to a warmer
+                  // ivory below, same as the couple dashboard's back button.
+                  gradient: const LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[Color(0xFFFFFFFF), Color(0xFFF6EDDF)],
+                  ),
+                  border: Border.all(color: gold.withOpacity(.55), width: 1),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                        color: Colors.black.withOpacity(.20),
+                        blurRadius: 12,
+                        spreadRadius: -3,
+                        offset: const Offset(0, 5)),
+                    BoxShadow(
+                        color: Colors.black.withOpacity(.12),
+                        blurRadius: 3,
+                        offset: const Offset(0, 1)),
+                  ],
+                ),
+                child:
+                    const Icon(Icons.arrow_back_rounded, color: plum, size: 20),
+              ),
+            ),
+          ),
+        );
+        if (wide) {
+          return Row(children: <Widget>[
+            back,
+            const SizedBox(width: 12),
+            Expanded(child: title),
+            ...actions,
+          ]);
+        }
+        // On a phone, Print and Send used to sit in this Row as fixed-width
+        // children: they bid first and the title took whatever was left -
+        // about 80px, before any narrower handset. They get their own
+        // scrollable row now, which is what the seating chart already does.
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(children: <Widget>[
+              back,
+              const SizedBox(width: 12),
+              Expanded(child: title),
+            ]),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(children: actions),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _wideBody() {
+    return Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          SizedBox(
+              width: 390,
+              child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 0, 14),
+                  child: _searchPanel())),
+          Expanded(
+              child: Padding(
+                  padding: const EdgeInsets.all(14), child: _planPanel())),
+        ]);
+  }
+
+  Widget _phoneBody() {
+    final String searchLabel = _reqFor.isNotEmpty
+        ? 'Pick the version'
+        : _searchFor.isNotEmpty
+            ? 'Choose: ${_momentLabel(_searchFor)}'
+            : 'Find songs';
+    return Column(children: <Widget>[
+      Padding(
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+        child: Row(children: <Widget>[
+          _tabChip('Your plan', 0, badge: _newRequests),
+          const SizedBox(width: 6),
+          _tabChip(searchLabel, 1),
+        ]),
+      ),
+      Expanded(
+          child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: _viewSwitch(_tab == 0
+                  ? KeyedSubtree(
+                      key: const ValueKey<String>('plan:root'),
+                      child: _planPanel())
+                  : KeyedSubtree(
+                      key: const ValueKey<String>('search'),
+                      child: _searchPanel())))),
+    ]);
+  }
+
+  Widget _tabChip(String label, int i, {int badge = 0}) {
+    final bool on = _tab == i;
+    return _Press(
+      tick: _Tick.select,
+      onTap: on ? null : () => setState(() => _tab = i),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+            color: on ? plum : card,
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: on ? plum : goldLine)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+          Text(label,
+              style: TextStyle(
+                  color: on ? ivory : plum,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800)),
+          if (badge > 0) ...<Widget>[
+            const SizedBox(width: 6),
+            Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: const BoxDecoration(
+                    color: gold,
+                    borderRadius: BorderRadius.all(Radius.circular(999))),
+                child: Text('$badge',
+                    style: const TextStyle(
+                        color: plumDeep,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900))),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  BoxDecoration get _panelDeco => BoxDecoration(
+      color: card,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: goldLine));
+
+  // ---------------- search panel ----------------
+
+  Widget _searchPanel() {
+    String title = 'Find a song';
+    String sub = 'Hear a 30-second preview, then file it.';
+    if (_reqFor.isNotEmpty) {
+      title = 'Pick the version';
+      sub = 'Tap + on the right one to approve the request.';
+    } else if (_searchFor.isNotEmpty) {
+      title = 'Choose your ${_momentLabel(_searchFor).toLowerCase()}';
+      sub = 'Tap + on a result to set it.';
+    }
+    final bool targeted = _reqFor.isNotEmpty || _searchFor.isNotEmpty;
+    return Container(
+      decoration: _panelDeco,
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Container(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: <Color>[
+                targeted ? gold.withOpacity(.22) : Colors.transparent,
+                Colors.transparent
+              ], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(children: <Widget>[
+                      Expanded(child: Text(title, style: _serif(size: 22))),
+                      if (targeted)
+                        TextButton(
+                            onPressed: _h(() => setState(() {
+                                  _searchFor = '';
+                                  _reqFor = '';
+                                })),
+                            child: const Text('Cancel',
+                                style: TextStyle(
+                                    color: muted,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700))),
+                    ]),
+                    Text(sub,
+                        style: const TextStyle(fontSize: 11.5, color: muted)),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _searchC,
+                      onChanged: _onSearchChanged,
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (String v) => _search(v.trim()),
+                      style: const TextStyle(color: ink, fontSize: 13.5),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: 'Song, artist, or both\u2026',
+                        hintStyle: const TextStyle(
+                            color: Color(0xFFB8AEBD), fontSize: 13),
+                        prefixIcon: const Icon(Icons.search_rounded,
+                            color: muted, size: 20),
+                        suffixIcon: _searchC.text.isEmpty
+                            ? null
+                            : IconButton(
+                                icon: const Icon(Icons.close_rounded,
+                                    color: muted, size: 18),
+                                onPressed: _h(() {
+                                  _searchC.clear();
+                                  _onSearchChanged('');
+                                })),
+                        filled: true,
+                        fillColor: ivory,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: goldLine)),
+                        enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: goldLine)),
+                        focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide:
+                                const BorderSide(color: gold, width: 1.5)),
+                      ),
+                    ),
+                  ]),
+            ),
+            Expanded(
+              child: _searching
+                  ? const Center(
+                      child: SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: gold)))
+                  : _searchErr.isNotEmpty
+                      ? Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(_searchErr,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontSize: 12.5, color: muted, height: 1.4)))
+                      : _results.isEmpty
+                          ? _searchEmpty()
+                          : ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+                              itemCount: _results.length,
+                              itemBuilder: (BuildContext c, int i) =>
+                                  _resultRow(_results[i]),
+                            ),
+            ),
+          ]),
+    );
+  }
+
+  Widget _searchEmpty() {
+    final List<List<String>> ideas = <List<String>>[
+      <String>['First dance', 'Perfect Ed Sheeran'],
+      <String>['Entrance', 'September Earth Wind Fire'],
+      <String>['Father-daughter', 'My Girl Temptations'],
+      <String>['Last dance', 'Don\u2019t Stop Believin\u2019'],
+      <String>['Cake cutting', 'How Sweet It Is'],
+      <String>['Send-off', 'Signed Sealed Delivered'],
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Text('STUCK? START HERE',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    letterSpacing: 2,
+                    color: plum,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: ideas
+                  .map((List<String> x) => ActionChip(
+                        label: Text(x[1],
+                            style: const TextStyle(
+                                fontSize: 11.5,
+                                color: plum,
+                                fontWeight: FontWeight.w700)),
+                        backgroundColor: gold.withOpacity(.16),
+                        side: const BorderSide(color: goldLine),
+                        onPressed: _h(() {
+                          _searchC.text = x[1];
+                          _search(x[1]);
+                        }),
+                      ))
+                  .toList(),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+                'Previews are 30 seconds. Your DJ gets a link for every song.',
+                style: TextStyle(fontSize: 11.5, color: muted, height: 1.4)),
+          ]),
+    );
+  }
+
+  Widget _art(_Song s, double size) {
+    final Widget fallback = Container(
+        width: size,
+        height: size,
+        color: gold.withOpacity(.25),
+        child: Icon(Icons.music_note_rounded, color: plum, size: size * .5));
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(size * .2),
+      child: s.art.isEmpty
+          ? fallback
+          : Image.network(s.art,
+              width: size,
+              height: size,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback),
+    );
+  }
+
+  Widget _explicitTag() => Container(
+        margin: const EdgeInsets.only(left: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+        decoration: BoxDecoration(
+            color: _wantsClean ? rose : muted.withOpacity(.75),
+            borderRadius: BorderRadius.circular(3)),
+        child: const Text('E',
+            style: TextStyle(
+                color: ivory, fontSize: 9, fontWeight: FontWeight.w900)),
+      );
+
+  Widget _playBtn(_Song s, {double size = 34}) {
+    final bool me = _playingId == s.id && _isPlaying;
+    return _Press(
+      scale: .86,
+      tick: _Tick.none, // _togglePlay ticks when playback actually changes
+      onTap: () => _togglePlay(s),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: me ? plum : ivory,
+            border: Border.all(color: me ? plum : goldLine)),
+        child: _glyphSwitch(me
+            ? Padding(
+                key: const ValueKey<String>('eq'),
+                padding: EdgeInsets.all(size * .27),
+                child: CustomPaint(
+                    painter: _EqPainter(_bars.sublist(0, 5), ivory, gap: 1.5)))
+            : Icon(Icons.play_arrow_rounded,
+                key: const ValueKey<String>('play'),
+                color: plum,
+                size: size * .58)),
+      ),
+    );
+  }
+
+  Widget _resultRow(_Song s) {
+    final String where = _whereIs(s);
+    final bool me = _playingId == s.id;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 6),
+      decoration: BoxDecoration(
+          color: me ? gold.withOpacity(.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12)),
+      child: Row(children: <Widget>[
+        _art(s, 44),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  Flexible(
+                      child: Text(s.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: ink,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700))),
+                  if (s.explicit) _explicitTag(),
+                ]),
+                Text(
+                    '${s.artist}${s.length.isEmpty ? '' : ' \u00b7 ${s.length}'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11.5, color: muted)),
+                if (where.isNotEmpty)
+                  Text(where,
+                      style: const TextStyle(
+                          fontSize: 10.5,
+                          color: vGreen,
+                          fontWeight: FontWeight.w800)),
+              ]),
+        ),
+        _playBtn(s),
+        const SizedBox(width: 6),
+        _Press(
+          scale: .86,
+          tick: _Tick.none, // the list op ticks when the song actually lands
+          onTap: () => _fileSong(s),
+          child: Container(
+              width: 34,
+              height: 34,
+              decoration:
+                  const BoxDecoration(shape: BoxShape.circle, color: gold),
+              child: const Icon(Icons.add_rounded, color: plumDeep, size: 20)),
+        ),
+      ]),
+    );
+  }
+
+  // The persistent player: art, title, equalizer, scrubber, controls.
+  Widget _playerBar(_Song s, bool wide) {
+    final double f = _dur <= 0 ? 0 : (_pos / _dur).clamp(0.0, 1.0).toDouble();
+    final String where = _whereIs(s);
+    return Container(
+      padding: EdgeInsets.fromLTRB(wide ? 18 : 12, 10, wide ? 18 : 12, 10),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+            colors: <Color>[plumDeep, plum],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight),
+        border: Border(top: BorderSide(color: goldLine)),
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        Row(children: <Widget>[
+          _art(s, 44),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(children: <Widget>[
+                    Flexible(
+                        child: Text(s.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                color: ivory,
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800))),
+                    if (s.explicit) _explicitTag(),
+                  ]),
+                  Text('${s.artist}${where.isEmpty ? '' : ' \u00b7 $where'}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          color: ivory.withOpacity(.75), fontSize: 11.5)),
+                ]),
+          ),
+          if (wide) ...<Widget>[
+            const SizedBox(width: 14),
+            SizedBox(
+                width: 190,
+                height: 36,
+                child: CustomPaint(
+                    painter: _EqPainter(_bars, gold, mirror: true))),
+            const SizedBox(width: 14),
+          ] else ...<Widget>[
+            const SizedBox(width: 8),
+            SizedBox(
+                width: 70,
+                height: 30,
+                child: CustomPaint(
+                    painter:
+                        _EqPainter(_bars.sublist(0, 12), gold, mirror: true))),
+            const SizedBox(width: 8),
+          ],
+          _Press(
+            scale: .86,
+            tick: _Tick.none,
+            onTap: () => _togglePlay(s),
+            child: Container(
+                width: 40,
+                height: 40,
+                decoration:
+                    const BoxDecoration(shape: BoxShape.circle, color: gold),
+                child: _glyphSwitch(Icon(
+                    _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                    key: ValueKey<bool>(_isPlaying),
+                    color: plumDeep,
+                    size: 24))),
+          ),
+          const SizedBox(width: 6),
+          if (where.isEmpty)
+            _Press(
+              scale: .86,
+              tick: _Tick.none,
+              onTap: () => _fileSong(s),
+              child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle, border: Border.all(color: gold)),
+                  child: const Icon(Icons.add_rounded, color: gold, size: 22)),
+            ),
+          const SizedBox(width: 6),
+          _Press(
+              scale: .86,
+              tick: _Tick.select,
+              onTap: () => setState(_stop),
+              child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.close_rounded,
+                      color: ivory.withOpacity(.8), size: 18))),
+        ]),
+        const SizedBox(height: 8),
+        Row(children: <Widget>[
+          Text(_clock(_pos),
+              style: TextStyle(
+                  color: ivory.withOpacity(.7),
+                  fontSize: 10,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures()
+                  ])),
+          const SizedBox(width: 8),
+          Expanded(
+            child:
+                LayoutBuilder(builder: (BuildContext c, BoxConstraints cons) {
+              // v2.4: 1:1 under the finger (it always was); now the thumb
+              // grows and the track thickens while it is held, with a
+              // select tick at pickup and release.
+              final double th = _scrubbing ? 18 : 12;
+              final double tr = _scrubbing ? 6 : 4;
+              final bool reduced = _reducedMotion(context);
+              final Duration quick = Duration(milliseconds: reduced ? 0 : 120);
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (TapDownDetails d) {
+                  _tick(_Tick.select);
+                  _seekFrac(d.localPosition.dx / math.max(1.0, cons.maxWidth));
+                },
+                onHorizontalDragStart: (DragStartDetails d) {
+                  _tick(_Tick.select);
+                  setState(() => _scrubbing = true);
+                },
+                onHorizontalDragUpdate: (DragUpdateDetails d) => _seekFrac(
+                    d.localPosition.dx / math.max(1.0, cons.maxWidth)),
+                onHorizontalDragEnd: (DragEndDetails d) {
+                  _tick(_Tick.select);
+                  setState(() => _scrubbing = false);
+                },
+                onHorizontalDragCancel: () =>
+                    setState(() => _scrubbing = false),
+                child: SizedBox(
+                  height: 22,
+                  child:
+                      Stack(alignment: Alignment.centerLeft, children: <Widget>[
+                    AnimatedContainer(
+                        duration: quick,
+                        height: tr,
+                        decoration: BoxDecoration(
+                            color: ivory.withOpacity(.2),
+                            borderRadius: BorderRadius.circular(999))),
+                    AnimatedContainer(
+                        duration: quick,
+                        height: tr,
+                        width: cons.maxWidth * f,
+                        decoration: BoxDecoration(
+                            color: gold,
+                            borderRadius: BorderRadius.circular(999))),
+                    Positioned(
+                        left: (cons.maxWidth * f - th / 2)
+                            .clamp(0.0, math.max(0.0, cons.maxWidth - th)),
+                        child: AnimatedContainer(
+                            duration: quick,
+                            curve: Curves.easeOutCubic,
+                            width: th,
+                            height: th,
+                            decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: gold,
+                                boxShadow: _scrubbing
+                                    ? <BoxShadow>[
+                                        BoxShadow(
+                                            color: gold.withOpacity(.55),
+                                            blurRadius: 10,
+                                            spreadRadius: 1)
+                                      ]
+                                    : const <BoxShadow>[]))),
+                  ]),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(width: 8),
+          Text(_clock(_dur),
+              style: TextStyle(
+                  color: ivory.withOpacity(.7),
+                  fontSize: 10,
+                  fontFeatures: const <FontFeature>[
+                    FontFeature.tabularFigures()
+                  ])),
+        ]),
+      ]),
+    );
+  }
+
+  String _clock(double s) =>
+      '${(s ~/ 60)}:${(s.round() % 60).toString().padLeft(2, '0')}';
+
+  void _seekFrac(double frac) {
+    if (_playingId.isEmpty || _dur <= 0) return;
+    final double f = frac.clamp(0.0, 1.0).toDouble();
+    try {
+      if (kIsWeb) {
+        if (_el != null) _elSet(_el!, 'currentTime', f * _dur);
+      } else {
+        _player?.seek(Duration(milliseconds: (f * _dur * 1000).round()));
+      }
+      _pos = f * _dur;
+      setState(() {});
+    } catch (_) {}
+  }
+
+  // ---------------- the plan ----------------
+
+  Widget _planPanel() {
+    return LayoutBuilder(builder: (BuildContext c, BoxConstraints cons) {
+      final int cols =
+          cons.maxWidth >= 760 ? 3 : (cons.maxWidth >= 480 ? 2 : 1);
+      return ListView(
+          padding: const EdgeInsets.only(bottom: 24),
+          children: <Widget>[
+            _requestsCard(),
+            if (_djReplies.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 18),
+              _djCard()
+            ],
+            const SizedBox(height: 18),
+            _sectionTitle('The moments',
+                'One song each. The DJ needs these before anything else.',
+                trailing: TextButton.icon(
+                    onPressed: _h(_addCustomMoment),
+                    icon: const Icon(Icons.add_rounded, color: plum, size: 16),
+                    label: const Text('Add a moment',
+                        style: TextStyle(
+                            color: plum,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800)))),
+            _momentGrid(cols),
+            const SizedBox(height: 18),
+            _sectionTitle(
+                'Must play',
+                _must.isEmpty
+                    ? 'The songs that have to happen.'
+                    : 'Drag to order; the DJ reads it top to bottom.',
+                trailing: _must.isEmpty ? null : _runtimePill()),
+            _songListCard(_must, must: true),
+            const SizedBox(height: 18),
+            _sectionTitle('Do not play', 'Every DJ asks. Save them the guess.'),
+            _songListCard(_dont, must: false),
+            const SizedBox(height: 8),
+            _avoidCard(),
+            const SizedBox(height: 18),
+            _sectionTitle('The vibe', 'Tap what fits.'),
+            _vibeCard(),
+            const SizedBox(height: 18),
+            _sectionTitle('Notes for the DJ',
+                'Announcements, pronunciations, the song that must not follow the toasts.'),
+            _notesCard(),
+            if (_sentTo['at'] is Timestamp)
+              Padding(
+                padding: const EdgeInsets.only(top: 14),
+                child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                  const Icon(Icons.check_circle_rounded,
+                      color: vGreen, size: 14),
+                  const SizedBox(width: 6),
+                  Text(
+                      'Last sent to ${(_sentTo['vendorName'] ?? 'your DJ').toString()} on ${_longDate((_sentTo['at'] as Timestamp).toDate())}',
+                      style: const TextStyle(fontSize: 11.5, color: muted)),
+                ]),
+              ),
+          ]);
+    });
+  }
+
+  Widget _sectionTitle(String t, String sub, {Widget? trailing}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 2),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(t, style: _serif(size: 24)),
+                Text(sub, style: const TextStyle(fontSize: 11.5, color: muted)),
+              ]),
+        ),
+        if (trailing != null) trailing,
+      ]),
+    );
+  }
+
+  Widget _runtimePill() {
+    final int m = _mustMinutes;
+    final int r = _receptionMinutes;
+    final int room = ((r - m) / 3.5).floor();
+    final bool over = m > r;
+    final String text = over
+        ? '${_hm(m)} of must-plays - more than the ${_hm(r)} reception'
+        : '${_hm(m)} of must-plays \u00b7 room for about ${math.max(0, room)} more';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+          color: over ? const Color(0xFFFBECEC) : gold.withOpacity(.16),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+              color: over ? rose.withOpacity(.4) : gold.withOpacity(.5))),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 10.5,
+              color: over ? rose : amber,
+              fontWeight: FontWeight.w800)),
+    );
+  }
+
+  String _hm(int mins) => mins >= 60
+      ? '${mins ~/ 60} h${mins % 60 == 0 ? '' : ' ${mins % 60} m'}'
+      : '$mins m';
+
+  // ---- guest requests ----
+
+  Widget _requestsCard() {
+    final List<QueryDocumentSnapshot<Map<String, dynamic>>> shown =
+        _requests.where((QueryDocumentSnapshot<Map<String, dynamic>> d) {
+      final String st = (d.data()['status'] ?? 'new').toString();
+      return _showDeclined || st != 'declined';
+    }).toList();
+    final int declined = _requests.length -
+        _requests
+            .where((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                (d.data()['status'] ?? 'new') != 'declined')
+            .length;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+            colors: <Color>[gold.withOpacity(.22), card],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: gold.withOpacity(.6)),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(children: <Widget>[
+              Container(
+                  width: 36,
+                  height: 36,
+                  decoration:
+                      const BoxDecoration(shape: BoxShape.circle, color: plum),
+                  child: const Icon(Icons.how_to_vote_rounded,
+                      color: gold, size: 18)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                          _requests.isEmpty
+                              ? 'Let your guests request songs'
+                              : 'Guest requests',
+                          style: _serif(size: 22)),
+                      Text(
+                          _requests.isEmpty
+                              ? 'Share one link. Requests land here with who asked; approve the good ones straight into must-play.'
+                              : '$_newRequests waiting \u00b7 ${_requests.length - _newRequests - declined} approved${declined > 0 ? ' \u00b7 $declined declined' : ''}',
+                          style: const TextStyle(
+                              fontSize: 11.5, color: muted, height: 1.35)),
+                    ]),
+              ),
+              const SizedBox(width: 8),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                    backgroundColor: plum,
+                    foregroundColor: ivory,
+                    elevation: 0,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    minimumSize: Size.zero,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                onPressed: _h(_copyRequestLink),
+                icon: const Icon(Icons.link_rounded, size: 15),
+                label: const Text('Copy link',
+                    style:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+              ),
+            ]),
+            if (_requestLink.isNotEmpty)
+              Padding(
+                  padding: const EdgeInsets.only(top: 6, left: 46),
+                  child: Text(_requestLink.replaceFirst('https://', ''),
+                      style: const TextStyle(fontSize: 10.5, color: muted))),
+            if (shown.isNotEmpty) ...<Widget>[
+              const SizedBox(height: 10),
+              for (final QueryDocumentSnapshot<Map<String, dynamic>> d in shown)
+                _requestRow(d),
+            ],
+            if (declined > 0)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                    onPressed: _h(
+                        () => setState(() => _showDeclined = !_showDeclined)),
+                    child: Text(
+                        _showDeclined
+                            ? 'Hide declined'
+                            : 'Show $declined declined',
+                        style: const TextStyle(
+                            color: muted,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700))),
+              ),
+          ]),
+    );
+  }
+
+  Widget _requestRow(QueryDocumentSnapshot<Map<String, dynamic>> d) {
+    final Map<String, dynamic> r = d.data();
+    final String st = (r['status'] ?? 'new').toString();
+    final String guest = (r['guest'] ?? '').toString().trim();
+    final String note = (r['note'] ?? '').toString().trim();
+    final dynamic at = r['createdAt'];
+    final Color line =
+        st == 'approved' ? vGreen : (st == 'declined' ? muted : gold);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.fromLTRB(12, 9, 8, 9),
+      decoration: BoxDecoration(
+          color: card,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: goldLine)),
+      child: Row(children: <Widget>[
+        Container(
+            width: 3,
+            height: 34,
+            decoration: BoxDecoration(
+                color: line, borderRadius: BorderRadius.circular(2))),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                    '${r['song'] ?? ''}${(r['artist'] ?? '').toString().isNotEmpty ? ' \u2013 ${r['artist']}' : ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                        color: st == 'declined' ? muted : ink,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        decoration: st == 'declined'
+                            ? TextDecoration.lineThrough
+                            : null)),
+                Text(
+                    '${guest.isEmpty ? 'A guest' : guest}${at is Timestamp ? ' \u00b7 ${_shortDate(at.toDate())}' : ''}${note.isEmpty ? '' : ' \u00b7 \u201c$note\u201d'}',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11, color: muted)),
+              ]),
+        ),
+        if (st == 'new') ...<Widget>[
+          IconButton(
+              tooltip: 'Hear it / pick the version',
+              onPressed: _h(() => _pickForRequest(d)),
+              icon: const Icon(Icons.search_rounded, color: plum, size: 18),
+              visualDensity: VisualDensity.compact),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: vGreen,
+                foregroundColor: ivory,
+                elevation: 0,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                minimumSize: Size.zero,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8))),
+            onPressed: _h(() => _approve(d)),
+            child: const Text('Add',
+                style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
+          ),
+          IconButton(
+              tooltip: 'Decline',
+              onPressed: _h(() => _decline(d)),
+              icon: const Icon(Icons.close_rounded, color: muted, size: 18),
+              visualDensity: VisualDensity.compact),
+        ] else
+          Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: Text(st == 'approved' ? 'Added' : 'Declined',
+                  style: TextStyle(
+                      fontSize: 11, color: line, fontWeight: FontWeight.w800))),
+      ]),
+    );
+  }
+
+  // ---- from your DJ ----
+
+  Widget _djCard() {
+    return Container(
+      decoration: _panelDeco,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(children: <Widget>[
+              const Icon(Icons.headphones_rounded, color: plum, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                  child: Text(
+                      'From ${(_sentTo['vendorName'] ?? 'your DJ').toString()}',
+                      style: _serif(size: 22))),
+              const Text('since you sent the plan',
+                  style: TextStyle(fontSize: 11, color: muted)),
+            ]),
+            const SizedBox(height: 8),
+            for (final Map<String, dynamic> m in _djReplies)
+              Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+                decoration: BoxDecoration(
+                    color: ivory,
+                    borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(14),
+                        bottomLeft: Radius.circular(14),
+                        bottomRight: Radius.circular(14)),
+                    border: Border.all(color: goldLine)),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(m['text'].toString(),
+                          style: const TextStyle(
+                              color: ink, fontSize: 13, height: 1.4)),
+                      if (m['at'] is Timestamp)
+                        Text(_shortDate((m['at'] as Timestamp).toDate()),
+                            style: const TextStyle(fontSize: 10, color: muted)),
+                    ]),
+              ),
+            const Text('Reply in Messages - this shows what they wrote back.',
+                style: TextStyle(fontSize: 11, color: muted)),
+          ]),
+    );
+  }
+
+  // ---- moments ----
+
+  Widget _momentGrid(int cols) {
+    final List<Widget> tiles =
+        _allMoments.map((List<String> m) => _momentTile(m)).toList();
+    final List<Widget> rows = <Widget>[];
+    for (int i = 0; i < tiles.length; i += cols) {
+      final List<Widget> r = <Widget>[];
+      for (int j = 0; j < cols; j++) {
+        r.add(Expanded(
+            child:
+                i + j < tiles.length ? tiles[i + j] : const SizedBox.shrink()));
+        if (j < cols - 1) r.add(const SizedBox(width: 10));
+      }
+      rows.add(Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child:
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: r)));
+    }
+    return Column(children: rows);
+  }
+
+  Widget _momentTile(List<String> m) {
+    final _Song? s = _moments[m[0]];
+    final bool custom = m[0].startsWith('c_');
+    final bool me = s != null && _playingId == s.id;
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+          color: card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: s == null ? goldLine : (me ? plum : gold),
+              width: me ? 1.5 : 1)),
+      child: Stack(children: <Widget>[
+        // The cover as a wash behind the tile. Positioned.fill + cover works
+        // on the wide layout, where a tile is roughly square; on a phone the
+        // tile is full width and ~100 tall, so a square cover is scaled about
+        // eight times and cropped to a strip - it reads as a random photo
+        // under the title and the artist, not as album art.
+        //
+        // A band at the right edge instead, with a scrim in the card's own
+        // colour fading it out before it reaches any text.
+        if (s != null && s.art.isNotEmpty) ...<Widget>[
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: 132,
+            child: Opacity(
+              opacity: .22,
+              child: Image.network(s.art,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink()),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: <Color>[card, card.withOpacity(0)],
+                  stops: const <double>[.55, 1],
+                ),
+              ),
+            ),
+          ),
+        ],
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  Expanded(
+                      child: Text(m[1],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: plum,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: .3))),
+                  if (s != null && s.time.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                          color: gold.withOpacity(.2),
+                          borderRadius: BorderRadius.circular(999)),
+                      child: Text(_fmtClock(s.time),
+                          style: const TextStyle(
+                              fontSize: 9.5,
+                              color: amber,
+                              fontWeight: FontWeight.w800)),
+                    ),
+                  if (s != null)
+                    _Press(
+                      scale: .85,
+                      onTap: () {
+                        _moments.remove(m[0]);
+                        _scheduleSave();
+                        setState(() {});
+                      },
+                      child: const Padding(
+                          padding: EdgeInsets.all(3),
+                          child: Icon(Icons.close_rounded,
+                              color: muted, size: 15)),
+                    )
+                  else if (custom)
+                    _Press(
+                        scale: .85,
+                        onTap: () => _removeCustomMoment(m[0]),
+                        child: const Padding(
+                            padding: EdgeInsets.all(3),
+                            child: Icon(Icons.delete_outline_rounded,
+                                color: muted, size: 15))),
+                ]),
+                const SizedBox(height: 8),
+                if (s == null)
+                  Row(children: <Widget>[
+                    Expanded(
+                      child: _Press(
+                        tick: _Tick.select,
+                        onTap: () => setState(() {
+                          _searchFor = m[0];
+                          _reqFor = '';
+                          _tab = 1;
+                          _searchC.clear();
+                          _results = <_Song>[];
+                          _searchErr = '';
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 9, horizontal: 10),
+                          decoration: BoxDecoration(
+                              color: ivory,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: goldLine)),
+                          child: Row(children: <Widget>[
+                            const Icon(Icons.search_rounded,
+                                color: plum, size: 15),
+                            const SizedBox(width: 6),
+                            Expanded(
+                                child: Text(
+                                    m[2].isEmpty ? 'Choose a song' : m[2],
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontSize: 11.5,
+                                        color: muted,
+                                        fontWeight: FontWeight.w600))),
+                          ]),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Tooltip(
+                      message: 'Ask June for three ideas',
+                      child: _Press(
+                        scale: .9,
+                        enabled: !_juneBusy,
+                        onTap: _juneBusy ? null : () => _askJune(m[0]),
+                        // Disc stays 36, target goes to 44. This button sits
+                        // beside a search field, so a miss opens the keyboard
+                        // instead of asking June.
+                        child: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: Center(
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                      colors: <Color>[plumDeep, plum]),
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: _juneBusy
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: gold))
+                                  : const Icon(Icons.auto_awesome_rounded,
+                                      color: gold, size: 17),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ])
+                else
+                  Row(children: <Widget>[
+                    _art(s, 40),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(children: <Widget>[
+                              Flexible(
+                                  child: Text(s.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          color: ink,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w700))),
+                              if (s.explicit) _explicitTag(),
+                            ]),
+                            Text(s.artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 11, color: muted)),
+                            _Press(
+                              onTap: () => _pinMoment(m[0]),
+                              child: Text(
+                                  s.time.isEmpty
+                                      ? 'Pin to timeline'
+                                      : s.eventLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 10.5,
+                                      color: plum,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline)),
+                            ),
+                          ]),
+                    ),
+                    _playBtn(s, size: 30),
+                  ]),
+              ]),
+        ),
+      ]),
+    );
+  }
+
+  // ---- lists ----
+
+  Widget _songListCard(List<_Song> list, {required bool must}) {
+    if (list.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: _panelDeco,
+        child: Row(children: <Widget>[
+          Icon(must ? Icons.favorite_border_rounded : Icons.block_rounded,
+              color: must ? plum : rose, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text(
+                  must
+                      ? 'Search a song and tap + to add it here.'
+                      : 'Nothing banned yet. Chicken Dance, anyone?',
+                  style: const TextStyle(fontSize: 12.5, color: muted))),
+        ]),
+      );
+    }
+    return Container(
+      decoration: _panelDeco,
+      clipBehavior: Clip.antiAlias,
+      child: must
+          ? ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: list.length,
+              // v2.4: a picked-up row lifts with a shadow; a tick on pickup
+              // and another when it lands.
+              onReorderStart: (int _) => _tick(_Tick.medium),
+              proxyDecorator: (Widget child, int i, Animation<double> a) =>
+                  AnimatedBuilder(
+                animation: a,
+                builder: (BuildContext c, Widget? w) {
+                  final double t = Curves.easeOut.transform(a.value);
+                  return Transform.scale(
+                    scale: 1 + .02 * t,
+                    child: Material(
+                      color: card,
+                      elevation: 10 * t,
+                      shadowColor: plumDeep.withOpacity(.4),
+                      borderRadius: BorderRadius.circular(12),
+                      child: w,
+                    ),
+                  );
+                },
+                child: child,
+              ),
+              onReorder: (int a, int b) {
+                _tick(_Tick.select);
+                setState(() {
+                  if (b > a) b--;
+                  final _Song s = list.removeAt(a);
+                  list.insert(b, s);
+                });
+                _scheduleSave();
+              },
+              itemBuilder: (BuildContext c, int i) => _listRow(list[i], i, must,
+                  key: ValueKey<String>('m:${list[i].id}')),
+            )
+          : Column(children: <Widget>[
+              for (int i = 0; i < list.length; i++) _listRow(list[i], i, must)
+            ]),
+    );
+  }
+
+  Widget _listRow(_Song s, int i, bool must, {Key? key}) {
+    final bool me = _playingId == s.id;
+    return Container(
+      key: key,
+      padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
+      decoration: BoxDecoration(
+          color: me ? gold.withOpacity(.1) : Colors.transparent,
+          border: Border(bottom: BorderSide(color: goldLine.withOpacity(.6)))),
+      child: Row(children: <Widget>[
+        if (must)
+          ReorderableDragStartListener(
+            index: i,
+            child: const MouseRegion(
+                cursor: SystemMouseCursors.grab,
+                child: Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(Icons.drag_indicator_rounded,
+                        color: muted, size: 18))),
+          ),
+        SizedBox(
+            width: 22,
+            child: Text('${i + 1}',
+                style: _serif(size: 16, color: must ? plum : rose))),
+        _art(s, 38),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  Flexible(
+                      child: Text(s.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: ink,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700))),
+                  if (s.explicit) _explicitTag(),
+                  if (s.requestedBy.isNotEmpty)
+                    Container(
+                        margin: const EdgeInsets.only(left: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                            color: gold.withOpacity(.2),
+                            borderRadius: BorderRadius.circular(999)),
+                        child: Text('guest',
+                            style: const TextStyle(
+                                fontSize: 9.5,
+                                color: amber,
+                                fontWeight: FontWeight.w800))),
+                ]),
+                Text(
+                    '${s.artist}${s.length.isEmpty ? '' : ' \u00b7 ${s.length}'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 11.5, color: muted)),
+                if (s.note.isNotEmpty)
+                  Text(s.note,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 11,
+                          color: amber,
+                          fontStyle: FontStyle.italic)),
+                if (must && s.explicit && _wantsClean)
+                  _Press(
+                    onTap: () {
+                      _searchC.text = '${s.title} ${s.artist} clean';
+                      _search(_searchC.text);
+                    },
+                    child: const Text('Explicit - find the clean edit',
+                        style: TextStyle(
+                            fontSize: 10.5,
+                            color: rose,
+                            fontWeight: FontWeight.w800)),
+                  ),
+              ]),
+        ),
+        _playBtn(s, size: 30),
+        if (must)
+          IconButton(
+              tooltip: 'Note for the DJ',
+              onPressed: _h(() => _editNote(s)),
+              icon: Icon(
+                  s.note.isEmpty
+                      ? Icons.sticky_note_2_outlined
+                      : Icons.sticky_note_2_rounded,
+                  color: muted,
+                  size: 18),
+              visualDensity: VisualDensity.compact),
+        IconButton(
+            tooltip: 'Remove',
+            onPressed: _h(() => _remove(s)),
+            icon: const Icon(Icons.close_rounded, color: muted, size: 18),
+            visualDensity: VisualDensity.compact),
+      ]),
+    );
+  }
+
+  Widget _avoidCard() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: _panelDeco,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Text('ARTISTS OR GENRES TO AVOID',
+                style: TextStyle(
+                    fontSize: 10.5,
+                    letterSpacing: 2,
+                    color: plum,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: <Widget>[
+                for (final String a in _avoid)
+                  InputChip(
+                    label: Text(a,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: rose,
+                            fontWeight: FontWeight.w700)),
+                    backgroundColor: const Color(0xFFFBECEC),
+                    side: BorderSide(color: rose.withOpacity(.35)),
+                    deleteIconColor: rose,
+                    onDeleted: () {
+                      setState(() => _avoid.remove(a));
+                      _scheduleSave();
+                    },
+                  ),
+                SizedBox(
+                  width: 220,
+                  child: TextField(
+                    controller: _avoidC,
+                    style: const TextStyle(color: ink, fontSize: 13),
+                    onSubmitted: (String v) {
+                      final String t = v.trim();
+                      if (t.isEmpty) return;
+                      setState(() {
+                        if (!_avoid.contains(t)) _avoid.add(t);
+                        _avoidC.clear();
+                      });
+                      _scheduleSave();
+                    },
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: 'No country, nothing by\u2026',
+                      hintStyle: const TextStyle(
+                          color: Color(0xFFB8AEBD), fontSize: 12),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(999),
+                          borderSide: const BorderSide(color: goldLine)),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(999),
+                          borderSide: const BorderSide(color: goldLine)),
+                      suffixIcon: const Icon(Icons.keyboard_return_rounded,
+                          size: 16, color: muted),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ]),
+    );
+  }
+
+  Widget _vibeCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: _panelDeco,
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: kVibes.map((String v) {
+          final bool on = _vibe.contains(v);
+          return FilterChip(
+            label: Text(v,
+                style: TextStyle(
+                    fontSize: 12,
+                    color: on ? ivory : plum,
+                    fontWeight: FontWeight.w700)),
+            selected: on,
+            showCheckmark: false,
+            selectedColor: plum,
+            backgroundColor: ivory,
+            side: BorderSide(color: on ? plum : goldLine),
+            onSelected: _hb((bool sel) {
+              setState(() {
+                if (sel) {
+                  _vibe.add(v);
+                } else {
+                  _vibe.remove(v);
+                }
+              });
+              _scheduleSave();
+            }),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _notesCard() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: _panelDeco,
+      child: TextField(
+        controller: _notesC,
+        minLines: 3,
+        maxLines: 8,
+        onChanged: (String v) {
+          _notes = v;
+          _scheduleSave();
+        },
+        style: const TextStyle(color: ink, fontSize: 13.5, height: 1.4),
+        decoration: const InputDecoration(
+          hintText:
+              'Please announce the parent dances. Our last name is pronounced NGOO-yen. No requests from Uncle Rick.',
+          hintStyle: TextStyle(color: Color(0xFFB8AEBD), fontSize: 12.5),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
+  // ---------------- print + send ----------------
+
+  String _summaryText() {
+    final StringBuffer b = StringBuffer();
+    b.writeln(
+        'MUSIC${_coupleLabel.isEmpty ? '' : ' - $_coupleLabel'}${_weddingDate.isEmpty ? '' : ' - $_weddingDate'}');
+    b.writeln('');
+    if (_moments.isNotEmpty) {
+      b.writeln('THE MOMENTS');
+      for (final List<String> m in _allMoments) {
+        final _Song? s = _moments[m[0]];
+        if (s != null)
+          b.writeln(
+              '${s.time.isEmpty ? '' : '${_fmtClock(s.time)}  '}${m[1]}: ${s.title} - ${s.artist}');
+      }
+      b.writeln('');
+    }
+    if (_must.isNotEmpty) {
+      b.writeln('MUST PLAY (${_hm(_mustMinutes)})');
+      for (int i = 0; i < _must.length; i++) {
+        final _Song s = _must[i];
+        b.writeln(
+            '${i + 1}. ${s.title} - ${s.artist}${s.note.isEmpty ? '' : ' (${s.note})'}');
+      }
+      b.writeln('');
+    }
+    if (_dont.isNotEmpty || _avoid.isNotEmpty) {
+      b.writeln('DO NOT PLAY');
+      for (final _Song s in _dont) {
+        b.writeln('${s.title} - ${s.artist}');
+      }
+      if (_avoid.isNotEmpty) b.writeln('Also avoid: ${_avoid.join(', ')}');
+      b.writeln('');
+    }
+    if (_vibe.isNotEmpty) {
+      b.writeln('THE VIBE');
+      b.writeln(_vibe.join(' \u00b7 '));
+      b.writeln('');
+    }
+    if (_notes.trim().isNotEmpty) {
+      b.writeln('NOTES');
+      b.writeln(_notes.trim());
+      b.writeln('');
+    }
+    b.writeln('Planned on Lazo \u00b7 meetlazo.com');
+    return b.toString();
+  }
+
+  String _songHtml(_Song s, {String prefix = ''}) {
+    final String links = <String>[
+      if (s.link.isNotEmpty) '<a href="${_esc(s.link)}">Listen</a>',
+      '<a href="${_esc(s.spotify)}">Spotify</a>',
+    ].join(' &middot; ');
+    return '<tr><td style="width:44px">${s.art.isEmpty ? '' : '<img src="${_esc(s.art)}" width="40" height="40" style="border-radius:8px">'}</td>'
+        '<td>${prefix.isEmpty ? '' : '<span style="color:#6B5F72;font-size:11px;letter-spacing:1px;text-transform:uppercase">${_esc(prefix)}</span><br>'}'
+        '<b>${_esc(s.title)}</b>${s.explicit ? ' <span style="background:#6B5F72;color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">E</span>' : ''}<br><span style="color:#6B5F72">${_esc(s.artist)}${s.length.isEmpty ? '' : ' &middot; ${s.length}'}</span>'
+        '${s.note.isEmpty ? '' : '<br><i style="color:#8A6A2F">${_esc(s.note)}</i>'}</td>'
+        '<td style="white-space:nowrap;font-size:12px">$links</td></tr>';
+  }
+
+  String _printHtml() {
+    final StringBuffer h = StringBuffer();
+    if (_moments.isNotEmpty) {
+      h.write('<h2>The moments</h2><table>');
+      for (final List<String> m in _allMoments) {
+        final _Song? s = _moments[m[0]];
+        if (s != null)
+          h.write(_songHtml(s,
+              prefix:
+                  '${s.time.isEmpty ? '' : '${_fmtClock(s.time)} \u00b7 '}${m[1]}'));
+      }
+      h.write('</table>');
+    }
+    if (_must.isNotEmpty) {
+      h.write(
+          '<h2>Must play (${_must.length} \u00b7 ${_hm(_mustMinutes)})</h2><table>');
+      for (final _Song s in _must) {
+        h.write(_songHtml(s));
+      }
+      h.write('</table>');
+    }
+    if (_dont.isNotEmpty || _avoid.isNotEmpty) {
+      h.write(
+          '<h2>Do not play${_dont.isEmpty ? '' : ' (${_dont.length})'}</h2>');
+      if (_dont.isNotEmpty) {
+        h.write('<table>');
+        for (final _Song s in _dont) {
+          h.write(_songHtml(s));
+        }
+        h.write('</table>');
+      }
+      if (_avoid.isNotEmpty)
+        h.write(
+            '<p><b>Also avoid:</b> ${_avoid.map(_esc).join(' &middot; ')}</p>');
+    }
+    if (_vibe.isNotEmpty)
+      h.write('<h2>The vibe</h2><p>${_vibe.map(_esc).join(' &middot; ')}</p>');
+    if (_notes.trim().isNotEmpty)
+      h.write(
+          '<h2>Notes</h2><p>${_esc(_notes.trim()).replaceAll('\n', '<br>')}</p>');
+    final String sub = <String>[
+      if (_coupleLabel.isNotEmpty) _coupleLabel,
+      if (_weddingDate.isNotEmpty) _weddingDate
+    ].join(' \u00b7 ');
+    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Music</title><style>'
+        'body{font-family:Georgia,serif;color:#241E2B;margin:0;padding:32px;background:#fff}'
+        'h1{font-weight:600;font-size:30px;margin:0 0 4px;color:#52284F}.sub{color:#6B5F72;font-size:13px;margin-bottom:22px}'
+        'h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#52284F;margin:26px 0 8px;border-bottom:1px solid #E6D6B8;padding-bottom:4px}'
+        'table{border-collapse:collapse;width:100%;font-family:Helvetica,Arial,sans-serif;font-size:13px}td{padding:7px 8px;border-bottom:1px solid #F0E8D8;vertical-align:middle}'
+        'p{font-family:Helvetica,Arial,sans-serif;font-size:13.5px;line-height:1.5}a{color:#52284F}'
+        '.foot{margin-top:34px;color:#6B5F72;font-size:11px;font-family:Helvetica,Arial,sans-serif}'
+        '.btn{position:fixed;top:14px;right:14px;background:#52284F;color:#fff;border:0;padding:9px 14px;border-radius:999px;font-size:13px;cursor:pointer}@media print{.btn{display:none}body{padding:0}}'
+        '</style></head><body><button class="btn" onclick="window.print()">Print / Save as PDF</button>'
+        '<h1>Music</h1><div class="sub">${_esc(sub)}</div>$h'
+        '<div class="foot">Planned on Lazo &middot; meetlazo.com</div></body></html>';
+  }
+
+  bool get _hasAnything =>
+      _moments.isNotEmpty || _must.isNotEmpty || _dont.isNotEmpty;
+
+  void _print() {
+    if (!_hasAnything) {
+      _toast('Add a song or two first.');
+      return;
+    }
+    if (!kIsWeb) {
+      Clipboard.setData(ClipboardData(text: _summaryText()));
+      _toast('Copied the plan - paste it into Notes or an email.');
+      return;
+    }
+    try {
+      final html.Blob blob = html.Blob(<String>[_printHtml()], 'text/html');
+      final String url = html.Url.createObjectUrlFromBlob(blob);
+      html.window.open(url, '_blank');
+    } catch (e) {
+      debugPrint('LAZO music print: ' + e.toString());
+      _toast('Could not open the printable page.');
+    }
+  }
+
+  Future<void> _sendSheet() async {
+    if (!_hasAnything) {
+      _toast('Add a song or two first.');
+      return;
+    }
+    final List<Map<String, dynamic>> booked = <Map<String, dynamic>>[];
+    try {
+      final QuerySnapshot<Map<String, dynamic>> qs = await FirebaseFirestore
+          .instance
+          .collection('inquiries')
+          .where('coupleUid', isEqualTo: _cid)
+          .get();
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> d in qs.docs) {
+        final Map<String, dynamic> m = d.data();
+        final bool isBooked = (m['status'] ?? '').toString() == 'booked' ||
+            (m['contractStatus'] ?? '').toString() == 'signed';
+        if (!isBooked) continue;
+        final Map<String, dynamic> intent = m['structuredIntent'] is Map
+            ? Map<String, dynamic>.from(m['structuredIntent'] as Map)
+            : <String, dynamic>{};
+        final String cat =
+            (m['vendorCategory'] ?? m['category'] ?? intent['category'] ?? '')
+                .toString()
+                .toLowerCase();
+        final bool dj = cat.contains('dj') ||
+            cat.contains('band') ||
+            cat.contains('music') ||
+            cat.contains('entertain');
+        booked.add(<String, dynamic>{
+          'id': d.id,
+          'name': (m['vendorName'] ?? 'Your vendor').toString(),
+          'dj': dj,
+          'planner': cat.contains('plann') || cat.contains('coordinat')
+        });
+      }
+    } catch (e) {
+      debugPrint('LAZO music booked: ' + e.toString());
+    }
+    booked.sort((Map<String, dynamic> a, Map<String, dynamic> b) {
+      int rank(Map<String, dynamic> v) =>
+          v['dj'] == true ? 0 : (v['planner'] == true ? 1 : 2);
+      final int c = rank(a).compareTo(rank(b));
+      return c != 0 ? c : a['name'].toString().compareTo(b['name'].toString());
+    });
+    final Set<String> picked = <String>{
+      for (final Map<String, dynamic> v in booked)
+        if (v['dj'] == true) v['id'].toString(),
+    };
+    if (picked.isEmpty && booked.isNotEmpty)
+      picked.add(booked.first['id'].toString());
+    final bool resend = _sentTo['at'] is Timestamp;
+    final TextEditingController noteC = TextEditingController(
+        text: resend
+            ? 'Updated music plan - a few things moved since last time. The attached file is the current one.'
+            : 'Here\u2019s our music plan - the moments, our must-plays and the do-not-play list. We\u2019re open to your read on the rest of the night!');
+    bool busy = false;
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext ctx) => StatefulBuilder(
+        builder: (BuildContext ctx, StateSetter setS) => Padding(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 560),
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+            decoration: BoxDecoration(
+                color: card,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: goldLine)),
+            child: SingleChildScrollView(
+              child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(children: <Widget>[
+                      Expanded(
+                          child: Text(
+                              resend ? 'Send the update' : 'Send to your DJ',
+                              style: _serif(size: 26))),
+                      IconButton(
+                          onPressed: _h(() => Navigator.of(ctx).pop()),
+                          icon: const Icon(Icons.close_rounded, color: muted)),
+                    ]),
+                    Text(_subline,
+                        style: const TextStyle(fontSize: 12.5, color: muted)),
+                    const SizedBox(height: 12),
+                    if (booked.isEmpty)
+                      const Text(
+                          'No booked vendors on Lazo yet. When your DJ or band is booked here, the plan lands straight in their thread. Until then, email it or copy the list.',
+                          style: TextStyle(
+                              fontSize: 13, color: muted, height: 1.45))
+                    else ...<Widget>[
+                      const Text('WHO GETS IT',
+                          style: TextStyle(
+                              fontSize: 10.5,
+                              letterSpacing: 2,
+                              color: plum,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 6),
+                      ...booked.map((Map<String, dynamic> v) {
+                        final String id = v['id'].toString();
+                        final bool on = picked.contains(id);
+                        return _Press(
+                          scale: .985,
+                          dim: .92,
+                          tick: _Tick.select,
+                          onTap: () => setS(
+                              () => on ? picked.remove(id) : picked.add(id)),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(children: <Widget>[
+                              Icon(
+                                  on
+                                      ? Icons.check_box_rounded
+                                      : Icons.check_box_outline_blank_rounded,
+                                  color: on ? plum : muted,
+                                  size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                  child: Text(v['name'].toString(),
+                                      style: const TextStyle(
+                                          color: ink,
+                                          fontSize: 13.5,
+                                          fontWeight: FontWeight.w700))),
+                              if (v['dj'] == true)
+                                const Text('DJ / band',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: vGreen,
+                                        fontWeight: FontWeight.w800)),
+                            ]),
+                          ),
+                        );
+                      }),
+                      const SizedBox(height: 12),
+                      TextField(
+                          controller: noteC,
+                          minLines: 2,
+                          maxLines: 4,
+                          style: const TextStyle(color: ink, fontSize: 13.5),
+                          decoration: const InputDecoration(
+                              labelText: 'A note to go with it',
+                              labelStyle: TextStyle(color: muted),
+                              border: OutlineInputBorder())),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: plum,
+                              foregroundColor: ivory,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                          onPressed: _h(
+                              busy || picked.isEmpty
+                                  ? null
+                                  : () async {
+                                      setS(() => busy = true);
+                                      final List<Map<String, dynamic>> sent =
+                                          <Map<String, dynamic>>[];
+                                      for (final Map<String, dynamic> v
+                                          in booked) {
+                                        if (!picked.contains(v['id'])) continue;
+                                        if (await _sendToThread(
+                                            v['id'].toString(),
+                                            v['name'].toString(),
+                                            noteC.text.trim())) {
+                                          sent.add(<String, dynamic>{
+                                            'inquiryId': v['id'],
+                                            'vendorName': v['name']
+                                          });
+                                        }
+                                      }
+                                      if (sent.isNotEmpty) {
+                                        try {
+                                          await _ref.set(<String, dynamic>{
+                                            'sentTo': <String, dynamic>{
+                                              'inquiryId':
+                                                  sent.first['inquiryId'],
+                                              'vendorName': sent
+                                                  .map((Map<String, dynamic>
+                                                          e) =>
+                                                      e['vendorName'])
+                                                  .join(', '),
+                                              'at': FieldValue.serverTimestamp()
+                                            },
+                                          }, SetOptions(merge: true));
+                                          await _coupleRef
+                                              .collection('sends')
+                                              .doc('music')
+                                              .set(<String, dynamic>{
+                                            'kind': 'music',
+                                            'title': 'music',
+                                            'to': sent,
+                                            'at': FieldValue.serverTimestamp()
+                                          }, SetOptions(merge: true));
+                                        } catch (_) {}
+                                      }
+                                      if (ctx.mounted) Navigator.of(ctx).pop();
+                                      if (sent.isNotEmpty)
+                                        _toast(
+                                            'Sent to ${sent.map((Map<String, dynamic> e) => e['vendorName']).join(', ')} \u2713 Replies show up here.');
+                                    },
+                              _Tick.medium),
+                          icon: busy
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: ivory))
+                              : const Icon(Icons.send_rounded, size: 17),
+                          label: Text(
+                              busy
+                                  ? 'Sending\u2026'
+                                  : 'Send to ${picked.length} vendor${picked.length == 1 ? '' : 's'}',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w800)),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                    Row(children: <Widget>[
+                      TextButton.icon(
+                        onPressed: _h(() async {
+                          final Uri u = Uri.parse(
+                              'mailto:?subject=${Uri.encodeComponent('Music${_coupleLabel.isEmpty ? '' : ' - $_coupleLabel'}')}&body=${Uri.encodeComponent(_summaryText())}');
+                          try {
+                            await launchUrl(u);
+                          } catch (_) {
+                            await Clipboard.setData(
+                                ClipboardData(text: _summaryText()));
+                            _toast('Copied - paste it into an email.');
+                          }
+                        }),
+                        icon: const Icon(Icons.mail_outline_rounded,
+                            color: plum, size: 16),
+                        label: const Text('Email it',
+                            style: TextStyle(
+                                color: plum, fontWeight: FontWeight.w700)),
+                      ),
+                      TextButton.icon(
+                        onPressed: _h(() async {
+                          await Clipboard.setData(
+                              ClipboardData(text: _summaryText()));
+                          _toast('Copied \u2713');
+                        }),
+                        icon: const Icon(Icons.copy_rounded,
+                            color: plum, size: 16),
+                        label: const Text('Copy list',
+                            style: TextStyle(
+                                color: plum, fontWeight: FontWeight.w700)),
+                      ),
+                    ]),
+                  ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _sendToThread(
+      String inquiryId, String vendorName, String note) async {
+    final DocumentReference<Map<String, dynamic>> ref =
+        FirebaseFirestore.instance.collection('inquiries').doc(inquiryId);
+    Map<String, dynamic>? att;
+    try {
+      final Uint8List bytes = Uint8List.fromList(utf8.encode(_printHtml()));
+      final String path =
+          'inquiries/$inquiryId/attachments/${DateTime.now().millisecondsSinceEpoch}_music.html';
+      final Reference r = FirebaseStorage.instance.ref(path);
+      await r.putData(bytes, SettableMetadata(contentType: 'text/html'));
+      final String url = await r.getDownloadURL();
+      att = <String, dynamic>{
+        'url': url,
+        'name': 'Music.html',
+        'type': 'text/html',
+        'size': bytes.length,
+        'path': path
+      };
+    } catch (e) {
+      debugPrint('LAZO music attach: ' + e.toString());
+      att = null;
+    }
+    String text =
+        '${note.isEmpty ? 'Here\u2019s our music plan.' : note}\n\n${_summaryText()}';
+    if (text.length >= 2900)
+      text = text.substring(0, 2860) + '\u2026\n\n(The full list is attached.)';
+    try {
+      final Map<String, dynamic> msg = <String, dynamic>{
+        'senderRole': 'couple',
+        'text': text,
+        'at': FieldValue.serverTimestamp()
+      };
+      if (att != null) msg['attachment'] = att;
+      try {
+        await ref.collection('messages').add(msg);
+      } catch (e) {
+        if (att == null) rethrow;
+        msg.remove('attachment');
+        await ref.collection('messages').add(msg);
+      }
+    } catch (e) {
+      _toast('Could not send: ' + _errText(e));
+      return false;
+    }
+    try {
+      await ref.set(<String, dynamic>{
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'lastMessageRole': 'couple',
+        'lastMessagePreview': 'Music plan from the couple'
+      }, SetOptions(merge: true));
+    } catch (_) {}
+    return true;
+  }
+}
+
+// Rounded equalizer bars, drawn from a 0..1 list. mirror draws them growing
+// from the vertical centre, which reads better in a bar than a baseline.
+// ---------------- v2.4: MOTION ----------------
+// Three rules, from the WWDC "Designing Fluid Interfaces" talk:
+//  1. Answer the finger on pointer-DOWN, never only on release.
+//  2. Critically damped by default. Overshoot only when something arrives
+//     with momentum.
+//  3. Reduced-motion users get a cross-fade - never a slide, never a bounce.
+
+bool _reducedMotion(BuildContext c) =>
+    MediaQuery.maybeOf(c)?.disableAnimations ?? false;
+
+// Haptics, in tiers, fired on the commit so the pulse and the visual change
+// hit on the same frame. No-ops on web; no permission needed on phones.
+//   select - a choice among peers: tabs, the scrubber, a checkbox.
+//   light  - an ordinary button; a preview starting or pausing.
+//   medium - a song landing in the plan; a row picked up; Send to your DJ.
+enum _Tick { none, select, light, medium }
+
+void _tick(_Tick t) {
+  switch (t) {
+    case _Tick.none:
+      return;
+    case _Tick.select:
+      HapticFeedback.selectionClick();
+      return;
+    case _Tick.light:
+      HapticFeedback.lightImpact();
+      return;
+    case _Tick.medium:
+      HapticFeedback.mediumImpact();
+      return;
+  }
+}
+
+/// Wrap a button's onPressed. Null stays null, so disabled stays disabled.
+VoidCallback? _h(VoidCallback? f, [_Tick t = _Tick.light]) => f == null
+    ? null
+    : () {
+        _tick(t);
+        f();
+      };
+
+/// Same for bool callbacks: a chip's onSelected, a Switch's onChanged.
+ValueChanged<bool>? _hb(ValueChanged<bool>? f, [_Tick t = _Tick.select]) =>
+    f == null
+        ? null
+        : (bool v) {
+            _tick(t);
+            f(v);
+          };
+
+/// A tappable that answers the instant the finger lands - 97% in 90ms on the
+/// way down, a slower settle on the way up. Use it where the child paints its
+/// own background; InkWell's ripple would land underneath and never show.
+class _Press extends StatefulWidget {
+  const _Press({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.scale = .97,
+    this.dim = .88,
+    this.enabled = true,
+    this.tick = _Tick.light,
+    this.tickOnDown = false,
+  });
+  final Widget child;
+  final VoidCallback? onTap;
+  final double scale;
+  final double dim;
+  final bool enabled;
+  final _Tick tick;
+  // Harmony: the scale already fires on touch-down, so a control can put its
+  // haptic there too instead of a frame after release. Off by default, so no
+  // existing call site changes.
+  final bool tickOnDown;
+  @override
+  State<_Press> createState() => _PressState();
+}
+
+class _PressState extends State<_Press> {
+  bool _down = false;
+  void _set(bool v) {
+    if (_down != v && mounted) setState(() => _down = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool on = _down && widget.enabled && !_reducedMotion(context);
+    final VoidCallback? tap = widget.enabled ? widget.onTap : null;
+    return MouseRegion(
+      cursor: widget.enabled && widget.onTap != null
+          ? SystemMouseCursors.click
+          : MouseCursor.defer,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: widget.enabled
+            ? (_) {
+                if (widget.tickOnDown) _tick(widget.tick);
+                _set(true);
+              }
+            : null,
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        onTap: tap == null
+            ? null
+            : () {
+                if (!widget.tickOnDown) _tick(widget.tick);
+                tap();
+              },
+        child: AnimatedScale(
+          scale: on ? widget.scale : 1,
+          duration: Duration(milliseconds: on ? 90 : 240),
+          curve: on ? Curves.easeOut : Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: on ? widget.dim : 1,
+            duration: Duration(milliseconds: on ? 60 : 200),
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EqPainter extends CustomPainter {
+  _EqPainter(this.bars, this.color, {this.gap = 2, this.mirror = false});
+  final List<double> bars;
+  final Color color;
+  final double gap;
+  final bool mirror;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (bars.isEmpty) return;
+    final double w = (size.width - gap * (bars.length - 1)) / bars.length;
+    final Paint p = Paint()..color = color;
+    final Paint dim = Paint()..color = color.withOpacity(.28);
+    for (int i = 0; i < bars.length; i++) {
+      final double v = bars[i].clamp(0.04, 1.0);
+      final double h = math.max(2.0, size.height * v);
+      final double x = i * (w + gap);
+      final Rect track = mirror
+          ? Rect.fromLTWH(x, 0, w, size.height)
+          : Rect.fromLTWH(x, 0, w, size.height);
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(track, Radius.circular(w / 2)), dim);
+      final Rect bar = mirror
+          ? Rect.fromLTWH(x, (size.height - h) / 2, w, h)
+          : Rect.fromLTWH(x, size.height - h, w, h);
+      canvas.drawRRect(RRect.fromRectAndRadius(bar, Radius.circular(w / 2)), p);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_EqPainter old) => true;
+}
+
+// END OF FILE - JC-LAZO-MUSIC-0915-007
