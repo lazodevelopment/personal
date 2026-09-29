@@ -41,10 +41,15 @@ weather = {"ok": True, "day": {"hi": 76, "lo": 58, "rain": 10, "code": 1, "sky":
 invite = {"fields": {"name": {"stringValue": "Rosa Alvarez"}, "party": {"stringValue": "Rosa & Miguel Alvarez"}, "plusOnes": {"integerValue": "1"},
                      "meals": {"arrayValue": {"values": [{"stringValue": "Chicken"}, {"stringValue": "Salmon"}, {"stringValue": "Garden risotto"}]}}}}
 
+# the couple's own photos per design, so a shoot shows the design's hero
+PHOTOS_BY_SLUG = {"peony": {"hero": f"{U}1583939003579-730e3918a45a?auto=format&fit=crop&w=1900&q=74", "hx": .5, "hy": .28,
+                            "story": f"{U}1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1000&q=74"}}
+PH = PHOTOS_BY_SLUG.get(SLUG)
+photo_js = ("LS.heroPhoto={url:%s,x:%s,y:%s,zoom:1};LS.storyPhoto={url:%s,x:.5,y:.5,zoom:1};" % (json.dumps(PH["hero"]), PH["hx"], PH["hy"], json.dumps(PH["story"]))) if PH else ""
 clock = """<script>(function(){var R=Date;var d0=new R();var iso=d0.getFullYear()+"-"+String(d0.getMonth()+1).padStart(2,"0")+"-"+String(d0.getDate()).padStart(2,"0");var FIX=new R(iso+"T17:40:00").getTime();window.__ISO=iso;
 function D(){if(arguments.length===0)return new R(FIX);return new (Function.prototype.bind.apply(R,[null].concat([].slice.call(arguments))))}
 D.prototype=R.prototype;D.now=function(){return FIX};D.parse=R.parse;D.UTC=R.UTC;window.Date=D;})();</script>"""
-mock = ("<script>(function(){var LS=window.LAZO_SITE;LS.dateIso=window.__ISO;LS.timeline=%s;var W=%s,S=%s,X=%s,I=%s;var f=window.fetch;"
+mock = ("<script>(function(){var LS=window.LAZO_SITE;LS.dateIso=window.__ISO;" + photo_js + "LS.timeline=%s;var W=%s,S=%s,X=%s,I=%s;var f=window.fetch;"
         "window.fetch=function(u,o){var s=String(u);var j=function(b){return Promise.resolve(new Response(JSON.stringify(b),{status:200,headers:{'content-type':'application/json'}}))};"
         "if(s.indexOf('/photos')>0&&(!o||o.method!=='POST'))return j(W);if(s.indexOf('/seating/main')>0)return j(S);if(s.indexOf('/weather')>0)return j(X);if(s.indexOf('/invites/')>0)return j(I);return f.apply(this,arguments)};})();</script>"
         % (json.dumps(tl), json.dumps(wall), json.dumps(seating), json.dumps(weather), json.dumps(invite)))

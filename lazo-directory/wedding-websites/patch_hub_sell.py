@@ -156,8 +156,8 @@ HTML = f"""<!-- lz-sell -->
   </div>
 
   <div class="scta">
-   <a href="https://app.meetlazo.com/?template=sage">Make yours &mdash; free, live in minutes</a>
-   <p>Pick any design above. Every one of these features comes with it.</p>
+   <a href="https://app.meetlazo.com/?template=peony">Make yours &mdash; free, live in minutes</a>
+   <p>Shown on Peony, our newest design. Pick any of the twenty-one above; every feature comes with it.</p>
   </div>
  </div>
 </section>

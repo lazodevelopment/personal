@@ -231,6 +231,9 @@ THEMES.update(_EXTRA)
 # hand-built specs (see themes_v2.py).
 from themes_v2 import V2 as _V2
 THEMES.update(_V2)
+# JC-LAZO-WWT-0929-PEONY: the twenty-first, for the blush-and-peony bride
+from themes_peony import PEONY as _PEONY
+THEMES.update(_PEONY)
 
 
 # Shared by every theme: on a full-bleed photo hero the type sits on the dark

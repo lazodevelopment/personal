@@ -74,7 +74,7 @@ const TYPES = { html:"text/html;charset=utf-8", css:"text/css", js:"text/javascr
 
 // JC-LAZO-WWSEO-0919-010: harvest, aquarelle, prism, meadow, gilded, marigold, papel
 const TEMPLATES = ["sage","noir","dune","fete","tide","flora","atelier","verona","shore","summit","ranch","starlit","frost",
-                   "harvest","aquarelle","prism","meadow","gilded","marigold","papel"];
+                   "harvest","aquarelle","prism","meadow","gilded","marigold","papel","peony"];
 const PROJECT = "lazo-513ec";
 
 // Unwrap Firestore REST typed values into plain JS

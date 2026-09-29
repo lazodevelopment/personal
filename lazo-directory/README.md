@@ -112,3 +112,7 @@ app-patches/patch_couple_v140.py (v139 -> v140): Browse merges a top-24-by-score
 - Screenshots (Flora - blush; Sage read too green): `python wedding-websites\_preview.py flora && python wedding-websites\_mock_now.py flora` builds _preview/flora-now.html (clock pinned to 5:40 pm, mocked seat finder / wall / forecast / invite, ?shot=<selector> shifts a section to the top), served by `.claude/launch.json` (ww-preview, port 8090) and captured with headless Chrome (`chrome --headless=new --window-size=1280,800 --virtual-time-budget=8000 --screenshot=...`). WebP copies live in generate/static/ww-*.webp so build.py ships them to /assets/; PNG originals in generate/static/ww/ are not copied.
 
 - Patch order matters: patch_photos, patch_live and patch_more each strip and re-append their scripts before </body>, so re-running one moves it after the others. patch_more now defers to DOMContentLoaded so it never depends on order.
+
+## Peony (2026-09-29, JC-LAZO-WWT-0929-PEONY)
+- The twenty-first template: wedding-websites/themes_peony.py (merged into make_themes.THEMES), themes.json entry, hub card + filters + SEO, worker TEMPLATES, dashboard v141 (picker + palettes). Build: `make_themes.py peony`, `apply_feel.py peony`, `patch_seo.py peony`, then the three 0929 patches with `peony`, then `patch_hub_cards.py`, `patch_hub_filters.py`, `patch_hub_seo.py`.
+- The hub's sales screenshots are shot on Peony (`_mock_now.py peony` uses PHOTOS_BY_SLUG for its own hero/story photos); the CTA links ?template=peony.
