@@ -31,6 +31,8 @@ payload = {
     "guestPhotosOn": True, "guestPhotosNote": "",
     # JC-LAZO-WWS-0929-LIVE
     "timelineOn": True, "timeline": [{"time": "16:00", "label": "Guests arrive", "note": "Cold drinks on the porch", "dur": 30}, {"time": "16:30", "label": "Ceremony", "note": "", "dur": 30}, {"time": "17:15", "label": "Cocktail hour", "note": "", "dur": 75}, {"time": "18:30", "label": "Dinner", "note": "", "dur": 90}, {"time": "20:00", "label": "First dance, then everyone", "note": "", "dur": 150}, {"time": "22:30", "label": "Send-off", "note": "Sparklers by the barn", "dur": 15}],
+    "events": [{"name": "Welcome dinner", "dateIso": "2027-06-11", "time": "6:30 PM", "venueName": "The Sedona Inn", "venueAddress": "120 Main St, Sedona, AZ", "note": "Casual, come as you are", "dress": "", "rsvp": True}, {"name": "Farewell brunch", "dateIso": "2027-06-13", "time": "10:00 AM", "venueName": "The Orchard House", "venueAddress": "1400 Old Mill Road, Sedona, Arizona", "note": "", "dress": "", "rsvp": True}],
+    "hotelAddress": "120 Main St, Sedona, AZ", "guestPhotosHold": False,
     "seatingOn": True, "mealOptions": ["Chicken", "Salmon", "Garden risotto"], "galleryUrl": "https://meetlazo.com/g/sarah-and-mike", "translateOn": True,
     "song": {"title": "Perfect", "artist": "Ed Sheeran", "art": "", "trackId": "", "autoplay": True,
              "src": ("https://meetlazo.com/music/preview?u=" + urllib.parse.quote(src, safe="")) if src else ""} if src else None,

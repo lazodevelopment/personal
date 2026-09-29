@@ -44,7 +44,6 @@ CSS = """
 .tlx li.done{opacity:.55}.tlx li.now{border-left-color:var(--acc);background:var(--panel)}
 .tlx li.now::after,.tlx li.next::after{position:absolute;right:12px;top:12px;font-size:10px;letter-spacing:.3em;text-transform:uppercase}
 .tlx li.now::after{content:"Now";color:var(--acc)}.tlx li.next::after{content:"Next";color:var(--mut)}
-.ven.wx h3{text-transform:capitalize}
 .seatf{max-width:420px;margin:22px auto 0}.seatf input{font:inherit;font-size:16px;padding:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%;text-align:center}
 .seatr{display:grid;gap:10px;max-width:520px;margin:14px auto 0}
 .seatc{background:var(--panel);border:1px solid var(--acc);padding:16px 18px;text-align:left}
@@ -120,7 +119,7 @@ JS = r"""
     var card=document.createElement("div");card.className="ven wx";
     var ss=d.sunset?(function(t){var p=t.split(":"),h=parseInt(p[0],10),ap=h>=12?"pm":"am";return (h%12||12)+":"+p[1]+" "+ap})(d.sunset):"";
     card.innerHTML='<p class="k">The forecast</p><h3></h3><p></p><p class="dim"></p>';
-    card.querySelector("h3").textContent=d.hi+"° and "+d.sky;
+    card.querySelector("h3").textContent=d.hi+"° and "+d.sky;card.querySelector("h3").style.textTransform="none";
     card.querySelectorAll("p")[1].textContent="Low of "+d.lo+"°"+(d.rain?" · "+d.rain+"% chance of rain":"")+(ss?" · sunset "+ss:"");
     card.querySelector(".dim").textContent=d.line||"";
     vl.appendChild(card);

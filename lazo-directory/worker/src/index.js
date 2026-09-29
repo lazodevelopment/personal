@@ -56,7 +56,7 @@ import { printsRoute } from "./prints.js";
 // siteGalleryFocus) ride into the payload below.
 import { guestPhotosRoute } from "./guestphotos.js";
 // JC-LAZO-WORKER-0929-LIVE-001: weather, translation, table cards, the DJ page
-import { weatherRoute, translateRoute, cardsPage, playlistPage } from "./sitefeatures.js";
+import { weatherRoute, translateRoute, cardsPage, playlistPage, dayBeforeRoute } from "./sitefeatures.js";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -333,6 +333,13 @@ async function renderCoupleSite(slug, env) {
     mealOptions: (g("mealOptions") || []).map(String).filter(Boolean).slice(0, 8),
     galleryUrl: /^https:\/\//.test(String(g("galleryUrl") || "")) ? String(g("galleryUrl")) : "",
     translateOn: g("translateOn") !== false,
+    // JC-LAZO-WORKER-0929-MORE-001: the weekend's events, the hotel, the hold
+    events: (g("events") || []).filter(e => e && typeof e === "object" && e.name).slice(0, 12).map(e => ({
+      name: String(e.name || ""), dateIso: /^\d{4}-\d{2}-\d{2}$/.test(String(e.dateIso || "")) ? String(e.dateIso) : "",
+      time: String(e.time || ""), venueName: String(e.venueName || ""), venueAddress: String(e.venueAddress || ""),
+      note: String(e.note || ""), rsvp: e.rsvp === true, dress: String(e.dress || "") })),
+    hotelAddress: g("hotelAddress") || "",
+    guestPhotosHold: g("guestPhotosHold") === true,
   };
 
   const priv = !!payload.passcode;
@@ -869,6 +876,8 @@ export default {
     const wxMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/weather\/?$/);
     if (wxMatch && req.method === "GET") return weatherRoute(wxMatch[1], env, venuePoint);
     if (url.pathname === "/api/translate") return translateRoute(req, env);
+    const dbMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/day-before\/?$/);
+    if (dbMatch) return dayBeforeRoute(dbMatch[1], req, env, venuePoint);
     const cardsMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/cards\/?$/);
     if (cardsMatch && req.method === "GET") return cardsPage(cardsMatch[1]);
     const plMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/playlist\/?$/);

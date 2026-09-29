@@ -230,3 +230,101 @@ ul{list-style:none;padding:0;margin:0}li{background:#FFFDF9;border:1px solid #E6
 <script>setTimeout(function(){location.reload()},120000)</script></body></html>`;
   return new Response(html, { headers: { "content-type": "text/html;charset=utf-8", "cache-control": "public, max-age=60", "x-robots-tag": "noindex" } });
 }
+
+// ---------------------------------------------------------------- the day-before note
+// JC-LAZO-WORKER-0929-DAYB4-001: POST /api/w/{slug}/day-before, signed with the
+// couple's Firebase ID token. Reads the RSVPs and the guest list AS the couple
+// (Firestore REST with their token, so the rules decide), builds one email -
+// the timeline, the venue with a map link, parking and transport, the
+// forecast, and each guest's table when the seating lookup is on - and sends
+// it through Resend. {test: true} sends only to the caller.
+import { verifyIdToken, ownsSite, fsListAs, fsPatchAs } from "./auth.js";
+
+function fsFields(doc) {
+  const out = {};
+  for (const [k, v] of Object.entries((doc && doc.fields) || {})) out[k] = fsVal(v);
+  return out;
+}
+const hhmm = (t) => { const m = /^(\d{1,2}):(\d{2})/.exec(t || ""); return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : null; };
+const pretty = (t) => { const mm = hhmm(t); if (mm === null) return t || ""; let h = Math.floor(mm / 60); const m = mm % 60, ap = h >= 12 ? "pm" : "am"; h = h % 12 || 12; return `${h}:${m < 10 ? "0" : ""}${m} ${ap}`; };
+
+export async function dayBeforeRoute(slug, req, env, placesPoint) {
+  if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, "access-control-allow-headers": "content-type, authorization" } });
+  if (req.method !== "POST") return json({ ok: false, error: "method" }, 405);
+  if (!env.RESEND_API_KEY) return json({ ok: false, error: "no_mailer", message: "Email isn’t set up on the server yet." }, 503);
+  const who = await verifyIdToken(req);
+  if (!who) return json({ ok: false, error: "unauthenticated" }, 401);
+  const site = await fsDoc("weddingSites/" + encodeURIComponent(slug));
+  if (!site) return json({ ok: false, error: "not_found" }, 404);
+  if (!(await ownsSite(who, { coupleUid: site.coupleUid }))) return json({ ok: false, error: "forbidden" }, 403);
+  let b = {}; try { b = await req.json(); } catch (e) {}
+  const test = b.test === true;
+  const note = String(b.note || "").slice(0, 600);
+  const replyTo = /^[^@\s]+@[^@\s]+$/.test(String(b.replyTo || "")) ? String(b.replyTo) : (who.email || "");
+
+  // recipients: RSVP yes with an email, plus guests marked attending with an email
+  const seen = new Set(); const to = [];
+  const add = (name, email) => { email = String(email || "").trim().toLowerCase(); if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || seen.has(email)) return; seen.add(email); to.push({ name: String(name || "").trim(), email }); };
+  if (test) add(who.email, who.email);
+  else {
+    for (const d of await fsListAs(who.token, `weddingSites/${encodeURIComponent(slug)}/rsvps`)) { const f = fsFields(d); if (f.attending === "yes") add(f.name, f.email); }
+    for (const d of await fsListAs(who.token, `couples/${encodeURIComponent(site.coupleUid)}/guests`)) { const f = fsFields(d); if (f.rsvp === "yes") add(f.name, f.email); }
+  }
+  if (!to.length) return json({ ok: false, error: "no_recipients", message: "Nobody has an email on file yet." }, 400);
+
+  const tables = new Map();
+  if (site.seatingOn === true) {
+    const sd = await fsDoc(`weddingSites/${encodeURIComponent(slug)}/seating/main`);
+    for (const g of (sd && sd.guests) || []) if (g && g.n && g.t) tables.set(String(g.n).toLowerCase(), String(g.t));
+  }
+  let wx = null;
+  try { const r = await weatherRoute(slug, env, placesPoint); const j = await r.json(); wx = j && j.day; } catch (e) {}
+
+  const names = String(site.names || "the couple");
+  const dateNice = /^\d{4}-\d{2}-\d{2}$/.test(site.dateIso || "") ? new Date(site.dateIso + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "";
+  const siteUrl = `https://meetlazo.com/w/${slug}/`;
+  const venue = [site.venueName, site.venueAddress].filter(Boolean).join(", ");
+  const maps = venue ? "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(venue) : "";
+  const tl = (site.timeline || []).filter(m => m && m.label).slice().sort((a, b) => (hhmm(a.time) || 0) - (hhmm(b.time) || 0));
+  const P = "#52284F", G = "#D9B77C", M = "#6B5F72";
+  const row = (k, v) => v ? `<tr><td style="padding:6px 0;color:${M};font-size:13px;width:110px;vertical-align:top">${esc(k)}</td><td style="padding:6px 0;font-size:14px">${v}</td></tr>` : "";
+  const bodyFor = (g) => {
+    const table = tables.get(g.name.toLowerCase());
+    return `<div style="max-width:560px;margin:0 auto;font-family:Helvetica,Arial,sans-serif;color:#241E2B;background:#FAF6F0;padding:28px 22px">
+<p style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${G};margin:0 0 6px">Tomorrow</p>
+<h1 style="font-family:Georgia,serif;font-weight:600;font-size:30px;color:${P};margin:0 0 4px;line-height:1.1">${esc(names)}</h1>
+<p style="color:${M};font-size:14px;margin:0 0 18px">${esc(dateNice)}${g.name ? ` · for ${esc(g.name)}` : ""}</p>
+${note ? `<p style="font-size:15px;line-height:1.55;margin:0 0 18px">${esc(note).replace(/\n/g, "<br>")}</p>` : ""}
+<table style="border-collapse:collapse;width:100%;background:#fff;border:1px solid #E6D6B8;border-radius:12px;padding:6px 14px">
+${row("Where", venue ? `${esc(venue)}${maps ? ` · <a href="${maps}" style="color:${P}">Map</a>` : ""}` : "")}
+${row("Ceremony", esc(site.ceremonyTime || ""))}
+${row("Your table", table ? `<b>${esc(table)}</b>` : "")}
+${row("Parking", esc(site.parking || ""))}
+${row("Getting there", esc(site.transport || ""))}
+${row("Dress code", esc(site.dressCode || ""))}
+${row("Forecast", wx ? `${wx.hi}° and ${esc(wx.sky)}, low ${wx.lo}°${wx.rain ? `, ${wx.rain}% chance of rain` : ""}. ${esc(wx.line || "")}` : "")}
+</table>
+${tl.length ? `<h3 style="font-family:Georgia,serif;font-weight:600;color:${P};font-size:18px;margin:22px 0 8px">The day, hour by hour</h3><table style="border-collapse:collapse;width:100%">${tl.map(m => `<tr><td style="padding:5px 0;color:${P};font-weight:700;font-size:13px;width:90px;vertical-align:top">${esc(pretty(m.time))}</td><td style="padding:5px 0;font-size:14px">${esc(m.label)}${m.note ? `<div style="color:${M};font-size:12.5px">${esc(m.note)}</div>` : ""}</td></tr>`).join("")}</table>` : ""}
+<p style="margin:22px 0 0"><a href="${siteUrl}" style="display:inline-block;background:${P};color:#FAF6F0;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700;font-size:14px">Everything on our site</a></p>
+<p style="color:${M};font-size:12px;margin-top:22px">Sent by ${esc(names)} through <a href="https://meetlazo.com" style="color:${P}">Lazo</a>.</p></div>`;
+  };
+  const from = env.DAYB4_FROM || env.CONTACT_FROM || "Lazo <noreply@meetlazo.com>";
+  const subject = `${test ? "[test] " : ""}Tomorrow: ${names}${dateNice ? " · " + dateNice : ""}`;
+  let sent = 0, failed = 0;
+  for (let i = 0; i < to.length; i += 5) {
+    await Promise.all(to.slice(i, i + 5).map(async (g) => {
+      try {
+        const r = await fetch("https://api.resend.com/emails", { method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${env.RESEND_API_KEY}` },
+          body: JSON.stringify({ from, to: [g.email], reply_to: replyTo || undefined, subject, html: bodyFor(g) }) });
+        if (r.ok) sent++; else failed++;
+      } catch (e) { failed++; }
+    }));
+  }
+  if (!test && sent) {
+    await fsPatchAs(who.token, `weddingSites/${encodeURIComponent(slug)}`,
+      { dayBeforeSentAt: { timestampValue: new Date().toISOString() }, dayBeforeSentTo: { integerValue: String(sent) } },
+      ["dayBeforeSentAt", "dayBeforeSentTo"]);
+  }
+  return json({ ok: true, sent, failed, recipients: to.length, test });
+}

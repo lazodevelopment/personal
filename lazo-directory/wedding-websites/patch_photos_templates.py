@@ -44,6 +44,8 @@ CSS = f"""
 .gpbtn{{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:var(--ink);color:var(--bg);padding:14px 26px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;border:1px solid var(--ink);transition:transform .26s var(--lz-out,ease),background-color .2s ease}}
 .gpbtn:hover{{background:var(--acc);border-color:var(--acc);color:#fff}}
 .gpbtn:active{{transform:scale(.97)}}
+.gpbtn{{max-width:100%;white-space:normal;text-align:center;line-height:1.35}}
+.gpsec .wrap{{overflow-x:hidden}}
 .gpbtn input{{display:none}}
 .gpbtn.busy{{opacity:.6;pointer-events:none}}
 .gpst{{font-size:13.5px;color:var(--acc);min-height:20px;margin-top:12px;text-align:center}}
@@ -169,7 +171,7 @@ GUEST_JS = f"""
   var files=[].slice.call(fileI.files||[]);fileI.value="";
   if(!files.length)return;
   var name=nameI.value.trim().slice(0,60);try{{localStorage.setItem("lzgpname",name)}}catch(_){{}}
-  var ok=0,bad=0,why="";btn.classList.add("busy");
+  var ok=0,bad=0,held=0,why="";btn.classList.add("busy");
   for(var i=0;i<files.length;i++){{
    st.textContent="Adding "+(i+1)+" of "+files.length+"\\u2026";
    try{{
@@ -177,11 +179,12 @@ GUEST_JS = f"""
     var fd=new FormData();fd.append("file",blob,"photo.jpg");fd.append("name",name);
     var r=await fetch(API,{{method:"POST",body:fd}});var j=await r.json();
     if(!r.ok||!j.ok)throw new Error((j&&j.message)||"");
+    if(j.held){{held++;continue;}}
     var p=j.photo;p.local=URL.createObjectURL(blob);card(p,true);empty.hidden=true;ok++;
    }}catch(e){{bad++;if(e&&e.message)why=e.message;}}
   }}
   btn.classList.remove("busy");
-  st.textContent=ok?("Added "+ok+" photo"+(ok===1?"":"s")+" \\u2014 thank you! \\u2713"+(bad?" ("+bad+" didn\\u2019t go through)":"")):(why||"That didn\\u2019t send \\u2014 try again?");
+  st.textContent=held&&!ok?("Got "+held+" \\u2014 thank you! The couple will add them to the wall shortly. \\u2713"):ok?("Added "+ok+" photo"+(ok===1?"":"s")+" \\u2014 thank you! \\u2713"+(held?" ("+held+" waiting for the couple)":"")+(bad?" ("+bad+" didn\\u2019t go through)":"")):(why||"That didn\\u2019t send \\u2014 try again?");
  }});
 }})();
 </script>

@@ -23,6 +23,14 @@
 // Limits: 10 MB a photo, JPEG / PNG / WebP by magic bytes (never by the
 // header the browser sends), 1,000 photos a site.
 
+// JC-LAZO-WORKER-0929-HOLD-001: a moderation queue. With weddingSites.
+// guestPhotosHold on, uploads land under guest/{slug}/pending/ and only the
+// couple (a Firebase ID token the dashboard sends, see auth.js) can list them
+// (?pending=1) and approve them (POST /api/w/{slug}/photos/approve {ids}),
+// which copies each object to the live prefix. /w/{slug}/photos/download is
+// a page that zips the whole wall in the browser (the list is public anyway).
+import { verifyIdToken, ownsSite } from "./auth.js";
+
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_PHOTOS = 1000;   // one R2 list page; the check below is one call
 const PROJECT = "lazo-513ec";
@@ -60,15 +68,17 @@ async function siteDoc(slug) {
   const hit = await caches.default.match(key);
   if (hit) { try { return await hit.json(); } catch (e) {} }
   const u = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/weddingSites/${encodeURIComponent(slug)}`
-    + "?mask.fieldPaths=guestPhotosOn&mask.fieldPaths=guestPhotosRemoved&mask.fieldPaths=names&mask.fieldPaths=passcode";
+    + "?mask.fieldPaths=guestPhotosOn&mask.fieldPaths=guestPhotosRemoved&mask.fieldPaths=names&mask.fieldPaths=passcode&mask.fieldPaths=guestPhotosHold&mask.fieldPaths=coupleUid";
   const r = await fetch(u, { headers: { accept: "application/json" } });
   if (!r.ok) return null;
   const doc = await r.json();
   const f = doc.fields || {};
   const out = {
     on: fsVal(f.guestPhotosOn) !== false,
+    hold: fsVal(f.guestPhotosHold) === true,
     removed: (fsVal(f.guestPhotosRemoved) || []).map(String),
     names: String(fsVal(f.names) || ""),
+    coupleUid: String(fsVal(f.coupleUid) || ""),
   };
   await caches.default.put(key, new Response(JSON.stringify(out), {
     headers: { "content-type": "application/json", "cache-control": "public, max-age=30" } }));
@@ -97,8 +107,8 @@ function newId() {
 
 const clean = (s, n) => String(s || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
 
-async function listAll(slug, env) {
-  const prefix = `guest/${slug}/`;
+async function listAll(slug, env, sub = "") {
+  const prefix = `guest/${slug}/${sub}`;
   const out = [];
   let cursor;
   for (let i = 0; i < 3; i++) {
@@ -117,9 +127,24 @@ async function listAll(slug, env) {
   return out;
 }
 
-async function listPhotos(slug, env) {
+async function coupleOf(req, slug, site) {
+  const who = await verifyIdToken(req);
+  if (!who) return null;
+  const ok = await ownsSite(who, { coupleUid: site.coupleUid });
+  return ok ? who : null;
+}
+
+async function listPhotos(slug, env, url, req) {
   const site = await siteDoc(slug);
   if (!site) return json({ ok: false, error: "not_found" }, 404);
+  if (url.searchParams.get("pending") === "1") {
+    const who = await coupleOf(req, slug, site);
+    if (!who) return json({ ok: false, error: "forbidden" }, 403);
+    const pend = await listAll(slug, env, "pending/");
+    return json({ ok: true, hold: site.hold, count: pend.length, photos: pend.map(p => ({
+      id: p.id, name: p.name, caption: p.caption, at: p.at,
+      url: `https://meetlazo.com/w/${slug}/photo/pending/${p.id}.${p.ext}` })) });
+  }
   let items = await listAll(slug, env);
   // moderation: the couple listed ids to take down - delete them now
   const removed = new Set(site.removed);
@@ -134,8 +159,33 @@ async function listPhotos(slug, env) {
     id: p.id, name: p.name, caption: p.caption, at: p.at,
     url: `https://meetlazo.com/w/${slug}/photo/${p.id}.${p.ext}`,
   }));
-  return json({ ok: true, on: site.on, count: photos.length, photos }, 200,
+  return json({ ok: true, on: site.on, hold: site.hold, count: photos.length, photos }, 200,
     { "cache-control": "public, max-age=15, s-maxage=15" });
+}
+
+// the couple approves (copy to live, drop the pending copy) or declines
+async function approvePhotos(slug, req, env) {
+  const site = await siteDoc(slug);
+  if (!site) return json({ ok: false, error: "not_found" }, 404);
+  const who = await coupleOf(req, slug, site);
+  if (!who) return json({ ok: false, error: "forbidden" }, 403);
+  let b; try { b = await req.json(); } catch (e) { return json({ ok: false }, 400); }
+  const ids = (Array.isArray(b.ids) ? b.ids : []).map(String).filter(x => /^[a-z0-9]{15}$/.test(x)).slice(0, 200);
+  const decline = b.decline === true;
+  const pend = await listAll(slug, env, "pending/");
+  let n = 0;
+  for (const p of pend) {
+    if (!ids.includes(p.id)) continue;
+    if (!decline) {
+      const o = await env.GALLERIES.get(p.key);
+      if (o) await env.GALLERIES.put(`guest/${slug}/${p.id}.${p.ext}`, o.body, {
+        httpMetadata: { contentType: MIME[p.ext], cacheControl: "public, max-age=86400" },
+        customMetadata: o.customMetadata || {} });
+    }
+    await env.GALLERIES.delete(p.key);
+    n++;
+  }
+  return json({ ok: true, [decline ? "declined" : "approved"]: n });
 }
 
 async function uploadPhoto(slug, req, env) {
@@ -157,19 +207,19 @@ async function uploadPhoto(slug, req, env) {
   if (first.truncated || first.objects.length >= MAX_PHOTOS)
     return json({ ok: false, error: "full", message: "The wall is full - the couple has plenty to look through!" }, 409);
   const id = newId();
-  const key = `guest/${slug}/${id}.${ext}`;
+  const key = `guest/${slug}/${site.hold ? "pending/" : ""}${id}.${ext}`;
   const name = clean(form.get("name"), 60);
   const caption = clean(form.get("caption"), 140);
   await env.GALLERIES.put(key, bytes, {
     httpMetadata: { contentType: MIME[ext], cacheControl: "public, max-age=86400" },
     customMetadata: { name, caption, ip: req.headers.get("cf-connecting-ip") || "" },
   });
-  return json({ ok: true, photo: { id, name, caption, at: new Date().toISOString(),
-    url: `https://meetlazo.com/w/${slug}/photo/${id}.${ext}` } });
+  return json({ ok: true, held: site.hold, photo: { id, name, caption, at: new Date().toISOString(),
+    url: `https://meetlazo.com/w/${slug}/photo/${site.hold ? "pending/" : ""}${id}.${ext}` } });
 }
 
-async function servePhoto(slug, id, ext, env) {
-  const obj = await env.GALLERIES.get(`guest/${slug}/${id}.${ext}`);
+async function servePhoto(slug, id, ext, env, sub = "") {
+  const obj = await env.GALLERIES.get(`guest/${slug}/${sub}${id}.${ext}`);
   if (!obj) return new Response("Not found", { status: 404, headers: { "cache-control": "public, max-age=60" } });
   return new Response(obj.body, { headers: {
     "content-type": MIME[ext] || "application/octet-stream",
@@ -185,12 +235,55 @@ export async function guestPhotosRoute(url, req, env) {
   if (!env.GALLERIES) return null;
   const api = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/photos\/?$/);
   if (api) {
-    if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
-    if (req.method === "GET") return listPhotos(api[1], env);
+    if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, "access-control-allow-headers": "content-type, authorization" } });
+    if (req.method === "GET") return listPhotos(api[1], env, url, req);
     if (req.method === "POST") return uploadPhoto(api[1], req, env);
     return json({ ok: false, error: "method" }, 405);
   }
-  const img = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/photo\/([a-z0-9]{15})\.(jpg|png|webp)$/);
-  if (img && req.method === "GET") return servePhoto(img[1], img[2], img[3], env);
+  const apv = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/photos\/approve\/?$/);
+  if (apv) {
+    if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, "access-control-allow-headers": "content-type, authorization" } });
+    if (req.method === "POST") return approvePhotos(apv[1], req, env);
+    return json({ ok: false, error: "method" }, 405);
+  }
+  const img = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/photo\/(pending\/)?([a-z0-9]{15})\.(jpg|png|webp)$/);
+  if (img && req.method === "GET") return servePhoto(img[1], img[3], img[4], env, img[2] || "");
+  const dl = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/photos\/download\/?$/);
+  if (dl && req.method === "GET") return downloadPage(dl[1]);
   return null;
+}
+
+// JC-LAZO-WORKER-0929-HOLD-001: "download everything" - the browser fetches
+// each photo and packs a zip with fflate, so the worker never spends CPU on a
+// gigabyte of JPEGs. The listing is public, so the page needs no login.
+function downloadPage(slug) {
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Download the photo wall</title>
+<style>body{margin:0;background:#FAF6F0;color:#241E2B;font-family:Helvetica,Arial,sans-serif}.wrap{max-width:460px;margin:0 auto;padding:40px 20px}
+h1{font-family:Georgia,serif;font-weight:600;font-size:30px;color:#52284F;margin:0 0 6px}p{color:#6B5F72;font-size:14px;line-height:1.5}
+button{margin-top:16px;width:100%;border:0;border-radius:12px;padding:14px;background:#52284F;color:#FAF6F0;font-size:15px;font-weight:700;cursor:pointer}button:disabled{opacity:.6}
+.bar{height:8px;border-radius:999px;background:rgba(82,40,79,.12);overflow:hidden;margin-top:16px}.bar span{display:block;height:100%;width:0;background:#D9B77C;transition:width .3s}
+.st{font-size:13px;color:#6B5F72;margin-top:8px;min-height:18px}</style></head><body><div class="wrap">
+<h1>Every photo, one file</h1><p id="n">Counting\u2026</p><button id="go" disabled>Download the zip</button><div class="bar"><span id="b"></span></div><div class="st" id="st"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fflate/0.8.2/fflate.min.js"></script>
+<script>
+var API="https://meetlazo.com/api/w/${slug}/photos",list=[];
+fetch(API).then(function(r){return r.json()}).then(function(j){list=(j&&j.photos)||[];document.getElementById("n").textContent=list.length?list.length+" photo"+(list.length===1?"":"s")+" on the wall. Stays on your device \u2014 nothing is uploaded.":"Nothing on the wall yet.";document.getElementById("go").disabled=!list.length;});
+document.getElementById("go").onclick=async function(){
+ var go=this,b=document.getElementById("b"),st=document.getElementById("st");go.disabled=true;
+ var files={},done=0;
+ for(var i=0;i<list.length;i++){
+  var p=list[i];
+  try{var r=await fetch(p.url);var buf=new Uint8Array(await r.arrayBuffer());var ext=(p.url.match(/\.(jpg|png|webp)$/)||[0,"jpg"])[1];
+   var who=(p.name||"guest").replace(/[^A-Za-z0-9 _-]+/g,"").trim().replace(/\s+/g,"-").slice(0,40)||"guest";
+   files[String(i+1).padStart(4,"0")+"-"+who+"."+ext]=[buf,{level:0}];}catch(e){}
+  done++;b.style.width=Math.round(done/list.length*100)+"%";st.textContent="Fetched "+done+" of "+list.length;
+ }
+ st.textContent="Packing\u2026";
+ var zip=fflate.zipSync(files);
+ var blob=new Blob([zip],{type:"application/zip"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="${slug}-photos.zip";document.body.appendChild(a);a.click();
+ st.textContent="Done \u2014 "+done+" photos in the zip.";go.disabled=false;
+};
+</script></body></html>`;
+  return new Response(html, { headers: { "content-type": "text/html;charset=utf-8", "cache-control": "public, max-age=300", "x-robots-tag": "noindex" } });
 }

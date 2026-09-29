@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Table cards — Sarah &amp; Mike</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EFE9E0;color:#241E2B;font:300 15px/1.5 "Jost",sans-serif}
+.bar{background:#52284F;color:#FAF6F0;padding:14px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.bar b{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600}
+.bar label{font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.bar button{margin-left:auto;background:#D9B77C;color:#3D1C3B;border:0;border-radius:999px;padding:9px 18px;font:500 13px "Jost",sans-serif;cursor:pointer}
+.sheet{display:grid;grid-template-columns:1fr 1fr;gap:0;max-width:8.5in;margin:24px auto;background:#fff;padding:.5in .5in}
+.card{border:1px dashed #D9B77C;padding:.35in .3in;text-align:center;height:3.6in;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.card .k{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:#8A6A2F}
+.card h2{font:600 26px/1.05 "Cormorant Garamond",serif;color:#52284F;margin:0;text-wrap:balance}
+.card p{margin:0;font-size:12.5px;color:#6B5F72;max-width:24ch}
+.card .qr{width:1.35in;height:1.35in;margin:4px 0}
+.card .qr img,.card .qr canvas{width:100%;height:100%}
+.card small{font-size:10.5px;color:#8A6A2F;letter-spacing:.04em}
+@media print{body{background:#fff}.bar{display:none}.sheet{margin:0;padding:.4in;page-break-after:always}.card{border-color:#ddd}}
+</style></head><body>
+<div class="bar"><b>Table cards · Sarah &amp; Mike</b>
+<label><input type="radio" name="k" value="photos" checked> Share your photos</label>
+<label><input type="radio" name="k" value="song"> Request a song</label>
+<label><input type="radio" name="k" value="both"> Both on one card</label>
+<button onclick="print()">Print</button></div>
+<div class="sheet" id="sheet"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+var SITE="https://meetlazo.com/w/sarah-and-mike/",NAMES="Sarah & Mike";
+var KINDS={
+ photos:{k:"Share your photos",h:"Took one we\u2019d love to see?",p:"Scan, tap \u201cAdd photos from your phone\u201d, and it lands on our site for everyone.",u:SITE+"?photos=1#photos"},
+ song:{k:"Request a song",h:"Get us on the dance floor.",p:"Scan and tell the DJ what you need to hear tonight.",u:SITE+"requests"},
+ both:{k:"Tonight",h:"Share a photo, request a song.",p:"Scan for our site \u2014 add your photos from your phone, and tell the DJ what to play.",u:SITE+"?photos=1#photos"}};
+function build(){
+ var kind=document.querySelector('input[name=k]:checked').value,K=KINDS[kind],s=document.getElementById("sheet");s.innerHTML="";
+ for(var i=0;i<6;i++){
+  var c=document.createElement("div");c.className="card";
+  c.innerHTML='<span class="k">'+K.k+'</span><h2>'+K.h+'</h2><p>'+K.p+'</p><div class="qr"></div><small>'+SITE.replace("https://","")+'</small>';
+  s.appendChild(c);
+  new QRCode(c.querySelector(".qr"),{text:K.u,width:260,height:260,correctLevel:QRCode.CorrectLevel.M,colorDark:"#3D1C3B",colorLight:"#ffffff"});
+ }
+}
+document.querySelectorAll('input[name=k]').forEach(function(r){r.addEventListener("change",build)});build();
+</script></body></html>

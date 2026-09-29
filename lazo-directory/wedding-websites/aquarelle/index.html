@@ -293,32 +293,10 @@ body.framed .oursong{display:none}
 .nbf{margin-top:22px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);text-align:center}
 /* ---- /JC-LAZO-WWS-0915-FEEL ---- */
 
-/* ---- JC-LAZO-WWS-0929-PHOTOS: the couple's photos where they put them; the guests' wall ---- */
-.hero .hph{overflow:hidden}
-.hero .hph>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.pimg .gpwrap{overflow:hidden;position:relative}
-.gpsec .gpform{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
-.gpname{font:inherit;font-size:15px;padding:13px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:min(100%,260px)}
-.gpbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:var(--ink);color:var(--bg);padding:14px 26px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;border:1px solid var(--ink);transition:transform .26s var(--lz-out,ease),background-color .2s ease}
-.gpbtn:hover{background:var(--acc);border-color:var(--acc);color:#fff}
-.gpbtn:active{transform:scale(.97)}
-.gpbtn input{display:none}
-.gpbtn.busy{opacity:.6;pointer-events:none}
-.gpst{font-size:13.5px;color:var(--acc);min-height:20px;margin-top:12px;text-align:center}
-.gpwall{columns:2;column-gap:10px;margin-top:clamp(26px,3.4vw,40px)}
-@media(min-width:700px){.gpwall{columns:3}}
-@media(min-width:1000px){.gpwall{columns:4}}
-.gpi{break-inside:avoid;margin:0 0 10px;cursor:zoom-in;background:var(--panel);border:1px solid var(--line)}
-.gpi img{width:100%;display:block;filter:none}
-.gpi figcaption{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:8px 10px}
-.gpempty{text-align:center;color:var(--mut);margin-top:26px}
-.gplb{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;gap:12px}
-.gplb.on{display:flex}
-.gplb img{max-width:100%;max-height:82vh;object-fit:contain;border:0}
-.gplb p{color:#fff;font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;text-align:center}
-.gplb .gpx{position:absolute;top:14px;right:16px;background:none;border:0;color:#fff;font-size:24px;cursor:pointer}
-body.framed .gpsec{display:none}
-/* ---- /JC-LAZO-WWS-0929-PHOTOS ---- */
+
+
+
+
 
 /* ---- JC-LAZO-WWS-0929-LIVE: hour by hour, forecast, seats, personal RSVP, team links, gallery, translation, slideshow ---- */
 .tlx{list-style:none;padding:0;margin:clamp(26px,3.4vw,40px) auto 0;max-width:640px}
@@ -328,7 +306,6 @@ body.framed .gpsec{display:none}
 .tlx li.done{opacity:.55}.tlx li.now{border-left-color:var(--acc);background:var(--panel)}
 .tlx li.now::after,.tlx li.next::after{position:absolute;right:12px;top:12px;font-size:10px;letter-spacing:.3em;text-transform:uppercase}
 .tlx li.now::after{content:"Now";color:var(--acc)}.tlx li.next::after{content:"Next";color:var(--mut)}
-.ven.wx h3{text-transform:capitalize}
 .seatf{max-width:420px;margin:22px auto 0}.seatf input{font:inherit;font-size:16px;padding:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:100%;text-align:center}
 .seatr{display:grid;gap:10px;max-width:520px;margin:14px auto 0}
 .seatc{background:var(--panel);border:1px solid var(--acc);padding:16px 18px;text-align:left}
@@ -356,6 +333,49 @@ html.lzwall body>*:not(.wallx){display:none!important}
 .wallx .wqr{position:absolute;right:32px;bottom:28px;color:#fff;text-align:right;text-shadow:0 2px 12px rgba(0,0,0,.7)}
 .wallx .wqr b{display:block;font-size:14px;letter-spacing:.3em;text-transform:uppercase;opacity:.8}.wallx .wqr span{font-size:18px}
 /* ---- /JC-LAZO-WWS-0929-LIVE ---- */
+
+/* ---- JC-LAZO-WWS-0929-PHOTOS: the couple's photos where they put them; the guests' wall ---- */
+.hero .hph{overflow:hidden}
+.hero .hph>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.pimg .gpwrap{overflow:hidden;position:relative}
+.gpsec .gpform{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+.gpname{font:inherit;font-size:15px;padding:13px 14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);width:min(100%,260px)}
+.gpbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;background:var(--ink);color:var(--bg);padding:14px 26px;font-size:12px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;border:1px solid var(--ink);transition:transform .26s var(--lz-out,ease),background-color .2s ease}
+.gpbtn:hover{background:var(--acc);border-color:var(--acc);color:#fff}
+.gpbtn:active{transform:scale(.97)}
+.gpbtn{max-width:100%;white-space:normal;text-align:center;line-height:1.35}
+.gpsec .wrap{overflow-x:hidden}
+.gpbtn input{display:none}
+.gpbtn.busy{opacity:.6;pointer-events:none}
+.gpst{font-size:13.5px;color:var(--acc);min-height:20px;margin-top:12px;text-align:center}
+.gpwall{columns:2;column-gap:10px;margin-top:clamp(26px,3.4vw,40px)}
+@media(min-width:700px){.gpwall{columns:3}}
+@media(min-width:1000px){.gpwall{columns:4}}
+.gpi{break-inside:avoid;margin:0 0 10px;cursor:zoom-in;background:var(--panel);border:1px solid var(--line)}
+.gpi img{width:100%;display:block;filter:none}
+.gpi figcaption{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:8px 10px}
+.gpempty{text-align:center;color:var(--mut);margin-top:26px}
+.gplb{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;gap:12px}
+.gplb.on{display:flex}
+.gplb img{max-width:100%;max-height:82vh;object-fit:contain;border:0}
+.gplb p{color:#fff;font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;text-align:center}
+.gplb .gpx{position:absolute;top:14px;right:16px;background:none;border:0;color:#fff;font-size:24px;cursor:pointer}
+body.framed .gpsec{display:none}
+/* ---- /JC-LAZO-WWS-0929-PHOTOS ---- */
+
+/* ---- JC-LAZO-WWS-0929-MORE: calendar, the weekend, the hotel, the table map ---- */
+.tlcal{text-align:center;margin-top:18px}.tlcal a{margin:0 8px}
+.evg{display:grid;gap:18px;margin-top:clamp(26px,3.4vw,42px)}
+@media(min-width:760px){.evg{grid-template-columns:1fr 1fr}}
+.ev{background:var(--panel);border:1px solid var(--line);padding:24px 24px 20px}
+.ev .k{margin-bottom:6px}.ev h3{font-size:24px;margin-bottom:4px}.ev p{font-size:15px}.ev .dim{color:var(--mut);font-size:13.5px;margin-top:3px}
+.ev .evl{margin-top:12px;display:flex;gap:16px;flex-wrap:wrap}.ev .evl a{font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;border-bottom:1px solid currentColor;padding-bottom:2px;color:inherit;opacity:.85}
+.evs{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.evs label{border:1px solid var(--line);padding:10px 12px;font-size:13px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.evs label:has(input:checked){border-color:var(--acc);color:var(--acc)}
+.seatmap{margin-top:12px;background:var(--bg);border:1px solid var(--line)}
+.seatmap svg{width:100%;height:auto;display:block}
+/* ---- /JC-LAZO-WWS-0929-MORE ---- */
 </style>
 
 <script>
@@ -428,6 +448,9 @@ html.lzwall body>*:not(.wallx){display:none!important}
  });
 })();
 </script>
+
+
+
 
 <section>
  <div class="wrap split">
@@ -907,90 +930,10 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
 })();
 </script>
 
-<script>
-/* JC-LAZO-WWS-0929-GUESTPHOTOS: photos guests share from their phones */
-(function(){
- if(document.body.classList.contains("framed"))return;
- var LS=window.LAZO_SITE||null;
- var q=new URLSearchParams(location.search);
- if(LS&&LS.guestPhotosOn===false)return;
- var live=!!LS,open=true;
- if(live){var iso=LS.dateIso||"";if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){open=Date.now()>=new Date(iso+"T00:00:00").getTime()||q.get("photos")==="1";}}
- if(live&&!open)return;
- var slug=live?LS.slug:"";
- var API=live?"https://meetlazo.com/api/w/"+encodeURIComponent(slug)+"/photos":"";
- var note=(live&&LS.guestPhotosNote)||"Took a photo we\u2019d love to see? Add it here straight from your phone \u2014 it lands on this page for everyone.";
- var sec=document.createElement("section");sec.className="gpsec";sec.id="photos";
- sec.innerHTML='<div class="wrap"><div class="center"><p class="k">Your photos</p><h2 style="margin:0 auto">Share the day as you saw it.</h2><p class="lede" id="gpnote"></p>'
-  +'<div class="gpform"><input class="gpname" id="gpname" placeholder="Your name (optional)" maxlength="60" autocomplete="name">'
-  +'<label class="gpbtn" id="gpbtn"><input type="file" id="gpfile" accept="image/*" multiple>Add photos from your phone</label></div>'
-  +'<p class="gpst" id="gpst"></p></div><div class="gpwall" id="gpwall"></div><p class="gpempty" id="gpempty" hidden>No photos yet \u2014 yours could be the first.</p></div>';
- sec.querySelector("#gpnote").textContent=note;
- var after=document.querySelector(".gal");after=after?after.closest("section"):null;
- if(!after){var sp=document.querySelector(".split");after=sp?sp.closest("section"):null;}
- var foot=document.querySelector("footer");
- if(after&&after.parentNode)after.parentNode.insertBefore(sec,after.nextSibling);else if(foot)foot.parentNode.insertBefore(sec,foot);else return;
- var wall=sec.querySelector("#gpwall"),empty=sec.querySelector("#gpempty"),st=sec.querySelector("#gpst"),nameI=sec.querySelector("#gpname"),fileI=sec.querySelector("#gpfile"),btn=sec.querySelector("#gpbtn");
- try{nameI.value=localStorage.getItem("lzgpname")||"";}catch(_){}
- var lb=document.createElement("div");lb.className="gplb";lb.innerHTML='<button class="gpx" aria-label="Close">\u2715</button><img alt=""><p></p>';document.body.appendChild(lb);
- lb.addEventListener("click",function(e){if(e.target.tagName!=="IMG")lb.classList.remove("on")});
- document.addEventListener("keydown",function(e){if(e.key==="Escape")lb.classList.remove("on")});
- function thumb(u){return live?"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w=640&q=72":u}
- function card(p,first){
-  var f=document.createElement("figure");f.className="gpi";
-  var im=document.createElement("img");im.alt=p.caption||"";im.loading="lazy";im.src=p.local||thumb(p.url);
-  im.onerror=function(){if(im.src!==p.url)im.src=p.url;else f.remove();};
-  f.appendChild(im);
-  var who=[p.name,p.caption].filter(Boolean).join(" \u00b7 ");
-  if(who){var c=document.createElement("figcaption");c.textContent=who;f.appendChild(c);}
-  f.addEventListener("click",function(){lb.querySelector("img").src=p.local||p.url;lb.querySelector("p").textContent=who;lb.classList.add("on");});
-  if(first&&wall.firstChild)wall.insertBefore(f,wall.firstChild);else wall.appendChild(f);
- }
- function render(list){wall.innerHTML="";list.forEach(function(p){card(p,false)});empty.hidden=list.length>0;}
- if(!live){
-  var sample=[].slice.call(document.querySelectorAll(".gal img,.pimg img")).map(function(i){return i.getAttribute("src")}).filter(Boolean).slice(0,4);
-  var names=["Aunt Rosa","The Nguyens","Table 7","Dev"];
-  render(sample.map(function(u,i){return{url:u,name:names[i]||"",caption:""}}));
-  btn.addEventListener("click",function(e){e.preventDefault();if(typeof demo==="function")demo();});
-  return;
- }
- fetch(API).then(function(r){return r.json()}).then(function(j){render((j&&j.photos)||[])}).catch(function(){empty.hidden=false});
- function shrink(file){
-  return new Promise(function(res){
-   var MAX=2000,done=function(b){res(b||file)};
-   var img=new Image(),url=URL.createObjectURL(file);
-   img.onload=function(){
-    try{
-     var w=img.naturalWidth,h=img.naturalHeight,s=Math.min(1,MAX/Math.max(w,h));
-     var cv=document.createElement("canvas");cv.width=Math.round(w*s);cv.height=Math.round(h*s);
-     cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
-     URL.revokeObjectURL(url);cv.toBlob(function(b){done(b)},"image/jpeg",.86);
-    }catch(_){done(null)}
-   };
-   img.onerror=function(){URL.revokeObjectURL(url);done(null)};
-   img.src=url;
-  });
- }
- fileI.addEventListener("change",async function(){
-  var files=[].slice.call(fileI.files||[]);fileI.value="";
-  if(!files.length)return;
-  var name=nameI.value.trim().slice(0,60);try{localStorage.setItem("lzgpname",name)}catch(_){}
-  var ok=0,bad=0,why="";btn.classList.add("busy");
-  for(var i=0;i<files.length;i++){
-   st.textContent="Adding "+(i+1)+" of "+files.length+"\u2026";
-   try{
-    var blob=await shrink(files[i]);
-    var fd=new FormData();fd.append("file",blob,"photo.jpg");fd.append("name",name);
-    var r=await fetch(API,{method:"POST",body:fd});var j=await r.json();
-    if(!r.ok||!j.ok)throw new Error((j&&j.message)||"");
-    var p=j.photo;p.local=URL.createObjectURL(blob);card(p,true);empty.hidden=true;ok++;
-   }catch(e){bad++;if(e&&e.message)why=e.message;}
-  }
-  btn.classList.remove("busy");
-  st.textContent=ok?("Added "+ok+" photo"+(ok===1?"":"s")+" \u2014 thank you! \u2713"+(bad?" ("+bad+" didn\u2019t go through)":"")):(why||"That didn\u2019t send \u2014 try again?");
- });
-})();
-</script>
+
+
+
+
 
 <script>
 /* JC-LAZO-WWS-0929-LIVE: hour by hour, the forecast, find your seat, personal RSVPs, the team with links, the gallery hand-off, translation, the slideshow */
@@ -1037,7 +980,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
     var card=document.createElement("div");card.className="ven wx";
     var ss=d.sunset?(function(t){var p=t.split(":"),h=parseInt(p[0],10),ap=h>=12?"pm":"am";return (h%12||12)+":"+p[1]+" "+ap})(d.sunset):"";
     card.innerHTML='<p class="k">The forecast</p><h3></h3><p></p><p class="dim"></p>';
-    card.querySelector("h3").textContent=d.hi+"° and "+d.sky;
+    card.querySelector("h3").textContent=d.hi+"° and "+d.sky;card.querySelector("h3").style.textTransform="none";
     card.querySelectorAll("p")[1].textContent="Low of "+d.lo+"°"+(d.rain?" · "+d.rain+"% chance of rain":"")+(ss?" · sunset "+ss:"");
     card.querySelector(".dim").textContent=d.line||"";
     vl.appendChild(card);
@@ -1186,6 +1129,192 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
    W.querySelector(".wcap").textContent=[p.name,p.caption].filter(Boolean).join(" · ");
   };
   load().then(function(){show();setInterval(show,7000);setInterval(load,45000)});
+ }
+})();
+</script>
+
+<script>
+/* JC-LAZO-WWS-0929-GUESTPHOTOS: photos guests share from their phones */
+(function(){
+ if(document.body.classList.contains("framed"))return;
+ var LS=window.LAZO_SITE||null;
+ var q=new URLSearchParams(location.search);
+ if(LS&&LS.guestPhotosOn===false)return;
+ var live=!!LS,open=true;
+ if(live){var iso=LS.dateIso||"";if(/^\d{4}-\d{2}-\d{2}$/.test(iso)){open=Date.now()>=new Date(iso+"T00:00:00").getTime()||q.get("photos")==="1";}}
+ if(live&&!open)return;
+ var slug=live?LS.slug:"";
+ var API=live?"https://meetlazo.com/api/w/"+encodeURIComponent(slug)+"/photos":"";
+ var note=(live&&LS.guestPhotosNote)||"Took a photo we\u2019d love to see? Add it here straight from your phone \u2014 it lands on this page for everyone.";
+ var sec=document.createElement("section");sec.className="gpsec";sec.id="photos";
+ sec.innerHTML='<div class="wrap"><div class="center"><p class="k">Your photos</p><h2 style="margin:0 auto">Share the day as you saw it.</h2><p class="lede" id="gpnote"></p>'
+  +'<div class="gpform"><input class="gpname" id="gpname" placeholder="Your name (optional)" maxlength="60" autocomplete="name">'
+  +'<label class="gpbtn" id="gpbtn"><input type="file" id="gpfile" accept="image/*" multiple>Add photos from your phone</label></div>'
+  +'<p class="gpst" id="gpst"></p></div><div class="gpwall" id="gpwall"></div><p class="gpempty" id="gpempty" hidden>No photos yet \u2014 yours could be the first.</p></div>';
+ sec.querySelector("#gpnote").textContent=note;
+ var after=document.querySelector(".gal");after=after?after.closest("section"):null;
+ if(!after){var sp=document.querySelector(".split");after=sp?sp.closest("section"):null;}
+ var foot=document.querySelector("footer");
+ if(after&&after.parentNode)after.parentNode.insertBefore(sec,after.nextSibling);else if(foot)foot.parentNode.insertBefore(sec,foot);else return;
+ var wall=sec.querySelector("#gpwall"),empty=sec.querySelector("#gpempty"),st=sec.querySelector("#gpst"),nameI=sec.querySelector("#gpname"),fileI=sec.querySelector("#gpfile"),btn=sec.querySelector("#gpbtn");
+ try{nameI.value=localStorage.getItem("lzgpname")||"";}catch(_){}
+ var lb=document.createElement("div");lb.className="gplb";lb.innerHTML='<button class="gpx" aria-label="Close">\u2715</button><img alt=""><p></p>';document.body.appendChild(lb);
+ lb.addEventListener("click",function(e){if(e.target.tagName!=="IMG")lb.classList.remove("on")});
+ document.addEventListener("keydown",function(e){if(e.key==="Escape")lb.classList.remove("on")});
+ function thumb(u){return live?"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w=640&q=72":u}
+ function card(p,first){
+  var f=document.createElement("figure");f.className="gpi";
+  var im=document.createElement("img");im.alt=p.caption||"";im.loading="lazy";im.src=p.local||thumb(p.url);
+  im.onerror=function(){if(im.src!==p.url)im.src=p.url;else f.remove();};
+  f.appendChild(im);
+  var who=[p.name,p.caption].filter(Boolean).join(" \u00b7 ");
+  if(who){var c=document.createElement("figcaption");c.textContent=who;f.appendChild(c);}
+  f.addEventListener("click",function(){lb.querySelector("img").src=p.local||p.url;lb.querySelector("p").textContent=who;lb.classList.add("on");});
+  if(first&&wall.firstChild)wall.insertBefore(f,wall.firstChild);else wall.appendChild(f);
+ }
+ function render(list){wall.innerHTML="";list.forEach(function(p){card(p,false)});empty.hidden=list.length>0;}
+ if(!live){
+  var sample=[].slice.call(document.querySelectorAll(".gal img,.pimg img")).map(function(i){return i.getAttribute("src")}).filter(Boolean).slice(0,4);
+  var names=["Aunt Rosa","The Nguyens","Table 7","Dev"];
+  render(sample.map(function(u,i){return{url:u,name:names[i]||"",caption:""}}));
+  btn.addEventListener("click",function(e){e.preventDefault();if(typeof demo==="function")demo();});
+  return;
+ }
+ fetch(API).then(function(r){return r.json()}).then(function(j){render((j&&j.photos)||[])}).catch(function(){empty.hidden=false});
+ function shrink(file){
+  return new Promise(function(res){
+   var MAX=2000,done=function(b){res(b||file)};
+   var img=new Image(),url=URL.createObjectURL(file);
+   img.onload=function(){
+    try{
+     var w=img.naturalWidth,h=img.naturalHeight,s=Math.min(1,MAX/Math.max(w,h));
+     var cv=document.createElement("canvas");cv.width=Math.round(w*s);cv.height=Math.round(h*s);
+     cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);
+     URL.revokeObjectURL(url);cv.toBlob(function(b){done(b)},"image/jpeg",.86);
+    }catch(_){done(null)}
+   };
+   img.onerror=function(){URL.revokeObjectURL(url);done(null)};
+   img.src=url;
+  });
+ }
+ fileI.addEventListener("change",async function(){
+  var files=[].slice.call(fileI.files||[]);fileI.value="";
+  if(!files.length)return;
+  var name=nameI.value.trim().slice(0,60);try{localStorage.setItem("lzgpname",name)}catch(_){}
+  var ok=0,bad=0,held=0,why="";btn.classList.add("busy");
+  for(var i=0;i<files.length;i++){
+   st.textContent="Adding "+(i+1)+" of "+files.length+"\u2026";
+   try{
+    var blob=await shrink(files[i]);
+    var fd=new FormData();fd.append("file",blob,"photo.jpg");fd.append("name",name);
+    var r=await fetch(API,{method:"POST",body:fd});var j=await r.json();
+    if(!r.ok||!j.ok)throw new Error((j&&j.message)||"");
+    if(j.held){held++;continue;}
+    var p=j.photo;p.local=URL.createObjectURL(blob);card(p,true);empty.hidden=true;ok++;
+   }catch(e){bad++;if(e&&e.message)why=e.message;}
+  }
+  btn.classList.remove("busy");
+  st.textContent=held&&!ok?("Got "+held+" \u2014 thank you! The couple will add them to the wall shortly. \u2713"):ok?("Added "+ok+" photo"+(ok===1?"":"s")+" \u2014 thank you! \u2713"+(held?" ("+held+" waiting for the couple)":"")+(bad?" ("+bad+" didn\u2019t go through)":"")):(why||"That didn\u2019t send \u2014 try again?");
+ });
+})();
+</script>
+
+<script>
+/* JC-LAZO-WWS-0929-MORE: the day in a calendar, the weekend's events, the hotel, your table on the map */
+(function(){
+ var LS=window.LAZO_SITE;if(!LS||document.body.classList.contains("framed"))return;
+ /* the LIVE block builds #tlx, .seatr and the travel card; whichever order the
+    patches were applied in, this runs after it */
+ if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",arguments.callee);return}
+ var esc=function(t){return String(t||"").replace(/[<>&"]/g,function(c){return{"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]})};
+ var iso=LS.dateIso||"",hasDate=/^\d{4}-\d{2}-\d{2}$/.test(iso);
+ var hhmm=function(t){var m=/^(\d{1,2}):(\d{2})/.exec(t||"");if(!m)return null;return parseInt(m[1],10)*60+parseInt(m[2],10)};
+ var parse12=function(t){var m=/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i.exec(t||"");if(!m)return null;var h=parseInt(m[1],10),mi=m[2]?parseInt(m[2],10):0;if(m[3]){var pm=m[3].toLowerCase()==="pm";if(pm&&h<12)h+=12;if(!pm&&h===12)h=0}return h*60+mi};
+ var p2=function(n){return String(n).padStart(2,"0")};
+ var stamp=function(d,mins){return d.replace(/-/g,"")+"T"+p2(Math.floor(mins/60)%24)+p2(mins%60)+"00"};
+ var icsWrap=function(events){return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Lazo//Wedding//EN"].concat(events).concat(["END:VCALENDAR"]).join("\r\n")};
+ var vevent=function(uid,d,start,end,title,loc,desc){return ["BEGIN:VEVENT","UID:"+uid+"@meetlazo.com","DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z"),"DTSTART:"+stamp(d,start),"DTEND:"+stamp(d,end),"SUMMARY:"+String(title).replace(/,/g,"\\,"),"LOCATION:"+String(loc||"").replace(/,/g,"\\,"),"DESCRIPTION:"+String(desc||"").replace(/,/g,"\\,").replace(/\n/g,"\\n"),"END:VEVENT"].join("\r\n")};
+ var dl=function(a,name,ics){a.href="data:text/calendar;charset=utf-8,"+encodeURIComponent(ics);a.download=name;a.className="addcal";};
+ var gcal=function(title,d,start,end,loc){return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(title)+"&dates="+stamp(d,start)+"/"+stamp(d,end)+"&location="+encodeURIComponent(loc||"")};
+ var venue=[LS.venueName,LS.venueAddress].filter(Boolean).join(", ");
+
+ /* ---- 1. the whole day in a calendar ---- */
+ var tlx=document.getElementById("tlx");
+ if(tlx&&hasDate&&LS.timeline&&LS.timeline.length){
+  var evs=LS.timeline.filter(function(m){return m&&m.label&&hhmm(m.time)!==null}).map(function(m,i){var st=hhmm(m.time),en=st+(m.dur>0?m.dur:60);return vevent("lazo-"+(LS.slug||"w")+"-"+i,iso,st,Math.min(en,23*60+59),m.label,venue,m.note||"")});
+  var wrap=document.createElement("p");wrap.className="tlcal";
+  var a=document.createElement("a");dl(a,(LS.slug||"wedding")+"-day.ics",icsWrap(evs));a.textContent="Add the whole day to your calendar";wrap.appendChild(a);
+  var cer=parse12(LS.ceremonyTime||"");if(cer!==null){var g=document.createElement("a");g.className="addcal";g.href=gcal((LS.names||"Wedding")+" \u2014 ceremony",iso,cer,Math.min(cer+300,23*60+59),venue);g.target="_blank";g.rel="noopener";g.textContent="Google Calendar";wrap.appendChild(g)}
+  tlx.parentNode.insertBefore(wrap,tlx.nextSibling);
+ }
+
+ /* ---- 2. the weekend ---- */
+ var events=(LS.events||[]).filter(function(e){return e&&e.name});
+ if(events.length){
+  var s=document.createElement("section");s.className="evsec";s.id="events";
+  s.innerHTML='<div class="wrap"><div class="center"><p class="k">The weekend</p><h2 style="margin:0 auto">More than one day to celebrate.</h2></div><div class="evg"></div></div>';
+  var grid=s.querySelector(".evg");
+  events.forEach(function(e,i){
+   var c=document.createElement("div");c.className="ev";
+   var when=e.dateIso?new Date(e.dateIso+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric"}):"";
+   c.innerHTML='<p class="k"></p><h3></h3><p></p><p class="dim"></p><div class="evl"></div>';
+   c.querySelector(".k").textContent=when+(e.time?" \u00b7 "+e.time:"");
+   c.querySelector("h3").textContent=e.name;
+   c.querySelectorAll("p")[1].textContent=[e.venueName,e.venueAddress].filter(Boolean).join(", ");
+   c.querySelector(".dim").textContent=[e.note,e.dress?"Dress: "+e.dress:""].filter(Boolean).join(" \u00b7 ");
+   var links=c.querySelector(".evl");
+   var loc=[e.venueName,e.venueAddress].filter(Boolean).join(", ");
+   if(loc){var d=document.createElement("a");d.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(loc);d.target="_blank";d.rel="noopener";d.textContent="Directions";links.appendChild(d)}
+   if(e.dateIso){var st=parse12(e.time||"");if(st===null)st=18*60;var ca=document.createElement("a");dl(ca,(LS.slug||"wedding")+"-"+(i+1)+".ics",icsWrap([vevent("lazo-"+(LS.slug||"w")+"-ev"+i,e.dateIso,st,Math.min(st+180,23*60+59),e.name+" \u2014 "+(LS.names||""),loc,e.note||"")]));ca.textContent="Add to calendar";links.appendChild(ca)}
+   grid.appendChild(c);
+  });
+  var day=document.querySelector(".dayg");day=day?day.closest("section"):null;
+  var story=document.querySelector(".split");story=story?story.closest("section"):null;
+  var anchor=day||document.getElementById("rsvpSec");
+  if(anchor)anchor.parentNode.insertBefore(s,anchor);else if(story)story.parentNode.insertBefore(s,story.nextSibling);
+  // RSVP: which events?
+  var rform=document.getElementById("rform"),ask=events.filter(function(e){return e.rsvp});
+  if(rform&&ask.length&&LS.rsvpOpen!==false){
+   var box=document.createElement("div");box.className="evs";box.innerHTML='<span class="mealk">Which will you join?</span>';
+   ask.forEach(function(e){var l=document.createElement("label");var cb=document.createElement("input");cb.type="checkbox";cb.name="ev";cb.value=e.name;cb.checked=true;var t=document.createElement("span");t.textContent=e.name;l.appendChild(cb);l.appendChild(t);box.appendChild(l)});
+   var at=rform.querySelector(".plusrow")||rform.querySelector(".meals")||rform.querySelector("[data-song]")||rform.querySelector("textarea");
+   rform.insertBefore(box,at);
+   var _f=window.fetch;
+   window.fetch=function(u,o){try{if(typeof u==="string"&&u.indexOf("/rsvps")>0&&o&&o.method==="POST"){var b=JSON.parse(o.body);var picked=[].slice.call(rform.querySelectorAll("input[name=ev]:checked")).map(function(c){return{stringValue:c.value.slice(0,80)}});b.fields.events={arrayValue:{values:picked}};o.body=JSON.stringify(b)}}catch(_){}return _f.apply(this,arguments)};
+  }
+ }
+
+ /* ---- 3. the hotel ---- */
+ if(LS.hotelAddress){
+  var vens=document.querySelectorAll(".ven");var tv=vens[1];
+  if(tv&&tv.style.display!=="none"){var h=document.createElement("a");h.className="addcal";h.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(LS.hotelAddress);h.target="_blank";h.rel="noopener";h.textContent="Directions to the hotel";tv.appendChild(h)}
+ }
+
+ /* ---- 4. your table on the map ---- */
+ var seatr=document.getElementById("seatr");
+ if(seatr){
+  var FSB="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/seating/main";
+  var roomP=null;
+  var room=function(){if(roomP)return roomP;roomP=fetch(FSB).then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.tables)return null;var num=function(v){return v?Number(v.doubleValue!=null?v.doubleValue:v.integerValue):0};var cv=(f.canvas&&f.canvas.mapValue&&f.canvas.mapValue.fields)||{};
+   return{w:num(cv.w)||1600,h:num(cv.h)||1000,tables:((f.tables.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",x:num(m.x),y:num(m.y),sh:(m.sh||{}).stringValue||"round",r:num(m.r),s:num(m.s)||8}})}}).catch(function(){return null});return roomP};
+  new MutationObserver(function(){
+   var cards=seatr.querySelectorAll(".seatc");if(!cards.length)return;
+   room().then(function(R){
+    if(!R||!R.tables.length)return;
+    cards.forEach(function(c){
+     if(c.querySelector(".seatmap"))return;
+     var t=(c.querySelector(".seatt")||{}).textContent||"";var tn=t.split(" \u00b7 ")[0].trim();if(!tn)return;
+     var mine=R.tables.filter(function(x){return x.n===tn});if(!mine.length)return;
+     var sv='<svg viewBox="0 0 '+R.w+' '+R.h+'" role="img" aria-label="Your table on the floor plan">';
+     R.tables.forEach(function(x){var hit=x.n===tn;var fill=hit?"var(--acc)":"var(--line)";var lab=hit?"#fff":"var(--mut)";
+      if(x.sh==="round")sv+='<circle cx="'+x.x+'" cy="'+x.y+'" r="42" fill="'+fill+'"/>';
+      else{var w=x.sh==="rect"?110:x.sh==="king"||x.sh==="serp"?260:160,h2=x.sh==="rect"?60:50;sv+='<rect x="'+(x.x-w/2)+'" y="'+(x.y-h2/2)+'" width="'+w+'" height="'+h2+'" rx="10" fill="'+fill+'" transform="rotate('+(x.r||0)+' '+x.x+' '+x.y+')"/>'}
+      sv+='<text x="'+x.x+'" y="'+(x.y+6)+'" text-anchor="middle" font-size="'+(hit?26:20)+'" font-weight="'+(hit?700:400)+'" fill="'+lab+'">'+esc(x.n.replace(/^Table\s+/i,""))+'</text>'});
+     sv+='</svg>';
+     var box=document.createElement("div");box.className="seatmap";box.innerHTML=sv;c.appendChild(box);
+    });
+   });
+  }).observe(seatr,{childList:true});
  }
 })();
 </script>

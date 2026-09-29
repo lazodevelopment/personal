@@ -430,7 +430,7 @@ service cloud.firestore {
 
       match /rsvps/{rsvpId} {
         allow create: if request.resource.data.keys().hasOnly(
-              ['name','email','attending','plusOnes','meal','note','song','createdAt','invite'])
+              ['name','email','attending','plusOnes','meal','note','song','createdAt','invite','events'])
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0
           && request.resource.data.name.size() < 120
