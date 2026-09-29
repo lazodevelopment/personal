@@ -37,7 +37,7 @@ def swap(old, new, label, count=1):
 
 swap("// Build ID: JC-LAZO-MUSIC-0915-007\n",
      "// Build ID: JC-LAZO-MUSIC-0929-V25\n"
-     "// (v2.5: COMPILE FIX - universal_html/js_util re-exports dart:js_util, which the current Dart SDK no longer ships, so every jsu.* call failed to compile. The Web Audio analyser is removed; position, length and paused come from the audio element's own properties (present on universal_html's phone stub too); the equalizer is the beat animation everywhere. Playback unchanged. Dependencies: audioplayers, universal_html, http. base v2.4.1)\n",
+     "// (v2.5: COMPILE FIX - universal_html/js_util re-exports dart:js_util, which the current Dart SDK no longer ships, so every jsu.* call failed to compile. The Web Audio analyser is removed; position, length and paused are read from the audio element through `dynamic` (the phone stub lacks them; the calls only run on the web); the equalizer is the beat animation everywhere. Playback unchanged. Dependencies: audioplayers, universal_html, http. base v2.4.1)\n",
      "header")
 swap("import 'package:universal_html/js_util.dart' as jsu;\n", "", "drop js_util import")
 swap("""  Object? _actx; // JS AudioContext (via universal_html/js_util, web only)
@@ -90,13 +90,15 @@ swap("""  // universal_html's phone stub of the audio element has no currentTime
       jsu.callMethod(ctx, 'resume', <Object?>[]);
     } catch (_) {}
   }
-""", """  // v2.5: the element's own properties. universal_html's MediaElement has
-  // currentTime / duration / paused on every platform (a stub on phones),
-  // and these only run behind kIsWeb anyway.
+""", """  // v2.5: read through `dynamic`. On the web the element is dart:html's, so
+  // currentTime / duration / paused resolve to the real getters; universal_
+  // html's phone stub lacks them, but a dynamic call still compiles there and
+  // these only ever run behind kIsWeb.
   static double _elNum(html.AudioElement el, String prop) {
     try {
-      final num v = prop == 'duration' ? el.duration : el.currentTime;
-      return v.isFinite ? v.toDouble() : 0;
+      final dynamic d = el;
+      final Object? v = prop == 'duration' ? d.duration : d.currentTime;
+      return (v is num && v.isFinite) ? v.toDouble() : 0;
     } catch (_) {
       return 0;
     }
@@ -104,7 +106,8 @@ swap("""  // universal_html's phone stub of the audio element has no currentTime
 
   static bool _elPaused(html.AudioElement el) {
     try {
-      return el.paused;
+      final dynamic d = el;
+      return d.paused == true;
     } catch (_) {
       return true;
     }
@@ -112,7 +115,10 @@ swap("""  // universal_html's phone stub of the audio element has no currentTime
 
   static void _elSet(html.AudioElement el, String prop, Object? v) {
     try {
-      if (prop == 'currentTime' && v is num) el.currentTime = v;
+      if (prop == 'currentTime' && v is num) {
+        final dynamic d = el;
+        d.currentTime = v;
+      }
     } catch (_) {}
   }
 

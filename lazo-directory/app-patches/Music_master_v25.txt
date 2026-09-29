@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 
 // lazo_music.dart
 // Build ID: JC-LAZO-MUSIC-0929-V25
-// (v2.5: COMPILE FIX - universal_html/js_util re-exports dart:js_util, which the current Dart SDK no longer ships, so every jsu.* call failed to compile. The Web Audio analyser is removed; position, length and paused come from the audio element's own properties (present on universal_html's phone stub too); the equalizer is the beat animation everywhere. Playback unchanged. Dependencies: audioplayers, universal_html, http. base v2.4.1)
+// (v2.5: COMPILE FIX - universal_html/js_util re-exports dart:js_util, which the current Dart SDK no longer ships, so every jsu.* call failed to compile. The Web Audio analyser is removed; position, length and paused are read from the audio element through `dynamic` (the phone stub lacks them; the calls only run on the web); the equalizer is the beat animation everywhere. Playback unchanged. Dependencies: audioplayers, universal_html, http. base v2.4.1)
 // (v2.4.1: the playback timer is now _posTimer - as _tick it shadowed the haptic helper and broke the build. v2.4: FEEL - every play button, the +, the tab chips, the moment tiles, the back button and the player's controls answer on pointer-down (_Press; InkWell's ripple was painting under their opaque circles and never showed); haptics in tiers - light when a preview starts or pauses and on ordinary buttons, select on tabs, the scrubber and the close, medium when a song lands in the plan (must play, do not play, a moment - however it got there), on pickup when reordering must-plays and on Send to your DJ; the play/pause glyph cross-fades and scales instead of snapping; the player bar rises from the bottom edge and leaves the same way; the scrubber's thumb grows under the finger while you drag and the track thickens with it; picked-up must-plays lift with a shadow; on phones the Search tab slides in over the plan; every list rubber-bands at its edges; display type tightens with size; all of it honours Reduce Motion. Autosave, previews, the equalizer, requests and June are untouched. base v2.3)
 // (v2.3: MOBILE COMPILE FIX. package:web and dart:js_interop are NOT importable on iOS/Android (the Android AAB failed on them); the web-only audio element is now universal_html's AudioElement and the Web Audio analyser is reached through package:universal_html/js_util (dart:js_util on web, a stub on phones), all behind kIsWeb. Same behaviour on web; drop the `web` dependency. Dependencies on this widget in FlutterFlow: audioplayers, universal_html, http. v2.2: THE EQUALIZER LISTENS AGAIN. On web, previews play through a browser audio element wired to a Web Audio AnalyserNode via package:web (wrong - see v2.3), fed through meetlazo.com/music/preview so the clip carries CORS and the spectrum is readable; if the relay fails the clip plays direct and the bars fall back to the beat animation. Phones keep package:audioplayers with the beat animation. Add `web` to the widget's dependencies. v2.1 MOBILE BUILD: compiles for iOS and Android. Previews play through package:audioplayers on every platform (dart:html audio removed), search goes through package:http, dart:web_audio is gone so the equalizer is the beat-driven animation everywhere (the signal-reading version needs a web-only file FlutterFlow can't hold; it can come back as a stub pair later), print opens a tab on web and copies the plan on phones. Dependencies to add on this widget in FlutterFlow: audioplayers, universal_html. v2: THE CONVERSATION. Guest requests - a link (meetlazo.com/w/{slug}/requests)
 // guests use from the invitation or the website; requests land in an inbox
@@ -753,13 +753,15 @@ class _LazoMusicState extends State<LazoMusic> {
     }
   }
 
-  // v2.5: the element's own properties. universal_html's MediaElement has
-  // currentTime / duration / paused on every platform (a stub on phones),
-  // and these only run behind kIsWeb anyway.
+  // v2.5: read through `dynamic`. On the web the element is dart:html's, so
+  // currentTime / duration / paused resolve to the real getters; universal_
+  // html's phone stub lacks them, but a dynamic call still compiles there and
+  // these only ever run behind kIsWeb.
   static double _elNum(html.AudioElement el, String prop) {
     try {
-      final num v = prop == 'duration' ? el.duration : el.currentTime;
-      return v.isFinite ? v.toDouble() : 0;
+      final dynamic d = el;
+      final Object? v = prop == 'duration' ? d.duration : d.currentTime;
+      return (v is num && v.isFinite) ? v.toDouble() : 0;
     } catch (_) {
       return 0;
     }
@@ -767,7 +769,8 @@ class _LazoMusicState extends State<LazoMusic> {
 
   static bool _elPaused(html.AudioElement el) {
     try {
-      return el.paused;
+      final dynamic d = el;
+      return d.paused == true;
     } catch (_) {
       return true;
     }
@@ -775,7 +778,10 @@ class _LazoMusicState extends State<LazoMusic> {
 
   static void _elSet(html.AudioElement el, String prop, Object? v) {
     try {
-      if (prop == 'currentTime' && v is num) el.currentTime = v;
+      if (prop == 'currentTime' && v is num) {
+        final dynamic d = el;
+        d.currentTime = v;
+      }
     } catch (_) {}
   }
 
