@@ -1,0 +1,147 @@
+cd ~/bs && cat > patch_lazo_invite.py <<'PATCH_EOF'
+#!/usr/bin/env python3
+"""JC-LZ-INVITE-0928: one "the free planning tool we use with our couples" email per booked couple, from the daily job.
+
+Works for both brands. Run from the functions folder (Atavia: ~/bs, Elizabeth Scott: ~/es-deploy/functions):
+  python3 patch_lazo_invite.py atavia        --postal "123 Main St, Phoenix, AZ 85004"
+  python3 patch_lazo_invite.py elizabethscott --postal "..."  [--sign "Name"]
+Then redeploy the daily job (no trigger/secrets flags, so the schedule and secrets it has stay as they are):
+  gcloud functions deploy charge_balances --gen2 --region=us-central1 --runtime=python312 --source=. --entry-point=charge_balances
+
+What it adds
+  lib/emails.py  lazo_invite(api_key, booking): the email. Short personal recommendation, one button, unsubscribe
+                 link (mailto) plus List-Unsubscribe header, and the brand's postal address in the footer (CAN-SPAM).
+  main.py        _send_lazo_invites(db, now): runs daily after the lead chase. Eligible = confirmed (paid) bookings,
+                 not test, real address (marketplace relays skipped), not opted out, not already sent, confirmed at
+                 least LAZO_INVITE_DELAY_DAYS ago, wedding not more than 60 days past. At most LAZO_INVITE_PER_RUN
+                 per day, so the first run reaches existing couples gradually. Stamps lazo_invite_sent_at.
+                 A couple who replies "unsubscribe": set marketing_optout=true on their booking (admin or Cloud Shell).
+Anchor-and-assert: nothing is written unless every anchor is found exactly once.
+"""
+import pathlib, sys
+
+ROOT = pathlib.Path(__file__).resolve().parent
+args = sys.argv[1:]
+brand = (args[0] if args and not args[0].startswith("--") else "").lower()
+if brand not in ("atavia", "elizabethscott"):
+    print("usage: python3 patch_lazo_invite.py atavia|elizabethscott --postal \"street, city, ST zip\" [--sign \"Name\"]"); sys.exit(1)
+def opt(flag, default=""):
+    return args[args.index(flag) + 1] if flag in args and args.index(flag) + 1 < len(args) else default
+postal = opt("--postal").strip()
+if not postal:
+    print("--postal is required: CAN-SPAM needs the brand's postal address in the footer. Nothing written."); sys.exit(1)
+
+B = {
+    "atavia": dict(name="Atavia Weddings", sign=opt("--sign", "Lauren McKinnon"),
+                   sign_line="Atavia Weddings · (336) 537-9590 · ataviaweddings.com",
+                   reply="info@ataviaweddings.com", color="#B0713F", utm="atavia"),
+    "elizabethscott": dict(name="Elizabeth Scott Weddings", sign=opt("--sign", "Elizabeth Scott Weddings"),
+                   sign_line="hello@elizabethscottweddings.com · elizabethscottweddings.com",
+                   reply="hello@elizabethscottweddings.com", color="#B08D57", utm="elizabethscott"),
+}[brand]
+
+EMAIL_FN = '''
+
+def lazo_invite(api_key, booking):
+    """JC-LZ-INVITE-0928: one-time recommendation of Lazo (free planning tool)
+    to a booked couple, sent by charge_balances a few days after booking.
+    Marketing, not transactional: unsubscribe link + List-Unsubscribe header
+    and the postal address in the footer."""
+    first = booking["client_names"].split("&")[0].strip().split()[0]
+    link = "https://meetlazo.com/?utm_source=%(utm)s&utm_medium=email&utm_campaign=couples-invite"
+    unsub = "mailto:%(reply)s?subject=unsubscribe"
+    html = f"""
+    <div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">
+      <h1 style="font-weight:normal;letter-spacing:2px">%(name_upper)s</h1>
+      <p>Hi {first},</p>
+      <p>A quick one from us, not about your photos or film.</p>
+      <p>The tool we use with our couples to keep the wedding day organized &mdash; the
+      timeline, the vendor list, who needs to be where and when &mdash; is called
+      <b>Lazo</b>. It is free, and when your planner, your venue and we are all looking
+      at the same plan, the day runs the way you pictured it.</p>
+      <p style="text-align:center;margin:26px 0">
+        <a href="{link}" style="background:%(color)s;color:#FAF7F2;padding:14px 30px;
+        text-decoration:none;letter-spacing:2px;font-family:Arial,sans-serif;
+        font-size:13px">TRY LAZO, IT&rsquo;S FREE</a></p>
+      <p>If your planning is already sorted, ignore this with our blessing. Nothing about
+      your booking changes either way.</p>
+      <p style="color:%(color)s">&mdash; %(sign)s<br>%(sign_line)s</p>
+      <p style="font-size:11px;color:#8a8580;margin-top:30px">You are receiving this
+      because you booked with %(name)s. %(postal)s.
+      <a href="{unsub}" style="color:#8a8580">Unsubscribe</a> from notes like this one.</p>
+    </div>"""
+    r = requests.post(API, json={
+        "from": FROM, "to": [booking["email"]], "reply_to": "%(reply)s",
+        "subject": "The free planning tool we use with our couples",
+        "html": html, "headers": {"List-Unsubscribe": f"<{unsub}>"},
+    }, headers={"Authorization": f"Bearer {api_key}"}, timeout=30)
+    r.raise_for_status()
+    return r.json()
+''' % dict(B, name_upper=B["name"].upper(), postal=postal.replace('"', "'"))
+
+MAIN_ANCHOR = "\n\n# ========================================================= charge_balances =="
+MAIN_FN = '''
+
+
+# ======================================================== lazo invite ==
+LAZO_INVITE_DELAY_DAYS = 3    # JC-LZ-INVITE-0928: days after the booking is paid
+LAZO_INVITE_PER_RUN = 25      # cap per daily run: the first run reaches existing couples gradually
+LAZO_INVITE_RELAY = ("zola.com", "theknot.com", "weddingpro.com", "example.com")
+
+
+def _send_lazo_invites(db, now):
+    """One Lazo recommendation per booked couple, a few days after they pay.
+    Skips test bookings, marketplace relay addresses, opted-out couples,
+    weddings more than 60 days past, and anyone already sent. Stamps
+    lazo_invite_sent_at so it can never repeat. Non-fatal throughout."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    sent = 0
+    cutoff = (now - timedelta(days=60)).strftime("%Y-%m-%d")
+    since = now - timedelta(days=LAZO_INVITE_DELAY_DAYS)
+    try:
+        snaps = (db.collection("bookings")
+                   .where(filter=FieldFilter("status", "==", "confirmed")).get())
+    except Exception as e:
+        print(f"lazo invite query failed: {e}"); return
+    for snap in snaps:
+        if sent >= LAZO_INVITE_PER_RUN:
+            break
+        b = snap.to_dict() or {}
+        email = str(b.get("email") or "").strip().lower()
+        paid = b.get("deposit_paid_at") or b.get("created_at")
+        if (b.get("test_mode") or b.get("lazo_invite_sent_at") or b.get("marketing_optout")
+                or not email or "@" not in email
+                or any(email.endswith("@" + r) or ("." + r) in email for r in LAZO_INVITE_RELAY)
+                or not paid or paid > since
+                or str(b.get("event_date_raw") or "9999") < cutoff):
+            continue
+        try:
+            emails.lazo_invite(RESEND_API_KEY.value, b)
+            snap.reference.update({"lazo_invite_sent_at": firestore.SERVER_TIMESTAMP})
+            sent += 1
+        except Exception as e:
+            print(f"lazo invite failed {b.get('booking_id', snap.id)}: {e}")
+    print(f"lazo invites: sent {sent}")'''
+
+CALL_ANCHOR = "    _chase_leads()                    # card-window abandons (no booking yet)\n"
+CALL_NEW = CALL_ANCHOR + "    _send_lazo_invites(firestore.client(), datetime.now(timezone.utc))   # JC-LZ-INVITE-0928\n"
+
+main_p, em_p = ROOT / "main.py", ROOT / "lib" / "emails.py"
+main_src, em_src = main_p.read_text(encoding="utf-8"), em_p.read_text(encoding="utf-8")
+if "JC-LZ-INVITE-0928" in main_src:
+    print("already applied"); sys.exit(0)
+for label, src, a in (("main.py charge_balances header", main_src, MAIN_ANCHOR), ("main.py _chase_leads call", main_src, CALL_ANCHOR)):
+    if src.count(a) != 1:
+        print(f"{label}: anchor found {src.count(a)} times, expected 1 - nothing written"); sys.exit(1)
+if "def lazo_invite(" in em_src:
+    print("lib/emails.py already has lazo_invite - nothing written"); sys.exit(1)
+if "import requests" not in em_src or "API = " not in em_src:
+    print("lib/emails.py does not look like the Resend email module - nothing written"); sys.exit(1)
+(ROOT / "main.py.bak-lazo0928").write_text(main_src, encoding="utf-8", newline="")
+(ROOT / "lib" / "emails.py.bak-lazo0928").write_text(em_src, encoding="utf-8", newline="")
+main_out = main_src.replace(MAIN_ANCHOR, MAIN_FN + MAIN_ANCHOR).replace(CALL_ANCHOR, CALL_NEW)
+main_p.write_text(main_out, encoding="utf-8", newline="")
+em_p.write_text(em_src.rstrip("\n") + "\n" + EMAIL_FN, encoding="utf-8", newline="")
+print(f"patched for {B['name']}: signs as {B['sign']}, postal footer: {postal}")
+PATCH_EOF
+python3 patch_lazo_invite.py atavia --postal "1095 Sugarview Dr Ste 100, Sheridan, WY 82801"

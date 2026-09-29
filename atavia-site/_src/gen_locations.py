@@ -2,6 +2,7 @@
 """Generate SEO location pages for Atavia Weddings: metro pages, 50 state pages,
 and a nationwide hub. Edit METROS / STATES and re-run, then run build.py."""
 import pathlib
+import re as _re, json as _json
 
 SRC = pathlib.Path(__file__).resolve().parent
 BASE = "https://ataviaweddings.com"
@@ -141,6 +142,26 @@ def schema_for(name, canon, area_type="City"):
             '"sameAs":["https://www.instagram.com/ataviaweddings"]}</script>'
             ) % (name, canon, OG, area_type, name)
 
+def metro_extra_schema(city, state, canon):
+    """JC-ATV-SEO-0927: breadcrumbs (Home > Nationwide > City) and a Service with real starting prices."""
+    plain = city.replace("&amp;", "&")   # JSON-LD is not HTML: no entities inside the script
+    crumbs = ('<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":['
+              '{"@type":"ListItem","position":1,"name":"Home","item":"%s/"},'
+              '{"@type":"ListItem","position":2,"name":"Nationwide","item":"%s/nationwide-wedding-videographer"},'
+              '{"@type":"ListItem","position":3,"name":"%s","item":"%s"}]}</script>') % (BASE, BASE, _json.dumps(plain)[1:-1], canon)
+    offers = [("Wedding Videography", "Cinematic wedding films, 4 to 10 hours of coverage, raw footage included.", 1200),
+              ("Wedding Photography", "Wedding photography, 4 to 10 hours of coverage, engagement session included.", 1500),
+              ("Photo & Film", "One team for photography and videography, 6 to 10 hours of coverage.", 3000)]
+    service = ('<script type="application/ld+json">{"@context":"https://schema.org","@type":"Service","name":"Wedding Videography & Photography in %s",'
+               '"serviceType":"Wedding videography and photography","provider":{"@id":"https://ataviaweddings.com/#business"},'
+               '"areaServed":{"@type":"City","name":"%s","containedInPlace":{"@type":"State","name":"%s"}},"url":"%s",'
+               '"hasOfferCatalog":{"@type":"OfferCatalog","name":"Collections","itemListElement":[%s]}}</script>') % (
+               plain, plain, state, canon,
+               ",".join('{"@type":"Offer","itemOffered":{"@type":"Service","name":"%s","description":"%s"},'
+                        '"priceSpecification":{"@type":"PriceSpecification","price":%d,"priceCurrency":"USD","minPrice":%d}}' % (n, d, pr, pr)
+                        for n, d, pr in offers))
+    return crumbs + service
+
 manifest = []
 ri = 0
 def next_review():
@@ -245,7 +266,7 @@ def area_html(mslug, city):
 def faq_parts(city, region):
     items = [
         ("How much does a wedding videographer cost in %s?" % city,
-         "Atavia film collections start at $1,200 and photography at $1,400, with no travel fees anywhere in %s. "
+         "Atavia film collections start at $1,200 and photography at $1,500, with no travel fees anywhere in %s. "
          "A $500 deposit reserves your date, and every collection includes your raw footage." % region),
         ("Do you charge travel fees for %s weddings?" % city,
          "No. A local Atavia team covers %s, so there is no out-of-town crew and no travel line on your invoice." % region),
@@ -254,6 +275,18 @@ def faq_parts(city, region):
          "so nobody is in the other&rsquo;s shot. See <a href=\"/packages\" style=\"color:var(--copper)\">packages</a>."),
         ("Will we get the raw footage?",
          "Yes. Every collection includes complimentary access to your raw footage alongside the edited film."),
+        ("How many hours of coverage does a %s wedding need?" % city,
+         "Collections run 4, 6, 8 or 10 hours. Eight hours is the most popular: it covers the end of getting ready, the ceremony, "
+         "portraits, and the reception through the first dances. Add hours &agrave; la carte when you book if your timeline runs longer."),
+        ("Is a second shooter worth it?",
+         "For weddings of eight hours or more, or with a large wedding party, usually yes. A second photographer or videographer "
+         "is in two places at once &mdash; both of you getting ready, key reactions during the vows, wide and intimate angles together &mdash; "
+         "and brings backup gear. It is a $500 add-on on any collection."),
+        ("How does booking work?",
+         "Choose your collection on our <a href=\"/book/\" style=\"color:var(--copper)\">booking page</a>, sign the agreement online, and a $500 retainer "
+         "is charged the moment you sign. Your remaining balance is charged automatically 14 business days after signing, or you can pay in full up front."),
+        ("Are you insured?",
+         "Fully insured, for your peace of mind and your venue&rsquo;s, and we carry backup cameras and audio on every wedding."),
     ]
     html = ('<!-- ===== FAQ ===== -->\n<section class="sec sec--tight"><div class="wrap" style="max-width:760px">'
             '<div class="sec__head reveal"><div class="sec__roman">Good to Know</div>'
@@ -287,8 +320,8 @@ for slug, city, state, region, intro, venues, tail in METROS:
     canon = BASE + "/" + slug
     manifest.append(dict(slug=slug, out=slug + ".html", nav="", tier="metro", footer_label=city,
         title="%s Wedding Videographer &amp; Photographer | Films from $1,200 | Atavia" % city,
-        desc="%s wedding videographers &amp; photographers with a local team &mdash; no travel fees, raw footage included. Films from $1,200, photos from $1,400. See the venues we shoot across %s." % (city, region),
-        canon=canon, schema_html=schema_for(city.replace("&amp;","&") + ", " + state, canon, "City") + faq_schema))
+        desc="%s wedding videographers &amp; photographers with a local team &mdash; no travel fees, raw footage included. Films from $1,200, photos from $1,500. See the venues we shoot across %s." % (city, region),
+        canon=canon, schema_html=schema_for(city.replace("&amp;","&") + ", " + state, canon, "City") + faq_schema + metro_extra_schema(city, state, canon)))
 
 # ============ 50 STATE PAGES ============
 # state, abbr, [city1, city2, city3], character phrase

@@ -1,6 +1,11 @@
 // Lazo static site worker — serves the generated directory from R2,
 // and renders live couple wedding sites at /w/{slug} by hydrating the
 // couple's chosen template with their weddingSites doc. (v3)
+// JC-LAZO-WORKER-0929-GUESTPHOTOS-001: guests' photos from the day (guestphotos.js:
+//   POST/GET /api/w/{slug}/photos, GET /w/{slug}/photo/{id}.jpg, lazo-galleries
+//   bucket under guest/{slug}/). The payload gains heroPhoto / storyPhoto /
+//   coverFocus / siteGalleryFocus ({url, x, y, zoom}) and guestPhotosOn / Note;
+//   the share image prefers heroPhoto.
 // JC-LAZO-WORKER-0915-NEARBY-003: one branch per business (the closest), at most
 //   two of any one type per group, and a penalty for places Google itself
 //   describes as a chain. Cache key bumped to v3.
@@ -46,6 +51,12 @@ import { withGeo } from "./geo.js";
 import { geoResponse, trackerResponse, withTracker } from "./track.js";
 // JC-LAZO-PRINTS-0920-001: the print store (WHCC editor + Stripe)
 import { printsRoute } from "./prints.js";
+// JC-LAZO-WORKER-0929-GUESTPHOTOS-001: guests' photos from the day, into the
+// lazo-galleries bucket; couple's positioned photos (heroPhoto / storyPhoto /
+// siteGalleryFocus) ride into the payload below.
+import { guestPhotosRoute } from "./guestphotos.js";
+// JC-LAZO-WORKER-0929-LIVE-001: weather, translation, table cards, the DJ page
+import { weatherRoute, translateRoute, cardsPage, playlistPage } from "./sitefeatures.js";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -249,6 +260,15 @@ async function couplesSearch(url) {
   return new Response(JSON.stringify(hits), { headers });
 }
 
+// JC-LAZO-WORKER-0929-GUESTPHOTOS-001: a positioned photo, or null.
+function photoSlot(v) {
+  if (!v || typeof v !== "object") return null;
+  const num = (x, d, lo, hi) => (typeof x === "number" && isFinite(x)) ? Math.min(hi, Math.max(lo, x)) : d;
+  const out = { x: num(v.x, .5, 0, 1), y: num(v.y, .5, 0, 1), zoom: num(v.zoom, 1, 1, 3) };
+  if (typeof v.url === "string" && /^https:\/\//.test(v.url)) out.url = v.url;
+  return out;
+}
+
 async function renderCoupleSite(slug, env) {
   // 1. the couple's site doc
   const f = await fsDoc("weddingSites", slug);
@@ -296,6 +316,23 @@ async function renderCoupleSite(slug, env) {
     nearbyOn: g("nearbyOn") !== false,
     nearbyNote: g("nearbyNote") || "",
     nearbyPicks: g("nearbyPicks") || [],
+    // JC-LAZO-WORKER-0929-GUESTPHOTOS-001: photos where the couple put them.
+    // {url, x, y, zoom}: x/y 0..1 is the point that stays in view, zoom 1..3.
+    heroPhoto: photoSlot(g("heroPhoto")),
+    storyPhoto: photoSlot(g("storyPhoto")),
+    coverFocus: photoSlot(g("coverFocus")) || null,
+    siteGalleryFocus: (g("siteGalleryFocus") || []).map(photoSlot),
+    guestPhotosOn: g("guestPhotosOn") !== false,
+    guestPhotosNote: g("guestPhotosNote") || "",
+    // JC-LAZO-WORKER-0929-LIVE-001: the day hour by hour, seating lookup, meals
+    // on the RSVP form, the photographer's gallery, translation
+    timelineOn: g("timelineOn") !== false,
+    timeline: (g("timeline") || []).filter(m => m && typeof m === "object" && m.label).slice(0, 40)
+      .map(m => ({ time: String(m.time || ""), label: String(m.label || ""), note: String(m.note || ""), dur: Number(m.dur) || 0 })),
+    seatingOn: g("seatingOn") === true,
+    mealOptions: (g("mealOptions") || []).map(String).filter(Boolean).slice(0, 8),
+    galleryUrl: /^https:\/\//.test(String(g("galleryUrl") || "")) ? String(g("galleryUrl")) : "",
+    translateOn: g("translateOn") !== false,
   };
 
   const priv = !!payload.passcode;
@@ -315,7 +352,7 @@ async function renderCoupleSite(slug, env) {
   const desc = priv
     ? "A private celebration - the passcode is on the invitation."
     : [dateNice, payload.venueName, payload.venueAddress].filter(Boolean).join(" · ") || "Save the date - details, schedule and RSVP.";
-  const image = priv ? "" : (payload.coverUrl || (payload.siteGallery || [])[0] || "");
+  const image = priv ? "" : ((payload.heroPhoto && payload.heroPhoto.url) || payload.coverUrl || (payload.siteGallery || [])[0] || "");
   const pageUrl = `https://meetlazo.com/w/${encodeURIComponent(slug)}/`;
   let og = `<meta property="og:type" content="website">\n<meta property="og:site_name" content="Lazo">\n<meta property="og:title" content="${esc(title)}">\n<meta property="og:description" content="${esc(desc)}">\n<meta property="og:url" content="${pageUrl}">\n<meta name="description" content="${esc(desc)}">\n<link rel="canonical" href="${pageUrl}">\n`;
   if (image) og += `<meta property="og:image" content="${esc(image)}">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:image" content="${esc(image)}">\n`;
@@ -825,6 +862,17 @@ export default {
     if (bookMatch && req.method === "GET") return bookPage(bookMatch[1], url.searchParams.get("inq") || "", url.searchParams.get("type") || "");
     if (url.pathname === "/sitemap-couples.xml" && req.method === "GET") return couplesSitemap();
     if (url.pathname === "/api/couples" && req.method === "GET") return couplesSearch(url);
+    // JC-LAZO-WORKER-0929-GUESTPHOTOS-001
+    const gp = await guestPhotosRoute(url, req, env);
+    if (gp) return gp;
+    // JC-LAZO-WORKER-0929-LIVE-001
+    const wxMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/weather\/?$/);
+    if (wxMatch && req.method === "GET") return weatherRoute(wxMatch[1], env, venuePoint);
+    if (url.pathname === "/api/translate") return translateRoute(req, env);
+    const cardsMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/cards\/?$/);
+    if (cardsMatch && req.method === "GET") return cardsPage(cardsMatch[1]);
+    const plMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/playlist\/?$/);
+    if (plMatch && req.method === "GET") return playlistPage(plMatch[1]);
     const wMatch = url.pathname.match(/^\/w\/([a-z0-9\-]{1,80})\/?$/);
     if (wMatch && req.method === "GET") {
       const resp = await renderCoupleSite(wMatch[1], env);

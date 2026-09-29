@@ -118,6 +118,46 @@ NOINDEX_THIN = True            # thin pages get <meta name="robots" content="noi
 DIRECTORY_IN_SITEMAP = False   # False = sitemap-directory.xml is written but NOT listed in the index
 MIN_RICH_REVIEWS = 1           # reviews needed for a synthesized page to count as rich
 
+# ── EARNED TIER (Sep 28 2026) ────────────────────────────────────────
+# The Sep noindex sweep also removed every community page Google had
+# already chosen to rank: per the GSC Performance export (Jun 29–Sep 28)
+# 882 community pages earned 13.6K impressions and 50 of the site's 70
+# clicks, and every one of them was noindexed. A page Google has already
+# served in Search is treated as rich: index,follow + sitemap-rich.xml.
+# The list lives in gsc_earned_pages.txt (one slug per line); refresh it
+# from a new Performance -> Pages export whenever you like.
+EARNED_TIER = True
+
+# ── STAGED ROLLOUT (Sep 28 2026) ─────────────────────────────────────
+# Total community pages to index this build. Rich pages (reviews, curated,
+# enriched, earned) always count; the gap up to INDEX_TARGET is filled by
+# the deepest thin pages (Google details card > photo > city with its own
+# hub page > bigger city). Everything else stays noindex,follow.
+#
+# Raise this in steps and watch GSC after each one — the Aug 2026 mass
+# submission of ~18.5K thin pages cut impressions 96% in a week. Suggested
+# ladder: 1650 (rich + detail-card pages) -> ~3500 -> ~5500 -> ... only
+# while impressions keep rising; lower it again if they fall.
+INDEX_TARGET = 1650
+EARNED_PAGES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                 "gsc_earned_pages.txt")
+
+
+def load_earned_slugs():
+    """Slugs from gsc_earned_pages.txt (blank lines / # comments ignored)."""
+    if not EARNED_TIER or not os.path.exists(EARNED_PAGES_PATH):
+        return set()
+    out = set()
+    with open(EARNED_PAGES_PATH, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                slug = line.split("/")[-1]
+                if slug.endswith(".html"):
+                    slug = slug[:-5]
+                out.add(slug)
+    return out
+
 # enrich_pages.py runs AFTER this generator and injects a block into each
 # page. This generator rewrites every page nightly, which wipes that
 # block unless we carry it over from the previous build. Set these two
@@ -998,7 +1038,7 @@ def footer_html():
     return f"""<footer>
   <div class="wrap">
     <div class="foot">
-      <div><a href="{SITE_URL}/">leasereputation.com</a> &middot; <a href="{SITE_URL}/community/">All communities</a> &middot; <a href="{SITE_URL}/guides/tenant-rights/">Tenant rights</a> &middot; <a href="{SITE_URL}/privacy.html">Privacy</a> &middot; <a href="{SITE_URL}/terms.html">Terms</a></div>
+      <div><a href="{SITE_URL}/">leasereputation.com</a> &middot; <a href="{SITE_URL}/apartments/">Apartments by state</a> &middot; <a href="{SITE_URL}/community/">All communities</a> &middot; <a href="{SITE_URL}/management/">Management companies</a> &middot; <a href="{SITE_URL}/guides/">Renter guides</a> &middot; <a href="{SITE_URL}/guides/tenant-rights/">Tenant rights</a> &middot; <a href="{SITE_URL}/privacy.html">Privacy</a> &middot; <a href="{SITE_URL}/terms.html">Terms</a></div>
       <div>&copy; 2026 Lease Reputation LLC</div>
     </div>
     <p class="disclaimer">LeaseReputation is an independent review platform and is not affiliated with, endorsed by, or sponsored by any apartment community, property manager, or developer named on this page. Community names and trademarks are the property of their respective owners and are used here for identification and reference only. Reviews reflect the opinions of verified residents. Verified reviewers may receive a small thank-you gift (such as a $5 coffee card); gifts are the same for every verified reviewer and are never conditioned on the content or sentiment of a review. Community photos via Google.</p>
@@ -1027,9 +1067,12 @@ def community_page(c, related, live=None, city_pages=frozenset(), explore_html="
                     f'{"review" if live["reviewCount"] == 1 else "reviews"} on LeaseReputation. '
                     f'Reviews that can\'t be bought or buried.')
     else:
-        desc = (f'Read verified resident reviews for {c["name"]} in {c["city"]}, {c["state"]}. '
-                f'See its Reputation Score — built only from residents who actually lived there. '
-                f'Reviews that can\'t be bought or buried.')
+        # No reviews yet: say so. The old copy promised reviews the page
+        # didn't have — top-10 rankings with ~0.4% CTR and instant bounces.
+        desc = (f'{c["name"]} in {c["city"]}, {c["state"]}: no verified resident reviews yet — '
+                f'be the first. Address, neighborhood, nearby communities, and '
+                f'{STATE_NAMES.get(c["state"], c["state"])} tenant rights on LeaseReputation, '
+                f'where reviews can\'t be bought or buried.')
     canonical = f'{SITE_URL}/community/{slug}.html'
     crumbs_html, crumbs_schema = breadcrumbs(c, slug, city_pages)
 
@@ -1429,9 +1472,9 @@ HUB_TEMPLATE = HUB_TEMPLATE = """<!DOCTYPE html>
 @HEADER@
 <section class="hero">
   <div class="wrap">
-    <div class="eyebrow">Verified Resident Reviews</div>
-    <h1>Apartment reviews<br /><span class="accent">you can trust.</span></h1>
-    <p class="sub">@N@ apartment communities and growing — every score built only from verified residents who actually lived there. Find your building, read the honest take, add your own.</p>
+    <div class="eyebrow">@EYEBROW@</div>
+    <h1>@H1@</h1>
+    <p class="sub">@SUB@</p>
     <div class="cta-row"><a class="btn" href="@APP@">Open the app</a></div>
   </div>
 </section>
@@ -1459,49 +1502,82 @@ HUB_CSS = """
 """
 
 
-def hub_page(communities):
-    n = len(communities)
-    title = "Verified Apartment Reviews by Community | LeaseReputation"
-    desc = ("Browse " + str(n) + " apartment communities with verified resident "
-            "reviews on LeaseReputation. Reputation Scores built only from "
-            "residents who actually lived there — never sponsored, never for sale.")
-
-    # Group: state -> city -> [communities]; states ordered by community count.
+def _state_directory_sections(communities, city_pages, max_cities=8):
+    """One card per state: link to the state hub plus its biggest city
+    pages. Every community is still reachable in two hops (state hub ->
+    city group), but this page stays ~30 KB instead of 2.2 MB / 19K links."""
     states = {}
     for c in communities:
         states.setdefault(c["state"], {}).setdefault(c["city"], []).append(c)
-
-    sections = ""
-    for st in sorted(states, key=lambda s: -sum(len(v) for v in states[s].values())):
+    cards = ""
+    for st in sorted(states, key=lambda s: STATE_NAMES.get(s, s)):
         cities = states[st]
         count = sum(len(v) for v in cities.values())
         st_name = STATE_NAMES.get(st, st)
-        city_blocks = ""
-        for city in sorted(cities):
-            links = ""
-            for c in sorted(cities[city], key=lambda x: x["name"].lower()):
-                links += ('<a href="' + SITE_URL + '/community/'
-                          + slugify_entry(c) + '.html">' + esc(c["name"]) + '</a>')
-            city_blocks += ('<details class="citygroup"><summary>' + esc(city)
-                            + ' <span class="ccount">' + str(len(cities[city]))
-                            + '</span></summary><div class="citylinks">' + links
-                            + '</div></details>')
-        sections += ('<div class="card"><h2><a href="' + SITE_URL
-                     + '/apartments/' + st.lower()
-                     + '/" style="color:inherit;text-decoration:none">'
-                     + esc(st_name) + '</a> <span class="ccount">' + str(count)
-                     + ' communities</span></h2>' + city_blocks + '</div>')
+        hub = SITE_URL + "/apartments/" + st.lower() + "/"
+        chips = ""
+        shown = 0
+        for city in sorted(cities, key=lambda ct: -len(cities[ct])):
+            if shown >= max_cities:
+                break
+            if city_slug(city, st) not in city_pages:
+                continue
+            chips += ('<a href="' + SITE_URL + '/apartments/' + city_slug(city, st)
+                      + '/">' + esc(city) + ' <span class="ccount">'
+                      + str(len(cities[city])) + '</span></a>')
+            shown += 1
+        chips += ('<a href="' + hub + '">All ' + esc(st_name) + ' communities &rarr;</a>')
+        cards += ('<div class="card"><h2><a href="' + hub
+                  + '" style="color:inherit;text-decoration:none">Apartments in '
+                  + esc(st_name) + '</a> <span class="ccount">' + str(count)
+                  + ' communities</span></h2><div class="citylinks" '
+                  'style="padding-left:0">' + chips + '</div></div>')
+    return cards
 
+
+def _hub_shell(title, desc, canon, eyebrow, h1, sub, sections):
     out = HUB_TEMPLATE
     for token, val in [
         ("@TITLE@", esc(title)), ("@DESC@", esc(desc)),
-        ("@CANON@", SITE_URL + "/community/"), ("@SITE@", SITE_URL),
+        ("@CANON@", canon), ("@SITE@", SITE_URL),
         ("@CSS@", PAGE_CSS + HUB_CSS), ("@HEADER@", header_html()),
-        ("@N@", str(n)), ("@APP@", APP_URL),
+        ("@EYEBROW@", eyebrow), ("@H1@", h1), ("@SUB@", esc(sub)),
+        ("@APP@", APP_URL),
         ("@SECTIONS@", sections), ("@FOOTER@", footer_html()),
     ]:
         out = out.replace(token, val)
     return out
+
+
+def hub_page(communities, city_pages=frozenset()):
+    n = len(communities)
+    title = "Verified Apartment Reviews by Community | LeaseReputation"
+    desc = ("Browse " + "{:,}".format(n) + " apartment communities with verified resident "
+            "reviews on LeaseReputation, by state and city. Reputation Scores built only "
+            "from residents who actually lived there — never sponsored, never for sale.")
+    sub = ("{:,}".format(n) + " apartment communities and growing — every score built only "
+           "from verified residents who actually lived there. Pick your state, then "
+           "your city, and find your building.")
+    return _hub_shell(title, desc, SITE_URL + "/community/", "Verified Resident Reviews",
+                      'Apartment reviews<br /><span class="accent">you can trust.</span>',
+                      sub, _state_directory_sections(communities, city_pages))
+
+
+def apartments_index_page(communities, city_pages):
+    """/apartments/ — the state directory the nav and footer point at
+    (previously a 404)."""
+    n = len(communities)
+    n_states = len({c["state"] for c in communities})
+    title = "Apartments by State — Verified Resident Reviews | LeaseReputation"
+    desc = ("Find apartments in " + str(n_states) + " states with verified resident "
+            "reviews on LeaseReputation. " + "{:,}".format(n) + " communities, rated only "
+            "by residents who actually lived there — never for sale.")
+    sub = ("{:,}".format(n) + " communities across " + str(n_states)
+           + " states. Choose a state to see its cities, then compare communities "
+           "on verified-resident Reputation Scores.")
+    return _hub_shell(title, desc, SITE_URL + "/apartments/", "Apartment Directory",
+                      'Apartments<br /><span class="accent">by state.</span>',
+                      sub, _state_directory_sections(communities, city_pages))
 
 
 def explore_links_html(c, city_pages, state_city_chips):
@@ -1652,10 +1728,51 @@ def main():
         _state_city_chips[st].sort(key=lambda t: -t[2])
 
     written = []          # (slug, name)
-    sm_communities = []   # (loc, lastmod, rich) for the tiered sitemap
+    sm_communities = []   # (loc, lastmod, indexable) for the tiered sitemap
+    earned_slugs = load_earned_slugs()
     n_rich = 0
+    n_earned = 0
     n_enriched = 0
     n_details = 0
+
+    # ── Pass 1: content depth per community, so the staged rollout can
+    # pick the deepest thin pages before anything is written.
+    _imgdir = os.path.join(outdir, "images")
+    meta = []   # parallel to all_communities
+    for c in all_communities:
+        live = live_data.get(c.get("place_id", ""))
+        prev_path = os.path.join(outdir, f"{c['_slug']}.html")
+        enrich_html = carry_enrichment(prev_path, c["_slug"])
+        details_html = carry_details(prev_path)
+        earned = c["_slug"] in earned_slugs
+        # RICH = reviews / curated / enriched / earned. A Google photo alone
+        # is not unique content and does not qualify (that was the bug).
+        rich = bool((live and live["reviewCount"] >= MIN_RICH_REVIEWS)
+                    or c.get("_curated") or enrich_html or earned)
+        has_photo = (os.path.exists(os.path.join(_imgdir, f"{c['_slug']}.jpg"))
+                     or (c.get("place_id") and os.path.exists(
+                         os.path.join(_imgdir, f"{c['place_id']}.jpg"))))
+        n_city = len(by_city.get((c["city"].lower(), c["state"]), []))
+        depth = ((2 if details_html else 0) + (1 if has_photo else 0)
+                 + (1 if city_slug(c["city"], c["state"]) in city_pages_set else 0)
+                 + min(n_city, 50) / 100.0)
+        meta.append({"live": live, "enrich": enrich_html, "details": details_html,
+                     "earned": earned, "rich": rich, "depth": depth,
+                     "staged": False})
+        n_rich += rich
+        n_earned += earned
+        n_enriched += bool(enrich_html)
+        n_details += bool(details_html)
+
+    # Staged pick: fill INDEX_TARGET - rich with the deepest thin pages.
+    gap = max(0, INDEX_TARGET - n_rich) if NOINDEX_THIN else 0
+    thin_idx = [i for i, m in enumerate(meta) if not m["rich"]]
+    thin_idx.sort(key=lambda i: (-meta[i]["depth"], all_communities[i]["_slug"]))
+    for i in thin_idx[:gap]:
+        meta[i]["staged"] = True
+    n_staged = sum(1 for m in meta if m["staged"])
+
+    # ── Pass 2: write pages.
     for i, c in enumerate(all_communities):
         # related = same city first, then same-state ring neighbors, up to 4
         key = (c["city"].lower(), c["state"])
@@ -1668,27 +1785,15 @@ def main():
                 if cand is not c and cand not in related:
                     related.append(cand)
                 step += 1
-        live = live_data.get(c.get("place_id", ""))
+        m = meta[i]
+        live = m["live"]
         explore = explore_links_html(c, city_pages_set,
                                      _state_city_chips.get(c["state"], []))
-        # Carry enrich_pages.py output across the rebuild (see ENRICH_START).
-        prev_path = os.path.join(outdir, f"{c['_slug']}.html")
-        enrich_html = carry_enrichment(prev_path, c["_slug"])
-        details_html = carry_details(prev_path)
-        if enrich_html:
-            n_enriched += 1
-        if details_html:
-            n_details += 1
-        # RICH = reviews / curated / enriched. A Google photo alone is not
-        # unique content and no longer qualifies (that was the bug).
-        rich = bool((live and live["reviewCount"] >= MIN_RICH_REVIEWS)
-                    or c.get("_curated") or enrich_html)
-        if rich:
-            n_rich += 1
+        indexable = bool(m["rich"] or m["staged"] or not NOINDEX_THIN)
         slug, html_out = community_page(c, related, live, city_pages_set, explore,
-                                        enrich_html=enrich_html,
-                                        details_html=details_html,
-                                        indexable=(rich or not NOINDEX_THIN),
+                                        enrich_html=m["enrich"],
+                                        details_html=m["details"],
+                                        indexable=indexable,
                                         n_in_city=len(by_city.get(key, [])))
         path = os.path.join(outdir, f"{slug}.html")
         with open(path, "w", encoding="utf-8") as f:
@@ -1697,15 +1802,18 @@ def main():
         lastmod = ""
         if live:
             lastmod = live["latestReview"] or live["docUpdated"]
-        sm_communities.append((f"{SITE_URL}/community/{slug}.html", lastmod, rich))
+        sm_communities.append((f"{SITE_URL}/community/{slug}.html", lastmod, indexable))
         print(f"  + community/{slug}.html — {c['name']}")
     print(f"  - rich tier: {n_rich} of {len(all_communities)} communities "
-          f"({n_enriched} curated/enriched, {n_details} with Google details cards)"
-          + ("; thin pages are noindex,follow" if NOINDEX_THIN else ""))
+          f"({n_enriched} curated/enriched, {n_earned} earned via GSC, "
+          f"{n_details} with Google details cards)")
+    print(f"  - staged rollout: INDEX_TARGET={INDEX_TARGET} -> {n_rich} rich + "
+          f"{n_staged} staged thin = {n_rich + n_staged} indexable; "
+          f"{len(all_communities) - n_rich - n_staged} remain noindex,follow")
 
     # hub
     with open(os.path.join(outdir, "index.html"), "w", encoding="utf-8") as f:
-        f.write(hub_page(all_communities))
+        f.write(hub_page(all_communities, city_pages_set))
     print(f"  + community/index.html (hub, {len(all_communities)} communities)")
 
     base = os.path.dirname(os.path.abspath(__file__))
@@ -1770,6 +1878,10 @@ def main():
         extra_urls.append(canon)
         n_state += 1
     print(f"  + {n_state} state hub pages (apartments/{{st}}/)")
+    with open(os.path.join(citydir, "index.html"), "w", encoding="utf-8") as f:
+        f.write(apartments_index_page(all_communities, city_pages_set))
+    extra_urls.append(SITE_URL + "/apartments/")
+    print("  + apartments/index.html (state directory)")
 
     # ── BRAND / MANAGEMENT PAGES: /management/{brand}/ ──
     branddir = os.path.join(base, "management")
@@ -1876,7 +1988,7 @@ def write_sitemap(sm_communities, extra_urls=None):
     today = datetime.date.today().isoformat()
     core = ["", "privacy.html", "terms.html", "cookies.html",
             "community-guidelines.html", "contact.html", "accessibility.html",
-            "community/"]
+            "community/", "guides/"]
 
     rich, directory = [], []
     for p in core:
@@ -1891,6 +2003,12 @@ def write_sitemap(sm_communities, extra_urls=None):
             if os.path.exists(os.path.join(_tr_dir, st, "index.html")):
                 rich.append(_url_tag(f"{SITE_URL}/guides/tenant-rights/{st}/",
                                      "", "monthly"))
+    # Article guides (build_guides.py output): guides/<slug>.html
+    _g_dir = os.path.join(base, "guides")
+    if os.path.isdir(_g_dir):
+        for fn in sorted(os.listdir(_g_dir)):
+            if fn.endswith(".html") and fn != "index.html":
+                rich.append(_url_tag(f"{SITE_URL}/guides/{fn}", "", "monthly"))
     for loc in (extra_urls or []):
         rich.append(_url_tag(loc, "", "weekly"))
     for loc, lastmod, is_rich in sm_communities:

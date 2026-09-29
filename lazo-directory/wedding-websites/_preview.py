@@ -21,9 +21,17 @@ payload = {
     "transport": "A shuttle runs from the inn every half hour from 3:30", "parking": "Lot behind the barn",
     "travelNotes": "The road in is gravel for the last mile.",
     "registryLinks": [{"label": "Crate & Barrel", "url": "https://www.crateandbarrel.com"}], "registryNote": "",
-    "rsvpBy": "May 1, 2027", "vendorTeam": [{"category": "Photographer", "name": "Atavia Weddings"}],
+    "rsvpBy": "May 1, 2027", "vendorTeam": [{"category": "Photographer", "name": "Atavia Weddings", "vendorId": "ChIJdemo", "url": "https://meetlazo.com/phoenix/wedding-photographers/atavia-weddings/"}, {"category": "Venue", "name": "The Orchard House"}],
     "siteGallery": [f"{U}1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=74", f"{U}1473116763249-2faaef81ccda?auto=format&fit=crop&w=900&q=74", f"{U}1505142468610-359e7d316be0?auto=format&fit=crop&w=900&q=74"],
     "passcode": "", "rsvpOpen": True, "coverUrl": "", "palette": "",
+    # JC-LAZO-WWS-0929-PHOTOS: positioned photos + the guests' wall (add ?photos=1 to the preview URL to see it before the date)
+    "heroPhoto": {"url": f"{U}1519741497674-611481863552?auto=format&fit=crop&w=1900&q=74", "x": 0.5, "y": 0.35, "zoom": 1.3},
+    "storyPhoto": {"url": f"{U}1522673607200-164d1b6ce486?auto=format&fit=crop&w=1000&q=74", "x": 0.6, "y": 0.4, "zoom": 1.0},
+    "siteGalleryFocus": [{"x": 0.5, "y": 0.2, "zoom": 1.6}, {"x": 0.5, "y": 0.5, "zoom": 1.0}, {"x": 0.3, "y": 0.5, "zoom": 1.2}],
+    "guestPhotosOn": True, "guestPhotosNote": "",
+    # JC-LAZO-WWS-0929-LIVE
+    "timelineOn": True, "timeline": [{"time": "16:00", "label": "Guests arrive", "note": "Cold drinks on the porch", "dur": 30}, {"time": "16:30", "label": "Ceremony", "note": "", "dur": 30}, {"time": "17:15", "label": "Cocktail hour", "note": "", "dur": 75}, {"time": "18:30", "label": "Dinner", "note": "", "dur": 90}, {"time": "20:00", "label": "First dance, then everyone", "note": "", "dur": 150}, {"time": "22:30", "label": "Send-off", "note": "Sparklers by the barn", "dur": 15}],
+    "seatingOn": True, "mealOptions": ["Chicken", "Salmon", "Garden risotto"], "galleryUrl": "https://meetlazo.com/g/sarah-and-mike", "translateOn": True,
     "song": {"title": "Perfect", "artist": "Ed Sheeran", "art": "", "trackId": "", "autoplay": True,
              "src": ("https://meetlazo.com/music/preview?u=" + urllib.parse.quote(src, safe="")) if src else ""} if src else None,
 }

@@ -199,7 +199,7 @@ def payment_nudge(api_key, booking, pay_url=None):
                  f"One step left to reserve {booking['event_date']}", html)
 
 
-def card_recovery(api_key, lead, resume_url, second=False):
+def card_recovery(api_key, lead, resume_url, second=False, code=None):
     """Couple filled the booking form but closed the card window. Sent from
     the daily scheduler (first the morning after, then once more 3 days on)."""
     first = (lead.get("client_names") or "there").split("&")[0].strip().split()[0]
@@ -219,6 +219,17 @@ def card_recovery(api_key, lead, resume_url, second=False):
                    f"<p>If plans changed, no problem at all. If you\u2019d still like the "
                    f"date, it takes about two minutes to finish.</p>")
         subject = f"Still want {date}?" if date else "Still want your date?"
+        if code:   # JC-ATV-NUDGE-0928
+            from datetime import datetime as _dt
+            try:
+                exp = _dt.fromisoformat(code["expires_at"]).strftime("%A, %B %d")
+            except Exception:
+                exp = "3 days"
+            lead_in += (f"<p>To make it easy: code <b>{code['code']}</b> takes "
+                        f"<b>${code['amount']}</b> off any collection if you finish before "
+                        f"<b>{exp}</b>. It is already applied on the link below.</p>")
+            subject = (f"${code['amount']} off {date} — this week only" if date
+                       else f"${code['amount']} off your date — this week only")
     html = f"""
     <div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">
       <h1 style="font-weight:normal;letter-spacing:2px">ATAVIA WEDDINGS</h1>
@@ -271,6 +282,43 @@ def balance_receipt(api_key, booking, amount):
                  f"Payment received — {booking.get('event_date','')}", html)
 
 
+def balance_heads_up(api_key, booking, amount, when="tomorrow morning"):
+    """Sent by charge_balances the run before a card-on-file balance falls
+    due. The welcome email named the date weeks ago; this is the reminder so
+    the charge never surprises anyone, and it gives an expired card a day to
+    be swapped before it declines."""
+    first = booking["client_names"].split("&")[0].strip().split()[0]
+    card = (f"your {booking.get('card_brand','card')} "
+            f"\u2022\u2022\u2022\u2022{booking['card_last4']}"
+            if booking.get("card_last4") else "the card on file")
+    html = f"""
+    <div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">
+      <h1 style="font-weight:normal;letter-spacing:2px">ATAVIA WEDDINGS</h1>
+      <p>Hi {first},</p>
+      <p>A quick heads-up: <b>{when}</b> we'll charge your remaining balance of
+      <b>${amount:,.2f}</b> to {card}, exactly as scheduled in your agreement.
+      Once it goes through, your package is paid in full and you'll get a
+      receipt from us.</p>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0">
+        <tr><td style="padding:3px 14px 3px 0;color:#6B6B6B;font-size:12px">Package</td>
+            <td style="padding:3px 0;font-size:13px">{booking.get('package_name','')}</td></tr>
+        <tr><td style="padding:3px 14px 3px 0;color:#6B6B6B;font-size:12px">Wedding date</td>
+            <td style="padding:3px 0;font-size:13px">{booking.get('event_date','')}</td></tr>
+        <tr><td style="padding:3px 14px 3px 0;color:#6B6B6B;font-size:12px">Amount</td>
+            <td style="padding:3px 0;font-size:13px">${amount:,.2f}</td></tr>
+      </table>
+      <p><b>Nothing for you to do</b> &mdash; unless that card has changed or
+      you'd rather use a different one. If so, just reply to this email today
+      and we'll sort it out before the charge runs.</p>
+      <p>It will appear on your statement as <b>Atavia Weddings</b>.</p>
+      <p style="color:#B0713F">&mdash; The Atavia Weddings Team<br>
+      (336) 537-9590 &middot; ataviaweddings.com</p>
+    </div>"""
+    return _send(api_key, booking["email"],
+                 f"Heads-up: your balance is scheduled for {when} "
+                 f"\u2014 {booking.get('event_date','')}", html)
+
+
 def balance_charge_failed(api_key, booking, amount, attempt, max_attempts,
                           pay_url=None):
     """The scheduled balance charge was declined.
@@ -319,3 +367,40 @@ def balance_charge_failed(api_key, booking, amount, attempt, max_attempts,
     return _send(api_key, booking["email"],
                  f"We couldn't process your balance payment — "
                  f"{booking.get('event_date','')}", html)
+
+
+def lazo_invite(api_key, booking):
+    """JC-LZ-INVITE-0928: one-time recommendation of Lazo (free planning tool)
+    to a booked couple, sent by charge_balances a few days after booking.
+    Marketing, not transactional: unsubscribe link + List-Unsubscribe header
+    and the postal address in the footer."""
+    first = booking["client_names"].split("&")[0].strip().split()[0]
+    link = "https://meetlazo.com/?utm_source=atavia&utm_medium=email&utm_campaign=couples-invite"
+    unsub = "mailto:info@ataviaweddings.com?subject=unsubscribe"
+    html = f"""
+    <div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">
+      <h1 style="font-weight:normal;letter-spacing:2px">ATAVIA WEDDINGS</h1>
+      <p>Hi {first},</p>
+      <p>A quick one from us, not about your photos or film.</p>
+      <p>The tool we use with our couples to keep the wedding day organized &mdash; the
+      timeline, the vendor list, who needs to be where and when &mdash; is called
+      <b>Lazo</b>. It is free, and when your planner, your venue and we are all looking
+      at the same plan, the day runs the way you pictured it.</p>
+      <p style="text-align:center;margin:26px 0">
+        <a href="{link}" style="background:#B0713F;color:#FAF7F2;padding:14px 30px;
+        text-decoration:none;letter-spacing:2px;font-family:Arial,sans-serif;
+        font-size:13px">TRY LAZO, IT&rsquo;S FREE</a></p>
+      <p>If your planning is already sorted, ignore this with our blessing. Nothing about
+      your booking changes either way.</p>
+      <p style="color:#B0713F">&mdash; Lauren McKinnon<br>Atavia Weddings · (336) 537-9590 · ataviaweddings.com</p>
+      <p style="font-size:11px;color:#8a8580;margin-top:30px">You are receiving this
+      because you booked with Atavia Weddings. 1095 Sugarview Dr Ste 100, Sheridan, WY 82801.
+      <a href="{unsub}" style="color:#8a8580">Unsubscribe</a> from notes like this one.</p>
+    </div>"""
+    r = requests.post(API, json={
+        "from": FROM, "to": [booking["email"]], "reply_to": "info@ataviaweddings.com",
+        "subject": "The free planning tool we use with our couples",
+        "html": html, "headers": {"List-Unsubscribe": f"<{unsub}>"},
+    }, headers={"Authorization": f"Bearer {api_key}"}, timeout=30)
+    r.raise_for_status()
+    return r.json()

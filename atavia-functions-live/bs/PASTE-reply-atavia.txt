@@ -1,0 +1,61 @@
+cd ~/bs && cat > patch_reply_inquiry.py <<'PATCH_EOF'
+#!/usr/bin/env python3
+"""JC-ATV-REPLY-0928: "Write back" from the Leads page. admin_action gains a reply_inquiry action that emails the
+couple from the brand address (Resend, same sender as every other email) and records the message on the inquiry.
+
+Works for both brands. Run from the functions folder (Atavia: ~/bs, Elizabeth Scott: ~/es-deploy/functions):
+  python3 patch_reply_inquiry.py
+then redeploy admin_action (no trigger/secrets flags, so the secrets it has stay as they are):
+  gcloud functions deploy admin_action --gen2 --region=us-central1 --runtime=python312 --source=. --entry-point=admin_action
+
+Anchor-and-assert: nothing is written unless the anchor is found exactly once.
+"""
+import pathlib, sys
+
+ROOT = pathlib.Path(__file__).resolve().parent
+ANCHOR = '''    booking_id = str(data.get("booking_id") or "")
+    ref = db.collection("bookings").document(booking_id)
+    snap = ref.get()'''
+NEW = '''    if action == "reply_inquiry":   # JC-ATV-REPLY-0928: "Write back" on the Leads page
+        import html as _html
+        iref = db.collection("inquiries").document(str(data.get("inquiry_id") or ""))
+        isnap = iref.get()
+        if not isnap.exists:
+            return _json(req, {"error": "inquiry not found"}, 404)
+        inq = isnap.to_dict() or {}
+        to = str(inq.get("email") or "").strip()
+        subject = str(data.get("subject") or "").strip()[:200]
+        body = str(data.get("body") or "").strip()[:5000]
+        if not to or "@" not in to:
+            return _json(req, {"error": "this inquiry has no email address"}, 400)
+        if not subject or not body:
+            return _json(req, {"error": "subject and message are required"}, 400)
+        paras = [p.strip() for p in body.replace("\\r", "").split("\\n\\n") if p.strip()]
+        html_body = "".join("<p style=\\"margin:0 0 16px\\">%s</p>" % _html.escape(p).replace("\\n", "<br>") for p in paras)
+        html_doc = ("<div style=\\"font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#2B2B2B;max-width:560px\\">"
+                    + html_body + "</div>")
+        try:
+            emails._send(RESEND_API_KEY.value, to, subject, html_doc)
+        except Exception as e:
+            print(f"reply_inquiry send failed: {e}")
+            return _json(req, {"error": "the email service refused the message; try again in a minute"}, 502)
+        entry = {"at": now.isoformat(), "by": who, "subject": subject, "body": body, "to": to}
+        iref.update({"replies": firestore.ArrayUnion([entry]), "last_reply_at": now,
+                     "status": "contacted", "status_at": now})
+        return _json(req, {"ok": True, "sent_to": to})
+
+''' + ANCHOR
+
+p = ROOT / "main.py"
+src = p.read_text(encoding="utf-8")
+if "JC-ATV-REPLY-0928" in src:
+    print("already applied"); sys.exit(0)
+if src.count(ANCHOR) != 1:
+    print("anchor found %d times, expected 1 - nothing written" % src.count(ANCHOR)); sys.exit(1)
+if "def _send(" not in (ROOT / "lib" / "emails.py").read_text(encoding="utf-8"):
+    print("lib/emails.py has no _send() - nothing written"); sys.exit(1)
+(ROOT / "main.py.bak-reply0928").write_text(src, encoding="utf-8", newline="")
+p.write_text(src.replace(ANCHOR, NEW), encoding="utf-8", newline="")
+print("main.py patched (backup main.py.bak-reply0928)")
+PATCH_EOF
+python3 patch_reply_inquiry.py && gcloud functions deploy admin_action --gen2 --region=us-central1 --runtime=python312 --source=. --entry-point=admin_action

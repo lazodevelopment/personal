@@ -729,6 +729,13 @@ function detail(r){
   ${r._past && r.status==="confirmed" ? productionPanel(r) : ""}
   ${notesPanel(r)}
   <div class="zone">
+    ${r.marketing_optout
+      ? `<button class="btn ghost" data-act="optin" data-id="${r.id}">Opt back in to notes</button>
+         <span class="hint">Opted out — this couple gets booking emails only (receipts, questionnaire, reminders), never optional notes like the Lazo recommendation.</span>`
+      : `<button class="btn ghost" data-act="optout" data-id="${r.id}">Opt out of notes</button>
+         <span class="hint">Use when a couple replies "unsubscribe". Booking emails still go; optional notes (the Lazo recommendation) stop.</span>`}
+  </div>
+  <div class="zone">
     ${r.status!=="cancelled"&&!r.test_mode?`<button class="btn danger" data-act="cancel" data-id="${r.id}">Cancel booking</button>`:""}
     ${r.test_mode
       ? `<button class="btn ghost" data-act="untest" data-id="${r.id}">Mark as real booking</button>
@@ -976,7 +983,12 @@ document.addEventListener("click", async e => {
   const id = b.dataset.id, act = b.dataset.act, rec = RAW.find(x=>x.id===id); if (!rec) return;
   const name = rec.client_names || id;
   try {
-    if (act==="test" || act==="untest") {
+    if (act==="optout" || act==="optin") {   // JC-LZ-INVITE-0928: marketing opt-out (honours "unsubscribe" replies)
+      const v = act==="optout";
+      if (DEMO) rec.marketing_optout = v; else await updateDoc(doc(db,"bookings",id), { marketing_optout: v });
+      toast(v ? `${name} opted out of notes` : `${name} opted back in`);
+      if (DEMO) render();
+    } else if (act==="test" || act==="untest") {
       const v = act==="test";
       if (DEMO) rec.test_mode = v; else await updateDoc(doc(db,"bookings",id), { test_mode: v });
       toast(v ? `${name} marked as test` : `${name} marked as real`);

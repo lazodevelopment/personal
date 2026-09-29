@@ -162,6 +162,14 @@ td.when{white-space:nowrap}
 .sub{color:var(--dim);font-size:0.78125rem;margin-top:0.125rem}
 .mini{display:flex;gap:0.375rem;flex-wrap:wrap}
 .mini .btn{padding:0.375rem 0.6875rem;font-size:0.75rem}
+tr.compose td{padding:0 0.625rem 1rem}
+.composebox{background:rgba(27,26,24,.55);border:1px solid var(--line);border-radius:12px;padding:0.875rem 1rem}
+.composebox input,.composebox textarea{display:block;width:100%;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:8px;color:var(--cream);font:inherit;font-size:0.84375rem;padding:0.5rem 0.625rem;margin-top:0.375rem}
+.composebox textarea{line-height:1.5;resize:vertical;white-space:pre-wrap}
+.composebox input:focus,.composebox textarea:focus{outline:none;border-color:var(--copper)}
+.hist{margin-top:0.75rem;border-top:1px solid var(--line);padding-top:0.5rem}
+.histrow{padding:0.375rem 0}
+.histbody{color:var(--grey);font-size:0.8125rem;white-space:pre-wrap;margin-top:0.25rem}
 .codeform{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:0.625rem;align-items:end;padding:0.375rem 1.25rem 1rem}
 .codeform .btn{height:2.3125rem}
 .paste{margin:0 1.25rem 1rem;padding:0.75rem 0.875rem;border-radius:10px;background:rgba(27,26,24,.5);border:1px solid var(--line);font-size:0.8125rem;color:var(--cream);line-height:1.5;display:none}
@@ -208,7 +216,7 @@ td.when{white-space:nowrap}
 
     <section class="sec glass" id="leadSec">
       <div class="top"><h2>Started booking <small id="leadCount"></small></h2><span class="sub">Couples who reached the card step on /book/ — the pipeline nudges them at day 1 and 3</span></div>
-      <table><thead><tr><th>Who</th><th>Wedding</th><th>Package</th><th>Attribution</th><th>Started</th><th>Status</th><th></th></tr></thead><tbody id="leadRows"><tr><td colspan="7" class="state">Loading…</td></tr></tbody></table>
+      <table><thead><tr><th>Who</th><th>Wedding</th><th>Package</th><th>Source</th><th>Started</th><th>Status</th><th></th></tr></thead><tbody id="leadRows"><tr><td colspan="7" class="state">Loading…</td></tr></tbody></table>
     </section>
 
     <section class="sec glass" id="codeSec">
@@ -249,6 +257,42 @@ const DEMO = new URLSearchParams(location.search).has("demo");
 
 let auth, db, INQ = [], LEADS = [], BOOK = [], CODES = [], RANGE = 90, INQ_TAB = "open", SHOW_EXPIRED = false;
 
+/* ====== write back (JC-ATV-REPLY-0928) ====== */
+const REPLY_SIG = "Lauren McKinnon\nAtavia Weddings · (336) 537-9590 · ataviaweddings.com";
+const REPLY_BRAND = "Atavia Weddings";
+let REPLY_OPEN = null; const DRAFT = {};   // drafts survive the re-render that every Firestore update triggers
+const replyLine = i => {
+  const n = (i.replies||[]).length, auto = ts(i.auto_replied_at), last = n ? ts(i.replies[n-1].at) : null;
+  if (!auto && !n) return "";
+  const parts = []; if (auto) parts.push(`auto-replied ${ago(auto)}${i.auto_code?` · ${esc(i.auto_code)}`:""}`); if (n) parts.push(`${n} repl${n===1?"y":"ies"} · last ${ago(last)}`);
+  return `<div class="sub" style="white-space:normal;max-width:none">${parts.join(" · ")}</div>`;
+};
+const composeRow = i => {
+  const first = (i.first_name||"").trim() || "there", when = i.event_date_raw ? fmtD(new Date(i.event_date_raw+"T00:00:00")) : "";
+  const d = DRAFT[i.id] || { subject: (when ? `Your wedding on ${when}` : "Your wedding") + ` — ${REPLY_BRAND}`, body: `Hi ${first},\n\n\n\n${REPLY_SIG}` };
+  const hist = [...(i.auto_replied_at ? [{at:i.auto_replied_at, by:"automatic reply", subject:i.auto_code?`with code ${i.auto_code}`:"", body:""}] : []), ...(i.replies||[])];
+  return `<tr class="compose"><td colspan="7">
+    <div class="composebox">
+      <div class="sub" style="white-space:normal;max-width:none;margin-bottom:.5rem">To <b style="color:var(--cream);font-weight:400">${esc(i.email)}</b> · sent from ${esc(REPLY_BRAND)}'s address; their answer lands in the inbox as usual.</div>
+      <input id="rSubj" data-draft="${i.id}" data-field="subject" value="${esc(d.subject)}" placeholder="Subject">
+      <textarea id="rBody" data-draft="${i.id}" data-field="body" rows="9" placeholder="Message">${esc(d.body)}</textarea>
+      <div class="mini" style="margin-top:.5rem;align-items:center"><button class="btn" data-send="${i.id}">Send email</button><button class="btn ghost" data-reply="${i.id}">Cancel</button></div>
+      ${hist.length?`<div class="hist">${hist.map(h=>`<div class="histrow"><span class="sub">${fmtD(ts(h.at))} · ${esc(h.by||"")}${h.subject?` · ${esc(h.subject)}`:""}</span>${h.body?`<div class="histbody">${esc(h.body)}</div>`:""}</div>`).join("")}</div>`:""}
+    </div></td></tr>`;
+};
+document.addEventListener("input", e => { const el = e.target.closest("[data-draft]"); if (!el) return; const d = DRAFT[el.dataset.draft] = DRAFT[el.dataset.draft] || { subject: $("#rSubj").value, body: $("#rBody").value }; d[el.dataset.field] = el.value; });
+async function sendReply(id, btn) {
+  const i = INQ.find(x=>x.id===id); if (!i) return;
+  const subject = $("#rSubj").value.trim(), body = $("#rBody").value.trim();
+  if (!subject || !body) { toast("Subject and message are required"); return; }
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    if (DEMO) { i.replies = [...(i.replies||[]), { at:new Date(), by:"you", subject, body, to:i.email }]; i.status = "contacted"; }
+    else await callAdmin({ action:"reply_inquiry", inquiry_id:id, subject, body });
+    delete DRAFT[id]; REPLY_OPEN = null; toast(`Sent to ${i.email}`); render();
+  } catch (err) { toast("Couldn't send: " + err.message); btn.disabled = false; btn.textContent = "Send email"; }
+}
+
 /* ====== auth ====== */
 function showGateErr(m){ const el=$("#gateErr"); el.textContent=m; el.style.display="block"; }
 function setLive(on){ $("#live").classList.toggle("off",!on); $("#liveTxt").textContent = on ? "Live" : "Offline"; }
@@ -277,6 +321,31 @@ async function callAdmin(payload){
 
 /* ====== matching + funnel ====== */
 const norm = e => String(e||"").trim().toLowerCase();
+/* JC-ATV-ATTR-0927: where a booking start came from. Leads and bookings both carry attr_landing (path + query
+   as first seen, so utm_* and fbclid survive), attr_referrer and attr_venue. Older rows have none -> "untracked". */
+const attrOf = x => {
+  x = x || {};
+  const landing = String(x.attr_landing||""), ref = String(x.attr_referrer||"");
+  let utm = "", camp = "";
+  try { const q = new URLSearchParams(landing.split("?")[1]||""); utm = (q.get("utm_source")||"").toLowerCase(); camp = q.get("utm_campaign")||""; if (!utm && q.get("fbclid")) utm = "facebook/instagram"; } catch {}
+  const host = (() => { if (!ref || ref === "direct") return ""; try { return new URL(ref).hostname.replace(/^www\./,""); } catch { return ref.toLowerCase(); } })();
+  let src;
+  if (utm) src = ({ig:"instagram", fb:"facebook", msg:"messenger", an:"audience network"})[utm] || utm;
+  else if (/instagram|facebook|fb\.com|fbcdn/.test(host)) src = "instagram / facebook";
+  else if (/google\./.test(host)) src = "google";
+  else if (/bing\.|duckduckgo|yahoo\.|ecosia/.test(host)) src = "other search";
+  else if (/theknot|zola|weddingwire|meetlazo/.test(host)) src = host.replace(/\.com$/,"");
+  else if (/ataviaweddings\.com/.test(host)) src = "direct";
+  else if (host) src = host;
+  else if (landing || x.attr_venue) src = "direct";
+  else src = "untracked";
+  const path = landing.split("?")[0];
+  const page = !landing && !x.attr_venue ? "untracked" : x.attr_venue ? "venue page" : (!path || path === "/") ? "home"
+    : path.startsWith("/venues/") ? "venue page" : /wedding-videographer/.test(path) ? "city page" : path.startsWith("/blog") ? "blog"
+    : path.startsWith("/guides") ? "guides" : path.replace(/^\/|\/$/g,"");
+  return { src: camp ? `${src} · ${camp}` : src, page, host, tracked: !!(landing || ref || x.attr_venue) };
+};
+const attrRow = l => attrOf((l.attr_landing || l.attr_referrer) ? l : (l._b && (l._b.attr_landing || l._b.attr_referrer)) ? l._b : l);
 function render(){
   const now = new Date(), since = RANGE ? new Date(now - RANGE*864e5) : new Date(0);
   const inRange = x => { const d = ts(x.created_at); return d && d >= since; };
@@ -303,13 +372,21 @@ function render(){
   const pk = {}; for (const i of inqs) { const k = (i.package||"not chosen").split("—")[0].trim(); pk[k]=pk[k]||0; pk[k]++; }
   for (const l of leads) { const k = (l.package_name||"?").trim(); pk[k]=pk[k]||0; pk[k]++; }
   const pkTop = Object.entries(pk).sort((a,b)=>b[1]-a[1]).slice(0,8), pkMax = Math.max(1,...pkTop.map(x=>x[1]));
-  const attr = {}; for (const l of leads) { const k = l.attr_venue ? "venue page" : "direct / other"; attr[k]=attr[k]||{n:0,c:0}; attr[k].n++; if (l._st!=="open"&&l._st!=="abandoned") attr[k].c++; }
+  const attrRows = [...leads, ...books.filter(b=>!byEmail[norm(b.email)]).map(b=>({...b,_b:b,_st:b.status==="confirmed"?"booked":b.signed_at?"signed":"converted"}))];
+  const bySrc = {}, byPage = {};
+  for (const l of attrRows) { const a = attrRow(l), conv = l._st!=="open"&&l._st!=="abandoned";
+    bySrc[a.src]=bySrc[a.src]||{n:0,c:0}; bySrc[a.src].n++; if (conv) bySrc[a.src].c++;
+    byPage[a.page]=byPage[a.page]||{n:0,c:0}; byPage[a.page].n++; if (conv) byPage[a.page].c++; }
+  const attrList = o => Object.entries(o).sort((a,b)=>b[1].n-a[1].n).map(([k,v])=>`<li><span>${esc(k)}<div class="track" style="width:${v.n/Math.max(1,attrRows.length)*100}%"></div></span><b>${v.n}</b><i>${v.c} converted</i></li>`).join("")||"<li>None in range.</li>";
+  const untracked = attrRows.filter(l=>!attrRow(l).tracked).length;
   $("#funnel").innerHTML = `<div class="top"><div><h2>Funnel <small style="font-family:'Lato';font-size:.75rem;color:var(--dim);margin-left:.5rem">${RANGE?`last ${RANGE} days`:"all time"}</small></h2></div>
     <div class="chips">${[[30,"30 days"],[90,"90 days"],[365,"12 months"],[0,"All time"]].map(([v,l])=>`<button class="chip${RANGE===v?" on":""}" data-range="${v}">${l}</button>`).join("")}</div></div>
     <div class="steps">${steps.map(([l,v,sub,prev],i)=>`<div class="step"><div class="v">${v}</div><div class="l">${l}</div><div class="c">${prev?`${prev?Math.round(v/prev*100):0}% of previous`:"&nbsp;"}</div><div class="barw"><i style="width:${v/max*100}%"></i></div><div class="sub">${sub}</div></div>`).join("")}</div>
     <div class="srcs">
       <div><h3>Where inquiries say they found you</h3><ul class="pages">${srcTop.length?srcTop.map(([k,v])=>`<li><span>${esc(k)}<div class="track" style="width:${v.n/inqs.length*100}%"></div></span><b>${v.n}</b><i>${v.booked?`${v.booked} booked`:"—"}</i></li>`).join(""):"<li>No inquiries in range.</li>"}</ul>
-        <h3 style="margin-top:1rem">Booking starts by attribution</h3><ul class="pages">${Object.entries(attr).map(([k,v])=>`<li><span>${esc(k)}</span><b>${v.n}</b><i>${v.c} converted</i></li>`).join("")||"<li>None in range.</li>"}</ul></div>
+        <h3 style="margin-top:1rem">Booking starts by source</h3><ul class="pages">${attrList(bySrc)}</ul>
+        <h3 style="margin-top:1rem">Booking starts by landing page</h3><ul class="pages">${attrList(byPage)}</ul>
+        ${untracked?`<div class="sub" style="margin-top:.5rem;max-width:none;white-space:normal">${untracked} of ${attrRows.length} started before landing page and referrer were recorded at the card step, so they show as untracked.</div>`:""}</div>
       <div><h3>What they're asking about</h3><ul class="pages">${pkTop.map(([k,v])=>`<li><span>${esc(k)}<div class="track" style="width:${v/pkMax*100}%"></div></span><b>${v}</b><i></i></li>`).join("")||"<li>—</li>"}</ul>
         <div class="sub" style="margin-top:.875rem;max-width:none;white-space:normal">Inquiries only appear here once the /contact form is forwarding to Firestore (see setup). Matching between inquiries, booking starts and bookings is by email address.</div></div>
     </div>`;
@@ -326,9 +403,9 @@ function render(){
     <td>${esc(i.package||"—")}${i.venue?`<div class="sub">${esc(i.venue)}</div>`:""}</td>
     <td>${esc(i.found_us||"—")}${i.referrer?`<div class="sub">${esc((()=>{try{return new URL(i.referrer).hostname.replace(/^www\./,"")}catch{return i.referrer}})())}</div>`:""}</td>
     <td>${ago(ts(i.created_at))}<div class="sub">${fmtD(ts(i.created_at))}</div></td>
-    <td>${pill(stPill(i._st))}</td>
-    <td><div class="mini">${i._b?`<a class="btn ghost" href="/?open=${i._b.id}">Open booking</a>`:""}${!["booked","signed","started","closed"].includes(i._st)?`<button class="btn ghost" data-inqst="contacted" data-id="${i.id}"${i._st==="contacted"?" disabled":""}>Mark contacted</button><button class="btn ghost" data-code="${esc(i.email)}">Issue code</button>`:""}${i._st!=="closed"&&!i._b?`<button class="btn ghost" data-inqst="closed" data-id="${i.id}">Close</button>`:`${i._st==="closed"?`<button class="btn ghost" data-inqst="new" data-id="${i.id}">Reopen</button>`:""}`}</div></td>
-  </tr>`).join("") : `<tr><td colspan="7" class="state">${INQ.length?"Nothing in this tab.":"No inquiries yet — once the /contact form forwards to Firestore they land here."}</td></tr>`;
+    <td>${pill(stPill(i._st))}${replyLine(i)}</td>
+    <td><div class="mini">${i._b?`<a class="btn ghost" href="/?open=${i._b.id}">Open booking</a>`:""}${i.email?`<button class="btn ghost" data-reply="${i.id}">${REPLY_OPEN===i.id?"Hide":"Write back"}</button>`:""}${!["booked","signed","started","closed"].includes(i._st)?`<button class="btn ghost" data-inqst="contacted" data-id="${i.id}"${i._st==="contacted"?" disabled":""}>Mark contacted</button><button class="btn ghost" data-code="${esc(i.email)}">Issue code</button>`:""}${i._st!=="closed"&&!i._b?`<button class="btn ghost" data-inqst="closed" data-id="${i.id}">Close</button>`:`${i._st==="closed"?`<button class="btn ghost" data-inqst="new" data-id="${i.id}">Reopen</button>`:""}`}</div></td>
+  </tr>${REPLY_OPEN===i.id?composeRow(i):""}`).join("") : `<tr><td colspan="7" class="state">${INQ.length?"Nothing in this tab.":"No inquiries yet — once the /contact form forwards to Firestore they land here."}</td></tr>`;
 
   // leads table
   $("#leadCount").textContent = `${leads.length} couple${leads.length===1?"":"s"} in range · ${leads.filter(l=>l._st==="open").length} open`;
@@ -337,7 +414,7 @@ function render(){
     <td><div class="name">${esc(l.client_names||l.email)}</div><div class="sub"><a href="mailto:${esc(l.email)}">${esc(l.email)}</a>${l.phone?` · <a href="tel:${esc(l.phone)}">${esc(fmtPhone(l.phone))}</a>`:""}</div></td>
     <td>${l.event_date_raw?fmtD(new Date(l.event_date_raw+"T00:00:00")):"—"}</td>
     <td>${esc(l.package_name||"—")}<div class="sub">${l.payment_option==="pif"?"paid in full":"standard plan"}</div></td>
-    <td>${esc(l.attr_venue||"direct")}</td>
+    <td>${(a=>`${esc(a.src)}<div class="sub">${esc(l.attr_venue||a.page)}</div>`)(attrRow(l))}</td>
     <td>${ago(ts(l.created_at))}<div class="sub">${fmtD(ts(l.created_at))}${l._attempts>1?` · ${l._attempts} attempts`:""}${l.nudge1_sent||l.nudge_1_sent?" · nudged":""}${l.nudge2_sent||l.nudge_2_sent?" ×2":""}</div></td>
     <td>${pill(lPill(l._st))}</td>
     <td><div class="mini">${l._b?`<a class="btn ghost" href="/?open=${l._b.id}">Open booking</a>`:`<button class="btn ghost" data-code="${esc(l.email)}">Issue code</button>`}${l.sid?`<a class="btn ghost" href="/visitors.html?sid=${encodeURIComponent(l.sid)}">Trail</a>`:""}</div></td>
@@ -361,6 +438,8 @@ document.addEventListener("click", async e => {
   const st = e.target.closest("[data-inqst]"); if (st) {
     if (DEMO) { const i = INQ.find(x=>x.id===st.dataset.id); i.status = st.dataset.inqst; render(); return; }
     try { await updateDoc(doc(db,"inquiries",st.dataset.id), { status: st.dataset.inqst, status_at: new Date() }); toast("Updated"); } catch (err) { toast("Couldn't update: "+(err.code||err.message)); } return; }
+  const wb = e.target.closest("[data-reply]"); if (wb) { REPLY_OPEN = REPLY_OPEN===wb.dataset.reply ? null : wb.dataset.reply; render(); if (REPLY_OPEN) { const ta=$("#rBody"); if (ta) ta.focus(); } return; }
+  const sd = e.target.closest("[data-send]"); if (sd) { await sendReply(sd.dataset.send, sd); return; }
   const c = e.target.closest("[data-code]"); if (c) { $("#cNote").value = c.dataset.code; $("#codeSec").scrollIntoView({behavior:"smooth",block:"start"}); $("#cAmt").focus(); return; }
   if (e.target.id==="showExpired") { SHOW_EXPIRED = !SHOW_EXPIRED; render(); return; }
   const cp = e.target.closest("[data-copy]"); if (cp) { try { await navigator.clipboard.writeText(cp.dataset.copy); toast("Copied"); } catch { prompt("Copy:", cp.dataset.copy); } }

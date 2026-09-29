@@ -1,0 +1,44 @@
+<!-- JC-ATV-BOOKED-0927: SignWell sends couples here after they sign. Until now this URL served a stale copy of the
+     booking form; it is now a real confirmation page and the place the Purchase event fires (once per browser). -->
+<section class="page-hero">
+  <div class="page-hero__bg" aria-hidden="true">
+    <img src="https://firebasestorage.googleapis.com/v0/b/atavia-c29cd.firebasestorage.app/o/DSC_4772.jpg?alt=media&amp;token=5182d7b9-096f-4902-a8b6-7ef2cd2e865a" alt="">
+  </div>
+  <span class="page-hero__watermark" aria-hidden="true">A</span>
+  <div class="wrap">
+    <div class="eyebrow center rules reveal">You&rsquo;re Booked</div>
+    <h1 class="page-hero__title reveal d1">It&rsquo;s <em>official.</em></h1>
+    <p class="page-hero__sub reveal d2">Your agreement is signed and your date is on our calendar. Thank you for trusting us with your day.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="wrap" style="max-width:720px">
+    <div class="sec__head reveal" style="margin-bottom:0">
+      <div class="sec__roman">What Happens Next</div>
+      <h2 class="sec__title">Three things to <em>expect.</em></h2>
+      <div class="rule"></div>
+    </div>
+    <ol class="reveal d1" style="margin:30px 0 0;padding:0;list-style:none;color:var(--ivory-dim);font-size:clamp(15px,1.7vw,17px);line-height:1.85">
+      <li style="padding:18px 0;border-bottom:1px solid var(--line)"><strong style="color:var(--ivory)">Your receipt and welcome email.</strong> The card you saved was charged the moment you signed. A receipt and a welcome note from <a href="mailto:info@ataviaweddings.com" style="color:var(--copper)">info@ataviaweddings.com</a> arrive within a few minutes &mdash; check spam if they don&rsquo;t.</li>
+      <li style="padding:18px 0;border-bottom:1px solid var(--line)"><strong style="color:var(--ivory)">Your remaining balance.</strong> If you chose the standard plan, the balance is charged to the same card 14 business days after signing, exactly as your agreement states, with a heads-up email the day before. Paid in full? There is nothing else to pay.</li>
+      <li style="padding:18px 0"><strong style="color:var(--ivory)">Your wedding-day questionnaire.</strong> As your date gets closer we&rsquo;ll send a short questionnaire &mdash; timeline, key people, the moments that matter most to you &mdash; so the team arrives already knowing your day.</li>
+    </ol>
+    <p class="reveal d2" style="margin-top:30px;color:var(--ivory-dim);font-size:15px;line-height:1.75">Questions in the meantime? Call or text <a href="tel:+13365379590" style="color:var(--copper)">(336) 537-9590</a> or reply to any of our emails.</p>
+    <div class="reveal d2" style="margin-top:34px">
+      <a href="/films" class="btn btn--ghost" style="margin-right:12px">Watch Our Films <span class="arr">&#8599;</span></a>
+      <a href="/guides/wedding-day-timeline" class="btn btn--ghost">Plan Your Timeline <span class="arr">&#8599;</span></a>
+    </div>
+  </div>
+</section>
+<script>
+/* Purchase = signed agreement + retainer charged. Fired once per browser so a refresh or a bookmark
+   never double-counts; Meta and GA4 both get it. Value is the $500 retainer collected at signing. */
+(function(){
+  var KEY="atv_booked_fired";
+  try{ if(localStorage.getItem(KEY)) return; localStorage.setItem(KEY, new Date().toISOString()); }catch(e){}
+  var p={currency:"USD",value:500,content_name:"wedding-booking",content_type:"product"};
+  try{ if(typeof fbq==="function") fbq("track","Purchase",p); }catch(e){}
+  try{ if(typeof gtag==="function") gtag("event","purchase",{currency:"USD",value:500,transaction_id:"booked-"+Date.now(),items:[{item_name:"Wedding booking retainer",price:500,quantity:1}]}); }catch(e){}
+})();
+</script>

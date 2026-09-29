@@ -390,6 +390,9 @@ $("codeBtn").addEventListener("click", async ()=>{
   }catch(e){ $("err_discount_code").textContent="Could not verify the code — try again."; $("err_discount_code").style.display="block"; }
   recalc();
 });
+/* JC-ESW-CODE-0928: ?code=ESW-XXXX-200 (from the automatic inquiry reply or an issued code) is filled in and applied on load. */
+(function(){ const c=(new URLSearchParams(location.search).get("code")||"").trim().toUpperCase();
+  if(/^ESW-[A-Z0-9]{4}-\d+$/.test(c)){ $("discount_code").value=c; $("codeBtn").click(); } })();
 
 /* ---- Zoho Payments widget: the PAN and CVV live in the processor's modal ---- */
 function setCardStatus(msg,bad){ const el=$("cardstatus"); if(!el) return; el.textContent=msg||""; el.className="bk-cardstatus"+(bad?" bad":""); }

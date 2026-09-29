@@ -430,7 +430,7 @@ service cloud.firestore {
 
       match /rsvps/{rsvpId} {
         allow create: if request.resource.data.keys().hasOnly(
-              ['name','email','attending','plusOnes','meal','note','song','createdAt'])
+              ['name','email','attending','plusOnes','meal','note','song','createdAt','invite'])
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0
           && request.resource.data.name.size() < 120
@@ -443,6 +443,29 @@ service cloud.firestore {
       match /chapters/{chapterId} {
         allow read: if true;
         allow create, update, delete: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+
+      // JC-LAZO-LIVE-0929: the site, live. All three are mirrored here by the
+      // couple's dashboard because the sources (guests, dayof, musicRequests)
+      // are couple-private and the worker/page read Firestore REST anonymously.
+      //   seating/main  {guests:[{n,p,t,s}]}  "Find your seat" on the site
+      //   invites/{guestId}  personal RSVP links: get by token only, never list
+      //   playlist/main  {songs:[...]}  the DJ's page at /w/{slug}/playlist
+      match /seating/{doc} {
+        allow read: if true;
+        allow write: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+      match /invites/{token} {
+        allow get: if true;
+        allow list: if false;
+        allow write: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+      match /playlist/{doc} {
+        allow read: if true;
+        allow write: if coupleAccess(
           get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
       }
 

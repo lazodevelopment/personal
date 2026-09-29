@@ -3,6 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Meta Pixel Code (JC-ATV-PIXEL-0927) -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1245257617279907');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1245257617279907&amp;ev=PageView&amp;noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 <title>Book Your Date — Atavia Weddings</title>
 <meta name="description" content="Reserve your wedding date with Atavia Weddings. Choose your collection, sign online, secure your date with a $500 retainer.">
 <link rel="canonical" href="https://ataviaweddings.com/book/">
@@ -298,6 +315,8 @@ const ZOHO_API_KEY="1003.83e6499fc9de1c8789e32c8b2b691765.a643597f26c52ee5feda0e
 const SESSION_ENDPOINT="https://us-central1-atavia-c29cd.cloudfunctions.net/zoho_session";
 const ENDPOINT="https://us-central1-atavia-c29cd.cloudfunctions.net/book_submit";
 const atvSid=function(){try{return window.atvSid||sessionStorage.getItem("atv_sid")||"";}catch(e){return "";}};
+/* JC-ATV-PIXEL-0927: Meta + GA4 events for the two moments that matter on this page. */
+const atvEvent=function(fb,ga,params){try{if(typeof fbq==="function")fbq("track",fb,params);}catch(e){}try{if(typeof gtag==="function"&&ga)gtag("event",ga,params);}catch(e){}};
 const CODE_ENDPOINT="https://us-central1-atavia-c29cd.cloudfunctions.net/check_code";
 const RETAINER=500,PIF_DISCOUNT=100,PKGS=[{"id":"petite","name":"The Petite","type":"photo","label":"Four Hours Photography Collection","hours":4,"total":1500,"bullets":["4 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session"]},{"id":"bloom","name":"The Bloom","type":"photo","label":"Six Hours Photography Collection","hours":6,"total":1700,"bullets":["6 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session"]},{"id":"garden","pop":true,"name":"The Garden","type":"photo","label":"Eight Hours Photography Collection","hours":8,"total":2000,"bullets":["8 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session"]},{"id":"estate","name":"The Estate","type":"photo","label":"Ten Hours Photography Collection","hours":10,"total":2600,"bullets":["10 Hours of Coverage","One Photographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session"]},{"id":"aubade","name":"The Aubade","type":"video","label":"Four Hours Videography Collection","hours":4,"total":1200,"bullets":["4 Hours of Coverage","One Videographer","HD Resolution","Professional Audio","Highlight Film","Raw Footage","Digital Delivery"]},{"id":"verse","name":"The Verse","type":"video","label":"Six Hours Videography Collection","hours":6,"total":1400,"bullets":["6 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Raw Footage","Digital Delivery"]},{"id":"reverie","pop":true,"name":"The Reverie","type":"video","label":"Eight Hours Videography Collection","hours":8,"total":1500,"bullets":["8 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Instagram Highlight","Drone Footage of Venue","Raw Footage","Digital Delivery"]},{"id":"sonnet","name":"The Sonnet","type":"video","label":"Ten Hours Videography Collection","hours":10,"total":2000,"bullets":["10 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Instagram Highlight","Drone Footage of Venue","Raw Footage","Digital Delivery"]},{"id":"duet","name":"The Duet","type":"combined","label":"Six Hours Combined Collection","hours":6,"total":3000,"bullets":["6 Hours of Coverage","One Photographer","One Videographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session","4K Resolution Video","Professional Audio","Highlight Film","Extended Edit","Raw Footage","Digital Delivery","Lifetime Cloud Storage"]},{"id":"heirloom","pop":true,"name":"The Heirloom","type":"combined","label":"Eight Hours Combined Collection","hours":8,"total":3500,"bullets":["8 Hours of Coverage","One Photographer","One Videographer","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session","4K Resolution Video","Professional Audio","Highlight Film","Extended Edit","Raw Footage","Digital Delivery","Lifetime Cloud Storage"]},{"id":"legacy","name":"The Legacy","type":"combined","label":"Ten Hours Combined Collection","hours":10,"total":4000,"bullets":["10 Hours of Coverage","Two Photographers","Two Videographers","All Images Edited","Unlimited Locations","Online Gallery","Full Ownership Rights","Engagement Session","4K Resolution Video","Professional Audio","Highlight Film","Extended Edit","Instagram Highlight","Drone Footage of Venue","Raw Footage","Digital Delivery","Lifetime Cloud Storage"]}];
 const STATES=["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming"];
@@ -397,6 +416,8 @@ btn.disabled=false;btn.textContent="Apply";renderSummary();}
 $("#promo_apply").addEventListener("click",applyPromo);
 $("#promo_code").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();applyPromo();}});
 $("#promo_code").addEventListener("input",()=>{if(selDisc){selDisc=null;$("#promo_msg").className="promo-msg";renderSummary();}});
+/* JC-ATV-NUDGE-0928: ?code=ATAVIA-XXXX-200 (from the day-3 nudge email or an issued code) is filled in and applied on load. */
+const _cq=(_q.get("code")||"").trim().toUpperCase();if(/^ATAVIA-[A-Z0-9]{4}-\d+$/.test(_cq)){$("#promo_code").value=_cq;applyPromo();}
 function renderTerms(bal,pif){
 const el=$("#terms_text");if(!el)return;
 if(!selPkg){el.innerHTML='I understand that I will receive my complete Service Agreement by email for electronic signature. <b>My card will be charged automatically the moment I sign</b> \u2014 that is what reserves my date. Until the agreement is signed and paid, my date is not held.';return;}
@@ -438,9 +459,10 @@ function zohoReadyCheck(){
 // Step 0: server creates the Zoho customer + save-card session; step 1: modal
 // tokenizes the card. Resolves {customer_id,payment_method_id,session_id} or
 // null if the couple closed the window. Throws on real errors.
-async function captureCard(names,email,phone,addr){
+async function captureCard(names,email,phone,addr,attr){attr=attr||{};
   const r=await fetch(SESSION_ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({client_names:names,email:email,phone:phone,package_id:(typeof selPkg!=="undefined"&&selPkg)?selPkg.id:"",payment_option:(typeof selPlan!=="undefined")?selPlan:"",event_date:($("#event_date")||{}).value||"",attr_venue:(new URLSearchParams(location.search).get("venue")||""),sid:atvSid()})});
+    body:JSON.stringify({client_names:names,email:email,phone:phone,package_id:(typeof selPkg!=="undefined"&&selPkg)?selPkg.id:"",payment_option:(typeof selPlan!=="undefined")?selPlan:"",event_date:($("#event_date")||{}).value||"",attr_venue:attr.venue||"",attr_venue_url:attr.venue_url||"",attr_landing:attr.landing_page||"",attr_referrer:attr.referrer||"",sid:atvSid()})});
+  atvEvent("InitiateCheckout","begin_checkout",{currency:"USD",value:500,content_name:(typeof selPkg!=="undefined"&&selPkg)?selPkg.name:"",content_category:"wedding-booking"});
   if(!r.ok)throw new Error("Payment setup is unavailable right now.");
   const sess=await r.json();
   const inst=zohoInstance();
@@ -520,7 +542,7 @@ const _addr={address_line1:f("mailing_address")||undefined,
   state:((_cszParts[1]||"").match(/[A-Za-z]{2}/)||[f("governing_state")])[0]||undefined,
   postal_code:(_csz.match(/\b\d{5}(?:-\d{4})?\b/)||[""])[0]||undefined,
   country:"US"};
-const card=await captureCard(names,f("email"),f("phone").replace(/[^\d+]/g,""),_addr);
+const card=await captureCard(names,f("email"),f("phone").replace(/[^\d+]/g,""),_addr,_attr);
 if(!card){btn.disabled=false;btn.textContent="Reserve My Date";$("#cardwrap").classList.remove("busy");
   setCardStatus("Add a card to reserve your date \u2014 nothing is charged until you sign.",true);
   return showErr("Please add a card to reserve your date.");}
@@ -536,7 +558,7 @@ zoho_pm_session_id:card.session_id,
 attr_venue:_attr.venue,attr_venue_url:_attr.venue_url,
 attr_landing:_attr.landing_page,attr_referrer:_attr.referrer,sid:atvSid()})});
 const d=await res.json();if(!res.ok||!d.ok)throw new Error(d.error||"Something went wrong.");
-if(typeof gtag==="function")gtag("event","generate_lead",{currency:"USD",value:500});
+atvEvent("Lead","generate_lead",{currency:"USD",value:500,content_name:selPkg.name,content_category:"wedding-booking"});
 $("#done-email").textContent=f("email");$("#done-date").textContent=new Date(f("event_date")+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
 $("#main").style.display="none";$("#done").style.display="block";window.scrollTo({top:0});
 }catch(ex){showErr(ex.message+" Please try again, or email info@ataviaweddings.com and we'll reserve your date personally.");btn.disabled=false;btn.textContent="Reserve My Date";$("#cardwrap").classList.remove("busy");}});

@@ -34,6 +34,9 @@ except Exception:
     cache = {}
 
 sm = DIST / "sitemap-templates.xml"
+# JC-LAZO-WWS-0929-PHOTOS: a fresh dist (before tonight's build) has no templates sitemap - start one
+if not sm.exists():
+    sm.write_text('<?xml version="1.0" encoding="UTF-8"?>' + chr(10) + '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' + chr(10) + '</urlset>' + chr(10), encoding="utf-8")
 t = sm.read_text(encoding="utf-8")
 old = dict(re.findall(r"<url><loc>(https://meetlazo.com/wedding-websites/[^<]*)</loc><lastmod>([^<]*)</lastmod></url>\n", t))
 t = re.sub(r"<url><loc>https://meetlazo.com/wedding-websites/[^<]*</loc>.*?</url>\n", "", t)
@@ -49,13 +52,13 @@ t = t.replace("</urlset>", "".join(lines) + "</urlset>")
 sm.write_text(t, encoding="utf-8")
 cache_file.write_text(json.dumps(cache), encoding="utf-8")
 
+newest = max(cache[u][1] for u in urls)   # (was defined after its first use below)
 idx = DIST / "sitemap.xml"
 i = idx.read_text(encoding="utf-8")
 if "sitemap-templates.xml" not in i:  # JC-LAZO-SEO-0922-001: tiered sitemaps; templates get their own
     i = i.replace("</sitemapindex>", f"<sitemap><loc>{BASE}/sitemap-templates.xml</loc><lastmod>{newest}</lastmod></sitemap>\n</sitemapindex>")
 if "sitemap-couples" not in i:
     i = i.replace("</sitemapindex>", f"<sitemap><loc>{BASE}/sitemap-couples.xml</loc></sitemap>\n</sitemapindex>")
-newest = max(cache[u][1] for u in urls)
 i = re.sub(r"(sitemap-3\.xml</loc><lastmod>)([^<]*)", lambda m: m.group(1) + max(m.group(2), newest), i)
 idx.write_text(i, encoding="utf-8")
 print(f"{len(slugs)} pages + hub copied to dist; {len(urls)} URLs in sitemap-templates.xml")

@@ -12,12 +12,13 @@ service cloud.firestore {
 
     match /bookings/{id} {
       allow read: if isAdmin();
-      // Dashboard may only touch these fields: test flag, private notes, post-production tracker.
-      // Money, status and contract fields are server-only (Cloud Functions use the Admin SDK).
+      // Dashboard may only touch these fields: test flag, private notes, post-production tracker,
+      // marketing opt-out. Money, status and contract fields are server-only (Cloud Functions use the Admin SDK).
       allow update: if isAdmin()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['test_mode', 'admin_notes', 'production'])
+             .hasOnly(['test_mode', 'admin_notes', 'production', 'marketing_optout'])
         && (!('test_mode' in request.resource.data) || request.resource.data.test_mode is bool)
+        && (!('marketing_optout' in request.resource.data) || request.resource.data.marketing_optout is bool)
         && (!('admin_notes' in request.resource.data) || (request.resource.data.admin_notes is list && request.resource.data.admin_notes.size() <= 200))
         && (!('production' in request.resource.data) || request.resource.data.production is map);
       // Delete only bookings already marked as test.

@@ -131,6 +131,13 @@
     }
     var btn=form.querySelector('button[type=submit]');
     btn.disabled=true; status.className='form-status show'; status.textContent='Sending…';
+    // JC-ATV-INQ-0928: also hand the inquiry straight to Firestore (inquiry_webhook) so the admin
+    // Leads funnel sees it. Formspree still sends the email; this copy never blocks or fails the form.
+    try{
+      var fd2=new FormData(form);
+      try{ fd2.append('sid', window.atvSid||sessionStorage.getItem('atv_sid')||''); }catch(e2){}
+      fetch('https://us-central1-atavia-c29cd.cloudfunctions.net/inquiry_webhook',{method:'POST',body:fd2,keepalive:true}).catch(function(){});
+    }catch(e1){}
     fetch(action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}})
       .then(function(r){
         if(r.ok){ form.reset(); if(window.fbq){ fbq('track','Lead'); } status.className='form-status show ok';

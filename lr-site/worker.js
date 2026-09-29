@@ -84,6 +84,20 @@ export default {
 
     const url = new URL(request.url);
 
+    // One origin: https + apex. www.leasereputation.com and plain http were
+    // both serving 200 copies of every page (duplicate hosts in GSC).
+    if (url.protocol !== "https:" || url.hostname.startsWith("www.")) {
+      url.protocol = "https:";
+      url.hostname = url.hostname.replace(/^www\./, "");
+      return Response.redirect(url.toString(), 301);
+    }
+
+    // /index.html and /dir/index.html -> / and /dir/ (canonical form).
+    if (url.pathname.endsWith("/index.html")) {
+      url.pathname = url.pathname.slice(0, -"index.html".length);
+      return Response.redirect(url.toString(), 301);
+    }
+
     // Trailing-slash normalisation: /az/phoenix/ -> /az/phoenix when the
     // extensionless form exists. One canonical URL per page, so the crawler
     // is not fed two addresses for the same content.
@@ -97,6 +111,16 @@ export default {
     }
 
     for (const key of candidates(url.pathname)) {
+      // /apartments/addison-tx resolved to apartments/addison-tx/index.html
+      // and served it at both addresses; send the bare form to the
+      // canonical trailing-slash URL instead.
+      if (key.endsWith("/index.html") && !url.pathname.endsWith("/")) {
+        if ((await env.SITE.get(key, { type: "text" })) !== null) {
+          url.pathname = url.pathname + "/";
+          return Response.redirect(url.toString(), 301);
+        }
+        continue;
+      }
       const res = await serve(env, key, request);
       if (res) return res;
     }

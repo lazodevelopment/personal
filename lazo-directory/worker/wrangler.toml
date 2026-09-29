@@ -12,6 +12,10 @@ bucket_name = "lazo-site"
 
 # JC-LAZO-GALLERY-0911-005: post-wedding delivery galleries live in their own
 # bucket so deploy_site.py's prune can never touch client photos.
+# JC-LAZO-WORKER-0929-LIVE-001: /api/translate runs m2m100 on Workers AI
+[ai]
+binding = "AI"
+
 [[r2_buckets]]
 binding = "GALLERIES"
 bucket_name = "lazo-galleries"

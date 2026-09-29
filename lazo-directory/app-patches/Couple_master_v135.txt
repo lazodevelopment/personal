@@ -70,7 +70,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   static const Color muted = Color(0xFF6B5F72);
   static const Color cardBg = Color(0xFFFFFDF9);
   static const Color goldLine = Color(0xFFE6D6B8);
-  static const Color rose = Color(0xFFB04343); // JC-LAZO-COUPLE-0920-TL-001: overlaps
+  static const Color rose =
+      Color(0xFFB04343); // JC-LAZO-COUPLE-0920-TL-001: overlaps
 
   // The canvas is a dark plum gradient, so the phone's own clock, wifi and
   // battery have to be light. The two brightness fields are a well-known trap:
@@ -1959,8 +1960,16 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     <String>['music', 'Music', 'music|song|songs|playlist|dj list|first dance'],
     <String>['website', 'Website', 'website|wedding site|our site'],
     <String>['registry', 'Registry', 'registry|gifts'],
-    <String>['shopping', 'Shopping list', 'shopping|shopping list|things to buy|to buy|supplies|decor list'],
-    <String>['board', 'Dream board', 'dream board|mood board|moodboard|inspiration|pinterest|vision board|inspo'],
+    <String>[
+      'shopping',
+      'Shopping list',
+      'shopping|shopping list|things to buy|to buy|supplies|decor list'
+    ],
+    <String>[
+      'board',
+      'Dream board',
+      'dream board|mood board|moodboard|inspiration|pinterest|vision board|inspo'
+    ],
     <String>['account', 'Account', 'account|settings|log out|partner invite'],
   ];
 
@@ -3036,29 +3045,44 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             Timestamp? latestAt;
             String latestLine = '';
             for (final Map<String, String> c in kCategories) {
-              final Map<String, dynamic> p = plan[c['slug']] ?? const <String, dynamic>{};
+              final Map<String, dynamic> p =
+                  plan[c['slug']] ?? const <String, dynamic>{};
               final num pl = (p['budgetPlanned'] as num?) ?? 0;
               final num sp = (p['budgetActual'] as num?) ?? 0;
               if (pl > 0 || sp > 0) rows.add(<dynamic>[c['label'], pl, sp]);
               final dynamic ua = p['updatedAt'];
-              if (ua is Timestamp && (latestAt == null || ua.compareTo(latestAt!) > 0) && (pl > 0 || sp > 0)) {
+              if (ua is Timestamp &&
+                  (latestAt == null || ua.compareTo(latestAt!) > 0) &&
+                  (pl > 0 || sp > 0)) {
                 latestAt = ua;
                 final String by = (p['updatedBy'] ?? '').toString();
-                latestLine = '${c['label']} updated${by.isEmpty ? '' : ' by $by'} \u00b7 ${_ago(ua)}';
+                latestLine =
+                    '${c['label']} updated${by.isEmpty ? '' : ' by $by'} \u00b7 ${_ago(ua)}';
               }
             }
             if (rows.isEmpty) return out;
-            rows.sort((List<dynamic> a, List<dynamic> b) => ((b[1] as num) > 0 ? b[1] as num : b[2] as num).compareTo((a[1] as num) > 0 ? a[1] as num : a[2] as num));
-            final num allocated = rows.fold<num>(0, (num acc, List<dynamic> r) => acc + (r[1] as num));
+            rows.sort((List<dynamic> a, List<dynamic> b) =>
+                ((b[1] as num) > 0 ? b[1] as num : b[2] as num)
+                    .compareTo((a[1] as num) > 0 ? a[1] as num : a[2] as num));
+            final num allocated = rows.fold<num>(
+                0, (num acc, List<dynamic> r) => acc + (r[1] as num));
             final bool overAlloc = allocated > total;
             out.add(const SizedBox(height: 14));
             out.add(Row(children: <Widget>[
               const Expanded(
                 child: Text('ALLOCATION',
-                    style: TextStyle(fontSize: 10.5, letterSpacing: 2, color: plum, fontWeight: FontWeight.w700)),
+                    style: TextStyle(
+                        fontSize: 10.5,
+                        letterSpacing: 2,
+                        color: plum,
+                        fontWeight: FontWeight.w700)),
               ),
-              Text('${_money(allocated)} planned \u00b7 ${(allocated / total * 100).round()}%',
-                  style: TextStyle(fontSize: 11.5, color: overAlloc ? const Color(0xFFB3413A) : muted, fontWeight: FontWeight.w700)),
+              Text(
+                  '${_money(allocated)} planned \u00b7 ${(allocated / total * 100).round()}%',
+                  style: TextStyle(
+                      fontSize: 11.5,
+                      color: overAlloc ? const Color(0xFFB3413A) : muted,
+                      fontWeight: FontWeight.w700)),
             ]));
             out.add(const SizedBox(height: 6));
             for (final List<dynamic> r in rows.take(8)) {
@@ -3070,30 +3094,58 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 onTap: () => setState(() => _view = _View.vendors),
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 7),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                    Row(children: <Widget>[
-                      Expanded(child: Text(r[0].toString(), style: const TextStyle(color: ink, fontSize: 12.5, fontWeight: FontWeight.w700))),
-                      Text('${pl > 0 ? (pl / total * 100).round() : 0}% \u00b7 ${_money(pl > 0 ? pl : sp)}${sp > 0 && pl > 0 ? ' \u00b7 ${_money(sp)} spent' : ''}',
-                          style: TextStyle(fontSize: 11.5, color: sp > pl && pl > 0 ? const Color(0xFFB3413A) : muted)),
-                    ]),
-                    const SizedBox(height: 4),
-                    SizedBox(
-                      height: 6,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: Stack(fit: StackFit.expand, children: <Widget>[
-                          Container(color: plum.withOpacity(.08)),
-                          Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(widthFactor: share, heightFactor: 1, child: Container(color: gold.withOpacity(.75)))),
-                          Align(alignment: Alignment.centerLeft, child: FractionallySizedBox(widthFactor: spentShare, heightFactor: 1, child: Container(color: sp > pl && pl > 0 ? const Color(0xFFB3413A) : plum))),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(children: <Widget>[
+                          Expanded(
+                              child: Text(r[0].toString(),
+                                  style: const TextStyle(
+                                      color: ink,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700))),
+                          Text(
+                              '${pl > 0 ? (pl / total * 100).round() : 0}% \u00b7 ${_money(pl > 0 ? pl : sp)}${sp > 0 && pl > 0 ? ' \u00b7 ${_money(sp)} spent' : ''}',
+                              style: TextStyle(
+                                  fontSize: 11.5,
+                                  color: sp > pl && pl > 0
+                                      ? const Color(0xFFB3413A)
+                                      : muted)),
                         ]),
-                      ),
-                    ),
-                  ]),
+                        const SizedBox(height: 4),
+                        SizedBox(
+                          height: 6,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(999),
+                            child:
+                                Stack(fit: StackFit.expand, children: <Widget>[
+                              Container(color: plum.withOpacity(.08)),
+                              Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                      widthFactor: share,
+                                      heightFactor: 1,
+                                      child: Container(
+                                          color: gold.withOpacity(.75)))),
+                              Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: FractionallySizedBox(
+                                      widthFactor: spentShare,
+                                      heightFactor: 1,
+                                      child: Container(
+                                          color: sp > pl && pl > 0
+                                              ? const Color(0xFFB3413A)
+                                              : plum))),
+                            ]),
+                          ),
+                        ),
+                      ]),
                 ),
               ));
             }
             if (rows.length > 8) {
-              out.add(Text('and ${rows.length - 8} more', style: const TextStyle(fontSize: 11.5, color: muted)));
+              out.add(Text('and ${rows.length - 8} more',
+                  style: const TextStyle(fontSize: 11.5, color: muted)));
             }
             if (latestLine.isNotEmpty) {
               out.add(Padding(
@@ -3101,7 +3153,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 child: Row(children: <Widget>[
                   const Icon(Icons.history_rounded, size: 13, color: muted),
                   const SizedBox(width: 5),
-                  Expanded(child: Text(latestLine, style: const TextStyle(fontSize: 11.5, color: muted))),
+                  Expanded(
+                      child: Text(latestLine,
+                          style:
+                              const TextStyle(fontSize: 11.5, color: muted))),
                 ]),
               ));
             }
@@ -6029,7 +6084,20 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   }
 
   String _licDate(DateTime d) {
-    const List<String> m = <String>['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const List<String> m = <String>[
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${m[d.month - 1]} ${d.day}';
   }
 
@@ -6050,19 +6118,23 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           ? Map<String, dynamic>.from(ms[metro] as Map)
           : <String, dynamic>{};
       stateSlug = (me['state'] ?? '').toString();
-      offices = me['offices'] is List ? me['offices'] as List : const <dynamic>[];
+      offices =
+          me['offices'] is List ? me['offices'] as List : const <dynamic>[];
       final Map<String, dynamic> sts = _licData!['states'] is Map
           ? Map<String, dynamic>.from(_licData!['states'] as Map)
           : <String, dynamic>{};
-      if (sts[stateSlug] is Map) st = Map<String, dynamic>.from(sts[stateSlug] as Map);
+      if (sts[stateSlug] is Map)
+        st = Map<String, dynamic>.from(sts[stateSlug] as Map);
     }
     DateTime? wd;
     final dynamic ts = couple['weddingDate'];
     if (ts is Timestamp) wd = ts.toDate();
     String window = '';
     if (st != null && wd != null) {
-      final int v = st['valid_days'] is num ? (st['valid_days'] as num).toInt() : 0;
-      final int w = st['wait_days'] is num ? (st['wait_days'] as num).toInt() : 0;
+      final int v =
+          st['valid_days'] is num ? (st['valid_days'] as num).toInt() : 0;
+      final int w =
+          st['wait_days'] is num ? (st['wait_days'] as num).toInt() : 0;
       final DateTime latest = wd.subtract(Duration(days: w));
       if (v > 0) {
         final DateTime earliest = wd.subtract(Duration(days: v));
@@ -6072,9 +6144,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       }
       final int daysToLatest = latest.difference(DateTime.now()).inDays;
       if (!done && daysToLatest < 0) {
-        window += ' · that was ${-daysToLatest} day${daysToLatest == -1 ? '' : 's'} ago';
+        window +=
+            ' · that was ${-daysToLatest} day${daysToLatest == -1 ? '' : 's'} ago';
       } else if (!done && daysToLatest <= 14) {
-        window += ' · ${daysToLatest == 0 ? 'today' : 'in $daysToLatest day${daysToLatest == 1 ? '' : 's'}'}';
+        window +=
+            ' · ${daysToLatest == 0 ? 'today' : 'in $daysToLatest day${daysToLatest == 1 ? '' : 's'}'}';
       }
     }
     final String fee = st == null ? '' : (st['fee_text'] ?? '').toString();
@@ -6088,7 +6162,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       try {
         await _coupleRef.set(<String, dynamic>{
           'licenseDone': !done,
-          'licenseDoneAt': done ? FieldValue.delete() : FieldValue.serverTimestamp(),
+          'licenseDoneAt':
+              done ? FieldValue.delete() : FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       } catch (e) {
         _toast('Could not save that: ' + e.toString());
@@ -6111,15 +6186,20 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
               tick: _Tick.select,
               onTap: toggle,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: done ? vGreen : Colors.white,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: done ? vGreen : goldLine),
                 ),
                 child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                  Icon(done ? Icons.check_rounded : Icons.radio_button_unchecked_rounded,
-                      size: 14, color: done ? Colors.white : muted),
+                  Icon(
+                      done
+                          ? Icons.check_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      size: 14,
+                      color: done ? Colors.white : muted),
                   const SizedBox(width: 5),
                   Text(done ? 'We have it' : 'Not yet',
                       style: TextStyle(
@@ -6132,7 +6212,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           ]),
           const SizedBox(height: 8),
           if (done)
-            const Text('Bring it on the day - the officiant signs it and returns it to the office.',
+            const Text(
+                'Bring it on the day - the officiant signs it and returns it to the office.',
                 style: TextStyle(fontSize: 12.5, color: muted, height: 1.4))
           else if (st == null) ...<Widget>[
             Text(
@@ -6140,16 +6221,23 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     ? 'Looking up your state…'
                     : (metro.isEmpty
                         ? 'Set your city in Account and we’ll show the fee, the office and when to apply.'
-                        : (_licErr.isNotEmpty ? _licErr : 'The fee, the office and when to apply, for your state.')),
-                style: const TextStyle(fontSize: 12.5, color: muted, height: 1.4)),
+                        : (_licErr.isNotEmpty
+                            ? _licErr
+                            : 'The fee, the office and when to apply, for your state.')),
+                style:
+                    const TextStyle(fontSize: 12.5, color: muted, height: 1.4)),
             const SizedBox(height: 8),
             _Press(
               onTap: () async {
                 final Uri u = Uri.parse(siteUrl);
-                if (await canLaunchUrl(u)) await launchUrl(u, mode: LaunchMode.externalApplication);
+                if (await canLaunchUrl(u))
+                  await launchUrl(u, mode: LaunchMode.externalApplication);
               },
               child: const Text('Every state, on meetlazo.com →',
-                  style: TextStyle(color: plum, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                  style: TextStyle(
+                      color: plum,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800)),
             ),
           ] else ...<Widget>[
             Wrap(spacing: 8, runSpacing: 8, children: <Widget>[
@@ -6164,23 +6252,32 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             ]),
             if (window.isNotEmpty) ...<Widget>[
               const SizedBox(height: 10),
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                const Icon(Icons.event_available_rounded, size: 16, color: Color(0xFF8A6A2F)),
-                const SizedBox(width: 6),
-                Expanded(
-                    child: Text(window,
-                        style: const TextStyle(
-                            color: Color(0xFF8A6A2F), fontSize: 13, fontWeight: FontWeight.w800, height: 1.35))),
-              ]),
+              Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Icon(Icons.event_available_rounded,
+                        size: 16, color: Color(0xFF8A6A2F)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                        child: Text(window,
+                            style: const TextStyle(
+                                color: Color(0xFF8A6A2F),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                height: 1.35))),
+                  ]),
             ],
             const SizedBox(height: 10),
-            Text('$stateName: issued by the ${issuer.toLowerCase()}. Both of you go, with photo ID.',
-                style: const TextStyle(fontSize: 12.5, color: muted, height: 1.4)),
+            Text(
+                '$stateName: issued by the ${issuer.toLowerCase()}. Both of you go, with photo ID.',
+                style:
+                    const TextStyle(fontSize: 12.5, color: muted, height: 1.4)),
             if ((st['course'] ?? '').toString().isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text((st['course'] ?? '').toString(),
-                    style: const TextStyle(fontSize: 12, color: muted, height: 1.4)),
+                    style: const TextStyle(
+                        fontSize: 12, color: muted, height: 1.4)),
               ),
             const SizedBox(height: 8),
             for (final dynamic o in offices.take(3))
@@ -6189,8 +6286,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   padding: const EdgeInsets.only(bottom: 6),
                   child: _Press(
                     onTap: () async {
-                      final Uri u = Uri.parse((o['site'] ?? siteUrl).toString());
-                      if (await canLaunchUrl(u)) await launchUrl(u, mode: LaunchMode.externalApplication);
+                      final Uri u =
+                          Uri.parse((o['site'] ?? siteUrl).toString());
+                      if (await canLaunchUrl(u))
+                        await launchUrl(u,
+                            mode: LaunchMode.externalApplication);
                     },
                     child: Container(
                       padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
@@ -6200,19 +6300,36 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                           border: Border.all(color: goldLine)),
                       child: Row(children: <Widget>[
                         Expanded(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                            Text('${o['county'] ?? ''} · ${o['office'] ?? ''}',
-                                style: const TextStyle(color: ink, fontSize: 13, fontWeight: FontWeight.w700)),
-                            if ((o['note'] ?? '').toString().isNotEmpty || (o['fee'] ?? '').toString().isNotEmpty)
-                              Text(
-                                  <String>[
-                                    if ((o['fee'] ?? '').toString().isNotEmpty) 'about \$${o['fee']}',
-                                    if ((o['note'] ?? '').toString().isNotEmpty) (o['note'] ?? '').toString(),
-                                  ].join(' · '),
-                                  style: const TextStyle(fontSize: 11.5, color: muted, height: 1.35)),
-                          ]),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                    '${o['county'] ?? ''} · ${o['office'] ?? ''}',
+                                    style: const TextStyle(
+                                        color: ink,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700)),
+                                if ((o['note'] ?? '').toString().isNotEmpty ||
+                                    (o['fee'] ?? '').toString().isNotEmpty)
+                                  Text(
+                                      <String>[
+                                        if ((o['fee'] ?? '')
+                                            .toString()
+                                            .isNotEmpty)
+                                          'about \$${o['fee']}',
+                                        if ((o['note'] ?? '')
+                                            .toString()
+                                            .isNotEmpty)
+                                          (o['note'] ?? '').toString(),
+                                      ].join(' · '),
+                                      style: const TextStyle(
+                                          fontSize: 11.5,
+                                          color: muted,
+                                          height: 1.35)),
+                              ]),
                         ),
-                        const Icon(Icons.open_in_new_rounded, size: 15, color: plum),
+                        const Icon(Icons.open_in_new_rounded,
+                            size: 15, color: plum),
                       ]),
                     ),
                   ),
@@ -6220,10 +6337,14 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             _Press(
               onTap: () async {
                 final Uri u = Uri.parse(siteUrl);
-                if (await canLaunchUrl(u)) await launchUrl(u, mode: LaunchMode.externalApplication);
+                if (await canLaunchUrl(u))
+                  await launchUrl(u, mode: LaunchMode.externalApplication);
               },
               child: Text('Everything about the $stateName license →',
-                  style: const TextStyle(color: plum, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                  style: const TextStyle(
+                      color: plum,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w800)),
             ),
           ],
         ],
@@ -6240,7 +6361,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: gold.withOpacity(.55))),
       child: Text('$v · $k',
-          style: const TextStyle(color: Color(0xFF8A6A2F), fontSize: 11.5, fontWeight: FontWeight.w800)),
+          style: const TextStyle(
+              color: Color(0xFF8A6A2F),
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800)),
     );
   }
 
@@ -8345,7 +8469,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         30,
         <String>['photo', 'video', 'party']
       ],
-      <dynamic>[-90, 'First look', 'Private moment, then wedding-party photos', 45, <String>['photo', 'video']],
+      <dynamic>[
+        -90,
+        'First look',
+        'Private moment, then wedding-party photos',
+        45,
+        <String>['photo', 'video']
+      ],
       <dynamic>[
         -30,
         'Guests arrive',
@@ -8353,7 +8483,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         30,
         <String>['venue', 'dj', 'planner']
       ],
-      <dynamic>[0, 'Ceremony', '', 30, <String>['officiant', 'photo', 'video', 'dj', 'florist']],
+      <dynamic>[
+        0,
+        'Ceremony',
+        '',
+        30,
+        <String>['officiant', 'photo', 'video', 'dj', 'florist']
+      ],
       <dynamic>[
         30,
         'Cocktail hour',
@@ -8368,7 +8504,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         5,
         <String>['dj', 'photo', 'video']
       ],
-      <dynamic>[95, 'First dance', '', 5, <String>['dj', 'photo', 'video']],
+      <dynamic>[
+        95,
+        'First dance',
+        '',
+        5,
+        <String>['dj', 'photo', 'video']
+      ],
       <dynamic>[
         105,
         'Welcome & toasts',
@@ -8376,7 +8518,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         15,
         <String>['dj', 'caterer']
       ],
-      <dynamic>[120, 'Dinner', '', 60, <String>['caterer', 'venue']],
+      <dynamic>[
+        120,
+        'Dinner',
+        '',
+        60,
+        <String>['caterer', 'venue']
+      ],
       <dynamic>[
         180,
         'Speeches',
@@ -8384,11 +8532,41 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         15,
         <String>['dj', 'video', 'party']
       ],
-      <dynamic>[195, 'Parent dances', '', 10, <String>['dj', 'photo', 'video']],
-      <dynamic>[205, 'Cake cutting', 'Then the dance floor opens', 5, <String>['cake', 'caterer', 'photo']],
-      <dynamic>[210, 'Open dancing', '', 90, <String>['dj']],
-      <dynamic>[300, 'Last dance', 'Private last dance, or everyone in', 5, <String>['dj', 'photo', 'video']],
-      <dynamic>[310, 'Send-off', 'Sparklers, bubbles, or a quiet exit', 10, <String>['planner', 'photo', 'video', 'venue']],
+      <dynamic>[
+        195,
+        'Parent dances',
+        '',
+        10,
+        <String>['dj', 'photo', 'video']
+      ],
+      <dynamic>[
+        205,
+        'Cake cutting',
+        'Then the dance floor opens',
+        5,
+        <String>['cake', 'caterer', 'photo']
+      ],
+      <dynamic>[
+        210,
+        'Open dancing',
+        '',
+        90,
+        <String>['dj']
+      ],
+      <dynamic>[
+        300,
+        'Last dance',
+        'Private last dance, or everyone in',
+        5,
+        <String>['dj', 'photo', 'video']
+      ],
+      <dynamic>[
+        310,
+        'Send-off',
+        'Sparklers, bubbles, or a quiet exit',
+        10,
+        <String>['planner', 'photo', 'video', 'venue']
+      ],
     ];
     final WriteBatch batch = FirebaseFirestore.instance.batch();
     for (final List<dynamic> row in classic) {
@@ -8981,8 +9159,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           _railNavLink('Music', Icons.music_note_rounded, _openMusic),
           _railNavRow('Website', Icons.language_rounded, _View.website),
           _railNavRow('Registry', Icons.card_giftcard_rounded, _View.registry),
-          _railNavRow('Shopping list', Icons.shopping_bag_rounded, _View.shopping),
-          _railNavRow('Dream board', Icons.auto_awesome_mosaic_rounded, _View.board),
+          _railNavRow(
+              'Shopping list', Icons.shopping_bag_rounded, _View.shopping),
+          _railNavRow(
+              'Dream board', Icons.auto_awesome_mosaic_rounded, _View.board),
         ],
       ),
     );
@@ -11940,8 +12120,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                       color: ivory.withOpacity(.07),
                       border: Border.all(color: gold.withOpacity(.5)),
                     ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                      const Icon(Icons.open_with_rounded, size: 14, color: gold),
+                    child:
+                        Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                      const Icon(Icons.open_with_rounded,
+                          size: 14, color: gold),
                       const SizedBox(width: 6),
                       const Text('Adjust position',
                           style: TextStyle(
@@ -18586,7 +18768,16 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     ),
                     const SizedBox(height: 6),
                     Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
-                      for (final int m in const <int>[0, 15, 30, 45, 60, 90, 120, 180])
+                      for (final int m in const <int>[
+                        0,
+                        15,
+                        30,
+                        45,
+                        60,
+                        90,
+                        120,
+                        180
+                      ])
                         _tlChip(m == 0 ? 'A moment' : _tlDur(m), dur == m,
                             () => setD(() => dur = m)),
                     ]),
@@ -18603,13 +18794,18 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     const SizedBox(height: 6),
                     Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
                       for (final List<String> o in kTlOwners)
-                        _tlChip(o[1], owners.contains(o[0]), () => setD(() {
-                              if (!owners.remove(o[0])) owners.add(o[0]);
-                            })),
+                        _tlChip(
+                            o[1],
+                            owners.contains(o[0]),
+                            () => setD(() {
+                                  if (!owners.remove(o[0])) owners.add(o[0]);
+                                })),
                     ]),
                     const SizedBox(height: 12),
-                    _tlChip('This is the ceremony \u00b7 the day is built around it',
-                        anchor, () => setD(() => anchor = !anchor)),
+                    _tlChip(
+                        'This is the ceremony \u00b7 the day is built around it',
+                        anchor,
+                        () => setD(() => anchor = !anchor)),
                   ],
                 ),
                 actions: <Widget>[
@@ -18652,10 +18848,14 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             await _dayofRef.where('anchor', isEqualTo: true).get();
         final WriteBatch b = FirebaseFirestore.instance.batch();
         bool any = false;
-        for (final QueryDocumentSnapshot<Map<String, dynamic>> o in others.docs) {
+        for (final QueryDocumentSnapshot<Map<String, dynamic>> o
+            in others.docs) {
           if (d != null && o.id == d.id) continue;
-          if (d == null && (o.data()['label'] ?? '') == labelC.text.trim() && (o.data()['time'] ?? '') == hh) continue;
-          b.set(o.reference, <String, dynamic>{'anchor': false}, SetOptions(merge: true));
+          if (d == null &&
+              (o.data()['label'] ?? '') == labelC.text.trim() &&
+              (o.data()['time'] ?? '') == hh) continue;
+          b.set(o.reference, <String, dynamic>{'anchor': false},
+              SetOptions(merge: true));
           any = true;
         }
         if (any) await b.commit();
@@ -18787,7 +18987,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       if (d.data()['anchor'] == true) return d;
     }
     for (final QueryDocumentSnapshot<Map<String, dynamic>> d in evs) {
-      if ((d.data()['label'] ?? '').toString().trim().toLowerCase() == 'ceremony') {
+      if ((d.data()['label'] ?? '').toString().trim().toLowerCase() ==
+          'ceremony') {
         return d;
       }
     }
@@ -18797,17 +18998,23 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   // The website's ceremony time ("4:00 pm", "16:00", "4pm") as a TimeOfDay.
   TimeOfDay? _tlSiteCeremony() {
     try {
-      final QuerySnapshot<Map<String, dynamic>>? q = _liveQ['site:$_cid']?.latest;
+      final QuerySnapshot<Map<String, dynamic>>? q =
+          _liveQ['site:$_cid']?.latest;
       if (q == null || q.docs.isEmpty) return null;
-      final String raw = (q.docs.first.data()['ceremonyTime'] ?? '').toString().trim().toLowerCase();
-      final RegExpMatch? m = RegExp(r'(\d{1,2})(?::(\d{2}))?\s*(am|pm)?').firstMatch(raw);
+      final String raw = (q.docs.first.data()['ceremonyTime'] ?? '')
+          .toString()
+          .trim()
+          .toLowerCase();
+      final RegExpMatch? m =
+          RegExp(r'(\d{1,2})(?::(\d{2}))?\s*(am|pm)?').firstMatch(raw);
       if (m == null) return null;
       int h = int.parse(m.group(1)!);
       final int mi = int.tryParse(m.group(2) ?? '') ?? 0;
       final String? ap = m.group(3);
       if (ap == 'pm' && h < 12) h += 12;
       if (ap == 'am' && h == 12) h = 0;
-      if (ap == null && h < 8) h += 12; // "4:00" on a wedding site means afternoon
+      if (ap == null && h < 8)
+        h += 12; // "4:00" on a wedding site means afternoon
       if (h > 23 || mi > 59) return null;
       return TimeOfDay(hour: h, minute: mi);
     } catch (_) {
@@ -18820,7 +19027,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       List<QueryDocumentSnapshot<Map<String, dynamic>>> evs) async {
     final QueryDocumentSnapshot<Map<String, dynamic>>? a = _tlAnchor(evs);
     if (a == null) {
-      _toast('Mark the ceremony first - open it and tap \u201cThis is the ceremony\u201d.');
+      _toast(
+          'Mark the ceremony first - open it and tap \u201cThis is the ceremony\u201d.');
       return;
     }
     final int was = _tlMin((a.data()['time'] ?? '16:00').toString());
@@ -18837,10 +19045,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     for (final QueryDocumentSnapshot<Map<String, dynamic>> d in evs) {
       final String t = (d.data()['time'] ?? '').toString();
       before[d.reference] = t;
-      b.set(d.reference, <String, dynamic>{
-        'time': _tlHm(_tlMin(t) + delta),
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      b.set(
+          d.reference,
+          <String, dynamic>{
+            'time': _tlHm(_tlMin(t) + delta),
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     }
     await b.commit();
     _toastUndo(
@@ -18856,8 +19067,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
 
   // One vendor's page: their moments first, then the whole day with theirs
   // marked. The planner (and anyone with no tag) gets the whole day plain.
-  String _tlVendorHtml(List<QueryDocumentSnapshot<Map<String, dynamic>>> evs,
-      List<List<String>> team, Map<String, dynamic> couple, String tag,
+  String _tlVendorHtml(
+      List<QueryDocumentSnapshot<Map<String, dynamic>>> evs,
+      List<List<String>> team,
+      Map<String, dynamic> couple,
+      String tag,
       String vendorName) {
     final String who = _coupleLabel(couple);
     final String when = _weddingDateLine(couple);
@@ -18870,13 +19084,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           .toList();
       h.write('<h2>Your moments</h2>');
       if (mine.isEmpty) {
-        h.write('<p style="color:#6B5F72">Nothing is marked as yours yet - the whole day is below. Tell us where you need to be and when.</p>');
+        h.write(
+            '<p style="color:#6B5F72">Nothing is marked as yours yet - the whole day is below. Tell us where you need to be and when.</p>');
       } else {
         h.write('<table>');
         for (final QueryDocumentSnapshot<Map<String, dynamic>> d in mine) {
           final Map<String, dynamic> ev = d.data();
           final String note = (ev['note'] ?? '').toString();
-          h.write('<tr><td class="time">${_esc(_tlRange(ev))}</td><td><b>${_esc((ev['label'] ?? '').toString())}</b>'
+          h.write(
+              '<tr><td class="time">${_esc(_tlRange(ev))}</td><td><b>${_esc((ev['label'] ?? '').toString())}</b>'
               '${note.isEmpty ? '' : '<br><span style="color:#6B5F72">${_esc(note)}</span>'}</td></tr>');
         }
         h.write('</table>');
@@ -18889,7 +19105,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       final String note = (ev['note'] ?? '').toString();
       final List<String> os = _tlOwners(ev);
       final bool mine = scoped && os.contains(tag);
-      h.write('<tr${mine ? ' style="background:#FBF3E4"' : ''}><td class="time">${_esc(_tlRange(ev))}</td><td><b>${_esc((ev['label'] ?? '').toString())}</b>'
+      h.write(
+          '<tr${mine ? ' style="background:#FBF3E4"' : ''}><td class="time">${_esc(_tlRange(ev))}</td><td><b>${_esc((ev['label'] ?? '').toString())}</b>'
           '${mine ? ' <span style="color:#8A6A2F;font-size:11px;font-weight:700">YOURS</span>' : ''}'
           '${note.isEmpty ? '' : '<br><span style="color:#6B5F72">${_esc(note)}</span>'}'
           '${os.isEmpty ? '' : '<br><span style="color:#8A6A2F;font-size:11px">${_esc(os.map(_tlOwnerLabel).join(' \u00b7 '))}</span>'}'
@@ -18899,13 +19116,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     if (team.isNotEmpty) {
       h.write('<h2>The team</h2><table>');
       for (final List<String> x in team) {
-        h.write('<tr><td>${_esc(x[0])}</td><td><b>${_esc(x[1].isEmpty ? 'Booked' : x[1])}</b></td></tr>');
+        h.write(
+            '<tr><td>${_esc(x[0])}</td><td><b>${_esc(x[1].isEmpty ? 'Booked' : x[1])}</b></td></tr>');
       }
       h.write('</table>');
     }
     return _printShell(
         scoped ? 'Day-of timeline for $vendorName' : 'Day-of timeline',
-        <String>[if (who.isNotEmpty) who, if (when.isNotEmpty) when].join(' \u00b7 '),
+        <String>[if (who.isNotEmpty) who, if (when.isNotEmpty) when]
+            .join(' \u00b7 '),
         h.toString());
   }
 
@@ -18935,7 +19154,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       final Map<String, dynamic> ev = d.data();
       final String note = (ev['note'] ?? '').toString();
       final bool mine = scoped && _tlOwners(ev).contains(tag);
-      t.writeln('${_tlRange(ev)}  ${ev['label'] ?? ''}${mine ? '  [yours]' : ''}${note.isEmpty ? '' : ' - $note'}');
+      t.writeln(
+          '${_tlRange(ev)}  ${ev['label'] ?? ''}${mine ? '  [yours]' : ''}${note.isEmpty ? '' : ' - $note'}');
     }
     return t.toString();
   }
@@ -21051,9 +21271,30 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   static const double kBoardW = 2000;
   static const double kBoardH = 1400;
   static const List<String> kBoardColors = <String>[
-    'F6E7E4', 'E8C4BF', 'C97C7C', 'A64D4D', 'F3EBDD', 'D9B77C', 'B08D3E', '8A6A2F',
-    'E7EFE6', 'A8C0A0', '5B7553', '2F5D50', 'E6EEF5', '9FB8CF', '4A6C8C', '1F2A44',
-    'EFE9F5', 'C9B6E4', '7A5C99', '52284F', 'FFFFFF', 'D9D4CC', '6B6B66', '241E2B',
+    'F6E7E4',
+    'E8C4BF',
+    'C97C7C',
+    'A64D4D',
+    'F3EBDD',
+    'D9B77C',
+    'B08D3E',
+    '8A6A2F',
+    'E7EFE6',
+    'A8C0A0',
+    '5B7553',
+    '2F5D50',
+    'E6EEF5',
+    '9FB8CF',
+    '4A6C8C',
+    '1F2A44',
+    'EFE9F5',
+    'C9B6E4',
+    '7A5C99',
+    '52284F',
+    'FFFFFF',
+    'D9D4CC',
+    '6B6B66',
+    '241E2B',
   ];
 
   List<Map<String, dynamic>> _bdItems = <Map<String, dynamic>>[];
@@ -21063,7 +21304,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   bool _bdBusy = false;
   Timer? _bdSaveT;
   final TransformationController _bdTc = TransformationController();
-  int _bdLocalRev = 0; // bumps on every local change; remote snapshots older than our last save are ignored
+  int _bdLocalRev =
+      0; // bumps on every local change; remote snapshots older than our last save are ignored
 
   void _bdApplyRemote(Map<String, dynamic> d) {
     if (_bdDragging) return;
@@ -21093,7 +21335,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
 
   double _bdScale() => _bdTc.value.getMaxScaleOnAxis();
 
-  String _bdId() => 'b${DateTime.now().millisecondsSinceEpoch}${_bdItems.length}';
+  String _bdId() =>
+      'b${DateTime.now().millisecondsSinceEpoch}${_bdItems.length}';
 
   int _bdTopZ() {
     int z = 0;
@@ -21138,22 +21381,29 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         backgroundColor: ivory,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Pin from a link',
-            style: TextStyle(color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
+            style: TextStyle(
+                color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
         content: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
           TextField(
               controller: c,
               autofocus: true,
               keyboardType: TextInputType.url,
               style: const TextStyle(color: ink),
-              decoration: _lightDeco('Paste the link', hint: 'A Pinterest pin, an Etsy listing, any page or picture')),
+              decoration: _lightDeco('Paste the link',
+                  hint:
+                      'A Pinterest pin, an Etsy listing, any page or picture')),
           const SizedBox(height: 8),
-          const Text('We pull the picture and a caption from the page. Copy the link from the share button on Pinterest.',
+          const Text(
+              'We pull the picture and a caption from the page. Copy the link from the share button on Pinterest.',
               style: TextStyle(fontSize: 12, color: muted, height: 1.4)),
         ]),
         actions: <Widget>[
-          TextButton(onPressed: _h(() => Navigator.pop(ctx, false)), child: const Text('Cancel', style: TextStyle(color: muted))),
+          TextButton(
+              onPressed: _h(() => Navigator.pop(ctx, false)),
+              child: const Text('Cancel', style: TextStyle(color: muted))),
           FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: gold, foregroundColor: plum),
+              style: FilledButton.styleFrom(
+                  backgroundColor: gold, foregroundColor: plum),
               onPressed: _h(() => Navigator.pop(ctx, true)),
               child: const Text('Pin it')),
         ],
@@ -21166,14 +21416,19 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     setState(() => _bdBusy = true);
     try {
       final httpc.Response r = await httpc
-          .get(Uri.parse('https://meetlazo.com/api/unfurl?u=' + Uri.encodeComponent(u)))
+          .get(Uri.parse(
+              'https://meetlazo.com/api/unfurl?u=' + Uri.encodeComponent(u)))
           .timeout(const Duration(seconds: 15));
-      final Map<String, dynamic> j = r.statusCode == 200 ? Map<String, dynamic>.from(jsonDecode(r.body) as Map) : <String, dynamic>{};
+      final Map<String, dynamic> j = r.statusCode == 200
+          ? Map<String, dynamic>.from(jsonDecode(r.body) as Map)
+          : <String, dynamic>{};
       final String img = (j['image'] ?? '').toString();
       if (img.isEmpty) {
         _bdAdd(<String, dynamic>{
           'kind': 'note',
-          'text': (j['title'] ?? '').toString().isNotEmpty ? j['title'].toString() : u,
+          'text': (j['title'] ?? '').toString().isNotEmpty
+              ? j['title'].toString()
+              : u,
           'src': u,
           'color': 'F3EBDD',
           'w': 220.0,
@@ -21211,16 +21466,30 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       for (final PlatformFile f in res.files.take(6)) {
         final Uint8List? bytes = f.bytes;
         if (bytes == null || bytes.length > 8 * 1024 * 1024) continue;
-        final String ext = f.name.contains('.') ? f.name.substring(f.name.lastIndexOf('.')).toLowerCase() : '.jpg';
-        final String ctype = ext == '.png' ? 'image/png' : (ext == '.webp' ? 'image/webp' : 'image/jpeg');
+        final String ext = f.name.contains('.')
+            ? f.name.substring(f.name.lastIndexOf('.')).toLowerCase()
+            : '.jpg';
+        final String ctype = ext == '.png'
+            ? 'image/png'
+            : (ext == '.webp' ? 'image/webp' : 'image/jpeg');
         // The website gallery path: the storage rules already allow it.
-        final Reference ref = FirebaseStorage.instance.ref('couples/$_uid/site/board${DateTime.now().millisecondsSinceEpoch}$ext');
+        final Reference ref = FirebaseStorage.instance.ref(
+            'couples/$_uid/site/board${DateTime.now().millisecondsSinceEpoch}$ext');
         await ref.putData(bytes, SettableMetadata(contentType: ctype));
         final String url = await ref.getDownloadURL();
-        _bdAdd(<String, dynamic>{'kind': 'image', 'url': url, 'src': '', 'title': '', 'site': '', 'w': 260.0, 'ar': 1.0});
+        _bdAdd(<String, dynamic>{
+          'kind': 'image',
+          'url': url,
+          'src': '',
+          'title': '',
+          'site': '',
+          'w': 260.0,
+          'ar': 1.0
+        });
       }
     } catch (e) {
-      _toast(e.toString().contains('permission') || e.toString().contains('unauthorized')
+      _toast(e.toString().contains('permission') ||
+              e.toString().contains('unauthorized')
           ? 'Photo upload isn’t permitted yet - storage rules need the couples/site path.'
           : 'Upload failed: ' + e.toString());
     } finally {
@@ -21229,46 +21498,66 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   }
 
   Future<void> _bdAddNote([Map<String, dynamic>? existing]) async {
-    final TextEditingController c = TextEditingController(text: (existing?['text'] ?? '').toString());
+    final TextEditingController c =
+        TextEditingController(text: (existing?['text'] ?? '').toString());
     String color = (existing?['color'] ?? 'F3EBDD').toString();
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => StatefulBuilder(
         builder: (BuildContext ctx2, StateSetter setD) => AlertDialog(
           backgroundColor: ivory,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(existing == null ? 'Add a note' : 'Edit note',
-              style: const TextStyle(color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
-          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-            TextField(
-                controller: c,
-                autofocus: true,
-                minLines: 2,
-                maxLines: 6,
-                textCapitalization: TextCapitalization.sentences,
-                style: const TextStyle(color: ink),
-                decoration: _lightDeco('The note', hint: 'Candlelight, long tables, no centrepieces taller than a wine glass')),
-            const SizedBox(height: 10),
-            Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
-              for (final String k in const <String>['F3EBDD', 'F6E7E4', 'E7EFE6', 'E6EEF5', 'EFE9F5', 'FFFFFF'])
-                _Press(
-                  tick: _Tick.select,
-                  onTap: () => setD(() => color = k),
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                        color: Color(int.parse('FF$k', radix: 16)),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: color == k ? plum : goldLine, width: color == k ? 2.5 : 1)),
-                  ),
-                ),
-            ]),
-          ]),
+              style: const TextStyle(
+                  color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
+          content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                TextField(
+                    controller: c,
+                    autofocus: true,
+                    minLines: 2,
+                    maxLines: 6,
+                    textCapitalization: TextCapitalization.sentences,
+                    style: const TextStyle(color: ink),
+                    decoration: _lightDeco('The note',
+                        hint:
+                            'Candlelight, long tables, no centrepieces taller than a wine glass')),
+                const SizedBox(height: 10),
+                Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
+                  for (final String k in const <String>[
+                    'F3EBDD',
+                    'F6E7E4',
+                    'E7EFE6',
+                    'E6EEF5',
+                    'EFE9F5',
+                    'FFFFFF'
+                  ])
+                    _Press(
+                      tick: _Tick.select,
+                      onTap: () => setD(() => color = k),
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                            color: Color(int.parse('FF$k', radix: 16)),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: color == k ? plum : goldLine,
+                                width: color == k ? 2.5 : 1)),
+                      ),
+                    ),
+                ]),
+              ]),
           actions: <Widget>[
-            TextButton(onPressed: _h(() => Navigator.pop(ctx2, false)), child: const Text('Cancel', style: TextStyle(color: muted))),
+            TextButton(
+                onPressed: _h(() => Navigator.pop(ctx2, false)),
+                child: const Text('Cancel', style: TextStyle(color: muted))),
             FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: gold, foregroundColor: plum),
+                style: FilledButton.styleFrom(
+                    backgroundColor: gold, foregroundColor: plum),
                 onPressed: _h(() => Navigator.pop(ctx2, true)),
                 child: const Text('Save')),
           ],
@@ -21284,71 +21573,95 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       _bdSave();
       return;
     }
-    _bdAdd(<String, dynamic>{'kind': 'note', 'text': c.text.trim(), 'color': color, 'src': '', 'w': 220.0, 'ar': 1.3});
+    _bdAdd(<String, dynamic>{
+      'kind': 'note',
+      'text': c.text.trim(),
+      'color': color,
+      'src': '',
+      'w': 220.0,
+      'ar': 1.3
+    });
   }
 
   Future<void> _bdAddSwatch([Map<String, dynamic>? existing]) async {
     String color = (existing?['color'] ?? 'D9B77C').toString();
     final TextEditingController hexC = TextEditingController(text: color);
-    final TextEditingController labelC = TextEditingController(text: (existing?['text'] ?? '').toString());
+    final TextEditingController labelC =
+        TextEditingController(text: (existing?['text'] ?? '').toString());
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => StatefulBuilder(
         builder: (BuildContext ctx2, StateSetter setD) => AlertDialog(
           backgroundColor: ivory,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(existing == null ? 'Add a color' : 'Edit color',
-              style: const TextStyle(color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
-          content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-            Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
-              for (final String k in kBoardColors)
-                _Press(
-                  tick: _Tick.select,
-                  onTap: () => setD(() {
-                    color = k;
-                    hexC.text = k;
-                  }),
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                        color: Color(int.parse('FF$k', radix: 16)),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: color == k ? plum : goldLine, width: color == k ? 2.5 : 1)),
+              style: const TextStyle(
+                  color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
+          content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
+                  for (final String k in kBoardColors)
+                    _Press(
+                      tick: _Tick.select,
+                      onTap: () => setD(() {
+                        color = k;
+                        hexC.text = k;
+                      }),
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                            color: Color(int.parse('FF$k', radix: 16)),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: color == k ? plum : goldLine,
+                                width: color == k ? 2.5 : 1)),
+                      ),
+                    ),
+                ]),
+                const SizedBox(height: 10),
+                Row(children: <Widget>[
+                  Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                          color: Color(int.tryParse(
+                                  'FF${hexC.text.replaceAll('#', '')}',
+                                  radix: 16) ??
+                              0xFFD9B77C),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: goldLine))),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                        controller: hexC,
+                        style: const TextStyle(color: ink),
+                        onChanged: (String v) {
+                          final String h =
+                              v.replaceAll('#', '').trim().toUpperCase();
+                          if (RegExp(r'^[0-9A-F]{6}$').hasMatch(h))
+                            setD(() => color = h);
+                        },
+                        decoration: _lightDeco('Hex', hint: 'D9B77C')),
                   ),
-                ),
-            ]),
-            const SizedBox(height: 10),
-            Row(children: <Widget>[
-              Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                      color: Color(int.tryParse('FF${hexC.text.replaceAll('#', '')}', radix: 16) ?? 0xFFD9B77C),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: goldLine))),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                    controller: hexC,
+                ]),
+                const SizedBox(height: 10),
+                TextField(
+                    controller: labelC,
                     style: const TextStyle(color: ink),
-                    onChanged: (String v) {
-                      final String h = v.replaceAll('#', '').trim().toUpperCase();
-                      if (RegExp(r'^[0-9A-F]{6}$').hasMatch(h)) setD(() => color = h);
-                    },
-                    decoration: _lightDeco('Hex', hint: 'D9B77C')),
-              ),
-            ]),
-            const SizedBox(height: 10),
-            TextField(
-                controller: labelC,
-                style: const TextStyle(color: ink),
-                decoration: _lightDeco('Call it (optional)', hint: 'Dusty sage, bridesmaids')),
-          ]),
+                    decoration: _lightDeco('Call it (optional)',
+                        hint: 'Dusty sage, bridesmaids')),
+              ]),
           actions: <Widget>[
-            TextButton(onPressed: _h(() => Navigator.pop(ctx2, false)), child: const Text('Cancel', style: TextStyle(color: muted))),
+            TextButton(
+                onPressed: _h(() => Navigator.pop(ctx2, false)),
+                child: const Text('Cancel', style: TextStyle(color: muted))),
             FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: gold, foregroundColor: plum),
+                style: FilledButton.styleFrom(
+                    backgroundColor: gold, foregroundColor: plum),
                 onPressed: _h(() => Navigator.pop(ctx2, true)),
                 child: const Text('Save')),
           ],
@@ -21364,7 +21677,14 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       _bdSave();
       return;
     }
-    _bdAdd(<String, dynamic>{'kind': 'swatch', 'color': color, 'text': labelC.text.trim(), 'src': '', 'w': 120.0, 'ar': 1.0});
+    _bdAdd(<String, dynamic>{
+      'kind': 'swatch',
+      'color': color,
+      'text': labelC.text.trim(),
+      'src': '',
+      'w': 120.0,
+      'ar': 1.0
+    });
   }
 
   // v135: who is typing - initials and first name of the signed-in partner.
@@ -21373,12 +21693,20 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     String name = (u?.displayName ?? '').trim();
     if (name.isEmpty) name = (u?.email ?? '').split('@').first;
     if (name.isEmpty) name = 'You';
-    final List<String> parts = name.split(RegExp(r'[\s._-]+')).where((String w) => w.isNotEmpty).toList();
-    final String ini = parts.take(2).map((String w) => w[0].toUpperCase()).join();
-    return <String>[ini.isEmpty ? 'Y' : ini, parts.isEmpty ? 'You' : parts.first];
+    final List<String> parts = name
+        .split(RegExp(r'[\s._-]+'))
+        .where((String w) => w.isNotEmpty)
+        .toList();
+    final String ini =
+        parts.take(2).map((String w) => w[0].toUpperCase()).join();
+    return <String>[
+      ini.isEmpty ? 'Y' : ini,
+      parts.isEmpty ? 'You' : parts.first
+    ];
   }
 
-  List<Map<String, dynamic>> _bdComments(Map<String, dynamic> it) => <Map<String, dynamic>>[
+  List<Map<String, dynamic>> _bdComments(Map<String, dynamic> it) =>
+      <Map<String, dynamic>>[
         if (it['comments'] is List)
           for (final dynamic c in it['comments'] as List)
             if (c is Map) Map<String, dynamic>.from(c)
@@ -21392,12 +21720,14 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       backgroundColor: ivory,
       isScrollControlled: true,
       constraints: const BoxConstraints(maxWidth: 520),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
       builder: (BuildContext ctx) => StatefulBuilder(
         builder: (BuildContext ctx2, StateSetter setS) {
           final List<Map<String, dynamic>> cs = _bdComments(it);
           return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx2).viewInsets.bottom),
+            padding:
+                EdgeInsets.only(bottom: MediaQuery.of(ctx2).viewInsets.bottom),
             child: SafeArea(
               child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
                 Padding(
@@ -21406,31 +21736,48 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     if (it['kind'] == 'image')
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network((it['url'] ?? '').toString(), width: 44, height: 44, fit: BoxFit.cover,
-                            errorBuilder: (BuildContext a, Object b, StackTrace? d) => const SizedBox(width: 44, height: 44)),
+                        child: Image.network((it['url'] ?? '').toString(),
+                            width: 44,
+                            height: 44,
+                            fit: BoxFit.cover,
+                            errorBuilder:
+                                (BuildContext a, Object b, StackTrace? d) =>
+                                    const SizedBox(width: 44, height: 44)),
                       )
                     else
                       Container(
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                            color: Color(int.tryParse('FF${(it['color'] ?? 'F3EBDD').toString()}', radix: 16) ?? 0xFFF3EBDD),
+                            color: Color(int.tryParse(
+                                    'FF${(it['color'] ?? 'F3EBDD').toString()}',
+                                    radix: 16) ??
+                                0xFFF3EBDD),
                             borderRadius: BorderRadius.circular(8)),
                       ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                        Text('Talk about this one', style: _serif(size: 22)),
-                        Text(
-                            ((it['title'] ?? it['text'] ?? '').toString()).isEmpty
-                                ? (cs.isEmpty ? 'Nothing yet' : '${cs.length} comment${cs.length == 1 ? '' : 's'}')
-                                : (it['title'] ?? it['text']).toString(),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12.5, color: muted)),
-                      ]),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text('Talk about this one',
+                                style: _serif(size: 22)),
+                            Text(
+                                ((it['title'] ?? it['text'] ?? '').toString())
+                                        .isEmpty
+                                    ? (cs.isEmpty
+                                        ? 'Nothing yet'
+                                        : '${cs.length} comment${cs.length == 1 ? '' : 's'}')
+                                    : (it['title'] ?? it['text']).toString(),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 12.5, color: muted)),
+                          ]),
                     ),
-                    IconButton(icon: const Icon(Icons.close_rounded, color: muted), onPressed: () => Navigator.pop(ctx2)),
+                    IconButton(
+                        icon: const Icon(Icons.close_rounded, color: muted),
+                        onPressed: () => Navigator.pop(ctx2)),
                   ]),
                 ),
                 Flexible(
@@ -21441,52 +21788,91 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                       if (cs.isEmpty)
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 14),
-                          child: Text('Say what you like about it, or what you’d change. Your partner sees it here too.',
-                              style: TextStyle(fontSize: 13, color: muted, height: 1.45)),
+                          child: Text(
+                              'Say what you like about it, or what you’d change. Your partner sees it here too.',
+                              style: TextStyle(
+                                  fontSize: 13, color: muted, height: 1.45)),
                         ),
                       for (final Map<String, dynamic> cm in cs)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                            Container(
-                              width: 30,
-                              height: 30,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                  color: (cm['by'] ?? '') == (FirebaseAuth.instance.currentUser?.uid ?? '') ? plum : gold,
-                                  shape: BoxShape.circle),
-                              child: Text((cm['ini'] ?? '?').toString(),
-                                  style: TextStyle(
-                                      color: (cm['by'] ?? '') == (FirebaseAuth.instance.currentUser?.uid ?? '') ? gold : plumDeep,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800)),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                                Row(children: <Widget>[
-                                  Text((cm['name'] ?? '').toString(), style: const TextStyle(color: plum, fontSize: 12.5, fontWeight: FontWeight.w800)),
-                                  const SizedBox(width: 6),
-                                  Text(cm['at'] is num ? _ago(Timestamp.fromMillisecondsSinceEpoch((cm['at'] as num).toInt())) : '',
-                                      style: const TextStyle(fontSize: 11, color: muted)),
-                                ]),
-                                Text((cm['text'] ?? '').toString(), style: const TextStyle(color: ink, fontSize: 14, height: 1.4)),
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Container(
+                                  width: 30,
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                      color: (cm['by'] ?? '') ==
+                                              (FirebaseAuth.instance.currentUser
+                                                      ?.uid ??
+                                                  '')
+                                          ? plum
+                                          : gold,
+                                      shape: BoxShape.circle),
+                                  child: Text((cm['ini'] ?? '?').toString(),
+                                      style: TextStyle(
+                                          color: (cm['by'] ?? '') ==
+                                                  (FirebaseAuth.instance
+                                                          .currentUser?.uid ??
+                                                      '')
+                                              ? gold
+                                              : plumDeep,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800)),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Row(children: <Widget>[
+                                          Text((cm['name'] ?? '').toString(),
+                                              style: const TextStyle(
+                                                  color: plum,
+                                                  fontSize: 12.5,
+                                                  fontWeight: FontWeight.w800)),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                              cm['at'] is num
+                                                  ? _ago(Timestamp
+                                                      .fromMillisecondsSinceEpoch(
+                                                          (cm['at'] as num)
+                                                              .toInt()))
+                                                  : '',
+                                              style: const TextStyle(
+                                                  fontSize: 11, color: muted)),
+                                        ]),
+                                        Text((cm['text'] ?? '').toString(),
+                                            style: const TextStyle(
+                                                color: ink,
+                                                fontSize: 14,
+                                                height: 1.4)),
+                                      ]),
+                                ),
+                                if ((cm['by'] ?? '') ==
+                                    (FirebaseAuth.instance.currentUser?.uid ??
+                                        ''))
+                                  IconButton(
+                                    icon: const Icon(Icons.close_rounded,
+                                        size: 15, color: muted),
+                                    onPressed: () {
+                                      setState(() {
+                                        final List<Map<String, dynamic>> all =
+                                            _bdComments(it);
+                                        all.removeWhere(
+                                            (Map<String, dynamic> x) =>
+                                                x['at'] == cm['at'] &&
+                                                x['by'] == cm['by']);
+                                        it['comments'] = all;
+                                      });
+                                      setS(() {});
+                                      _bdSave();
+                                    },
+                                  ),
                               ]),
-                            ),
-                            if ((cm['by'] ?? '') == (FirebaseAuth.instance.currentUser?.uid ?? ''))
-                              IconButton(
-                                icon: const Icon(Icons.close_rounded, size: 15, color: muted),
-                                onPressed: () {
-                                  setState(() {
-                                    final List<Map<String, dynamic>> all = _bdComments(it);
-                                    all.removeWhere((Map<String, dynamic> x) => x['at'] == cm['at'] && x['by'] == cm['by']);
-                                    it['comments'] = all;
-                                  });
-                                  setS(() {});
-                                  _bdSave();
-                                },
-                              ),
-                          ]),
                         ),
                     ],
                   ),
@@ -21498,8 +21884,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                       width: 30,
                       height: 30,
                       alignment: Alignment.center,
-                      decoration: const BoxDecoration(color: plum, shape: BoxShape.circle),
-                      child: Text(me[0], style: const TextStyle(color: gold, fontSize: 11, fontWeight: FontWeight.w800)),
+                      decoration: const BoxDecoration(
+                          color: plum, shape: BoxShape.circle),
+                      child: Text(me[0],
+                          style: const TextStyle(
+                              color: gold,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800)),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -21509,13 +21900,16 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                         maxLines: 3,
                         textCapitalization: TextCapitalization.sentences,
                         style: const TextStyle(color: ink, fontSize: 14),
-                        decoration: _lightDeco('Candles instead of taper lights?'),
+                        decoration:
+                            _lightDeco('Candles instead of taper lights?'),
                         onSubmitted: (String v) {
                           if (v.trim().isEmpty) return;
                           setState(() {
-                            final List<Map<String, dynamic>> all = _bdComments(it);
+                            final List<Map<String, dynamic>> all =
+                                _bdComments(it);
                             all.add(<String, dynamic>{
-                              'by': FirebaseAuth.instance.currentUser?.uid ?? '',
+                              'by':
+                                  FirebaseAuth.instance.currentUser?.uid ?? '',
                               'ini': me[0],
                               'name': me[1],
                               'text': v.trim(),
@@ -21536,7 +21930,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                         final String v = c.text.trim();
                         if (v.isEmpty) return;
                         setState(() {
-                          final List<Map<String, dynamic>> all = _bdComments(it);
+                          final List<Map<String, dynamic>> all =
+                              _bdComments(it);
                           all.add(<String, dynamic>{
                             'by': FirebaseAuth.instance.currentUser?.uid ?? '',
                             'ini': me[0],
@@ -21571,17 +21966,25 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     final StringBuffer h = StringBuffer();
     final StringBuffer t = StringBuffer();
     t.writeln('DREAM BOARD${when.isEmpty ? '' : ' - $when'}');
-    final List<Map<String, dynamic>> imgs = _bdItems.where((Map<String, dynamic> i) => i['kind'] == 'image').toList();
-    final List<Map<String, dynamic>> notes = _bdItems.where((Map<String, dynamic> i) => i['kind'] == 'note').toList();
-    final List<Map<String, dynamic>> sw = _bdItems.where((Map<String, dynamic> i) => i['kind'] == 'swatch').toList();
+    final List<Map<String, dynamic>> imgs = _bdItems
+        .where((Map<String, dynamic> i) => i['kind'] == 'image')
+        .toList();
+    final List<Map<String, dynamic>> notes = _bdItems
+        .where((Map<String, dynamic> i) => i['kind'] == 'note')
+        .toList();
+    final List<Map<String, dynamic>> sw = _bdItems
+        .where((Map<String, dynamic> i) => i['kind'] == 'swatch')
+        .toList();
     if (sw.isNotEmpty) {
-      h.write('<h2>Colors</h2><div style="display:flex;flex-wrap:wrap;gap:10px">');
+      h.write(
+          '<h2>Colors</h2><div style="display:flex;flex-wrap:wrap;gap:10px">');
       t.writeln('');
       t.writeln('COLORS');
       for (final Map<String, dynamic> i in sw) {
         final String c = (i['color'] ?? 'D9B77C').toString();
         final String l = (i['text'] ?? '').toString();
-        h.write('<div style="text-align:center;font-size:12px;color:#6B5F72"><div style="width:64px;height:64px;border-radius:12px;background:#$c;border:1px solid #E6D6B8"></div>#$c${l.isEmpty ? '' : '<br>' + _esc(l)}</div>');
+        h.write(
+            '<div style="text-align:center;font-size:12px;color:#6B5F72"><div style="width:64px;height:64px;border-radius:12px;background:#$c;border:1px solid #E6D6B8"></div>#$c${l.isEmpty ? '' : '<br>' + _esc(l)}</div>');
         t.writeln('#$c${l.isEmpty ? '' : ' - $l'}');
       }
       h.write('</div>');
@@ -21592,13 +21995,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       t.writeln('NOTES');
       for (final Map<String, dynamic> i in notes) {
         final String src = (i['src'] ?? '').toString();
-        h.write('<li>${_esc((i['text'] ?? '').toString())}${src.isEmpty ? '' : ' <a href="${_esc(src)}">link</a>'}</li>');
+        h.write(
+            '<li>${_esc((i['text'] ?? '').toString())}${src.isEmpty ? '' : ' <a href="${_esc(src)}">link</a>'}</li>');
         t.writeln('- ${i['text'] ?? ''}${src.isEmpty ? '' : ' ($src)'}');
       }
       h.write('</ul>');
     }
     if (imgs.isNotEmpty) {
-      h.write('<h2>Pictures</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">');
+      h.write(
+          '<h2>Pictures</h2><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">');
       t.writeln('');
       t.writeln('PICTURES');
       for (final Map<String, dynamic> i in imgs) {
@@ -21606,7 +22011,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         final String src = (i['src'] ?? '').toString();
         final String cap = (i['title'] ?? '').toString();
         final List<Map<String, dynamic>> cms = _bdComments(i);
-        h.write('<div><a href="${_esc(src.isEmpty ? u : src)}"><img src="${_esc(u)}" style="width:100%;border-radius:10px;display:block" alt=""></a>${cap.isEmpty ? '' : '<div style="font-size:12px;color:#6B5F72;margin-top:4px">' + _esc(cap) + '</div>'}'
+        h.write(
+            '<div><a href="${_esc(src.isEmpty ? u : src)}"><img src="${_esc(u)}" style="width:100%;border-radius:10px;display:block" alt=""></a>${cap.isEmpty ? '' : '<div style="font-size:12px;color:#6B5F72;margin-top:4px">' + _esc(cap) + '</div>'}'
             '${cms.isEmpty ? '' : '<div style="font-size:11.5px;color:#52284F;margin-top:4px">' + cms.map((Map<String, dynamic> x) => '<b>' + _esc((x['name'] ?? '').toString()) + ':</b> ' + _esc((x['text'] ?? '').toString())).join('<br>') + '</div>'}</div>');
         t.writeln('${cap.isEmpty ? '' : cap + ' - '}${src.isEmpty ? u : src}');
       }
@@ -21616,11 +22022,17 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       kind: 'board',
       title: 'dream board',
       fileName: 'Dream board.html',
-      page: _printShell('Dream board', <String>[if (who.isNotEmpty) who, if (when.isNotEmpty) when].join(' · '), h.toString()),
+      page: _printShell(
+          'Dream board',
+          <String>[if (who.isNotEmpty) who, if (when.isNotEmpty) when]
+              .join(' · '),
+          h.toString()),
       text: t.toString(),
       tags: <String>['florist', 'planner', 'photo'],
-      note: 'Here’s our dream board - the look we’re going for. Tell us what’s realistic and what you’d change.',
-      preview: '${imgs.length} picture${imgs.length == 1 ? '' : 's'}, ${notes.length} note${notes.length == 1 ? '' : 's'}, ${sw.length} color${sw.length == 1 ? '' : 's'}',
+      note:
+          'Here’s our dream board - the look we’re going for. Tell us what’s realistic and what you’d change.',
+      preview:
+          '${imgs.length} picture${imgs.length == 1 ? '' : 's'}, ${notes.length} note${notes.length == 1 ? '' : 's'}, ${sw.length} color${sw.length == 1 ? '' : 's'}',
     );
   }
 
@@ -21628,11 +22040,14 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       stream: _liveDoc('board:$_cid', () => _boardRef),
       initialData: _liveD['board:$_cid']?.latest,
-      builder: (BuildContext c, AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> sn) {
+      builder: (BuildContext c,
+          AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> sn) {
         if (sn.hasData) _bdApplyRemote(sn.data!.data() ?? <String, dynamic>{});
-        final Map<String, dynamic>? sel = _bdSel.isEmpty ? null : _bdById(_bdSel);
+        final Map<String, dynamic>? sel =
+            _bdSel.isEmpty ? null : _bdById(_bdSel);
         final bool empty = _bdItems.isEmpty;
-        Widget tool(IconData ic, String label, VoidCallback go, {bool solid = false}) {
+        Widget tool(IconData ic, String label, VoidCallback go,
+            {bool solid = false}) {
           return _Press(
             tick: _Tick.light,
             onTap: _bdBusy ? null : go,
@@ -21642,21 +22057,28 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
               decoration: BoxDecoration(
                 color: solid ? gold : Colors.white.withOpacity(.12),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: solid ? gold : ivory.withOpacity(.35)),
+                border:
+                    Border.all(color: solid ? gold : ivory.withOpacity(.35)),
               ),
               child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                 Icon(ic, size: 15, color: solid ? plumDeep : ivory),
                 const SizedBox(width: 6),
-                Text(label, style: TextStyle(color: solid ? plumDeep : ivory, fontSize: 12.5, fontWeight: FontWeight.w800)),
+                Text(label,
+                    style: TextStyle(
+                        color: solid ? plumDeep : ivory,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800)),
               ]),
             ),
           );
         }
 
         final List<Widget> sorted = <Widget>[];
-        final List<Map<String, dynamic>> byZ = List<Map<String, dynamic>>.from(_bdItems)
-          ..sort((Map<String, dynamic> a, Map<String, dynamic> b) =>
-              ((a['z'] is num ? (a['z'] as num) : 0)).compareTo(b['z'] is num ? (b['z'] as num) : 0));
+        final List<Map<String, dynamic>> byZ =
+            List<Map<String, dynamic>>.from(_bdItems)
+              ..sort((Map<String, dynamic> a, Map<String, dynamic> b) =>
+                  ((a['z'] is num ? (a['z'] as num) : 0))
+                      .compareTo(b['z'] is num ? (b['z'] as num) : 0));
         for (final Map<String, dynamic> it in byZ) {
           sorted.add(_boardItem(it));
         }
@@ -21669,11 +22091,18 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     ? null
                     : _Press(
                         onTap: () => _bdShare(couple),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                          Icon(Icons.send_rounded, color: ivory.withOpacity(.9), size: 15),
-                          const SizedBox(width: 4),
-                          Text('Share', style: TextStyle(color: ivory.withOpacity(.9), fontSize: 12, fontWeight: FontWeight.w800)),
-                        ]),
+                        child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(Icons.send_rounded,
+                                  color: ivory.withOpacity(.9), size: 15),
+                              const SizedBox(width: 4),
+                              Text('Share',
+                                  style: TextStyle(
+                                      color: ivory.withOpacity(.9),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800)),
+                            ]),
                       )),
           ),
           Padding(
@@ -21688,7 +22117,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 if (_bdBusy)
                   const Padding(
                     padding: EdgeInsets.only(left: 4),
-                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: gold)),
+                    child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: gold)),
                   ),
               ]),
             ),
@@ -21702,21 +22135,30 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   if ((sel['src'] ?? '').toString().isNotEmpty)
                     tool(Icons.open_in_new_rounded, 'Open source', () async {
                       final Uri? u = Uri.tryParse(sel['src'].toString());
-                      if (u != null && await canLaunchUrl(u)) await launchUrl(u, mode: LaunchMode.externalApplication);
+                      if (u != null && await canLaunchUrl(u))
+                        await launchUrl(u,
+                            mode: LaunchMode.externalApplication);
                     }),
-                  tool(Icons.mode_comment_outlined,
-                      _bdComments(sel).isEmpty ? 'Comment' : '${_bdComments(sel).length} comment${_bdComments(sel).length == 1 ? '' : 's'}',
+                  tool(
+                      Icons.mode_comment_outlined,
+                      _bdComments(sel).isEmpty
+                          ? 'Comment'
+                          : '${_bdComments(sel).length} comment${_bdComments(sel).length == 1 ? '' : 's'}',
                       () => _bdCommentSheet(sel)),
-                  if (sel['kind'] == 'note') tool(Icons.edit_rounded, 'Edit', () => _bdAddNote(sel)),
-                  if (sel['kind'] == 'swatch') tool(Icons.edit_rounded, 'Edit', () => _bdAddSwatch(sel)),
+                  if (sel['kind'] == 'note')
+                    tool(Icons.edit_rounded, 'Edit', () => _bdAddNote(sel)),
+                  if (sel['kind'] == 'swatch')
+                    tool(Icons.edit_rounded, 'Edit', () => _bdAddSwatch(sel)),
                   tool(Icons.flip_to_front_rounded, 'To front', () {
                     setState(() => sel['z'] = _bdTopZ() + 1);
                     _bdSave();
                   }),
                   tool(Icons.delete_outline_rounded, 'Remove', () {
-                    final Map<String, dynamic> gone = Map<String, dynamic>.from(sel);
+                    final Map<String, dynamic> gone =
+                        Map<String, dynamic>.from(sel);
                     setState(() {
-                      _bdItems.removeWhere((Map<String, dynamic> i) => i['id'] == gone['id']);
+                      _bdItems.removeWhere(
+                          (Map<String, dynamic> i) => i['id'] == gone['id']);
                       _bdSel = '';
                     });
                     _bdSave();
@@ -21753,7 +22195,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                       child: Stack(clipBehavior: Clip.none, children: <Widget>[
                         Positioned.fill(
                           child: IgnorePointer(
-                            child: CustomPaint(painter: _BoardGridPainter(gold.withOpacity(.22))),
+                            child: CustomPaint(
+                                painter:
+                                    _BoardGridPainter(gold.withOpacity(.22))),
                           ),
                         ),
                         ...sorted,
@@ -21773,14 +22217,20 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(color: goldLine),
                           ),
-                          child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                            Text('The look you’re going for', style: _serif(size: 24)),
-                            const SizedBox(height: 6),
-                            const Text(
-                                'Pin a link from Pinterest, Etsy or anywhere and the picture lands here. Add photos from your phone, notes, and the colors. Drag it all around; drag a corner to resize. Share it with your florist, planner and photographer when it says what you mean.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 13, color: muted, height: 1.45)),
-                          ]),
+                          child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: <Widget>[
+                                Text('The look you’re going for',
+                                    style: _serif(size: 24)),
+                                const SizedBox(height: 6),
+                                const Text(
+                                    'Pin a link from Pinterest, Etsy or anywhere and the picture lands here. Add photos from your phone, notes, and the colors. Drag it all around; drag a corner to resize. Share it with your florist, planner and photographer when it says what you mean.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: muted,
+                                        height: 1.45)),
+                              ]),
                         ),
                       ),
                     ),
@@ -21796,9 +22246,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   Widget _boardItem(Map<String, dynamic> it) {
     final String id = it['id'].toString();
     final String kind = (it['kind'] ?? 'note').toString();
-    final double w = (it['w'] is num ? (it['w'] as num).toDouble() : 220).clamp(60, 900).toDouble();
-    final double ar = (it['ar'] is num ? (it['ar'] as num).toDouble() : 1).clamp(.2, 5).toDouble();
-    final double hgt = kind == 'note' ? (it['h'] is num ? (it['h'] as num).toDouble() : w / ar) : w / ar;
+    final double w = (it['w'] is num ? (it['w'] as num).toDouble() : 220)
+        .clamp(60, 900)
+        .toDouble();
+    final double ar = (it['ar'] is num ? (it['ar'] as num).toDouble() : 1)
+        .clamp(.2, 5)
+        .toDouble();
+    final double hgt = kind == 'note'
+        ? (it['h'] is num ? (it['h'] as num).toDouble() : w / ar)
+        : w / ar;
     final double x = it['x'] is num ? (it['x'] as num).toDouble() : 100;
     final double y = it['y'] is num ? (it['y'] as num).toDouble() : 100;
     final bool sel = _bdSel == id;
@@ -21815,7 +22271,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             if (frame != null && it['arReal'] != true) {
               // First paint: read the real aspect once, so the pin keeps its shape.
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                final ImageStream st = Image.network((it['url'] ?? '').toString()).image.resolve(const ImageConfiguration());
+                final ImageStream st =
+                    Image.network((it['url'] ?? '').toString())
+                        .image
+                        .resolve(const ImageConfiguration());
                 late final ImageStreamListener l;
                 l = ImageStreamListener((ImageInfo info, bool _) {
                   st.removeListener(l);
@@ -21844,17 +22303,23 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       );
       final String cap = (it['title'] ?? '').toString();
       if (cap.isNotEmpty) {
-        body = Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-          body,
-          SizedBox(
-            width: w,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
-              child: Text(cap, maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: muted, height: 1.3)),
-            ),
-          ),
-        ]);
+        body = Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              body,
+              SizedBox(
+                width: w,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(2, 4, 2, 0),
+                  child: Text(cap,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 11, color: muted, height: 1.3)),
+                ),
+              ),
+            ]);
       }
     } else if (kind == 'swatch') {
       final String c = (it['color'] ?? 'D9B77C').toString();
@@ -21867,12 +22332,21 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
               color: Color(int.tryParse('FF$c', radix: 16) ?? 0xFFD9B77C),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white, width: 3),
-              boxShadow: const <BoxShadow>[BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))]),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                    color: Color(0x22000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 3))
+              ]),
         ),
         SizedBox(
           width: w,
-          child: Text(l.isEmpty ? '#$c' : '$l · #$c', textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: muted, fontWeight: FontWeight.w700)),
+          child: Text(l.isEmpty ? '#$c' : '$l · #$c',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                  fontSize: 11, color: muted, fontWeight: FontWeight.w700)),
         ),
       ]);
     } else {
@@ -21884,9 +22358,17 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         decoration: BoxDecoration(
             color: Color(int.tryParse('FF$c', radix: 16) ?? 0xFFF3EBDD),
             borderRadius: BorderRadius.circular(10),
-            boxShadow: const <BoxShadow>[BoxShadow(color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))]),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                  color: Color(0x22000000), blurRadius: 8, offset: Offset(0, 3))
+            ]),
         child: Text((it['text'] ?? '').toString(),
-            style: TextStyle(color: ink, fontSize: (w / 14).clamp(12, 20).toDouble(), height: 1.35, fontFamily: GoogleFonts.cormorantGaramond().fontFamily, fontWeight: FontWeight.w600)),
+            style: TextStyle(
+                color: ink,
+                fontSize: (w / 14).clamp(12, 20).toDouble(),
+                height: 1.35,
+                fontFamily: GoogleFonts.cormorantGaramond().fontFamily,
+                fontWeight: FontWeight.w600)),
       );
     }
     return Positioned(
@@ -21905,8 +22387,12 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         onPanUpdate: (DragUpdateDetails d) {
           final double sc = _bdScale();
           setState(() {
-            it['x'] = ((it['x'] as num).toDouble() + d.delta.dx / sc).clamp(-200, kBoardW - 40).toDouble();
-            it['y'] = ((it['y'] as num).toDouble() + d.delta.dy / sc).clamp(-200, kBoardH - 40).toDouble();
+            it['x'] = ((it['x'] as num).toDouble() + d.delta.dx / sc)
+                .clamp(-200, kBoardW - 40)
+                .toDouble();
+            it['y'] = ((it['y'] as num).toDouble() + d.delta.dy / sc)
+                .clamp(-200, kBoardH - 40)
+                .toDouble();
           });
         },
         onPanEnd: (DragEndDetails d) {
@@ -21923,7 +22409,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: sel ? plum : Colors.transparent, width: 2)),
+                border: Border.all(
+                    color: sel ? plum : Colors.transparent, width: 2)),
             child: body,
           ),
           if (_bdComments(it).isNotEmpty)
@@ -21933,13 +22420,21 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
               child: GestureDetector(
                 onTap: () => _bdCommentSheet(it),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                   decoration: BoxDecoration(
-                      color: plum, borderRadius: BorderRadius.circular(999), border: Border.all(color: ivory, width: 1.5)),
+                      color: plum,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: ivory, width: 1.5)),
                   child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                    const Icon(Icons.mode_comment_rounded, size: 10, color: gold),
+                    const Icon(Icons.mode_comment_rounded,
+                        size: 10, color: gold),
                     const SizedBox(width: 3),
-                    Text('${_bdComments(it).length}', style: const TextStyle(color: gold, fontSize: 10, fontWeight: FontWeight.w800)),
+                    Text('${_bdComments(it).length}',
+                        style: const TextStyle(
+                            color: gold,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800)),
                   ]),
                 ),
               ),
@@ -21954,9 +22449,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 onPanUpdate: (DragUpdateDetails d) {
                   final double sc = _bdScale();
                   setState(() {
-                    it['w'] = ((it['w'] as num).toDouble() + d.delta.dx / sc).clamp(60, 900).toDouble();
+                    it['w'] = ((it['w'] as num).toDouble() + d.delta.dx / sc)
+                        .clamp(60, 900)
+                        .toDouble();
                     if (kind == 'note') {
-                      it['h'] = (((it['h'] is num ? (it['h'] as num) : w / ar).toDouble()) + d.delta.dy / sc).clamp(60, 900).toDouble();
+                      it['h'] = (((it['h'] is num ? (it['h'] as num) : w / ar)
+                                  .toDouble()) +
+                              d.delta.dy / sc)
+                          .clamp(60, 900)
+                          .toDouble();
                     }
                   });
                 },
@@ -21967,8 +22468,12 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 child: Container(
                   width: 26,
                   height: 26,
-                  decoration: BoxDecoration(color: plum, shape: BoxShape.circle, border: Border.all(color: ivory, width: 2)),
-                  child: const Icon(Icons.open_in_full_rounded, size: 13, color: gold),
+                  decoration: BoxDecoration(
+                      color: plum,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: ivory, width: 2)),
+                  child: const Icon(Icons.open_in_full_rounded,
+                      size: 13, color: gold),
                 ),
               ),
             ),
@@ -22032,7 +22537,12 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     <dynamic>['Wedding-party gifts', 'favors', 8, 400],
     <dynamic>['Parent gifts', 'favors', 4, 200],
     <dynamic>['Welcome bags for out-of-town guests', 'favors', 20, 250],
-    <dynamic>['Emergency kit (sewing, stain pen, pain relief, blister pads)', 'dayof', 1, 45],
+    <dynamic>[
+      'Emergency kit (sewing, stain pen, pain relief, blister pads)',
+      'dayof',
+      1,
+      45
+    ],
     <dynamic>['Steamer', 'dayof', 1, 35],
     <dynamic>['Snacks and water for getting ready', 'dayof', 1, 60],
     <dynamic>['Vendor tip envelopes, labelled', 'dayof', 10, 5],
@@ -22072,7 +22582,12 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         TextEditingController(text: (it['link'] ?? '').toString());
     final TextEditingController noteC =
         TextEditingController(text: (it['note'] ?? '').toString());
-    String cat = (it['cat'] ?? (_shopFilter.length > 5 && kShopCats.any((List<String> k) => k[0] == _shopFilter) ? _shopFilter : 'reception')).toString();
+    String cat = (it['cat'] ??
+            (_shopFilter.length > 5 &&
+                    kShopCats.any((List<String> k) => k[0] == _shopFilter)
+                ? _shopFilter
+                : 'reception'))
+        .toString();
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => StatefulBuilder(
@@ -22083,7 +22598,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     borderRadius: BorderRadius.circular(20)),
                 title: Text(d == null ? 'Add to the list' : 'Edit item',
                     style: const TextStyle(
-                        color: plum, fontSize: 17, fontWeight: FontWeight.w800)),
+                        color: plum,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800)),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -22122,25 +22639,29 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     const SizedBox(height: 6),
                     Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
                       for (final List<String> k in kShopCats)
-                        _tlChip(k[1], cat == k[0], () => setD(() => cat = k[0])),
+                        _tlChip(
+                            k[1], cat == k[0], () => setD(() => cat = k[0])),
                     ]),
                     const SizedBox(height: 10),
                     TextField(
                         controller: linkC,
                         keyboardType: TextInputType.url,
                         style: const TextStyle(color: ink),
-                        decoration: _lightDeco('Link (optional)', hint: 'Where you found it')),
+                        decoration: _lightDeco('Link (optional)',
+                            hint: 'Where you found it')),
                     const SizedBox(height: 10),
                     TextField(
                         controller: noteC,
                         style: const TextStyle(color: ink),
-                        decoration: _lightDeco('Note (optional)', hint: 'Colour, size, who’s buying it')),
+                        decoration: _lightDeco('Note (optional)',
+                            hint: 'Colour, size, who’s buying it')),
                   ],
                 ),
                 actions: <Widget>[
                   TextButton(
                       onPressed: _h(() => Navigator.pop(ctx2, false)),
-                      child: const Text('Cancel', style: TextStyle(color: muted))),
+                      child:
+                          const Text('Cancel', style: TextStyle(color: muted))),
                   FilledButton(
                     style: FilledButton.styleFrom(
                         backgroundColor: gold, foregroundColor: plum),
@@ -22157,7 +22678,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       'name': nameC.text.trim(),
       'cat': cat,
       'qty': int.tryParse(qtyC.text.trim()) ?? 1,
-      'est': int.tryParse(estC.text.trim().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
+      'est':
+          int.tryParse(estC.text.trim().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
       'link': link,
       'note': noteC.text.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -22176,7 +22698,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
       Map<String, dynamic> couple) async {
     final List<QueryDocumentSnapshot<Map<String, dynamic>>> open = docs
-        .where((QueryDocumentSnapshot<Map<String, dynamic>> d) => d.data()['bought'] != true)
+        .where((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+            d.data()['bought'] != true)
         .toList();
     if (open.isEmpty) {
       _toast('Everything is bought - nothing to send.');
@@ -22189,7 +22712,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     t.writeln('SHOPPING LIST - still to buy${when.isEmpty ? '' : ' - $when'}');
     for (final List<String> k in kShopCats) {
       final List<QueryDocumentSnapshot<Map<String, dynamic>>> rows = open
-          .where((QueryDocumentSnapshot<Map<String, dynamic>> d) => (d.data()['cat'] ?? 'other') == k[0])
+          .where((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+              (d.data()['cat'] ?? 'other') == k[0])
           .toList();
       if (rows.isEmpty) continue;
       t.writeln('');
@@ -22201,8 +22725,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         final int est = it['est'] is num ? (it['est'] as num).toInt() : 0;
         final String note = (it['note'] ?? '').toString();
         final String link = (it['link'] ?? '').toString();
-        t.writeln('${qty > 1 ? '$qty x ' : ''}${it['name'] ?? ''}${est > 0 ? ' - about \$$est' : ''}${note.isEmpty ? '' : ' - $note'}${link.isEmpty ? '' : ' - $link'}');
-        h.write('<tr><td class="time">${qty > 1 ? '$qty ×' : ''}</td><td><b>${_esc((it['name'] ?? '').toString())}</b>'
+        t.writeln(
+            '${qty > 1 ? '$qty x ' : ''}${it['name'] ?? ''}${est > 0 ? ' - about \$$est' : ''}${note.isEmpty ? '' : ' - $note'}${link.isEmpty ? '' : ' - $link'}');
+        h.write(
+            '<tr><td class="time">${qty > 1 ? '$qty ×' : ''}</td><td><b>${_esc((it['name'] ?? '').toString())}</b>'
             '${est > 0 ? ' <span style="color:#8A6A2F">about \$$est</span>' : ''}'
             '${note.isEmpty ? '' : '<br><span style="color:#6B5F72">${_esc(note)}</span>'}'
             '${link.isEmpty ? '' : '<br><a href="${_esc(link)}">${_esc(link)}</a>'}</td></tr>');
@@ -22213,11 +22739,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       kind: 'shopping',
       title: 'shopping list',
       fileName: 'Shopping list.html',
-      page: _printShell('Shopping list - still to buy',
-          <String>[if (who.isNotEmpty) who, if (when.isNotEmpty) when].join(' · '), h.toString()),
+      page: _printShell(
+          'Shopping list - still to buy',
+          <String>[if (who.isNotEmpty) who, if (when.isNotEmpty) when]
+              .join(' · '),
+          h.toString()),
       text: t.toString(),
       tags: <String>['planner'],
-      note: 'Here’s what we still need to buy. Tell us if you’d rather source any of it, or if we’re missing something.',
+      note:
+          'Here’s what we still need to buy. Tell us if you’d rather source any of it, or if we’re missing something.',
       preview: '${open.length} item${open.length == 1 ? '' : 's'} still to buy',
     );
   }
@@ -22226,7 +22756,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
       stream: _liveQuery('shop:$_cid', () => _shopRef.orderBy('order')),
       initialData: _liveQ['shop:$_cid']?.latest,
-      builder: (BuildContext c, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> sn) {
+      builder: (BuildContext c,
+          AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> sn) {
         final List<QueryDocumentSnapshot<Map<String, dynamic>>> docs =
             sn.data?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[];
         final int total = docs.length;
@@ -22243,8 +22774,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             toGo += est;
           }
         }
-        final List<QueryDocumentSnapshot<Map<String, dynamic>>> shown = docs.where(
-            (QueryDocumentSnapshot<Map<String, dynamic>> d) {
+        final List<QueryDocumentSnapshot<Map<String, dynamic>>> shown =
+            docs.where((QueryDocumentSnapshot<Map<String, dynamic>> d) {
           final Map<String, dynamic> it = d.data();
           if (_shopFilter == 'tobuy') return it['bought'] != true;
           if (_shopFilter == 'bought') return it['bought'] == true;
@@ -22281,15 +22812,18 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     ? null
                     : _Press(
                         onTap: () => _sendShopping(docs, couple),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                          Icon(Icons.send_rounded, color: ivory.withOpacity(.9), size: 15),
-                          const SizedBox(width: 4),
-                          Text('Send',
-                              style: TextStyle(
-                                  color: ivory.withOpacity(.9),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w800)),
-                        ]),
+                        child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(Icons.send_rounded,
+                                  color: ivory.withOpacity(.9), size: 15),
+                              const SizedBox(width: 4),
+                              Text('Send',
+                                  style: TextStyle(
+                                      color: ivory.withOpacity(.9),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800)),
+                            ]),
                       )),
             Padding(
               padding: const EdgeInsets.only(left: 6, bottom: 14),
@@ -22297,37 +22831,48 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 total == 0
                     ? 'The things you buy yourselves - signs, the card box, favors, the day-of kit. Your registry is what guests buy; this is the rest.'
                     : '$bought of $total bought${toGo > 0 ? ' · about \$$toGo still to spend' : ''}${spent > 0 ? ' · \$$spent spent' : ''}',
-                style: TextStyle(fontSize: 13, color: ivory.withOpacity(.72), height: 1.45),
+                style: TextStyle(
+                    fontSize: 13, color: ivory.withOpacity(.72), height: 1.45),
               ),
             ),
             if (total == 0)
               _glass(
                 padding: const EdgeInsets.all(18),
                 radius: 22,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                  const Text('Start with the classic list',
-                      style: TextStyle(color: plum, fontSize: 16, fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 6),
-                  Text(
-                      '${kShopClassic.length} things most weddings end up buying, in the right categories with rough prices. Cross off what you don’t need, add what we missed.',
-                      style: const TextStyle(fontSize: 12.5, color: muted, height: 1.45)),
-                  const SizedBox(height: 12),
-                  Row(children: <Widget>[
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(backgroundColor: gold, foregroundColor: plum),
-                      onPressed: _h(_seedShopping, _Tick.medium),
-                      icon: const Icon(Icons.auto_awesome_rounded, size: 16),
-                      label: const Text('Use the classic list',
-                          style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
-                    ),
-                    const SizedBox(width: 10),
-                    TextButton(
-                      onPressed: _h(() => _editShopItem(null)),
-                      child: const Text('Add one thing',
-                          style: TextStyle(color: plum, fontWeight: FontWeight.w700)),
-                    ),
-                  ]),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Text('Start with the classic list',
+                          style: TextStyle(
+                              color: plum,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800)),
+                      const SizedBox(height: 6),
+                      Text(
+                          '${kShopClassic.length} things most weddings end up buying, in the right categories with rough prices. Cross off what you don’t need, add what we missed.',
+                          style: const TextStyle(
+                              fontSize: 12.5, color: muted, height: 1.45)),
+                      const SizedBox(height: 12),
+                      Row(children: <Widget>[
+                        FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: gold, foregroundColor: plum),
+                          onPressed: _h(_seedShopping, _Tick.medium),
+                          icon:
+                              const Icon(Icons.auto_awesome_rounded, size: 16),
+                          label: const Text('Use the classic list',
+                              style: TextStyle(
+                                  fontSize: 12.5, fontWeight: FontWeight.w800)),
+                        ),
+                        const SizedBox(width: 10),
+                        TextButton(
+                          onPressed: _h(() => _editShopItem(null)),
+                          child: const Text('Add one thing',
+                              style: TextStyle(
+                                  color: plum, fontWeight: FontWeight.w700)),
+                        ),
+                      ]),
+                    ]),
               )
             else ...<Widget>[
               SingleChildScrollView(
@@ -22338,7 +22883,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   chip('bought', 'Bought', bought),
                   chip('all', 'All'),
                   for (final List<String> k in kShopCats)
-                    if (docs.any((QueryDocumentSnapshot<Map<String, dynamic>> d) => (d.data()['cat'] ?? 'other') == k[0]))
+                    if (docs.any(
+                        (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                            (d.data()['cat'] ?? 'other') == k[0]))
                       chip(k[0], k[1]),
                 ]),
               ),
@@ -22346,36 +22893,53 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 Padding(
                   padding: const EdgeInsets.all(18),
                   child: Text(
-                      _shopFilter == 'tobuy' ? 'Everything is bought.' : 'Nothing here yet.',
-                      style: TextStyle(color: ivory.withOpacity(.72), fontSize: 13)),
+                      _shopFilter == 'tobuy'
+                          ? 'Everything is bought.'
+                          : 'Nothing here yet.',
+                      style: TextStyle(
+                          color: ivory.withOpacity(.72), fontSize: 13)),
                 )
               else
                 for (final List<String> k in kShopCats)
-                  if (shown.any((QueryDocumentSnapshot<Map<String, dynamic>> d) => (d.data()['cat'] ?? 'other') == k[0]))
+                  if (shown.any(
+                      (QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+                          (d.data()['cat'] ?? 'other') == k[0]))
                     _glass(
                       padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
                       radius: 22,
                       margin: const EdgeInsets.only(bottom: 12),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-                        Text(k[1].toUpperCase(),
-                            style: const TextStyle(
-                                fontSize: 10.5, letterSpacing: 2, color: plum, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
-                        for (final QueryDocumentSnapshot<Map<String, dynamic>> d in shown)
-                          if ((d.data()['cat'] ?? 'other') == k[0]) _shopRow(d),
-                      ]),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(k[1].toUpperCase(),
+                                style: const TextStyle(
+                                    fontSize: 10.5,
+                                    letterSpacing: 2,
+                                    color: plum,
+                                    fontWeight: FontWeight.w700)),
+                            const SizedBox(height: 4),
+                            for (final QueryDocumentSnapshot<
+                                Map<String, dynamic>> d in shown)
+                              if ((d.data()['cat'] ?? 'other') == k[0])
+                                _shopRow(d),
+                          ]),
                     ),
               Center(
                 child: TextButton.icon(
                   onPressed: _h(() => _editShopItem(null)),
-                  icon: Icon(Icons.add_rounded, color: ivory.withOpacity(.9), size: 18),
+                  icon: Icon(Icons.add_rounded,
+                      color: ivory.withOpacity(.9), size: 18),
                   label: Text('Add something',
-                      style: TextStyle(color: ivory.withOpacity(.9), fontWeight: FontWeight.w700)),
+                      style: TextStyle(
+                          color: ivory.withOpacity(.9),
+                          fontWeight: FontWeight.w700)),
                 ),
               ),
               Center(
-                child: Text('Tap the circle when it’s bought · tap the name to edit · hold to remove',
-                    style: TextStyle(fontSize: 10.5, color: ivory.withOpacity(.6))),
+                child: Text(
+                    'Tap the circle when it’s bought · tap the name to edit · hold to remove',
+                    style: TextStyle(
+                        fontSize: 10.5, color: ivory.withOpacity(.6))),
               ),
             ],
           ],
@@ -22401,59 +22965,72 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-          _Press(
-            tick: _Tick.select,
-            onTap: () async {
-              await d.reference.set(<String, dynamic>{
-                'bought': !bought,
-                'boughtAt': bought ? FieldValue.delete() : FieldValue.serverTimestamp(),
-              }, SetOptions(merge: true));
-            },
-            child: Container(
-              width: 26,
-              height: 26,
-              margin: const EdgeInsets.only(top: 1),
-              decoration: BoxDecoration(
-                color: bought ? vGreen : Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: bought ? vGreen : goldLine, width: 1.6),
+        child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _Press(
+                tick: _Tick.select,
+                onTap: () async {
+                  await d.reference.set(<String, dynamic>{
+                    'bought': !bought,
+                    'boughtAt': bought
+                        ? FieldValue.delete()
+                        : FieldValue.serverTimestamp(),
+                  }, SetOptions(merge: true));
+                },
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  margin: const EdgeInsets.only(top: 1),
+                  decoration: BoxDecoration(
+                    color: bought ? vGreen : Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: bought ? vGreen : goldLine, width: 1.6),
+                  ),
+                  child: bought
+                      ? const Icon(Icons.check_rounded,
+                          size: 16, color: Colors.white)
+                      : null,
+                ),
               ),
-              child: bought ? const Icon(Icons.check_rounded, size: 16, color: Colors.white) : null,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-              Text('${qty > 1 ? '$qty × ' : ''}${it['name'] ?? ''}',
-                  style: TextStyle(
-                      color: bought ? muted : ink,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w700,
-                      decoration: bought ? TextDecoration.lineThrough : null)),
-              if (est > 0 || note.isNotEmpty)
-                Text(
-                    <String>[
-                      if (est > 0) 'about \$$est',
-                      if (note.isNotEmpty) note,
-                    ].join(' · '),
-                    style: const TextStyle(fontSize: 11.5, color: muted, height: 1.35)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text('${qty > 1 ? '$qty × ' : ''}${it['name'] ?? ''}',
+                          style: TextStyle(
+                              color: bought ? muted : ink,
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              decoration:
+                                  bought ? TextDecoration.lineThrough : null)),
+                      if (est > 0 || note.isNotEmpty)
+                        Text(
+                            <String>[
+                              if (est > 0) 'about \$$est',
+                              if (note.isNotEmpty) note,
+                            ].join(' · '),
+                            style: const TextStyle(
+                                fontSize: 11.5, color: muted, height: 1.35)),
+                    ]),
+              ),
+              if (link.isNotEmpty)
+                _Press(
+                  onTap: () async {
+                    final Uri? u = Uri.tryParse(link);
+                    if (u != null && await canLaunchUrl(u)) {
+                      await launchUrl(u, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child:
+                        Icon(Icons.open_in_new_rounded, size: 16, color: plum),
+                  ),
+                ),
             ]),
-          ),
-          if (link.isNotEmpty)
-            _Press(
-              onTap: () async {
-                final Uri? u = Uri.tryParse(link);
-                if (u != null && await canLaunchUrl(u)) {
-                  await launchUrl(u, mode: LaunchMode.externalApplication);
-                }
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(Icons.open_in_new_rounded, size: 16, color: plum),
-              ),
-            ),
-        ]),
       ),
     );
   }

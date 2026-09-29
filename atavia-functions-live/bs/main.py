@@ -261,6 +261,11 @@ def zoho_session(req: https_fn.Request) -> https_fn.Response:
             "event_date_raw": ev_raw[:10], "event_date_display": ev_disp,
             "zoho_customer_id": cust["customer_id"],
             "attr_venue": str(data.get("attr_venue") or "")[:200],
+            # JC-ATV-ATTR-0927: same attribution the booking carries, so the
+            # leads dashboard can say where each booking start came from.
+            "attr_venue_url": str(data.get("attr_venue_url") or "")[:300],
+            "attr_landing": str(data.get("attr_landing") or "")[:300],
+            "attr_referrer": str(data.get("attr_referrer") or "")[:300],
             "client_ip": req.headers.get("X-Forwarded-For", req.remote_addr),
             "sid": str(data.get("sid") or "")[:32],
         })
@@ -1035,6 +1040,10 @@ def _poll_paid_invoices():
         print(f"poller: confirmed {b['booking_id']}")
 
 
+NUDGE_CODE_AMOUNT = 200   # JC-ATV-NUDGE-0928: $ off carried by the day-3 nudge
+NUDGE_CODE_HOURS = 72
+
+
 def _chase_leads():
     """Card-window abandons. zoho_session recorded a lead; no booking exists.
     Nudge 1 the first morning after (>= 3h old), nudge 2 three days later,
@@ -1084,7 +1093,18 @@ def _chase_leads():
                      "in 3 days. Worth a personal text if it's a strong date.",
                      f"Source: {lead.get('attr_venue') or 'direct'}"])
             elif not lead.get("nudge2_sent_at") and age_h >= 24 * 3:
-                emails.card_recovery(RESEND_API_KEY.value, lead, resume, second=True)
+                # JC-ATV-NUDGE-0928: the second nudge carries a $200 code good
+                # for 72 h - a reason to decide, not just a reminder. Minted
+                # once; a failure to mint still sends the plain nudge.
+                code = None
+                try:
+                    code = _mint_code(db, NUDGE_CODE_AMOUNT, NUDGE_CODE_HOURS,
+                                      f"day-3 nudge — {lead.get('email','')}")
+                    snap.reference.update({"nudge2_code": code["code"]})
+                    resume += ("&" if "?" in resume else "?") + "code=" + code["code"]
+                except Exception as e:
+                    print(f"nudge code mint failed (non-fatal): {e}")
+                emails.card_recovery(RESEND_API_KEY.value, lead, resume, second=True, code=code)
                 snap.reference.update({"nudge2_sent_at": now})
         except Exception as e:
             print(f"lead chase failed {snap.id}: {e}")
@@ -1244,6 +1264,77 @@ def _send_gratuity_invites():
             print(f"gratuity invite failed for {b['booking_id']}: {e}")
 
 
+def _send_balance_heads_up(db, now):
+    """Email couples whose card-on-file balance falls due within the next 24 h
+    (i.e. it will be charged on tomorrow's 07:00 run). Once per booking, stamped
+    in balance_heads_up_sent_at. No-card bookings get a payment link instead of
+    a charge, so they are skipped here."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    soon = (db.collection("bookings")
+              .where(filter=FieldFilter("status", "==", "confirmed"))
+              .where(filter=FieldFilter("payment_option", "==", "standard"))
+              .where(filter=FieldFilter("balance_due_at", ">", now))
+              .where(filter=FieldFilter("balance_due_at", "<=", now + timedelta(hours=24)))
+              .get())
+    for snap in soon:
+        b = snap.to_dict()
+        if (b.get("balance_paid_at") or b.get("balance_heads_up_sent_at")
+                or b.get("test_mode")
+                or not (b.get("zoho_payment_method_id") and b.get("zoho_customer_id"))):
+            continue
+        try:
+            emails.balance_heads_up(RESEND_API_KEY.value, b, b["balance"])
+            snap.reference.update({"balance_heads_up_sent_at": firestore.SERVER_TIMESTAMP})
+            emails.notify_owner(
+                RESEND_API_KEY.value, OWNER_EMAIL,
+                f"BALANCE HEADS-UP SENT \u2014 {b['client_names']} \u2014 ${b['balance']:,}",
+                [f"Booking {b['booking_id']}: the couple was told their balance "
+                 f"charges tomorrow morning. Charge runs on the next 07:00 job."])
+        except Exception as e:
+            print(f"balance heads-up failed {b['booking_id']}: {e}")
+
+
+
+# ======================================================== lazo invite ==
+LAZO_INVITE_DELAY_DAYS = 3    # JC-LZ-INVITE-0928: days after the booking is paid
+LAZO_INVITE_PER_RUN = 25      # cap per daily run: the first run reaches existing couples gradually
+LAZO_INVITE_RELAY = ("zola.com", "theknot.com", "weddingpro.com", "example.com")
+
+
+def _send_lazo_invites(db, now):
+    """One Lazo recommendation per booked couple, a few days after they pay.
+    Skips test bookings, marketplace relay addresses, opted-out couples,
+    weddings more than 60 days past, and anyone already sent. Stamps
+    lazo_invite_sent_at so it can never repeat. Non-fatal throughout."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    sent = 0
+    cutoff = (now - timedelta(days=60)).strftime("%Y-%m-%d")
+    since = now - timedelta(days=LAZO_INVITE_DELAY_DAYS)
+    try:
+        snaps = (db.collection("bookings")
+                   .where(filter=FieldFilter("status", "==", "confirmed")).get())
+    except Exception as e:
+        print(f"lazo invite query failed: {e}"); return
+    for snap in snaps:
+        if sent >= LAZO_INVITE_PER_RUN:
+            break
+        b = snap.to_dict() or {}
+        email = str(b.get("email") or "").strip().lower()
+        paid = b.get("deposit_paid_at") or b.get("created_at")
+        if (b.get("test_mode") or b.get("lazo_invite_sent_at") or b.get("marketing_optout")
+                or not email or "@" not in email
+                or any(email.endswith("@" + r) or ("." + r) in email for r in LAZO_INVITE_RELAY)
+                or not paid or paid > since
+                or str(b.get("event_date_raw") or "9999") < cutoff):
+            continue
+        try:
+            emails.lazo_invite(RESEND_API_KEY.value, b)
+            snap.reference.update({"lazo_invite_sent_at": firestore.SERVER_TIMESTAMP})
+            sent += 1
+        except Exception as e:
+            print(f"lazo invite failed {b.get('booking_id', snap.id)}: {e}")
+    print(f"lazo invites: sent {sent}")
+
 # ========================================================= charge_balances ==
 @scheduler_fn.on_schedule(schedule="every day 07:00",
                           timezone=scheduler_fn.Timezone("America/Phoenix"),
@@ -1256,8 +1347,13 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
     _send_questionnaire_reminders()   # nag unsubmitted questionnaires
     _chase_abandoned()                # recover stalled bookings
     _chase_leads()                    # card-window abandons (no booking yet)
+    _send_lazo_invites(firestore.client(), datetime.now(timezone.utc))   # JC-LZ-INVITE-0928
     db = firestore.client()
     now = datetime.now(timezone.utc)
+    try:
+        _send_balance_heads_up(db, now)   # 24 h notice before tomorrow's charge
+    except Exception as e:
+        print(f"balance heads-up sweep failed: {e}")
     from google.cloud.firestore_v1.base_query import FieldFilter
     due = (db.collection("bookings")
              .where(filter=FieldFilter("status", "==", "confirmed"))
@@ -1295,10 +1391,24 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
                      f"payment link for the balance was emailed to {b['email']}.",
                      f"Link: {link.get('url')}"])
             except Exception as e:
+                attempts = b.get("balance_attempts", 0) + 1
                 snap.reference.update({
-                    "balance_attempts": b.get("balance_attempts", 0) + 1,
+                    "balance_attempts": attempts,
                     "balance_last_error": str(e)[:500]})
                 print(f"balance link failed {b['booking_id']}: {e}")
+                # Previously print-only: two unbilled couples sat here for
+                # weeks with nobody told (JC-ATV-PAY-0927).
+                try:
+                    emails.notify_owner(
+                        RESEND_API_KEY.value, OWNER_EMAIL,
+                        f"BALANCE LINK FAILED (attempt {attempts}/3) \u2014 "
+                        f"{b['client_names']} \u2014 ${b['balance']:,}",
+                        [f"Booking {b['booking_id']} has no card on file and Zoho "
+                         f"refused to create a payment link: {str(e)[:300]}",
+                         "Bill them from the Zoho dashboard by hand." if attempts >= 3
+                         else "Will retry tomorrow."])
+                except Exception as e2:
+                    print(f"balance link owner alert failed: {e2}")
             continue
         try:
             tx = zoho.charge_saved_method(
@@ -1580,6 +1690,34 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
         out = _mint_code(db, amount, hours, str(data.get("note") or "")[:200])
         return _json(req, out)
 
+    if action == "reply_inquiry":   # JC-ATV-REPLY-0928: "Write back" on the Leads page
+        import html as _html
+        iref = db.collection("inquiries").document(str(data.get("inquiry_id") or ""))
+        isnap = iref.get()
+        if not isnap.exists:
+            return _json(req, {"error": "inquiry not found"}, 404)
+        inq = isnap.to_dict() or {}
+        to = str(inq.get("email") or "").strip()
+        subject = str(data.get("subject") or "").strip()[:200]
+        body = str(data.get("body") or "").strip()[:5000]
+        if not to or "@" not in to:
+            return _json(req, {"error": "this inquiry has no email address"}, 400)
+        if not subject or not body:
+            return _json(req, {"error": "subject and message are required"}, 400)
+        paras = [p.strip() for p in body.replace("\r", "").split("\n\n") if p.strip()]
+        html_body = "".join("<p style=\"margin:0 0 16px\">%s</p>" % _html.escape(p).replace("\n", "<br>") for p in paras)
+        html_doc = ("<div style=\"font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#2B2B2B;max-width:560px\">"
+                    + html_body + "</div>")
+        try:
+            emails._send(RESEND_API_KEY.value, to, subject, html_doc)
+        except Exception as e:
+            print(f"reply_inquiry send failed: {e}")
+            return _json(req, {"error": "the email service refused the message; try again in a minute"}, 502)
+        entry = {"at": now.isoformat(), "by": who, "subject": subject, "body": body, "to": to}
+        iref.update({"replies": firestore.ArrayUnion([entry]), "last_reply_at": now,
+                     "status": "contacted", "status_at": now})
+        return _json(req, {"ok": True, "sent_to": to})
+
     booking_id = str(data.get("booking_id") or "")
     ref = db.collection("bookings").document(booking_id)
     snap = ref.get()
@@ -1842,12 +1980,26 @@ def inquiry_webhook(req: https_fn.Request) -> https_fn.Response:
            "landing": g("landing_page", "Landing Page"), "referrer": g("referrer", "Referrer"),
            "message": g("message", "Message", "notes")[:2000],
            "sid": g("sid") if _SID_RE.match(g("sid") or "") else "",
-           "source": "formspree" if "submission" in body else "site",
-           "status": "new", "created_at": firestore.SERVER_TIMESTAMP}
+           "source": "formspree" if "submission" in body else
+                     "gmail-intake" if sub.get("auto_code") or sub.get("auto_replied") else "site",
+           "status": "contacted" if sub.get("auto_replied") else "new",
+           "created_at": firestore.SERVER_TIMESTAMP}
+    # JC-ATV-AUTOREPLY-0928: the Gmail intake script answers every marketplace
+    # inquiry within minutes and asks for a code to put in that reply.
+    code = None
+    if sub.get("auto_code"):
+        try:
+            code = _mint_code(db, NUDGE_CODE_AMOUNT, NUDGE_CODE_HOURS,
+                              f"auto-reply — {email}")
+            doc["auto_code"] = code["code"]
+        except Exception as e:
+            print(f"auto-reply code mint failed (non-fatal): {e}")
+    if sub.get("auto_replied"):
+        doc["auto_replied_at"] = firestore.SERVER_TIMESTAMP
     ref = db.collection("inquiries").add(doc)[1]
     if doc["sid"]:
         _link_session(db, doc["sid"], f"{doc['first_name']} {doc['last_name']}".strip(), email)
-    return _json(req, {"ok": True, "id": ref.id})
+    return _json(req, {"ok": True, "id": ref.id, "code": code})
 
 
 # ============================================================ daily digest ==
