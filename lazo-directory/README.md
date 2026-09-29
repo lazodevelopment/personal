@@ -116,3 +116,5 @@ app-patches/patch_couple_v140.py (v139 -> v140): Browse merges a top-24-by-score
 ## Peony (2026-09-29, JC-LAZO-WWT-0929-PEONY)
 - The twenty-first template: wedding-websites/themes_peony.py (merged into make_themes.THEMES), themes.json entry, hub card + filters + SEO, worker TEMPLATES, dashboard v141 (picker + palettes). Build: `make_themes.py peony`, `apply_feel.py peony`, `patch_seo.py peony`, then the three 0929 patches with `peony`, then `patch_hub_cards.py`, `patch_hub_filters.py`, `patch_hub_seo.py`.
 - The hub's sales screenshots are shot on Peony (`_mock_now.py peony` uses PHOTOS_BY_SLUG for its own hero/story photos); the CTA links ?template=peony.
+
+- Default design is Peony (2026-09-29): dashboard v142 (app-patches/patch_couple_v142.py) and worker renderCoupleSite fall back to peony instead of fete.

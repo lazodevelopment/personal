@@ -276,10 +276,11 @@ async function renderCoupleSite(slug, env) {
   const g = (k) => fsVal(f[k]);
 
   // 2. their chosen template, from the same bucket the demos live in
-  let tpl = (g("template") || "fete").toString();
-  if (!TEMPLATES.includes(tpl)) tpl = "fete";
+  // JC-LAZO-WWT-0929-PEONY: Peony is the default design (was Fete)
+  let tpl = (g("template") || "peony").toString();
+  if (!TEMPLATES.includes(tpl)) tpl = "peony";
   let asset = await env.SITE.get(`wedding-websites/${tpl}/index.html`);
-  if (!asset) asset = await env.SITE.get(`wedding-websites/fete/index.html`);
+  if (!asset) asset = await env.SITE.get(`wedding-websites/peony/index.html`);
   if (!asset) return null;
   let html = await asset.text();
   // JC-LAZO-WWSEO-0919-002: the demo page's canonical, share tags and JSON-LD
