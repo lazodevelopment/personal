@@ -30,6 +30,7 @@
 // which copies each object to the live prefix. /w/{slug}/photos/download is
 // a page that zips the whole wall in the browser (the list is public anyway).
 import { verifyIdToken, ownsSite } from "./auth.js";
+import { fsHeaders, siteLocked, lockedResponse } from "./fsauth.js";  // JC-LAZO-WORKER-0930-FSAUTH
 
 const MAX_BYTES = 10 * 1024 * 1024;
 const MAX_PHOTOS = 1000;   // one R2 list page; the check below is one call
@@ -69,11 +70,12 @@ async function siteDoc(slug) {
   if (hit) { try { return await hit.json(); } catch (e) {} }
   const u = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/weddingSites/${encodeURIComponent(slug)}`
     + "?mask.fieldPaths=guestPhotosOn&mask.fieldPaths=guestPhotosRemoved&mask.fieldPaths=names&mask.fieldPaths=passcode&mask.fieldPaths=guestPhotosHold&mask.fieldPaths=coupleUid";
-  const r = await fetch(u, { headers: { accept: "application/json" } });
+  const r = await fetch(u, { headers: await fsHeaders() });
   if (!r.ok) return null;
   const doc = await r.json();
   const f = doc.fields || {};
   const out = {
+    passcode: String(fsVal(f.passcode) || "").trim(),
     on: fsVal(f.guestPhotosOn) !== false,
     hold: fsVal(f.guestPhotosHold) === true,
     removed: (fsVal(f.guestPhotosRemoved) || []).map(String),
@@ -233,6 +235,12 @@ async function servePhoto(slug, id, ext, env, sub = "") {
 // Returns a Response for the guest-photo routes, else null.
 export async function guestPhotosRoute(url, req, env) {
   if (!env.GALLERIES) return null;
+  // JC-LAZO-WORKER-0930-FSAUTH: a passcode site's photos need the passcode cookie (approve is the couple's own, token-checked)
+  const any = url.pathname.match(/^\/(?:api\/)?w\/([a-z0-9-]{1,80})\/photo/);
+  if (any && req.method !== "OPTIONS" && !/\/photos\/approve\/?$/.test(url.pathname)) {
+    const site = await siteDoc(any[1]);
+    if (site && site.passcode && await siteLocked(any[1], req, site.passcode)) return lockedResponse();
+  }
   const api = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/photos\/?$/);
   if (api) {
     if (req.method === "OPTIONS") return new Response(null, { headers: { ...CORS, "access-control-allow-headers": "content-type, authorization" } });

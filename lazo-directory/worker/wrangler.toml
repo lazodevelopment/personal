@@ -24,6 +24,9 @@ bucket_name = "lazo-galleries"
 #   WHCC_EDITOR_KEY WHCC_EDITOR_SECRET WHCC_OS_KEY WHCC_OS_SECRET
 #   STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET PRINTS_ADMIN_KEY (and GALLERY_SECRET, already set)
 [vars]
+# JC-LAZO-WORKER-0930-FSAUTH: the worker signs in to Firestore (see src/fsauth.js); WORKER_TOKEN_KEY is a secret
+FIREBASE_API_KEY = "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU"
+WORKER_TOKEN_URL = "https://us-central1-lazo-513ec.cloudfunctions.net/workerToken"
 WHCC_ENV = "sandbox"          # "production" when the live credential set is in
 PRINT_MARKUP = "100"          # percent over WHCC wholesale, shown to the couple
 PRINT_FROM_NAME = "Lazo Weddings"

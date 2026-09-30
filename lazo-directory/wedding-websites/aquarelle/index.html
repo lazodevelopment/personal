@@ -759,10 +759,11 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  }
  // ---- Guestbook (after the wedding) ----
  var FS="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/guestbook";
+ var FSR="/api/w/"+encodeURIComponent(LS.slug)+"/guestbook";  /* JC-LAZO-WWS-0930-DATA */
  if(married&&foot){
   var gsec=mkSection('<div class="center"><p class="k">The guestbook</p><h2 style="margin:0 auto">Notes from the people we love</h2></div><div class="gbwall" id="gbwall"></div><form class="gbf" id="gbf"><input data-gn aria-label="Your name" placeholder="Your name" required maxlength="79"><textarea data-gm aria-label="Your note" placeholder="A note for the newlyweds\u2026" required maxlength="399" rows="3"></textarea><button type="submit">Sign the guestbook</button></form>');
   foot.parentNode.insertBefore(gsec,foot);
-  fetch(FS+"?pageSize=60").then(function(r){return r.json()}).then(function(j){
+  fetch(FSR).then(function(r){return r.json()}).then(function(j){
    var wall=document.getElementById("gbwall");if(!wall)return;
    var docs=(j.documents||[]).map(function(d){var f=d.fields||{};return{n:(f.name||{}).stringValue||"",m:(f.message||{}).stringValue||"",t:(f.createdAt||{}).timestampValue||""}});
    docs.sort(function(a,b){return a.t<b.t?1:-1});
@@ -821,7 +822,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   document.querySelectorAll("[data-eyebrow]").forEach(function(e){e.textContent=yrs+(yrs===1?" year":" years")+" today \u2014 happy anniversary!"});
  }
  // chapters feed
- fetch("https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/chapters?pageSize=40")
+ fetch("/api/w/"+encodeURIComponent(LS.slug)+"/chapters")
   .then(function(r){return r.json()})
   .then(function(j){
    var docs=(j.documents||[]).map(function(d){var f=d.fields||{};
@@ -941,7 +942,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  var LS=window.LAZO_SITE;if(!LS)return;
  var q=new URLSearchParams(location.search);
  var esc=function(t){return String(t||"").replace(/[<>&"]/g,function(c){return{"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]})};
- var FSB="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug);
+ var FSB="/api/w/"+encodeURIComponent(LS.slug);  /* JC-LAZO-WWS-0930-DATA */
  var iso=LS.dateIso||"",hasDate=/^\d{4}-\d{2}-\d{2}$/.test(iso);
  var todayIs=hasDate&&new Date().toDateString()===new Date(iso+"T12:00:00").toDateString();
  var married=q.get("married")==="1"||(hasDate&&Date.now()>new Date(iso+"T17:00:00").getTime()+864e5);
@@ -997,13 +998,13 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   var s3=sec('<div class="center"><p class="k">Your seat</p><h2 style="margin:0 auto">Find your table.</h2><p class="lede">Type your name as it was on the invitation.</p><div class="seatf"><input id="seatq" aria-label="Your name, to find your table" placeholder="Your name" autocomplete="name" maxlength="80"></div><div class="seatr" id="seatr"></div></div>',"seatsec");
   before(s3,rsvpSec);
   var seatP=null;
-  var loadSeats=function(){if(seatP)return seatP;seatP=fetch(FSB+"/seating/main").then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.guests)return[];return ((f.guests.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",p:(m.p||{}).stringValue||"",t:(m.t||{}).stringValue||"",s:(m.s&&m.s.integerValue!=null)?Number(m.s.integerValue):null}})}).catch(function(){return[]});return seatP};
+  var loadSeats=function(q){seatP=fetch(FSB+"/seat?q="+encodeURIComponent(q||"")).then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.guests)return[];return ((f.guests.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",p:(m.p||{}).stringValue||"",t:(m.t||{}).stringValue||"",s:(m.s&&m.s.integerValue!=null)?Number(m.s.integerValue):null}})}).catch(function(){return[]});return seatP};
   var seatq=s3.querySelector("#seatq"),seatr=s3.querySelector("#seatr");
   var norm=function(x){return String(x||"").toLowerCase().replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim()};
   var seatT;
   seatq.addEventListener("input",function(){clearTimeout(seatT);seatT=setTimeout(function(){
    var v=norm(seatq.value);if(v.length<2){seatr.innerHTML="";return}
-   loadSeats().then(function(list){
+   loadSeats(v).then(function(list){
     var words=v.split(" ");
     var hits=list.filter(function(g){var n=norm(g.n),p=norm(g.p);return words.every(function(w){return n.indexOf(w)>=0})||(p&&words.every(function(w){return p.indexOf(w)>=0}))}).slice(0,4);
     if(!hits.length){seatr.innerHTML='<p class="lede" style="margin:14px auto 0">We couldn’t find that name — try just your first or last name, or ask at the door.</p>';return}
@@ -1033,7 +1034,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   };
   mealRow((LS.mealOptions||[]).filter(Boolean));
   if(token){
-   fetch(FSB+"/invites/"+encodeURIComponent(token)).then(function(r){return r.ok?r.json():null}).then(function(j){
+   fetch(FSB+"/invite/"+encodeURIComponent(token)).then(function(r){return r.ok?r.json():null}).then(function(j){
     var f=j&&j.fields;if(!f)return;
     var inv={name:(f.name||{}).stringValue||"",party:(f.party||{}).stringValue||"",plus:Number((f.plusOnes||{}).integerValue||0),meals:(((f.meals||{}).arrayValue||{}).values||[]).map(function(v){return v.stringValue||""}).filter(Boolean)};
     var ins=rform.querySelectorAll("input");
@@ -1297,7 +1298,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  /* ---- 4. your table on the map ---- */
  var seatr=document.getElementById("seatr");
  if(seatr){
-  var FSB="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/seating/main";
+  var FSB="/api/w/"+encodeURIComponent(LS.slug)+"/room";  /* JC-LAZO-WWS-0930-DATA */
   var roomP=null;
   var room=function(){if(roomP)return roomP;roomP=fetch(FSB).then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.tables)return null;var num=function(v){return v?Number(v.doubleValue!=null?v.doubleValue:v.integerValue):0};var cv=(f.canvas&&f.canvas.mapValue&&f.canvas.mapValue.fields)||{};
    return{w:num(cv.w)||1600,h:num(cv.h)||1000,tables:((f.tables.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",x:num(m.x),y:num(m.y),sh:(m.sh||{}).stringValue||"round",r:num(m.r),s:num(m.s)||8}})}}).catch(function(){return null});return roomP};

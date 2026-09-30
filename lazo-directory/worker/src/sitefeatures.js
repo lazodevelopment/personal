@@ -36,7 +36,7 @@ function fsVal(v) {
 }
 async function fsDoc(path) {
   const r = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/${path}`,
-    { headers: { accept: "application/json" } });
+    { headers: await fsHeaders() });
   if (!r.ok) return null;
   const d = await r.json();
   const out = {};
@@ -239,6 +239,7 @@ ul{list-style:none;padding:0;margin:0}li{background:#FFFDF9;border:1px solid #E6
 // forecast, and each guest's table when the seating lookup is on - and sends
 // it through Resend. {test: true} sends only to the caller.
 import { verifyIdToken, ownsSite, fsListAs, fsPatchAs } from "./auth.js";
+import { fsHeaders } from "./fsauth.js";  // JC-LAZO-WORKER-0930-FSAUTH
 
 function fsFields(doc) {
   const out = {};

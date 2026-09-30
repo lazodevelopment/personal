@@ -98,6 +98,11 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    // JC-LAZO-WORKER-0930-FSAUTH: the Cloudflare worker, signed in through the
+    // workerToken function as uid lazo-worker with the worker claim. It renders
+    // couple sites and answers the page's guest-facing reads, so nothing under
+    // weddingSites needs to be world-readable any more.
+    function isWorker() { return signedIn() && request.auth.token.worker == true && request.auth.uid == 'lazo-worker'; }
     function isAdmin() {
       return signedIn()
         && (request.auth.token.admin == true
@@ -424,7 +429,7 @@ service cloud.firestore {
     }
 
     match /weddingSites/{slug} {
-      allow read: if true;
+      allow read: if isWorker() || coupleAccess(resource.data.coupleUid);
       allow create: if coupleAccess(request.resource.data.coupleUid);
       allow update, delete: if coupleAccess(resource.data.coupleUid);
 
@@ -441,7 +446,8 @@ service cloud.firestore {
       }
 
       match /chapters/{chapterId} {
-        allow read: if true;
+        allow read: if isWorker() || coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
         allow create, update, delete: if coupleAccess(
           get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
       }
@@ -453,18 +459,21 @@ service cloud.firestore {
       //   invites/{guestId}  personal RSVP links: get by token only, never list
       //   playlist/main  {songs:[...]}  the DJ's page at /w/{slug}/playlist
       match /seating/{doc} {
-        allow read: if true;
+        allow read: if isWorker() || coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
         allow write: if coupleAccess(
           get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
       }
       match /invites/{token} {
-        allow get: if true;
+        allow get: if isWorker() || coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
         allow list: if false;
         allow write: if coupleAccess(
           get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
       }
       match /playlist/{doc} {
-        allow read: if true;
+        allow read: if isWorker() || coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
         allow write: if coupleAccess(
           get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
       }
@@ -478,7 +487,8 @@ service cloud.firestore {
           && request.resource.data.message is string
           && request.resource.data.message.size() > 0
           && request.resource.data.message.size() < 400;
-        allow read: if true;
+        allow read: if isWorker() || coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
         allow delete: if coupleAccess(
           get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
         allow update: if false;
