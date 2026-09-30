@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -211,14 +211,108 @@ async function loadCalendar(env, force) {
   } catch (e) { return cached || { at: new Date().toISOString(), events: [], error: e.message }; }
 }
 
+
+/* ---------------- sports (ESPN public scoreboard), markets (Yahoo chart meta), news (RSS) ---------------- */
+const LEAGUES = { nfl: "football/nfl", mlb: "baseball/mlb", nba: "basketball/nba", nhl: "hockey/nhl" };
+const ymd = (d) => d.toISOString().slice(0, 10).replace(/-/g, "");
+async function sports(env) {
+  const fav = (env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI").split(/[,\s|]+/).filter(Boolean);
+  const leagues = (env.LEAGUES || "nfl,mlb").split(/[,\s]+/).filter((l) => LEAGUES[l]);
+  const days = [-1, 0, 1].map((n) => ymd(new Date(Date.now() + n * 86400e3)));
+  const games = []; const errors = [];
+  await Promise.all(leagues.flatMap((lg) => days.map(async (d) => {
+    try {
+      const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${LEAGUES[lg]}/scoreboard?dates=${d}`, { headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", accept: "application/json" }, cf: { cacheTtl: 60, cacheEverything: true } });
+      const j = await r.json();
+      for (const ev of j.events || []) {
+        const c = ev.competitions?.[0]; if (!c) continue;
+        const teams = c.competitors.map((t) => ({ abbr: t.team.abbreviation, name: t.team.shortDisplayName || t.team.displayName, score: t.score, home: t.homeAway === "home", winner: t.winner === true, record: t.records?.[0]?.summary || "" }));
+        games.push({ league: lg, id: ev.id, date: ev.date, state: ev.status?.type?.state, detail: ev.status?.type?.shortDetail || "", period: ev.status?.period, clock: ev.status?.displayClock, teams, fav: teams.some((t) => fav.includes(t.abbr)), tv: c.broadcasts?.[0]?.names?.[0] || "" });
+      }
+    } catch (e) { errors.push(`${lg} ${d}: ${e.message}`); }
+  })));
+  const seen = new Set(); const out = games.filter((g) => !seen.has(g.id) && seen.add(g.id));
+  out.sort((a, b) => (b.fav - a.fav) || ((a.state === "in") - (b.state === "in")) * -1 || a.date.localeCompare(b.date));
+  if (!out.length) { const fromPc = await kv.get(env, "sports"); if (fromPc?.games?.length) return { ...fromPc, source: "pc", errors }; }
+  return { at: new Date().toISOString(), fav, games: out, errors };
+}
+function sportsSummary(sp) {
+  if (!sp?.games) return "unavailable";
+  const f = sp.games.filter((g) => g.fav);
+  if (!f.length) return "no games for the favourite teams yesterday, today or tomorrow";
+  return f.map((g) => { const [a, b] = g.teams; const who = g.teams.find((t) => sp.fav.includes(t.abbr)); const opp = g.teams.find((t) => t !== who);
+    if (g.state === "in") return `${who.name} ${who.score}-${opp.score} ${opp.name} LIVE (${g.detail})`;
+    if (g.state === "post") return `${who.name} ${who.winner ? "beat" : "lost to"} ${opp.name} ${who.score}-${opp.score}`;
+    return `${who.name} vs ${opp.name} ${new Date(g.date).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "short", hour: "numeric", minute: "2-digit" })}${g.tv ? " on " + g.tv : ""}`; }).join("; ");
+}
+
+const INDEXES = [["^GSPC", "S&P 500"], ["^DJI", "Dow"], ["^IXIC", "Nasdaq"]];
+async function markets(env) {
+  const user = (await kv.get(env, "tickers")) || [];
+  const syms = [...INDEXES.map(([s]) => s), ...user.map((t) => String(t).toUpperCase())];
+  const rows = await Promise.all(syms.map(async (sym) => {
+    try {
+      const r = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=5m`, { headers: { "user-agent": "Mozilla/5.0" }, cf: { cacheTtl: 120, cacheEverything: true } });
+      const m = (await r.json()).chart?.result?.[0]?.meta; if (!m) return { sym, error: "no data" };
+      const price = m.regularMarketPrice, prev = m.chartPreviousClose ?? m.previousClose;
+      return { sym, name: INDEXES.find(([s]) => s === sym)?.[1] || m.shortName || sym, price, prev, change: price - prev, pct: prev ? (price - prev) / prev * 100 : 0, state: m.marketState || "", time: m.regularMarketTime };
+    } catch (e) { return { sym, error: e.message }; }
+  }));
+  return { at: new Date().toISOString(), rows };
+}
+const marketsSummary = (mk) => (mk?.rows || []).filter((r) => !r.error).map((r) => `${r.name} ${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)} (${r.pct >= 0 ? "+" : ""}${r.pct.toFixed(2)}%)`).join(", ") || "unavailable";
+
+const NEWS_FEEDS = [
+  ["Phoenix", "FOX 10", "https://www.fox10phoenix.com/rss/category/local-news"],
+  ["Dallas", "FOX 4", "https://www.fox4news.com/rss/category/local-news"],
+  ["Boston", "Boston 25", "https://www.boston25news.com/arc/outboundfeeds/rss/category/news/local/?outputType=xml"],
+];
+const untag = (x) => x.replace(/<!\[CDATA\[|\]\]>/g, "").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#39;|&apos;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+async function news(env) {
+  const cities = await Promise.all(NEWS_FEEDS.map(async ([city, station, url]) => {
+    try {
+      const t = await (await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" }, cf: { cacheTtl: 900, cacheEverything: true } })).text();
+      const items = [...t.matchAll(/<item>([\s\S]*?)<\/item>/g)].slice(0, 8).map((m) => { const b = m[1]; const g = (k) => (b.match(new RegExp(`<${k}[^>]*>([\\s\\S]*?)<\\/${k}>`)) || [])[1] || ""; return { title: untag(g("title")), url: untag(g("link")) || untag(g("guid")), at: g("pubDate") ? new Date(untag(g("pubDate"))).toISOString() : null }; }).filter((i) => i.title);
+      return { city, station, items };
+    } catch (e) { return { city, station, items: [], error: e.message }; }
+  }));
+  return { at: new Date().toISOString(), cities };
+}
+const newsSummary = (nw) => (nw?.cities || []).map((c) => `${c.city} (${c.station}): ` + c.items.slice(0, 4).map((i) => i.title).join(" / ")).join(" | ") || "unavailable";
+
+/* wedding-day weather: forecast at the venue's city for every booked wedding in the next 10 days */
+async function weddingWeather(env) {
+  const metrics = await kv.get(env, "metrics"); if (!metrics?.businesses) return {};
+  const geo = (await kv.get(env, "geo")) || {}; const out = {}; const today = new Date(); today.setHours(0, 0, 0, 0);
+  for (const [id, b] of Object.entries(metrics.businesses)) for (const e of b.upcoming || []) {
+    if (!e.where) continue; const days = Math.floor((new Date(e.date + "T12:00") - today) / 86400e3); if (days < 0 || days > 10) continue;
+    try {
+      if (!geo[e.where]) { const g = await (await fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(e.where.split(",")[0]) + "&countryCode=US")).json(); const hit = (g.results || []).find((r) => !e.where.includes(",") || String(r.admin1 || "").toLowerCase().startsWith(stateName(e.where.split(",").pop().trim()).toLowerCase())) || g.results?.[0]; if (!hit) continue; geo[e.where] = { lat: hit.latitude, lon: hit.longitude, name: [hit.name, hit.admin1].filter(Boolean).join(", ") }; }
+      const loc = geo[e.where];
+      const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunset&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=14&timezone=auto`, { cf: { cacheTtl: 1800, cacheEverything: true } })).json();
+      const i = (w.daily?.time || []).indexOf(e.date); if (i < 0) continue;
+      out[`${id}:${e.id || e.date}`] = { biz: id, date: e.date, title: e.title, where: loc.name, code: w.daily.weather_code[i], hi: Math.round(w.daily.temperature_2m_max[i]), lo: Math.round(w.daily.temperature_2m_min[i]), rain: w.daily.precipitation_probability_max[i] ?? 0, wind: Math.round(w.daily.wind_speed_10m_max[i]), sunset: (w.daily.sunset[i] || "").slice(11) };
+    } catch {}
+  }
+  await kv.put(env, "geo", geo); await kv.put(env, "wxdays", { at: new Date().toISOString(), days: out });
+  return out;
+}
+const STATES = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey", NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont", VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia" };
+const stateName = (ab) => STATES[ab.toUpperCase()] || ab;
+const wxdaysSummary = (wd) => Object.values(wd?.days || {}).sort((a, b) => a.date.localeCompare(b.date)).map((d) => `${d.date} ${d.title} at ${d.where}: ${WMO[d.code] || "code " + d.code}, high ${d.hi} low ${d.lo}, rain ${d.rain}%, wind ${d.wind} mph, sunset ${d.sunset}`).join("; ") || "no booked weddings in the next 10 days with a known venue";
+
 /* ---------------- context for the brain ---------------- */
 async function buildContext(env, request) {
-  const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue, traffic] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue", "traffic"].map((k) => kv.get(env, k)));
-  const wx = await weatherData(request, env, place).catch(() => null);
+  const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue, traffic, wxdays] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue", "traffic", "wxdays"].map((k) => kv.get(env, k)));
+  const [wx, sp, mk, nw] = await Promise.all([weatherData(request, env, place).catch(() => null), sports(env).catch(() => null), markets(env).catch(() => null), news(env).catch(() => null)]);
   const lines = [];
   lines.push(`TIME: ${localTime(env)} (${env.TZ || "America/Chicago"})`);
   lines.push(`SITES: ` + (status?.sites || []).map((s) => `${s.name} ${s.ok ? "up" : "DOWN"} ${s.ms}ms`).join(", "));
   lines.push(`WEATHER: ${weatherSummary(wx)}`);
+  lines.push(`WEDDING-DAY WEATHER (next 10 days): ${wxdaysSummary(wxdays)}`);
+  lines.push(`SPORTS (his teams: Cowboys, Patriots, Rangers, Rockies, Red Sox, Diamondbacks): ${sportsSummary(sp)}`);
+  lines.push(`MARKETS: ${marketsSummary(mk)}`);
+  lines.push(`LOCAL NEWS: ${newsSummary(nw)}`);
   if (traffic?.sites) lines.push(`WEB TRAFFIC (as of ${traffic.at}, day ${traffic.day}): ` + Object.entries(traffic.sites).map(([id, t]) => t.error ? `${BIZ_NAME[id]} ${t.error}` : `${BIZ_NAME[id]}: ${t.online} online now, ${t.today} visitors today, ${t.views} page views, top pages ${(t.pages || []).slice(0, 3).map((p) => p[0] + " " + p[1]).join(", ")}, sources ${(t.sources || []).map((p) => p[0] + " " + p[1]).join(", ")}`).join(" | "));
   if (metrics?.businesses) {
     lines.push(`METRICS (collected ${metrics.collectedAt}):`);
@@ -379,6 +473,7 @@ export default {
     if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
+      await weddingWeather(env).catch(() => null);
       if (localHour(env) === (+env.BRIEF_HOUR || 5)) {
         const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} });
         await makeMorning(env, fake).catch((e) => pushAlert(env, { kind: "watch", text: "Morning brief failed: " + e.message }));
@@ -405,7 +500,7 @@ export default {
     }
     if (p === "/" || p === "/index.html" || p === "/wall") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
-    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, tz: env.TZ || "America/Chicago" });
+    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago" });
     if (p === "/api/status") {
       const cached = url.searchParams.get("fresh") ? null : await kv.get(env, "status");
       if (cached && Date.now() - new Date(cached.checkedAt) < 6 * 60000) return json({ ...cached, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
@@ -413,6 +508,10 @@ export default {
       return json({ checkedAt: new Date().toISOString(), sites, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
     }
     if (p === "/api/weather") { const place = url.searchParams.get("lat") ? { lat: url.searchParams.get("lat"), lon: url.searchParams.get("lon"), name: url.searchParams.get("place") } : await kv.get(env, "place"); const w = await weatherData(request, env, place); return json(w, w.error ? 400 : 200, { "cache-control": "public, max-age=300" }); }
+    if (p === "/api/sports") return json(await sports(env));
+    if (p === "/api/markets") return json(await markets(env));
+    if (p === "/api/news") return json(await news(env));
+    if (p === "/api/wxdays") return json(url.searchParams.get("fresh") ? { days: await weddingWeather(env) } : ((await kv.get(env, "wxdays")) || { days: {} }));
     if (p === "/api/calendar") return json((await loadCalendar(env, !!url.searchParams.get("fresh"))) || { events: [], off: true });
     if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx);
     if (p === "/api/tts" && request.method === "POST") return tts(request, env);
@@ -441,7 +540,7 @@ export default {
       if (request.method === "POST" || request.method === "PUT") {
         const body = await request.json(); const saved = [];
         for (const k of STATE_KEYS) if (k in body) { await kv.put(env, k, body[k]); saved.push(k); }
-        if (body.metrics) ctx.waitUntil(watchMetrics(env, body.metrics));
+        if (body.metrics) ctx.waitUntil(Promise.all([watchMetrics(env, body.metrics), weddingWeather(env)]));
         return json({ saved, at: new Date().toISOString() });
       }
     }

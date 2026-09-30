@@ -96,6 +96,33 @@ def collect(biz):
     }
 
 
+LEAGUES = {"nfl": "football/nfl", "mlb": "baseball/mlb", "nba": "basketball/nba", "nhl": "hockey/nhl"}
+FAV = ["DAL", "NE", "TEX", "COL", "BOS", "ARI"]
+
+
+def sports(leagues=("nfl", "mlb")):
+    """ESPN public scoreboard for yesterday/today/tomorrow, compacted the way the hub renders it."""
+    import urllib.request
+    games, seen = [], set()
+    for lg in leagues:
+        for n in (-1, 0, 1):
+            d = (NOW + dt.timedelta(days=n)).strftime("%Y%m%d")
+            try:
+                req = urllib.request.Request(f"https://site.api.espn.com/apis/site/v2/sports/{LEAGUES[lg]}/scoreboard?dates={d}", headers={"User-Agent": "Mozilla/5.0"})
+                j = json.load(urllib.request.urlopen(req, timeout=20))
+            except Exception as e:
+                print(f"sports {lg} {d}: {e}"); continue
+            for ev in j.get("events", []):
+                if ev["id"] in seen: continue
+                seen.add(ev["id"])
+                c = (ev.get("competitions") or [{}])[0]
+                teams = [{"abbr": t["team"]["abbreviation"], "name": t["team"].get("shortDisplayName") or t["team"].get("displayName"), "score": t.get("score"), "home": t.get("homeAway") == "home", "winner": t.get("winner") is True, "record": ((t.get("records") or [{}])[0]).get("summary", "")} for t in c.get("competitors", [])]
+                st = ev.get("status", {}).get("type", {})
+                games.append({"league": lg, "id": ev["id"], "date": ev.get("date"), "state": st.get("state"), "detail": st.get("shortDetail", ""), "teams": teams, "fav": any(t["abbr"] in FAV for t in teams), "tv": ((c.get("broadcasts") or [{}])[0].get("names") or [""])[0]})
+    games.sort(key=lambda g: (not g["fav"], g["state"] != "in", g["date"] or ""))
+    return {"at": NOW.isoformat(), "fav": FAV, "games": games}
+
+
 def main():
     out = {"at": NOW.isoformat(), "day": DAY_START.astimezone(TZ).strftime("%Y-%m-%d"), "sites": {}}
     for biz in ("atavia", "es"):
@@ -106,11 +133,13 @@ def main():
         except Exception as e:
             out["sites"][biz] = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
             print(f"{biz}: FAILED {e}")
+    sp = sports()
+    print(f"sports: {len(sp['games'])} games, {sum(1 for g in sp['games'] if g['fav'])} for the favourites")
     if "--dry-run" in sys.argv:
         print(json.dumps(out, indent=1)); return
     key = open(os.path.join(HERE, ".hub-key")).read().strip()
     r = subprocess.run(["curl", "-s", "-X", "POST", "-H", "content-type: application/json", "-H", f"x-hub-key: {key}", "--data-binary", "@-", HUB + "/api/state"],
-                       input=json.dumps({"traffic": out}), capture_output=True, text=True, timeout=60)
+                       input=json.dumps({"traffic": out, "sports": sp}), capture_output=True, text=True, timeout=60)
     print("posted:", r.stdout.strip() or r.stderr.strip())
 
 

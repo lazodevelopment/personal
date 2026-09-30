@@ -71,6 +71,9 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .clock .d{font-size:11px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
 .clock .u{font-size:10px;color:var(--dim);letter-spacing:.1em;margin-top:2px}.clock .u a{color:var(--dim)}
 .clock .z{font-size:11px;color:var(--dim);letter-spacing:.05em;margin-top:3px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.clock .mk{font-size:11px;letter-spacing:.03em;margin-top:3px;display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;font-family:var(--mono)}
+.clock .mk span{white-space:nowrap;color:var(--dim)}.clock .mk b{font-weight:400;color:#fff;margin:0 4px 0 3px}.clock .mk i{font-style:normal}.clock .mk i.up{color:var(--green)}.clock .mk i.down{color:var(--red)}
+.clock .mk button{font-family:var(--mono);font-size:10px;color:var(--dim);border:1px solid var(--line);padding:0 5px}
 .clock .z span{white-space:nowrap}.clock .z b{color:var(--cyan2);font-weight:400;margin-right:4px}.clock .z span.here b{color:#fff}
 @keyframes slide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 
@@ -191,6 +194,27 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .nws div.Extreme,.nws div.Severe{border-color:var(--red);background:rgba(255,77,94,.12)}
 .nws b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 
+/* scores, news */
+.scores{display:grid;gap:6px}
+.game{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:6px 10px;font-size:13px}
+.game.fav{border-color:var(--line2);background:rgba(var(--glow),.05)}
+.game.live{border-color:var(--green)}
+.game .lg{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--dim)}
+.game .t{display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.game .t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game .t b{font-family:var(--mono);font-weight:400;font-variant-numeric:tabular-nums;color:#fff}
+.game .t .w{color:#fff;font-weight:600}
+.game .st{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;white-space:nowrap}
+.game.live .st{color:var(--green)}
+.news{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.news h3{margin:0 0 6px;font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);font-weight:400}
+.news h3 small{color:var(--dim);letter-spacing:.05em;margin-left:6px}
+.news ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.news li{font-size:13px;line-height:1.35;border-left:2px solid var(--line);padding-left:8px}
+.news li a{color:var(--fg)}.news li a:hover{color:var(--cyan2)}
+.news li small{display:block;font-family:var(--mono);font-size:9px;color:var(--dim)}
+.events .wxd{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}.events .wxd b{color:#fff;font-weight:400}.events .wxd.wet{color:var(--amber)}
+.events .wxd.wet b{color:var(--amber)}
 /* inbox, upcoming, money, memory */
 .mail{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .mail li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border-left:2px solid var(--line2);padding:4px 10px;min-width:0}
@@ -304,7 +328,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div><h1>JARVIS</h1><small id="greet">BOOTING</small></div>
   </div>
   <div class="attn" id="attn"><span class="quiet">scanning…</span></div>
-  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="u"><span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
+  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="mk" id="ticker"></div><div class="u"><span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
 </header>
 
 <main class="grid" id="main">
@@ -374,6 +398,16 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div class="empty" id="calHint" style="margin-top:8px"></div>
   </section>
 
+  <section class="panel c5" data-v="ops" id="sportsPanel">
+    <h2>Scores <span class="sub" id="sportsSub"></span></h2>
+    <div class="scores" id="scores"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="panel c7" data-v="ops" id="newsPanel">
+    <h2>Local News <span class="sub" id="newsSub"></span></h2>
+    <div class="news" id="news"><div class="empty">Loading…</div></div>
+  </section>
+
   <section class="panel c7" data-v="more">
     <h2>Money <span class="sub" id="moneySub"></span></h2>
     <div id="money"><div class="empty">Cash-in by month appears once metrics are collected.</div></div>
@@ -427,7 +461,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const state = { traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
+const state = { sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
 const fmtAgo = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m/60) + " h ago" : new Date(iso).toLocaleDateString(); };
 const money = (n) => "$" + (n >= 10000 ? Math.round(n/1000) + "k" : n >= 1000 ? (n/1000).toFixed(1) + "k" : Math.round(n));
 const moneyFull = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -485,13 +519,14 @@ function renderAttention() {
   for (const id of ["atavia", "es"]) { const k = m[id]?.headline?.find(x => x.label === "Leads 7d"); if (k?.value) chips.push({ cls: "good", n: k.value, t: bizOf(id).name + " leads this week", go: id }); const b = m[id]?.headline?.find(x => x.label === "Balances due"); if (b?.value) chips.push({ cls: "", n: money(b.value), t: bizOf(id).name + " balances due", go: id }); }
   const ver = m.lr?.headline?.find(x => /Verifications/.test(x.label)); if (ver?.value) chips.push({ cls: "warn", n: ver.value, t: "LR verifications", go: "lr" });
   for (const [id, t] of Object.entries(state.traffic?.sites || {})) if (t.online) chips.push({ cls: "good", n: t.online, t: `on ${bizOf(id).name} now`, go: id });
+  for (const g of (state.sports?.games || []).filter(x => x.fav && x.state === "in")) { const [a, b] = g.teams; chips.push({ cls: "good", n: `${a.score}-${b.score}`, t: `${a.abbr} @ ${b.abbr} live`, go: "#sportsPanel" }); }
   for (const a of state.wx?.nws || []) chips.push({ cls: /Extreme|Severe/.test(a.severity) ? "crit" : "warn", n: "!", t: a.event, go: "#wxPanel" });
   const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
   const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
   $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
   $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
 }
-const viewOf = (sel) => ({ "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
+const viewOf = (sel) => ({ "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
 
 /* ---------- business tiles ---------- */
 function hourBars(hours) {
@@ -704,6 +739,29 @@ $("#radarPlay").onclick = () => {
   $("#radarPlay").textContent = "❚❚"; radarTimer = setInterval(() => showRadar((radarIdx + 1) % radarFrames.length), 500);
 };
 
+/* ---------- scores, markets, news, wedding-day weather ---------- */
+async function loadSports() {
+  try { state.sports = await fetch("/api/sports").then(r => r.json()); } catch { return; }
+  const g = state.sports.games || []; const fav = g.filter(x => x.fav), others = g.filter(x => !x.fav && x.state !== "post").slice(0, 6);
+  const live = fav.filter(x => x.state === "in");
+  $("#sportsSub").textContent = live.length ? `${live.length} live` : fav.length ? `${fav.length} for your teams` : "";
+  const row = (x) => { const [a, b] = x.teams; const when = x.state === "pre" ? new Date(x.date).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) + (x.tv ? " · " + x.tv : "") : x.detail;
+    return `<div class="game ${x.fav ? "fav" : ""} ${x.state === "in" ? "live" : ""}"><span class="lg">${x.league.toUpperCase()}</span><div class="t"><span class="${x.state === "post" && a.winner ? "w" : ""}">${esc(a.name)} <small style="color:var(--dim)">${esc(a.record)}</small></span><b>${x.state === "pre" ? "" : esc(a.score)}</b><span class="${x.state === "post" && b.winner ? "w" : ""}">${b.home ? "@ " : ""}${esc(b.name)} <small style="color:var(--dim)">${esc(b.record)}</small></span><b>${x.state === "pre" ? "" : esc(b.score)}</b></div><span class="st">${esc(when)}</span></div>`; };
+  $("#scores").innerHTML = (fav.length ? fav.map(row).join("") : `<div class="empty">No games for your teams yesterday, today or tomorrow.</div>`) + (others.length ? `<div class="empty" style="margin-top:6px;letter-spacing:.2em">AROUND THE LEAGUES</div>` + others.map(row).join("") : "");
+  renderAttention();
+}
+async function loadMarkets() {
+  try { state.markets = await fetch("/api/markets").then(r => r.json()); } catch { return; }
+  const rows = (state.markets.rows || []).filter(r => !r.error);
+  $("#ticker").innerHTML = rows.map(r => `<span>${esc(r.name)}<b>${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)}</b><i class="${r.change >= 0 ? "up" : "down"}">${r.change >= 0 ? "▲" : "▼"}${Math.abs(r.pct).toFixed(2)}%</i></span>`).join("") + `<button id="tickAdd" title="Add or remove stocks">±</button>`;
+  $("#tickAdd").onclick = async () => { const cur = (state.tickers || []).join(", "); const v = prompt("Stocks to show, comma separated (e.g. AAPL, MSFT, NVDA). Blank for indexes only.", cur); if (v === null) return; state.tickers = v.split(/[,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean); await save({ tickers: state.tickers }); loadMarkets(); };
+}
+async function loadNews() {
+  try { state.news = await fetch("/api/news").then(r => r.json()); } catch { return; }
+  $("#newsSub").textContent = fmtAgo(state.news.at);
+  $("#news").innerHTML = (state.news.cities || []).map(c => `<div><h3>${esc(c.city.toUpperCase())}<small>${esc(c.station)}</small></h3><ul>${c.items.slice(0, 6).map(i => `<li><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>${i.at ? `<small>${fmtAgo(i.at)}</small>` : ""}</li>`).join("") || '<li class="empty">feed unavailable</li>'}</ul></div>`).join("");
+}
+async function loadWxDays() { try { state.wxdays = await fetch("/api/wxdays").then(r => r.json()); renderEvents(); } catch {} }
 /* ---------- inbox, upcoming, money, memory, alerts, morning ---------- */
 function renderBrief() {
   const b = state.brief;
@@ -713,11 +771,12 @@ function renderBrief() {
   $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` + items.map(m => `<li class="${m.needs_reply ? "needs" : ""}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}</span><span class="when">${esc(m.when||"")}</span><a class="subj" href="${esc(m.url||"https://mail.google.com/")}" target="_blank" rel="noopener">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</a></li>`).join("")).join("");
 }
 function renderEvents() {
-  const ev = Object.entries(state.metrics?.businesses || {}).flatMap(([id, b]) => (b.upcoming || []).map(e => ({ date: e.date, title: e.title, biz: bizOf(id).name, cls: "" })))
+  const wd = state.wxdays?.days || {};
+  const ev = Object.entries(state.metrics?.businesses || {}).flatMap(([id, b]) => (b.upcoming || []).map(e => ({ date: e.date, title: e.title + (e.where ? " · " + e.where : ""), biz: bizOf(id).name, cls: "", wx: wd[`${id}:${e.id || e.date}`] })))
     .concat((state.calendar?.events || []).map(e => ({ date: e.start, title: e.title + (e.location ? " · " + e.location : ""), biz: e.allDay ? "CAL" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), cls: "cal" })))
     .filter(e => e.date && new Date(e.date.length === 10 ? e.date + "T12:00" : e.date) >= new Date(Date.now() - 86400e3)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12);
   $("#evSub").textContent = ev.length ? `next ${ev.length}` : "";
-  $("#events").innerHTML = ev.length ? ev.map(e => { const d = new Date(e.date.length === 10 ? e.date + "T12:00" : e.date); const days = Math.ceil((d - Date.now()) / 86400e3); return `<li><span class="bz ${e.cls}">${esc(e.biz)}</span><span>${esc(e.title)}</span><span class="in">${d.toLocaleDateString([], {month:"short", day:"numeric"})} · ${days <= 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + " d"}</span></li>`; }).join("") : `<li class="empty">Bookings and calendar items appear here.</li>`;
+  $("#events").innerHTML = ev.length ? ev.map(e => { const d = new Date(e.date.length === 10 ? e.date + "T12:00" : e.date); const days = Math.ceil((d - Date.now()) / 86400e3); const w = e.wx ? `<span class="wxd ${e.wx.rain >= 40 ? "wet" : ""}" title="${esc(e.wx.where)} · wind ${e.wx.wind} mph · sunset ${esc(e.wx.sunset)}">${wmo(e.wx.code)[1]} <b>${e.wx.hi}°</b>/${e.wx.lo}° ${e.wx.rain}%</span>` : ""; return `<li style="${w ? "grid-template-columns:auto 1fr auto auto" : ""}"><span class="bz ${e.cls}">${esc(e.biz)}</span><span>${esc(e.title)}</span>${w}<span class="in">${d.toLocaleDateString([], {month:"short", day:"numeric"})} · ${days <= 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + " d"}</span></li>`; }).join("") : `<li class="empty">Bookings and calendar items appear here.</li>`;
   $("#calHint").textContent = "";
 }
 function renderMoney() {
@@ -777,7 +836,7 @@ async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
     const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
-    state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
+    state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
     if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}
@@ -915,7 +974,7 @@ function handleAction(a) {
 }
 $("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
 $("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
-["what needs me today?", "status report", "how did Atavia do this week", "what's on this weekend?", "draft a reply to the latest lead", "remember that…"].forEach(c => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+["what needs me today?", "status report", "how are the Cowboys doing?", "weather for the next wedding", "what's in the news?", "how are the markets?", "remember that…"].forEach(c => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
 document.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); showView("jarvis"); $("#q").focus(); $("#brainPanel").scrollIntoView({behavior:"smooth", block:"center"}); } if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else if (document.body.classList.contains("wall")) exitWall(); else stopSpeaking(); } });
 
 /* ---------- voice input: hold-to-talk, wake word, conversation mode, interruption ---------- */
@@ -991,11 +1050,11 @@ renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? 
   $("#who").textContent = state.cfg.user && state.cfg.user.includes("@") ? state.cfg.user.split("@")[0] : "key";
   pickVoices();
   let v = "jarvis"; try { v = localStorage.getItem("jarvisView") || v; } catch {} showView(v);
-  await loadState(); loadWeather(); checkStatus(); detectMic();
+  await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
   if (location.pathname === "/wall") setTimeout(enterWall, 500);
   if (location.hash === "#morning") { showView("jarvis"); $("#alertPanel").scrollIntoView(); }
 })();
-setInterval(checkStatus, 5 * 60000); setInterval(loadWeather, 15 * 60000); setInterval(loadState, 60000); setInterval(wallInfo, 60000);
+setInterval(checkStatus, 5 * 60000); setInterval(loadWeather, 15 * 60000); setInterval(loadSports, 60000); setInterval(loadMarkets, 2 * 60000); setInterval(loadNews, 15 * 60000); setInterval(loadWxDays, 30 * 60000); setInterval(loadState, 60000); setInterval(wallInfo, 60000);
 </script>
 </body>
 </html>

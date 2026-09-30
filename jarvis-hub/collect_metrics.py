@@ -11,7 +11,7 @@ Credentials, in order of preference per project:
      Atavia (atavia-c29cd) and Elizabeth Scott (elizabeth-scott-738e5), whose org policy forbids key files.
      The signed-in account needs the Viewer role on each project (Firebase → Users and permissions).
 """
-import json, os, sys, subprocess, traceback, warnings
+import json, os, re, sys, subprocess, traceback, warnings
 warnings.filterwarnings("ignore", message=".*without a quota project.*")
 from datetime import datetime, timedelta, timezone, date
 from collections import defaultdict
@@ -176,7 +176,14 @@ def collect_films(db):
         except (TypeError, ValueError):
             continue
         if d >= TODAY:
-            upcoming.append({"date": d.isoformat(), "title": f"{b.get('client_names') or b.get('email') or 'Wedding'} · {b.get('package_name') or b.get('package_id') or ''}".strip(" ·")})
+            venue = (b.get("ceremony_venue") or b.get("reception_venue") or "").strip()
+            parts = [x.strip() for x in venue.split(",") if x.strip()]
+            where = ", ".join(parts[-2:]) if len(parts) >= 2 else ""
+            if not where:
+                csz = (b.get("city_state_zip") or "").strip()
+                m = re.match(r"^(.*?),\s*([A-Z]{2})\b", csz)
+                if m: where = f"{m.group(1)}, {m.group(2)}"
+            upcoming.append({"id": b["_id"], "date": d.isoformat(), "title": f"{b.get('client_names') or b.get('email') or 'Wedding'} · {b.get('package_name') or b.get('package_id') or ''}".strip(" ·"), "venue": venue[:80], "where": where[:60]})
     upcoming.sort(key=lambda e: e["date"])
     # monthly cash-in for the money view (deposits + balances + gratuities by paid date)
     months = defaultdict(float)
