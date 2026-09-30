@@ -938,7 +938,21 @@ function attachAudio(el) {
 }
 
 /* ---------- voice output: sentence-streamed ElevenLabs, browser fallback ---------- */
-let VOICE = null, VOICES = [], speakQueue = [], speaking = false, currentAudio = null, speakGen = 0;
+let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0;
+// One persistent <audio> element. Phones only allow playback on an element that was started by a user
+// gesture, so we unlock it on the first tap and then reuse it for every segment (no gaps, no blocked plays).
+const player = new Audio(); player.preload = "auto"; let playerAnalyser = null, playerUnlocked = false;
+function unlockPlayer() {
+  if (playerUnlocked) return; playerUnlocked = true;
+  try { player.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAGbZHBgG1OF6zM82DWbZaUmMBptgQhGjsyYqc9ae9XFz280948NMBWInluyfr1yq7Ny//TcCQBAEWzP8bzE3A+MWgHOOyphGxMfR7oPp3G7A8MPCbNu5Cz0MC5KmoRMuUsBA8nnb6oN1LlDzPT7X23wvGPMaKmqCJAWAAAA=="; const p = player.play(); if (p) p.catch(() => {}); } catch {}
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {}
+}
+["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, unlockPlayer, { once: true, passive: true }));
+function playerViz() {
+  if (playerAnalyser) return playerAnalyser;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaElementSource(player); playerAnalyser = actx.createAnalyser(); playerAnalyser.fftSize = 512; playerAnalyser.smoothingTimeConstant = .8; src.connect(playerAnalyser); playerAnalyser.connect(actx.destination); } catch { playerAnalyser = null; }
+  return playerAnalyser;
+}
 const clean = (n) => n.replace(/Microsoft |Online |\(Natural\)|Google |English \(United Kingdom\)|- /g, "").trim();
 function pickVoices() {
   let all = []; try { all = speechSynthesis.getVoices(); } catch {}
@@ -951,11 +965,11 @@ function pickVoices() {
 }
 try { speechSynthesis.onvoiceschanged = pickVoices; } catch {}
 $("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the ElevenLabs voice."); if (!VOICES.length) return; VOICE = VOICES[(VOICES.indexOf(VOICE) + 1) % VOICES.length]; try { localStorage.setItem("jarvisVoice", VOICE.name); } catch {} pickVoices(); speak("This is the " + clean(VOICE.name) + " voice."); };
-function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; } try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
+function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
 function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
-function enqueueSpeech(sentence) {
+function enqueueSpeech(segment) {
   const gen = speakGen;
-  const item = { text: sentence, gen, blob: state.cfg.tts ? fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: sentence }) }).then(r => r.ok ? r.blob() : null).catch(() => null) : Promise.resolve(null) };
+  const item = { text: segment, gen, blob: state.cfg.tts ? fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: segment }) }).then(r => r.ok ? r.blob() : null).catch(() => null) : Promise.resolve(null) };
   speakQueue.push(item); if (!speaking) pumpSpeech();
 }
 async function pumpSpeech() {
@@ -964,14 +978,14 @@ async function pumpSpeech() {
     const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
     const blob = await item.blob; if (item.gen !== speakGen) continue;
     if (blob) {
-      await new Promise(res => { const a = new Audio(URL.createObjectURL(blob)); currentAudio = a; setViz("speaking", attachAudio(a)); a.onended = a.onerror = () => { currentAudio = null; res(); }; a.play().catch(res); });
+      await new Promise(res => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
     } else {
       await new Promise(res => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .96; u.pitch = 1; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
     }
   }
   speaking = false; setViz("idle"); onSpeechEnd();
 }
-function playUrl(url, btn) { stopSpeaking(); const a = new Audio(url); currentAudio = a; setViz("speaking", attachAudio(a)); if (btn) btn.textContent = "❚❚ PLAYING"; a.onended = a.onerror = () => { currentAudio = null; setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; a.play().catch(() => setViz("idle")); }
+function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); player.src = url; setViz("speaking", playerViz()); if (btn) btn.textContent = "❚❚ PLAYING"; player.onended = player.onerror = () => { setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; player.play().catch(() => setViz("idle")); }
 
 /* ---------- the brain: streaming chat ---------- */
 function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
@@ -989,11 +1003,12 @@ async function ask(text) {
   stopSpeaking(); addMsg("me", text); $("#q").value = "";
   const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
   const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
-  let full = "", spoken = 0; const gen = ++speakGen; speakQueue = [];
+  let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
   const flushSentences = (final) => {
+    if (!final && firstSent) return; // after the opening sentence, wait for the whole reply and send it as one segment
     const rest = full.slice(spoken); const m = final ? [rest] : rest.match(/^[\s\S]*?[.!?](?=\s|$)/);
     if (!m) return; const chunk = (final ? rest : m[0]).trim(); if (!chunk) return;
-    spoken += final ? rest.length : m[0].length; if ($("#speakOn").checked) enqueueSpeech(chunk);
+    spoken += final ? rest.length : m[0].length; firstSent = true; if ($("#speakOn").checked) enqueueSpeech(chunk);
   };
   try {
     const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, messages: state.chat }) });

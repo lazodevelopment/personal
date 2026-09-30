@@ -440,11 +440,11 @@ async function makeMorning(env, request) {
 }
 
 /* ---------------- ElevenLabs ---------------- */
-function elevenlabs(env, text, format = "mp3_44100_64") {
+function elevenlabs(env, text, format = "mp3_44100_128") {
   const voice = env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
   return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=${format}`, {
     method: "POST", headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ text: String(text).slice(0, 2500), model_id: "eleven_turbo_v2_5", voice_settings: { stability: 0.5, similarity_boost: 0.8, style: 0.2 } }),
+    body: JSON.stringify({ text: String(text).slice(0, 2500), model_id: "eleven_turbo_v2_5", voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
   });
 }
 async function tts(request, env) {
