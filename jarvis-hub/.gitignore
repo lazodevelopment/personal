@@ -5,3 +5,4 @@ node_modules/
 .ntfy-topic
 secrets/
 collect_metrics.log
+jarvis_hands.log

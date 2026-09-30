@@ -70,6 +70,8 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .clock .t{font-size:28px;color:#fff;text-shadow:0 0 14px rgba(var(--glow),.45)}
 .clock .d{font-size:11px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
 .clock .u{font-size:10px;color:var(--dim);letter-spacing:.1em;margin-top:2px}.clock .u a{color:var(--dim)}
+.clock .z{font-size:11px;color:var(--dim);letter-spacing:.05em;margin-top:3px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.clock .z span{white-space:nowrap}.clock .z b{color:var(--cyan2);font-weight:400;margin-right:4px}.clock .z span.here b{color:#fff}
 @keyframes slide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 
 /* panels */
@@ -158,9 +160,9 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 /* weather band: map behind, glass panel in front */
 .band{position:relative;min-height:420px;padding:0;overflow:hidden}
 .band #map{position:absolute;inset:0;background:#02050a}
-.band .glass{position:relative;z-index:2;margin:14px;max-width:520px;background:var(--glass);border:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(8px)}
+.band .glass{position:relative;z-index:1001;margin:14px;max-width:520px;background:var(--glass);border:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(8px)}
 .band .glass h2{margin-bottom:8px}
-.band .mapctl{position:absolute;z-index:2;right:14px;bottom:14px;left:auto;background:var(--glass);border:1px solid var(--line);padding:6px 10px;display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);backdrop-filter:blur(8px);max-width:calc(100% - 28px)}
+.band .mapctl{position:absolute;z-index:1001;right:14px;bottom:14px;left:auto;background:var(--glass);border:1px solid var(--line);padding:6px 10px;display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);backdrop-filter:blur(8px);max-width:calc(100% - 28px)}
 .mapctl input[type=range]{width:160px;accent-color:var(--cyan);padding:0;border:0;background:none}
 .leaflet-container{font-family:var(--mono);font-size:11px}
 .leaflet-control-attribution{background:rgba(4,7,13,.7)!important;color:var(--dim)!important}
@@ -297,7 +299,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div><h1>JARVIS</h1><small id="greet">BOOTING</small></div>
   </div>
   <div class="attn" id="attn"><span class="quiet">scanning…</span></div>
-  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="u"><span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
+  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="u"><span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
 </header>
 
 <main class="grid" id="main">
@@ -775,6 +777,9 @@ function clockTick() {
   $("#clock").textContent = phone ? n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
   $("#date").textContent = phone ? n.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric",year:"numeric"});
   $("#wallClock").textContent = n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zones = [["ET", "America/New_York"], ["CT", "America/Chicago"], ["MT", "America/Denver"], ["AZ", "America/Phoenix"], ["PT", "America/Los_Angeles"], ["AK", "America/Anchorage"], ["HI", "Pacific/Honolulu"]];
+  $("#zones").innerHTML = zones.filter(([, tz]) => !phone || ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"].includes(tz)).map(([k, tz]) => `<span class="${tz === here ? "here" : ""}"><b>${k}</b>${n.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).replace(" ", "").toLowerCase()}</span>`).join("");
 }
 setInterval(clockTick, 1000); clockTick(); setInterval(setLighting, 60000);
 
