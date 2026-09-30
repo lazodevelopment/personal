@@ -74,7 +74,8 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .clock .mk{font-size:14px;letter-spacing:.03em;margin-top:5px;display:flex;gap:16px;justify-content:flex-end;flex-wrap:wrap;font-family:var(--mono)}
 .clock .mk span{white-space:nowrap;color:var(--dim)}.clock .mk b{font-weight:400;color:#fff;margin:0 4px 0 3px}.clock .mk i{font-style:normal}.clock .mk i.up{color:var(--green)}.clock .mk i.down{color:var(--red)}
 .clock .mk button{font-family:var(--mono);font-size:13px;color:var(--dim);border:1px solid var(--line);padding:0 7px}
-.clock .z span{white-space:nowrap}.clock .z b{color:var(--cyan2);font-weight:400;margin-right:4px}.clock .z span.here b{color:#fff}
+.z span{white-space:nowrap}.z b{color:var(--cyan2);font-weight:400;margin-right:4px}.z span.here b{color:#fff}
+.mk span{white-space:nowrap;color:var(--dim)}.mk b{font-weight:400;color:#fff;margin:0 4px 0 3px}.mk i{font-style:normal}.mk i.up{color:var(--green)}.mk i.down{color:var(--red)}
 @keyframes slide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 
 /* panels */
@@ -308,20 +309,33 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 /* phone: bottom nav, one view at a time */
 .nav{display:none}
 @media(max-width:899px){
-  body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
-  .hud{grid-template-columns:1fr auto;gap:8px;padding-top:10px}.attn{grid-column:1/-1;order:3}
-  .brand h1{font-size:18px;letter-spacing:.3em}.brand small{font-size:9px;max-width:180px;overflow:hidden;text-overflow:ellipsis}.mini{width:30px;height:30px}
-  .clock .t{font-size:22px}.clock .d{font-size:10px}.clock .u{font-size:9px}
-  .panel{padding:12px}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:110px;height:110px}
-  .band{min-height:0}.band #map{position:relative;height:300px;margin:0 -12px -12px}.band .glass{margin:0 0 12px;max-width:none;background:transparent;border:0;padding:0;backdrop-filter:none}
+  body{padding-inline:12px;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+  /* header: one compact row, not sticky, chips scroll sideways in a single line */
+  .hud{position:static;grid-template-columns:auto 1fr auto;gap:10px;padding:8px 0 6px;margin-bottom:10px;background:none}
+  .brand{gap:8px}.mini{width:26px;height:26px}.brand h1{font-size:16px;letter-spacing:.25em}.brand small{display:none}
+  .attn{flex-wrap:nowrap;overflow-x:auto;max-height:none;gap:6px;padding:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;order:0}
+  .attn::-webkit-scrollbar{display:none}
+  .attn .chip{padding:4px 8px;font-size:10px}.attn .chip b{font-size:13px}
+  .clock .t{font-size:20px}.clock .d,.clock .z,.clock .mk{display:none}.clock .u{margin-top:0;font-size:10px}
+  /* panels */
+  .panel{padding:12px}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:100px;height:100px}.chat{max-height:240px}
+  .tile .name{font-size:16px}
+  /* weather band: map below the numbers; the map only takes touch after you tap it */
+  .band{min-height:0}.band #map{position:relative;height:280px;margin:0 -12px -12px;touch-action:pan-y}
+  .band .glass{margin:0 0 12px;max-width:none;background:transparent;border:0;padding:0;backdrop-filter:none}
   .band .mapctl{position:relative;right:auto;bottom:auto;margin:8px 0 0;max-width:none}.leaflet-top.leaflet-left{top:10px;bottom:auto}
+  .mapgate{position:absolute;inset:0;z-index:1002;display:grid;place-items:center;background:rgba(4,7,13,.35);font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--cyan2);cursor:pointer}
   .wx .big{font-size:44px}.wx .meta{grid-template-columns:1fr 1fr}.day{font-size:9px}.day i{font-size:14px}
+  .teams{grid-template-columns:1fr}
+  /* phone views */
   main[data-view] > .panel{display:none}main[data-view] > .panel[data-v~="all"]{display:block}
   main[data-view="ops"] > .panel[data-v~="ops"],main[data-view="jarvis"] > .panel[data-v~="jarvis"],main[data-view="weather"] > .panel[data-v~="weather"],main[data-view="feeds"] > .panel[data-v~="feeds"],main[data-view="more"] > .panel[data-v~="more"]{display:block}
   .nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(4,7,13,.94);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(10px)}
   .nav button{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);padding:6px 2px;display:grid;gap:3px;justify-items:center}
   .nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
   .nav button.on{color:var(--cyan2)}
+  /* time zones + markets live in the More view on phones */
+  #phoneInfo{display:block}
 }
 @media(prefers-reduced-motion:reduce){.core *,.talk,#boot .lines div,.tile,.attn .chip,.alerts li{animation:none!important;transition:none!important;opacity:1}}
 </style>
@@ -435,6 +449,11 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <input id="camName" placeholder="Label" aria-label="Webcam label" style="flex:0 1 140px">
       <button class="btn sm" id="camAdd">ADD</button>
     </form>
+  </section>
+
+  <section class="panel quiet" data-v="more" id="phoneInfo" style="display:none">
+    <h2>Time zones</h2><div class="z" id="zones2" style="font-family:var(--mono);font-size:14px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap"></div>
+    <h2 style="margin-top:12px">Markets</h2><div class="mk" id="ticker2" style="font-family:var(--mono);font-size:14px;display:flex;gap:16px;flex-wrap:wrap"></div>
   </section>
 
   <section class="panel c6 quiet" data-v="more">
@@ -719,7 +738,9 @@ let map, radarFrames = [], radarIdx = 0, radarTimer = null;
 function initMap(lat, lon) {
   if (!window.L) return;
   if (!map) {
-    map = L.map("map", { zoomControl: true, attributionControl: true }).setView([lat, lon], 7);
+    const phone = innerWidth < 900;
+    map = L.map("map", { zoomControl: true, attributionControl: true, dragging: !phone, touchZoom: !phone, scrollWheelZoom: !phone, tap: !phone }).setView([lat, lon], 7);
+    if (phone) { const gate = document.createElement("div"); gate.className = "mapgate"; gate.textContent = "TAP TO USE THE MAP"; $("#map").appendChild(gate); gate.onclick = () => { gate.remove(); map.dragging.enable(); map.touchZoom.enable(); $("#map").style.touchAction = "none"; }; }
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Esri, HERE, Garmin · radar © RainViewer", maxZoom: 16 }).addTo(map);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16, opacity: .7, zIndex: 9 }).addTo(map);
     L.circleMarker([lat, lon], { radius: 6, color: "#19d3ff", fillColor: "#fff", fillOpacity: 1, weight: 2 }).addTo(map);
@@ -776,7 +797,8 @@ async function loadSports() {
 async function loadMarkets() {
   try { state.markets = await fetch("/api/markets").then(r => r.json()); } catch { return; }
   const rows = (state.markets.rows || []).filter(r => !r.error);
-  $("#ticker").innerHTML = rows.map(r => `<span>${esc(r.name)}<b>${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)}</b><i class="${r.change >= 0 ? "up" : "down"}">${r.change >= 0 ? "▲" : "▼"}${Math.abs(r.pct).toFixed(2)}%</i></span>`).join("") + `<button id="tickAdd" title="Add or remove stocks">±</button>`;
+  const tHtml = rows.map(r => `<span>${esc(r.name)}<b>${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)}</b><i class="${r.change >= 0 ? "up" : "down"}">${r.change >= 0 ? "▲" : "▼"}${Math.abs(r.pct).toFixed(2)}%</i></span>`).join("");
+  $("#ticker").innerHTML = tHtml + `<button id="tickAdd" title="Add or remove stocks">±</button>`; const t2 = $("#ticker2"); if (t2) t2.innerHTML = tHtml;
   $("#tickAdd").onclick = async () => { const cur = (state.tickers || []).join(", "); const v = prompt("Stocks to show, comma separated (e.g. AAPL, MSFT, NVDA). Blank for indexes only.", cur); if (v === null) return; state.tickers = v.split(/[,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean); await save({ tickers: state.tickers }); loadMarkets(); };
 }
 async function loadNews() {
@@ -877,7 +899,8 @@ function clockTick() {
   $("#wallClock").textContent = n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
   const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const zones = [["ET", "America/New_York"], ["CT", "America/Chicago"], ["MT", "America/Denver"], ["AZ", "America/Phoenix"], ["PT", "America/Los_Angeles"], ["AK", "America/Anchorage"], ["HI", "Pacific/Honolulu"]];
-  $("#zones").innerHTML = zones.filter(([, tz]) => !phone || ["America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"].includes(tz)).map(([k, tz]) => `<span class="${tz === here ? "here" : ""}"><b>${k}</b>${n.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).replace(" ", "").toLowerCase()}</span>`).join("");
+  const zHtml = zones.map(([k, tz]) => `<span class="${tz === here ? "here" : ""}"><b>${k}</b>${n.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).replace(" ", "").toLowerCase()}</span>`).join("");
+  $("#zones").innerHTML = zHtml; const z2 = $("#zones2"); if (z2) z2.innerHTML = zHtml;
 }
 setInterval(clockTick, 1000); clockTick(); setInterval(setLighting, 60000);
 
