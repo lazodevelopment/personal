@@ -196,6 +196,13 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 
 /* scores, news */
 .scores{display:grid;gap:6px}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.team{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;border:1px solid var(--line2);padding:8px 10px;background:rgba(var(--glow),.05);min-width:0}
+.team.live{border-color:var(--green)}.team{cursor:pointer}.team.sel{border-color:var(--cyan)}
+.stand table tr.fav td{color:#fff;background:rgba(var(--glow),.08)}.stand td{max-width:none}
+.team img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(0,0,0,.6))}
+.team .tn{font-weight:700;color:#fff;font-size:15px;letter-spacing:.03em}.team .tn small{font-family:var(--mono);font-weight:400;color:var(--dim);font-size:11px;margin-left:4px}
+.team .tl{font-size:12px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.team .tl.dim{color:var(--dim);font-family:var(--mono);font-size:11px}
 .game{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:6px 10px;font-size:13px}
 .game.fav{border-color:var(--line2);background:rgba(var(--glow),.05)}
 .game.live{border-color:var(--green)}
@@ -206,7 +213,7 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .game .t .w{color:#fff;font-weight:600}
 .game .st{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;white-space:nowrap}
 .game.live .st{color:var(--green)}
-.news{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.news{display:grid;grid-template-columns:1fr;gap:12px}
 .news h3{margin:0 0 6px;font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);font-weight:400}
 .news h3 small{color:var(--dim);letter-spacing:.05em;margin-left:6px}
 .news ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
@@ -398,12 +405,12 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div class="empty" id="calHint" style="margin-top:8px"></div>
   </section>
 
-  <section class="panel c5" data-v="ops" id="sportsPanel">
+  <section class="panel c7" data-v="ops" id="sportsPanel">
     <h2>Scores <span class="sub" id="sportsSub"></span></h2>
     <div class="scores" id="scores"><div class="empty">Loading…</div></div>
   </section>
 
-  <section class="panel c7" data-v="ops" id="newsPanel">
+  <section class="panel c5" data-v="ops" id="newsPanel">
     <h2>Local News <span class="sub" id="newsSub"></span></h2>
     <div class="news" id="news"><div class="empty">Loading…</div></div>
   </section>
@@ -747,7 +754,18 @@ async function loadSports() {
   $("#sportsSub").textContent = live.length ? `${live.length} live` : fav.length ? `${fav.length} for your teams` : "";
   const row = (x) => { const [a, b] = x.teams; const when = x.state === "pre" ? new Date(x.date).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) + (x.tv ? " · " + x.tv : "") : x.detail;
     return `<div class="game ${x.fav ? "fav" : ""} ${x.state === "in" ? "live" : ""}"><span class="lg">${x.league.toUpperCase()}</span><div class="t"><span class="${x.state === "post" && a.winner ? "w" : ""}">${esc(a.name)} <small style="color:var(--dim)">${esc(a.record)}</small></span><b>${x.state === "pre" ? "" : esc(a.score)}</b><span class="${x.state === "post" && b.winner ? "w" : ""}">${b.home ? "@ " : ""}${esc(b.name)} <small style="color:var(--dim)">${esc(b.record)}</small></span><b>${x.state === "pre" ? "" : esc(b.score)}</b></div><span class="st">${esc(when)}</span></div>`; };
-  $("#scores").innerHTML = (fav.length ? fav.map(row).join("") : `<div class="empty">No games for your teams yesterday, today or tomorrow.</div>`) + (others.length ? `<div class="empty" style="margin-top:6px;letter-spacing:.2em">AROUND THE LEAGUES</div>` + others.map(row).join("") : "");
+  const fmtWhen = (d) => new Date(d).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const teamCard = (t) => { const n = t.next, l = t.last;
+    const nextTxt = n ? (n.state === "in" ? `<b style="color:var(--green)">LIVE</b> ${n.home ? "vs" : "@"} ${esc(n.opp)} ${esc(n.my ?? "")}-${esc(n.their ?? "")} · ${esc(n.detail)}` : `Next: ${n.home ? "vs" : "@"} ${esc(n.opp)} · ${fmtWhen(n.date)}${n.tv ? " · " + esc(n.tv) : ""}`) : (t.note ? esc(t.note) : "no game scheduled");
+    const lastTxt = l ? `Last: ${l.won ? "W" : "L"} ${esc(l.my ?? "")}-${esc(l.their ?? "")} ${l.home ? "vs" : "@"} ${esc(l.opp)}` : "";
+    const ord = (n) => n + (["th","st","nd","rd"][((n % 100) - 20) % 10] || ["th","st","nd","rd"][n % 100] || "th");
+    const div = t.division ? `<div class="tl dim">${ord(t.rank)} in ${esc(t.division)} · tap for standings</div>` : "";
+    return `<div class="team ${n?.state === "in" ? "live" : ""}" data-abbr="${esc(t.abbr)}">${t.logo ? `<img src="${esc(t.logo)}" alt="">` : ""}<div><div class="tn">${esc(t.name)} <small>${esc(t.record || "")}</small></div><div class="tl">${nextTxt}</div><div class="tl dim">${lastTxt}</div>${div}</div></div>`; };
+  const stTable = (abbr) => { const d = state.sports.standings?.[abbr]; if (!d) return "";
+    return `<div class="stand" data-for="${esc(abbr)}"><div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(d.division.toUpperCase())}</div><table><tr><th></th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">PCT</th><th class="num">GB</th><th>Strk</th></tr>${d.rows.map(r => `<tr class="${r.fav ? "fav" : ""}"><td class="num">${r.rank}</td><td>${esc(r.name)}${r.clinch ? ` <small style="color:var(--green)">${esc(r.clinch)}</small>` : ""}</td><td class="num">${esc(r.w)}</td><td class="num">${esc(r.l)}</td><td class="num">${esc(r.pct)}</td><td class="num">${esc(r.gb)}</td><td class="mono">${esc(r.streak || "")}</td></tr>`).join("")}</table></div>`; };
+  const teams = (state.sports.teams || []);
+  $("#scores").innerHTML = (teams.length ? `<div class="teams">${teams.map(teamCard).join("")}</div><div id="standWrap"></div>` : "") + (fav.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">YOUR GAMES</div>` + fav.map(row).join("") : "") + (others.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">AROUND THE LEAGUES</div>` + others.map(row).join("") : "");
+  $("#scores").querySelectorAll(".team[data-abbr]").forEach(el => el.onclick = () => { const w = $("#standWrap"); const open = w.querySelector(`.stand[data-for="${el.dataset.abbr}"]`); w.innerHTML = open ? "" : stTable(el.dataset.abbr); $("#scores").querySelectorAll(".team").forEach(x => x.classList.toggle("sel", !open && x === el)); });
   renderAttention();
 }
 async function loadMarkets() {

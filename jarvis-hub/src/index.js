@@ -238,6 +238,7 @@ async function sports(env) {
 }
 function sportsSummary(sp) {
   if (!sp?.games) return "unavailable";
+  if (sp.teams?.length) { const t = sp.teams.map((t) => `${t.name} (${t.record || "?"}${t.division ? `, ${t.rank}${["th","st","nd","rd"][t.rank] || "th"} in the ${t.division}` : ""}): ` + (t.next ? (t.next.state === "in" ? `LIVE ${t.next.my}-${t.next.their} vs ${t.next.opp} ${t.next.detail}` : `next ${t.next.home ? "vs" : "at"} ${t.next.opp} ${new Date(t.next.date).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}${t.next.tv ? " on " + t.next.tv : ""}`) : (t.note || "no game scheduled")) + (t.last ? `; last ${t.last.won ? "won" : "lost"} ${t.last.my}-${t.last.their} ${t.last.home ? "vs" : "at"} ${t.last.opp}` : "")).join(" | "); return t; }
   const f = sp.games.filter((g) => g.fav);
   if (!f.length) return "no games for the favourite teams yesterday, today or tomorrow";
   return f.map((g) => { const [a, b] = g.teams; const who = g.teams.find((t) => sp.fav.includes(t.abbr)); const opp = g.teams.find((t) => t !== who);
