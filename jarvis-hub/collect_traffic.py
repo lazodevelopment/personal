@@ -153,6 +153,8 @@ def team_cards():
             done = [e for e in evs if e["state"] == "post"]; upcoming = [e for e in evs if e["state"] in ("pre", "in") and (e["state"] == "in" or (e["date"] or "") >= now)]
             card["last"] = done[-1] if done else None
             card["next"] = upcoming[0] if upcoming else None
+            card["upcoming"] = upcoming[:5]
+            card["recent"] = done[-3:]
             # record from the schedule's season summary when present
             rec = None
             for ev in reversed(j.get("events", [])):

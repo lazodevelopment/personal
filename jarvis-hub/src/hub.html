@@ -196,13 +196,14 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 
 /* scores, news */
 .scores{display:grid;gap:6px}
-.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
-.team{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;border:1px solid var(--line2);padding:8px 10px;background:rgba(var(--glow),.05);min-width:0}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.team{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;border:1px solid var(--line2);padding:8px 10px;background:rgba(var(--glow),.05);min-width:0;overflow:hidden}
+.team > div{min-width:0}
 .team.live{border-color:var(--green)}.team{cursor:pointer}.team.sel{border-color:var(--cyan)}
 .stand table tr.fav td{color:#fff;background:rgba(var(--glow),.08)}.stand td{max-width:none}
 .team img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(0,0,0,.6))}
-.team .tn{font-weight:700;color:#fff;font-size:15px;letter-spacing:.03em}.team .tn small{font-family:var(--mono);font-weight:400;color:var(--dim);font-size:11px;margin-left:4px}
-.team .tl{font-size:12px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.team .tl.dim{color:var(--dim);font-family:var(--mono);font-size:11px}
+.team .tn{font-weight:700;color:#fff;font-size:15px;letter-spacing:.03em;overflow-wrap:anywhere}.team .tn small{font-family:var(--mono);font-weight:400;color:var(--dim);font-size:11px;margin-left:4px}
+.team .tl{font-size:12px;line-height:1.35;overflow-wrap:anywhere}.team .tl.dim{color:var(--dim);font-family:var(--mono);font-size:11px}
 .game{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:6px 10px;font-size:13px}
 .game.fav{border-color:var(--line2);background:rgba(var(--glow),.05)}
 .game.live{border-color:var(--green)}
@@ -759,10 +760,14 @@ async function loadSports() {
     const nextTxt = n ? (n.state === "in" ? `<b style="color:var(--green)">LIVE</b> ${n.home ? "vs" : "@"} ${esc(n.opp)} ${esc(n.my ?? "")}-${esc(n.their ?? "")} · ${esc(n.detail)}` : `Next: ${n.home ? "vs" : "@"} ${esc(n.opp)} · ${fmtWhen(n.date)}${n.tv ? " · " + esc(n.tv) : ""}`) : (t.note ? esc(t.note) : "no game scheduled");
     const lastTxt = l ? `Last: ${l.won ? "W" : "L"} ${esc(l.my ?? "")}-${esc(l.their ?? "")} ${l.home ? "vs" : "@"} ${esc(l.opp)}` : "";
     const ord = (n) => n + (["th","st","nd","rd"][((n % 100) - 20) % 10] || ["th","st","nd","rd"][n % 100] || "th");
-    const div = t.division ? `<div class="tl dim">${ord(t.rank)} in ${esc(t.division)} · tap for standings</div>` : "";
-    return `<div class="team ${n?.state === "in" ? "live" : ""}" data-abbr="${esc(t.abbr)}">${t.logo ? `<img src="${esc(t.logo)}" alt="">` : ""}<div><div class="tn">${esc(t.name)} <small>${esc(t.record || "")}</small></div><div class="tl">${nextTxt}</div><div class="tl dim">${lastTxt}</div>${div}</div></div>`; };
-  const stTable = (abbr) => { const d = state.sports.standings?.[abbr]; if (!d) return "";
-    return `<div class="stand" data-for="${esc(abbr)}"><div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(d.division.toUpperCase())}</div><table><tr><th></th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">PCT</th><th class="num">GB</th><th>Strk</th></tr>${d.rows.map(r => `<tr class="${r.fav ? "fav" : ""}"><td class="num">${r.rank}</td><td>${esc(r.name)}${r.clinch ? ` <small style="color:var(--green)">${esc(r.clinch)}</small>` : ""}</td><td class="num">${esc(r.w)}</td><td class="num">${esc(r.l)}</td><td class="num">${esc(r.pct)}</td><td class="num">${esc(r.gb)}</td><td class="mono">${esc(r.streak || "")}</td></tr>`).join("")}</table></div>`; };
+    const then = (t.upcoming || []).slice(1, 3).map(g => `${g.home ? "vs" : "@"} ${esc(g.opp)} ${new Date(g.date).toLocaleDateString([], { month: "short", day: "numeric" })}`).join(" · ");
+    const thenTxt = then ? `<div class="tl dim">Then: ${then}</div>` : "";
+    const div = t.division ? `<div class="tl dim">${ord(t.rank)} in ${esc(t.division)} · tap for schedule + standings</div>` : "";
+    return `<div class="team ${n?.state === "in" ? "live" : ""}" data-abbr="${esc(t.abbr)}">${t.logo ? `<img src="${esc(t.logo)}" alt="">` : ""}<div><div class="tn">${esc(t.name)} <small>${esc(t.record || "")}</small></div><div class="tl">${nextTxt}</div>${thenTxt}<div class="tl dim">${lastTxt}</div>${div}</div></div>`; };
+  const stTable = (abbr) => { const d = state.sports.standings?.[abbr]; const t = (state.sports.teams || []).find(x => x.abbr === abbr); if (!d && !t) return "";
+    const sched = t ? `<div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(t.name.toUpperCase())} · SCHEDULE</div><table><tr><th>Date</th><th>Opponent</th><th>Result / Time</th><th>TV</th></tr>${[...(t.recent || []).map(g => `<tr><td class="mono">${new Date(g.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</td><td>${g.home ? "vs" : "@"} ${esc(g.opp)}</td><td class="mono" style="color:${g.won ? "var(--green)" : "var(--red)"}">${g.won ? "W" : "L"} ${esc(g.my ?? "")}-${esc(g.their ?? "")}</td><td></td></tr>`), ...(t.upcoming || []).map(g => `<tr class="${g.state === "in" ? "fav" : ""}"><td class="mono">${new Date(g.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</td><td>${g.home ? "vs" : "@"} ${esc(g.opp)}</td><td class="mono">${g.state === "in" ? "LIVE " + esc(g.my ?? "") + "-" + esc(g.their ?? "") : new Date(g.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</td><td class="mono">${esc(g.tv || "")}</td></tr>`)].join("") || '<tr><td colspan="4" class="empty">no games scheduled</td></tr>'}</table>` : "";
+    if (!d) return `<div class="stand" data-for="${esc(abbr)}">${sched}</div>`;
+    return `<div class="stand" data-for="${esc(abbr)}">${sched}<div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(d.division.toUpperCase())}</div><table><tr><th></th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">PCT</th><th class="num">GB</th><th>Strk</th></tr>${d.rows.map(r => `<tr class="${r.fav ? "fav" : ""}"><td class="num">${r.rank}</td><td>${esc(r.name)}${r.clinch ? ` <small style="color:var(--green)">${esc(r.clinch)}</small>` : ""}</td><td class="num">${esc(r.w)}</td><td class="num">${esc(r.l)}</td><td class="num">${esc(r.pct)}</td><td class="num">${esc(r.gb)}</td><td class="mono">${esc(r.streak || "")}</td></tr>`).join("")}</table></div>`; };
   const teams = (state.sports.teams || []);
   $("#scores").innerHTML = (teams.length ? `<div class="teams">${teams.map(teamCard).join("")}</div><div id="standWrap"></div>` : "") + (fav.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">YOUR GAMES</div>` + fav.map(row).join("") : "") + (others.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">AROUND THE LEAGUES</div>` + others.map(row).join("") : "");
   $("#scores").querySelectorAll(".team[data-abbr]").forEach(el => el.onclick = () => { const w = $("#standWrap"); const open = w.querySelector(`.stand[data-for="${el.dataset.abbr}"]`); w.innerHTML = open ? "" : stTable(el.dataset.abbr); $("#scores").querySelectorAll(".team").forEach(x => x.classList.toggle("sel", !open && x === el)); });
