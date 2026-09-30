@@ -321,7 +321,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   .panel{padding:12px}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:100px;height:100px}.chat{max-height:240px}
   .tile .name{font-size:16px}
   /* weather band: map below the numbers; the map only takes touch after you tap it */
-  .band{min-height:0}.band #map{position:relative;height:280px;margin:0 -12px -12px;touch-action:pan-y}
+  .band{min-height:0;display:flex;flex-direction:column}.band .glass{order:0}.band #map{order:1;position:relative;height:280px;margin:0 -12px 0;touch-action:pan-y}.band .mapctl{order:2}
+  .mapgate{touch-action:pan-y}
   .band .glass{margin:0 0 12px;max-width:none;background:transparent;border:0;padding:0;backdrop-filter:none}
   .band .mapctl{position:relative;right:auto;bottom:auto;margin:8px 0 0;max-width:none}.leaflet-top.leaflet-left{top:10px;bottom:auto}
   .mapgate{position:absolute;inset:0;z-index:1002;display:grid;place-items:center;background:rgba(4,7,13,.35);font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--cyan2);cursor:pointer}
