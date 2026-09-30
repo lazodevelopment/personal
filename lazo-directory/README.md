@@ -125,3 +125,5 @@ app-patches/patch_couple_v140.py (v139 -> v140): Browse merges a top-24-by-score
 - Manual, in Search Console: URL inspection > Request indexing for /wedding-websites/, /wedding-websites/peony/ and the five feature pages; confirm sitemap-templates.xml shows as Success under Sitemaps.
 
 - App Store (2026-09-30): "Lazo: Wedding Planner" id 6812863675 is live; base.html carries the apple-itunes-app smart banner and _footer.html links the listing ("Get the iPhone app"). Android pending.
+
+- Home (2026-09-30, JC-LAZO-HOME-0930-APP): generate/patch_home_app0930.py puts the app section (Apple store screenshots /assets/app-*.webp, App Store badge) under the hero, removes the vendor claim tile from the couples home, and hides the featured row for a metro with no claimed vendors (was "No <city> vendor has claimed yet"). Applies to the template and dist/index.html.
