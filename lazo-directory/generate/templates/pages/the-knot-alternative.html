@@ -15,7 +15,7 @@
     { "@type": "Question", "name": "Are the reviews on Lazo trustworthy?",
       "acceptedAnswer": { "@type": "Answer", "text": "Every review on Lazo comes from a verified couple who proves the work actually happened before their review counts. Vendors can respond free, and can never pay to hide or bury a review." } },
     { "@type": "Question", "name": "Will I find the same vendors on Lazo?",
-      "acceptedAnswer": { "@type": "Answer", "text": "Lazo lists 88,000+ vendor pages across 45 U.S. metros, built from the same real-world businesses. Many of the vendors you have shortlisted elsewhere already have a Lazo page you can inquire on today." } }
+      "acceptedAnswer": { "@type": "Answer", "text": "Lazo lists {{ vendor_total_display|default('70,000+') }} vendor pages across 45 U.S. metros, built from the same real-world businesses. Many of the vendors you have shortlisted elsewhere already have a Lazo page you can inquire on today." } }
   ]
 }
 </script>
@@ -72,7 +72,7 @@
 <section class="band band-plum">
 <h2 class="band-title">What you get on Lazo</h2>
 <div class="promises">
-<div class="promise"><h3>Verified vendor search</h3><p>88,000+ vendor pages across 45 metros, ranked by the Lazo Score &mdash; never by ad budget.</p></div>
+<div class="promise"><h3>Verified vendor search</h3><p>{{ vendor_total_display|default('70,000+') }} vendor pages across {{ metro_count|default(45) }} metros, ranked by the Lazo Score &mdash; never by ad budget.</p></div>
 <div class="promise"><h3>June, your AI copilot</h3><p>She knows your date, your budget, and your list. Ask what to book next and she does the work.</p></div>
 <div class="promise"><h3>Every tool, free</h3><p>Budget, guest list, seating chart, messaging, and a wedding website with digital RSVPs.</p></div>
 </div>

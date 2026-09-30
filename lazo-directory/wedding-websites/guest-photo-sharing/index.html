@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="apple-itunes-app" content="app-id=6812863675">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Free Wedding Guest Photo Sharing on Your Wedding Website | Lazo</title>
 <meta name="description" content="Guests add photos from their phones straight to your free wedding website - QR table cards, approval before they show, a slideshow for the TV and one zip of everything. No app, no fee, no separate site.">
@@ -189,6 +190,7 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
 .faqs p{color:#6B6B66;font-size:15px;margin-top:10px;max-width:70ch}
 /* /lz-seo-css */
 
+
 /* ---- lz-sell: built for the day itself ---- */
 .sell{background:#fff;border-top:1px solid var(--goldSoft);border-bottom:1px solid var(--goldSoft);padding:96px 22px}
 .sell .sw{max-width:1180px;margin:0 auto}
@@ -260,9 +262,9 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
   <p class="lbl">See your names on every design</p>
   <p class="hint">Type below — every preview updates as you do</p>
   <div class="row">
-   <input id="pn1" placeholder="Your name" autocomplete="off">
+   <input id="pn1" aria-label="Your name" placeholder="Your name" autocomplete="off">
    <span class="amp">&amp;</span>
-   <input id="pn2" placeholder="Partner&#39;s name" autocomplete="off">
+   <input id="pn2" aria-label="Partner&#39;s name" placeholder="Partner&#39;s name" autocomplete="off">
   </div>
   <div class="row2"><input id="pd" type="date" aria-label="Wedding date"></div>
   <p class="live"><span class="dot"></span> Live on all three previews below</p>
@@ -294,19 +296,19 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
  <div class="tpl rv" data-t="peony" data-styles="floral formal">
   <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="Peony template preview" data-f src="../peony/?frame=1"></iframe></div></div>
   <h2>Peony</h2><p class="vibe">Blush · peony &amp; champagne · petals in the air</p>
-  <div class="pals" data-slug="peony"><button data-p="peony" title="Peony" style="background:linear-gradient(135deg,#C2506F 55%,#FDF7F8 55%)" class="on"></button><button data-p="champagne" title="Champagne" style="background:linear-gradient(135deg,#B9924E 55%,#FCF8F2 55%)"></button><button data-p="dusk" title="Dusk" style="background:linear-gradient(135deg,#8B62A8 55%,#FAF7FB 55%)"></button><button data-p="ivory" title="Ivory" style="background:linear-gradient(135deg,#A9766A 55%,#FCFBF8 55%)"></button></div>
+  <div class="pals" data-slug="peony"><button data-p="peony" title="Peony" aria-label="Peony palette" aria-pressed="true" style="background:linear-gradient(135deg,#C2506F 55%,#FDF7F8 55%)" class="on"></button><button data-p="champagne" title="Champagne" aria-label="Champagne palette" aria-pressed="false" style="background:linear-gradient(135deg,#B9924E 55%,#FCF8F2 55%)"></button><button data-p="dusk" title="Dusk" aria-label="Dusk palette" aria-pressed="false" style="background:linear-gradient(135deg,#8B62A8 55%,#FAF7FB 55%)"></button><button data-p="ivory" title="Ivory" aria-label="Ivory palette" aria-pressed="false" style="background:linear-gradient(135deg,#A9766A 55%,#FCFBF8 55%)"></button></div>
   <div class="btns"><a class="view" data-view href="../peony/">View demo</a><a class="use" data-use href="#">Use Peony</a></div>
  </div>
  <div class="tpl rv" data-t="flora" data-styles="floral">
   <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="Flora template preview" data-f src="../flora/?frame=1"></iframe></div></div>
   <h2>Flora</h2><p class="vibe">Romantic · garden roses · candlelight</p>
-  <div class="pals" data-slug="flora"><button data-p="rose" title="Rose" style="background:linear-gradient(135deg,#C86B84 55%,#FDF8F8 55%)" class="on"></button><button data-p="peony" title="Peony" style="background:linear-gradient(135deg,#D4837E 55%,#FCF7F5 55%)"></button><button data-p="wildflower" title="Wildflower" style="background:linear-gradient(135deg,#8E8A3E 55%,#FAF9F5 55%)"></button><button data-p="duskgarden" title="Duskgarden" style="background:linear-gradient(135deg,#6E5C9E 55%,#F8F6FA 55%)"></button></div>
+  <div class="pals" data-slug="flora"><button data-p="rose" title="Rose" aria-label="Rose palette" aria-pressed="true" style="background:linear-gradient(135deg,#C86B84 55%,#FDF8F8 55%)" class="on"></button><button data-p="peony" title="Peony" aria-label="Peony palette" aria-pressed="false" style="background:linear-gradient(135deg,#D4837E 55%,#FCF7F5 55%)"></button><button data-p="wildflower" title="Wildflower" aria-label="Wildflower palette" aria-pressed="false" style="background:linear-gradient(135deg,#8E8A3E 55%,#FAF9F5 55%)"></button><button data-p="duskgarden" title="Duskgarden" aria-label="Duskgarden palette" aria-pressed="false" style="background:linear-gradient(135deg,#6E5C9E 55%,#F8F6FA 55%)"></button></div>
   <div class="btns"><a class="view" data-view href="../flora/">View demo</a><a class="use" data-use href="#">Use Flora</a></div>
  </div>
  <div class="tpl rv" data-t="sage" data-styles="floral boho">
   <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="Sage template preview" data-f src="../sage/?frame=1"></iframe></div></div>
   <h2>Sage</h2><p class="vibe">Botanical · garden · forest light</p>
-  <div class="pals" data-slug="sage"><button data-p="garden" title="Garden" style="background:linear-gradient(135deg,#6F8F76 55%,#F8FAF6 55%)" class="on"></button><button data-p="eucalyptus" title="Eucalyptus" style="background:linear-gradient(135deg,#5D8A80 55%,#F6F9F8 55%)"></button><button data-p="terracotta" title="Terracotta" style="background:linear-gradient(135deg,#B8674A 55%,#FAF6F2 55%)"></button><button data-p="lavender" title="Lavender" style="background:linear-gradient(135deg,#8A7DB0 55%,#F9F8FB 55%)"></button></div>
+  <div class="pals" data-slug="sage"><button data-p="garden" title="Garden" aria-label="Garden palette" aria-pressed="true" style="background:linear-gradient(135deg,#6F8F76 55%,#F8FAF6 55%)" class="on"></button><button data-p="eucalyptus" title="Eucalyptus" aria-label="Eucalyptus palette" aria-pressed="false" style="background:linear-gradient(135deg,#5D8A80 55%,#F6F9F8 55%)"></button><button data-p="terracotta" title="Terracotta" aria-label="Terracotta palette" aria-pressed="false" style="background:linear-gradient(135deg,#B8674A 55%,#FAF6F2 55%)"></button><button data-p="lavender" title="Lavender" aria-label="Lavender palette" aria-pressed="false" style="background:linear-gradient(135deg,#8A7DB0 55%,#F9F8FB 55%)"></button></div>
   <div class="btns"><a class="view" data-view href="../sage/">View demo</a><a class="use" data-use href="#">Use Sage</a></div>
  </div>
 </main>
@@ -325,6 +327,7 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
   <p class="fine">Free forever for couples · Change designs anytime · Live in minutes</p>
  </div>
 </section>
+
 
 
 
@@ -372,6 +375,7 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
    <div>
     <h4>For couples</h4>
     <a href="https://app.meetlazo.com">Start planning</a>
+    <a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675">Get the iPhone app</a>
     <a href="https://meetlazo.com/phoenix/">Find vendors</a>
     <a href="https://meetlazo.com/what-is-a-lazo/">The Lazo tradition</a>
     <a href="https://meetlazo.com/why-lazo/">Why Lazo</a>
@@ -422,9 +426,10 @@ function apply(){
   const p=params(),qs=p.toString();
   document.querySelectorAll(".tpl").forEach(card=>{
    const id=card.dataset.t;
-   const fp=new URLSearchParams(p);fp.set("frame","1");
+   const cp=new URLSearchParams(p);const on=card.querySelector(".pals button.on");if(on&&on.dataset.p)cp.set("palette",on.dataset.p);const cqs=cp.toString();
+   const fp=new URLSearchParams(cp);fp.set("frame","1");
    card.querySelector("[data-f]").src="../"+id+"/?"+fp.toString();
-   card.querySelector("[data-view]").href="../"+id+"/"+(qs?"?"+qs:"");
+   card.querySelector("[data-view]").href=id+"/"+(cqs?"?"+cqs:"");
   });
  },500);
 }
@@ -448,12 +453,14 @@ document.querySelectorAll(".pals").forEach(function(row){
  var use=card.querySelector("[data-use]");
  row.querySelectorAll("button").forEach(function(b){
   b.addEventListener("click",function(){
-   row.querySelectorAll("button").forEach(function(x){x.classList.remove("on")});
-   b.classList.add("on");
+   row.querySelectorAll("button").forEach(function(x){x.classList.remove("on");x.setAttribute("aria-pressed","false")});
+   b.classList.add("on");b.setAttribute("aria-pressed","true");
    var k=b.dataset.p;
+   var p=(typeof params==="function")?params():new URLSearchParams();p.set("palette",k);
+   var fp=new URLSearchParams(p);fp.set("frame","1");
    var base=frame.getAttribute("src").split("?")[0];
-   frame.setAttribute("src",base+"?frame=1&palette="+k);
-   view.href="../"+slug+"/?palette="+k;
+   frame.setAttribute("src",base+"?"+fp.toString());
+   view.href="../"+slug+"/?"+p.toString();
    if(use){var uh=(use.getAttribute("href")||"").split("&palette")[0].split("?palette")[0];
     use.setAttribute("href",uh+(uh.indexOf("?")>-1?"&":"?")+"palette="+k);}
   });

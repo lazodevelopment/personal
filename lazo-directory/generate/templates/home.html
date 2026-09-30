@@ -8,7 +8,7 @@
 {% block jsonld %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"Lazo wedding planner","applicationCategory":"LifestyleApplication","operatingSystem":"Web, iOS, Android","url":"https://app.meetlazo.com","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free for couples: guest list, budget, seating charts, dream board, timeline, wedding website and June."}},
+ {"@type":"SoftwareApplication","name":"Lazo wedding planner","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web","url":"https://app.meetlazo.com","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free for couples: guest list, budget, seating charts, dream board, timeline, wedding website and June."}},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is Lazo really free for couples?","acceptedAnswer":{"@type":"Answer","text":"Yes. There is no paid tier for couples and nothing is capped. Lazo takes 0% of what couples pay vendors. The business is an optional Pro plan for vendors who want more tools, which sharpens the tools and never touches the rankings, so the couple tools stay free and the rankings stay honest."}},
   {"@type":"Question","name":"How are vendors ranked?","acceptedAnswer":{"@type":"Answer","text":"By the Lazo Score, built only from verified reviews from couples who proved the wedding happened, weighted for recency. No vendor can pay for a better position."}},
@@ -78,7 +78,7 @@
   .stance .cols{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:28px}
   .stance h3{font-size:30px;margin:0 0 10px}
   .stance p{margin:0;color:var(--muted);font-size:16px}
-  .stance .them h3,.stance .them p{color:#9A8FA1}
+  .stance .them h3,.stance .them p{color:#786C83}
   .ww{display:grid;grid-template-columns:1.1fr 1fr;gap:32px;align-items:center;background:var(--card);border:1px solid var(--gold-line);border-radius:24px;padding:36px}
   .ww p{color:var(--muted);font-size:16px;margin:0 0 18px}
   .ww .demo{border-radius:18px;background:var(--plum-deep);border:1px solid rgba(217,183,124,.6);overflow:hidden;line-height:0}
@@ -96,7 +96,7 @@
   <div class="hero-inner">
     <h1>Wedding vendors you can <em>actually</em> trust.</h1>
     <p class="hero-sub">Every business verified. Every review from a couple who booked. Rankings no one can buy. And June, your free AI planner, from first inquiry to last dance.</p>
-    <form class="finder" onsubmit="event.preventDefault();var m=this.metro.value,c=this.cat.value;if(m&&c)location.href='/'+m+'/'+c+'/';else if(m)location.href='/'+m+'/';">
+    <form class="finder" id="find" onsubmit="event.preventDefault();var m=this.metro.value,c=this.cat.value;if(m&&c)location.href='/'+m+'/'+c+'/';else if(m)location.href='/'+m+'/';">
       <select name="cat" aria-label="Vendor type">
         <option value="">What are you looking for?</option>
         {% for c in categories %}<option value="{{ c.slug }}">{{ c.label }}</option>{% endfor %}
@@ -337,7 +337,7 @@
 .pcard .fine{color:var(--muted);font-size:14px;margin:0 0 18px}
 .pcard ul{list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:1fr 1fr;gap:9px 18px}
 .pcard li{font-size:14.5px;color:var(--ink);display:flex;gap:9px;align-items:flex-start;line-height:1.35}
-.pcard li::before{content:"¹3";flex:none;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--plum-deep);font-size:12px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+.pcard li::before{content:"\2713";flex:none;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--plum-deep);font-size:12px;font-weight:800;display:grid;place-items:center;margin-top:1px}
 .pcard .cta{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
 .pcard .cta a.more{color:var(--plum);font-weight:600;text-decoration:none;border-bottom:1px solid var(--gold)}
 .pcard .nope{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--gold-line);font-size:13px;color:var(--muted)}

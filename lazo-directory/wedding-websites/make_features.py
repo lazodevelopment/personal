@@ -197,7 +197,7 @@ def build(slug):
     s = s[:a] + "".join(relink(CARDS[t]) for t in spec["themes"]) + s[b:]
     s = s.replace('card.querySelector("[data-f]").src=id+"/?"+fp.toString();', 'card.querySelector("[data-f]").src="../"+id+"/?"+fp.toString();', 1)
     s = s.replace('card.querySelector("[data-view]").href=id+"/"+(qs?"?"+qs:"");', 'card.querySelector("[data-view]").href="../"+id+"/"+(qs?"?"+qs:"");', 1)
-    s = s.replace('view.href=slug+"/?palette="+k;', 'view.href="../"+slug+"/?palette="+k;', 1)
+    s = s.replace('view.href=slug+"/?"+p.toString();', 'view.href="../"+slug+"/?"+p.toString();', 1)
     s = s.replace('href="noir/?married=1"', 'href="../noir/?married=1"', 1)
     s = re.sub(r"Live on all [\w-]+ previews below", "Live on all three previews below", s, count=1)
     # hub-only blocks out
@@ -205,6 +205,12 @@ def build(slug):
     s = re.sub(r"<!-- lz-filters -->.*?<!-- /lz-filters -->\n", "", s, flags=re.S)
     s = re.sub(r"\s*<!-- lz-married -->.*?<!-- /lz-married -->", "", s, flags=re.S)
     s = re.sub(r"\n<script>\n/\* lz-filters-js \*/.*?/\* /lz-filters-js \*/\n</script>", "", s, flags=re.S)
+    # JC-LAZO-HUB-0930-FIX: the vs page keeps the Knot/Zola table the sales block holds
+    cmp_m = re.search(r'  <div class="cmp"[^>]*>\n.*?</table>\n\s*<p class="fine">[^\n]*\n', s, flags=re.S)
+    cmp_html = (cmp_m.group(0) + "  </div>\n") if cmp_m else ""
+    # JC-LAZO-HUB-0930-FIX: the vs page keeps the Knot/Zola table the sales block holds
+    cmp_m = re.search(r'  <div class="cmp"[^>]*>\n.*?</table>\n\s*<p class="fine">[^\n]*\n', s, flags=re.S)
+    cmp_html = (cmp_m.group(0) + "  </div>\n") if cmp_m else ""
     s = re.sub(r"<!-- lz-sell -->.*?<!-- /lz-sell -->\n?", "", s, flags=re.S)
     s = re.sub(r'<section class="beyond rv">.*?</section>\n', "", s, count=1, flags=re.S)
     # the feature story, ABOVE the template grid: screenshot, copy, points
@@ -219,8 +225,10 @@ def build(slug):
              f'  <p class="sp" style="margin-top:34px;max-width:64ch">{E(spec["intro"][1])}</p>',
              '  <div class="fmore" style="margin-top:28px">']
     story += [f'   <div><b>{E(t)}</b><span>{E(p)}</span></div>' for t, p in spec["points"]]
-    story += ['  </div>',
-              '  <div class="scta"><a href="https://app.meetlazo.com/?template=' + spec["themes"][0] + '">Make yours &mdash; free, live in minutes</a>'
+    story += ['  </div>']
+    if slug == "vs-zola-the-knot" and cmp_html:
+        story += ['  <div style="margin-top:36px">', cmp_html, '  </div>']
+    story += ['  <div class="scta"><a href="https://app.meetlazo.com/?template=' + spec["themes"][0] + '">Make yours &mdash; free, live in minutes</a>'
               '<p>Every Lazo design carries this. Three to start with are below.</p></div>',
               ' </div>', '</section>', '<!-- /lz-feature -->', '']
     s = s.replace('<main class="grid" id="grid">', "\n".join(story) + '<main class="grid" id="grid">', 1)

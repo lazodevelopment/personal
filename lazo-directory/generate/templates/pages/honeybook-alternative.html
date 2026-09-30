@@ -15,7 +15,7 @@
     { "@type": "Question", "name": "Can I send proposals through Lazo?",
       "acceptedAnswer": { "@type": "Answer", "text": "Yes. Send a proposal with title, price, and terms directly in the conversation thread; the couple accepts in one tap and the booking is confirmed on both dashboards." } },
     { "@type": "Question", "name": "Where do Lazo leads come from?",
-      "acceptedAnswer": { "@type": "Answer", "text": "From verified couples planning on Lazo — 88,000+ vendor pages across 45 U.S. metros draw couples in, and inquiries arrive with the wedding date and planning details attached." } }
+      "acceptedAnswer": { "@type": "Answer", "text": "From verified couples planning on Lazo — {{ vendor_total_display|default('70,000+') }} vendor pages across 45 U.S. metros draw couples in, and inquiries arrive with the wedding date and planning details attached." } }
   ]
 }
 </script>
@@ -80,7 +80,7 @@
 <h2>Questions vendors ask</h2>
 <details class="faq"><summary>Can Lazo replace my CRM?</summary><p>For proposals and booking confirmation, often yes. For invoicing, contracts, and workflows, keep the tools you love &mdash; Lazo plays the demand side.</p></details>
 <details class="faq"><summary>What does Lazo cost?</summary><p>Nothing &mdash; profile, leads, alerts, messaging, and proposals are free forever, with no subscription and no lead fees.</p></details>
-<details class="faq"><summary>How do couples find me?</summary><p>Lazo's marketplace spans 88,000+ vendor pages across 45 metros; couples search by category and metro, ranked by verified-review scores.</p></details>
+<details class="faq"><summary>How do couples find me?</summary><p>Lazo's marketplace spans {{ vendor_total_display|default('70,000+') }} vendor pages across {{ metro_count|default(45) }} metros; couples search by category and metro, ranked by verified-review scores.</p></details>
 <details class="faq"><summary>How long does setup take?</summary><p>About five minutes to claim your profile. No card, no contract.</p></details>
 <div class="claim-strip" style="margin-top:34px">
 <h2>Stop paying to manage. Start getting found.</h2>
