@@ -57,10 +57,10 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .brand h1{margin:0;font-weight:600;font-size:24px;letter-spacing:.42em;color:#fff;text-shadow:0 0 18px rgba(var(--glow),.55)}
 .brand small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.2em;margin-top:-2px;white-space:nowrap}
 .mini{width:36px;height:36px}.mini svg{width:100%;height:100%;overflow:visible}
-.attn{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;min-width:0;padding:2px}
+.attn{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding:2px;max-height:74px;overflow:hidden;align-content:flex-start}
 .attn::-webkit-scrollbar{display:none}
-.attn .chip{flex:none;font-family:var(--mono);font-size:11px;letter-spacing:.06em;border:1px solid var(--line);padding:6px 10px;color:var(--fg);display:flex;gap:8px;align-items:center;background:rgba(8,18,34,.7);cursor:pointer;animation:slide .35s ease-out}
-.attn .chip b{font-size:15px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.attn .chip{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.05em;border:1px solid var(--line);padding:4px 9px;color:var(--fg);display:flex;gap:8px;align-items:center;background:rgba(8,18,34,.7);cursor:pointer;animation:slide .35s ease-out}
+.attn .chip b{font-size:14px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
 .attn .chip.warn{border-color:rgba(255,179,64,.6)}.attn .chip.warn b{color:var(--amber)}
 .attn .chip.crit{border-color:var(--red);background:rgba(255,77,94,.1)}.attn .chip.crit b{color:var(--red)}
 .attn .chip.good{border-color:rgba(57,240,168,.5)}.attn .chip.good b{color:var(--green)}
@@ -156,6 +156,11 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .tile .links a:hover{border-color:var(--cyan);text-decoration:none;background:rgba(var(--glow),.08)}
 .tile .nodata{font-family:var(--mono);font-size:11px;color:var(--dim)}
 .tile .more{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.15em;text-align:right}
+.traffic{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:end;border-top:1px solid var(--line);padding-top:8px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.05em}
+.traffic b{display:block;font-size:19px;color:#fff;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+.traffic .live b{color:var(--green)}.traffic .live b::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;vertical-align:middle;animation:pulse 1.6s ease-in-out infinite}
+.traffic svg{width:100%;height:26px;display:block}
+.traffic small{display:block;font-size:9px;color:var(--dim)}
 
 /* weather band: map behind, glass panel in front */
 .band{position:relative;min-height:420px;padding:0;overflow:hidden}
@@ -422,7 +427,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const state = { sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
+const state = { traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
 const fmtAgo = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m/60) + " h ago" : new Date(iso).toLocaleDateString(); };
 const money = (n) => "$" + (n >= 10000 ? Math.round(n/1000) + "k" : n >= 1000 ? (n/1000).toFixed(1) + "k" : Math.round(n));
 const moneyFull = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -479,6 +484,7 @@ function renderAttention() {
   const jobs = m.roven?.counts?.jobs_pending_review; if (jobs) chips.push({ cls: "warn", n: jobs, t: "Roven jobs to review", go: "roven" });
   for (const id of ["atavia", "es"]) { const k = m[id]?.headline?.find(x => x.label === "Leads 7d"); if (k?.value) chips.push({ cls: "good", n: k.value, t: bizOf(id).name + " leads this week", go: id }); const b = m[id]?.headline?.find(x => x.label === "Balances due"); if (b?.value) chips.push({ cls: "", n: money(b.value), t: bizOf(id).name + " balances due", go: id }); }
   const ver = m.lr?.headline?.find(x => /Verifications/.test(x.label)); if (ver?.value) chips.push({ cls: "warn", n: ver.value, t: "LR verifications", go: "lr" });
+  for (const [id, t] of Object.entries(state.traffic?.sites || {})) if (t.online) chips.push({ cls: "good", n: t.online, t: `on ${bizOf(id).name} now`, go: id });
   for (const a of state.wx?.nws || []) chips.push({ cls: /Extreme|Severe/.test(a.severity) ? "crit" : "warn", n: "!", t: a.event, go: "#wxPanel" });
   const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
   const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
@@ -488,6 +494,10 @@ function renderAttention() {
 const viewOf = (sel) => ({ "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
 
 /* ---------- business tiles ---------- */
+function hourBars(hours) {
+  if (!hours) return ""; const max = Math.max(1, ...hours); const h = new Date().getHours();
+  return `<svg viewBox="0 0 96 26" preserveAspectRatio="none">${hours.map((v, i) => `<rect x="${i * 4}" y="${(26 - v / max * 24).toFixed(1)}" width="3" height="${(v / max * 24).toFixed(1)}" fill="${i === h ? "#39f0a8" : "#19d3ff"}" opacity="${i > h ? .15 : .8}"/>`).join("")}</svg>`;
+}
 function sparkline(vals, color = "#19d3ff") {
   if (!vals || vals.length < 2) return "";
   const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1, n = vals.length;
@@ -505,9 +515,11 @@ function renderBiz() {
     const mb = m[b.id];
     const kpis = mb?.headline?.length ? `<div class="kpis">${mb.headline.slice(0,4).map((k, i) => `<div class="kpi">${esc(k.label)}<b data-tick="${b.id}:${i}" data-v="${typeof k.value === "number" ? k.value : ""}" data-money="${k.money ? 1 : ""}">${k.money ? money(k.value) : esc(k.value)}</b>${k.delta != null ? `<i class="${k.delta > 0 ? "up" : k.delta < 0 ? "down" : ""}">${fmtDelta(k)}</i>` : ""}</div>`).join("")}</div>` : `<div class="nodata">${mb?.error ? esc(mb.error) : "metrics pending"}</div>`;
     const spark = mb?.series?.values ? sparkline(mb.series.values, mb.series.color) : "";
+    const tr = state.traffic?.sites?.[b.id];
+    const traffic = tr && !tr.error ? `<div class="traffic"><div class="live">ONLINE NOW<b data-tick="${b.id}:online" data-v="${tr.online}">${tr.online}</b></div><div>TODAY<b data-tick="${b.id}:today" data-v="${tr.today}">${tr.today}</b><small>${tr.views} page views</small></div><div>${hourBars(tr.hourly)}<small>visitors by hour · ${fmtAgo(state.traffic.at)}</small></div></div>` : (tr?.error ? `<div class="nodata">traffic: ${esc(tr.error)}</div>` : "");
     const links = Object.entries(b.links).map(([k,v]) => `<a href="${v}" target="_blank" rel="noopener">${k}</a>`).join("");
     return `<div class="tile" data-id="${b.id}"><div><div class="name">${b.name}</div><div class="kind">${b.kind}</div></div>
-      <div class="stat"><span class="dot ${cls}"></span>${txt}</div>${kpis}${spark}
+      <div class="stat"><span class="dot ${cls}"></span>${txt}</div>${kpis}${spark}${traffic}
       <div class="links"><a href="${b.site}" target="_blank" rel="noopener">Site</a>${links}</div><div class="more">TAP FOR DETAIL ›</div></div>`;
   }).join("");
   $("#biz").querySelectorAll("[data-tick]").forEach(el => { if (el.dataset.v !== "") tick(el, el.dataset.tick, +el.dataset.v, v => el.dataset.money ? money(v) : Math.round(v).toLocaleString()); });
@@ -555,7 +567,11 @@ function openDrill(id) {
   const src = d.leadsBySource ? Object.entries(d.leadsBySource).map(([k, v], i, arr) => { const max = Math.max(...arr.map(x => x[1])); return `<div class="hbar"><span>${esc(k)}</span><i style="width:${(v / max * 100).toFixed(0)}%"></i><span>${v}</span></div>`; }).join("") : `<div class="empty">No lead-source data.</div>`;
   const pend = d.pending?.length ? `<div class="pend">${d.pending.map(p => `<div><span>${esc(p.label)}</span><span>${actionButtons(p)}</span></div>`).join("")}</div>` : `<div class="empty">Nothing pending.</div>`;
   const upc = mb.upcoming?.length ? `<ul class="events">${mb.upcoming.map(e => `<li><span class="bz">${esc(e.date)}</span><span>${esc(e.title)}</span><span class="in">in ${Math.ceil((new Date(e.date + "T12:00") - Date.now()) / 86400e3)} d</span></li>`).join("")}</ul>` : `<div class="empty">No upcoming dates.</div>`;
-  $("#dBody").innerHTML = `
+  const tr = state.traffic?.sites?.[id];
+  const hb = (arr) => (arr || []).map(([p, n], i, a) => `<div class="hbar"><span title="${esc(p)}">${esc(p)}</span><i style="width:${(n / a[0][1] * 100).toFixed(0)}%"></i><span>${n}</span></div>`).join("") || '<div class="empty">–</div>';
+  const trafficSec = tr && !tr.error ? `<section class="panel"><h2>Web traffic today <span class="sub">${fmtAgo(state.traffic.at)} · refreshed every 5 min</span></h2><div class="dkpis"><div class="kpi">Online now<b style="color:var(--green)">${tr.online}</b></div><div class="kpi">Visitors today<b>${tr.today}</b></div><div class="kpi">Page views<b>${tr.views}</b></div><div class="kpi">Bots filtered<b>${tr.bots_today}</b></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px"><div><h2>By hour</h2><div class="traffic" style="border:0;padding:0;display:block">${hourBars(tr.hourly)}</div></div><div><h2>Top pages</h2>${hb(tr.pages)}</div><div><h2>Sources</h2>${hb(tr.sources)}</div><div><h2>On the site now</h2>${(tr.now_pages || []).map(p => `<div class="mono" style="font-size:12px">${esc(p)}</div>`).join("") || '<div class="empty">nobody right now</div>'}<h2 style="margin-top:10px">Devices</h2><div class="mono" style="font-size:12px">${Object.entries(tr.devices || {}).map(([k, v]) => `${esc(k)} ${v}`).join(" · ") || "–"}</div></div></div></section>` : "";
+  $("#dBody").innerHTML = `${trafficSec}
     <section class="panel"><h2>Headline</h2><div class="dkpis">${kpis || '<div class="empty">' + esc(mb.error || "metrics pending") + '</div>'}</div></section>
     <section class="panel d6"><h2>Cash in by month</h2>${monthly.length ? barsSvg(monthly.map(m => ({ ym: m.ym, [id]: m.v })), { [id]: b.color }) + `<div class="legend">${monthly.slice(-3).map(m => `<span>${m.ym} <b style="color:#fff">${moneyFull(m.v)}</b></span>`).join("")}</div>` : '<div class="empty">No revenue history for this business.</div>'}</section>
     <section class="panel d6"><h2>Response time</h2>${rtSvg(state.history?.[id])}<div class="legend"><span>now <b style="color:#fff">${state.sites.find(s => s.id === id)?.ms ?? "–"} ms</b></span><span>status <b style="color:#fff">${state.uptime?.[id]?.ok === false ? "DOWN" : "up"}${state.uptime?.[id]?.slow ? " · slow" : ""}</b></span></div></section>
@@ -761,7 +777,7 @@ async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
     const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
-    state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
+    state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
     if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}

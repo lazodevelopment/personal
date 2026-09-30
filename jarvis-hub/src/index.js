@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -213,12 +213,13 @@ async function loadCalendar(env, force) {
 
 /* ---------------- context for the brain ---------------- */
 async function buildContext(env, request) {
-  const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue"].map((k) => kv.get(env, k)));
+  const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue, traffic] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue", "traffic"].map((k) => kv.get(env, k)));
   const wx = await weatherData(request, env, place).catch(() => null);
   const lines = [];
   lines.push(`TIME: ${localTime(env)} (${env.TZ || "America/Chicago"})`);
   lines.push(`SITES: ` + (status?.sites || []).map((s) => `${s.name} ${s.ok ? "up" : "DOWN"} ${s.ms}ms`).join(", "));
   lines.push(`WEATHER: ${weatherSummary(wx)}`);
+  if (traffic?.sites) lines.push(`WEB TRAFFIC (as of ${traffic.at}, day ${traffic.day}): ` + Object.entries(traffic.sites).map(([id, t]) => t.error ? `${BIZ_NAME[id]} ${t.error}` : `${BIZ_NAME[id]}: ${t.online} online now, ${t.today} visitors today, ${t.views} page views, top pages ${(t.pages || []).slice(0, 3).map((p) => p[0] + " " + p[1]).join(", ")}, sources ${(t.sources || []).map((p) => p[0] + " " + p[1]).join(", ")}`).join(" | "));
   if (metrics?.businesses) {
     lines.push(`METRICS (collected ${metrics.collectedAt}):`);
     for (const [id, b] of Object.entries(metrics.businesses)) {
