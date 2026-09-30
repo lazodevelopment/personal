@@ -21,6 +21,7 @@ crons = ["*/5 * * * *", "0 * * * *"]
 ALLOWED_EMAILS = "jesse@briskhealth.com"
 ALERT_EMAIL = "jesse@briskhealth.com"
 TZ = "America/Chicago"
+BRIEF_HOUR = "5"                # local hour for the morning brief
 NTFY_TOPIC = "jarvis-a52b945267dd"
 # Secrets (npx wrangler secret put NAME): HUB_KEY, ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, GOOGLE_CLIENT_ID, PUSHOVER_USER, PUSHOVER_TOKEN, RESEND_API_KEY, CAL_ICS_URL (Google Calendar "secret address in iCal format")
 # Optional vars: ELEVENLABS_VOICE_ID, ALERT_FROM ("JARVIS <jarvis@yourdomain>" once the domain is verified in Resend)

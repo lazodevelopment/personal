@@ -344,7 +344,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 
   <section class="panel c4" id="alertPanel" data-v="jarvis">
     <h2>Briefing <span class="sub" id="morningAt"></span><button class="btn sm" id="morningRun">GENERATE</button></h2>
-    <div class="morning" id="morning"><div class="empty">The morning brief lands here at 7 AM.</div></div>
+    <div class="morning" id="morning"><div class="empty">The morning brief lands here at 5 AM.</div></div>
     <h2>Alerts <span class="sub" id="alertCount"></span><button class="btn sm" id="testPush">TEST PUSH</button></h2>
     <ul class="alerts" id="alerts"><li class="empty">Nothing yet.</li></ul>
   </section>
@@ -743,7 +743,7 @@ function renderAlerts() {
 }
 function renderMorning() {
   const m = state.morning;
-  if (!m?.text) { $("#morning").innerHTML = `<div class="empty">The morning brief lands here at 7 AM. Press GENERATE for one now.</div>`; $("#morningAt").textContent = ""; return; }
+  if (!m?.text) { $("#morning").innerHTML = `<div class="empty">The morning brief lands here at 5 AM. Press GENERATE for one now.</div>`; $("#morningAt").textContent = ""; return; }
   $("#morningAt").textContent = fmtAgo(m.at);
   $("#morning").innerHTML = `<div class="row">${m.audio ? `<button class="btn primary" id="morningPlay">▶ PLAY BRIEF</button>` : `<button class="btn" id="morningSpeak">▶ READ ALOUD</button>`}<span class="empty">${Math.round(m.text.split(/\s+/).length / 150 * 60)} s</span></div><p>${esc(m.text)}</p>`;
   const btn = $("#morningPlay"); if (btn) btn.onclick = () => playUrl("/api/morning/audio", btn);

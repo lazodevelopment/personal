@@ -379,7 +379,7 @@ export default {
     if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
-      if (localHour(env) === 7) {
+      if (localHour(env) === (+env.BRIEF_HOUR || 5)) {
         const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} });
         await makeMorning(env, fake).catch((e) => pushAlert(env, { kind: "watch", text: "Morning brief failed: " + e.message }));
       }
