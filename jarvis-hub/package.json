@@ -1,0 +1,16 @@
+{
+  "name": "jarvis-hub",
+  "version": "1.0.0",
+  "description": "Personal command center: live status of Atavia, Elizabeth Scott, Lazo, Roven and LeaseReputation, local weather, an inbox brief, live webcam feeds, a launch bar, shared notes, and push-to-talk voice.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0"
+  }
+}

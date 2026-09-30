@@ -1,0 +1,111 @@
+# JARVIS hub
+
+Personal command center for Jesse: live status and business metrics for Atavia, Elizabeth Scott,
+Lazo, Roven and LeaseReputation, weather with Doppler radar, an inbox brief, alerts to your phone,
+live webcam feeds, a Claude-powered assistant you can talk to, and a wall mode for a TV.
+
+Live: https://jarvis-hub.floral-credit-e4f0.workers.dev (Cloudflare account d16dd804, same as Lazo).
+
+## Sign-in
+- **Google**: only the addresses in `ALLOWED_EMAILS` (wrangler.toml; currently jesse@briskhealth.com).
+  Needs a Google OAuth client ID set as the secret `GOOGLE_CLIENT_ID` (see Setup below).
+- **Access key**: `.hub-key` (gitignored). Also the `x-hub-key` header for scripts. Kept as a fallback.
+
+## What runs where
+| Piece | Where | Cadence |
+|---|---|---|
+| Dashboard + API + brain + TTS | Cloudflare Worker `src/index.js`, page `src/hub.html` | on request |
+| Uptime checks, down/up alerts, unanswered-lead nudges | Worker cron (`[triggers]`) | every 5 min |
+| Inbox brief (Gmail → `brief`) | Claude scheduled task `jarvis-inbox-brief` (runs while the Claude app is open) | hourly 7am–9pm |
+| Business metrics (Firestore → `metrics`) | `collect_metrics.py` via Task Scheduler "JARVIS metrics" | hourly |
+
+## Setup (one-time secrets)
+```powershell
+cd C:\Users\kurvh\jarvis-hub
+npx wrangler secret put ANTHROPIC_API_KEY     # the brain (console.anthropic.com → API keys)
+npx wrangler secret put ELEVENLABS_API_KEY    # natural British voice (elevenlabs.io → profile → API keys)
+npx wrangler secret put GOOGLE_CLIENT_ID      # Google sign-in (see below)
+npx wrangler secret put RESEND_API_KEY        # optional: email alerts as well as push
+```
+Google client ID: console.cloud.google.com → APIs & Services → Credentials → Create credentials →
+OAuth client ID → Web application. Authorized JavaScript origins: `https://jarvis-hub.floral-credit-e4f0.workers.dev`
+(add your custom domain too). No redirect URI is needed. Paste the client ID into the secret above.
+
+Phone push: **Pushover** (pushover.net, $5 one-time per platform). Create an account, install the app,
+copy your User Key from the dashboard, then Create an Application called JARVIS and copy its API Token:
+```powershell
+npx wrangler secret put PUSHOVER_USER
+npx wrangler secret put PUSHOVER_TOKEN
+```
+Test with the TEST PUSH button. (ntfy.sh is also wired via `NTFY_TOPIC` but its free server rate-limits
+Cloudflare's shared egress IPs, so it only works intermittently from the worker.)
+
+ElevenLabs voice: defaults to "George". To use another, set `ELEVENLABS_VOICE_ID` under `[vars]`.
+
+## Metrics collector
+Uses the service-account keys already on this PC for Lazo, Roven and LeaseReputation.
+Atavia and Elizabeth Scott have no server key here: in the Firebase console for each project
+(Project settings → Service accounts → Generate new private key) and save the file as
+`secrets/atavia-c29cd.json` and `secrets/elizabeth-scott-738e5.json`. The next hourly run picks them up.
+```powershell
+C:\Users\kurvh\lazo-directory\.venv\Scripts\python.exe collect_metrics.py --dry-run   # print, don't post
+```
+Log: `collect_metrics.log`.
+
+## Run locally / deploy
+```powershell
+npx wrangler dev --port 8790          # HUB_KEY unset locally, so the page is open
+npx wrangler whoami                   # must show d16dd804...
+npx wrangler deploy
+```
+
+## API (cookie or `x-hub-key`)
+- `GET /api/config` which features are configured.
+- `GET /api/status` (`?fresh=1` to force) site checks + uptime memory.
+- `GET /api/weather?lat&lon&place`, `GET /api/alerts?lat&lon` (NWS).
+- `POST /api/chat {text, messages}` → `{reply, actions, messages}`.
+- `POST /api/tts {text}` → audio/mpeg (ElevenLabs).
+- `GET|POST /api/state` keys: `brief`, `webcams`, `notes`, `place`, `metrics`, `alerts`, `chat`.
+- `POST /api/test-alert`.
+
+### Brief shape (posted by the inbox routine)
+```json
+{"brief":{"at":"ISO","account":"…","note":"…","items":[{"from":"","when":"","received":"ISO","subject":"","snippet":"","url":"","needs_reply":true}]}}
+```
+`needs_reply` + `received` drive the 2-hour unanswered-lead nudge.
+
+### Metrics shape (posted by the collector)
+```json
+{"metrics":{"collectedAt":"ISO","businesses":{"lazo":{"headline":[{"label":"","value":0,"money":false,"delta":0,"deltaUnit":"","deltaLabel":""}],"series":{"name":"","values":[],"color":""},"upcoming":[{"date":"YYYY-MM-DD","title":""}],"counts":{}}}}}
+```
+
+## What JARVIS does now (round two)
+- **Attention strip** in the header: sites down/slow, emails needing reply, unanswered Lazo inquiries, pending claims/jobs, leads this week, balances due, NWS alerts, queued actions, today's calendar. Click a chip to jump there.
+- **Drill-downs**: click any business tile for cash-in by month, response-time history, recent bookings (with NOTE buttons), leads by source, pending decisions (with APPROVE/REJECT) and upcoming dates.
+- **Streaming brain**: `/api/chat` is server-sent events. All live facts are pre-loaded into the prompt (one model round for most questions) and the voice starts on the first sentence.
+- **Actions with confirmation**: JARVIS proposes (`request_action`), you press CONFIRM, the item goes to the queue at `/api/queue`. Executing it needs the "hands" script on the PC (see below). `draft_reply` shows an editable draft with an Open-in-Gmail button; nothing is sent automatically.
+- **Morning brief**: hourly cron; at 7 AM local it writes a ~2-minute brief from the live context, voices it with ElevenLabs (`/api/morning/audio`) and pushes the first lines to your phone. GENERATE runs it on demand.
+- **Money**: 12-month stacked cash-in per business from Firestore payment records (deposits, balances, gratuities, Pro charges, placement fees). Zoho/Stripe are mirrored by those records; direct API pulls would need their credentials, which live in Secret Manager.
+- **Memory**: `remember`/`forget` tools plus the Memory panel; facts are in every prompt.
+- **Watchfulness**: on every metrics post, JARVIS compares with the previous snapshot (lead drops ≥60% from a base of 5+, pending pile-ups, unanswered inquiries) and every 5 minutes checks response time against the 24h median (alerts when 2.5× slower and over 1.5 s). Search Console isn't wired (needs OAuth).
+- **Calendar**: set `CAL_ICS_URL` to your Google Calendar's "Secret address in iCal format" (Calendar settings → Integrate calendar). Events merge into Upcoming and the brain's context; refreshed hourly.
+- **Conversation mode** (devices with a mic): JARVIS listens after each reply; speaking over him interrupts. Wake word "Jarvis" also works.
+- **Visualizer**: the core renders a live frequency ring from the audio while JARVIS speaks (and from the mic while listening).
+- **Phone**: bottom nav (JARVIS / OPS / WEATHER / FEEDS / MORE), one view at a time.
+
+### Hands (executing confirmed actions)
+The hub only queues actions. A small script on the PC would poll `GET /api/queue`, perform the Firestore write with the
+same credentials as the collector, and `POST /api/queue/result {id, ok, message}`. The exact writes each admin tool
+makes are documented in the queue item kinds: `roven_approve_job` → jobs/{id} status active; `roven_reject_job` → rejected;
+`roven_approve_employer` → employers doc + custom claim + application approved (approve_employer.py);
+`lazo_claim` → vendors claimedBy/claimStatus/verified + users vendorId + claimRequests approved (Vendor admin queue);
+`booking_note` → bookings/{id} admin_notes arrayUnion({at,text,by}); `lazo_inquiry_responded` → status responded + respondedAt.
+Writing that executor was blocked by the assistant's permission rules (it changes production business data unattended), so it is left for Jesse to add or approve explicitly.
+
+## Using it
+- **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
+- **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.
+- **Wall mode**: every embeddable feed in a full-screen grid with clock, weather and system state. Click a feed to enlarge it, click again to return. `/wall` or the header link. Esc exits.
+- **Radar map**: Esri dark base tiles (no key needed) under RainViewer radar frames.
+- **Radar**: RainViewer frames (past 2 h + 30 min nowcast). Play/scrub. Click a day in the forecast for that day's hourly curve.
+- Install as an app: browser menu → Install / Add to Home Screen.
