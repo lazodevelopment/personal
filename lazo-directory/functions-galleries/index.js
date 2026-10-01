@@ -380,3 +380,22 @@ exports.galleryDelete = onCall(
     return { ok: true, deleted };
   }
 );
+
+// JC-LAZO-WORKER-0930-FSAUTH: the Cloudflare worker reads couple sites out of
+// Firestore. Those docs used to be world-readable so the worker could read
+// them anonymously, which also let anyone pull a couple's guest list. Now the
+// worker signs in: it presents WORKER_TOKEN_KEY here, gets a custom token for
+// the fixed uid "lazo-worker" with the {worker:true} claim, exchanges it for an
+// ID token, and the rules grant reads to that claim. Nothing else can mint it.
+const { onRequest } = require("firebase-functions/v2/https");
+const WORKER_TOKEN_KEY = defineSecret("WORKER_TOKEN_KEY");
+exports.workerToken = onRequest({ secrets: [WORKER_TOKEN_KEY], cors: false }, async (req, res) => {
+  const given = String(req.get("x-lazo-key") || "").trim();
+  const want = String(WORKER_TOKEN_KEY.value() || "").trim();
+  if (!want || given.length !== want.length
+      || !crypto.timingSafeEqual(Buffer.from(given), Buffer.from(want))) {
+    res.status(401).json({ ok: false }); return;
+  }
+  const token = await admin.auth().createCustomToken("lazo-worker", { worker: true });
+  res.set("cache-control", "no-store").json({ ok: true, token });
+});

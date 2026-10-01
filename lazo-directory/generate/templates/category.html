@@ -18,7 +18,7 @@
   <div class="hero-inner">
     <p class="eyebrow"><a href="/{{ metro.id }}/">{{ metro.display }}</a></p>
     <h1>{{ cat.label }} in {{ metro.name }}</h1>
-    <p class="hero-sub">Ranked by verified reputation &mdash; never by who paid. <span class="rank-note">New vendors start at the community baseline until verified reviews arrive.</span></p>
+    <p class="hero-sub">Ranked by verified reputation &mdash; never by who paid. <span class="rank-note">Verified vendors first; reviews from couples who booked move the rest.</span></p>
     {%- if cost_typical %}
     <p class="hero-cost">Typical cost: <strong>{{ cost_typical }}</strong> &middot; <a href="/cost/{{ cat.slug }}/">Read the {{ cat.singular|lower }} cost guide &rarr;</a></p>
     {%- endif %}
@@ -130,9 +130,10 @@
       is live, not only in the footer. This is a statement of fact about the sort
       on line "cvs.sort(key=lambda v: (-v.score, -v.reviewCount, name))" in
       build.py: score, then reviews, then alphabetical. Never ad spend. -#}
+  {%- set any_reviews = vendors|selectattr('reviewCount')|list|length > 0 %}
   <p class="no-ads"><b>No sponsored results.</b> This is every
-    {{ cat.singular|lower }} we list in {{ metro.name }}, ordered by what booked
-    couples said &mdash; nobody can pay to move up.</p>
+    {{ cat.singular|lower }} we list in {{ metro.name }}{% if any_reviews %}, ordered by what booked
+    couples said{% else %} &mdash; verified vendors first, then by name{% endif %}. Nobody can pay to move up.</p>
   <ol class="vendor-list" id="vlist">
     {% for v in vendors %}
     {% set at = v.attributes or {} %}
@@ -154,7 +155,7 @@
         {% if v.bioSnippet %}<p class="vc2-bio">&ldquo;{{ v.bioSnippet }}&rdquo;</p>{% endif %}
         <div class="vc2-chips">
           {% if v.verified %}<span class="ch-ver">&#10022; LAZO VERIFIED</span>{% endif %}
-          {% if not v.reviewCount %}<span class="ch-new">NEW TO LAZO</span>{% endif %}
+          {% if not v.reviewCount and not v.verified and not v.claimedBy %}<span class="ch-new">NEW TO LAZO</span>{% endif %}
           {% if v.priceRangeDisplay %}<span class="ch-price">{{ v.priceRangeDisplay }}</span>{% endif %}
           {% if v.hasOffer %}<span class="ch-offer">SPECIAL OFFER</span>{% endif %}
           {% if v.travelFrom %}<span class="ch-travel">TRAVELS FROM {{ v.travelFrom|upper }}</span>{% endif %}

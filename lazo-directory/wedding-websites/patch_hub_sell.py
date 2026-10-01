@@ -153,6 +153,13 @@ HTML = f"""<!-- lz-sell -->
     </tbody>
    </table>
    <p class="fine">Based on the public feature lists of theknot.com and zola.com wedding websites as of September 2026. If we've missed something they do, tell us and we'll fix this table.</p>
+   <div class="chips" style="margin-top:22px;justify-content:center">
+    <a href="guest-photo-sharing/">Guest photo sharing</a>
+    <a href="find-your-table/">Find your table</a>
+    <a href="spanish-wedding-website/">In 20 languages</a>
+    <a href="day-of-timeline/">The day-of timeline</a>
+    <a href="vs-zola-the-knot/">Lazo vs Zola vs The Knot</a>
+   </div>
   </div>
 
   <div class="scta">

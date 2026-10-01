@@ -57,6 +57,8 @@ import { printsRoute } from "./prints.js";
 import { guestPhotosRoute } from "./guestphotos.js";
 // JC-LAZO-WORKER-0929-LIVE-001: weather, translation, table cards, the DJ page
 import { weatherRoute, translateRoute, cardsPage, playlistPage, dayBeforeRoute } from "./sitefeatures.js";
+// JC-LAZO-WORKER-0930-FSAUTH
+import { setWorkerEnv, fsHeaders, pcToken, cookieVal, siteLocked, lockedResponse } from "./fsauth.js";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -96,7 +98,7 @@ function fsVal(v) {
 
 async function fsDoc(collection, id) {
   const docUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/${collection}/${encodeURIComponent(id)}`;
-  const r = await fetch(docUrl, { headers: { accept: "application/json" } });
+  const r = await fetch(docUrl, { headers: await fsHeaders() });
   if (!r.ok) return null;
   const doc = await r.json();
   return doc.fields || null;
@@ -147,7 +149,7 @@ async function listPublicCouples() {
       + (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
     let j;
     try {
-      const rr = await fetch(u, { headers: { accept: "application/json" } });
+      const rr = await fetch(u, { headers: await fsHeaders() });
       if (!rr.ok) break;
       j = await rr.json();
     } catch (e) { break; }
@@ -269,7 +271,87 @@ function photoSlot(v) {
   return out;
 }
 
-async function renderCoupleSite(slug, env) {
+// JC-LAZO-WORKER-0930-SITEFIX: the passcode gate lives here, not in the page (helpers in fsauth.js).
+function gatePage(slug, names, wrong) {
+  const who = names ? esc(names) : "A private celebration";
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>${who} — enter the passcode</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#FBF7F0;color:#241E2B;font:15px/1.5 Inter,system-ui,sans-serif}
+.g{width:min(92vw,360px);text-align:center;padding:36px 28px;background:#fff;border:1px solid #E6D6B8;border-radius:22px;box-shadow:0 30px 60px -40px rgba(36,30,43,.5)}
+.k{letter-spacing:.18em;text-transform:uppercase;font-size:11px;color:#8A6A2F;font-weight:600;margin:0 0 8px}
+h1{font:500 30px/1.15 "Cormorant Garamond",serif;margin:0 0 18px;color:#52284F}
+input{font:inherit;padding:13px;width:100%;box-sizing:border-box;border:1px solid #E6D6B8;border-radius:10px;text-align:center;letter-spacing:.12em}
+button{font:inherit;font-weight:600;margin-top:12px;width:100%;padding:13px;border:0;border-radius:999px;background:#52284F;color:#fff;cursor:pointer}
+p.e{color:#B23B3B;margin:12px 0 0;font-size:14px}p.h{color:#7A6E85;margin:14px 0 0;font-size:13px}</style></head>
+<body><form class="g" method="post" action="/w/${encodeURIComponent(slug)}/unlock"><p class="k">A private celebration</p><h1>${who}</h1>
+<input name="code" aria-label="Passcode" autocomplete="one-time-code" autofocus required><button type="submit">Open the site</button>
+${wrong ? '<p class="e">That passcode didn\'t match. Try again?</p>' : ''}<p class="h">The passcode is on your invitation.</p></form></body></html>`;
+  return new Response(html, { status: wrong ? 403 : 401, headers: {
+    "content-type": TYPES.html, "cache-control": "private, no-store", "x-robots-tag": "noindex, nofollow" } });
+}
+async function unlockRoute(slug, req) {
+  const f = await fsDoc("weddingSites", slug);
+  const code = String(fsVal(f && f.passcode) || "").trim();
+  let given = "";
+  try { given = String((await req.formData()).get("code") || "").trim(); } catch (e) { given = ""; }
+  const back = `/w/${encodeURIComponent(slug)}/`;
+  if (!code || given !== code) return new Response(null, { status: 303, headers: { location: back + "?wrong=1", "cache-control": "no-store" } });
+  const tok = await pcToken(slug, code);
+  return new Response(null, { status: 303, headers: {
+    location: back, "cache-control": "no-store",
+    "set-cookie": `lzw_${slug}=${tok}; Path=${back}; Max-Age=2592000; Secure; HttpOnly; SameSite=Lax` } });
+}
+
+// JC-LAZO-WORKER-0930-FSAUTH: what the page reads after it loads - the guestbook, chapters, the
+// seat finder (only the matches, never the list), the room map (tables, no
+// names) and a personal invite. Each honours the passcode cookie.
+async function siteDataRoute(slug, what, url, req) {
+  const f = await fsDoc("weddingSites", slug);
+  if (!f) return json({ ok: false, error: "not_found" }, 404);
+  const code = String(fsVal(f.passcode) || "").trim();
+  if (await siteLocked(slug, req, code)) return lockedResponse();
+  const h = { "content-type": "application/json", "access-control-allow-origin": "*",
+    "cache-control": code ? "private, no-store" : "public, max-age=0, s-maxage=20" };
+  const base = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/weddingSites/${encodeURIComponent(slug)}`;
+  const pick = (fields, keep) => { const o = {}; for (const k of keep) if (fields && fields[k]) o[k] = fields[k]; return o; };
+  const listOf = async (sub, n, keep) => {
+    const r = await fetch(`${base}/${sub}?pageSize=${n}`, { headers: await fsHeaders() });
+    if (!r.ok) return { documents: [] };
+    const j = await r.json();
+    return { documents: (j.documents || []).map(d => ({ name: d.name, fields: pick(d.fields, keep) })) };
+  };
+  if (what === "guestbook") return new Response(JSON.stringify(await listOf("guestbook", 60, ["name", "message", "createdAt"])), { headers: h });
+  if (what === "chapters") return new Response(JSON.stringify(await listOf("chapters", 40, ["title", "text", "dateIso", "photos"])), { headers: h });
+  if (what.startsWith("invite/")) {
+    const r = await fetch(`${base}/invites/${encodeURIComponent(what.slice(7))}`, { headers: await fsHeaders() });
+    if (!r.ok) return json({ ok: false, error: "not_found" }, 404);
+    const d = await r.json();
+    return new Response(JSON.stringify({ fields: pick(d.fields, ["name", "party", "plusOnes", "meals"]) }), { headers: { ...h, "cache-control": "private, no-store" } });
+  }
+  // seating/main, held 30 s so the finder's keystrokes don't each cost a read
+  const key = new Request(`https://meetlazo.com/_internal/seating/${slug}`);
+  let sd = null;
+  try { const hit = await caches.default.match(key); if (hit) sd = await hit.json(); } catch (e) {}
+  if (!sd) {
+    const r = await fetch(`${base}/seating/main`, { headers: await fsHeaders() });
+    sd = r.ok ? ((await r.json()).fields || {}) : {};
+    try { await caches.default.put(key, new Response(JSON.stringify(sd), { headers: { "content-type": "application/json", "cache-control": "public, max-age=30" } })); } catch (e) {}
+  }
+  if (what === "room") return new Response(JSON.stringify({ fields: pick(sd, ["tables", "canvas"]) }), { headers: h });
+  // seat: the same matching the page used to do on the whole list
+  const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  const q = norm(url.searchParams.get("q"));
+  if (q.length < 2) return new Response(JSON.stringify({ fields: { guests: { arrayValue: { values: [] } } } }), { headers: { ...h, "cache-control": "no-store" } });
+  const words = q.split(" ");
+  const vals = ((sd.guests && sd.guests.arrayValue && sd.guests.arrayValue.values) || []);
+  const str = (v, k) => norm(v.mapValue && v.mapValue.fields && v.mapValue.fields[k] && v.mapValue.fields[k].stringValue);
+  const hits = vals.filter(v => { const n = str(v, "n"), p = str(v, "p");
+    return words.every(w => n.includes(w)) || (p && words.every(w => p.includes(w))); }).slice(0, 6);
+  return new Response(JSON.stringify({ fields: { guests: { arrayValue: { values: hits } } } }), { headers: { ...h, "cache-control": "no-store" } });
+}
+
+async function renderCoupleSite(slug, env, req) {
   // 1. the couple's site doc
   const f = await fsDoc("weddingSites", slug);
   if (!f) return null;
@@ -344,6 +426,16 @@ async function renderCoupleSite(slug, env) {
   };
 
   const priv = !!payload.passcode;
+  // JC-LAZO-WORKER-0930-SITEFIX: the browser only ever sees a passcode site after proving the code
+  if (priv) {
+    const want = await pcToken(slug, String(payload.passcode).trim());
+    if (cookieVal(req, "lzw_" + slug) !== want) {
+      const wrong = !!(req && new URL(req.url).searchParams.get("wrong"));
+      return gatePage(slug, payload.names, wrong);
+    }
+    payload.passcode = "";
+    payload.locked = true;
+  }
   let inject = `<script>window.LAZO_SITE=${JSON.stringify(payload)
     .replace(/</g, "\\u003c")};</script>`;
   if (priv) inject = '<meta name="robots" content="noindex, nofollow">\n' + inject;
@@ -362,10 +454,12 @@ async function renderCoupleSite(slug, env) {
     : [dateNice, payload.venueName, payload.venueAddress].filter(Boolean).join(" · ") || "Save the date - details, schedule and RSVP.";
   const image = priv ? "" : ((payload.heroPhoto && payload.heroPhoto.url) || payload.coverUrl || (payload.siteGallery || [])[0] || "");
   const pageUrl = `https://meetlazo.com/w/${encodeURIComponent(slug)}/`;
-  let og = `<meta property="og:type" content="website">\n<meta property="og:site_name" content="Lazo">\n<meta property="og:title" content="${esc(title)}">\n<meta property="og:description" content="${esc(desc)}">\n<meta property="og:url" content="${pageUrl}">\n<meta name="description" content="${esc(desc)}">\n<link rel="canonical" href="${pageUrl}">\n`;
+  let og = `<meta property="og:type" content="website">\n<meta property="og:site_name" content="Lazo">\n<meta property="og:title" content="${esc(title)}">\n<meta property="og:description" content="${esc(desc)}">\n<meta property="og:url" content="${pageUrl}">\n<meta name="description" content="${esc(desc)}">\n`;
   if (image) og += `<meta property="og:image" content="${esc(image)}">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="twitter:image" content="${esc(image)}">\n`;
   else og += `<meta name="twitter:card" content="summary">\n`;
   html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
+  // JC-LAZO-WORKER-0930-SITEFIX: the template's own description describes the design, not the couple
+  html = html.replace(/<meta name="description" content="[^"]*">\n?/, "");
   // JC-LAZO-WWSEO-0919-002: a public couple site is a page worth finding - guests
   // search "<names> wedding". Canonical (the /w/ URL takes ?palette etc.) and an
   // Event when the date is known, else a plain WebPage. Passcode sites get nothing.
@@ -397,7 +491,7 @@ async function renderCoupleSite(slug, env) {
     "access-control-allow-origin": "*",
     "x-lazo": "tied-together",
   };
-  if (priv) headers["x-robots-tag"] = "noindex, nofollow";
+  if (priv) { headers["x-robots-tag"] = "noindex, nofollow"; headers["cache-control"] = "private, no-store"; }
   return new Response(html, { headers });
 }
 
@@ -619,6 +713,7 @@ const GONE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><m
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
+    setWorkerEnv(env);  // JC-LAZO-WORKER-0930-FSAUTH
 
     // JC-LAZO-LAUNCH-0921-001: one canonical host. Plain http and www both 301 to
     // https://meetlazo.com so search engines see a single origin, and /favicon.ico
@@ -879,13 +974,19 @@ export default {
     if (url.pathname === "/api/translate") return translateRoute(req, env);
     const dbMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/day-before\/?$/);
     if (dbMatch) return dayBeforeRoute(dbMatch[1], req, env, venuePoint);
+    // JC-LAZO-WORKER-0930-FSAUTH
+    const gdMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/(guestbook|chapters|seat|room|invite\/[A-Za-z0-9_-]{4,120})\/?$/);
+    if (gdMatch && req.method === "GET") return siteDataRoute(gdMatch[1], gdMatch[2], url, req);
     const cardsMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/cards\/?$/);
-    if (cardsMatch && req.method === "GET") return cardsPage(cardsMatch[1]);
+    if (cardsMatch && req.method === "GET") return (await siteLocked(cardsMatch[1], req)) ? lockedResponse() : cardsPage(cardsMatch[1]);
     const plMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/playlist\/?$/);
-    if (plMatch && req.method === "GET") return playlistPage(plMatch[1]);
+    if (plMatch && req.method === "GET") return (await siteLocked(plMatch[1], req)) ? lockedResponse() : playlistPage(plMatch[1]);
+    // JC-LAZO-WORKER-0930-SITEFIX
+    const unMatch = url.pathname.match(/^\/w\/([a-z0-9\-]{1,80})\/unlock\/?$/);
+    if (unMatch && req.method === "POST") return unlockRoute(unMatch[1], req);
     const wMatch = url.pathname.match(/^\/w\/([a-z0-9\-]{1,80})\/?$/);
     if (wMatch && req.method === "GET") {
-      const resp = await renderCoupleSite(wMatch[1], env);
+      const resp = await renderCoupleSite(wMatch[1], env, req);
       if (resp) return resp;
       const nf = await env.SITE.get("404.html");
       return new Response(nf ? nf.body : "Site not found", {
@@ -943,6 +1044,11 @@ export default {
       "content-type": TYPES[ext] || "application/octet-stream",
       "cache-control": cache,
       "access-control-allow-origin": "*",
+      // JC-LAZO-MKT-0930: the headers every scanner asks for on a public site
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "strict-origin-when-cross-origin",
+      "permissions-policy": "camera=(), microphone=(), payment=()",
       "x-lazo": "tied-together",
     }});
     // The home page follows the visitor (no-op for anyone far from a live metro).

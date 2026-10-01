@@ -89,7 +89,7 @@ html.motion .hero-inner>:nth-child(4){animation-delay:.38s}
 html.motion .hero-inner>:nth-child(n+5){animation-delay:.48s}
 .hero h1{color:var(--ivory);font-size:clamp(40px,6vw,76px);line-height:.98;max-width:14ch;letter-spacing:-.022em;text-shadow:0 2px 24px rgba(46,21,48,.35)}
 .hero-sub{max-width:52ch;color:rgba(250,246,240,.9);font-size:18px;margin:18px 0 26px;text-shadow:0 1px 12px rgba(46,21,48,.4)}
-.eyebrow{letter-spacing:.18em;text-transform:uppercase;font-size:11.5px;color:var(--gold);margin:0 0 14px;font-weight:700}
+.eyebrow{letter-spacing:.18em;text-transform:uppercase;font-size:11.5px;color:var(--gold-ink);margin:0 0 14px;font-weight:700}
 .eyebrow a{color:var(--gold);text-decoration:none}
 .rank-note{color:rgba(250,246,240,.75);font-size:14px}
 /* photo heroes: the picture is the design; one warm overlay, no clip */
@@ -665,7 +665,7 @@ main .vp img,main .vp iframe{max-width:100%}
   main .v-owner-links{justify-content:flex-start;grid-column:2}
 }
 @media (max-width:640px){
-  main .vp{padding:14px 16px 96px}
+  main .vp{padding:14px 16px 24px}
   main .vp-hero{min-height:230px;border-radius:20px}
   main .vp-hero-in{padding:18px 16px 16px;gap:12px;flex-direction:column;align-items:flex-start}
   main .v-logo:not(.is-wide):not(.is-tile){height:56px;max-width:200px;padding:6px 10px}
@@ -685,6 +685,7 @@ main .vp img,main .vp iframe{max-width:100%}
   main .v-cal-month:nth-child(n+2){display:none}
 }
 @media (max-width:720px){
+  body:has(.v-ctabar){padding-bottom:96px}
   .v-ctabar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(46,21,48,.94);backdrop-filter:saturate(1.3) blur(14px);-webkit-backdrop-filter:saturate(1.3) blur(14px);padding:10px 14px calc(10px + env(safe-area-inset-bottom));gap:10px;align-items:center;border-top:1px solid rgba(217,183,124,.8);box-shadow:0 -12px 32px -16px rgba(0,0,0,.5)}
   .v-ctabar p{color:var(--ivory);font-size:12px;margin:0;flex:1;line-height:1.35}
   .v-ctabar a{flex:0 0 auto}

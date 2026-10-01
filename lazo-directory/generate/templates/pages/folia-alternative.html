@@ -49,7 +49,7 @@
 <h2>The same planner, without the meter running</h2>
 <p>Folia&rsquo;s free plan is generous until it isn&rsquo;t: 500 guests, 10 vendors, and the two features most couples actually come for &mdash; ceremony seating and reception seating &mdash; sit behind $11.99 a month, $89 a year or $129 for two years. Lazo has no paid tier for couples. The seating charts, the dream board, the timeline, the guest list and the budget are free the day you sign up and free the day after the wedding, when the site flips to &ldquo;We&rsquo;re married&rdquo; and keeps going.</p>
 <h2>Where Lazo goes further</h2>
-<p><strong>Vendors you can trust, in the same place.</strong> Folia tracks the vendors you found elsewhere. Lazo is where you find them: 88,000+ vendor pages ranked only by verified couple reviews, with proposals, contracts and card payments inside the thread.</p>
+<p><strong>Vendors you can trust, in the same place.</strong> Folia tracks the vendors you found elsewhere. Lazo is where you find them: {{ vendor_total_display|default('70,000+') }} vendor pages ranked only by verified couple reviews, with proposals, contracts and card payments inside the thread.</p>
 <p><strong>The website feeds the plan.</strong> Guests RSVP on your free Lazo website and land in the guest list with their meals, which show up on the seating chart table by table. Nothing is typed twice.</p>
 <p><strong>June.</strong> An AI planner who knows your date, budget, guest list and bookings. She seats everyone from your parties and sides, drafts vendor messages, and tells you what to book next and whether it is running late.</p>
 <h2>Side by side</h2>
@@ -78,7 +78,7 @@
 <h2 class="band-title">What you get on Lazo</h2>
 <div class="promises">
 <div class="promise"><h3>Every planning tool, free</h3><p>Guest list, budget, both seating charts, dream board, timeline, shopping list, website. No tier, no card, no cap.</p></div>
-<div class="promise"><h3>Vendors with verified reviews</h3><p>88,000+ pages across 58 metros, ranked only by real couples. Message, sign and pay in one thread.</p></div>
+<div class="promise"><h3>Vendors with verified reviews</h3><p>{{ vendor_total_display|default('70,000+') }} pages across {{ metro_count|default(45) }} metros, ranked only by real couples. Message, sign and pay in one thread.</p></div>
 <div class="promise"><h3>June, your AI copilot</h3><p>Seats your guests, drafts your messages, and keeps you on schedule from your real data.</p></div>
 </div>
 </section>

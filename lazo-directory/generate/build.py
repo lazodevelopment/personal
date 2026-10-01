@@ -382,10 +382,8 @@ def compose_intro(v, cat, metro, near_venues):
         vn = ", ".join(x["name"] for x in near_venues[:2])
         mids.append(f"Couples touring this venue often compare it with nearby options such as {vn}.")
     _pc = v.get("ctx") or {}  # JC-LAZO-CONTENT-0922-001
-    if _pc.get("centre_mi") is not None and _pc.get("venues_10"):
-        _where = (f"{_pc['centre_mi']} miles {_pc['centre_dir']} of downtown {metro.get('name')}" if _pc.get("centre_dir")
-                  else f"in central {metro.get('name')}")
-        mids.append(f"{name} is {_where}, with {_pc['venues_10']} wedding venue{'s' if _pc['venues_10'] != 1 else ''} within ten miles.")
+    # JC-LAZO-DIR-0930-001: the Where row and the Around block already say
+    # where this is; a third copy read as filler (and Search Console agreed).
     closers = [
         "Verified reviews from real couples appear below as they are earned — rankings on Lazo are never sold.",
         "As verified reviews arrive from couples who booked here, they will appear on this page — and they are the only thing that moves a Lazo Score.",
@@ -435,15 +433,14 @@ def build_content(by_metro):
             # JC-LAZO-CONTENT-0922-001: the around block, facts only this page has
             _pc = v.get("ctx") or {}
             _around = []
-            if _pc.get("centre_mi") is not None:
-                _around.append(("From downtown", (f"{_pc['centre_mi']} miles {_pc['centre_dir']} of central {metro['name']}" if _pc.get("centre_dir") else f"Central {metro['name']}")))
             if v.get("near_venues") and primary != "wedding-venues":
                 _nv = v["near_venues"][0]
                 _around.append(("Nearest venue", f"{_nv['name']}, {_nv['mi']} mi"))
-            if _pc.get("venues_10"):
+            if _pc.get("venues_10") and primary != "wedding-venues":
                 _around.append(("Venues within 10 mi", f"{_pc['venues_10']:,} wedding venue{'s' if _pc['venues_10'] != 1 else ''}"))
-            if _pc.get("peers_10") is not None and primary in BY_SLUG:
-                _around.append((f"{BY_SLUG[primary]['label']} nearby", f"{v['near_3mi']} within 3 mi, {_pc['peers_10']} within 10"))
+            if _pc.get("peers_10") and primary in BY_SLUG:
+                _around.append((f"{BY_SLUG[primary]['label']} nearby",
+                                (f"{v['near_3mi']} within 3 mi, " if v.get("near_3mi") else "") + f"{_pc['peers_10']} within 10"))
             if _pc.get("hotels_5"):
                 _around.append(("Guest hotels", f"{_pc['hotels_5']} within 5 mi"))
             if _pc.get("communities"):
@@ -566,7 +563,8 @@ def _hotels_near(v, n=6, max_mi=15.0):
                 d = _dist_mi(a, h)
                 if d is not None and d <= max_mi and d >= 0.02:
                     cands.append((d, h))
-    cands.sort(key=lambda t: (t[0] + (2.0 if t[1].get("kind") == "motel" else 0.0)))
+    _lowend = re.compile(r"extended|airport|motel|econo|budget|super 8|days inn|travelodge|studio 6|suites only", re.I)
+    cands.sort(key=lambda t: (t[0] + (2.0 if t[1].get("kind") == "motel" else 0.0) + (3.0 if _lowend.search(t[1].get("name", "")) else 0.0)))
     out, seen = [], set()
     for d, h in cands:
         key = h["name"].lower()
@@ -716,15 +714,25 @@ def build(vendors: list[dict]):
             if not cvs:
                 continue
             # Ranking: verified score desc, then review count, then name. Never ad spend.
-            cvs.sort(key=lambda v: (-v["score"], -v["reviewCount"], v["name"].lower()))
+            # JC-LAZO-DIR-0930-001: within a score tie, the vendors who showed up
+            # (claimed, verified, with a photo) come first - then the name.
+            cvs.sort(key=lambda v: (-v["score"], -v["reviewCount"], not v.get("claimedBy"), not v.get("verified"),
+                                    not (v.get("coverUrl") or v.get("gallery") or v.get("logoUrl")), v["name"].lower()))
+            for v in cvs:
+                v["thumbUrl"] = v.get("coverUrl") or ((v.get("gallery") or [None])[0]) or v.get("logoUrl") or ""
+                _bio = re.sub(r"\s+", " ", str(v.get("bio") or "")).strip()
+                v["bioSnippet"] = (_bio[:137].rsplit(" ", 1)[0] + "\u2026") if len(_bio) > 140 else _bio
+                v["cardCity"] = _locality(v, metro) or ""
+                _ann = v.get("announcement") or {}
+                v["hasOffer"] = bool(isinstance(_ann, dict) and _ann.get("title"))
             from collections import Counter as _C
             locs = _C(_locality(v, metro) for v in cvs)
             top_locs = [l for l, _ in locs.most_common(4) if l != metro["name"]][:3]
             venues_here = [v for v in vs if "wedding-venues" in v["categories"]]
             cat_intro = (f"Lazo lists {len(cvs)} {cat['label'].lower()} serving {metro['display']}"
                          + (f", from {', '.join(top_locs[:-1])} to {top_locs[-1]}" if len(top_locs) > 1 else "")
-                         + ". Every ranking below comes from verified couple reviews \u2014 never from ad spend. "
-                         + "Vendors without verified reviews yet hold the community baseline score of 65 and are ordered alphabetically until couples weigh in.")
+                         + ". Verified couple reviews decide the order \u2014 never ad spend. "
+                         + "Until reviews arrive, vendors who have claimed and verified their profile come first, then everyone else by name.")
 
             cdir = mdir / cat["slug"]
             cdir.mkdir(exist_ok=True)

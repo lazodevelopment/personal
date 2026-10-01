@@ -544,8 +544,8 @@ body.framed .gpsec{display:none}
     <label><input type="radio" name="r" checked><span>Coming to the fiesta</span></label>
     <label><input type="radio" name="r"><span>Sending love from afar</span></label>
    </div>
-   <input data-song placeholder="A song the mariachi should play (optional)">
-   <textarea placeholder="Dietary notes, song requests, questions…"></textarea>
+   <input data-song aria-label="Song request" placeholder="A song the mariachi should play (optional)">
+   <textarea aria-label="A note with your song" placeholder="Dietary notes, song requests, questions…"></textarea>
    <button class="go" type="submit">Send RSVP</button>
   </form>
  </div>
@@ -617,7 +617,7 @@ function tick(){
  document.querySelectorAll("[data-cd]").forEach(e=>e.textContent=v[e.dataset.cd]);
 }
 tick();setInterval(tick,1000);
-if(names[0]&&names[1])document.title=names[0]+" & "+names[1]+" — "+document.title;
+if(names[0]&&names[1]&&!window.LAZO_SITE)document.title=names[0]+" & "+names[1]+" — "+document.title;
 function demo(){ov.classList.add("on");return false}
 rform.addEventListener("submit",e=>{e.preventDefault();demo()});
 
@@ -738,7 +738,7 @@ if(LS){
  if(LS.passcode&&sessionStorage.getItem("lzpass")!==LS.passcode){
   const gate=document.createElement("div");
   gate.style.cssText="position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px";
-  gate.innerHTML='<div style="text-align:center;max-width:340px"><p class="k">A private celebration</p><h2 style="margin:0 auto 18px">Enter the passcode</h2><input id="lzp" style="font:inherit;padding:13px;width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center" autofocus><p id="lzperr" style="color:var(--acc);font-size:13px;height:18px;margin-top:8px"></p></div>';
+  gate.innerHTML='<div style="text-align:center;max-width:340px"><p class="k">A private celebration</p><h2 style="margin:0 auto 18px">Enter the passcode</h2><input id="lzp" aria-label="Passcode" style="font:inherit;padding:13px;width:100%;border:1px solid var(--line);background:var(--panel);color:var(--ink);text-align:center" autofocus><p id="lzperr" style="color:var(--acc);font-size:13px;height:18px;margin-top:8px"></p></div>';
   document.body.appendChild(gate);
   gate.querySelector("#lzp").addEventListener("keydown",(e)=>{
    if(e.key!=="Enter")return;
@@ -764,7 +764,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  var when=new Date((LS.dateIso||"2100-01-01")+"T17:00:00");
  var married=q.get("married")==="1"||Date.now()>when.getTime()+864e5;
  var todayIs=new Date().toDateString()===when.toDateString();
- var esc=function(s){return String(s||"").replace(/[<>&"]/g,function(c){return{"<":"\u003c",">":"\u003e","&":"\u0026",'"':"\u0022"}[c]})};
+ var esc=function(s){return String(s||"").replace(/[<>&"]/g,function(c){return{"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]})};
  var foot=document.querySelector("footer");
  function mkSection(html){var s=document.createElement("section");s.innerHTML='<div class="wrap">'+html+'</div>';return s;}
  // ---- It's today! ----
@@ -781,10 +781,11 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  }
  // ---- Guestbook (after the wedding) ----
  var FS="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/guestbook";
+ var FSR="/api/w/"+encodeURIComponent(LS.slug)+"/guestbook";  /* JC-LAZO-WWS-0930-DATA */
  if(married&&foot){
-  var gsec=mkSection('<div class="center"><p class="k">The guestbook</p><h2 style="margin:0 auto">Notes from the people we love</h2></div><div class="gbwall" id="gbwall"></div><form class="gbf" id="gbf"><input data-gn placeholder="Your name" required maxlength="79"><textarea data-gm placeholder="A note for the newlyweds\u2026" required maxlength="399" rows="3"></textarea><button type="submit">Sign the guestbook</button></form>');
+  var gsec=mkSection('<div class="center"><p class="k">The guestbook</p><h2 style="margin:0 auto">Notes from the people we love</h2></div><div class="gbwall" id="gbwall"></div><form class="gbf" id="gbf"><input data-gn aria-label="Your name" placeholder="Your name" required maxlength="79"><textarea data-gm aria-label="Your note" placeholder="A note for the newlyweds\u2026" required maxlength="399" rows="3"></textarea><button type="submit">Sign the guestbook</button></form>');
   foot.parentNode.insertBefore(gsec,foot);
-  fetch(FS+"?pageSize=60").then(function(r){return r.json()}).then(function(j){
+  fetch(FSR).then(function(r){return r.json()}).then(function(j){
    var wall=document.getElementById("gbwall");if(!wall)return;
    var docs=(j.documents||[]).map(function(d){var f=d.fields||{};return{n:(f.name||{}).stringValue||"",m:(f.message||{}).stringValue||"",t:(f.createdAt||{}).timestampValue||""}});
    docs.sort(function(a,b){return a.t<b.t?1:-1});
@@ -807,7 +808,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  if(!document.body.classList.contains("framed")){
   var jb=document.createElement("button");jb.className="junebtn";jb.setAttribute("aria-label","Ask June");jb.textContent="\u2726";
   var jp=document.createElement("div");jp.className="junep";
-  jp.innerHTML='<div class="jh">June \u00b7 ask about the day</div><div class="jm" id="jm"><div class="j">Hi! I\u2019m June. Ask me anything about the wedding \u2014 what to wear, where to stay, when to arrive.</div></div><div class="jf"><input id="ji" placeholder="Ask a question\u2026" maxlength="240"><button id="js" aria-label="Send">\u2192</button></div>';
+  jp.innerHTML='<div class="jh">June \u00b7 ask about the day</div><div class="jm" id="jm"><div class="j">Hi! I\u2019m June. Ask me anything about the wedding \u2014 what to wear, where to stay, when to arrive.</div></div><div class="jf"><input id="ji" aria-label="Ask June a question" placeholder="Ask a question\u2026" maxlength="240"><button id="js" aria-label="Send">\u2192</button></div>';
   document.body.appendChild(jb);document.body.appendChild(jp);
   jb.addEventListener("click",function(){jp.classList.toggle("on");if(jp.classList.contains("on"))document.getElementById("ji").focus()});
   function ask(){
@@ -835,7 +836,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  var when=new Date((LS.dateIso||"2100-01-01")+"T17:00:00");
  var married=q.get("married")==="1"||Date.now()>when.getTime()+864e5;
  if(!married)return;
- var esc=function(s){return String(s||"").replace(/[<>&"]/g,function(c){return{"<":"\u003c",">":"\u003e","&":"\u0026",'"':"\u0022"}[c]})};
+ var esc=function(s){return String(s||"").replace(/[<>&"]/g,function(c){return{"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]})};
  // anniversary hat-tip
  var now=new Date();
  if(now.getMonth()===when.getMonth()&&now.getDate()===when.getDate()&&now.getFullYear()>when.getFullYear()){
@@ -843,7 +844,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   document.querySelectorAll("[data-eyebrow]").forEach(function(e){e.textContent=yrs+(yrs===1?" year":" years")+" today \u2014 happy anniversary!"});
  }
  // chapters feed
- fetch("https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/chapters?pageSize=40")
+ fetch("/api/w/"+encodeURIComponent(LS.slug)+"/chapters")
   .then(function(r){return r.json()})
   .then(function(j){
    var docs=(j.documents||[]).map(function(d){var f=d.fields||{};
@@ -963,7 +964,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  var LS=window.LAZO_SITE;if(!LS)return;
  var q=new URLSearchParams(location.search);
  var esc=function(t){return String(t||"").replace(/[<>&"]/g,function(c){return{"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]})};
- var FSB="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug);
+ var FSB="/api/w/"+encodeURIComponent(LS.slug);  /* JC-LAZO-WWS-0930-DATA */
  var iso=LS.dateIso||"",hasDate=/^\d{4}-\d{2}-\d{2}$/.test(iso);
  var todayIs=hasDate&&new Date().toDateString()===new Date(iso+"T12:00:00").toDateString();
  var married=q.get("married")==="1"||(hasDate&&Date.now()>new Date(iso+"T17:00:00").getTime()+864e5);
@@ -973,7 +974,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  function after(el,node){if(node&&node.parentNode)node.parentNode.insertBefore(el,node.nextSibling);else before(el,null);}
  var daySec=(function(){var d=document.querySelector(".dayg");return d?d.closest("section"):null})();
  var rsvpSec=document.getElementById("rsvpSec");
- function hhmm(t){var m=/^(\d{1,2}):(\d{2})/.exec(t||"");if(!m)return null;return parseInt(m[1],10)*60+parseInt(m[2],10)}
+ function hhmm(t){var m=/^(\d{1,2}):(\d{2})\s*([AaPp][Mm]?)?/.exec(String(t||"").trim());if(!m)return null;var h=parseInt(m[1],10),ap=(m[3]||"").toLowerCase();if(ap.charAt(0)==="p"&&h<12)h+=12;if(ap.charAt(0)==="a"&&h===12)h=0;return h*60+parseInt(m[2],10)}
  function pretty(t){var mm=hhmm(t);if(mm===null)return t||"";var h=Math.floor(mm/60),m=mm%60,ap=h>=12?"pm":"am";h=h%12||12;return h+":"+(m<10?"0":"")+m+" "+ap}
 
  /* ---- 1. the day, hour by hour ---- */
@@ -981,6 +982,10 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   var tl=LS.timeline.slice().sort(function(a,b){return (hhmm(a.time)||0)-(hhmm(b.time)||0)});
   var s1=sec('<div class="center"><p class="k">Hour by hour</p><h2 style="margin:0 auto">'+(todayIs?"Today, as it happens.":"How the day will go.")+'</h2></div><ol class="tlx" id="tlx"></ol>',"tlsec");
   var ol=s1.querySelector("#tlx");
+ var schd=document.querySelector(".sched");if(schd)schd.style.display="none";
+ var schd=document.querySelector(".sched");if(schd)schd.style.display="none";
+ var schd=document.querySelector(".sched");if(schd)schd.style.display="none";
+ var schd=document.querySelector(".sched");if(schd)schd.style.display="none";
   tl.forEach(function(m){var li=document.createElement("li");li.innerHTML='<b></b><span class="tll"></span>'+(m.note?'<span class="tln"></span>':'');li.querySelector("b").textContent=pretty(m.time);li.querySelector(".tll").textContent=m.label;if(m.note)li.querySelector(".tln").textContent=m.note;ol.appendChild(li)});
   if(daySec)after(s1,daySec);else before(s1,rsvpSec);
   var mark=function(){
@@ -1012,16 +1017,16 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
 
  /* ---- 3. find your seat ---- */
  if(!framed&&LS.seatingOn&&!married){
-  var s3=sec('<div class="center"><p class="k">Your seat</p><h2 style="margin:0 auto">Find your table.</h2><p class="lede">Type your name as it was on the invitation.</p><div class="seatf"><input id="seatq" placeholder="Your name" autocomplete="name" maxlength="80"></div><div class="seatr" id="seatr"></div></div>',"seatsec");
+  var s3=sec('<div class="center"><p class="k">Your seat</p><h2 style="margin:0 auto">Find your table.</h2><p class="lede">Type your name as it was on the invitation.</p><div class="seatf"><input id="seatq" aria-label="Your name, to find your table" placeholder="Your name" autocomplete="name" maxlength="80"></div><div class="seatr" id="seatr"></div></div>',"seatsec");
   before(s3,rsvpSec);
   var seatP=null;
-  var loadSeats=function(){if(seatP)return seatP;seatP=fetch(FSB+"/seating/main").then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.guests)return[];return ((f.guests.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",p:(m.p||{}).stringValue||"",t:(m.t||{}).stringValue||"",s:(m.s&&m.s.integerValue!=null)?Number(m.s.integerValue):null}})}).catch(function(){return[]});return seatP};
+  var loadSeats=function(q){seatP=fetch(FSB+"/seat?q="+encodeURIComponent(q||"")).then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.guests)return[];return ((f.guests.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",p:(m.p||{}).stringValue||"",t:(m.t||{}).stringValue||"",s:(m.s&&m.s.integerValue!=null)?Number(m.s.integerValue):null}})}).catch(function(){return[]});return seatP};
   var seatq=s3.querySelector("#seatq"),seatr=s3.querySelector("#seatr");
   var norm=function(x){return String(x||"").toLowerCase().replace(/[^a-z0-9 ]+/g," ").replace(/\s+/g," ").trim()};
   var seatT;
   seatq.addEventListener("input",function(){clearTimeout(seatT);seatT=setTimeout(function(){
    var v=norm(seatq.value);if(v.length<2){seatr.innerHTML="";return}
-   loadSeats().then(function(list){
+   loadSeats(v).then(function(list){
     var words=v.split(" ");
     var hits=list.filter(function(g){var n=norm(g.n),p=norm(g.p);return words.every(function(w){return n.indexOf(w)>=0})||(p&&words.every(function(w){return p.indexOf(w)>=0}))}).slice(0,4);
     if(!hits.length){seatr.innerHTML='<p class="lede" style="margin:14px auto 0">We couldn’t find that name — try just your first or last name, or ask at the door.</p>';return}
@@ -1051,7 +1056,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   };
   mealRow((LS.mealOptions||[]).filter(Boolean));
   if(token){
-   fetch(FSB+"/invites/"+encodeURIComponent(token)).then(function(r){return r.ok?r.json():null}).then(function(j){
+   fetch(FSB+"/invite/"+encodeURIComponent(token)).then(function(r){return r.ok?r.json():null}).then(function(j){
     var f=j&&j.fields;if(!f)return;
     var inv={name:(f.name||{}).stringValue||"",party:(f.party||{}).stringValue||"",plus:Number((f.plusOnes||{}).integerValue||0),meals:(((f.meals||{}).arrayValue||{}).values||[]).map(function(v){return v.stringValue||""}).filter(Boolean)};
     var ins=rform.querySelectorAll("input");
@@ -1115,7 +1120,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
   pill.innerHTML='<label><span aria-hidden="true">🌐</span><select aria-label="Language">'+opts+'</select></label>';
   document.body.appendChild(pill);
   var sel=pill.querySelector("select"),orig=new Map();
-  var nodes=function(){var out=[],w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p||/^(SCRIPT|STYLE|SELECT|OPTION|TEXTAREA|CODE|PRE)$/.test(p.nodeName))return NodeFilter.FILTER_REJECT;if(p.closest&&p.closest(".lzlang,.junep,.demo-bar,.cd,h1,.wallx,.lzsong,.seatr"))return NodeFilter.FILTER_REJECT;if(!/[A-Za-z]{2}/.test(n.nodeValue))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}});var n;while((n=w.nextNode()))out.push(n);
+  var nodes=function(){var out=[],w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p||/^(SCRIPT|STYLE|SELECT|OPTION|TEXTAREA|CODE|PRE)$/.test(p.nodeName))return NodeFilter.FILTER_REJECT;if(p.closest&&p.closest(".lzlang,.junep,.demo-bar,.cd,h1,.wallx,.oursong,.seatr,.vtg,.gbwall,.gpwall,.evg h3"))return NodeFilter.FILTER_REJECT;if(!/[A-Za-z]{2}/.test(n.nodeValue))return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT}});var n;while((n=w.nextNode()))out.push(n);
    document.querySelectorAll("input[placeholder],textarea[placeholder]").forEach(function(i){out.push({ph:i})});return out};
   var apply=function(lang){
    var list=nodes();
@@ -1315,7 +1320,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  /* ---- 4. your table on the map ---- */
  var seatr=document.getElementById("seatr");
  if(seatr){
-  var FSB="https://firestore.googleapis.com/v1/projects/lazo-513ec/databases/(default)/documents/weddingSites/"+encodeURIComponent(LS.slug)+"/seating/main";
+  var FSB="/api/w/"+encodeURIComponent(LS.slug)+"/room";  /* JC-LAZO-WWS-0930-DATA */
   var roomP=null;
   var room=function(){if(roomP)return roomP;roomP=fetch(FSB).then(function(r){return r.json()}).then(function(j){var f=j&&j.fields;if(!f||!f.tables)return null;var num=function(v){return v?Number(v.doubleValue!=null?v.doubleValue:v.integerValue):0};var cv=(f.canvas&&f.canvas.mapValue&&f.canvas.mapValue.fields)||{};
    return{w:num(cv.w)||1600,h:num(cv.h)||1000,tables:((f.tables.arrayValue||{}).values||[]).map(function(v){var m=(v.mapValue||{}).fields||{};return{n:(m.n||{}).stringValue||"",x:num(m.x),y:num(m.y),sh:(m.sh||{}).stringValue||"round",r:num(m.r),s:num(m.s)||8}})}}).catch(function(){return null});return roomP};

@@ -321,6 +321,8 @@ def build(slug):
     s = re.sub(r"<!-- lz-seo-sections -->.*?<!-- /lz-seo-sections -->\n\n?", "", s, flags=re.S)
     # the style pages are one style already: no filter row, no married switch
     s = re.sub(r"<!-- lz-filters -->.*?<!-- /lz-filters -->\n", "", s, flags=re.S)
+    s = re.sub(r"<!-- lz-sell -->.*?<!-- /lz-sell -->\n?", "", s, flags=re.S)  # JC-LAZO-HUB-0930-FIX
+    s = re.sub(r"<!-- lz-sell -->.*?<!-- /lz-sell -->\n?", "", s, flags=re.S)  # JC-LAZO-HUB-0930-FIX
     s = re.sub(r"\s*<!-- lz-married -->.*?<!-- /lz-married -->", "", s, flags=re.S)
     s = re.sub(r"\n<script>\n/\* lz-filters-js \*/.*?/\* /lz-filters-js \*/\n</script>", "", s, flags=re.S)
     s = re.sub(r'<section class="beyond rv">.*?</section>\n', "", s, count=1, flags=re.S)

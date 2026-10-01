@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>JARVIS</title>
+<link rel="icon" href="/icon.svg">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#04070d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+/* Layout: HUD header with an attention strip, then a composed 12-column grid: the console leads,
+   operations tiles, a full-width weather band with the map behind the numbers, then reference panels.
+   Single dark theme by design. --glow shifts with time of day and weather. */
+:root{
+  --bg:#04070d; --bg2:#070d19; --panel:rgba(8,18,34,.72); --glass:rgba(4,10,20,.78); --line:#123a55; --line2:#1d6a95;
+  --fg:#d7ecf9; --dim:#6f96b4; --cyan:#19d3ff; --cyan2:#7be8ff; --amber:#ffb340; --red:#ff4d5e; --green:#39f0a8; --violet:#a78bfa;
+  --glow:25,211,255; --glow2:123,232,255;
+  --display:"Rajdhani","Segoe UI",system-ui,sans-serif; --mono:"Share Tech Mono","Consolas",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--display);min-height:100%}
+body{padding-inline:16px;padding-block:0 40px;overflow-x:hidden;background:
+  radial-gradient(1400px 700px at 50% -10%,rgba(var(--glow),.13),transparent 60%),
+  radial-gradient(900px 500px at 100% 100%,rgba(var(--glow),.05),transparent 60%),
+  repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.012) 3px 4px),var(--bg);transition:background 2s}
+a{color:var(--cyan2);text-decoration:none}a:hover{text-decoration:underline}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:1px solid var(--cyan);outline-offset:2px}
+input,textarea{background:var(--bg2);border:1px solid var(--line);color:var(--fg);font:14px var(--mono);padding:8px 10px;min-width:0}
+input:focus,textarea:focus{border-color:var(--cyan);outline:0}
+.btn{border:1px solid var(--line2);padding:8px 14px;font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--cyan2);white-space:nowrap;display:inline-block}
+.btn:hover{background:rgba(var(--glow),.1);text-decoration:none}
+.btn.primary{background:var(--cyan);color:var(--bg);border-color:var(--cyan);font-weight:600}
+.btn.danger{color:var(--red);border-color:var(--red)}
+.btn.sm{padding:3px 8px;font-size:11px;letter-spacing:.1em;color:var(--dim);border-color:var(--line)}
+.btn.sm:hover{color:var(--cyan2);border-color:var(--line2)}
+.empty{color:var(--dim);font-family:var(--mono);font-size:12px}
+.mono{font-family:var(--mono)}
+
+/* boot */
+#boot{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;font-family:var(--mono);color:var(--cyan2);letter-spacing:.2em;font-size:13px;transition:opacity .5s}
+#boot.done{opacity:0;pointer-events:none}
+#boot .lines{display:grid;gap:6px;min-width:280px}
+#boot .lines div{opacity:0;animation:in .3s forwards}
+@keyframes in{to{opacity:1}}
+
+/* HUD header */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:12px 4px 8px;margin-bottom:14px;background:linear-gradient(var(--bg) 75%,transparent)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{margin:0;font-weight:600;font-size:24px;letter-spacing:.42em;color:#fff;text-shadow:0 0 18px rgba(var(--glow),.55)}
+.brand small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.2em;margin-top:-2px;white-space:nowrap}
+.mini{width:36px;height:36px}.mini svg{width:100%;height:100%;overflow:visible}
+.attn{display:flex;flex-wrap:wrap;gap:6px;min-width:0;padding:2px;max-height:74px;overflow:hidden;align-content:flex-start}
+.attn::-webkit-scrollbar{display:none}
+.attn .chip{flex:none;font-family:var(--mono);font-size:10px;letter-spacing:.05em;border:1px solid var(--line);padding:4px 9px;color:var(--fg);display:flex;gap:8px;align-items:center;background:rgba(8,18,34,.7);cursor:pointer;animation:slide .35s ease-out}
+.attn .chip b{font-size:14px;font-weight:600;color:#fff;font-variant-numeric:tabular-nums}
+.attn .chip.warn{border-color:rgba(255,179,64,.6)}.attn .chip.warn b{color:var(--amber)}
+.attn .chip.crit{border-color:var(--red);background:rgba(255,77,94,.1)}.attn .chip.crit b{color:var(--red)}
+.attn .chip.good{border-color:rgba(57,240,168,.5)}.attn .chip.good b{color:var(--green)}
+.attn .chip:hover{border-color:var(--cyan)}
+.attn .quiet{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.1em;align-self:center}
+.clock{text-align:right;font-family:var(--mono);line-height:1.15;white-space:nowrap}
+.clock .t{font-size:32px;color:#fff;text-shadow:0 0 14px rgba(var(--glow),.45)}
+.clock .d{font-size:12px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
+.clock .u{font-size:12px;color:var(--dim);letter-spacing:.1em;margin-top:4px}.clock .u a{color:var(--dim)}
+.clock .z{font-size:14px;color:var(--dim);letter-spacing:.05em;margin-top:6px;display:flex;gap:14px;justify-content:flex-end;flex-wrap:wrap}
+.clock .mk{font-size:14px;letter-spacing:.03em;margin-top:5px;display:flex;gap:16px;justify-content:flex-end;flex-wrap:wrap;font-family:var(--mono)}
+.clock .mk span{white-space:nowrap;color:var(--dim)}.clock .mk b{font-weight:400;color:#fff;margin:0 4px 0 3px}.clock .mk i{font-style:normal}.clock .mk i.up{color:var(--green)}.clock .mk i.down{color:var(--red)}
+.clock .mk button{font-family:var(--mono);font-size:13px;color:var(--dim);border:1px solid var(--line);padding:0 7px}
+.z span{white-space:nowrap}.z b{color:var(--cyan2);font-weight:400;margin-right:4px}.z span.here b{color:#fff}
+.mk span{white-space:nowrap;color:var(--dim)}.mk b{font-weight:400;color:#fff;margin:0 4px 0 3px}.mk i{font-style:normal}.mk i.up{color:var(--green)}.mk i.down{color:var(--red)}
+@keyframes slide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+
+/* panels */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.panel{grid-column:span 12;position:relative;background:var(--panel);border:1px solid var(--line);padding:14px 16px;min-width:0;backdrop-filter:blur(6px);box-shadow:inset 0 0 40px rgba(var(--glow),.03)}
+.panel::before,.panel::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--cyan);pointer-events:none;opacity:.8}
+.panel::before{top:-1px;left:-1px;border-right:0;border-bottom:0}.panel::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.panel h2{margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--cyan);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.panel h2 .sub{margin-left:auto;font-family:var(--mono);font-weight:400;letter-spacing:.05em;text-transform:none;color:var(--dim);font-size:11px}
+.panel.alarm{border-color:var(--red);box-shadow:inset 0 0 40px rgba(255,77,94,.08)}
+.panel.quiet{background:rgba(8,18,34,.45)}
+.panel.pulse{animation:pulse-b .9s ease-out}
+@keyframes pulse-b{0%{box-shadow:inset 0 0 0 1px rgba(var(--glow),.6),0 0 24px rgba(var(--glow),.25)}100%{box-shadow:inset 0 0 40px rgba(var(--glow),.03)}}
+@media(min-width:900px){.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}}
+
+/* console */
+.console{display:grid;grid-template-columns:150px 1fr;gap:16px;min-height:320px}
+.corebox{display:grid;align-content:start;justify-items:center;gap:8px}
+.core{width:140px;height:140px;position:relative}
+.core svg{width:100%;height:100%;overflow:visible;position:absolute;inset:0}
+.core canvas{position:absolute;inset:0;width:100%;height:100%}
+.core .r1{animation:spin 14s linear infinite;transform-origin:50% 50%;stroke:rgb(var(--glow))}
+.core .r2{animation:spin 9s linear infinite reverse;transform-origin:50% 50%;stroke:rgb(var(--glow2))}
+.core .pulse{animation:pulse 2.4s ease-in-out infinite;transform-origin:50% 50%;fill:rgb(var(--glow))}
+.core.listening .pulse{animation-duration:.6s}.core.listening .r1{stroke:var(--amber)}
+.core.thinking .r1{animation-duration:2s}.core.thinking .r2{animation-duration:1.2s}
+.core.talking .pulse{animation:none;opacity:.25}
+.core.alert .pulse,.core.alert .r1{stroke:var(--red);fill:var(--red)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(.85)}50%{opacity:1;transform:scale(1.05)}}
+.corestate{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--dim);text-transform:uppercase;text-align:center;min-height:1.2em}
+.chat{display:grid;gap:10px;overflow:auto;max-height:300px;padding-right:4px;align-content:start;scroll-behavior:smooth}
+.msg{max-width:92%;padding:8px 12px;font-size:14px;line-height:1.45;border:1px solid var(--line);white-space:pre-wrap}
+.msg.me{justify-self:end;border-color:var(--line2);background:rgba(var(--glow),.06)}
+.msg.ai{justify-self:start;background:rgba(8,18,34,.9)}
+.msg.ai::before{content:"JARVIS";display:block;font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--cyan);margin-bottom:3px}
+.msg.sys{justify-self:center;font-family:var(--mono);font-size:11px;color:var(--dim);border:0;text-align:center}
+.card{justify-self:start;max-width:96%;border:1px solid var(--amber);background:rgba(255,179,64,.06);padding:10px 12px;display:grid;gap:8px;font-size:14px;width:100%}
+.card.draft{border-color:var(--line2);background:rgba(var(--glow),.04)}
+.card .k{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--amber)}.card.draft .k{color:var(--cyan)}
+.card .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.card textarea{min-height:110px;font:14px var(--display);line-height:1.45}
+.card .st{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.ask{display:flex;gap:8px;margin-top:10px;align-items:center}
+.ask input{flex:1;font-size:14px;padding:11px 12px}
+.talk{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#2ee0ff,#0a7fa8 70%);display:grid;place-items:center;flex:none;color:var(--bg);font-family:var(--mono);font-size:10px}
+.talk.on{animation:glow 1s ease-in-out infinite;background:radial-gradient(circle at 40% 35%,#ffd27a,#c67c00 70%)}
+.talk[hidden]{display:none}
+@keyframes glow{50%{box-shadow:0 0 0 10px rgba(255,179,64,.15),0 0 30px rgba(255,179,64,.6)}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{font-family:var(--mono);font-size:10px;letter-spacing:.08em;border:1px solid var(--line);padding:3px 8px;color:var(--dim)}
+.chips button:hover{color:var(--cyan2);border-color:var(--line2)}
+.vopts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:8px}
+.vopts label{display:flex;gap:4px;align-items:center;cursor:pointer}
+
+/* morning + alerts */
+.morning{display:grid;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.morning .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.morning p{margin:0;font-size:14px;line-height:1.5;max-height:150px;overflow:auto;color:var(--fg)}
+.alerts{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-family:var(--mono);font-size:12px;max-height:200px;overflow:auto}
+.alerts li{display:grid;grid-template-columns:auto 1fr;gap:10px;color:var(--fg);animation:slide .4s ease-out}
+.alerts .when{color:var(--dim)}
+.alerts li.down,.alerts li.failed{color:var(--red)}.alerts li.up,.alerts li.done{color:var(--green)}.alerts li.lead,.alerts li.slow{color:var(--amber)}.alerts li.watch{color:var(--violet)}
+
+/* business tiles */
+.biz{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:12px}
+.tile{border:1px solid var(--line);padding:12px 12px 10px;background:linear-gradient(180deg,rgba(var(--glow),.06),transparent);min-width:0;display:grid;gap:8px;align-content:start;cursor:pointer;transition:border-color .2s,transform .2s}
+.tile:hover{border-color:var(--cyan);transform:translateY(-2px)}
+.tile.pulse{animation:pulse-b .9s ease-out}
+.tile .name{font-weight:700;font-size:18px;letter-spacing:.06em;color:#fff;line-height:1.1}
+.tile .kind{font-size:11px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+.tile .stat{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--dim);box-shadow:0 0 8px currentColor;flex:none}
+.dot.ok{background:var(--green);color:var(--green)}.dot.bad{background:var(--red);color:var(--red)}.dot.wait{background:var(--amber);color:var(--amber)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.kpi{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.05em;line-height:1.2}
+.kpi b{display:block;font-size:19px;color:#fff;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi i{font-style:normal;font-size:10px}.kpi i.up{color:var(--green)}.kpi i.down{color:var(--red)}
+.spark{width:100%;height:28px;display:block}
+.tile .links{display:flex;flex-wrap:wrap;gap:5px}
+.tile .links a{font-family:var(--mono);font-size:10px;letter-spacing:.06em;border:1px solid var(--line);padding:2px 7px;color:var(--cyan2)}
+.tile .links a:hover{border-color:var(--cyan);text-decoration:none;background:rgba(var(--glow),.08)}
+.tile .nodata{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.tile .more{font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.15em;text-align:right}
+.traffic{display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:end;border-top:1px solid var(--line);padding-top:8px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.05em}
+.traffic b{display:block;font-size:19px;color:#fff;font-weight:400;font-variant-numeric:tabular-nums;line-height:1.1}
+.traffic .live b{color:var(--green)}.traffic .live b::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:6px;vertical-align:middle;animation:pulse 1.6s ease-in-out infinite}
+.traffic svg{width:100%;height:26px;display:block}
+.traffic small{display:block;font-size:9px;color:var(--dim)}
+
+/* weather band: map behind, glass panel in front */
+.band{position:relative;min-height:420px;padding:0;overflow:hidden}
+.band #map{position:absolute;inset:0;background:#02050a}
+.band .glass{position:relative;z-index:1001;margin:14px;max-width:520px;background:var(--glass);border:1px solid var(--line);padding:14px 16px;backdrop-filter:blur(8px)}
+.band .glass h2{margin-bottom:8px}
+.band .mapctl{position:absolute;z-index:1001;right:14px;bottom:14px;left:auto;background:var(--glass);border:1px solid var(--line);padding:6px 10px;display:flex;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);backdrop-filter:blur(8px);max-width:calc(100% - 28px)}
+.mapctl input[type=range]{width:160px;accent-color:var(--cyan);padding:0;border:0;background:none}
+.leaflet-container{font-family:var(--mono);font-size:11px}
+.leaflet-control-attribution{background:rgba(4,7,13,.7)!important;color:var(--dim)!important}
+.leaflet-control-attribution a{color:var(--cyan2)!important}
+.leaflet-bar a{background:var(--bg2)!important;color:var(--cyan2)!important;border-color:var(--line)!important}
+.leaflet-top.leaflet-left{top:auto;bottom:60px}
+.wx{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.wx .big{font-family:var(--mono);font-size:54px;line-height:1;color:#fff;text-shadow:0 0 20px rgba(var(--glow),.4)}
+.wx .big sup{font-size:20px;color:var(--cyan)}
+.wx .desc{font-size:18px;font-weight:600;color:#fff}
+.wx .meta{font-family:var(--mono);font-size:11px;color:var(--dim);display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin-top:6px}
+.wx .meta b{color:var(--fg);font-weight:400}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.day{text-align:center;font-family:var(--mono);font-size:10px;color:var(--dim);padding:4px 2px;border:1px solid transparent;cursor:pointer}
+.day:hover,.day.sel{border-color:var(--line2);background:rgba(var(--glow),.06)}
+.day b{display:block;color:#fff;font-weight:400;font-size:13px}.day i{font-style:normal;display:block;font-size:17px;margin:2px 0}
+.hourly{height:64px;width:100%;margin-top:4px;display:block}
+.hlabel{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:8px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nws{display:grid;gap:6px;margin-bottom:8px}
+.nws div{border-left:3px solid var(--amber);padding:6px 10px;background:rgba(255,179,64,.1);font-size:13px}
+.nws div.Extreme,.nws div.Severe{border-color:var(--red);background:rgba(255,77,94,.12)}
+.nws b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+
+/* scores, news */
+.scores{display:grid;gap:6px}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.team{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;border:1px solid var(--line2);padding:8px 10px;background:rgba(var(--glow),.05);min-width:0;overflow:hidden}
+.team > div{min-width:0}
+.team.live{border-color:var(--green)}.team{cursor:pointer}.team.sel{border-color:var(--cyan)}
+.stand table tr.fav td{color:#fff;background:rgba(var(--glow),.08)}.stand td{max-width:none}
+.team img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 4px rgba(0,0,0,.6))}
+.team .tn{font-weight:700;color:#fff;font-size:15px;letter-spacing:.03em;overflow-wrap:anywhere}.team .tn small{font-family:var(--mono);font-weight:400;color:var(--dim);font-size:11px;margin-left:4px}
+.team .tl{font-size:12px;line-height:1.35;overflow-wrap:anywhere}.team .tl.dim{color:var(--dim);font-family:var(--mono);font-size:11px}
+.game{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:6px 10px;font-size:13px}
+.game.fav{border-color:var(--line2);background:rgba(var(--glow),.05)}
+.game.live{border-color:var(--green)}
+.game .lg{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--dim)}
+.game .t{display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.game .t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.game .t b{font-family:var(--mono);font-weight:400;font-variant-numeric:tabular-nums;color:#fff}
+.game .t .w{color:#fff;font-weight:600}
+.game .st{font-family:var(--mono);font-size:10px;color:var(--dim);text-align:right;white-space:nowrap}
+.game.live .st{color:var(--green)}
+.news{display:grid;grid-template-columns:1fr;gap:12px}
+.news h3{margin:0 0 6px;font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);font-weight:400}
+.news h3 small{color:var(--dim);letter-spacing:.05em;margin-left:6px}
+.news ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+.news li{font-size:13px;line-height:1.35;border-left:2px solid var(--line);padding-left:8px}
+.news li a{color:var(--fg)}.news li a:hover{color:var(--cyan2)}
+.news li small{display:block;font-family:var(--mono);font-size:9px;color:var(--dim)}
+.events .wxd{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}.events .wxd b{color:#fff;font-weight:400}.events .wxd.wet{color:var(--amber)}
+.events .wxd.wet b{color:var(--amber)}
+/* inbox, upcoming, money, memory */
+.mail{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.mail li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;border-left:2px solid var(--line2);padding:4px 10px;min-width:0}
+.mail li.needs{border-left-color:var(--amber)}
+.mail .from{font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mail .when{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}
+.mail .subj{grid-column:1/-1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mail .subj span{color:var(--dim)}
+.mail .grp{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);margin-top:6px}
+.tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;padding:1px 6px;border:1px solid var(--amber);color:var(--amber);vertical-align:middle;margin-left:6px}
+.events{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.events li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;font-size:14px;min-width:0}
+.events li span:nth-child(2){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.events .bz{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--cyan)}.events .bz.cal{color:var(--violet)}
+.events .in{font-family:var(--mono);font-size:11px;color:var(--dim);white-space:nowrap}
+.money{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:end}
+.money .big{font-family:var(--mono);color:#fff;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.money .big small{display:block;font-size:10px;color:var(--dim);letter-spacing:.2em;margin-bottom:4px}
+.money .cmp{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:6px}
+.money .cmp b{font-weight:400}.money .cmp b.up{color:var(--green)}.money .cmp b.down{color:var(--red)}
+.bars{height:130px;width:100%;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:4px;vertical-align:middle}
+.mem{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:220px;overflow:auto}
+.mem li{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:14px;border-left:2px solid var(--violet);padding:3px 10px}
+.mem li small{font-family:var(--mono);font-size:10px;color:var(--dim);display:block}
+.mem button{color:var(--dim);font-family:var(--mono);font-size:11px}.mem button:hover{color:var(--red)}
+.memadd{display:flex;gap:8px;margin-top:10px}.memadd input{flex:1}
+
+/* feeds, launch, notes, system */
+.cams{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.cam{position:relative;aspect-ratio:16/9;max-width:100%;background:#000;border:1px solid var(--line)}
+.cam iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.cam .lbl{position:absolute;left:0;bottom:0;font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:3px 8px;background:rgba(4,7,13,.75);color:var(--cyan2);pointer-events:none}
+.cam .x{position:absolute;top:0;right:0;font-family:var(--mono);font-size:11px;padding:3px 8px;background:rgba(4,7,13,.75);color:var(--red);opacity:0}
+.cam:hover .x{opacity:1}
+.camlink{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:6px;color:var(--cyan2);font-family:var(--mono);letter-spacing:.15em;font-size:12px;background:radial-gradient(circle at 50% 40%,rgba(var(--glow),.18),transparent 60%),#02050a}
+.camlink small{font-size:9px;color:var(--dim);letter-spacing:.05em}
+.addcam{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.addcam input{flex:1 1 180px}
+.launch{display:flex;flex-wrap:wrap;gap:6px}
+.launch a{font-family:var(--mono);font-size:11px;letter-spacing:.08em;border:1px solid var(--line);padding:5px 10px;color:var(--fg)}
+.launch a:hover{border-color:var(--cyan);color:var(--cyan2);text-decoration:none}
+textarea{width:100%;min-height:130px;resize:vertical;line-height:1.5}
+.notes-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.sys{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.sys b{color:#fff;font-weight:400}.sys b.on{color:var(--green)}.sys b.off{color:var(--dim)}
+
+/* drill-down overlay */
+#drill{position:fixed;inset:0;z-index:40;background:rgba(2,5,10,.92);backdrop-filter:blur(10px);display:none;overflow:auto;padding:24px 16px}
+#drill.open{display:block}
+.dwrap{max-width:1100px;margin:0 auto;display:grid;gap:14px}
+.dhead{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.dhead h3{margin:0;font-size:30px;letter-spacing:.1em;color:#fff;font-weight:600}
+.dhead .kind{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.2em}
+.dgrid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+.dgrid .panel{grid-column:span 12}
+@media(min-width:900px){.dgrid .d6{grid-column:span 6}.dgrid .d4{grid-column:span 4}.dgrid .d8{grid-column:span 8}}
+.dkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--dim);text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-weight:400}
+td{padding:5px 6px;border-bottom:1px solid rgba(18,58,85,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+td.num{font-family:var(--mono);text-align:right}
+.tblwrap{overflow-x:auto}
+.hbar{display:grid;grid-template-columns:110px 1fr auto;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:var(--dim);margin:3px 0}
+.hbar i{height:8px;background:var(--cyan);display:block;opacity:.8}
+.pend{display:grid;gap:6px}
+.pend div{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px;border:1px solid var(--line);padding:6px 10px}
+
+/* wall */
+body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav{display:none}
+#wallview{display:none;position:fixed;inset:0;background:#000;z-index:20}body.wall #wallview{display:block}
+.wallgrid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--cols,2),1fr);grid-auto-rows:1fr;gap:2px;background:#000}
+.wallgrid .cell{position:relative;min-width:0;min-height:0;background:#000}
+.wallgrid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.wallgrid .lbl{position:absolute;left:0;top:0;font-family:var(--mono);font-size:11px;letter-spacing:.15em;padding:4px 10px;background:rgba(4,7,13,.7);color:var(--cyan2);pointer-events:none}
+.wallgrid .cell.solo{grid-column:1/-1;grid-row:1/-1;z-index:2}
+#wallview .over{position:absolute;left:0;right:0;bottom:0;padding:14px 24px;background:linear-gradient(transparent,rgba(4,7,13,.9));display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);color:var(--cyan2);pointer-events:none}
+#wallview .over .t{font-size:46px;color:#fff;text-shadow:0 0 20px rgba(var(--glow),.5);line-height:1}
+#wallview .over .n{font-size:11px;letter-spacing:.2em;margin-top:6px;color:var(--dim)}
+#wallview .over .r{text-align:right;font-size:13px;line-height:1.6}
+#wallview .exit{position:absolute;top:14px;right:14px;opacity:.4;z-index:3}#wallview .exit:hover{opacity:1}
+
+/* phone: bottom nav, one view at a time */
+.nav{display:none}
+@media(max-width:899px){
+  body{padding-inline:12px;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
+  /* header: one compact row, not sticky, chips scroll sideways in a single line */
+  .hud{position:static;grid-template-columns:auto 1fr auto;gap:10px;padding:8px 0 6px;margin-bottom:10px;background:none}
+  .brand{gap:8px}.mini{width:26px;height:26px}.brand h1{font-size:16px;letter-spacing:.25em}.brand small{display:none}
+  .attn{flex-wrap:nowrap;overflow-x:auto;max-height:none;gap:6px;padding:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;order:0}
+  .attn::-webkit-scrollbar{display:none}
+  .attn .chip{padding:4px 8px;font-size:10px}.attn .chip b{font-size:13px}
+  .clock .t{font-size:20px}.clock .d,.clock .z,.clock .mk{display:none}.clock .u{margin-top:0;font-size:10px}
+  /* panels */
+  .panel{padding:12px}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:100px;height:100px}.chat{max-height:240px}
+  .tile .name{font-size:16px}
+  /* weather band: map below the numbers; the map only takes touch after you tap it */
+  .band{min-height:0;display:flex;flex-direction:column}.band .glass{order:0}.band #map{order:1;position:relative;height:280px;margin:0 -12px 0;touch-action:pan-y}.band .mapctl{order:2}
+  .mapgate{touch-action:pan-y}
+  .band .glass{margin:0 0 12px;max-width:none;background:transparent;border:0;padding:0;backdrop-filter:none}
+  .band .mapctl{position:relative;right:auto;bottom:auto;margin:8px 0 0;max-width:none}.leaflet-top.leaflet-left{top:10px;bottom:auto}
+  .mapgate{position:absolute;inset:0;z-index:1002;display:grid;place-items:center;background:rgba(4,7,13,.35);font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--cyan2);cursor:pointer}
+  .wx .big{font-size:44px}.wx .meta{grid-template-columns:1fr 1fr}.day{font-size:9px}.day i{font-size:14px}
+  .teams{grid-template-columns:1fr}
+  /* phone views */
+  main[data-view] > .panel{display:none}main[data-view] > .panel[data-v~="all"]{display:block}
+  main[data-view="ops"] > .panel[data-v~="ops"],main[data-view="jarvis"] > .panel[data-v~="jarvis"],main[data-view="weather"] > .panel[data-v~="weather"],main[data-view="feeds"] > .panel[data-v~="feeds"],main[data-view="more"] > .panel[data-v~="more"]{display:block}
+  main[data-view="weather"] > .panel.band{display:flex}
+  .nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(4,7,13,.94);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(10px)}
+  .nav button{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);padding:6px 2px;display:grid;gap:3px;justify-items:center}
+  .nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
+  .nav button.on{color:var(--cyan2)}
+  /* time zones + markets live in the More view on phones */
+  #phoneInfo{display:block}
+}
+@media(prefers-reduced-motion:reduce){.core *,.talk,#boot .lines div,.tile,.attn .chip,.alerts li{animation:none!important;transition:none!important;opacity:1}}
+</style>
+</head>
+<body>
+
+<div id="boot" aria-hidden="true"><div class="lines" id="bootlines"></div></div>
+
+<header class="hud">
+  <div class="brand">
+    <div class="mini" aria-hidden="true"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="#19d3ff" stroke-width="3" stroke-dasharray="40 30 10 60"/><circle cx="50" cy="50" r="27" fill="none" stroke="#7be8ff" stroke-width="2" stroke-dasharray="20 15 5 40"/><circle cx="50" cy="50" r="12" fill="#19d3ff" opacity=".8"/></svg></div>
+    <div><h1>JARVIS</h1><small id="greet">BOOTING</small></div>
+  </div>
+  <div class="attn" id="attn"><span class="quiet">scanning…</span></div>
+  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="mk" id="ticker"></div><div class="u"><span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
+</header>
+
+<main class="grid" id="main">
+
+  <section class="panel c8" id="brainPanel" data-v="jarvis">
+    <h2>JARVIS <span class="sub" id="brainState"></span><button class="btn sm" id="clearChat">CLEAR</button></h2>
+    <div class="console">
+      <div class="corebox">
+        <div class="core" id="core" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="48" fill="none" stroke="#123a55" stroke-width="1"/>
+            <circle class="r1" cx="50" cy="50" r="42" fill="none" stroke-width="2" stroke-dasharray="40 30 10 60" stroke-linecap="round"/>
+            <circle class="r2" cx="50" cy="50" r="33" fill="none" stroke-width="1.5" stroke-dasharray="20 15 5 40"/>
+            <circle class="pulse" cx="50" cy="50" r="18" opacity=".7"/>
+          </svg>
+          <canvas id="viz" width="280" height="280"></canvas>
+        </div>
+        <div class="corestate" id="coreState">idle</div>
+      </div>
+      <div>
+        <div class="chat" id="chat"></div>
+        <form class="ask" id="ask">
+          <input id="q" placeholder="Ask anything… or say what needs doing" autocomplete="off" aria-label="Ask JARVIS">
+          <button class="btn primary" type="submit">SEND</button>
+          <button class="talk" id="mic" type="button" title="Talk (hold J)" hidden>TALK</button>
+        </form>
+        <div class="chips" id="chips"></div>
+        <div class="vopts">
+          <label><input type="checkbox" id="speakOn" checked> speak</label>
+          <label id="wakeWrap" hidden><input type="checkbox" id="wakeOn"> wake word</label>
+          <label id="convWrap" hidden><input type="checkbox" id="convOn"> conversation</label>
+          <span id="voiceName"></span><button class="btn sm" id="voiceNext">VOICE</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel c4" id="alertPanel" data-v="jarvis">
+    <h2>Briefing <span class="sub" id="morningAt"></span><select id="briefPick" class="btn sm" style="background:var(--bg2);display:none"></select><button class="btn sm" id="morningRun">GENERATE</button></h2>
+    <div class="morning" id="morning"><div class="empty">Briefs land here at 5 AM, noon and 6 PM.</div></div>
+    <h2>Alerts <span class="sub" id="alertCount"></span><button class="btn sm" id="testPush">TEST PUSH</button></h2>
+    <ul class="alerts" id="alerts"><li class="empty">Nothing yet.</li></ul>
+  </section>
+
+  <section class="panel" id="opsPanel" data-v="ops">
+    <h2>Operations <span class="sub" id="statusAt">checking…</span><button class="btn sm" id="recheck">RECHECK</button></h2>
+    <div class="biz" id="biz"></div>
+  </section>
+
+  <section class="panel band" id="wxPanel" data-v="weather">
+    <div id="map"></div>
+    <div class="glass">
+      <h2>Weather <span class="sub" id="wxPlace"></span><button class="btn sm" id="wxLoc">SET PLACE</button></h2>
+      <div id="wx"><div class="empty">Locating…</div></div>
+    </div>
+    <div class="mapctl"><button class="btn sm" id="radarPlay">▶ PLAY</button><input type="range" id="radarPos" min="0" max="0" value="0" aria-label="Radar frame"><span id="radarTime">radar…</span></div>
+  </section>
+
+  <section class="panel c7" data-v="ops">
+    <h2>Inbox <span class="sub" id="briefAt"></span><a class="btn sm" href="https://mail.google.com/" target="_blank" rel="noopener">GMAIL</a></h2>
+    <ul class="mail" id="mail"><li class="empty">No brief yet.</li></ul>
+  </section>
+
+  <section class="panel c5" data-v="ops">
+    <h2>Upcoming <span class="sub" id="evSub"></span></h2>
+    <ul class="events" id="events"><li class="empty">Bookings and calendar items appear here.</li></ul>
+    <div class="empty" id="calHint" style="margin-top:8px"></div>
+  </section>
+
+  <section class="panel c7" data-v="ops" id="sportsPanel">
+    <h2>Scores <span class="sub" id="sportsSub"></span></h2>
+    <div class="scores" id="scores"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="panel c5" data-v="ops" id="newsPanel">
+    <h2>Local News <span class="sub" id="newsSub"></span></h2>
+    <div class="news" id="news"><div class="empty">Loading…</div></div>
+  </section>
+
+  <section class="panel c7" data-v="more">
+    <h2>Money <span class="sub" id="moneySub"></span></h2>
+    <div id="money"><div class="empty">Cash-in by month appears once metrics are collected.</div></div>
+  </section>
+
+  <section class="panel c5" data-v="more">
+    <h2>Memory <span class="sub" id="memSub"></span></h2>
+    <ul class="mem" id="mem"><li class="empty">Tell JARVIS "remember that…" and it lands here.</li></ul>
+    <form class="memadd" id="memadd"><input id="memText" placeholder="Add a fact JARVIS should keep"><button class="btn sm">ADD</button></form>
+  </section>
+
+  <section class="panel quiet" data-v="feeds">
+    <h2>Live Feeds <span class="sub" id="camCount"></span></h2>
+    <div class="cams" id="cams"></div>
+    <form class="addcam" id="addcam">
+      <input id="camUrl" placeholder="YouTube live URL, or any webcam page" aria-label="Webcam URL">
+      <input id="camName" placeholder="Label" aria-label="Webcam label" style="flex:0 1 140px">
+      <button class="btn sm" id="camAdd">ADD</button>
+    </form>
+  </section>
+
+  <section class="panel quiet" data-v="more" id="phoneInfo" style="display:none">
+    <h2>Time zones</h2><div class="z" id="zones2" style="font-family:var(--mono);font-size:14px;color:var(--dim);display:flex;gap:14px;flex-wrap:wrap"></div>
+    <h2 style="margin-top:12px">Markets</h2><div class="mk" id="ticker2" style="font-family:var(--mono);font-size:14px;display:flex;gap:16px;flex-wrap:wrap"></div>
+  </section>
+
+  <section class="panel c6 quiet" data-v="more">
+    <h2>Launch</h2>
+    <div class="launch" id="launch"></div>
+    <h2 style="margin-top:14px">System</h2>
+    <div class="sys" id="sys"></div>
+  </section>
+
+  <section class="panel c6 quiet" data-v="more">
+    <h2>Notes <span class="sub" id="notesAt"></span></h2>
+    <textarea id="notes" placeholder="Open items, reminders…"></textarea>
+    <div class="notes-foot"><span id="notesState">saved</span><button class="btn sm" id="notesSave">SAVE</button></div>
+  </section>
+
+</main>
+
+<nav class="nav" id="nav">
+  <button data-view="jarvis" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>JARVIS</button>
+  <button data-view="ops"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 15l3-4 3 3 4-6"/></svg>OPS</button>
+  <button data-view="weather"><svg viewBox="0 0 24 24"><path d="M7 17a4 4 0 010-8 5 5 0 019.6-1.5A3.5 3.5 0 0117 17z"/></svg>WEATHER</button>
+  <button data-view="feeds"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1"/><path d="M10 9l5 2-5 2z"/></svg>FEEDS</button>
+  <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>MORE</button>
+</nav>
+
+<div id="drill"><div class="dwrap"><div class="dhead"><div><h3 id="dTitle"></h3><div class="kind" id="dKind"></div></div><button class="btn sm" id="dClose">CLOSE ✕</button></div><div class="dgrid" id="dBody"></div></div></div>
+
+<div id="wallview"><div class="wallgrid" id="wallGrid"></div>
+  <div class="over"><div><div class="t" id="wallClock">--:--</div><div class="n" id="wallName"></div></div><div class="r" id="wallInfo"></div></div>
+  <button class="exit btn sm" id="wallExit">EXIT</button></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const state = { briefs: [], stale: {}, sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
+const fmtAgo = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m/60) + " h ago" : new Date(iso).toLocaleDateString(); };
+const money = (n) => "$" + (n >= 10000 ? Math.round(n/1000) + "k" : n >= 1000 ? (n/1000).toFixed(1) + "k" : Math.round(n));
+const moneyFull = (n) => "$" + Math.round(n || 0).toLocaleString();
+const BIZ = [
+  { id:"atavia", name:"Atavia", kind:"Wedding films", site:"https://ataviaweddings.com", color:"#39f0a8", links:{ Admin:"https://atavia-admin.pages.dev", Firebase:"https://console.firebase.google.com/project/atavia-c29cd/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Aataviaweddings.com" } },
+  { id:"es", name:"Elizabeth Scott", kind:"Wedding films", site:"https://elizabethscottweddings.com", color:"#7be8ff", links:{ Admin:"https://admin.elizabethscottweddings.com", Firebase:"https://console.firebase.google.com/project/elizabeth-scott-738e5/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Aelizabethscottweddings.com" } },
+  { id:"lazo", name:"Lazo", kind:"Planner app + directory", site:"https://meetlazo.com", color:"#19d3ff", links:{ "App Store":"https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675", ASC:"https://appstoreconnect.apple.com/apps", Play:"https://play.google.com/console/", Firebase:"https://console.firebase.google.com/project/lazo-513ec/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Ameetlazo.com" } },
+  { id:"roven", name:"Roven HR", kind:"Hiring platform", site:"https://rovenhr.com", color:"#ffb340", links:{ App:"https://app.rovenhr.com", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Arovenhr.com" } },
+  { id:"lr", name:"LeaseReputation", kind:"Apartment reviews", site:"https://leasereputation.com", color:"#a78bfa", links:{ App:"https://app.leasereputation.com", Firebase:"https://console.firebase.google.com/project/lease-reputation/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Aleasereputation.com" } },
+];
+const bizOf = (id) => BIZ.find(b => b.id === id) || { name: id, color: "#6f96b4" };
+const LAUNCH = [["Cloudflare","https://dash.cloudflare.com/"],["Firebase","https://console.firebase.google.com/"],["Search Console","https://search.google.com/search-console"],["Analytics","https://analytics.google.com/"],["App Store Connect","https://appstoreconnect.apple.com/"],["Play Console","https://play.google.com/console/"],["Stripe","https://dashboard.stripe.com/"],["Zoho","https://payments.zoho.com/"],["Resend","https://resend.com/emails"],["FlutterFlow","https://app.flutterflow.io/"],["Calendar","https://calendar.google.com/"],["Drive","https://drive.google.com/"],["Claude","https://claude.ai/"]];
+
+/* ---------- boot ---------- */
+(function boot(){
+  const lines = ["INITIALISING CORE", "LINKING FIVE OPERATIONS", "WEATHER + RADAR UPLINK", "INBOX + CALENDAR", "VOICE INTERFACE", "ONLINE"];
+  lines.forEach((l, i) => { const d = document.createElement("div"); d.textContent = "» " + l; d.style.animationDelay = (i * 120) + "ms"; $("#bootlines").appendChild(d); });
+  setTimeout(() => $("#boot").classList.add("done"), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1000);
+})();
+
+/* ---------- motion helpers ---------- */
+const prevNums = new Map();
+function tick(el, key, target, fmt) {
+  const from = prevNums.has(key) ? prevNums.get(key) : target; prevNums.set(key, target);
+  if (from === target || matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = fmt(target); return; }
+  const t0 = performance.now(); const dur = 700;
+  const step = (t) => { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(from + (target - from) * e); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+const pulse = (el) => { if (!el) return; el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse"); };
+
+/* ---------- lighting: time of day + weather ---------- */
+function setLighting() {
+  const h = new Date().getHours(); const code = state.wx?.current?.weather_code ?? 0;
+  let glow = "25,211,255", glow2 = "123,232,255";
+  if (h >= 5 && h < 8) { glow = "255,170,90"; glow2 = "255,210,150"; }
+  else if (h >= 17 && h < 20) { glow = "255,150,60"; glow2 = "255,200,120"; }
+  else if (h >= 20 || h < 5) { glow = "60,120,255"; glow2 = "140,180,255"; }
+  if (code >= 95) { glow = "167,139,250"; glow2 = "200,180,255"; }
+  else if (code >= 51) { glow = "80,150,220"; glow2 = "150,200,240"; }
+  const down = state.sites.some(s => !s.ok);
+  if (down) { glow = "255,77,94"; glow2 = "255,150,160"; }
+  document.documentElement.style.setProperty("--glow", glow); document.documentElement.style.setProperty("--glow2", glow2);
+}
+
+/* ---------- attention strip ---------- */
+function renderAttention() {
+  const chips = []; const m = state.metrics?.businesses || {};
+  const down = state.sites.filter(s => !s.ok); if (down.length) chips.push({ cls: "crit", n: down.length, t: "site" + (down.length > 1 ? "s" : "") + " down", go: "#opsPanel" });
+  const slow = Object.entries(state.uptime || {}).filter(([, u]) => u.slow); if (slow.length) chips.push({ cls: "warn", n: slow.length, t: "slow", go: "#opsPanel" });
+  const needs = (state.brief?.items || []).filter(i => i.needs_reply).length; if (needs) chips.push({ cls: "warn", n: needs, t: "emails need reply", go: "#mail" });
+  const unans = m.lazo?.counts?.inquiries_unanswered; if (unans) chips.push({ cls: "warn", n: unans, t: "Lazo inquiries unanswered", go: "lazo" });
+  const claims = m.lazo?.counts?.claims_pending; if (claims) chips.push({ cls: "warn", n: claims, t: "vendor claims pending", go: "lazo" });
+  const jobs = m.roven?.counts?.jobs_pending_review; if (jobs) chips.push({ cls: "warn", n: jobs, t: "Roven jobs to review", go: "roven" });
+  for (const id of ["atavia", "es"]) { const k = m[id]?.headline?.find(x => x.label === "Leads 7d"); if (k?.value) chips.push({ cls: "good", n: k.value, t: bizOf(id).name + " leads this week", go: id }); const b = m[id]?.headline?.find(x => x.label === "Balances due"); if (b?.value) chips.push({ cls: "", n: money(b.value), t: bizOf(id).name + " balances due", go: id }); }
+  const ver = m.lr?.headline?.find(x => /Verifications/.test(x.label)); if (ver?.value) chips.push({ cls: "warn", n: ver.value, t: "LR verifications", go: "lr" });
+  for (const [id, t] of Object.entries(state.traffic?.sites || {})) if (t.online) chips.push({ cls: "good", n: t.online, t: `on ${bizOf(id).name} now`, go: id });
+  for (const g of (state.sports?.games || []).filter(x => x.fav && x.state === "in")) { const [a, b] = g.teams; chips.push({ cls: "good", n: `${a.score}-${b.score}`, t: `${a.abbr} @ ${b.abbr} live`, go: "#sportsPanel" }); }
+  for (const a of state.wx?.nws || []) chips.push({ cls: /Extreme|Severe/.test(a.severity) ? "crit" : "warn", n: "!", t: a.event, go: "#wxPanel" });
+  for (const k of Object.keys(state.stale || {})) chips.push({ cls: "crit", n: "!", t: `${k} feed stopped`, go: "#opsPanel" });
+  const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
+  const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
+  $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
+  $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
+}
+const viewOf = (sel) => ({ "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
+
+/* ---------- business tiles ---------- */
+function hourBars(hours) {
+  if (!hours) return ""; const max = Math.max(1, ...hours); const h = new Date().getHours();
+  return `<svg viewBox="0 0 96 26" preserveAspectRatio="none">${hours.map((v, i) => `<rect x="${i * 4}" y="${(26 - v / max * 24).toFixed(1)}" width="3" height="${(v / max * 24).toFixed(1)}" fill="${i === h ? "#39f0a8" : "#19d3ff"}" opacity="${i > h ? .15 : .8}"/>`).join("")}</svg>`;
+}
+function sparkline(vals, color = "#19d3ff") {
+  if (!vals || vals.length < 2) return "";
+  const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1, n = vals.length;
+  const pts = vals.map((v, i) => [i * 100/(n-1), 26 - (v-min)/span*22]);
+  const d = pts.map((p,i) => (i?"L":"M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" "); const last = pts[n-1];
+  return `<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none"><path d="${d} L100 28 L0 28 Z" fill="${color}" opacity=".12"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/><circle cx="${last[0]}" cy="${last[1]}" r="1.8" fill="#fff"/></svg>`;
+}
+const fmtDelta = (k) => `${k.delta > 0 ? "▲" : k.delta < 0 ? "▼" : "•"} ${k.deltaUnit === "$" ? "$" + Math.abs(k.delta).toLocaleString() : Math.abs(k.delta) + (k.deltaUnit || "")} ${esc(k.deltaLabel ?? "vs prior")}`;
+function renderBiz() {
+  const m = state.metrics?.businesses || {};
+  $("#biz").innerHTML = BIZ.map(b => {
+    const s = state.sites.find(x => x.id === b.id), u = state.uptime?.[b.id];
+    const cls = !s ? "wait" : s.ok ? "ok" : "bad";
+    const txt = !s ? "checking" : s.ok ? `UP · ${s.ms} ms${u?.slow ? " · SLOW" : ""}${u?.since ? " · " + fmtAgo(u.since) : ""}` : `DOWN · ${s.status || s.error || "no response"}`;
+    const mb = m[b.id];
+    const kpis = mb?.headline?.length ? `<div class="kpis">${mb.headline.slice(0,4).map((k, i) => `<div class="kpi">${esc(k.label)}<b data-tick="${b.id}:${i}" data-v="${typeof k.value === "number" ? k.value : ""}" data-money="${k.money ? 1 : ""}">${k.money ? money(k.value) : esc(k.value)}</b>${k.delta != null ? `<i class="${k.delta > 0 ? "up" : k.delta < 0 ? "down" : ""}">${fmtDelta(k)}</i>` : ""}</div>`).join("")}</div>` : `<div class="nodata">${mb?.error ? esc(mb.error) : "metrics pending"}</div>`;
+    const spark = mb?.series?.values ? sparkline(mb.series.values, mb.series.color) : "";
+    const tr = state.traffic?.sites?.[b.id];
+    const traffic = tr && !tr.error ? `<div class="traffic"><div class="live">ONLINE NOW<b data-tick="${b.id}:online" data-v="${tr.online}">${tr.online}</b></div><div>TODAY<b data-tick="${b.id}:today" data-v="${tr.today}">${tr.today}</b><small>${tr.views} page views</small></div><div>${hourBars(tr.hourly)}<small>visitors by hour · ${fmtAgo(state.traffic.at)}</small></div></div>` : (tr?.error ? `<div class="nodata">traffic: ${esc(tr.error)}</div>` : "");
+    const links = Object.entries(b.links).map(([k,v]) => `<a href="${v}" target="_blank" rel="noopener">${k}</a>`).join("");
+    return `<div class="tile" data-id="${b.id}"><div><div class="name">${b.name}</div><div class="kind">${b.kind}</div></div>
+      <div class="stat"><span class="dot ${cls}"></span>${txt}</div>${kpis}${spark}${traffic}
+      <div class="links"><a href="${b.site}" target="_blank" rel="noopener">Site</a>${links}</div><div class="more">TAP FOR DETAIL ›</div></div>`;
+  }).join("");
+  $("#biz").querySelectorAll("[data-tick]").forEach(el => { if (el.dataset.v !== "") tick(el, el.dataset.tick, +el.dataset.v, v => el.dataset.money ? money(v) : Math.round(v).toLocaleString()); });
+  $("#biz").querySelectorAll(".tile").forEach(t => { t.onclick = (e) => { if (e.target.closest("a")) return; openDrill(t.dataset.id); }; });
+  const down = state.sites.filter(s => !s.ok);
+  $("#greet").textContent = !state.sites.length ? "ONLINE · CHECKING SYSTEMS" : down.length ? `ALERT · ${down.map(d=>d.name).join(", ")} DOWN` : "ONLINE · ALL SYSTEMS NOMINAL";
+  $("#greet").style.color = down.length ? "var(--red)" : "";
+  $("#core").classList.toggle("alert", down.length > 0); $("#opsPanel").classList.toggle("alarm", down.length > 0);
+  setLighting();
+}
+async function checkStatus(fresh) {
+  $("#statusAt").textContent = "checking…";
+  try {
+    const r = await fetch("/api/status" + (fresh ? "?fresh=1" : ""), { cache:"no-store" }); const d = await r.json();
+    state.sites = d.sites; state.uptime = d.uptime || {}; state.history = d.history || {}; renderBiz(); renderAttention(); renderSys();
+    $("#statusAt").textContent = "checked " + new Date(d.checkedAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+    if (fresh) $("#biz").querySelectorAll(".tile").forEach(pulse);
+  } catch { $("#statusAt").textContent = "status check failed"; }
+}
+
+/* ---------- drill-down ---------- */
+function barsSvg(series, colors, labels) {
+  // series: [{ym, a, b, ...}] stacked by business
+  const keys = Object.keys(colors); const max = Math.max(1, ...series.map(m => keys.reduce((a, k) => a + (m[k] || 0), 0)));
+  const w = 100 / series.length;
+  let out = "";
+  series.forEach((m, i) => { let y = 100; keys.forEach(k => { const h = (m[k] || 0) / max * 88; y -= h; if (h > 0) out += `<rect x="${(i * w + w * 0.15).toFixed(2)}" y="${y.toFixed(2)}" width="${(w * 0.7).toFixed(2)}" height="${h.toFixed(2)}" fill="${colors[k]}" opacity=".9"><title>${m.ym} ${labels?.[k] || k}: ${moneyFull(m[k])}</title></rect>`; }); });
+  const lab = series.map((m, i) => `<text x="${(i * w + w / 2).toFixed(2)}" y="99" font-size="4" fill="#6f96b4" text-anchor="middle" font-family="monospace">${m.ym.slice(2).replace("-", "/")}</text>`).join("");
+  return `<svg class="bars" viewBox="0 0 100 100" preserveAspectRatio="none">${out}${lab}</svg>`;
+}
+function rtSvg(hist) {
+  if (!hist || hist.length < 2) return `<div class="empty">Response-time history builds up over the day.</div>`;
+  const vals = hist.map(h => h[1]); const max = Math.max(...vals, 500); const n = vals.length;
+  const pts = vals.map((v, i) => [i * 300 / (n - 1), 60 - v / max * 56]);
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  return `<svg viewBox="0 0 300 64" preserveAspectRatio="none" style="width:100%;height:80px;display:block"><path d="${d} L300 64 L0 64 Z" fill="rgba(25,211,255,.12)"/><path d="${d}" fill="none" stroke="#19d3ff" stroke-width="1.2" vector-effect="non-scaling-stroke"/><text x="2" y="10" font-size="9" fill="#6f96b4" font-family="monospace">${max} ms</text><text x="298" y="62" font-size="8" fill="#6f96b4" font-family="monospace" text-anchor="end">last 24h</text></svg>`;
+}
+function openDrill(id) {
+  const b = bizOf(id), mb = state.metrics?.businesses?.[id] || {}, d = mb.detail || {};
+  $("#dTitle").textContent = b.name; $("#dKind").textContent = (b.kind || "").toUpperCase() + " · " + (state.metrics ? "metrics " + fmtAgo(state.metrics.collectedAt) : "no metrics");
+  const monthly = Object.entries(d.monthly || {}).map(([ym, v]) => ({ ym, v }));
+  const kpis = (mb.headline || []).map(k => `<div class="kpi">${esc(k.label)}<b>${k.money ? moneyFull(k.value) : esc(k.value)}</b>${k.delta != null ? `<i class="${k.delta > 0 ? "up" : k.delta < 0 ? "down" : ""}">${fmtDelta(k)}</i>` : ""}</div>`).join("");
+  const counts = Object.entries(mb.counts || {}).map(([k, v]) => `<div class="kpi">${esc(k.replace(/_/g, " "))}<b>${esc(typeof v === "number" ? v.toLocaleString() : v)}</b></div>`).join("");
+  const recent = d.recent?.length ? `<div class="tblwrap"><table><tr><th>${id === "roven" ? "Job" : "Client"}</th><th>Date</th><th>${id === "roven" ? "" : "Package"}</th><th class="num">${id === "roven" ? "" : "Total"}</th><th>Status</th><th></th></tr>${d.recent.map(r => `<tr><td>${esc(r.names)}</td><td class="mono">${esc(r.date || "")}</td><td>${esc(r.package || "")}</td><td class="num">${r.total != null ? moneyFull(r.total) : ""}${r.balance && !r.balance_paid ? `<br><small style="color:var(--amber)">${moneyFull(r.balance)} due</small>` : ""}</td><td class="mono">${esc(r.status || "")}</td><td>${["atavia", "es"].includes(id) ? `<button class="btn sm" data-note="${esc(r.id)}" data-name="${esc(r.names)}">NOTE</button>` : ""}</td></tr>`).join("")}</table></div>` : `<div class="empty">No recent items.</div>`;
+  const src = d.leadsBySource ? Object.entries(d.leadsBySource).map(([k, v], i, arr) => { const max = Math.max(...arr.map(x => x[1])); return `<div class="hbar"><span>${esc(k)}</span><i style="width:${(v / max * 100).toFixed(0)}%"></i><span>${v}</span></div>`; }).join("") : `<div class="empty">No lead-source data.</div>`;
+  const pend = d.pending?.length ? `<div class="pend">${d.pending.map(p => `<div><span>${esc(p.label)}</span><span>${actionButtons(p)}</span></div>`).join("")}</div>` : `<div class="empty">Nothing pending.</div>`;
+  const upc = mb.upcoming?.length ? `<ul class="events">${mb.upcoming.map(e => `<li><span class="bz">${esc(e.date)}</span><span>${esc(e.title)}</span><span class="in">in ${Math.ceil((new Date(e.date + "T12:00") - Date.now()) / 86400e3)} d</span></li>`).join("")}</ul>` : `<div class="empty">No upcoming dates.</div>`;
+  const tr = state.traffic?.sites?.[id];
+  const hb = (arr) => (arr || []).map(([p, n], i, a) => `<div class="hbar"><span title="${esc(p)}">${esc(p)}</span><i style="width:${(n / a[0][1] * 100).toFixed(0)}%"></i><span>${n}</span></div>`).join("") || '<div class="empty">–</div>';
+  const trafficSec = tr && !tr.error ? `<section class="panel"><h2>Web traffic today <span class="sub">${fmtAgo(state.traffic.at)} · refreshed every 5 min</span></h2><div class="dkpis"><div class="kpi">Online now<b style="color:var(--green)">${tr.online}</b></div><div class="kpi">Visitors today<b>${tr.today}</b></div><div class="kpi">Page views<b>${tr.views}</b></div><div class="kpi">Bots filtered<b>${tr.bots_today}</b></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px"><div><h2>By hour</h2><div class="traffic" style="border:0;padding:0;display:block">${hourBars(tr.hourly)}</div></div><div><h2>Top pages</h2>${hb(tr.pages)}</div><div><h2>Sources</h2>${hb(tr.sources)}</div><div><h2>On the site now</h2>${(tr.now_pages || []).map(p => `<div class="mono" style="font-size:12px">${esc(p)}</div>`).join("") || '<div class="empty">nobody right now</div>'}<h2 style="margin-top:10px">Devices</h2><div class="mono" style="font-size:12px">${Object.entries(tr.devices || {}).map(([k, v]) => `${esc(k)} ${v}`).join(" · ") || "–"}</div></div></div></section>` : "";
+  $("#dBody").innerHTML = `${trafficSec}
+    <section class="panel"><h2>Headline</h2><div class="dkpis">${kpis || '<div class="empty">' + esc(mb.error || "metrics pending") + '</div>'}</div></section>
+    <section class="panel d6"><h2>Cash in by month</h2>${monthly.length ? barsSvg(monthly.map(m => ({ ym: m.ym, [id]: m.v })), { [id]: b.color }) + `<div class="legend">${monthly.slice(-3).map(m => `<span>${m.ym} <b style="color:#fff">${moneyFull(m.v)}</b></span>`).join("")}</div>` : '<div class="empty">No revenue history for this business.</div>'}</section>
+    <section class="panel d6"><h2>Response time</h2>${rtSvg(state.history?.[id])}<div class="legend"><span>now <b style="color:#fff">${state.sites.find(s => s.id === id)?.ms ?? "–"} ms</b></span><span>status <b style="color:#fff">${state.uptime?.[id]?.ok === false ? "DOWN" : "up"}${state.uptime?.[id]?.slow ? " · slow" : ""}</b></span></div></section>
+    <section class="panel d8"><h2>${id === "roven" ? "Recent jobs" : "Recent bookings"}</h2>${recent}</section>
+    <section class="panel d4"><h2>Leads by source · 90d</h2>${src}</section>
+    <section class="panel d6"><h2>Needs a decision</h2>${pend}</section>
+    <section class="panel d6"><h2>Upcoming</h2>${upc}</section>
+    <section class="panel"><h2>All counts</h2><div class="dkpis">${counts || '<div class="empty">–</div>'}</div></section>`;
+  wireActionButtons($("#dBody"));
+  $("#dBody").querySelectorAll("[data-note]").forEach(btn => btn.onclick = () => { const note = prompt("Note for " + btn.dataset.name); if (note) proposeAction({ kind: "booking_note", params: { business: id, bookingId: btn.dataset.note, note }, summary: `Add note to ${btn.dataset.name} (${b.name}): "${note.slice(0, 60)}"` }); });
+  $("#drill").classList.add("open"); document.body.style.overflow = "hidden";
+}
+function closeDrill() { $("#drill").classList.remove("open"); document.body.style.overflow = ""; }
+$("#dClose").onclick = closeDrill; $("#drill").onclick = (e) => { if (e.target === $("#drill")) closeDrill(); };
+function actionButtons(p) {
+  if (p.kind === "roven_approve_job") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "roven_approve_job", params: { jobId: p.id }, summary: "Approve " + p.label }))}'>APPROVE</button> <button class="btn sm" data-act='${esc(JSON.stringify({ kind: "roven_reject_job", params: { jobId: p.id }, summary: "Reject " + p.label }))}'>REJECT</button>`;
+  if (p.kind === "roven_approve_employer") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "roven_approve_employer", params: { employerId: p.id }, summary: "Approve " + p.label }))}'>APPROVE</button>`;
+  if (p.kind === "lazo_claim") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_claim", params: { claimId: p.id, decision: "approved" }, summary: "Approve " + p.label }))}'>APPROVE</button> <button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_claim", params: { claimId: p.id, decision: "rejected" }, summary: "Reject " + p.label }))}'>REJECT</button>`;
+  if (p.kind === "lazo_inquiry_responded") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_inquiry_responded", params: { inquiryId: p.id }, summary: "Mark responded: " + p.label }))}'>MARK RESPONDED</button>`;
+  return "";
+}
+function wireActionButtons(root) { root.querySelectorAll("[data-act]").forEach(btn => btn.onclick = () => proposeAction(JSON.parse(btn.dataset.act))); }
+
+/* ---------- actions: confirm cards ---------- */
+function proposeAction(item) {
+  item.id = item.id || Math.random().toString(36).slice(2, 10);
+  closeDrill(); showView("jarvis");
+  const el = document.createElement("div"); el.className = "card"; el.dataset.id = item.id;
+  el.innerHTML = `<div class="k">CONFIRM ACTION</div><div>${esc(item.summary)}</div><div class="row"><button class="btn primary" data-ok>CONFIRM</button><button class="btn sm" data-no>CANCEL</button><span class="st"></span></div>`;
+  el.querySelector("[data-ok]").onclick = async () => { el.querySelector("[data-ok]").disabled = true; await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }); el.querySelector(".st").textContent = "queued · waiting for the hands script on your PC"; el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove()); state.queue.unshift({ ...item, status: "pending" }); renderAttention(); speak("Queued. I'll confirm when it's done."); };
+  el.querySelector("[data-no]").onclick = () => { el.querySelector(".st").textContent = "cancelled"; el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove()); };
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; $("#brainPanel").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function draftCard(d) {
+  const el = document.createElement("div"); el.className = "card draft";
+  const acct = d.business === "es" ? "hello@elizabethscottweddings.com" : d.business === "atavia" ? "info@ataviaweddings.com" : "";
+  el.innerHTML = `<div class="k">DRAFT REPLY · ${esc(d.business.toUpperCase())}</div><div class="mono" style="font-size:12px;color:var(--dim)">To: ${esc(d.to)} · Subject: ${esc(d.subject)}</div><textarea>${esc(d.body)}</textarea><div class="row"><a class="btn primary" target="_blank" rel="noopener">OPEN IN GMAIL</a><button class="btn sm" data-copy>COPY</button><span class="st">nothing is sent until you press Send in Gmail</span></div>`;
+  const link = () => { const body = el.querySelector("textarea").value; el.querySelector("a").href = `https://mail.google.com/mail/?view=cm&fs=1${acct ? "&authuser=" + encodeURIComponent(acct) : ""}&to=${encodeURIComponent(d.to)}&su=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(body)}`; };
+  link(); el.querySelector("textarea").oninput = link;
+  el.querySelector("[data-copy]").onclick = () => navigator.clipboard.writeText(el.querySelector("textarea").value).then(() => el.querySelector(".st").textContent = "copied").catch(() => {});
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9;
+}
+function syncQueueCards() {
+  for (const q of state.queue || []) { const el = $("#chat").querySelector(`.card[data-id="${q.id}"] .st`); if (el && q.status !== "pending") el.textContent = q.status + (q.result ? " · " + q.result : ""); }
+}
+
+/* ---------- weather ---------- */
+const WMO = {0:["Clear","☀️"],1:["Mostly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],61:["Light rain","🌧️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],66:["Freezing rain","🌨️"],67:["Freezing rain","🌨️"],71:["Light snow","🌨️"],73:["Snow","❄️"],75:["Heavy snow","❄️"],77:["Snow grains","❄️"],80:["Showers","🌦️"],81:["Showers","🌧️"],82:["Violent showers","⛈️"],85:["Snow showers","🌨️"],86:["Snow showers","❄️"],95:["Thunderstorm","⛈️"],96:["Thunderstorm, hail","⛈️"],99:["Thunderstorm, hail","⛈️"]};
+const wmo = (c) => WMO[c] || ["Unknown","•"];
+const compass = (d) => ["N","NE","E","SE","S","SW","W","NW"][Math.round((d||0)/45) % 8];
+const aqiLabel = (a) => a == null ? "" : a <= 50 ? "Good" : a <= 100 ? "Moderate" : a <= 150 ? "Unhealthy (sensitive)" : a <= 200 ? "Unhealthy" : "Hazardous";
+let selDay = 0;
+async function loadWeather() {
+  const q = state.place?.lat ? `?lat=${state.place.lat}&lon=${state.place.lon}&place=${encodeURIComponent(state.place.name||"")}` : "";
+  try { const w = await fetch("/api/weather" + q).then(r => r.json()); if (w.error) throw new Error(w.error); state.wx = w; renderWeather(); initMap(w.lat, w.lon); renderAttention(); setLighting(); }
+  catch (e) { $("#wx").innerHTML = `<div class="empty">Weather unavailable (${esc(e.message)}).</div>`; }
+}
+function renderWeather() {
+  const d = state.wx, c = d.current, [desc, icon] = wmo(c.weather_code);
+  $("#wxPlace").textContent = d.place;
+  const nws = d.nws?.length ? `<div class="nws">${d.nws.map(f => `<div class="${esc(f.severity)}"><b>${esc(f.event)}${f.ends ? " · until " + new Date(f.ends).toLocaleString([], {weekday:"short",hour:"numeric"}) : ""}</b>${esc(f.headline)}</div>`).join("")}</div>` : "";
+  const days = d.daily.time.map((t,i) => { const [, ic] = wmo(d.daily.weather_code[i]); const name = i === 0 ? "Today" : new Date(t + "T12:00").toLocaleDateString([], {weekday:"short"}); return `<div class="day ${i===selDay?"sel":""}" data-i="${i}">${name}<i>${ic}</i><b>${Math.round(d.daily.temperature_2m_max[i])}°</b>${Math.round(d.daily.temperature_2m_min[i])}° · ${d.daily.precipitation_probability_max[i] ?? 0}%</div>`; }).join("");
+  const sr = d.daily.sunrise[0].slice(11), ss = d.daily.sunset[0].slice(11);
+  $("#wx").innerHTML = `${nws}<div class="wx"><div class="big">${Math.round(c.temperature_2m)}<sup>°F</sup></div><div><div class="desc">${icon} ${desc}</div>
+    <div class="meta"><span>Feels <b>${Math.round(c.apparent_temperature)}°</b></span><span>Wind <b>${Math.round(c.wind_speed_10m)} mph ${compass(c.wind_direction_10m)}</b>${c.wind_gusts_10m > c.wind_speed_10m + 8 ? ` gusts <b>${Math.round(c.wind_gusts_10m)}</b>` : ""}</span>
+    <span>Humidity <b>${c.relative_humidity_2m}%</b></span><span>UV <b>${c.uv_index ?? "–"}</b>${d.daily.uv_index_max?.[0] ? ` (max ${Math.round(d.daily.uv_index_max[0])})` : ""}</span>
+    <span>Pressure <b>${(c.pressure_msl * 0.02953).toFixed(2)} in</b></span><span>Visibility <b>${Math.round((c.visibility||0)/1609)} mi</b></span>
+    <span>Air <b>${d.aqi?.us_aqi ?? "–"} ${aqiLabel(d.aqi?.us_aqi)}</b></span><span>☀ <b>${sr}</b> · ☾ <b>${ss}</b></span></div></div></div>
+    <div class="hlabel"><span id="hTitle"></span><span id="hRain"></span></div>
+    <svg class="hourly" id="hourly" viewBox="0 0 300 70" preserveAspectRatio="none" aria-label="Hourly temperature"></svg>
+    <div class="days">${days}</div>`;
+  $("#wx").querySelectorAll(".day").forEach(el => el.onclick = () => { selDay = +el.dataset.i; $("#wx").querySelectorAll(".day").forEach(x => x.classList.toggle("sel", +x.dataset.i === selDay)); drawHourly(); });
+  drawHourly();
+}
+function drawHourly() {
+  const d = state.wx; const day = d.daily.time[selDay];
+  let idx = d.hourly.time.map((t,i) => i).filter(i => d.hourly.time[i].startsWith(day));
+  if (selDay === 0) { const now = new Date(d.current.time); const s = Math.max(0, d.hourly.time.findIndex(t => new Date(t) >= now)); idx = d.hourly.time.map((t,i)=>i).slice(Math.max(0,s-1), s + 24); }
+  const temps = idx.map(i => d.hourly.temperature_2m[i]), rain = idx.map(i => d.hourly.precipitation_probability[i] || 0);
+  if (temps.length < 2) return;
+  const min = Math.min(...temps), max = Math.max(...temps), span = (max - min) || 1, n = temps.length;
+  const pts = temps.map((t,i) => [i * 300/(n-1), 56 - (t-min)/span*40]);
+  const path = pts.map((p,i) => (i?"L":"M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const bars = rain.map((r,i) => `<rect x="${(i*300/(n-1) - 2).toFixed(1)}" y="${(70 - r*0.28).toFixed(1)}" width="4" height="${(r*0.28).toFixed(1)}" fill="#19d3ff" opacity=".25"/>`).join("");
+  const step = Math.ceil(n/6);
+  const labels = idx.map((i, k) => k % step === 0 ? `<text x="${(k*300/(n-1)).toFixed(1)}" y="68" font-size="8" fill="#6f96b4" font-family="monospace">${new Date(d.hourly.time[i]).toLocaleTimeString([], {hour:"numeric"}).replace(" ","")}</text>` : "").join("");
+  $("#hourly").innerHTML = `${bars}<path d="${path} L300 70 L0 70 Z" fill="rgba(25,211,255,.12)"/><path d="${path}" fill="none" stroke="#19d3ff" stroke-width="1.5" vector-effect="non-scaling-stroke"/><text x="2" y="10" font-size="9" fill="#6f96b4" font-family="monospace">${Math.round(max)}°</text><text x="2" y="56" font-size="9" fill="#6f96b4" font-family="monospace">${Math.round(min)}°</text>${labels}`;
+  $("#hTitle").textContent = selDay === 0 ? "Next 24 hours" : new Date(day + "T12:00").toLocaleDateString([], {weekday:"long", month:"short", day:"numeric"}) + " · " + wmo(d.daily.weather_code[selDay])[0];
+  $("#hRain").textContent = `rain ${Math.max(...rain)}% · ${d.daily.precipitation_sum?.[selDay] ?? 0} in · wind to ${Math.round(d.daily.wind_speed_10m_max?.[selDay] || 0)} mph`;
+}
+$("#wxLoc").onclick = async () => {
+  const name = prompt("City for weather (blank = auto by IP)", state.place?.name || ""); if (name === null) return;
+  if (!name.trim()) { state.place = null; await save({ place: null }); return loadWeather(); }
+  const g = await fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(name)).then(r => r.json());
+  if (!g.results?.length) return speak("I couldn't find that place.");
+  const hit = g.results[0]; state.place = { name: [hit.name, hit.admin1].filter(Boolean).join(", "), lat: hit.latitude, lon: hit.longitude };
+  await save({ place: state.place }); loadWeather();
+};
+
+/* ---------- radar map ---------- */
+let map, radarFrames = [], radarIdx = 0, radarTimer = null;
+function initMap(lat, lon) {
+  if (!window.L) return;
+  if (!map) {
+    const phone = innerWidth < 900;
+    map = L.map("map", { zoomControl: true, attributionControl: true, dragging: !phone, touchZoom: !phone, scrollWheelZoom: !phone, tap: !phone }).setView([lat, lon], 7);
+    if (phone) { const gate = document.createElement("div"); gate.className = "mapgate"; gate.textContent = "TAP TO USE THE MAP"; $("#map").appendChild(gate); gate.onclick = () => { gate.remove(); map.dragging.enable(); map.touchZoom.enable(); $("#map").style.touchAction = "none"; }; }
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Esri, HERE, Garmin · radar © RainViewer", maxZoom: 16 }).addTo(map);
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16, opacity: .7, zIndex: 9 }).addTo(map);
+    L.circleMarker([lat, lon], { radius: 6, color: "#19d3ff", fillColor: "#fff", fillOpacity: 1, weight: 2 }).addTo(map);
+    loadRadar(); setInterval(loadRadar, 5 * 60000);
+    setTimeout(() => map.invalidateSize(), 500);
+  } else map.setView([lat, lon], map.getZoom());
+}
+async function loadRadar() {
+  try {
+    const d = await fetch("https://api.rainviewer.com/public/weather-maps.json").then(r => r.json());
+    const past = d.radar?.past || [], frames = [...past, ...(d.radar?.nowcast || [])];
+    radarFrames.forEach(f => map.removeLayer(f.layer));
+    radarFrames = frames.map(f => ({ time: f.time, layer: L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5 }).addTo(map) }));
+    $("#radarPos").max = Math.max(0, radarFrames.length - 1); showRadar(Math.max(0, past.length - 1));
+  } catch { $("#radarTime").textContent = "radar unavailable"; }
+}
+function showRadar(i) {
+  if (!radarFrames.length) return;
+  radarIdx = i; radarFrames.forEach((f, k) => f.layer.setOpacity(k === i ? .75 : 0)); $("#radarPos").value = i;
+  const f = radarFrames[i]; $("#radarTime").textContent = (f.time * 1000 > Date.now() ? "forecast " : "") + new Date(f.time * 1000).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+}
+$("#radarPos").oninput = (e) => showRadar(+e.target.value);
+$("#radarPlay").onclick = () => {
+  if (radarTimer) { clearInterval(radarTimer); radarTimer = null; $("#radarPlay").textContent = "▶ PLAY"; return; }
+  $("#radarPlay").textContent = "❚❚"; radarTimer = setInterval(() => showRadar((radarIdx + 1) % radarFrames.length), 500);
+};
+
+/* ---------- scores, markets, news, wedding-day weather ---------- */
+async function loadSports() {
+  try { state.sports = await fetch("/api/sports").then(r => r.json()); } catch { return; }
+  const g = state.sports.games || []; const fav = g.filter(x => x.fav), others = g.filter(x => !x.fav && x.state !== "post").slice(0, 6);
+  const live = fav.filter(x => x.state === "in");
+  $("#sportsSub").textContent = live.length ? `${live.length} live` : fav.length ? `${fav.length} for your teams` : "";
+  const row = (x) => { const [a, b] = x.teams; const when = x.state === "pre" ? new Date(x.date).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) + (x.tv ? " · " + x.tv : "") : x.detail;
+    return `<div class="game ${x.fav ? "fav" : ""} ${x.state === "in" ? "live" : ""}"><span class="lg">${x.league.toUpperCase()}</span><div class="t"><span class="${x.state === "post" && a.winner ? "w" : ""}">${esc(a.name)} <small style="color:var(--dim)">${esc(a.record)}</small></span><b>${x.state === "pre" ? "" : esc(a.score)}</b><span class="${x.state === "post" && b.winner ? "w" : ""}">${b.home ? "@ " : ""}${esc(b.name)} <small style="color:var(--dim)">${esc(b.record)}</small></span><b>${x.state === "pre" ? "" : esc(b.score)}</b></div><span class="st">${esc(when)}</span></div>`; };
+  const fmtWhen = (d) => new Date(d).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const teamCard = (t) => { const n = t.next, l = t.last;
+    const nextTxt = n ? (n.state === "in" ? `<b style="color:var(--green)">LIVE</b> ${n.home ? "vs" : "@"} ${esc(n.opp)} ${esc(n.my ?? "")}-${esc(n.their ?? "")} · ${esc(n.detail)}` : `Next: ${n.home ? "vs" : "@"} ${esc(n.opp)} · ${fmtWhen(n.date)}${n.tv ? " · " + esc(n.tv) : ""}`) : (t.note ? esc(t.note) : "no game scheduled");
+    const lastTxt = l ? `Last: ${l.won ? "W" : "L"} ${esc(l.my ?? "")}-${esc(l.their ?? "")} ${l.home ? "vs" : "@"} ${esc(l.opp)}` : "";
+    const ord = (n) => n + (["th","st","nd","rd"][((n % 100) - 20) % 10] || ["th","st","nd","rd"][n % 100] || "th");
+    const then = (t.upcoming || []).slice(1, 3).map(g => `${g.home ? "vs" : "@"} ${esc(g.opp)} ${new Date(g.date).toLocaleDateString([], { month: "short", day: "numeric" })}`).join(" · ");
+    const thenTxt = then ? `<div class="tl dim">Then: ${then}</div>` : "";
+    const div = t.division ? `<div class="tl dim">${ord(t.rank)} in ${esc(t.division)} · tap for schedule + standings</div>` : "";
+    return `<div class="team ${n?.state === "in" ? "live" : ""}" data-abbr="${esc(t.abbr)}">${t.logo ? `<img src="${esc(t.logo)}" alt="">` : ""}<div><div class="tn">${esc(t.name)} <small>${esc(t.record || "")}</small></div><div class="tl">${nextTxt}</div>${thenTxt}<div class="tl dim">${lastTxt}</div>${div}</div></div>`; };
+  const stTable = (abbr) => { const d = state.sports.standings?.[abbr]; const t = (state.sports.teams || []).find(x => x.abbr === abbr); if (!d && !t) return "";
+    const sched = t ? `<div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(t.name.toUpperCase())} · SCHEDULE</div><table><tr><th>Date</th><th>Opponent</th><th>Result / Time</th><th>TV</th></tr>${[...(t.recent || []).map(g => `<tr><td class="mono">${new Date(g.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</td><td>${g.home ? "vs" : "@"} ${esc(g.opp)}</td><td class="mono" style="color:${g.won ? "var(--green)" : "var(--red)"}">${g.won ? "W" : "L"} ${esc(g.my ?? "")}-${esc(g.their ?? "")}</td><td></td></tr>`), ...(t.upcoming || []).map(g => `<tr class="${g.state === "in" ? "fav" : ""}"><td class="mono">${new Date(g.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</td><td>${g.home ? "vs" : "@"} ${esc(g.opp)}</td><td class="mono">${g.state === "in" ? "LIVE " + esc(g.my ?? "") + "-" + esc(g.their ?? "") : new Date(g.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</td><td class="mono">${esc(g.tv || "")}</td></tr>`)].join("") || '<tr><td colspan="4" class="empty">no games scheduled</td></tr>'}</table>` : "";
+    if (!d) return `<div class="stand" data-for="${esc(abbr)}">${sched}</div>`;
+    return `<div class="stand" data-for="${esc(abbr)}">${sched}<div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(d.division.toUpperCase())}</div><table><tr><th></th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">PCT</th><th class="num">GB</th><th>Strk</th></tr>${d.rows.map(r => `<tr class="${r.fav ? "fav" : ""}"><td class="num">${r.rank}</td><td>${esc(r.name)}${r.clinch ? ` <small style="color:var(--green)">${esc(r.clinch)}</small>` : ""}</td><td class="num">${esc(r.w)}</td><td class="num">${esc(r.l)}</td><td class="num">${esc(r.pct)}</td><td class="num">${esc(r.gb)}</td><td class="mono">${esc(r.streak || "")}</td></tr>`).join("")}</table></div>`; };
+  const teams = (state.sports.teams || []);
+  $("#scores").innerHTML = (teams.length ? `<div class="teams">${teams.map(teamCard).join("")}</div><div id="standWrap"></div>` : "") + (fav.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">YOUR GAMES</div>` + fav.map(row).join("") : "") + (others.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">AROUND THE LEAGUES</div>` + others.map(row).join("") : "");
+  $("#scores").querySelectorAll(".team[data-abbr]").forEach(el => el.onclick = () => { const w = $("#standWrap"); const open = w.querySelector(`.stand[data-for="${el.dataset.abbr}"]`); w.innerHTML = open ? "" : stTable(el.dataset.abbr); $("#scores").querySelectorAll(".team").forEach(x => x.classList.toggle("sel", !open && x === el)); });
+  renderAttention();
+}
+async function loadMarkets() {
+  try { state.markets = await fetch("/api/markets").then(r => r.json()); } catch { return; }
+  const rows = (state.markets.rows || []).filter(r => !r.error);
+  const tHtml = rows.map(r => `<span>${esc(r.name)}<b>${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)}</b><i class="${r.change >= 0 ? "up" : "down"}">${r.change >= 0 ? "▲" : "▼"}${Math.abs(r.pct).toFixed(2)}%</i></span>`).join("");
+  $("#ticker").innerHTML = tHtml + `<button id="tickAdd" title="Add or remove stocks">±</button>`; const t2 = $("#ticker2"); if (t2) t2.innerHTML = tHtml;
+  $("#tickAdd").onclick = async () => { const cur = (state.tickers || []).join(", "); const v = prompt("Stocks to show, comma separated (e.g. AAPL, MSFT, NVDA). Blank for indexes only.", cur); if (v === null) return; state.tickers = v.split(/[,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean); await save({ tickers: state.tickers }); loadMarkets(); };
+}
+async function loadNews() {
+  try { state.news = await fetch("/api/news").then(r => r.json()); } catch { return; }
+  $("#newsSub").textContent = fmtAgo(state.news.at);
+  $("#news").innerHTML = (state.news.cities || []).map(c => `<div><h3>${esc(c.city.toUpperCase())}<small>${esc(c.station)}</small></h3><ul>${c.items.slice(0, 6).map(i => `<li><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>${i.at ? `<small>${fmtAgo(i.at)}</small>` : ""}</li>`).join("") || '<li class="empty">feed unavailable</li>'}</ul></div>`).join("");
+}
+async function loadWxDays() { try { state.wxdays = await fetch("/api/wxdays").then(r => r.json()); renderEvents(); } catch {} }
+/* ---------- inbox, upcoming, money, memory, alerts, morning ---------- */
+function renderBrief() {
+  const b = state.brief;
+  if (!b || !b.items?.length) { $("#mail").innerHTML = `<li class="empty">${esc(b?.note || "No brief yet. The hourly routine fills this.")}</li>`; $("#briefAt").textContent = b?.at ? (b.accounts?.length ? b.accounts.length + " inboxes · " : "") + fmtAgo(b.at) : ""; return; }
+  $("#briefAt").textContent = `${b.items.length} items · ${b.accounts?.length || 1} inbox${(b.accounts?.length || 1) > 1 ? "es" : ""} · ${fmtAgo(b.at)}`;
+  const groups = {}; for (const m of b.items) (groups[m.business || m.account || "inbox"] ||= []).push(m);
+  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` + items.map(m => `<li class="${m.needs_reply ? "needs" : ""}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}</span><span class="when">${esc(m.when||"")}</span><a class="subj" href="${esc(m.url||"https://mail.google.com/")}" target="_blank" rel="noopener">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</a></li>`).join("")).join("");
+}
+function renderEvents() {
+  const wd = state.wxdays?.days || {};
+  const ev = Object.entries(state.metrics?.businesses || {}).flatMap(([id, b]) => (b.upcoming || []).map(e => ({ date: e.date, title: e.title + (e.where ? " · " + e.where : ""), biz: bizOf(id).name, cls: "", wx: wd[`${id}:${e.id || e.date}`] })))
+    .concat((state.calendar?.events || []).map(e => ({ date: e.start, title: e.title + (e.location ? " · " + e.location : ""), biz: e.allDay ? "CAL" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), cls: "cal" })))
+    .filter(e => e.date && new Date(e.date.length === 10 ? e.date + "T12:00" : e.date) >= new Date(Date.now() - 86400e3)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12);
+  $("#evSub").textContent = ev.length ? `next ${ev.length}` : "";
+  $("#events").innerHTML = ev.length ? ev.map(e => { const d = new Date(e.date.length === 10 ? e.date + "T12:00" : e.date); const days = Math.ceil((d - Date.now()) / 86400e3); const w = e.wx ? `<span class="wxd ${e.wx.rain >= 40 ? "wet" : ""}" title="${esc(e.wx.where)} · wind ${e.wx.wind} mph · sunset ${esc(e.wx.sunset)}">${wmo(e.wx.code)[1]} <b>${e.wx.hi}°</b>/${e.wx.lo}° ${e.wx.rain}%</span>` : ""; return `<li style="${w ? "grid-template-columns:auto 1fr auto auto" : ""}"><span class="bz ${e.cls}">${esc(e.biz)}</span><span>${esc(e.title)}</span>${w}<span class="in">${d.toLocaleDateString([], {month:"short", day:"numeric"})} · ${days <= 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + " d"}</span></li>`; }).join("") : `<li class="empty">Bookings and calendar items appear here.</li>`;
+  $("#calHint").textContent = "";
+}
+function renderMoney() {
+  const mo = state.metrics?.money; if (!mo?.months?.length) return;
+  const colors = Object.fromEntries(BIZ.map(b => [b.id, b.color])); const labels = Object.fromEntries(BIZ.map(b => [b.id, b.name]));
+  const diff = mo.thisMonth - mo.lastMonth; const pct = mo.lastMonth ? Math.round(diff / mo.lastMonth * 100) : null;
+  $("#moneySub").textContent = "cash in, all businesses";
+  $("#money").innerHTML = `<div class="money"><div><div class="big"><small>THIS MONTH</small><span id="moneyNow">${moneyFull(mo.thisMonth)}</span></div><div class="cmp">last month ${moneyFull(mo.lastMonth)} · <b class="${diff >= 0 ? "up" : "down"}">${diff >= 0 ? "▲" : "▼"} ${moneyFull(Math.abs(diff))}${pct != null ? " (" + Math.abs(pct) + "%)" : ""}</b></div></div><div>${barsSvg(mo.months, colors, labels)}<div class="legend">${BIZ.map(b => `<span><i style="background:${b.color}"></i>${b.name}</span>`).join("")}<span style="margin-left:auto">12 months · ${moneyFull(mo.months.reduce((a, m) => a + m.total, 0))}</span></div></div></div>`;
+  tick($("#moneyNow"), "moneyNow", mo.thisMonth, moneyFull);
+}
+function renderMemory() {
+  const m = state.memory || []; $("#memSub").textContent = m.length ? `${m.length} facts` : "";
+  $("#mem").innerHTML = m.length ? m.map(x => `<li><span>${esc(x.text)}<small>${new Date(x.at).toLocaleDateString()}</small></span><button data-forget="${esc(x.id)}" title="Forget">✕</button></li>`).join("") : `<li class="empty">Tell JARVIS "remember that…" and it lands here.</li>`;
+  $("#mem").querySelectorAll("[data-forget]").forEach(b => b.onclick = async () => { state.memory = state.memory.filter(x => x.id !== b.dataset.forget); await save({ memory: state.memory }); renderMemory(); });
+}
+$("#memadd").onsubmit = async (e) => { e.preventDefault(); const t = $("#memText").value.trim(); if (!t) return; state.memory.unshift({ id: Math.random().toString(36).slice(2, 10), text: t, at: new Date().toISOString() }); $("#memText").value = ""; await save({ memory: state.memory }); renderMemory(); };
+let lastAlertAt = null;
+function renderAlerts() {
+  const a = state.alerts || []; $("#alertCount").textContent = a.length ? `${a.length}` : "";
+  $("#alerts").innerHTML = a.length ? a.slice(0, 25).map(x => `<li class="${esc(x.kind)}"><span class="when">${new Date(x.at).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span><span>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.text)}</a>` : esc(x.text)}</span></li>`).join("") : `<li class="empty">Nothing yet. Sites are checked every 5 minutes; leads are flagged after 2 hours; JARVIS also reports what it notices.</li>`;
+  if (a[0] && lastAlertAt && a[0].at > lastAlertAt) { blip(a[0].kind === "down" ? 220 : 880); speak(a[0].text); }
+  lastAlertAt = a[0]?.at || lastAlertAt || new Date(0).toISOString();
+}
+let briefSel = null;
+function renderMorning() {
+  const list = state.briefs?.length ? state.briefs : (state.morning?.text ? [state.morning] : []);
+  const m = list.find(b => b.id === briefSel) || list[0];
+  const pick = $("#briefPick"); pick.style.display = list.length > 1 ? "" : "none";
+  pick.innerHTML = list.map(b => `<option value="${esc(b.id)}" ${b === m ? "selected" : ""}>${esc((b.slot || "morning").toUpperCase())} · ${new Date(b.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</option>`).join("");
+  pick.onchange = () => { briefSel = pick.value; renderMorning(); };
+  if (!m?.text) { $("#morning").innerHTML = `<div class="empty">Briefs land here at 5 AM, noon and 6 PM. Press GENERATE for one now.</div>`; $("#morningAt").textContent = ""; return; }
+  $("#morningAt").textContent = `${(m.slot || "morning")} · ${fmtAgo(m.at)}`;
+  $("#morning").innerHTML = `<div class="row">${m.audio ? `<button class="btn primary" id="morningPlay">▶ PLAY</button>` : `<button class="btn" id="morningSpeak">▶ READ ALOUD</button>`}<span class="empty">${Math.round(m.text.split(/\s+/).length / 150 * 60)} s · ${esc(m.slot || "morning")}</span></div><p>${esc(m.text)}</p>`;
+  const btn = $("#morningPlay"); if (btn) btn.onclick = () => playUrl("/api/morning/audio?id=" + encodeURIComponent(m.id || ""), btn);
+  const sp = $("#morningSpeak"); if (sp) sp.onclick = () => speak(m.text);
+}
+$("#morningRun").onclick = async () => { $("#morningRun").textContent = "…"; try { const b = await fetch("/api/morning/run", { method: "POST" }).then(r => r.json()); if (b?.text) { state.morning = b; state.briefs = [b, ...(state.briefs || []).filter(x => x.id !== b.id)].slice(0, 7); briefSel = b.id; } renderMorning(); } finally { $("#morningRun").textContent = "GENERATE"; } };
+$("#testPush").onclick = async () => { const r = await fetch("/api/test-alert", { method: "POST" }).then(r => r.json()); const ok = (r.results || []).some(x => x.pushover === 200); speak(ok ? "Test alert sent to your phone." : "Push isn't configured yet."); };
+let actx;
+function blip(freq) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = freq; o.type = "sine"; g.gain.value = .0001; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.15, actx.currentTime + .02); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + .5); o.stop(actx.currentTime + .5); } catch {} }
+
+/* ---------- webcams ---------- */
+function toEmbed(u) {
+  try { const url = new URL(u.trim());
+    if (url.hostname.includes("youtu.be")) return "https://www.youtube.com/embed/" + url.pathname.slice(1) + "?autoplay=1&mute=1";
+    if (url.hostname.includes("youtube.com")) { if (url.pathname.startsWith("/embed/")) return url.href; const v = url.searchParams.get("v"); if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1`; const live = url.pathname.match(/\/live\/([\w-]+)/); if (live) return `https://www.youtube.com/embed/${live[1]}?autoplay=1&mute=1`; const ch = url.pathname.match(/\/(@[\w.-]+|channel\/[\w-]+)/); if (ch) return `https://www.youtube.com/embed/live_stream?channel=${ch[1].replace("channel/","")}&autoplay=1&mute=1`; }
+    return null; } catch { return undefined; }
+}
+function renderCams() {
+  const cams = state.webcams || []; $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
+  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<iframe src="${esc(c.embed)}" title="${esc(c.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
+}
+$("#addcam").onsubmit = async (e) => { e.preventDefault(); const raw = $("#camUrl").value.trim(); const embed = toEmbed(raw); if (embed === undefined) return; const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); };
+$("#cams").onclick = async (e) => { const b = e.target.closest(".x"); if (!b) return; state.webcams.splice(+b.dataset.i, 1); renderCams(); await save({ webcams: state.webcams }); };
+
+/* ---------- notes, state, system, clock ---------- */
+let notesTimer;
+$("#notes").oninput = () => { $("#notesState").textContent = "unsaved"; clearTimeout(notesTimer); notesTimer = setTimeout(saveNotes, 1500); };
+$("#notesSave").onclick = saveNotes;
+async function saveNotes() { state.notes = $("#notes").value; await save({ notes: state.notes }); $("#notesState").textContent = "saved " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
+async function loadState() {
+  try {
+    const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
+    const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
+    state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
+    if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
+    if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
+  } catch {}
+  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderAttention(); renderSys(); syncQueueCards();
+}
+async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
+function renderSys() {
+  const up = state.sites.filter(s => s.ok).length, avg = state.sites.length ? Math.round(state.sites.reduce((a,s)=>a+s.ms,0)/state.sites.length) : 0, c = state.cfg;
+  $("#sys").innerHTML = `<span>sites <b>${up}/${state.sites.length||BIZ.length}</b></span><span>avg <b>${avg} ms</b></span><span>metrics <b class="${state.stale?.metrics ? "off" : state.metrics ? "on" : "off"}">${state.metrics ? fmtAgo(state.metrics.collectedAt) : "none"}${state.stale?.metrics ? " · STALE" : ""}</b></span><span>traffic <b class="${state.stale?.traffic ? "off" : "on"}">${state.traffic ? fmtAgo(state.traffic.at) : "none"}${state.stale?.traffic ? " · STALE" : ""}</b></span><span>brain <b class="${c.brain ? "on" : "off"}">${c.brain ? "online" : "offline"}</b></span><span>voice <b class="${c.tts ? "on" : ""}">${c.tts ? "ElevenLabs" : "browser"}</b></span><span>push <b class="${c.pushover ? "on" : "off"}">${c.pushover ? "Pushover" : "off"}</b></span><span>calendar <b class="${c.calendar ? "on" : "off"}">${c.calendar ? "on" : "off"}</b></span><span>hands <b class="${(state.queue||[]).some(q => q.status === "done") ? "on" : "off"}">${(state.queue||[]).filter(q => q.status === "pending").length} queued</b></span>`;
+}
+function clockTick() {
+  const n = new Date(), phone = innerWidth < 900;
+  $("#clock").textContent = phone ? n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("#date").textContent = phone ? n.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  $("#wallClock").textContent = n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+  const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zones = [["ET", "America/New_York"], ["CT", "America/Chicago"], ["MT", "America/Denver"], ["AZ", "America/Phoenix"], ["PT", "America/Los_Angeles"], ["AK", "America/Anchorage"], ["HI", "Pacific/Honolulu"]];
+  const zHtml = zones.map(([k, tz]) => `<span class="${tz === here ? "here" : ""}"><b>${k}</b>${n.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).replace(" ", "").toLowerCase()}</span>`).join("");
+  $("#zones").innerHTML = zHtml; const z2 = $("#zones2"); if (z2) z2.innerHTML = zHtml;
+}
+setInterval(clockTick, 1000); clockTick(); setInterval(setLighting, 60000);
+
+/* ---------- visualizer ---------- */
+const viz = $("#viz"), vctx = viz.getContext("2d");
+let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
+function drawViz() {
+  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2, R = 48, glow = getComputedStyle(document.documentElement).getPropertyValue("--glow").trim();
+  vctx.clearRect(0, 0, W, H);
+  if (vizMode === "idle") { vizRaf = null; return; }
+  let data;
+  if (analyser) { data = new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(data); }
+  const bars = 72;
+  for (let i = 0; i < bars; i++) {
+    let v;
+    if (data) { const idx = Math.floor(Math.pow(i / bars, 1.6) * (data.length * 0.6)); v = data[idx] / 255; }
+    else { fakePhase += 0.0009; v = 0.25 + 0.35 * Math.abs(Math.sin(i * 0.5 + fakePhase * 40)) * (0.6 + 0.4 * Math.sin(fakePhase * 90 + i)); }
+    if (vizMode === "listening") v = v * 0.7;
+    const len = 6 + v * 46, a = (i / bars) * Math.PI * 2 - Math.PI / 2;
+    const x1 = cx + Math.cos(a) * R, y1 = cy + Math.sin(a) * R, x2 = cx + Math.cos(a) * (R + len), y2 = cy + Math.sin(a) * (R + len);
+    vctx.strokeStyle = `rgba(${vizMode === "listening" ? "255,179,64" : glow},${0.35 + v * 0.65})`; vctx.lineWidth = 3; vctx.lineCap = "round";
+    vctx.beginPath(); vctx.moveTo(x1, y1); vctx.lineTo(x2, y2); vctx.stroke();
+  }
+  // inner glow disc
+  const g = vctx.createRadialGradient(cx, cy, 4, cx, cy, R); const lvl = data ? data.slice(0, 16).reduce((a, b) => a + b, 0) / (16 * 255) : 0.4 + 0.2 * Math.sin(fakePhase * 120);
+  g.addColorStop(0, `rgba(255,255,255,${0.5 + lvl * 0.5})`); g.addColorStop(0.4, `rgba(${glow},${0.3 + lvl * 0.5})`); g.addColorStop(1, `rgba(${glow},0)`);
+  vctx.fillStyle = g; vctx.beginPath(); vctx.arc(cx, cy, R, 0, Math.PI * 2); vctx.fill();
+  vizRaf = requestAnimationFrame(drawViz);
+}
+function setViz(mode, node) { vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (mode !== "idle" && !vizRaf) drawViz(); if (mode === "idle") { vctx.clearRect(0, 0, viz.width, viz.height); } }
+function attachAudio(el) {
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(el); const an = actx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = .8; src.connect(an); an.connect(actx.destination); return an; } catch { return null; }
+}
+
+/* ---------- voice output: sentence-streamed ElevenLabs, browser fallback ---------- */
+let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0, currentSpeech = "";
+const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+let pendingReply = false, settleMic = async () => {};
+const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter(w => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter(w => w.length > 3); return words.length > 0 && words.filter(w => said.has(w)).length / words.length >= 0.5; };
+// One persistent <audio> element. Phones only allow playback on an element that was started by a user
+// gesture, so we unlock it on the first tap and then reuse it for every segment (no gaps, no blocked plays).
+const player = new Audio(); player.preload = "auto"; let playerAnalyser = null, playerUnlocked = false;
+function unlockPlayer() {
+  if (playerUnlocked) return; playerUnlocked = true;
+  try { player.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAGbZHBgG1OF6zM82DWbZaUmMBptgQhGjsyYqc9ae9XFz280948NMBWInluyfr1yq7Ny//TcCQBAEWzP8bzE3A+MWgHOOyphGxMfR7oPp3G7A8MPCbNu5Cz0MC5KmoRMuUsBA8nnb6oN1LlDzPT7X23wvGPMaKmqCJAWAAAA=="; const p = player.play(); if (p) p.catch(() => {}); } catch {}
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {}
+}
+["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, unlockPlayer, { once: true, passive: true }));
+function playerViz() {
+  if (playerAnalyser) return playerAnalyser;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaElementSource(player); playerAnalyser = actx.createAnalyser(); playerAnalyser.fftSize = 512; playerAnalyser.smoothingTimeConstant = .8; src.connect(playerAnalyser); playerAnalyser.connect(actx.destination); } catch { playerAnalyser = null; }
+  return playerAnalyser;
+}
+const clean = (n) => n.replace(/Microsoft |Online |\(Natural\)|Google |English \(United Kingdom\)|- /g, "").trim();
+function pickVoices() {
+  let all = []; try { all = speechSynthesis.getVoices(); } catch {}
+  const gb = all.filter(v => /en[-_]GB/i.test(v.lang));
+  const rank = v => (/natural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : /online/i.test(v.name) ? 2 : 3) + (/ryan|george|daniel|thomas|oliver|arthur|alfie|male/i.test(v.name) ? 0 : .5);
+  VOICES = (gb.length ? gb : all.filter(v => /^en/i.test(v.lang))).sort((a,b) => rank(a) - rank(b));
+  let saved = null; try { saved = localStorage.getItem("jarvisVoice"); } catch {}
+  VOICE = VOICES.find(v => v.name === saved) || VOICES[0] || null;
+  $("#voiceName").textContent = state.cfg.tts ? "ElevenLabs" : VOICE ? clean(VOICE.name) : "no voice";
+}
+try { speechSynthesis.onvoiceschanged = pickVoices; } catch {}
+$("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the ElevenLabs voice."); if (!VOICES.length) return; VOICE = VOICES[(VOICES.indexOf(VOICE) + 1) % VOICES.length]; try { localStorage.setItem("jarvisVoice", VOICE.name); } catch {} pickVoices(); speak("This is the " + clean(VOICE.name) + " voice."); };
+function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
+function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
+function enqueueSpeech(segment) {
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
+  const gen = speakGen;
+  const item = { text: segment, gen, blob: state.cfg.tts ? fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: segment }) }).then(r => r.ok ? r.blob() : null).catch(() => null) : Promise.resolve(null) };
+  speakQueue.push(item); if (!speaking) pumpSpeech();
+}
+async function pumpSpeech() {
+  speaking = true;
+  while (speakQueue.length) {
+    const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
+    const blob = await item.blob; if (item.gen !== speakGen) continue;
+    currentSpeech = item.text;
+    if (blob) {
+      if (PHONE) await settleMic();
+      await new Promise(res => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
+    } else {
+      await new Promise(res => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .96; u.pitch = 1; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
+    }
+  }
+  speaking = false; setViz("idle"); onSpeechEnd();
+}
+function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); player.src = url; setViz("speaking", playerViz()); if (btn) btn.textContent = "❚❚ PLAYING"; player.onended = player.onerror = () => { setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; player.play().catch(() => setViz("idle")); }
+
+/* ---------- the brain: streaming chat ---------- */
+function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
+function localAnswer(t) {
+  t = t.toLowerCase().trim();
+  if (/^(what('s| is) the )?time\??$/.test(t)) return "It's " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + ".";
+  if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
+  if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
+  if (/^(play|read) (the )?(morning )?brief/.test(t)) { if (state.morning?.audio) { playUrl("/api/morning/audio?id=" + encodeURIComponent(state.morning.id || "")); return ""; } if (state.morning?.text) return state.morning.text; return "There's no morning brief yet. Press generate and I'll write one."; }
+  if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
+  return null;
+}
+async function ask(text) {
+  text = text.trim(); if (!text) return;
+  pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
+  const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
+  const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
+  let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
+  const flushSentences = (final) => {
+    if (!final && firstSent) return; // after the opening sentence, wait for the whole reply and send it as one segment
+    const rest = full.slice(spoken); const m = final ? [rest] : rest.match(/^[\s\S]*?[.!?](?=\s|$)/);
+    if (!m) return; const chunk = (final ? rest : m[0]).trim(); if (!chunk) return;
+    spoken += final ? rest.length : m[0].length; firstSent = true; if ($("#speakOn").checked) enqueueSpeech(chunk);
+  };
+  try {
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, messages: state.chat }) });
+    const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
+    while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx; while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const frame = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        const ev = (frame.match(/^event: (.*)$/m) || [])[1]; const data = (frame.match(/^data: (.*)$/m) || [])[1]; if (!ev || !data) continue;
+        const d = JSON.parse(data);
+        if (ev === "delta") { full += d.text; el.textContent = full; $("#chat").scrollTop = 1e9; if (vizMode === "thinking" && !speaking) $("#brainState").textContent = "speaking"; flushSentences(false); }
+        else if (ev === "done") { full = full.trim(); el.textContent = full || "…"; flushSentences(true); state.chat = d.messages || state.chat; for (const a of d.actions || []) handleAction(a); }
+        else if (ev === "error") { el.textContent = full + "\n[" + d.message + "]"; }
+      }
+    }
+  } catch (e) { el.textContent = (full || "") + " I lost the connection to my reasoning core. " + e.message; }
+  $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) { pendingReply = false; setViz("idle"); onSpeechEnd(); }
+}
+function handleAction(a) {
+  if (a.type === "open") { const w = window.open(a.url, "_blank"); if (!w) addMsg("sys", "Popup blocked: " + a.url); }
+  if (a.type === "notes") { state.notes = a.value; $("#notes").value = a.value; }
+  if (a.type === "memory") { state.memory = a.value; renderMemory(); }
+  if (a.type === "draft") draftCard(a);
+  if (a.type === "confirm") proposeAction(a.item);
+}
+$("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
+$("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
+["what needs me today?", "status report", "how are the Cowboys doing?", "weather for the next wedding", "what's in the news?", "how are the markets?", "remember that…"].forEach(c => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+document.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); showView("jarvis"); $("#q").focus(); $("#brainPanel").scrollIntoView({behavior:"smooth", block:"center"}); } if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else if (document.body.classList.contains("wall")) exitWall(); else stopSpeaking(); } });
+
+/* ---------- voice input: hold-to-talk, wake word, conversation mode, interruption ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = $("#mic"); let rec, wake, listening = false, hasMic = false, micAnalyser = null, micStream = null;
+async function detectMic() {
+  try { const devs = await navigator.mediaDevices.enumerateDevices(); hasMic = devs.some(d => d.kind === "audioinput"); } catch { hasMic = false; }
+  if (SR && hasMic) { mic.hidden = false; $("#wakeWrap").hidden = false; $("#convWrap").hidden = false; setupVoice(); }
+}
+function onSpeechEnd() {
+  pendingReply = false;
+  if (!hasMic || speaking || listening) return;
+  if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && $("#convOn").checked) startListen(); }, 400);
+  else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
+}
+let startListen = () => {};
+function setupVoice() {
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1;
+  rec.onresult = (e) => { const r = e.results[e.results.length-1]; $("#coreState").textContent = "» " + r[0].transcript.slice(-40); if (r.isFinal) ask(r[0].transcript); };
+  rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) setViz("idle"); if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
+  rec.onerror = (e) => { if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
+  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); listening = true; mic.classList.add("on"); await grabMic(); setViz("listening", micAnalyser); try { rec.start(); } catch {} };
+  const stop = () => { try { rec.stop(); } catch {} };
+  mic.onclick = () => listening ? stop() : startListen();
+  document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "j" && !e.repeat && !/input|textarea/i.test(e.target.tagName)) startListen(); });
+  document.addEventListener("keyup", (e) => { if (e.key.toLowerCase() === "j" && listening) stop(); });
+  $("#wakeOn").onchange = () => { try { localStorage.setItem("jarvisWake", $("#wakeOn").checked ? "1" : ""); } catch {} $("#wakeOn").checked ? startWake() : stopWake(); };
+  $("#convOn").onchange = () => { try { localStorage.setItem("jarvisConv", $("#convOn").checked ? "1" : ""); } catch {} if ($("#convOn").checked) { addMsg("sys", "Conversation mode: I'll listen after each reply. Speak over me to interrupt."); startListen(); } };
+  try { if (localStorage.getItem("jarvisWake")) { $("#wakeOn").checked = true; startWake(); } if (localStorage.getItem("jarvisConv")) $("#convOn").checked = true; } catch {}
+  function startWake() {
+    if (wake || listening) return;
+    wake = new SR(); wake.continuous = true; wake.interimResults = true; wake.lang = "en-US";
+    wake.onresult = (e) => {
+      const r = e.results[e.results.length-1]; const t = r[0].transcript.toLowerCase();
+      // interruption: any sustained speech while JARVIS talks stops him and takes the question
+      if (speaking && r.isFinal && t.trim().split(/\s+/).length >= 2) { if (soundsLikeSelf(t)) return; stopSpeaking(); ask(t.replace(/^jarvis[,.]?\s*/, "")); return; }
+      if (!r.isFinal) return;
+      const m = t.match(/jarvis[,.]?\s*(.*)/); if (m) { blip(1200); if (m[1].trim().length > 2) ask(m[1]); else { stopWake(); startListen(); } }
+    };
+    wake.onend = () => { if (wake && ($("#wakeOn").checked || $("#convOn").checked) && !listening) { try { wake.start(); } catch {} } };
+    wake.onerror = () => {};
+    try { wake.start(); } catch {}
+  }
+  function stopWake() { if (!wake) return; const w = wake; wake = null; try { w.onend = null; w.stop(); } catch {} }
+  window.stopWakeForSpeech = stopWake; window.startWakeAgain = startWake;
+  // phones: Chrome pauses audio whenever a recognizer is active, so stop them all and wait for the mic to actually close
+  settleMic = () => new Promise(res => { let pending = 0, done = false; const fin = () => { if (!done) { done = true; res(); } };
+    if (wake) { const w = wake; wake = null; pending++; w.onend = () => { pending--; if (!pending) fin(); }; try { w.abort(); } catch { pending--; } }
+    if (listening) { pending++; const prev = rec.onend; rec.onend = (e) => { rec.onend = prev; prev && prev(e); pending--; if (!pending) fin(); }; try { rec.abort(); } catch { pending--; } }
+    if (!pending) fin(); else setTimeout(fin, 700); });
+  // keep a wake recognizer alive during speech in conversation mode so he can be interrupted
+  const _pump = pumpSpeech; window.__origPump = _pump;
+  if (!PHONE) setInterval(() => { if (speaking && ($("#convOn").checked || $("#wakeOn").checked) && !wake && !listening) startWake(); }, 800);
+  // phones: the mic must stay closed while JARVIS talks, otherwise Chrome pauses his audio; tap the core to interrupt
+  $("#core").onclick = () => { if (speaking) { stopSpeaking(); if (hasMic && ($("#convOn").checked || $("#wakeOn").checked)) startListen(); } };
+}
+async function grabMic() { try { if (!micStream) { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaStreamSource(micStream); micAnalyser = actx.createAnalyser(); micAnalyser.fftSize = 512; src.connect(micAnalyser); } } catch { micAnalyser = null; } }
+function releaseMic() { /* keep the stream for quick restarts; browsers show the indicator only while active */ }
+
+/* ---------- wall mode ---------- */
+let wallTimer;
+function enterWall() {
+  const cams = (state.webcams || []).filter(c => c.embed); if (!cams.length) return speak("No embeddable feeds for wall mode yet.");
+  document.body.classList.add("wall"); history.replaceState(null, "", "/wall");
+  const g = $("#wallGrid"); g.style.setProperty("--cols", Math.ceil(Math.sqrt(cams.length)));
+  g.innerHTML = cams.map(c => `<div class="cell"><iframe src="${esc(c.embed)}" allow="autoplay; encrypted-media" title="${esc(c.name)}"></iframe><span class="lbl">${esc(c.name)}</span></div>`).join("");
+  g.querySelectorAll(".cell").forEach(cell => { const hit = document.createElement("div"); hit.style.cssText = "position:absolute;inset:0;cursor:pointer"; hit.onclick = () => { const solo = cell.classList.contains("solo"); g.querySelectorAll(".cell").forEach(x => x.classList.remove("solo")); if (!solo) cell.classList.add("solo"); }; hit.ondblclick = (e) => { e.stopPropagation(); hit.remove(); }; cell.appendChild(hit); });
+  $("#wallName").textContent = `${cams.length} LIVE FEEDS · click to enlarge · double-click for controls`; wallInfo(); wallTimer = setInterval(wallInfo, 60000);
+  document.documentElement.requestFullscreen?.().catch(() => {});
+}
+function wallInfo() { const c = state.wx?.current; const down = state.sites.filter(s => !s.ok); $("#wallInfo").innerHTML = `${c ? `${Math.round(c.temperature_2m)}°F ${wmo(c.weather_code)[0]} · ${esc(state.wx.place)}<br>` : ""}${down.length ? `<span style="color:var(--red)">${esc(down.map(d=>d.name).join(", "))} DOWN</span>` : "ALL SYSTEMS NOMINAL"}${state.brief?.items?.length ? `<br>${state.brief.items.length} inbox items` : ""}`; }
+function exitWall() { document.body.classList.remove("wall"); clearInterval(wallTimer); $("#wallGrid").innerHTML = ""; history.replaceState(null, "", "/"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }
+$("#wallBtn").onclick = (e) => { e.preventDefault(); enterWall(); }; $("#wallExit").onclick = exitWall;
+
+/* ---------- phone navigation ---------- */
+function showView(v) { $("#main").dataset.view = v; $("#nav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.view === v)); if (v === "weather" && map) setTimeout(() => map.invalidateSize(), 50); try { localStorage.setItem("jarvisView", v); } catch {} }
+$("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.dataset.view));
+addEventListener("resize", () => { if (map) map.invalidateSize(); });
+
+/* ---------- start ---------- */
+$("#launch").innerHTML = LAUNCH.map(([n,u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("");
+$("#recheck").onclick = () => checkStatus(true);
+renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening") + ". Ask me anything, or tell me what needs doing.");
+(async () => {
+  try { state.cfg = await fetch("/api/config").then(r => r.json()); } catch {}
+  $("#who").textContent = state.cfg.user && state.cfg.user.includes("@") ? state.cfg.user.split("@")[0] : "key";
+  pickVoices();
+  let v = "jarvis"; try { v = localStorage.getItem("jarvisView") || v; } catch {} showView(v);
+  await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
+  if (location.pathname === "/wall") setTimeout(enterWall, 500);
+  if (location.hash === "#morning") { showView("jarvis"); $("#alertPanel").scrollIntoView(); }
+})();
+setInterval(checkStatus, 5 * 60000); setInterval(loadWeather, 15 * 60000); setInterval(loadSports, 60000); setInterval(loadMarkets, 2 * 60000); setInterval(loadNews, 15 * 60000); setInterval(loadWxDays, 30 * 60000); setInterval(loadState, 60000); setInterval(wallInfo, 60000);
+</script>
+</body>
+</html>

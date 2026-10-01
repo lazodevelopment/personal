@@ -32,8 +32,8 @@
   <div class="hero-inner">
     <p class="eyebrow">{{ metro.display }}</p>
     <h1>{{ metro.name }} weddings, <em>tied together.</em></h1>
-    <p class="hero-sub">Every wedding professional in {{ metro.name }} we could find, in the order couples who booked them put them. Never in the order anyone paid for.</p>
-    <div class="mt-facts"><span><b>{{ total }}</b>vendors</span><span><b>{{ categories|length }}</b>categories</span><span><b>0</b>rankings for sale</span></div>
+    <p class="hero-sub">Every wedding professional in {{ metro.name }} we could find. Verified vendors first, then reviews from couples who booked them &mdash; never who paid.</p>
+    <div class="mt-facts"><span><b>{{ '{:,}'.format(total) }}</b>vendors</span><span><b>{{ categories|length }}</b>categories</span><span><b>0</b>rankings for sale</span></div>
   </div>
 </section>
 

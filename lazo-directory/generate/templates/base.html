@@ -6,22 +6,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-itunes-app" content="app-id=6812863675">
 <title>{% block title %}Lazo &mdash; Tied Together{% endblock %}</title>
 <meta name="description" content="{% block desc %}Lazo is the verified wedding marketplace. Rankings can't be bought, every review is verified, every lead is a real couple.{% endblock %}">
 <link rel="canonical" href="{% block canonical %}{{ base }}/{% endblock %}">
 <meta property="og:site_name" content="Lazo">
-<meta property="og:type" content="website">
+<meta property="og:type" content="{% block ogtype %}website{% endblock %}">
 <meta property="og:title" content="{{ self.title() }}">
 <meta property="og:description" content="{{ self.desc() }}">
 <meta property="og:image" content="{% block ogimage %}{{ base }}/assets/photos/hero-3.jpg{% endblock %}">
+<meta property="og:url" content="{{ self.canonical() }}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ self.title() }}">
+<meta name="twitter:description" content="{{ self.desc() }}">
+<meta name="twitter:image" content="{{ self.ogimage() }}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/lazo.css?v={{ asset_v }}">
 <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png">
-<link rel="apple-touch-icon" href="/assets/appicon.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 {% if noindex %}<meta name="robots" content="noindex,follow">{% endif %}
 <style>
 /* JC-LAZO-BASE-0907-002: current-page marker in the nav; pages set nav_key */
@@ -30,7 +35,8 @@
   .site-head{padding:10px 14px}
   .brand-lockup{height:34px;width:auto}
   .site-nav{gap:12px}
-  .site-nav a:not(.nav-cta){display:none}
+  .site-nav a:not(.nav-cta){font-size:13px}
+  .site-nav a:nth-child(2),.site-nav a:nth-child(4){display:none}
   .site-nav .nav-cta{font-size:13.5px;padding:9px 16px}
 }
 </style>
@@ -62,7 +68,7 @@ src="https://www.facebook.com/tr?id=1245257617279907&ev=PageView&noscript=1"
     <img src="/assets/brand.png" alt="Lazo &mdash; Tied together" class="brand-lockup">
   </a>
   <nav class="site-nav">
-    <a href="/phoenix/"{% if self.nav_key() == 'find' %} class="on"{% endif %}>Find vendors</a>
+    <a href="/#find"{% if self.nav_key() == 'find' %} class="on"{% endif %}>Find vendors</a>
     <a href="/why-lazo/"{% if self.nav_key() == 'why' %} class="on"{% endif %}>Why Lazo</a>
     <a href="/wedding-websites/"{% if self.nav_key() == 'sites' %} class="on"{% endif %}>Wedding websites</a>
     <a href="/for-vendors/"{% if self.nav_key() == 'vendors' %} class="on"{% endif %}>For vendors</a>

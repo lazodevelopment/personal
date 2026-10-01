@@ -3,6 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="apple-itunes-app" content="app-id=6812863675">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Free watercolor wedding website templates | Lazo</title>
 <meta name="description" content="Soft washes of blush, sky and lilac. Free watercolor wedding websites with RSVPs, schedule and registry.">
@@ -143,6 +144,23 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
 .bcard p{color:#6B6B66;font-size:14px;line-height:1.65;margin:0}
 .beyond .bcta{display:inline-block;margin-top:38px;color:#52284F;font-weight:700;text-decoration:none;border-bottom:2px solid #D9B77C;padding-bottom:3px;font-size:15px}
 .beyond .bcta:hover{color:#8A6A2F}
+
+
+/* lz-filters-css */
+.filt{max-width:1180px;margin:34px auto 0;padding:0 22px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+.filt button{font:inherit;font-size:13.5px;color:var(--plum);background:#fff;border:1px solid var(--goldSoft);border-radius:999px;padding:8px 15px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.filt button:hover{background:var(--wash)}
+.filt button.on{background:var(--plum);color:var(--ivory);border-color:var(--plum)}
+.filt .fn{font-size:12.5px;color:var(--muted);margin-left:6px}
+.tpl.hide{display:none}
+.mar{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px auto 2px;font-size:13.5px;color:var(--ink);cursor:pointer;max-width:420px;text-align:left}
+.mar input{position:absolute;opacity:0;width:0;height:0}
+.mar .tog{flex:none;width:38px;height:22px;border-radius:999px;background:#E6D6B8;position:relative;transition:background .2s}
+.mar .tog::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.mar input:checked + .tog{background:var(--plum)}
+.mar input:checked + .tog::after{transform:translateX(16px)}
+.mar small{display:block;color:var(--muted);font-size:11.5px}
+/* /lz-filters-css */
 /* lz-seo-css */
 .sec{max-width:1080px;margin:0 auto;padding:76px 22px 0}
 .sec .sk{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:#8A6A2F;text-align:center;margin-bottom:12px}
@@ -171,21 +189,56 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
 .faqs details[open] summary::after{content:"\2013"}
 .faqs p{color:#6B6B66;font-size:15px;margin-top:10px;max-width:70ch}
 /* /lz-seo-css */
-/* lz-filters-css */
-.filt{max-width:1180px;margin:34px auto 0;padding:0 22px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
-.filt button{font:inherit;font-size:13.5px;color:var(--plum);background:#fff;border:1px solid var(--goldSoft);border-radius:999px;padding:8px 15px;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
-.filt button:hover{background:var(--wash)}
-.filt button.on{background:var(--plum);color:var(--ivory);border-color:var(--plum)}
-.filt .fn{font-size:12.5px;color:var(--muted);margin-left:6px}
-.tpl.hide{display:none}
-.mar{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px auto 2px;font-size:13.5px;color:var(--ink);cursor:pointer;max-width:420px;text-align:left}
-.mar input{position:absolute;opacity:0;width:0;height:0}
-.mar .tog{flex:none;width:38px;height:22px;border-radius:999px;background:#E6D6B8;position:relative;transition:background .2s}
-.mar .tog::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
-.mar input:checked + .tog{background:var(--plum)}
-.mar input:checked + .tog::after{transform:translateX(16px)}
-.mar small{display:block;color:var(--muted);font-size:11.5px}
-/* /lz-filters-css */
+
+
+/* ---- lz-sell: built for the day itself ---- */
+.sell{background:#fff;border-top:1px solid var(--goldSoft);border-bottom:1px solid var(--goldSoft);padding:96px 22px}
+.sell .sw{max-width:1180px;margin:0 auto}
+.sell .sk{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:#8A6A2F;text-align:center;margin-bottom:12px}
+.sell h2{font:500 clamp(30px,4.6vw,46px)/1.12 "Cormorant Garamond",serif;color:var(--plum);text-align:center;margin:0 auto 12px;max-width:22ch}
+.sell h2 em{font-style:italic;color:var(--gold)}
+.sell .sp{color:var(--muted);text-align:center;max-width:58ch;margin:0 auto;font-size:16.5px}
+.fgrid{display:grid;gap:22px;margin-top:48px}
+@media(min-width:700px){.fgrid{grid-template-columns:1fr 1fr}}
+@media(min-width:1040px){.fgrid{grid-template-columns:1fr 1fr 1fr}}
+.fc{background:var(--ivory);border:1px solid var(--goldSoft);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;transition:transform .3s ease,box-shadow .3s ease}
+.fc:hover{transform:translateY(-4px);box-shadow:0 30px 50px -30px rgba(36,30,43,.45)}
+.fc.wide{grid-column:1/-1;flex-direction:row;align-items:stretch}
+.fc.wide .shot{flex:1.4;aspect-ratio:auto;min-height:320px}
+.fc.wide .ft{flex:1;align-self:center}
+@media(max-width:699px){.fc.wide{flex-direction:column}.fc.wide .shot{min-height:0;aspect-ratio:16/10}}
+.fc .shot{aspect-ratio:16/10;background:#EFE9E0 center/cover no-repeat;border-bottom:1px solid var(--goldSoft);position:relative}
+.fc .shot img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.fc .shot.phone-in{background:var(--plumDeep);display:flex;justify-content:center;align-items:flex-end;padding:22px 22px 0}
+.fc .shot.phone-in img{width:min(62%,230px);height:auto;border-radius:22px 22px 0 0;border:6px solid #241E2B;border-bottom:0;box-shadow:0 20px 40px -20px rgba(0,0,0,.7)}
+.fc .ft{padding:22px 24px 26px}
+.fc .fk{font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:#8A6A2F;margin-bottom:8px}
+.fc h3{font:600 23px/1.15 "Cormorant Garamond",serif;color:var(--plum);margin:0 0 8px}
+.fc p{font-size:14.5px;color:#6B6B66;line-height:1.6;margin:0}
+.fc .new{position:absolute;top:12px;left:12px;background:var(--gold);color:var(--plumDeep);font-size:10px;letter-spacing:.24em;text-transform:uppercase;font-weight:600;border-radius:999px;padding:5px 10px}
+.fmore{display:grid;gap:14px;margin-top:22px;grid-template-columns:1fr 1fr}
+@media(min-width:900px){.fmore{grid-template-columns:repeat(4,1fr)}}
+.fmore div{background:var(--ivory);border:1px solid var(--goldSoft);border-radius:14px;padding:16px 18px}
+.fmore b{display:block;color:var(--plum);font-weight:500;margin-bottom:3px}
+.fmore span{font-size:13.5px;color:#6B6B66}
+.cmp{margin-top:84px}
+.cmp h3{font:500 clamp(26px,3.6vw,36px)/1.15 "Cormorant Garamond",serif;color:var(--plum);text-align:center;margin:0 auto 10px;max-width:24ch}
+.cmp .sp{margin-bottom:30px}
+.cmpt{width:100%;max-width:920px;margin:0 auto;border-collapse:separate;border-spacing:0;background:var(--ivory);border:1px solid var(--goldSoft);border-radius:18px;overflow:hidden;font-size:14.5px}
+.cmpt th,.cmpt td{padding:13px 16px;text-align:center;border-bottom:1px solid var(--goldSoft);vertical-align:middle}
+.cmpt tr:last-child td{border-bottom:0}
+.cmpt th{background:var(--plum);color:var(--ivory);font-weight:400;font-size:13px;letter-spacing:.06em}
+.cmpt th:first-child,.cmpt td:first-child{text-align:left}
+.cmpt td:first-child{color:var(--ink)}
+.cmpt td:nth-child(2){background:rgba(217,183,124,.14);font-weight:500;color:var(--plum)}
+.cmpt .y{color:#2E8B6B;font-weight:600}.cmpt .n{color:#B8AFA6}.cmpt .p{color:#8A6A2F;font-size:13px}
+.cmp .fine{text-align:center;font-size:12px;color:var(--muted);margin-top:14px;letter-spacing:.02em}
+.sell .scta{text-align:center;margin-top:44px}
+.sell .scta a{display:inline-block;background:var(--plum);color:var(--ivory);text-decoration:none;border-radius:999px;padding:16px 34px;font-size:15px;letter-spacing:.04em}
+.sell .scta a:hover{background:var(--plumDeep)}
+.sell .scta p{font-size:13px;color:var(--muted);margin-top:12px}
+@media(max-width:600px){.cmpt{font-size:13px}.cmpt th,.cmpt td{padding:10px 8px}}
+/* ---- /lz-sell ---- */
 </style>
 </head>
 <body>
@@ -209,9 +262,9 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
   <p class="lbl">See your names on every design</p>
   <p class="hint">Type below — every preview updates as you do</p>
   <div class="row">
-   <input id="pn1" placeholder="Your name" autocomplete="off">
+   <input id="pn1" aria-label="Your name" placeholder="Your name" autocomplete="off">
    <span class="amp">&amp;</span>
-   <input id="pn2" placeholder="Partner&#39;s name" autocomplete="off">
+   <input id="pn2" aria-label="Partner&#39;s name" placeholder="Partner&#39;s name" autocomplete="off">
   </div>
   <div class="row2"><input id="pd" type="date" aria-label="Wedding date"></div>
   <p class="live"><span class="dot"></span> Live on all three previews below</p>
@@ -222,19 +275,19 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
  <div class="tpl rv" data-t="aquarelle" data-styles="floral">
   <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="Aquarelle template preview" data-f src="../aquarelle/?frame=1"></iframe></div></div>
   <h2>Aquarelle</h2><p class="vibe">Watercolor · soft washes · blush, sky &amp; lilac</p>
-  <div class="pals" data-slug="aquarelle"><button data-p="blush" title="Blush" style="background:linear-gradient(135deg,#D08A9B 55%,#FDF8F7 55%)" class="on"></button><button data-p="sky" title="Sky" style="background:linear-gradient(135deg,#6FA6C8 55%,#F6FAFC 55%)"></button><button data-p="lilac" title="Lilac" style="background:linear-gradient(135deg,#9B86C4 55%,#FAF8FC 55%)"></button><button data-p="sage" title="Sage" style="background:linear-gradient(135deg,#7FA88E 55%,#F7FAF6 55%)"></button></div>
+  <div class="pals" data-slug="aquarelle"><button data-p="blush" title="Blush" aria-label="Blush palette" aria-pressed="true" style="background:linear-gradient(135deg,#D08A9B 55%,#FDF8F7 55%)" class="on"></button><button data-p="sky" title="Sky" aria-label="Sky palette" aria-pressed="false" style="background:linear-gradient(135deg,#6FA6C8 55%,#F6FAFC 55%)"></button><button data-p="lilac" title="Lilac" aria-label="Lilac palette" aria-pressed="false" style="background:linear-gradient(135deg,#9B86C4 55%,#FAF8FC 55%)"></button><button data-p="sage" title="Sage" aria-label="Sage palette" aria-pressed="false" style="background:linear-gradient(135deg,#7FA88E 55%,#F7FAF6 55%)"></button></div>
   <div class="btns"><a class="view" data-view href="../aquarelle/">View demo</a><a class="use" data-use href="#">Use Aquarelle</a></div>
  </div>
  <div class="tpl rv" data-t="flora" data-styles="floral">
   <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="Flora template preview" data-f src="../flora/?frame=1"></iframe></div></div>
-  <h2>Flora</h2><p class="vibe">Romantic · florals · a garden under glass</p>
-  <div class="pals" data-slug="flora"><button data-p="rose" title="Rose" style="background:linear-gradient(135deg,#B4586B 55%,#FBF6F4 55%)" class="on"></button><button data-p="peony" title="Peony" style="background:linear-gradient(135deg,#C4577E 55%,#FCF4F6 55%)"></button><button data-p="wildflower" title="Wildflower" style="background:linear-gradient(135deg,#7B8A3A 55%,#FAF8F1 55%)"></button><button data-p="duskgarden" title="Dusk Garden" style="background:linear-gradient(135deg,#8F5E9E 55%,#F6F3F8 55%)"></button></div>
+  <h2>Flora</h2><p class="vibe">Romantic · garden roses · candlelight</p>
+  <div class="pals" data-slug="flora"><button data-p="rose" title="Rose" aria-label="Rose palette" aria-pressed="true" style="background:linear-gradient(135deg,#C86B84 55%,#FDF8F8 55%)" class="on"></button><button data-p="peony" title="Peony" aria-label="Peony palette" aria-pressed="false" style="background:linear-gradient(135deg,#D4837E 55%,#FCF7F5 55%)"></button><button data-p="wildflower" title="Wildflower" aria-label="Wildflower palette" aria-pressed="false" style="background:linear-gradient(135deg,#8E8A3E 55%,#FAF9F5 55%)"></button><button data-p="duskgarden" title="Duskgarden" aria-label="Duskgarden palette" aria-pressed="false" style="background:linear-gradient(135deg,#6E5C9E 55%,#F8F6FA 55%)"></button></div>
   <div class="btns"><a class="view" data-view href="../flora/">View demo</a><a class="use" data-use href="#">Use Flora</a></div>
  </div>
  <div class="tpl rv" data-t="sage" data-styles="floral boho">
   <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="Sage template preview" data-f src="../sage/?frame=1"></iframe></div></div>
-  <h2>Sage</h2><p class="vibe">Botanical · garden · hand-drawn greenery</p>
-  <div class="pals" data-slug="sage"><button data-p="garden" title="Garden" style="background:linear-gradient(135deg,#5B7553 55%,#F6F8F2 55%)" class="on"></button><button data-p="eucalyptus" title="Eucalyptus" style="background:linear-gradient(135deg,#4E8073 55%,#F3F7F6 55%)"></button><button data-p="terracotta" title="Terracotta Garden" style="background:linear-gradient(135deg,#B0623C 55%,#FAF5EF 55%)"></button><button data-p="lavender" title="Lavender" style="background:linear-gradient(135deg,#7C6FA8 55%,#F7F5FA 55%)"></button></div>
+  <h2>Sage</h2><p class="vibe">Botanical · garden · forest light</p>
+  <div class="pals" data-slug="sage"><button data-p="garden" title="Garden" aria-label="Garden palette" aria-pressed="true" style="background:linear-gradient(135deg,#6F8F76 55%,#F8FAF6 55%)" class="on"></button><button data-p="eucalyptus" title="Eucalyptus" aria-label="Eucalyptus palette" aria-pressed="false" style="background:linear-gradient(135deg,#5D8A80 55%,#F6F9F8 55%)"></button><button data-p="terracotta" title="Terracotta" aria-label="Terracotta palette" aria-pressed="false" style="background:linear-gradient(135deg,#B8674A 55%,#FAF6F2 55%)"></button><button data-p="lavender" title="Lavender" aria-label="Lavender palette" aria-pressed="false" style="background:linear-gradient(135deg,#8A7DB0 55%,#F9F8FB 55%)"></button></div>
   <div class="btns"><a class="view" data-view href="../sage/">View demo</a><a class="use" data-use href="#">Use Sage</a></div>
  </div>
 </main>
@@ -253,6 +306,10 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
   <p class="fine">Free forever for couples · Change designs anytime · Live in minutes</p>
  </div>
 </section>
+
+
+
+
 
 
 
@@ -327,6 +384,7 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
    <div>
     <h4>For couples</h4>
     <a href="https://app.meetlazo.com">Start planning</a>
+    <a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675">Get the iPhone app</a>
     <a href="https://meetlazo.com/phoenix/">Find vendors</a>
     <a href="https://meetlazo.com/what-is-a-lazo/">The Lazo tradition</a>
     <a href="https://meetlazo.com/why-lazo/">Why Lazo</a>
@@ -377,9 +435,10 @@ function apply(){
   const p=params(),qs=p.toString();
   document.querySelectorAll(".tpl").forEach(card=>{
    const id=card.dataset.t;
-   const fp=new URLSearchParams(p);fp.set("frame","1");
+   const cp=new URLSearchParams(p);const on=card.querySelector(".pals button.on");if(on&&on.dataset.p)cp.set("palette",on.dataset.p);const cqs=cp.toString();
+   const fp=new URLSearchParams(cp);fp.set("frame","1");
    card.querySelector("[data-f]").src="../"+id+"/?"+fp.toString();
-   card.querySelector("[data-view]").href="../"+id+"/"+(qs?"?"+qs:"");
+   card.querySelector("[data-view]").href=id+"/"+(cqs?"?"+cqs:"");
   });
  },500);
 }
@@ -403,12 +462,14 @@ document.querySelectorAll(".pals").forEach(function(row){
  var use=card.querySelector("[data-use]");
  row.querySelectorAll("button").forEach(function(b){
   b.addEventListener("click",function(){
-   row.querySelectorAll("button").forEach(function(x){x.classList.remove("on")});
-   b.classList.add("on");
+   row.querySelectorAll("button").forEach(function(x){x.classList.remove("on");x.setAttribute("aria-pressed","false")});
+   b.classList.add("on");b.setAttribute("aria-pressed","true");
    var k=b.dataset.p;
+   var p=(typeof params==="function")?params():new URLSearchParams();p.set("palette",k);
+   var fp=new URLSearchParams(p);fp.set("frame","1");
    var base=frame.getAttribute("src").split("?")[0];
-   frame.setAttribute("src",base+"?frame=1&palette="+k);
-   view.href="../"+slug+"/?palette="+k;
+   frame.setAttribute("src",base+"?"+fp.toString());
+   view.href=slug+"/?"+p.toString();
    if(use){var uh=(use.getAttribute("href")||"").split("&palette")[0].split("?palette")[0];
     use.setAttribute("href",uh+(uh.indexOf("?")>-1?"&":"?")+"palette="+k);}
   });
