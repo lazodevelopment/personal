@@ -391,8 +391,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   </section>
 
   <section class="panel c4" id="alertPanel" data-v="jarvis">
-    <h2>Briefing <span class="sub" id="morningAt"></span><button class="btn sm" id="morningRun">GENERATE</button></h2>
-    <div class="morning" id="morning"><div class="empty">The morning brief lands here at 5 AM.</div></div>
+    <h2>Briefing <span class="sub" id="morningAt"></span><select id="briefPick" class="btn sm" style="background:var(--bg2);display:none"></select><button class="btn sm" id="morningRun">GENERATE</button></h2>
+    <div class="morning" id="morning"><div class="empty">Briefs land here at 5 AM, noon and 6 PM.</div></div>
     <h2>Alerts <span class="sub" id="alertCount"></span><button class="btn sm" id="testPush">TEST PUSH</button></h2>
     <ul class="alerts" id="alerts"><li class="empty">Nothing yet.</li></ul>
   </section>
@@ -490,7 +490,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const state = { sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
+const state = { briefs: [], stale: {}, sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
 const fmtAgo = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m/60) + " h ago" : new Date(iso).toLocaleDateString(); };
 const money = (n) => "$" + (n >= 10000 ? Math.round(n/1000) + "k" : n >= 1000 ? (n/1000).toFixed(1) + "k" : Math.round(n));
 const moneyFull = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -550,6 +550,7 @@ function renderAttention() {
   for (const [id, t] of Object.entries(state.traffic?.sites || {})) if (t.online) chips.push({ cls: "good", n: t.online, t: `on ${bizOf(id).name} now`, go: id });
   for (const g of (state.sports?.games || []).filter(x => x.fav && x.state === "in")) { const [a, b] = g.teams; chips.push({ cls: "good", n: `${a.score}-${b.score}`, t: `${a.abbr} @ ${b.abbr} live`, go: "#sportsPanel" }); }
   for (const a of state.wx?.nws || []) chips.push({ cls: /Extreme|Severe/.test(a.severity) ? "crit" : "warn", n: "!", t: a.event, go: "#wxPanel" });
+  for (const k of Object.keys(state.stale || {})) chips.push({ cls: "crit", n: "!", t: `${k} feed stopped`, go: "#opsPanel" });
   const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
   const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
   $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
@@ -847,15 +848,20 @@ function renderAlerts() {
   if (a[0] && lastAlertAt && a[0].at > lastAlertAt) { blip(a[0].kind === "down" ? 220 : 880); speak(a[0].text); }
   lastAlertAt = a[0]?.at || lastAlertAt || new Date(0).toISOString();
 }
+let briefSel = null;
 function renderMorning() {
-  const m = state.morning;
-  if (!m?.text) { $("#morning").innerHTML = `<div class="empty">The morning brief lands here at 5 AM. Press GENERATE for one now.</div>`; $("#morningAt").textContent = ""; return; }
-  $("#morningAt").textContent = fmtAgo(m.at);
-  $("#morning").innerHTML = `<div class="row">${m.audio ? `<button class="btn primary" id="morningPlay">▶ PLAY BRIEF</button>` : `<button class="btn" id="morningSpeak">▶ READ ALOUD</button>`}<span class="empty">${Math.round(m.text.split(/\s+/).length / 150 * 60)} s</span></div><p>${esc(m.text)}</p>`;
-  const btn = $("#morningPlay"); if (btn) btn.onclick = () => playUrl("/api/morning/audio", btn);
+  const list = state.briefs?.length ? state.briefs : (state.morning?.text ? [state.morning] : []);
+  const m = list.find(b => b.id === briefSel) || list[0];
+  const pick = $("#briefPick"); pick.style.display = list.length > 1 ? "" : "none";
+  pick.innerHTML = list.map(b => `<option value="${esc(b.id)}" ${b === m ? "selected" : ""}>${esc((b.slot || "morning").toUpperCase())} · ${new Date(b.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</option>`).join("");
+  pick.onchange = () => { briefSel = pick.value; renderMorning(); };
+  if (!m?.text) { $("#morning").innerHTML = `<div class="empty">Briefs land here at 5 AM, noon and 6 PM. Press GENERATE for one now.</div>`; $("#morningAt").textContent = ""; return; }
+  $("#morningAt").textContent = `${(m.slot || "morning")} · ${fmtAgo(m.at)}`;
+  $("#morning").innerHTML = `<div class="row">${m.audio ? `<button class="btn primary" id="morningPlay">▶ PLAY</button>` : `<button class="btn" id="morningSpeak">▶ READ ALOUD</button>`}<span class="empty">${Math.round(m.text.split(/\s+/).length / 150 * 60)} s · ${esc(m.slot || "morning")}</span></div><p>${esc(m.text)}</p>`;
+  const btn = $("#morningPlay"); if (btn) btn.onclick = () => playUrl("/api/morning/audio?id=" + encodeURIComponent(m.id || ""), btn);
   const sp = $("#morningSpeak"); if (sp) sp.onclick = () => speak(m.text);
 }
-$("#morningRun").onclick = async () => { $("#morningRun").textContent = "…"; try { state.morning = await fetch("/api/morning/run", { method: "POST" }).then(r => r.json()); renderMorning(); } finally { $("#morningRun").textContent = "GENERATE"; } };
+$("#morningRun").onclick = async () => { $("#morningRun").textContent = "…"; try { const b = await fetch("/api/morning/run", { method: "POST" }).then(r => r.json()); if (b?.text) { state.morning = b; state.briefs = [b, ...(state.briefs || []).filter(x => x.id !== b.id)].slice(0, 7); briefSel = b.id; } renderMorning(); } finally { $("#morningRun").textContent = "GENERATE"; } };
 $("#testPush").onclick = async () => { const r = await fetch("/api/test-alert", { method: "POST" }).then(r => r.json()); const ok = (r.results || []).some(x => x.pushover === 200); speak(ok ? "Test alert sent to your phone." : "Push isn't configured yet."); };
 let actx;
 function blip(freq) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = freq; o.type = "sine"; g.gain.value = .0001; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.15, actx.currentTime + .02); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + .5); o.stop(actx.currentTime + .5); } catch {} }
@@ -883,7 +889,7 @@ async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
     const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
-    state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
+    state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
     if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}
@@ -892,7 +898,7 @@ async function loadState() {
 async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
 function renderSys() {
   const up = state.sites.filter(s => s.ok).length, avg = state.sites.length ? Math.round(state.sites.reduce((a,s)=>a+s.ms,0)/state.sites.length) : 0, c = state.cfg;
-  $("#sys").innerHTML = `<span>sites <b>${up}/${state.sites.length||BIZ.length}</b></span><span>avg <b>${avg} ms</b></span><span>metrics <b class="${state.metrics ? "on" : "off"}">${state.metrics ? fmtAgo(state.metrics.collectedAt) : "none"}</b></span><span>brain <b class="${c.brain ? "on" : "off"}">${c.brain ? "online" : "offline"}</b></span><span>voice <b class="${c.tts ? "on" : ""}">${c.tts ? "ElevenLabs" : "browser"}</b></span><span>push <b class="${c.pushover ? "on" : "off"}">${c.pushover ? "Pushover" : "off"}</b></span><span>calendar <b class="${c.calendar ? "on" : "off"}">${c.calendar ? "on" : "off"}</b></span><span>hands <b class="${(state.queue||[]).some(q => q.status === "done") ? "on" : "off"}">${(state.queue||[]).filter(q => q.status === "pending").length} queued</b></span>`;
+  $("#sys").innerHTML = `<span>sites <b>${up}/${state.sites.length||BIZ.length}</b></span><span>avg <b>${avg} ms</b></span><span>metrics <b class="${state.stale?.metrics ? "off" : state.metrics ? "on" : "off"}">${state.metrics ? fmtAgo(state.metrics.collectedAt) : "none"}${state.stale?.metrics ? " · STALE" : ""}</b></span><span>traffic <b class="${state.stale?.traffic ? "off" : "on"}">${state.traffic ? fmtAgo(state.traffic.at) : "none"}${state.stale?.traffic ? " · STALE" : ""}</b></span><span>brain <b class="${c.brain ? "on" : "off"}">${c.brain ? "online" : "offline"}</b></span><span>voice <b class="${c.tts ? "on" : ""}">${c.tts ? "ElevenLabs" : "browser"}</b></span><span>push <b class="${c.pushover ? "on" : "off"}">${c.pushover ? "Pushover" : "off"}</b></span><span>calendar <b class="${c.calendar ? "on" : "off"}">${c.calendar ? "on" : "off"}</b></span><span>hands <b class="${(state.queue||[]).some(q => q.status === "done") ? "on" : "off"}">${(state.queue||[]).filter(q => q.status === "pending").length} queued</b></span>`;
 }
 function clockTick() {
   const n = new Date(), phone = innerWidth < 900;
@@ -1000,7 +1006,7 @@ function localAnswer(t) {
   if (/^(what('s| is) the )?time\??$/.test(t)) return "It's " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + ".";
   if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
   if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
-  if (/^(play|read) (the )?(morning )?brief/.test(t)) { if (state.morning?.audio) { playUrl("/api/morning/audio"); return ""; } if (state.morning?.text) return state.morning.text; return "There's no morning brief yet. Press generate and I'll write one."; }
+  if (/^(play|read) (the )?(morning )?brief/.test(t)) { if (state.morning?.audio) { playUrl("/api/morning/audio?id=" + encodeURIComponent(state.morning.id || "")); return ""; } if (state.morning?.text) return state.morning.text; return "There's no morning brief yet. Press generate and I'll write one."; }
   if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
   return null;
 }

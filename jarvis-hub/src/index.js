@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -340,7 +340,7 @@ async function buildContext(env, request) {
   lines.push(`NOTES:\n${notes || "(empty)"}`);
   lines.push(`MEMORY: ` + ((memory || []).map((m) => `[${m.id}] ${m.text}`).join(" | ") || "(nothing remembered yet)"));
   if (queue?.length) lines.push(`RECENT ACTIONS: ` + queue.slice(0, 5).map((q) => `${q.summary} → ${q.status}${q.result ? " (" + q.result + ")" : ""}`).join(" | "));
-  if (morning?.at) lines.push(`MORNING BRIEF exists from ${morning.at}.`);
+  if (morning?.at) lines.push(`LATEST BRIEF (${morning.slot || "morning"}, ${morning.at}): ${(morning.text || "").slice(0, 600)}`);
   return lines.join("\n");
 }
 
@@ -424,27 +424,53 @@ async function chat(request, env, ctx) {
   return new Response(readable, { headers: { "content-type": "text/event-stream", "cache-control": "no-store", "x-accel-buffering": "no" } });
 }
 
-/* ---------------- morning brief ---------------- */
-async function makeMorning(env, request) {
+/* ---------------- briefs: morning / afternoon / evening ---------------- */
+const SLOT_PROMPTS = {
+  morning: "This is the MORNING brief. About 220 to 300 words, two minutes read aloud. Greeting with the date and today's weather in one breath; what needs his attention today (unanswered leads, alerts, anything slow or down, anything JARVIS noticed); each business in a sentence or two with the numbers that matter and the week-over-week direction; today's and this week's weddings with their venue weather; his teams' games today and last night's results; one line on the markets and the top local headline if it matters; finish with one dry, encouraging line.",
+  afternoon: "This is the AFTERNOON brief. About 150 to 220 words. Only what is NEW since the morning brief: fresh leads or bookings, web traffic so far today for Atavia and Elizabeth Scott, actions completed, alerts, any site that got slow, scores of games in progress or finished today, markets at midday, and anything that changed in the forecast for tonight or this week's weddings. Do not repeat the morning numbers or re-describe the day's weather unless it changed. If genuinely nothing changed, say so in two sentences.",
+  evening: "This is the EVENING brief. About 180 to 250 words. Wrap the day: what came in today across the businesses (leads, bookings, sign-ups, revenue if any), today's final web traffic, final scores and tomorrow's games, how the markets closed; then look ahead: tomorrow's weather, tomorrow's and the weekend's weddings with venue weather, balances due, anything still unresolved that he should sleep on or handle first thing. Do not repeat what the morning or afternoon brief already said unless it resolved.",
+};
+const SLOT_HOURS = (env) => Object.fromEntries((env.BRIEF_HOURS || "5:morning,12:afternoon,18:evening").split(",").map((x) => { const [h, slot] = x.split(":"); return [+h, slot || "morning"]; }));
+const slotNow = (env) => { const h = localHour(env); return h < 11 ? "morning" : h < 17 ? "afternoon" : "evening"; };
+
+async function makeMorning(env, request, slot) {
   if (!env.ANTHROPIC_API_KEY) return { error: "no brain" };
+  slot = slot || slotNow(env);
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
   const context = await buildContext(env, request);
+  const history = (await kv.get(env, "briefs")) || [];
+  const prevToday = history.filter((b) => b.at.slice(0, 10) === new Date().toISOString().slice(0, 10) && b.slot !== slot).map((b) => `${b.slot.toUpperCase()} (${b.at}): ${b.text}`).join("\n\n");
   const r = await client.beta.messages.create({
     model: MODEL, max_tokens: 1200, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
-    system: BRAIN_SYSTEM + "\nYou are composing Jesse's spoken MORNING BRIEF. About 220 to 300 words, roughly two minutes read aloud. Structure as flowing prose: greeting with the date and weather in one breath; then what needs his attention today (unanswered leads and inquiries, alerts, anything slow or down, anything JARVIS noticed); then each business in a sentence or two with the numbers that matter and the week-over-week direction. For Lazo, report ONLY sign-ups (new couples this week, and new vendor claims if any); never mention unanswered vendor inquiries or inquiry counts in the brief; then upcoming weddings, calendar items and any note or memory relevant to today; finish with one dry, encouraging line. No lists, no headers.",
-    messages: [{ role: "user", content: "Compose this morning's brief.\n\nLIVE CONTEXT:\n" + context }],
+    system: BRAIN_SYSTEM + "\nYou are composing one of Jesse's three daily spoken briefs. " + SLOT_PROMPTS[slot] + " Flowing prose, no lists, no headers. For Lazo, report ONLY sign-ups (new couples, new vendor claims); never mention unanswered vendor inquiries in a brief.",
+    messages: [{ role: "user", content: `Compose the ${slot} brief.\n\n${prevToday ? "EARLIER BRIEFS TODAY (do not repeat their content):\n" + prevToday + "\n\n" : ""}LIVE CONTEXT:\n${context}` }],
   });
   const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim();
-  const morning = { at: new Date().toISOString(), text, audio: false };
+  const brief = { id: uid(), slot, at: new Date().toISOString(), text, audio: false };
   if (env.ELEVENLABS_API_KEY && text) {
-    try { const a = await elevenlabs(env, text); if (a.ok) { await env.HUB.put("morning_audio", await a.arrayBuffer()); morning.audio = true; } } catch {}
+    try { const a = await elevenlabs(env, text); if (a.ok) { await env.HUB.put("brief_audio_" + brief.id, await a.arrayBuffer(), { expirationTtl: 8 * 86400 }); brief.audio = true; } } catch {}
   }
-  await kv.put(env, "morning", morning);
+  const list = [brief, ...history].slice(0, 7);
+  await kv.put(env, "briefs", list); await kv.put(env, "morning", brief);
   const headline = text.split(/(?<=[.!?])\s/).slice(0, 2).join(" ");
-  await notify(env, "Morning brief", headline, { tags: "sunrise", url: new URL(request.url).origin + "/#morning" });
-  return morning;
+  await notify(env, `${slot[0].toUpperCase() + slot.slice(1)} brief`, headline, { tags: slot === "morning" ? "sunrise" : slot === "evening" ? "city_sunset" : "sun", url: new URL(request.url).origin + "/#morning" });
+  return brief;
 }
 
+/* ---------------- staleness: PC-fed feeds that stopped arriving ---------------- */
+async function checkStale(env) {
+  const feeds = [["metrics", "metrics", 2 * 3600e3, (m) => m?.collectedAt], ["traffic", "traffic", 25 * 60e3, (t) => t?.at], ["sports", "scores", 25 * 60e3, (s) => s?.at], ["brief", "inbox brief", 3 * 3600e3, (b) => b?.at]];
+  const flags = (await kv.get(env, "stale")) || {}; const h = localHour(env); let changed = false;
+  for (const [key, label, maxAge, getAt] of feeds) {
+    const at = getAt(await kv.get(env, key)); if (!at) continue;
+    if (key === "brief" && (h < 8 || h > 21)) continue; // the inbox routine only runs 7am-9pm while the Claude app is open
+    const age = Date.now() - new Date(at); const stale = age > maxAge;
+    if (stale && !flags[key]) { flags[key] = Date.now(); changed = true; await pushAlert(env, { kind: "watch", text: `${label} feed is ${Math.round(age / 60000)} min old: is the PC awake and signed in?` }); await notify(env, "Feed stopped", `${label} last arrived ${Math.round(age / 60000)} min ago. Check the PC (collectors / Claude app).`, { priority: "high", tags: "warning" }); }
+    if (!stale && flags[key]) { delete flags[key]; changed = true; await pushAlert(env, { kind: "up", text: `${label} feed is back` }); }
+  }
+  if (changed) await kv.put(env, "stale", flags);
+  return flags;
+}
 /* ---------------- ElevenLabs ---------------- */
 function elevenlabs(env, text, format = "mp3_44100_128") {
   const voice = env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
@@ -477,13 +503,14 @@ async function googleLogin(request, env) {
 export default {
   async scheduled(event, env, ctx) {
     const cron = event.cron || "";
-    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env));
+    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
-      if (localHour(env) === (+env.BRIEF_HOUR || 5)) {
+      const slot = SLOT_HOURS(env)[localHour(env)];
+      if (slot) {
         const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} });
-        await makeMorning(env, fake).catch((e) => pushAlert(env, { kind: "watch", text: "Morning brief failed: " + e.message }));
+        await makeMorning(env, fake, slot).catch((e) => pushAlert(env, { kind: "watch", text: slot + " brief failed: " + e.message }));
       }
     })());
   },
@@ -522,9 +549,9 @@ export default {
     if (p === "/api/calendar") return json((await loadCalendar(env, !!url.searchParams.get("fresh"))) || { events: [], off: true });
     if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx);
     if (p === "/api/tts" && request.method === "POST") return tts(request, env);
-    if (p === "/api/morning") return json((await kv.get(env, "morning")) || { none: true });
-    if (p === "/api/morning/audio") { const a = await env.HUB.get("morning_audio", "arrayBuffer"); return a ? new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }) : new Response("no audio", { status: 404 }); }
-    if (p === "/api/morning/run" && request.method === "POST") return json(await makeMorning(env, request));
+    if (p === "/api/morning") return json({ latest: (await kv.get(env, "morning")) || null, history: (await kv.get(env, "briefs")) || [], stale: (await kv.get(env, "stale")) || {} });
+    if (p === "/api/morning/audio") { const id = url.searchParams.get("id"); const a = await env.HUB.get(id ? "brief_audio_" + id : "brief_audio_" + ((await kv.get(env, "morning"))?.id || ""), "arrayBuffer"); return a ? new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }) : new Response("no audio", { status: 404 }); }
+    if (p === "/api/morning/run" && request.method === "POST") return json(await makeMorning(env, request, url.searchParams.get("slot") || undefined));
     if (p === "/api/test-alert" && request.method === "POST") return json({ ok: true, results: await notify(env, "JARVIS test", "Push notifications are wired up.", { tags: "robot" }) });
 
     // action queue: confirmed by Jesse on the page, executed by the hands script on his PC
