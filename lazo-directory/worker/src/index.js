@@ -58,7 +58,7 @@ import { guestPhotosRoute } from "./guestphotos.js";
 // JC-LAZO-WORKER-0929-LIVE-001: weather, translation, table cards, the DJ page
 import { weatherRoute, translateRoute, cardsPage, playlistPage, dayBeforeRoute } from "./sitefeatures.js";
 // JC-LAZO-WORKER-0930-FSAUTH
-import { setWorkerEnv, fsHeaders, pcToken, cookieVal, siteLocked, lockedResponse } from "./fsauth.js";
+import { setWorkerEnv, fsHeaders, workerToken, pcToken, cookieVal, siteLocked, lockedResponse } from "./fsauth.js";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -492,6 +492,7 @@ async function renderCoupleSite(slug, env, req) {
     "x-lazo": "tied-together",
   };
   if (priv) { headers["x-robots-tag"] = "noindex, nofollow"; headers["cache-control"] = "private, no-store"; }
+  headers["x-lazo-fs"] = (await workerToken()) ? "signed-in" : "anonymous";  // JC-LAZO-WORKER-0930-FSAUTH: visible proof of the sign-in
   return new Response(html, { headers });
 }
 

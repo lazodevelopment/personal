@@ -1,0 +1,729 @@
+rules_version = '2';
+// ============================================================
+// LAZO CANONICAL RULES
+// Build ID: JC-LAZO-RULES-0913-015
+// Changes from JC-LAZO-RULES-0913-014:
+//   + The vendor team graph: vendors.referralsSent / referralsBooked /
+//     referredBookings are function-written (teamRecommend, onReferralBooked)
+//     - protected. vendors.team (the curated crew) is vendor-writable.
+//     inquiries may carry referredBy on create (the couple's own write) and
+//     messages may carry a teamRec map (function-written; the key is added to
+//     the messages allowlist so client reads/edits are unaffected).
+//     couples/{cid}/recs is covered by the generic couple subcollection rule.
+// Build ID: JC-LAZO-RULES-0913-014
+// Changes from JC-LAZO-RULES-0913-013:
+//   + NEW /hellos/{id}: a vendor's outreach log (weekly cap). Vendor reads
+//     their own; every write is the helloSend callable.
+//   couples.hellosOk (opt out of vendor hellos) is an ordinary couple field.
+// Build ID: JC-LAZO-RULES-0913-013
+// Changes from JC-LAZO-RULES-0913-012:
+//   + vendors.showcases / showcaseCount (the public "real weddings" strip)
+//     are function-written only (galleryShowcase callable) - protected.
+//     vendors.prefs ("who I work with") is ordinary vendor-writable.
+// Build ID: JC-LAZO-RULES-0913-012
+// Changes from JC-LAZO-RULES-0913-011:
+//   + vendors.mcp (the assistant connector's token hash) is function-written
+//     only (mcpToken callable) - added to the protected keys.
+// Build ID: JC-LAZO-RULES-0913-011
+// Changes from JC-LAZO-RULES-0913-010:
+//   + NEW /consults/{id}: booked calls and tours. The vendor (owner/manager)
+//     and the couple read their own; every write is a scheduler function
+//     (consultBook / consultCancel / consultReminderSweep, admin SDK).
+//     vendors.scheduler is an ordinary vendor-writable field.
+// Build ID: JC-LAZO-RULES-0913-010
+// Changes from JC-LAZO-RULES-0913-009:
+//   + inquiries: vendors may set stage (pipeline column) and tags.
+//   + NEW /inquiries/{id}/tasks: the vendor (owner/manager) has full CRUD;
+//     the couple reads, and may tick off a task assigned to them (done /
+//     doneAt only). Roll-ups openTasks/nextTaskAt/nextTaskTitle on the
+//     inquiry are written by onTaskWritten (admin SDK) - not by clients.
+//   + vendors.pipeline (custom stages) and vendors.tagPalette are ordinary
+//     vendor-writable fields - no change needed.
+// Build ID: JC-LAZO-RULES-0913-009
+// Changes from JC-LAZO-RULES-0912-008:
+//   + vendors.payments is function-written only (whopVendorConnect /
+//     whopVendorDisconnect set processor + whopCompanyId). Vendors cannot
+//     point their own rail at someone else's Whop business.
+//   Payment plans need nothing else: installments are ordinary invoice docs
+//   (vendor create/update, both parties read, collection-group read for the
+//   Money card), and planCreate / paymentPlanSweep / whopAppWebhook write
+//   with the admin SDK.
+// Build ID: JC-LAZO-RULES-0912-008
+// Changes from JC-LAZO-RULES-0912-007:
+//   + NEW /galleries/{slug}: post-wedding delivery galleries (Pro Studio).
+//     World-readable like weddingSites - the worker hydrates /g/{slug}
+//     over Firestore REST with no credentials. The doc therefore never
+//     holds the passcode, only passcodeHash (sha256), which the worker
+//     compares. All writes go through the galleries callables (admin SDK).
+// Build ID: JC-LAZO-RULES-0912-007
+// Changes from JC-LAZO-RULES-0912-006:
+//   + NEW /featureRequests: the vendor Ideas board. Signed-in read; the
+//     author creates (validated); a vote adds or removes exactly the voter
+//     and moves the count by exactly one; only admins change status or reply.
+//     Bug reports need no change - supportTickets already accepts
+//     'Report a bug' with the auto-captured details inside 'context'.
+// Build ID: JC-LAZO-RULES-0912-006
+// Changes from JC-LAZO-RULES-0907-004:
+//   + /couples/{cid}/musicRequests: validated public create (guests request
+//     songs from meetlazo.com/w/{slug}/requests through the worker; no
+//     account). The couple's read/update/delete still comes from the
+//     generic couples/{uid}/{colId}/{docId} rule.
+//   + NEW /seatingShares/{token}: read-only snapshot of a couple's seating
+//     chart published under a random token; anyone with the token reads,
+//     only the couple writes/removes.
+// Build ID: JC-LAZO-RULES-0907-004
+// Changes from JC-LAZO-RULES-0907-003: vendors can't write bookedCount (nightly job only).
+// Build ID: JC-LAZO-RULES-0907-003
+// Changes from JC-LAZO-RULES-0820-002:
+//   + coupleAccess(cid): the owner OR a partner whose users.coupleUid
+//     points at that plan (set only by the redeemCoupleInvite callable).
+//     Applied to couples, inquiries and their subcollections, reviews,
+//     weddingSites and its subcollections.
+//   + vendorAccess(vendorId): the claimant OR a manager whose users.vendorId
+//     points at that vendor with vendorRole == 'manager' (set only by the
+//     redeemVendorInvite callable). Applied everywhere claimedBy was checked.
+//   + users: owners can no longer touch vendorId, coupleUid or vendorRole.
+//   + inquiries: the couple may close the loop - status 'lost' with
+//     lostReason / lostNote / lostAt. Vendor-side keys unchanged.
+//   + messages: 'system' key allowed (the close-the-loop farewell).
+//   + NEW /vendorInvites and /coupleInvites (creator creates/reads/revokes).
+//   + NEW /metroStats (signed-in read; nightly job writes).
+//   + NEW /vendorPulse (server only; explicit deny).
+//   + collection-group read on invoices for the vendor (Money card), matching
+//     the existing contracts group rule.
+// Prior changes retained: supportTickets, claim-aware isAdmin(), God Mode read.
+// ============================================================
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isAdmin() {
+      return signedIn()
+        && (request.auth.token.admin == true
+            || exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    function isOwnerAdmin() {
+      return isAdmin()
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid))
+             .data.role == 'owner';
+    }
+    // Two people plan a wedding. The partner's users doc names the plan.
+    function coupleAccess(cid) {
+      return signedIn()
+        && (request.auth.uid == cid
+            || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                && get(/databases/$(database)/documents/users/$(request.auth.uid))
+                     .data.coupleUid == cid));
+    }
+    // The claimant, or an invited manager.
+    function vendorAccess(vendorId) {
+      return signedIn()
+        && (get(/databases/$(database)/documents/vendors/$(vendorId))
+              .data.claimedBy == request.auth.uid
+            || (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                && get(/databases/$(database)/documents/users/$(request.auth.uid))
+                     .data.vendorId == vendorId
+                && get(/databases/$(database)/documents/users/$(request.auth.uid))
+                     .data.vendorRole == 'manager'));
+    }
+    function inqCoupleUid(inquiryId) {
+      return get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.coupleUid;
+    }
+    function inqVendorId(inquiryId) {
+      return get(/databases/$(database)/documents/inquiries/$(inquiryId)).data.vendorId;
+    }
+
+    // JC-LAZO-SAFETY-0918-001: true when the couple has blocked or reported this
+    // thread. Only the blockVendor / reportVendor callables set it (Admin SDK),
+    // so a vendor cannot clear it - see the inquiries update rule.
+    function inqBlocked(inquiryId) {
+      return get(/databases/$(database)/documents/inquiries/$(inquiryId))
+               .data.get('blockedByCouple', false) == true;
+    }
+
+    // ---- GOD MODE READ (admin dashboard) ----
+    match /{document=**} {
+      allow read: if isAdmin();
+    }
+
+    match /admins/{adminUid} {
+      allow read: if isAdmin();
+      allow create, update, delete: if isOwnerAdmin();
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow delete: if false;
+      // v009: 'payments' (processor, whopCompanyId) is set only by the
+      // whopVendorConnect / whopVendorDisconnect callables.
+      allow update: if isAdmin()
+        || (vendorAccess(vendorId)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['verified','claimStatus','claimedBy','score','metroId',
+                      'placeId','source','priceRangeVerified','seededAt','badges',
+                      'rank','views','statsUpdatedAt','bookedCount','payments','mcp',
+                      'showcases','showcaseCount','referralsSent','referralsBooked',
+                      'referredBookings']));
+
+      match /score/{doc} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if signedIn()
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.status == 'pending_verification'
+          && request.resource.data.keys().hasOnly(
+               ['authorUid','rating','dims','text','weddingDate',
+                'status','createdAt','contractUploadPath']);
+        allow update, delete: if false;
+      }
+
+      // LAZO PRO STUDIO — Wave 1: contract templates (owner or manager)
+      match /contractTemplates/{templateId} {
+        allow read, create, update, delete: if vendorAccess(vendorId);
+      }
+    }
+
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(
+             ['email','display_name','photo_url','uid','created_time',
+              'phone_number','role','vendorId','tosAcceptedAt'])
+        && (!('role' in request.resource.data)
+            || request.resource.data.role in ['couple','vendor'])
+        && (!('vendorId' in request.resource.data)
+            || request.resource.data.vendorId == null);
+      allow update: if (isAdmin()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['vendorId','vendorRole','coupleUid']))
+        || (isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+             .hasAny(['vendorId','vendorRole','coupleUid'])
+        && (!request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['role'])
+            || ((!('role' in resource.data) || resource.data.role == null)
+                && request.resource.data.role in ['couple','vendor'])));
+      allow delete: if false;
+    }
+
+    match /claimRequests/{requestId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(
+             ['uid','email','vendorId','businessName','metroId',
+              'status','createdAt','claimantRole','businessEmail',
+              'businessPhone','proofPath','legalEntityName','reverify']);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    match /listingRequests/{requestId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(
+             ['uid','email','businessName','phone','website','metroId',
+              'categories','serviceArea','status','createdAt','proofPath',
+              'legalEntityName']);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // JC-LAZO-SAFETY-0918-001: abuse reports. Created exclusively by the
+    // reportVendor callable through the Admin SDK, so no client - couple or
+    // vendor - can forge, read, alter or delete one. Reviewed in God Mode.
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','resolution','resolvedAt','resolvedBy']);
+      allow create, delete: if false;
+    }
+
+    match /couples/{uid} {
+      allow read, write: if coupleAccess(uid);
+      match /{colId}/{docId} { allow read, write: if coupleAccess(uid); }
+
+      // v006: guests request songs from the couple's site without an account.
+      // The worker (meetlazo.com/w/{slug}/requests -> /api/song-request)
+      // writes here over Firestore REST; the couple manages them above.
+      match /musicRequests/{reqId} {
+        allow create: if request.resource.data.keys().hasOnly(
+              ['guest','song','artist','note','status','source','createdAt'])
+          && request.resource.data.song is string
+          && request.resource.data.song.size() > 0
+          && request.resource.data.song.size() <= 200
+          && request.resource.data.guest is string
+          && request.resource.data.guest.size() <= 80
+          && request.resource.data.artist is string
+          && request.resource.data.artist.size() <= 120
+          && request.resource.data.note is string
+          && request.resource.data.note.size() <= 300
+          && request.resource.data.status == 'new'
+          && request.resource.data.source == 'site'
+          && request.resource.data.createdAt is timestamp;
+      }
+    }
+
+    // v006: a read-only snapshot of a couple's seating chart, published by
+    // the widget under a random 24-char token for planners/vendors to view.
+    match /seatingShares/{token} {
+      allow read: if true;
+      allow create: if coupleAccess(request.resource.data.coupleUid);
+      allow update: if coupleAccess(resource.data.coupleUid)
+                    && request.resource.data.coupleUid == resource.data.coupleUid;
+      allow delete: if coupleAccess(resource.data.coupleUid);
+    }
+
+    // Reviews written from inside a Lazo thread. The couple booked through
+    // the platform, so the booking is the verification - but they may only
+    // review a vendor they actually have an inquiry with.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if coupleAccess(request.resource.data.coupleUid)
+        && request.resource.data.keys().hasOnly(
+             ['vendorId','inquiryId','coupleUid','coupleName','rating',
+              'text','status','source','createdAt'])
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5
+        && request.resource.data.status == 'published'
+        && inqCoupleUid(request.resource.data.inquiryId) == request.resource.data.coupleUid;
+      allow update, delete: if false;
+    }
+
+    match /inquiries/{inquiryId} {
+      allow create: if coupleAccess(request.resource.data.coupleUid)
+        && request.resource.data.keys().hasAll(['coupleUid','vendorId','structuredIntent']);
+      allow read: if coupleAccess(resource.data.coupleUid)
+        || vendorAccess(resource.data.vendorId);
+      allow update: if (vendorAccess(resource.data.vendorId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','vendorReply','respondedAt','bookedAt','bookedBy',
+                       'seenByVendorAt','vendorLastReadAt','vendorActiveAt','vendorTypingAt',
+                       'questionnaireStatus','pendingQuestionnaireId',
+                       'questionnaireUpdatedAt',
+                       'invoiceStatus','invoiceUpdatedAt','lastInvoiceId',
+                       'deliveredAt','sneakPeekSentAt','teaserSentAt',
+                       'unbookedAt','unbookReason','unbookLabel',
+                       'stage','tags']))
+        || (coupleAccess(resource.data.coupleUid)
+        && ((request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['questionnaireStatus','questionnaireUpdatedAt'])
+        && request.resource.data.questionnaireStatus == 'completed')
+            || request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['coupleLastReadAt','coupleActiveAt','coupleTypingAt'])
+            || request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['reviewOptOut'])
+            // close the loop: the couple went another direction
+            || (request.resource.data.diff(resource.data).affectedKeys()
+                 .hasOnly(['status','lostReason','lostNote','lostAt'])
+                && request.resource.data.status == 'lost'
+                && resource.data.status != 'booked')));
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(
+               ['senderRole','text','at','attachment','sneakPeek','teaser','system',
+                'teamRec'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() < 3000
+          && (request.resource.data.text.size() > 0
+              || request.resource.data.keys().hasAny(
+                   ['attachment','sneakPeek','teaser']))
+          && ((request.resource.data.senderRole == 'couple'
+               && coupleAccess(inqCoupleUid(inquiryId)))
+              || (request.resource.data.senderRole == 'vendor'
+               && vendorAccess(inqVendorId(inquiryId))
+               // JC-LAZO-SAFETY-0918-001: a couple who blocked this vendor stops
+               // receiving messages. In the rules rather than the UI so it holds
+               // against a direct API call, which is the only version that counts
+               // when someone has told us they feel unsafe.
+               && !inqBlocked(inquiryId)));
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow update: if signedIn()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['text','editedAt'])
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() < 3000
+          && ((resource.data.senderRole == 'couple'
+               && coupleAccess(inqCoupleUid(inquiryId)))
+              || (resource.data.senderRole == 'vendor'
+               && vendorAccess(inqVendorId(inquiryId))));
+        allow delete: if false;
+      }
+
+      match /proposals/{proposalId} {
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(
+               ['title','price','note','includes','validUntil',
+                'status','createdAt'])
+          && request.resource.data.status == 'sent'
+          && vendorAccess(inqVendorId(inquiryId));
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow update: if coupleAccess(inqCoupleUid(inquiryId))
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','respondedAt'])
+          && request.resource.data.status in ['accepted','declined'];
+        allow delete: if false;
+      }
+
+      // LAZO PRO STUDIO — Wave 1: generated contracts (function-written; read-only to parties)
+      match /contracts/{contractId} {
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow create, update, delete: if false;
+      }
+
+      match /invoices/{invoiceId} {
+        allow create, update: if vendorAccess(inqVendorId(inquiryId));
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow delete: if false;
+      }
+
+      // v010: tasks. Vendor-side CRUD; the couple can only tick their own off.
+      match /tasks/{taskId} {
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow create, delete: if vendorAccess(inqVendorId(inquiryId));
+        allow update: if vendorAccess(inqVendorId(inquiryId))
+          || (coupleAccess(inqCoupleUid(inquiryId))
+              && resource.data.assignedTo == 'couple'
+              && request.resource.data.diff(resource.data).affectedKeys()
+                   .hasOnly(['done','doneAt']));
+      }
+
+      // LAZO PRO STUDIO — Wave 1: questionnaires (vendor sends; couple completes)
+      match /questionnaires/{qId} {
+        allow create: if vendorAccess(inqVendorId(inquiryId))
+          && request.resource.data.keys().hasOnly(
+               ['type','title','questions','answers','status','createdAt',
+                'vendorName'])
+          && request.resource.data.status == 'sent';
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow update: if coupleAccess(inqCoupleUid(inquiryId))
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['answers','status','completedAt'])
+          && request.resource.data.status in ['completed'];
+        allow delete: if vendorAccess(inqVendorId(inquiryId));
+      }
+    }
+
+    match /weddingSites/{slug} {
+      allow read: if true;
+      allow create: if coupleAccess(request.resource.data.coupleUid);
+      allow update, delete: if coupleAccess(resource.data.coupleUid);
+
+      match /rsvps/{rsvpId} {
+        allow create: if request.resource.data.keys().hasOnly(
+              ['name','email','attending','plusOnes','meal','note','song','createdAt','invite','events'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() < 120
+          && request.resource.data.attending in ['yes','no'];
+        allow read, delete: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+        allow update: if false;
+      }
+
+      match /chapters/{chapterId} {
+        allow read: if true;
+        allow create, update, delete: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+
+      // JC-LAZO-LIVE-0929: the site, live. All three are mirrored here by the
+      // couple's dashboard because the sources (guests, dayof, musicRequests)
+      // are couple-private and the worker/page read Firestore REST anonymously.
+      //   seating/main  {guests:[{n,p,t,s}]}  "Find your seat" on the site
+      //   invites/{guestId}  personal RSVP links: get by token only, never list
+      //   playlist/main  {songs:[...]}  the DJ's page at /w/{slug}/playlist
+      match /seating/{doc} {
+        allow read: if true;
+        allow write: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+      match /invites/{token} {
+        allow get: if true;
+        allow list: if false;
+        allow write: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+      match /playlist/{doc} {
+        allow read: if true;
+        allow write: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+      }
+
+      match /guestbook/{noteId} {
+        allow create: if request.resource.data.keys().hasOnly(
+              ['name','message','createdAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() < 80
+          && request.resource.data.message is string
+          && request.resource.data.message.size() > 0
+          && request.resource.data.message.size() < 400;
+        allow read: if true;
+        allow delete: if coupleAccess(
+          get(/databases/$(database)/documents/weddingSites/$(slug)).data.coupleUid);
+        allow update: if false;
+      }
+    }
+
+    // ---- v008: LAZO PRO STUDIO — post-wedding delivery galleries.
+    // World-readable so the worker can hydrate meetlazo.com/g/{slug} over
+    // Firestore REST with no credentials (same shape as weddingSites). The
+    // doc never holds the passcode, only passcodeHash; the photo manifest
+    // and the photos themselves live in the lazo-galleries R2 bucket behind
+    // the worker's passcode cookie. Every write is a galleries callable.
+    match /galleries/{slug} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /supportTickets/{ticketId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'open'
+        && request.resource.data.role in ['couple','vendor']
+        && request.resource.data.keys().hasOnly(
+             ['role','uid','email','category','subject','message',
+              'vendorName','status','createdAt','context'])
+        && request.resource.data.subject is string
+        && request.resource.data.subject.size() > 0
+        && request.resource.data.subject.size() < 200
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() < 5000;
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.uid == request.auth.uid);
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','reviewedAt','reviewedBy','adminNote'])
+        && request.resource.data.status in ['open','in_progress','resolved'];
+      allow delete: if false;
+    }
+
+    // ---- v158: the vendor Ideas board. Anyone signed in reads and votes;
+    // the author creates; only admins change status / reply.
+    match /featureRequests/{ideaId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'new'
+        && request.resource.data.votes == 1
+        && request.resource.data.voters == [request.auth.uid]
+        && request.resource.data.keys().hasOnly(
+             ['title','detail','area','uid','vendorId','votes','voters',
+              'status','createdAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 6
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.detail is string
+        && request.resource.data.detail.size() <= 600;
+      // a vote: exactly one voter added or removed, count moves by one, self only
+      allow update: if (signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['votes','voters'])
+        && ((request.resource.data.voters.size() == resource.data.voters.size() + 1
+             && request.resource.data.voters.hasAll(resource.data.voters)
+             && request.resource.data.voters.hasAny([request.auth.uid])
+             && !resource.data.voters.hasAny([request.auth.uid])
+             && request.resource.data.votes == resource.data.votes + 1)
+          || (request.resource.data.voters.size() == resource.data.voters.size() - 1
+             && resource.data.voters.hasAll(request.resource.data.voters)
+             && resource.data.voters.hasAny([request.auth.uid])
+             && !request.resource.data.voters.hasAny([request.auth.uid])
+             && request.resource.data.votes == resource.data.votes - 1)))
+        || (isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','adminNote','reviewedAt','reviewedBy'])
+        && request.resource.data.status in ['new','planned','building','shipped','declined']);
+      allow delete: if isAdmin();
+    }
+
+    // ---- v151 / v91: invites. The inviter creates and reads; the callables
+    // (redeemVendorInvite, redeemCoupleInvite) accept them server-side.
+    match /vendorInvites/{inviteId} {
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(
+             ['vendorId','email','role','code','status','createdBy','createdAt'])
+        && vendorAccess(request.resource.data.vendorId);
+      allow read: if signedIn() && resource.data.createdBy == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','revokedAt'])
+        && request.resource.data.status == 'revoked';
+      allow delete: if false;
+    }
+
+    match /coupleInvites/{inviteId} {
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.keys().hasOnly(
+             ['coupleUid','email','code','status','createdBy','createdAt'])
+        && coupleAccess(request.resource.data.coupleUid);
+      allow read: if signedIn() && resource.data.createdBy == request.auth.uid;
+      allow update: if signedIn()
+        && resource.data.createdBy == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status','revokedAt'])
+        && request.resource.data.status == 'revoked';
+      allow delete: if false;
+    }
+
+    // ---- nightly benchmarks and price ranges (functions-dashboard writes)
+    match /metroStats/{key} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // ---- views beacon counters (server only)
+    match /vendorPulse/{vendorId}/{document=**} {
+      allow read, write: if false;
+    }
+
+    // v014: hellos - the outreach log; vendor reads their own.
+    match /hellos/{helloId} {
+      allow read: if vendorAccess(resource.data.vendorId);
+      allow write: if false;
+    }
+
+    // v011: consults - read your own, function-written.
+    match /consults/{consultId} {
+      allow read: if vendorAccess(resource.data.vendorId)
+        || (resource.data.coupleUid is string
+            && coupleAccess(resource.data.coupleUid));
+      allow write: if false;
+    }
+
+    match /bookings/{bookingId} {
+      allow read: if signedIn()
+        && (resource.data.coupleUid == request.auth.uid
+            || resource.data.vendorOwnerUid == request.auth.uid);
+      allow write: if false;
+    }
+
+    match /analytics/{period} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /stats/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /metros/{metroId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // LAZO PRO — Wave 2: billing (function-written; parties read their own)
+    match /proIntents/{intentId} {
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /proSubscriptions/{vendorId} {
+      allow read: if vendorAccess(vendorId);
+      allow create, update, delete: if false;
+    }
+
+    // LAZO PRO STUDIO — Studio mode: vendor reads own contracts across all inquiries
+    match /{path=**}/contracts/{contractId} {
+      allow read: if vendorAccess(resource.data.vendorId);
+    }
+
+    // v151: the Money card and the morning brief read invoices across all
+    // inquiries the same way (invoice docs carry vendorId).
+    match /{path=**}/invoices/{invoiceId} {
+      allow read: if vendorAccess(resource.data.vendorId);
+    }
+
+
+    // ============================================================
+    // JC-LAZO-TRACK-0916-001 — visitor analytics (God Mode > Visitors)
+    //
+    // lazo-track.js writes these from meetlazo.com with the public web key and
+    // no sign-in, the same way any pageview beacon does. That means anyone who
+    // finds the endpoint can write a row, so these rules keep the blast radius
+    // small rather than pretending the write is trusted:
+    //   · only the fields the tracker actually sends (no arbitrary payloads)
+    //   · sid must match the doc id, so a write can't masquerade as another visit
+    //   · free-text capped, page_count ceilinged (no using this as free storage)
+    //   · nobody but an admin can READ a visit, ever
+    //   · nothing is deletable or editable after the fact
+    //
+    // The tracker commits two writes per page: a masked field update, then a
+    // transform (last_seen / page_count / first_seen). trackFields() is the
+    // union of both shapes because a transform-only write still presents the
+    // whole document to the rule.
+    // ============================================================
+    function trackFields() {
+      return [
+        'sid','page','title','device','ua','screen','lang','landing','referrer',
+        'metro','vendor','city','region','country','lat','lng','asn','org',
+        'bot','bot_why','engaged','utm_source','utm_campaign',
+        'first_seen','last_seen','page_count',
+        // set later by the inquiry flow so a visit can be tied to what it produced
+        'lead_name','lead_email','inquiry_id'
+      ];
+    }
+    function capped(d, k, n) {
+      return !(k in d) || !(d[k] is string) || d[k].size() <= n;
+    }
+    function sessionShapeOK(d, sid) {
+      return d.keys().hasOnly(trackFields())
+        && (!('sid' in d) || d.sid == sid)
+        && (!('page_count' in d) || (d.page_count is int && d.page_count > 0 && d.page_count <= 500))
+        && capped(d, 'ua', 500) && capped(d, 'title', 500) && capped(d, 'page', 500)
+        && capped(d, 'landing', 500) && capped(d, 'referrer', 500) && capped(d, 'org', 500)
+        && capped(d, 'city', 120) && capped(d, 'region', 120) && capped(d, 'country', 8)
+        && capped(d, 'metro', 80) && capped(d, 'vendor', 200)
+        && capped(d, 'engaged', 24) && capped(d, 'bot_why', 120)
+        && capped(d, 'utm_source', 200) && capped(d, 'utm_campaign', 200);
+    }
+    match /sessions/{sid} {
+      allow read: if isAdmin();
+      allow create, update: if sid.size() >= 8 && sid.size() <= 64
+        && sessionShapeOK(request.resource.data, sid);
+      allow delete: if false;
+
+      // One row per page view. Append-only: a trail can be added to but never rewritten.
+      match /hits/{hit} {
+        allow read: if isAdmin();
+        allow create: if request.resource.data.keys().hasOnly(['path','title','t'])
+          && request.resource.data.t is timestamp
+          && capped(request.resource.data, 'path', 500)
+          && capped(request.resource.data, 'title', 500);
+        allow update, delete: if false;
+      }
+    }
+    // The Visitors page reads every visit's trail in one collection-group query.
+    match /{path=**}/hits/{hit} {
+      allow read: if isAdmin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
