@@ -940,6 +940,7 @@ function attachAudio(el) {
 /* ---------- voice output: sentence-streamed ElevenLabs, browser fallback ---------- */
 let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0, currentSpeech = "";
 const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+let pendingReply = false, settleMic = async () => {};
 const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter(w => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter(w => w.length > 3); return words.length > 0 && words.filter(w => said.has(w)).length / words.length >= 0.5; };
 // One persistent <audio> element. Phones only allow playback on an element that was started by a user
 // gesture, so we unlock it on the first tap and then reuse it for every segment (no gaps, no blocked plays).
@@ -982,6 +983,7 @@ async function pumpSpeech() {
     const blob = await item.blob; if (item.gen !== speakGen) continue;
     currentSpeech = item.text;
     if (blob) {
+      if (PHONE) await settleMic();
       await new Promise(res => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
     } else {
       await new Promise(res => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .96; u.pitch = 1; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
@@ -1004,7 +1006,7 @@ function localAnswer(t) {
 }
 async function ask(text) {
   text = text.trim(); if (!text) return;
-  stopSpeaking(); addMsg("me", text); $("#q").value = "";
+  pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
   const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
   const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
   let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
@@ -1030,7 +1032,7 @@ async function ask(text) {
       }
     }
   } catch (e) { el.textContent = (full || "") + " I lost the connection to my reasoning core. " + e.message; }
-  $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) setViz("idle");
+  $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) { pendingReply = false; setViz("idle"); onSpeechEnd(); }
 }
 function handleAction(a) {
   if (a.type === "open") { const w = window.open(a.url, "_blank"); if (!w) addMsg("sys", "Popup blocked: " + a.url); }
@@ -1052,6 +1054,7 @@ async function detectMic() {
   if (SR && hasMic) { mic.hidden = false; $("#wakeWrap").hidden = false; $("#convWrap").hidden = false; setupVoice(); }
 }
 function onSpeechEnd() {
+  pendingReply = false;
   if (!hasMic || speaking || listening) return;
   if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && $("#convOn").checked) startListen(); }, 400);
   else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
@@ -1060,7 +1063,7 @@ let startListen = () => {};
 function setupVoice() {
   rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1;
   rec.onresult = (e) => { const r = e.results[e.results.length-1]; $("#coreState").textContent = "» " + r[0].transcript.slice(-40); if (r.isFinal) ask(r[0].transcript); };
-  rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) setViz("idle"); if ($("#wakeOn").checked) startWake(); };
+  rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) setViz("idle"); if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
   rec.onerror = (e) => { if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
   startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); listening = true; mic.classList.add("on"); await grabMic(); setViz("listening", micAnalyser); try { rec.start(); } catch {} };
   const stop = () => { try { rec.stop(); } catch {} };
@@ -1086,6 +1089,11 @@ function setupVoice() {
   }
   function stopWake() { if (!wake) return; const w = wake; wake = null; try { w.onend = null; w.stop(); } catch {} }
   window.stopWakeForSpeech = stopWake; window.startWakeAgain = startWake;
+  // phones: Chrome pauses audio whenever a recognizer is active, so stop them all and wait for the mic to actually close
+  settleMic = () => new Promise(res => { let pending = 0, done = false; const fin = () => { if (!done) { done = true; res(); } };
+    if (wake) { const w = wake; wake = null; pending++; w.onend = () => { pending--; if (!pending) fin(); }; try { w.abort(); } catch { pending--; } }
+    if (listening) { pending++; const prev = rec.onend; rec.onend = (e) => { rec.onend = prev; prev && prev(e); pending--; if (!pending) fin(); }; try { rec.abort(); } catch { pending--; } }
+    if (!pending) fin(); else setTimeout(fin, 700); });
   // keep a wake recognizer alive during speech in conversation mode so he can be interrupted
   const _pump = pumpSpeech; window.__origPump = _pump;
   if (!PHONE) setInterval(() => { if (speaking && ($("#convOn").checked || $("#wakeOn").checked) && !wake && !listening) startWake(); }, 800);

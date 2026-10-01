@@ -44,9 +44,15 @@ def adc_client(pid):
         from google.cloud import firestore as gcf
         creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/datastore"])
         creds = creds.with_quota_project(pid)
+        # refresh once up front so an expired Workspace session fails in a second, not after 5 minutes of retries
+        from google.auth.transport.requests import Request
+        creds.refresh(Request())
         return gcf.Client(project=pid, credentials=creds)
     except Exception as e:
-        print(f"{pid}: ADC unavailable ({type(e).__name__}: {str(e)[:120]})")
+        msg = str(e)
+        if "Reauthentication" in msg or "invalid_grant" in msg or "RefreshError" in type(e).__name__:
+            raise RuntimeError("Google sign-in expired: run `gcloud auth application-default login` on the PC")
+        print(f"{pid}: ADC unavailable ({type(e).__name__}: {msg[:120]})")
         return None
 
 
@@ -352,8 +358,10 @@ def main():
             out["businesses"][biz] = fn(db)
             print(f"{biz}: ok", json.dumps(out["businesses"][biz]["headline"]))
         except Exception as e:
-            out["businesses"][biz] = {"error": f"{type(e).__name__}: {str(e)[:160]}"}
-            print(f"{biz}: FAILED {e}"); traceback.print_exc()
+            msg = str(e)
+            out["businesses"][biz] = {"error": msg if "Google sign-in expired" in msg else f"{type(e).__name__}: {msg[:160]}"}
+            print(f"{biz}: FAILED {msg[:160]}")
+            if "Google sign-in expired" not in msg: traceback.print_exc()
     # money view: 12 months of cash-in across businesses
     allm = set()
     for b in out["businesses"].values():

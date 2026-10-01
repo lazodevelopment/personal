@@ -210,8 +210,9 @@ def main():
             r = out["sites"][biz]
             print(f"{biz}: online {r.get('online')} - today {r.get('today')} visitors, {r.get('views')} views")
         except Exception as e:
-            out["sites"][biz] = {"error": f"{type(e).__name__}: {str(e)[:120]}"}
-            print(f"{biz}: FAILED {e}")
+            msg = str(e)
+            out["sites"][biz] = {"error": msg if "Google sign-in expired" in msg else f"{type(e).__name__}: {msg[:120]}"}
+            print(f"{biz}: FAILED {msg[:160]}")
     sp = sports()
     print(f"sports: {len(sp['games'])} games, {sum(1 for g in sp['games'] if g['fav'])} for the favourites")
     if "--dry-run" in sys.argv:

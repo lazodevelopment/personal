@@ -118,6 +118,12 @@ async function runChecks(env) {
 async function watchMetrics(env, next) {
   const prev = await kv.get(env, "metrics_prev");
   await kv.put(env, "metrics_prev", next);
+  const expired = Object.entries(next.businesses || {}).filter(([, b]) => /sign-in expired|Reauthentication/i.test(b.error || "")).map(([id]) => BIZ_NAME[id]);
+  const wasExpired = Object.values(prev?.businesses || {}).some((b) => /sign-in expired|Reauthentication/i.test(b.error || ""));
+  if (expired.length && !wasExpired) {
+    await pushAlert(env, { kind: "watch", text: `Google sign-in on the PC expired: no data for ${expired.join(", ")} until you run gcloud auth application-default login` });
+    await notify(env, "Google sign-in expired", `${expired.join(", ")} metrics are paused. On the PC run: gcloud auth application-default login`, { priority: "high", tags: "key" });
+  }
   if (!prev?.businesses) return;
   const notes = [];
   for (const [id, b] of Object.entries(next.businesses || {})) {
