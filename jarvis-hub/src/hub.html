@@ -938,7 +938,9 @@ function attachAudio(el) {
 }
 
 /* ---------- voice output: sentence-streamed ElevenLabs, browser fallback ---------- */
-let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0;
+let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0, currentSpeech = "";
+const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter(w => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter(w => w.length > 3); return words.length > 0 && words.filter(w => said.has(w)).length / words.length >= 0.5; };
 // One persistent <audio> element. Phones only allow playback on an element that was started by a user
 // gesture, so we unlock it on the first tap and then reuse it for every segment (no gaps, no blocked plays).
 const player = new Audio(); player.preload = "auto"; let playerAnalyser = null, playerUnlocked = false;
@@ -968,6 +970,7 @@ $("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the
 function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
 function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
 function enqueueSpeech(segment) {
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
   const gen = speakGen;
   const item = { text: segment, gen, blob: state.cfg.tts ? fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: segment }) }).then(r => r.ok ? r.blob() : null).catch(() => null) : Promise.resolve(null) };
   speakQueue.push(item); if (!speaking) pumpSpeech();
@@ -977,6 +980,7 @@ async function pumpSpeech() {
   while (speakQueue.length) {
     const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
     const blob = await item.blob; if (item.gen !== speakGen) continue;
+    currentSpeech = item.text;
     if (blob) {
       await new Promise(res => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
     } else {
@@ -1047,7 +1051,11 @@ async function detectMic() {
   try { const devs = await navigator.mediaDevices.enumerateDevices(); hasMic = devs.some(d => d.kind === "audioinput"); } catch { hasMic = false; }
   if (SR && hasMic) { mic.hidden = false; $("#wakeWrap").hidden = false; $("#convWrap").hidden = false; setupVoice(); }
 }
-function onSpeechEnd() { if (hasMic && $("#convOn")?.checked && !listening) setTimeout(() => { if (!speaking && !listening && $("#convOn").checked) startListen(); }, 250); }
+function onSpeechEnd() {
+  if (!hasMic || speaking || listening) return;
+  if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && $("#convOn").checked) startListen(); }, 400);
+  else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
+}
 let startListen = () => {};
 function setupVoice() {
   rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1;
@@ -1068,7 +1076,7 @@ function setupVoice() {
     wake.onresult = (e) => {
       const r = e.results[e.results.length-1]; const t = r[0].transcript.toLowerCase();
       // interruption: any sustained speech while JARVIS talks stops him and takes the question
-      if (speaking && r.isFinal && t.trim().split(/\s+/).length >= 2) { stopSpeaking(); ask(t.replace(/^jarvis[,.]?\s*/, "")); return; }
+      if (speaking && r.isFinal && t.trim().split(/\s+/).length >= 2) { if (soundsLikeSelf(t)) return; stopSpeaking(); ask(t.replace(/^jarvis[,.]?\s*/, "")); return; }
       if (!r.isFinal) return;
       const m = t.match(/jarvis[,.]?\s*(.*)/); if (m) { blip(1200); if (m[1].trim().length > 2) ask(m[1]); else { stopWake(); startListen(); } }
     };
@@ -1077,9 +1085,12 @@ function setupVoice() {
     try { wake.start(); } catch {}
   }
   function stopWake() { if (!wake) return; const w = wake; wake = null; try { w.onend = null; w.stop(); } catch {} }
+  window.stopWakeForSpeech = stopWake; window.startWakeAgain = startWake;
   // keep a wake recognizer alive during speech in conversation mode so he can be interrupted
   const _pump = pumpSpeech; window.__origPump = _pump;
-  setInterval(() => { if (speaking && ($("#convOn").checked || $("#wakeOn").checked) && !wake && !listening) startWake(); }, 800);
+  if (!PHONE) setInterval(() => { if (speaking && ($("#convOn").checked || $("#wakeOn").checked) && !wake && !listening) startWake(); }, 800);
+  // phones: the mic must stay closed while JARVIS talks, otherwise Chrome pauses his audio; tap the core to interrupt
+  $("#core").onclick = () => { if (speaking) { stopSpeaking(); if (hasMic && ($("#convOn").checked || $("#wakeOn").checked)) startListen(); } };
 }
 async function grabMic() { try { if (!micStream) { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaStreamSource(micStream); micAnalyser = actx.createAnalyser(); micAnalyser.fftSize = 512; src.connect(micAnalyser); } } catch { micAnalyser = null; } }
 function releaseMic() { /* keep the stream for quick restarts; browsers show the indicator only while active */ }
