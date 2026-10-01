@@ -396,7 +396,7 @@ async function chat(request, env, ctx) {
       const actions = []; let reply = "";
       for (let i = 0; i < 4; i++) {
         const stream = client.beta.messages.stream({
-          model: MODEL, max_tokens: 800, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+          model: MODEL, max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
           system: [{ type: "text", text: BRAIN_SYSTEM + "\nKnown links: " + JSON.stringify(LINKS), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }],
           tools: BRAIN_TOOLS, messages,
         });
@@ -440,13 +440,19 @@ async function makeMorning(env, request, slot) {
   const context = await buildContext(env, request);
   const history = (await kv.get(env, "briefs")) || [];
   const prevToday = history.filter((b) => b.at.slice(0, 10) === new Date().toISOString().slice(0, 10) && b.slot !== slot).map((b) => `${b.slot.toUpperCase()} (${b.at}): ${b.text}`).join("\n\n");
-  const r = await client.beta.messages.create({
-    model: MODEL, max_tokens: 1200, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+  const params = {
+    model: MODEL, max_tokens: 6000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
     system: BRAIN_SYSTEM + "\nYou are composing one of Jesse's three daily spoken briefs. " + SLOT_PROMPTS[slot] + " Flowing prose, no lists, no headers. For Lazo, report ONLY sign-ups (new couples, new vendor claims); never mention unanswered vendor inquiries in a brief.",
     messages: [{ role: "user", content: `Compose the ${slot} brief.\n\n${prevToday ? "EARLIER BRIEFS TODAY (do not repeat their content):\n" + prevToday + "\n\n" : ""}LIVE CONTEXT:\n${context}` }],
-  });
-  const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim();
-  const brief = { id: uid(), slot, at: new Date().toISOString(), text, audio: false };
+  };
+  let text = "", r;
+  for (let i = 0; i < 3; i++) {
+    r = await client.beta.messages.create(params);
+    text = (text + " " + r.content.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim()).trim();
+    if (r.stop_reason !== "max_tokens") break;
+    params.messages = [...params.messages, { role: "assistant", content: r.content }, { role: "user", content: "You were cut off. Continue exactly where you stopped and finish the brief; do not restart or repeat anything." }];
+  }
+  const brief = { id: uid(), slot, at: new Date().toISOString(), text, audio: false, debug: { stop: r?.stop_reason, details: r?.stop_details || null, out: r?.usage?.output_tokens, blocks: (r?.content || []).map((b) => b.type + (b.type === "text" ? ":" + b.text.length : "")), model: r?.model } };
   if (env.ELEVENLABS_API_KEY && text) {
     try { const a = await elevenlabs(env, text); if (a.ok) { await env.HUB.put("brief_audio_" + brief.id, await a.arrayBuffer(), { expirationTtl: 8 * 86400 }); brief.audio = true; } } catch {}
   }
@@ -476,7 +482,7 @@ function elevenlabs(env, text, format = "mp3_44100_128") {
   const voice = env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
   return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=${format}`, {
     method: "POST", headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ text: String(text).slice(0, 2500), model_id: "eleven_turbo_v2_5", voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
+    body: JSON.stringify({ text: String(text).slice(0, 4800), model_id: "eleven_turbo_v2_5", voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
   });
 }
 async function tts(request, env) {
