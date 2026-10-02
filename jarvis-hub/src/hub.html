@@ -227,8 +227,8 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .ac .cs{position:absolute;left:18px;top:-2px;font-family:var(--mono);font-size:9px;color:#cfefff;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
 .wcam{width:15px;height:15px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:.9}
 .wcam svg{width:100%;height:100%;display:block}.wcam:hover{opacity:1;transform:translate(-50%,-50%) scale(1.3)}
-.cam{width:14px;height:14px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:.85}
-.cam svg{width:100%;height:100%;display:block}.cam:hover{opacity:1;transform:translate(-50%,-50%) scale(1.3)}
+.gcam{width:14px;height:14px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:.85}
+.gcam svg{width:100%;height:100%;display:block}.gcam:hover{opacity:1;transform:translate(-50%,-50%) scale(1.3)}
 .camview{border:1px solid var(--line2);background:rgba(4,10,20,.8);padding:8px;display:grid;gap:6px}
 .camview img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#000;border:1px solid var(--line)}
 .camhead{display:flex;justify-content:space-between;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:#fff}
@@ -1137,9 +1137,14 @@ function toEmbed(u) {
     if (url.hostname.includes("youtube.com")) { if (url.pathname.startsWith("/embed/")) return url.href; const v = url.searchParams.get("v"); if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1`; const live = url.pathname.match(/\/live\/([\w-]+)/); if (live) return `https://www.youtube.com/embed/${live[1]}?autoplay=1&mute=1`; const ch = url.pathname.match(/\/(@[\w.-]+|channel\/[\w-]+)/); if (ch) return `https://www.youtube.com/embed/live_stream?channel=${ch[1].replace("channel/","")}&autoplay=1&mute=1`; }
     return null; } catch { return undefined; }
 }
+// YouTube refuses embeds that arrive without the page's origin (Error 153): send it explicitly
+function ytSrc(u) { try { const x = new URL(u); if (/youtube(-nocookie)?\.com$/.test(x.hostname)) { x.searchParams.set("origin", location.origin); x.searchParams.set("playsinline", "1"); x.searchParams.set("enablejsapi", "1"); } return x.href; } catch { return u; } }
+const IFR = 'allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen';
+let camsKeyR = "";
 function renderCams() {
-  const cams = state.webcams || []; $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
-  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<iframe src="${esc(c.embed)}" title="${esc(c.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
+  const cams = state.webcams || []; const k = JSON.stringify(cams); if (k === camsKeyR) return; camsKeyR = k; // redrawing restarts every stream
+  $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
+  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
 }
 $("#addcam").onsubmit = async (e) => { e.preventDefault(); const raw = $("#camUrl").value.trim(); const embed = toEmbed(raw); if (embed === undefined) return; const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); };
 $("#cams").onclick = async (e) => { const b = e.target.closest(".x"); if (!b) return; state.webcams.splice(+b.dataset.i, 1); renderCams(); await save({ webcams: state.webcams }); };
@@ -1395,7 +1400,7 @@ function enterWall() {
   const cams = (state.webcams || []).filter(c => c.embed); if (!cams.length) return speak("No embeddable feeds for wall mode yet.");
   document.body.classList.add("wall"); history.replaceState(null, "", "/wall");
   const g = $("#wallGrid"); g.style.setProperty("--cols", Math.ceil(Math.sqrt(cams.length)));
-  g.innerHTML = cams.map(c => `<div class="cell"><iframe src="${esc(c.embed)}" allow="autoplay; encrypted-media" title="${esc(c.name)}"></iframe><span class="lbl">${esc(c.name)}</span></div>`).join("");
+  g.innerHTML = cams.map(c => `<div class="cell"><iframe src="${esc(ytSrc(c.embed))}" ${IFR} title="${esc(c.name)}"></iframe><span class="lbl">${esc(c.name)}</span></div>`).join("");
   g.querySelectorAll(".cell").forEach(cell => { const hit = document.createElement("div"); hit.style.cssText = "position:absolute;inset:0;cursor:pointer"; hit.onclick = () => { const solo = cell.classList.contains("solo"); g.querySelectorAll(".cell").forEach(x => x.classList.remove("solo")); if (!solo) cell.classList.add("solo"); }; hit.ondblclick = (e) => { e.stopPropagation(); hit.remove(); }; cell.appendChild(hit); });
   $("#wallName").textContent = `${cams.length} LIVE FEEDS · click to enlarge · double-click for controls`; wallInfo(); wallTimer = setInterval(wallInfo, 60000);
   document.documentElement.requestFullscreen?.().catch(() => {});
@@ -1517,7 +1522,7 @@ function openWebcam(w) {
 async function loadGlobal() { try { const d = await fetch("/api/world/global").then(r => r.json()); globalAc = d.ac || []; globalAt = d.at ? new Date(d.at).getTime() : Date.now(); } catch {} renderWorld(false); }
 function camMarker(c) {
   const key = c.img; let el = camEls.get(key);
-  if (!el) { el = document.createElement("div"); el.className = "cam"; el.innerHTML = CAM_SVG; el.title = c.n; el.onclick = () => openCam(c); camEls.set(key, el); }
+  if (!el) { el = document.createElement("div"); el.className = "gcam"; el.innerHTML = CAM_SVG; el.title = c.n; el.onclick = () => openCam(c); camEls.set(key, el); }
   return el;
 }
 let camTimer = null;
