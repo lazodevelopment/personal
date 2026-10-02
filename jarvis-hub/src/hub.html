@@ -241,6 +241,15 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .homepin::after{content:"";display:block;width:8px;height:8px;margin:2px auto 0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(25,211,255,.5),0 0 12px rgba(25,211,255,1)}
 .wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
 @media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globeBox,#globe{min-height:380px}}
+/* radio */
+.radio{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.radio input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--cyan)}
+.rplay{width:52px;height:52px;border-radius:50%;border:1px solid var(--cyan);background:rgba(var(--glow),.1);color:var(--cyan2);font-size:18px;cursor:pointer}
+.rplay.on{background:rgba(var(--glow),.25);box-shadow:0 0 18px rgba(var(--glow),.5);color:#fff}
+.rnow{min-width:0}.rnow b{display:block;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rnow small{color:var(--dim);font-size:11px}
+.rst{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rst button{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:5px 8px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer}
+.rst button.sel{border-color:var(--cyan);color:#fff;background:rgba(var(--glow),.1)}
 /* scanner */
 .scan{display:grid;gap:6px}
 .scan a{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:8px 10px;color:var(--fg);text-decoration:none}
@@ -534,15 +543,25 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div class="empty" id="scanNote" style="margin-top:8px"></div>
   </section>
 
-  <section class="panel c5" data-v="ops" id="decisionsPanel">
+  <section class="panel c4" data-v="ops" id="decisionsPanel">
     <h2>Decisions <span class="sub" id="decSub"></span></h2>
     <div class="pend" id="decisions"><div class="empty">Nothing waiting on you.</div></div>
   </section>
 
-  <section class="panel c5" data-v="ops">
+  <section class="panel c4" data-v="ops">
     <h2>Upcoming <span class="sub" id="evSub"></span></h2>
     <ul class="events" id="events"><li class="empty">Bookings and calendar items appear here.</li></ul>
     <div class="empty" id="calHint" style="margin-top:8px"></div>
+  </section>
+
+  <section class="panel c4" data-v="jarvis ops" id="radioPanel">
+    <h2>Radio <span class="sub" id="radioSub">Global · live from London</span></h2>
+    <div class="radio">
+      <button class="rplay" id="radioPlay" aria-label="Play radio">▶</button>
+      <div class="rnow"><b id="radioName">Classic FM</b><small id="radioState">off</small></div>
+      <input type="range" id="radioVol" min="0" max="100" value="70" aria-label="Radio volume">
+    </div>
+    <div class="rst" id="radioStations"></div>
   </section>
 
   <section class="panel c7" data-v="ops" id="sportsPanel">
@@ -1106,7 +1125,7 @@ function drawViz() {
     let v;
     if (data) { const idx = Math.floor(Math.pow(i / bars, 1.6) * (data.length * 0.6)); v = data[idx] / 255; }
     else { fakePhase += 0.0009; v = 0.25 + 0.35 * Math.abs(Math.sin(i * 0.5 + fakePhase * 40)) * (0.6 + 0.4 * Math.sin(fakePhase * 90 + i)); }
-    if (vizMode === "listening") v = v * 0.7;
+    if (vizMode === "listening") v = v * 0.7; else if (vizMode === "radio") v = v * 0.6;
     const len = 6 + v * 46, a = (i / bars) * Math.PI * 2 - Math.PI / 2;
     const x1 = cx + Math.cos(a) * R, y1 = cy + Math.sin(a) * R, x2 = cx + Math.cos(a) * (R + len), y2 = cy + Math.sin(a) * (R + len);
     vctx.strokeStyle = `rgba(${vizMode === "listening" ? "255,179,64" : glow},${0.35 + v * 0.65})`; vctx.lineWidth = 3; vctx.lineCap = "round";
@@ -1118,7 +1137,7 @@ function drawViz() {
   vctx.fillStyle = g; vctx.beginPath(); vctx.arc(cx, cy, R, 0, Math.PI * 2); vctx.fill();
   vizRaf = requestAnimationFrame(drawViz);
 }
-function setViz(mode, node) { vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (mode !== "idle" && !vizRaf) drawViz(); if (mode === "idle") { vctx.clearRect(0, 0, viz.width, viz.height); } }
+function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode === "radio" ? "♪ " + RADIO[radioIdx].n.toLowerCase() : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (mode !== "idle" && !vizRaf) drawViz(); if (mode === "idle") { vctx.clearRect(0, 0, viz.width, viz.height); } }
 function attachAudio(el) {
   try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(el); const an = actx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = .8; src.connect(an); an.connect(actx.destination); return an; } catch { return null; }
 }
@@ -1154,7 +1173,7 @@ function pickVoices() {
 }
 try { speechSynthesis.onvoiceschanged = pickVoices; } catch {}
 $("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the ElevenLabs voice."); if (!VOICES.length) return; VOICE = VOICES[(VOICES.indexOf(VOICE) + 1) % VOICES.length]; try { localStorage.setItem("jarvisVoice", VOICE.name); } catch {} pickVoices(); speak("This is the " + clean(VOICE.name) + " voice."); };
-function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
+function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
 function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
 function enqueueSpeech(segment) {
   if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
@@ -1164,7 +1183,7 @@ function enqueueSpeech(segment) {
   speakQueue.push(item); if (!speaking) pumpSpeech();
 }
 async function pumpSpeech() {
-  speaking = true;
+  speaking = true; radioDuck(true);
   while (speakQueue.length) {
     const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
     const blob = await item.blob; if (item.gen !== speakGen) continue;
@@ -1182,9 +1201,9 @@ async function pumpSpeech() {
       await new Promise(res => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .96; u.pitch = 1; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
     }
   }
-  speaking = false; setViz("idle"); onSpeechEnd();
+  speaking = false; radioDuck(false); setViz("idle"); onSpeechEnd();
 }
-function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); player.src = url; setViz("speaking", playerViz()); if (btn) btn.textContent = "❚❚ PLAYING"; player.onended = player.onerror = () => { setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; player.play().catch(() => setViz("idle")); }
+function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); radioDuck(true); player.src = url; setViz("speaking", playerViz()); if (btn) btn.textContent = "❚❚ PLAYING"; player.onended = player.onerror = () => { radioDuck(false); setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; player.play().catch(() => setViz("idle")); }
 
 /* ---------- the brain: streaming chat ---------- */
 function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
@@ -1194,6 +1213,10 @@ function localAnswer(t) {
   if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
   if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
   if (/^(play|read) (the )?(morning )?brief/.test(t)) { if (state.morning?.audio) { playUrl("/api/morning/audio?id=" + encodeURIComponent(state.morning.id || "")); return ""; } if (state.morning?.text) return state.morning.text; return "There's no morning brief yet. Press generate and I'll write one."; }
+  const rm = t.replace(/^jarvis,?\s*/, "").replace(/[.!?]+$/, "");
+  if (/^(stop|pause|turn off|kill|mute) (the )?(radio|music|classic fm)$|^radio off$/.test(rm)) { radioStop(); return "Radio off."; }
+  const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+)?(radio|music|some music|.+?)(?:\s+radio)?$/);
+  if (rp) { const want = /^(radio|music|some music)$/.test(rp[1]) ? "" : rp[1].replace(/\s+/g, ""); const i = want ? (RADIO_MATCH.find(j => RADIO[j].k.some(k => want.includes(k))) ?? -1) : radioIdx; if (i >= 0) { radioPlay(i); return ""; } }
   if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
   return null;
 }
@@ -1259,9 +1282,9 @@ let startListen = () => {};
 function setupVoice() {
   rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
   rec.onresult = (e) => { const r = e.results[e.results.length-1]; $("#coreState").textContent = "» " + r[0].transcript.slice(-40); if (r.isFinal) ask(r[0].transcript); };
-  rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) setViz("idle"); if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
+  rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) { radioDuck(false); setViz("idle"); } if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
   rec.onerror = (e) => { const why = { "not-allowed": "Microphone blocked. In Chrome: tap the lock icon in the address bar → Permissions → Microphone → Allow, then reload.", "service-not-allowed": "Speech recognition is disabled in this browser.", "audio-capture": "No microphone could be opened. Close other apps using the mic and try again.", "network": "Speech recognition needs an internet connection (Google's service).", "language-not-supported": "Speech language not supported." }[e.error]; if (why) addMsg("sys", why); else if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
-  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
+  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); radioDuck(true); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
   const stop = () => { try { rec.stop(); } catch {} };
   mic.onclick = () => listening ? stop() : startListen();
   document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "j" && !e.repeat && !/input|textarea/i.test(e.target.tagName)) startListen(); });
@@ -1547,6 +1570,52 @@ $("#worldHome").onclick = () => globe && globe.pointOfView({ ...worldHome(), alt
 $("#worldGlobe").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 2.4 }, 1500);
 document.querySelectorAll("[data-layer]").forEach(cb => cb.onchange = () => { worldLayers[cb.dataset.layer] = cb.checked; if (cb.dataset.layer === "flights") loadFlights(); if (cb.dataset.layer === "webcams") { webcamsKey = ""; loadWebcamsInView(); } if (cb.dataset.layer === "cams") { camsKey = ""; loadCamsInView(); } renderWorld(); });
 (function waitGlobe() { if (window.Globe && window.__stateLoaded) { if ($("#worldPanel").offsetParent !== null || !PHONE) initGlobe(); else setTimeout(waitGlobe, 1500); } else setTimeout(waitGlobe, 500); })();
+
+/* ---------- radio: Global's public live streams, played in the browser for personal listening ---------- */
+const RADIO = [
+  { n: "Classic FM", s: "ClassicFM", k: ["classicfm", "classical", "classic"] },
+  { n: "Classic FM Calm", s: "ClassicFMCalm", k: ["calm", "relax"] },
+  { n: "Classic FM Movies", s: "ClassicFMMoviesMP3", k: ["movie", "film", "soundtrack"] },
+  { n: "Smooth", s: "SmoothUK", k: ["smooth"] },
+  { n: "Smooth Chill", s: "SmoothChill", k: ["chill"] },
+  { n: "LBC News", s: "LBCUK", k: ["lbc", "news", "talk"] },
+  { n: "Heart", s: "HeartUK", k: ["heart"] },
+  { n: "Capital", s: "CapitalUK", k: ["capital"] },
+];
+// order matters for keyword matching: "classicfmcalm" must hit Calm before Classic FM
+const RADIO_MATCH = [1, 2, 0, 4, 3, 5, 6, 7];
+const radio = new Audio(); radio.crossOrigin = "anonymous"; radio.preload = "none";
+var radioOn = false, radioIdx = 0, radioAn = null, radioRetry = 0;
+try { const i = +localStorage.getItem("radioIdx"); if (RADIO[i]) radioIdx = i; const v = localStorage.getItem("radioVol"); if (v !== null) $("#radioVol").value = v; } catch {}
+const radioLevel = () => +$("#radioVol").value / 100;
+function radioViz() {
+  if (radioAn) return radioAn;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(radio); radioAn = actx.createAnalyser(); radioAn.fftSize = 512; radioAn.smoothingTimeConstant = .8; src.connect(radioAn); radioAn.connect(actx.destination); } catch { radioAn = null; }
+  return radioAn;
+}
+function radioUI(msg) {
+  const r = RADIO[radioIdx];
+  $("#radioName").textContent = r.n; $("#radioPlay").textContent = radioOn ? "❚❚" : "▶"; $("#radioPlay").classList.toggle("on", radioOn);
+  $("#radioState").textContent = msg || (radioOn ? "live" : "off · tap play or say \"Jarvis, play " + r.n + "\"");
+  $("#radioStations").innerHTML = RADIO.map((x, i) => `<button data-ri="${i}" class="${i === radioIdx ? "sel" : ""}">${esc(x.n.toUpperCase())}</button>`).join("");
+}
+function radioPlay(i = radioIdx) {
+  radioIdx = i; try { localStorage.setItem("radioIdx", i); } catch {}
+  radioOn = true; unlockPlayer(); radioViz();
+  radio.src = "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
+  radioUI("tuning…");
+  radio.play().then(() => { radioRetry = 0; radioUI(); if (!speaking && !listening) setViz("idle"); })
+    .catch(e => { if (e.name === "AbortError") return; radioOn = false; radioUI("couldn't start: " + (e.name === "NotAllowedError" ? "tap play once to allow audio" : e.message)); });
+}
+function radioStop() { radioOn = false; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); }
+function radioDuck(on) { if (!radioOn) return; radio.volume = on ? radioLevel() * 0.15 : radioLevel(); if (!on && radio.paused && radio.getAttribute("src")) radio.play().catch(() => {}); }
+radio.onerror = () => { if (!radioOn) return; if (radioRetry++ < 5) { radioUI("reconnecting…"); setTimeout(() => radioOn && radioPlay(radioIdx), 2000 * radioRetry); } else { radioOn = false; radioUI("stream unavailable right now"); } };
+radio.onpause = () => { if (radioOn && radio.getAttribute("src")) radioUI("paused by the device · tap ▶"); };
+radio.onplaying = () => { if (radioOn) radioUI(); };
+$("#radioPlay").onclick = () => { if (radioOn && !radio.paused) radioStop(); else radioPlay(); };
+$("#radioStations").onclick = (e) => { const b = e.target.closest("[data-ri]"); if (b) radioPlay(+b.dataset.ri); };
+$("#radioVol").oninput = () => { try { localStorage.setItem("radioVol", $("#radioVol").value); } catch {} radioDuck(speaking); };
+radioUI();
 
 /* ---------- scanner (Broadcastify; opened in their player, not re-streamed) ---------- */
 const SCANNER = {
