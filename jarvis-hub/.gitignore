@@ -8,3 +8,5 @@ collect_metrics.log
 jarvis_hands.log
 collect_traffic.log
 collect_flights.log
+.global_flights_at
+collect_cams.log

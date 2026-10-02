@@ -441,6 +441,35 @@ async function satTles(env) {
   } catch { return c?.v || []; }
 }
 
+
+/* ---------------- cameras (directory from the PC), global flights, routes ---------------- */
+let camMem = null; // per-isolate cache of the camera directory
+async function camsAll(env) {
+  if (camMem && Date.now() - camMem.t < 10 * 60e3) return camMem.v;
+  const v = (await env.HUB.get("cams", "json")) || []; camMem = { t: Date.now(), v }; return v;
+}
+async function txSnapshot(d, id) {
+  const j = await (await fetch(`https://its.txdot.gov/its/DistrictIts/GetCctvSnapshotByIcdId?districtCode=${encodeURIComponent(d)}&icdId=${encodeURIComponent(id)}`, { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" }, cf: { cacheTtl: 30, cacheEverything: true } })).json();
+  if (!j.snippet) return null;
+  return new Response(Uint8Array.from(atob(j.snippet), (c) => c.charCodeAt(0)), { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=30" } });
+}
+async function flightRoute(env, cs) {
+  cs = String(cs || "").toUpperCase().replace(/\s+/g, ""); if (!cs) return null;
+  const cache = (await kv.get(env, "routes")) || {};
+  if (cache[cs] && Date.now() - cache[cs].t < 24 * 3600e3) return cache[cs].v;
+  let v = null;
+  try {
+    const r = await within(fetch(`https://api.adsbdb.com/v0/callsign/${encodeURIComponent(cs)}`, { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" } }), 5000, null);
+    const j = r && r.ok ? await r.json() : null; const fr = j?.response?.flightroute;
+    if (fr) { const ap = (a) => a && { iata: a.iata_code, icao: a.icao_code, name: a.name, city: a.municipality, country: a.country_name, lat: a.latitude, lon: a.longitude };
+      v = { callsign: cs, flight: fr.callsign_iata || cs, airline: fr.airline?.name || "", from: ap(fr.origin), to: ap(fr.destination), via: ap(fr.midpoint) }; }
+  } catch {}
+  cache[cs] = { t: Date.now(), v };
+  const keys = Object.keys(cache); if (keys.length > 600) for (const k of keys.sort((a, b) => cache[a].t - cache[b].t).slice(0, 200)) delete cache[k];
+  await kv.put(env, "routes", cache);
+  return v;
+}
+
 /* ---------------- context for the brain ---------------- */
 async function buildContext(env, request) {
   const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue, traffic, wxdays] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue", "traffic", "wxdays"].map((k) => kv.get(env, k)));
@@ -495,7 +524,7 @@ Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding plan
 Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
-Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
+Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.`;
 
 const BRAIN_TOOLS = [
@@ -511,7 +540,7 @@ const BRAIN_TOOLS = [
 
 async function runTool(name, input, env, actions) {
   switch (name) {
-    case "track_flight": { const r = await trackFlight(env, input.flight); actions.push({ type: "world", flight: r.callsign }); return JSON.stringify(r).slice(0, 2500); }
+    case "track_flight": { const r = await trackFlight(env, input.flight); r.route = await flightRoute(env, r.callsign); actions.push({ type: "world", flight: r.callsign }); return JSON.stringify(r).slice(0, 3000); }
     case "flights_overhead": { const place = await kv.get(env, "place"); const ac = await flightsNear(env, +(place?.lat || 33.15), +(place?.lon || -96.82), input.nm || 25); actions.push({ type: "world" }); return JSON.stringify({ near: place?.name, count: ac.length, aircraft: ac.slice(0, 25) }); }
     case "open_link": actions.push({ type: "open", url: input.url, label: input.label }); return "Opened " + input.label + ".";
     case "append_note": { const cur = (await kv.get(env, "notes")) || ""; const next = (cur ? cur.replace(/\s+$/, "") + "\n" : "") + "- " + input.text; await kv.put(env, "notes", next); actions.push({ type: "notes", value: next }); return "Added."; }
@@ -735,6 +764,20 @@ export default {
     if (p === "/api/world/feed" && request.method === "POST") { const body = await request.json(); await kv.put(env, "flights", body); return json({ ok: true, ac: (body.ac || []).length }); }
     if (p === "/api/world/untrack" && request.method === "POST") { const { q } = await request.json(); const want = (await kv.get(env, "track_req")) || {}; delete want[toCallsign(q)]; await kv.put(env, "track_req", want); return json({ ok: true }); }
     if (p === "/api/world/events") return json((await worldEvents(env)) || { quakes: [], fires: [], iss: null });
+    if (p === "/api/world/camsfeed" && request.method === "POST") { const { cams } = await request.json(); await env.HUB.put("cams", JSON.stringify(cams || [])); camMem = null; return json({ ok: true, cams: (cams || []).length }); }
+    if (p === "/api/world/cams") {
+      const all = await camsAll(env); const lat = +url.searchParams.get("lat"), lon = +url.searchParams.get("lon"), r = Math.min(30, +url.searchParams.get("r") || 2);
+      if (!url.searchParams.get("lat")) return json({ total: all.length, cams: [] });
+      const kx = Math.max(0.2, Math.cos(lat * Math.PI / 180));
+      const near = all.filter((c) => Math.abs(c[0] - lat) < r && Math.abs(c[1] - lon) * kx < r * 1.6);
+      // nearest to the view centre first, so zooming into a city shows that city's cameras
+      near.sort((a, b) => ((a[0] - lat) ** 2 + ((a[1] - lon) * kx) ** 2) - ((b[0] - lat) ** 2 + ((b[1] - lon) * kx) ** 2));
+      return json({ total: all.length, inView: near.length, cams: near.slice(0, 500) }, 200, { "cache-control": "public, max-age=300" });
+    }
+    if (p === "/api/world/cam") { try { const r = await txSnapshot(url.searchParams.get("d"), url.searchParams.get("id")); return r || new Response("no image", { status: 404 }); } catch (e) { return new Response("camera error: " + e.message, { status: 502 }); } }
+    if (p === "/api/world/globalfeed" && request.method === "POST") { const body = await request.json(); await env.HUB.put("flights_global", JSON.stringify(body)); return json({ ok: true, ac: (body.ac || []).length }); }
+    if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
+    if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);

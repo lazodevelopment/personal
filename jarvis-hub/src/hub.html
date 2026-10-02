@@ -27,6 +27,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 var(--display);min-height:100%}
 body{padding-inline:16px;padding-block:0 40px;overflow-x:hidden;background:
   radial-gradient(1400px 700px at 50% -10%,rgba(var(--glow),.13),transparent 60%),
@@ -200,7 +201,17 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 
 /* world */
 .worldwrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;min-height:520px}
-#globe{position:relative;min-height:520px;background:radial-gradient(circle at 50% 50%,#06121f,#02050a 70%);border:1px solid var(--line);overflow:hidden}
+#globeBox{position:relative;min-height:520px}
+.zoomctl{position:absolute;right:10px;top:10px;z-index:5;display:grid;gap:4px}
+.zoomctl .btn{width:34px;height:34px;padding:0;font-size:18px;line-height:1;background:rgba(4,7,13,.85);color:var(--cyan2)}
+.gate{position:absolute;inset:0;z-index:6;display:grid;place-items:center;background:rgba(4,7,13,.35);font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--cyan2)}
+.fcard{border:1px solid #ffb340;background:rgba(255,179,64,.06);padding:10px 12px;display:grid;gap:6px;font-size:13px}
+.fcard .route{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center}
+.fcard .route b{display:block;font-family:var(--mono);font-size:22px;color:#fff;font-weight:400;letter-spacing:.05em}
+.fcard .route small{color:var(--dim);font-size:11px}
+.fcard .arrow{color:#ffb340;font-size:18px}
+.fcard .facts{font-family:var(--mono);font-size:11px;color:var(--dim);display:flex;gap:10px;flex-wrap:wrap}.fcard .facts b{color:#fff;font-weight:400}
+#globe{position:absolute;inset:0;min-height:520px;background:radial-gradient(circle at 50% 50%,#06121f,#02050a 70%);border:1px solid var(--line);overflow:hidden}
 #globe canvas{display:block}
 .wside{display:grid;gap:8px;align-content:start;min-width:0}
 .winfo{font-size:13px;display:grid;gap:8px;max-height:460px;overflow:auto}
@@ -213,11 +224,16 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .ac.tracked{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(255,179,64,1))}
 .ac.emerg{filter:drop-shadow(0 0 6px rgba(255,77,94,1))}
 .ac .cs{position:absolute;left:18px;top:-2px;font-family:var(--mono);font-size:9px;color:#cfefff;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
+.cam{width:14px;height:14px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:.85}
+.cam svg{width:100%;height:100%;display:block}.cam:hover{opacity:1;transform:translate(-50%,-50%) scale(1.3)}
+.camview{border:1px solid var(--line2);background:rgba(4,10,20,.8);padding:8px;display:grid;gap:6px}
+.camview img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#000;border:1px solid var(--line)}
+.camhead{display:flex;justify-content:space-between;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:#fff}
 .fire{width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff3c4 0,#ffb340 35%,rgba(255,90,40,.55) 60%,rgba(255,90,40,0) 72%);pointer-events:auto;cursor:pointer}
 .homepin{transform:translate(-50%,-100%);font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:#fff;text-shadow:0 0 6px rgba(25,211,255,1);pointer-events:none;white-space:nowrap}
 .homepin::after{content:"";display:block;width:8px;height:8px;margin:2px auto 0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(25,211,255,.5),0 0 12px rgba(25,211,255,1)}
 .wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
-@media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globe{min-height:360px;touch-action:pan-y}}
+@media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globeBox,#globe{min-height:380px}}
 /* scores, news */
 .scores{display:grid;gap:6px}
 .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
@@ -454,11 +470,16 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <label class="wl"><input type="checkbox" data-layer="sats" checked> satellites</label>
       <label class="wl"><input type="checkbox" data-layer="quakes" checked> quakes</label>
       <label class="wl"><input type="checkbox" data-layer="fires" checked> wildfires</label>
+      <label class="wl"><input type="checkbox" data-layer="cams" checked> cameras</label>
       <button class="btn sm" id="worldHome">HOME</button><button class="btn sm" id="worldGlobe">GLOBE</button></h2>
-    <div class="worldwrap"><div id="globe"></div>
+    <div class="worldwrap"><div id="globeBox"><div id="globe"></div>
+      <div class="zoomctl"><button class="btn sm" id="zIn" title="Zoom in">+</button><button class="btn sm" id="zOut" title="Zoom out">−</button></div>
+      <div class="gate" id="globeGate" hidden>TAP TO USE THE GLOBE</div></div>
       <div class="wside">
         <form id="trackForm" class="ask" style="margin:0"><input id="trackQ" placeholder="Track a flight: AA 2612, SWA653, N123AB" autocomplete="off" aria-label="Flight number"><button class="btn primary">TRACK</button></form>
         <div id="trackOut" class="empty" style="margin-top:6px"></div>
+        <div id="flightCard" class="fcard" hidden></div>
+        <div id="camView" class="camview" hidden><div class="camhead"><span id="camName"></span><button class="btn sm" id="camClose">✕</button></div><img id="camImg" alt="Traffic camera"><div class="empty" id="camMeta"></div></div>
         <div id="worldInfo" class="winfo"></div>
       </div>
     </div>
@@ -1280,7 +1301,8 @@ async function setHome(body) { try { state.cfg.home = await fetch("/api/home", {
 $("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = hm.mode === "auto" ? { key: hm.key === "az" ? "tx" : "az", mode: "manual" } : hm.key === "tx" ? { key: "az", mode: "manual" } : { mode: "auto", deviceTz: Intl.DateTimeFormat().resolvedOptions().timeZone }; setHome(order); };
 
 /* ---------- World (OSIRIS-style) ---------- */
-let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true };
+let globalAc = [], globalAt = 0, routeCache = {};
+let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null, cams: [] }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true, cams: true };
 const KT_MPH = 1.15078;
 function worldHome() { const p = state.place || state.wx || {}; return { lat: +(p.lat || 33.15), lng: +(p.lon || -96.82) }; }
 function initGlobe() {
@@ -1296,18 +1318,27 @@ function initGlobe() {
     .particlesData([]).particlesList((d) => d.pts).particleLat("lat").particleLng("lng").particleAltitude("alt").particlesSize(3).particlesSizeAttenuation(false).particlesColor((d) => d.color);
   globe.ringsData([]).ringColor(() => (t) => `rgba(255,110,90,${1 - t})`).ringMaxRadius("maxR").ringPropagationSpeed(1.2).ringRepeatPeriod(1600).ringAltitude(0.0015);
   globe.labelsData([]).labelText("text").labelSize(0.45).labelDotRadius(0.18).labelColor(() => "rgba(255,140,120,.9)").labelResolution(2).labelAltitude(0.002);
-  globe.controls().autoRotate = false; globe.controls().enableZoom = true; globe.controls().minDistance = 101;
+  globe.arcsData([]).arcStartLat("a").arcStartLng("b").arcEndLat("c").arcEndLng("d").arcColor(() => ["rgba(255,179,64,.9)", "rgba(25,211,255,.9)"]).arcStroke(0.6).arcDashLength(0.4).arcDashGap(0.2).arcDashAnimateTime(2500).arcAltitudeAutoScale(0.35);
+  globe.controls().autoRotate = false; globe.controls().enableZoom = true; globe.controls().minDistance = 101; globe.controls().zoomSpeed = 1.2;
   globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 0);
+  const zoomBy = (f) => { const v = globe.pointOfView(); globe.pointOfView({ ...v, altitude: Math.max(0.01, Math.min(4, v.altitude * f)) }, 400); };
+  $("#zIn").onclick = () => zoomBy(0.55); $("#zOut").onclick = () => zoomBy(1.8);
+  if (PHONE && matchMedia("(pointer: coarse)").matches) { const g = $("#globeGate"); g.hidden = false; globe.controls().enabled = false; g.onclick = () => { g.hidden = true; globe.controls().enabled = true; }; }
+  let viewT = null; const onView = () => { clearTimeout(viewT); viewT = setTimeout(() => { loadCamsInView(); renderWorld(false); }, 350); };
+  globe.controls().addEventListener("change", onView); if (globe.onZoom) globe.onZoom(onView);
+  loadGlobal(); worldTimers.push(setInterval(loadGlobal, 2 * 60000));
   new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
   if (PHONE) el.style.touchAction = "pan-y";
-  loadWorld(); loadSats();
+  loadWorld(); loadSats(); loadCams();
+  globe.onZoom && globe.onZoom(() => { clearTimeout(window.__camT); window.__camT = setTimeout(() => renderWorld(false), 200); });
   worldTimers.push(setInterval(loadFlights, 30000), setInterval(moveFlights, 2000), setInterval(loadEvents, 5 * 60000), setInterval(tickSats, 2000));
 }
 const PLANE = '<svg viewBox="0 0 24 24"><path fill="COLOR" d="M12 2c.6 0 1 .5 1 1.2v6.1l7.6 4.4c.3.2.4.5.4.8v1.1c0 .4-.4.7-.8.6L13 14.2v4.3l2.3 1.7c.2.1.3.3.3.6v.8c0 .3-.3.5-.6.4L12 21l-3 1c-.3.1-.6-.1-.6-.4v-.8c0-.2.1-.4.3-.6l2.3-1.7v-4.3l-7.2 2c-.4.1-.8-.2-.8-.6v-1.1c0-.3.1-.6.4-.8l7.6-4.4V3.2C11 2.5 11.4 2 12 2z"/></svg>';
 const markerCache = new Map();
 function acMarker(a, tracked) {
   const key = a.hex || a.flight; let el = markerCache.get(key);
-  if (!el) { el = document.createElement("div"); el.className = "ac"; el.onclick = () => { $("#trackQ").value = a.flight || a.reg; trackIt(a.flight || a.reg); }; markerCache.set(key, el); }
+  if (!el) { el = document.createElement("div"); el.className = "ac"; markerCache.set(key, el); }
+  el.onclick = (e) => { e.stopPropagation(); showFlight(a); };
   const color = a.emergency ? "#ff4d5e" : tracked ? "#ffb340" : "#7be8ff";
   el.className = "ac" + (tracked ? " tracked" : "") + (a.emergency ? " emerg" : "");
   el.innerHTML = PLANE.replace("COLOR", color) + (tracked ? `<span class="cs">${esc(a.flight || a.reg)}</span>` : "");
@@ -1324,6 +1355,33 @@ function fireMarker(f) {
   return el;
 }
 let homeEl = null;
+const CAM_SVG = '<svg viewBox="0 0 24 24"><rect x="2" y="7" width="14" height="10" rx="2" fill="#39f0a8"/><path d="M16 10l6-3v10l-6-3z" fill="#39f0a8"/><circle cx="9" cy="12" r="2.5" fill="#04070d"/></svg>';
+const camEls = new Map();
+let camsTotal = 0, camsKey = "";
+async function loadCams() { loadCamsInView(); }
+async function loadCamsInView() {
+  if (!globe || !worldLayers.cams) { worldData.cams = []; return; }
+  const v = globe.pointOfView(); if (v.altitude > 0.8) { worldData.cams = []; renderWorld(false); return; }
+  const r = Math.max(0.3, Math.min(25, v.altitude * 30)); const key = [v.lat.toFixed(1), v.lng.toFixed(1), r.toFixed(1)].join(",");
+  if (key === camsKey) return; camsKey = key;
+  try { const d = await fetch(`/api/world/cams?lat=${v.lat.toFixed(3)}&lon=${v.lng.toFixed(3)}&r=${r.toFixed(2)}`).then(x => x.json()); camsTotal = d.total || camsTotal; worldData.cams = (d.cams || []).map(c => ({ lat: c[0], lon: c[1], n: c[2], src: c[3], img: c[4] })); } catch {}
+  renderWorld(false);
+}
+async function loadGlobal() { try { const d = await fetch("/api/world/global").then(r => r.json()); globalAc = d.ac || []; globalAt = d.at ? new Date(d.at).getTime() : Date.now(); } catch {} renderWorld(false); }
+function camMarker(c) {
+  const key = c.img; let el = camEls.get(key);
+  if (!el) { el = document.createElement("div"); el.className = "cam"; el.innerHTML = CAM_SVG; el.title = c.n; el.onclick = () => openCam(c); camEls.set(key, el); }
+  return el;
+}
+let camTimer = null;
+function camSrc(c) { if (c.img.startsWith("tx:")) { const [, d, ...id] = c.img.split(":"); return `/api/world/cam?d=${d}&id=${encodeURIComponent(id.join(":"))}`; } return c.img; }
+function openCam(c) {
+  const show = () => { const u = camSrc(c); $("#camImg").src = u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(); $("#camMeta").textContent = `${c.src} · updated ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })} · refreshes every 30 s`; };
+  $("#camName").textContent = c.n; $("#camView").hidden = false; show(); clearInterval(camTimer); camTimer = setInterval(show, 30000);
+}
+$("#camClose").onclick = () => { $("#camView").hidden = true; clearInterval(camTimer); $("#camImg").removeAttribute("src"); };
+// only draw cameras near the current view so thousands of markers don't bog down the page
+function visibleCams() { return worldLayers.cams && globe && globe.pointOfView().altitude <= 0.8 ? worldData.cams : []; }
 async function loadWorld() { await Promise.all([loadFlights(), loadEvents()]); }
 let flightsAt = 0, flightsBase = [];
 async function loadFlights() {
@@ -1353,21 +1411,28 @@ function renderWorld(satsOnly) {
   if (!globe) return;
   const html = [];
   const tHex = worldData.tracked?.ac?.hex;
+  const pov = globe.pointOfView(), secsG = Math.min(900, (Date.now() - globalAt) / 1000);
+  const localHex = new Set(worldData.flights.map(a => a.hex));
+  const gProj = worldLayers.flights ? globalAc.filter(g => !g[7]).map(g => project({ hex: g[0], flight: g[1], lat: g[2], lon: g[3], alt: g[4], track: g[5], gs: g[6] }, secsG)) : [];
   if (worldLayers.flights) for (const a of worldData.flights) html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) });
+  if (worldLayers.flights && pov.altitude < 0.5) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0;
+    for (const a of gProj) { if (localHex.has(a.hex) || Math.abs(a.lat - pov.lat) > r || Math.abs(a.lon - pov.lng) * kx > r * 1.6) continue; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) }); if (++n > 350) break; } }
   if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === tHex)) { const a = worldData.tracked.ac; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, true) }); }
   if (worldLayers.fires) for (const f of worldData.fires) html.push({ lat: f.lat, lng: f.lon, alt: 0, el: fireMarker(f) });
+  for (const c of visibleCams()) html.push({ lat: c.lat, lng: c.lon, alt: 0, el: camMarker(c) });
   if (!homeEl) { homeEl = document.createElement("div"); homeEl.className = "homepin"; }
   homeEl.textContent = (state.place?.name || "Home").split(",")[0].toUpperCase(); html.push({ ...worldHome(), alt: 0, el: homeEl });
   globe.htmlElementsData(html);
   const satPts = worldLayers.sats ? worldData.sats.filter(s => !/ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: Math.min(0.5, s.altKm / 6371) })) : [];
   const issPts = worldLayers.sats ? worldData.sats.filter(s => /ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: s.altKm / 6371 })) : [];
-  globe.particlesData([{ pts: satPts, color: "#b9a6ff" }, { pts: issPts, color: "#ffffff" }]);
+  const acPts = worldLayers.flights && pov.altitude >= 0.5 ? gProj.map(a => ({ lat: a.lat, lng: a.lon, alt: 0.004 })) : [];
+  globe.particlesData([{ pts: acPts, color: "#7be8ff" }, { pts: satPts, color: "#b9a6ff" }, { pts: issPts, color: "#ffffff" }]);
   if (!satsOnly) {
     globe.ringsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 3).map(q => ({ lat: q.lat, lng: q.lon, maxR: Math.max(0.6, (q.mag - 2.5) * 1.2) })) : []);
     globe.labelsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 4.5).map(q => ({ lat: q.lat, lng: q.lon, text: "M" + q.mag.toFixed(1) })) : []);
   }
   const now = Date.now(); if (satsOnly && now - lastWorldRender < 10000) return; lastWorldRender = now;
-  $("#worldSub").textContent = `${worldData.feedAt ? "flights " + fmtAgo(worldData.feedAt) + " · " : ""}${worldData.flights.length} aircraft near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
+  $("#worldSub").textContent = `${globalAc.length.toLocaleString()} aircraft worldwide · ${camsTotal ? camsTotal.toLocaleString() + " cameras (zoom in) · " : ""}${worldData.flights.length} near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
   const big = [...worldData.quakes].sort((a, b) => b.mag - a.mag).slice(0, 5), fires = worldData.fires.slice(0, 5);
   const nearest = [...worldData.flights].filter(a => a.alt > 0).sort((a, b) => (b.alt || 0) - (a.alt || 0)).slice(0, 6);
   $("#worldInfo").innerHTML = `${worldData.iss ? `<h3>SPACE STATION</h3><div class="row" data-go="${worldData.iss.lat},${worldData.iss.lon}"><span>ISS over ${worldData.iss.lat.toFixed(1)}°, ${worldData.iss.lon.toFixed(1)}°</span><small>${worldData.iss.alt} km · ${Math.round(worldData.iss.vel * 0.621)} mph</small></div>` : ""}
@@ -1375,6 +1440,20 @@ function renderWorld(satsOnly) {
     <h3>EARTHQUAKES · 24H</h3>${big.map(q => `<div class="row" data-go="${q.lat},${q.lon}"><span>M${q.mag.toFixed(1)} ${esc(q.place || "")}</span><small>${fmtAgo(new Date(q.time).toISOString())}</small></div>`).join("") || '<div class="empty">none</div>'}
     <h3>LARGEST WILDFIRES</h3>${fires.map(f => `<div class="row" data-go="${f.lat},${f.lon}"><span>${esc(f.name)} <small>${esc(f.state)}</small></span><small>${f.acres.toLocaleString()} ac · ${f.contained ?? "?"}%</small></div>`).join("") || '<div class="empty">none</div>'}`;
   $("#worldInfo").querySelectorAll("[data-go]").forEach(r => r.onclick = () => { const [lat, lng] = r.dataset.go.split(",").map(Number); globe.pointOfView({ lat, lng, altitude: 0.6 }, 1200); if (r.dataset.fl) { $("#trackQ").value = r.dataset.fl; trackIt(r.dataset.fl); } });
+}
+async function showFlight(a) {
+  const cs = (a.flight || "").trim(); const card = $("#flightCard"); card.hidden = false;
+  const facts = `<div class="facts"><span>alt <b>${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "ground"}</b></span><span>speed <b>${a.gs ? Math.round(a.gs * KT_MPH) + " mph" : "–"}</b></span><span>heading <b>${a.track != null ? Math.round(a.track) + "°" : "–"}</b></span>${a.type ? `<span>type <b>${esc(a.type)}</b></span>` : ""}${a.reg ? `<span>reg <b>${esc(a.reg)}</b></span>` : ""}</div>`;
+  card.innerHTML = `<div class="k" style="font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:#ffb340">FLIGHT ${esc(cs || a.reg || a.hex)}</div><div class="empty">looking up the route…</div>${facts}<div class="rrow" style="display:flex;gap:6px"><button class="btn sm" id="fcTrack">FOLLOW</button><button class="btn sm" id="fcClose">CLOSE</button></div>`;
+  $("#fcClose").onclick = () => { card.hidden = true; globe.arcsData([]); };
+  $("#fcTrack").onclick = () => { $("#trackQ").value = cs || a.reg; trackIt(cs || a.reg); };
+  if (!cs) { card.querySelector(".empty").textContent = "No callsign broadcast, so the route is unknown."; return; }
+  let r = routeCache[cs]; if (r === undefined) { try { r = await fetch("/api/world/route?cs=" + encodeURIComponent(cs)).then(x => x.json()); } catch { r = null; } routeCache[cs] = r; }
+  const box = card.querySelector(".empty");
+  if (!r || r.none || !r.from) { box.textContent = "Route not on file for " + cs + "."; globe.arcsData([]); return; }
+  box.outerHTML = `<div style="font-size:12px;color:var(--dim)">${esc(r.airline || "")} ${esc(r.flight || cs)}</div><div class="route"><div><b>${esc(r.from.iata || r.from.icao)}</b><small>${esc(r.from.city || r.from.name)}</small></div><span class="arrow">✈</span><div><b>${esc(r.to?.iata || r.to?.icao || "?")}</b><small>${esc(r.to?.city || r.to?.name || "")}</small></div></div>`;
+  const arcs = [{ a: r.from.lat, b: r.from.lon, c: a.lat, d: a.lon }]; if (r.to) arcs.push({ a: a.lat, b: a.lon, c: r.to.lat, d: r.to.lon });
+  globe.arcsData(arcs);
 }
 function renderTracked() {
   const t = worldData.tracked; if (!t) { $("#trackOut").textContent = ""; return; }
