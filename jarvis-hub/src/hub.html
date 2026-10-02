@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.34.2/dist/globe.gl.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.46.2/dist/globe.gl.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js" defer></script>
 <style>
 /* Layout: HUD header with an attention strip, then a composed 12-column grid: the console leads,
@@ -208,6 +208,14 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .winfo .row{display:flex;justify-content:space-between;gap:8px;border-left:2px solid var(--line);padding:2px 8px;cursor:pointer}
 .winfo .row:hover{border-color:var(--cyan)}.winfo .row small{font-family:var(--mono);color:var(--dim);font-size:11px;white-space:nowrap}
 .wl{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);text-transform:none;display:flex;gap:4px;align-items:center;font-weight:400}
+.ac{width:16px;height:16px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;filter:drop-shadow(0 0 3px rgba(25,211,255,.8))}
+.ac svg{width:100%;height:100%;display:block}
+.ac.tracked{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(255,179,64,1))}
+.ac.emerg{filter:drop-shadow(0 0 6px rgba(255,77,94,1))}
+.ac .cs{position:absolute;left:18px;top:-2px;font-family:var(--mono);font-size:9px;color:#cfefff;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
+.fire{width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff3c4 0,#ffb340 35%,rgba(255,90,40,.55) 60%,rgba(255,90,40,0) 72%);pointer-events:auto;cursor:pointer}
+.homepin{transform:translate(-50%,-100%);font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:#fff;text-shadow:0 0 6px rgba(25,211,255,1);pointer-events:none;white-space:nowrap}
+.homepin::after{content:"";display:block;width:8px;height:8px;margin:2px auto 0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(25,211,255,.5),0 0 12px rgba(25,211,255,1)}
 .wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
 @media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globe{min-height:360px;touch-action:pan-y}}
 /* scores, news */
@@ -1229,20 +1237,44 @@ function worldHome() { const p = state.place || state.wx || {}; return { lat: +(
 function initGlobe() {
   if (globe || !window.Globe || !$("#globe")) return;
   const el = $("#globe");
-  globe = Globe()(el).width(el.clientWidth).height(el.clientHeight || 520)
-    .globeImageUrl("https://cdn.jsdelivr.net/npm/three-globe@2.41.12/example/img/earth-night.jpg")
-    .bumpImageUrl("https://cdn.jsdelivr.net/npm/three-globe@2.41.12/example/img/earth-topology.png")
-    .backgroundColor("rgba(0,0,0,0)").atmosphereColor("#19d3ff").atmosphereAltitude(0.18)
-    .pointsMerge(false).pointAltitude("alt").pointRadius("r").pointColor("c").pointLabel("tip").onPointClick(d => d.onClick && d.onClick())
-    .ringsData([]).ringColor(() => t => `rgba(255,120,80,${1 - t})`).ringMaxRadius("maxR").ringPropagationSpeed(1.5).ringRepeatPeriod(1400)
-    .labelsData([]).labelText("text").labelSize(0.6).labelDotRadius(0.25).labelColor(() => "#7be8ff").labelResolution(2).labelAltitude(0.01);
-  globe.controls().autoRotate = false; globe.controls().enableZoom = true;
-  const h = worldHome(); globe.pointOfView({ ...h, altitude: 0.22 }, 0);
+  globe = Globe({ animateIn: false })(el).width(el.clientWidth).height(el.clientHeight || 520)
+    // crisp dark map tiles at every zoom level, matching the radar map
+    .globeTileEngineUrl((x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${l}/${y}/${x}`)
+    .backgroundColor("rgba(0,0,0,0)").showAtmosphere(true).atmosphereColor("#19d3ff").atmosphereAltitude(0.12)
+    // aircraft, fires and the home pin are HTML markers: crisp icons, no 3D columns
+    .htmlElementsData([]).htmlLat("lat").htmlLng("lng").htmlAltitude("alt").htmlTransitionDuration(0).htmlElement((d) => d.el)
+    // satellites float at their real altitude as small glowing particles
+    .particlesData([]).particlesList((d) => d.pts).particleLat("lat").particleLng("lng").particleAltitude("alt").particlesSize(3).particlesSizeAttenuation(false).particlesColor((d) => d.color);
+  globe.ringsData([]).ringColor(() => (t) => `rgba(255,110,90,${1 - t})`).ringMaxRadius("maxR").ringPropagationSpeed(1.2).ringRepeatPeriod(1600).ringAltitude(0.0015);
+  globe.labelsData([]).labelText("text").labelSize(0.45).labelDotRadius(0.18).labelColor(() => "rgba(255,140,120,.9)").labelResolution(2).labelAltitude(0.002);
+  globe.controls().autoRotate = false; globe.controls().enableZoom = true; globe.controls().minDistance = 101;
+  globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 0);
   new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
-  if (PHONE) { el.style.touchAction = "pan-y"; }
+  if (PHONE) el.style.touchAction = "pan-y";
   loadWorld(); loadSats();
   worldTimers.push(setInterval(loadFlights, 30000), setInterval(moveFlights, 2000), setInterval(loadEvents, 5 * 60000), setInterval(tickSats, 2000));
 }
+const PLANE = '<svg viewBox="0 0 24 24"><path fill="COLOR" d="M12 2c.6 0 1 .5 1 1.2v6.1l7.6 4.4c.3.2.4.5.4.8v1.1c0 .4-.4.7-.8.6L13 14.2v4.3l2.3 1.7c.2.1.3.3.3.6v.8c0 .3-.3.5-.6.4L12 21l-3 1c-.3.1-.6-.1-.6-.4v-.8c0-.2.1-.4.3-.6l2.3-1.7v-4.3l-7.2 2c-.4.1-.8-.2-.8-.6v-1.1c0-.3.1-.6.4-.8l7.6-4.4V3.2C11 2.5 11.4 2 12 2z"/></svg>';
+const markerCache = new Map();
+function acMarker(a, tracked) {
+  const key = a.hex || a.flight; let el = markerCache.get(key);
+  if (!el) { el = document.createElement("div"); el.className = "ac"; el.onclick = () => { $("#trackQ").value = a.flight || a.reg; trackIt(a.flight || a.reg); }; markerCache.set(key, el); }
+  const color = a.emergency ? "#ff4d5e" : tracked ? "#ffb340" : "#7be8ff";
+  el.className = "ac" + (tracked ? " tracked" : "") + (a.emergency ? " emerg" : "");
+  el.innerHTML = PLANE.replace("COLOR", color) + (tracked ? `<span class="cs">${esc(a.flight || a.reg)}</span>` : "");
+  el.querySelector("svg").style.transform = `rotate(${a.track || 0}deg)`;
+  el.title = `${a.flight || a.reg || a.hex} ${a.type || ""} · ${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "on ground"}${a.gs ? " · " + Math.round(a.gs * KT_MPH) + " mph" : ""}${a.ownOp ? " · " + a.ownOp : ""}`;
+  return el;
+}
+const fireEls = new Map();
+function fireMarker(f) {
+  let el = fireEls.get(f.name + f.lat); if (!el) { el = document.createElement("div"); el.className = "fire"; fireEls.set(f.name + f.lat, el); }
+  const px = Math.max(8, Math.min(26, 6 + Math.sqrt(f.acres) / 12)); el.style.width = el.style.height = px + "px";
+  el.title = `${f.name} fire (${f.state}) · ${f.acres.toLocaleString()} acres · ${f.contained ?? "?"}% contained`;
+  el.onclick = () => globe.pointOfView({ lat: f.lat, lng: f.lon, altitude: 0.15 }, 1200);
+  return el;
+}
+let homeEl = null;
 async function loadWorld() { await Promise.all([loadFlights(), loadEvents()]); }
 let flightsAt = 0, flightsBase = [];
 async function loadFlights() {
@@ -1270,14 +1302,21 @@ function tickSats() {
 let lastWorldRender = 0;
 function renderWorld(satsOnly) {
   if (!globe) return;
-  const pts = [];
-  if (worldLayers.flights) for (const a of worldData.flights) pts.push({ lat: a.lat, lng: a.lon, alt: Math.max(0.004, (a.alt || 0) / 1.2e6), r: worldData.tracked?.ac?.hex === a.hex ? 0.3 : 0.09, c: a.emergency ? "#ff4d5e" : worldData.tracked?.ac?.hex === a.hex ? "#ffb340" : "#7be8ff", tip: `<div class="wtip"><b>${esc(a.flight || a.reg || a.hex)}</b> ${esc(a.type)}<br>${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "on ground"} · ${a.gs ? Math.round(a.gs * KT_MPH) + " mph" : ""} · hdg ${a.track != null ? Math.round(a.track) + "°" : "–"}${a.ownOp ? "<br>" + esc(a.ownOp) : ""}${a.emergency ? "<br><b style='color:#ff4d5e'>EMERGENCY " + esc(a.emergency) + "</b>" : ""}</div>`, onClick: () => { $("#trackQ").value = a.flight || a.reg; trackIt(a.flight || a.reg); } });
-  if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === worldData.tracked.ac.hex)) { const a = worldData.tracked.ac; pts.push({ lat: a.lat, lng: a.lon, alt: Math.max(0.002, (a.alt || 0) / 3.6e6), r: 0.4, c: "#ffb340", tip: `<div class="wtip"><b>${esc(a.flight)}</b> ${esc(a.type)}<br>${Math.round(a.alt || 0).toLocaleString()} ft · ${Math.round((a.gs || 0) * KT_MPH)} mph</div>` }); }
-  if (worldLayers.sats) for (const s of worldData.sats) pts.push({ lat: s.lat, lng: s.lng, alt: Math.min(0.6, s.altKm / 6371), r: /ISS/.test(s.name) ? 0.5 : 0.18, c: /ISS/.test(s.name) ? "#ffffff" : "#a78bfa", tip: `<div class="wtip"><b>${esc(s.name)}</b><br>${Math.round(s.altKm)} km up</div>` });
-  if (worldLayers.fires) for (const f of worldData.fires) pts.push({ lat: f.lat, lng: f.lon, alt: 0.005, r: Math.min(0.3, 0.06 + Math.sqrt(f.acres) / 1600), c: "rgba(255,138,61,.85)", tip: `<div class="wtip"><b>${esc(f.name)} fire</b> ${esc(f.state)}<br>${f.acres.toLocaleString()} acres · ${f.contained ?? "?"}% contained</div>` });
-  globe.pointsData(pts);
-  if (!satsOnly) globe.ringsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 3).map(q => ({ lat: q.lat, lng: q.lon, maxR: Math.max(1, (q.mag - 2) * 2.2) })) : []);
-  globe.labelsData([{ ...worldHome(), text: (state.place?.name || "Home").split(",")[0] }].concat(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 5).map(q => ({ lat: q.lat, lng: q.lon, text: "M" + q.mag.toFixed(1) })) : []));
+  const html = [];
+  const tHex = worldData.tracked?.ac?.hex;
+  if (worldLayers.flights) for (const a of worldData.flights) html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) });
+  if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === tHex)) { const a = worldData.tracked.ac; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, true) }); }
+  if (worldLayers.fires) for (const f of worldData.fires) html.push({ lat: f.lat, lng: f.lon, alt: 0, el: fireMarker(f) });
+  if (!homeEl) { homeEl = document.createElement("div"); homeEl.className = "homepin"; }
+  homeEl.textContent = (state.place?.name || "Home").split(",")[0].toUpperCase(); html.push({ ...worldHome(), alt: 0, el: homeEl });
+  globe.htmlElementsData(html);
+  const satPts = worldLayers.sats ? worldData.sats.filter(s => !/ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: Math.min(0.5, s.altKm / 6371) })) : [];
+  const issPts = worldLayers.sats ? worldData.sats.filter(s => /ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: s.altKm / 6371 })) : [];
+  globe.particlesData([{ pts: satPts, color: "#b9a6ff" }, { pts: issPts, color: "#ffffff" }]);
+  if (!satsOnly) {
+    globe.ringsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 3).map(q => ({ lat: q.lat, lng: q.lon, maxR: Math.max(0.6, (q.mag - 2.5) * 1.2) })) : []);
+    globe.labelsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 4.5).map(q => ({ lat: q.lat, lng: q.lon, text: "M" + q.mag.toFixed(1) })) : []);
+  }
   const now = Date.now(); if (satsOnly && now - lastWorldRender < 10000) return; lastWorldRender = now;
   $("#worldSub").textContent = `${worldData.feedAt ? "flights " + fmtAgo(worldData.feedAt) + " · " : ""}${worldData.flights.length} aircraft near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
   const big = [...worldData.quakes].sort((a, b) => b.mag - a.mag).slice(0, 5), fires = worldData.fires.slice(0, 5);
