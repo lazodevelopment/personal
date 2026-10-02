@@ -55,7 +55,7 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 @keyframes in{to{opacity:1}}
 
 /* HUD header */
-.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:12px 4px 8px;margin-bottom:14px;background:linear-gradient(var(--bg) 75%,transparent)}
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;padding:12px 4px 8px;margin-bottom:14px;background:linear-gradient(var(--bg) 75%,transparent)}
 .brand{display:flex;align-items:center;gap:12px}
 .brand h1{margin:0;font-weight:600;font-size:24px;letter-spacing:.42em;color:#fff;text-shadow:0 0 18px rgba(var(--glow),.55)}
 .brand small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.2em;margin-top:-2px;white-space:nowrap}
@@ -69,7 +69,8 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .attn .chip.good{border-color:rgba(57,240,168,.5)}.attn .chip.good b{color:var(--green)}
 .attn .chip:hover{border-color:var(--cyan)}
 .attn .quiet{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.1em;align-self:center}
-.clock{text-align:right;font-family:var(--mono);line-height:1.15;white-space:nowrap}
+.clock{text-align:right;font-family:var(--mono);line-height:1.15;max-width:min(560px,48vw);min-width:0}
+.clock .t,.clock .d,.clock .u{white-space:nowrap}
 .clock .t{font-size:32px;color:#fff;text-shadow:0 0 14px rgba(var(--glow),.45)}
 .clock .d{font-size:12px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
 .clock .home{font-family:var(--mono);font-size:inherit;letter-spacing:.1em;color:var(--cyan2);border:1px solid var(--line2);padding:0 6px}
@@ -240,6 +241,14 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .homepin::after{content:"";display:block;width:8px;height:8px;margin:2px auto 0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(25,211,255,.5),0 0 12px rgba(25,211,255,1)}
 .wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
 @media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globeBox,#globe{min-height:380px}}
+/* scanner */
+.scan{display:grid;gap:6px}
+.scan a{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border:1px solid var(--line);padding:8px 10px;color:var(--fg);text-decoration:none}
+.scan a:hover{border-color:var(--cyan);background:rgba(var(--glow),.06)}
+.scan a .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:rgba(var(--glow),.12);color:var(--cyan2);font-size:12px}
+.scan a b{font-weight:600;color:#fff;display:block}.scan a small{color:var(--dim);font-size:11px}
+.scan a .kind{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim)}
+.scan .off{opacity:.45;pointer-events:none}
 /* scores, news */
 .scores{display:grid;gap:6px}
 .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
@@ -519,6 +528,12 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <ul class="mail" id="mail"><li class="empty">No inbox connected yet.</li></ul>
   </section>
 
+  <section class="panel c5" data-v="ops" id="scannerPanel">
+    <h2>Scanner <span class="sub" id="scanSub"></span><button class="btn sm" id="scanSwap">SHOW TX</button></h2>
+    <div class="scan" id="scanner"></div>
+    <div class="empty" id="scanNote" style="margin-top:8px"></div>
+  </section>
+
   <section class="panel c5" data-v="ops" id="decisionsPanel">
     <h2>Decisions <span class="sub" id="decSub"></span></h2>
     <div class="pend" id="decisions"><div class="empty">Nothing waiting on you.</div></div>
@@ -666,7 +681,7 @@ function renderAttention() {
   $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
   $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
 }
-const viewOf = (sel) => ({ "#decisionsPanel": "ops", "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
+const viewOf = (sel) => ({ "#scannerPanel": "ops", "#decisionsPanel": "ops", "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
 
 /* ---------- business tiles ---------- */
 function hourBars(hours) {
@@ -1305,7 +1320,7 @@ $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.d
 addEventListener("resize", () => { if (map) map.invalidateSize(); });
 
 /* ---------- home location ---------- */
-function renderHome() { const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
+function renderHome() { try { renderScanner(); } catch {} const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
 async function setHome(body) { try { state.cfg.home = await fetch("/api/home", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()); renderHome(); await loadState(); loadWeather(); if (globe) { globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200); loadFlights(); } } catch {} }
 $("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = hm.mode === "auto" ? { key: hm.key === "az" ? "tx" : "az", mode: "manual" } : hm.key === "tx" ? { key: "az", mode: "manual" } : { mode: "auto", deviceTz: Intl.DateTimeFormat().resolvedOptions().timeZone }; setHome(order); };
 
@@ -1532,6 +1547,31 @@ $("#worldHome").onclick = () => globe && globe.pointOfView({ ...worldHome(), alt
 $("#worldGlobe").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 2.4 }, 1500);
 document.querySelectorAll("[data-layer]").forEach(cb => cb.onchange = () => { worldLayers[cb.dataset.layer] = cb.checked; if (cb.dataset.layer === "flights") loadFlights(); if (cb.dataset.layer === "webcams") { webcamsKey = ""; loadWebcamsInView(); } if (cb.dataset.layer === "cams") { camsKey = ""; loadCamsInView(); } renderWorld(); });
 (function waitGlobe() { if (window.Globe && window.__stateLoaded) { if ($("#worldPanel").offsetParent !== null || !PHONE) initGlobe(); else setTimeout(waitGlobe, 1500); } else setTimeout(waitGlobe, 500); })();
+
+/* ---------- scanner (Broadcastify; opened in their player, not re-streamed) ---------- */
+const SCANNER = {
+  tx: { label: "Frisco / Collin County", note: "Frisco runs its own P25 system; dispatch talkgroups that are still in the clear are on these feeds.", feeds: [
+    { n: "Frisco Police, Fire & EMS", d: "Calls playlist · law dispatch, fire dispatch, traffic", k: "CALLS", u: "https://www.broadcastify.com/calls/playlists/?a=view&uuid=8bf99044-c41f-11ee-a225-0e676e2c8629" },
+    { n: "Frisco Area Fire", d: "Live stream", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/39916" },
+    { n: "Collin County Police, Fire & EMS", d: "Live stream · county-wide", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/22147" },
+    { n: "All Collin County feeds", d: "Broadcastify directory", k: "LIST", u: "https://www.broadcastify.com/listen/ctid/2565" } ] },
+  az: { label: "Phoenix / Scottsdale", note: "Scottsdale, Mesa and Tempe police are fully encrypted, so nothing of theirs can be heard. Phoenix PD, DPS and valley fire still have dispatch in the clear.", feeds: [
+    { n: "Phoenix Police", d: "Live stream · all precincts (RWC)", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/12145" },
+    { n: "Arizona DPS – Metro Phoenix", d: "Live stream · highway patrol", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/20741" },
+    { n: "Phoenix Fire + Chandler PD/Fire", d: "Live stream", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/14875" },
+    { n: "Mesa, Gilbert & Queen Creek Fire", d: "Live stream · East Valley fire", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/43570" },
+    { n: "Maricopa County Sheriff – West", d: "Live stream", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/10232" },
+    { n: "All Maricopa County feeds", d: "Broadcastify directory", k: "LIST", u: "https://www.broadcastify.com/listen/ctid/100" } ] },
+};
+let scanOverride = null;
+function renderScanner() {
+  const home = state.cfg.home?.key === "az" ? "az" : "tx"; const which = scanOverride || home; const s = SCANNER[which];
+  $("#scanSub").textContent = s.label + (scanOverride ? "" : " · follows home");
+  $("#scanSwap").textContent = which === "az" ? "SHOW TX" : "SHOW AZ";
+  $("#scanner").innerHTML = s.feeds.map(f => `<a href="${f.u}" target="_blank" rel="noopener"><span class="ic">${f.k === "LIST" ? "☰" : f.k === "CALLS" ? "▶▶" : "▶"}</span><span><b>${esc(f.n)}</b><small>${esc(f.d)}</small></span><span class="kind">${f.k}</span></a>`).join("");
+  $("#scanNote").textContent = s.note + " Feeds open in Broadcastify's player; keep that tab open to keep listening.";
+}
+$("#scanSwap").onclick = () => { const home = state.cfg.home?.key === "az" ? "az" : "tx"; const cur = scanOverride || home; scanOverride = cur === "az" ? "tx" : "az"; if (scanOverride === home) scanOverride = null; renderScanner(); };
 /* ---------- start ---------- */
 $("#launch").innerHTML = LAUNCH.map(([n,u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("");
 $("#recheck").onclick = () => checkStatus(true);
