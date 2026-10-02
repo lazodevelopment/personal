@@ -350,7 +350,13 @@ async function ingestInbox(env, body, ctx) {
   const keep = Object.fromEntries(Object.entries(cache).filter(([, v]) => Date.now() - new Date(v.date) < 14 * 86400e3)); await kv.put(env, "inbox_class", keep);
   inbox.accounts[account] = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}) })) };
   await kv.put(env, "inbox", inbox);
-  if (body.hookUrl && body.secret) { const hooks = (await kv.get(env, "inbox_hooks")) || {}; hooks[account] = { url: body.hookUrl, secret: body.secret, business: body.business || "other", at: new Date().toISOString() }; await kv.put(env, "inbox_hooks", hooks); }
+  if (body.secret) {
+    // Apps Script reports its signed-in test URL (/a/<domain>/macros/...); only a public /macros/s/.../exec deployment URL works for the hub.
+    const hooks = (await kv.get(env, "inbox_hooks")) || {}; const cur = hooks[account] || {};
+    const reported = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(body.hookUrl || "") ? body.hookUrl : null;
+    hooks[account] = { ...cur, url: cur.pinned ? cur.url : (reported || cur.url || null), secret: body.secret, business: body.business || "other", at: new Date().toISOString() };
+    await kv.put(env, "inbox_hooks", hooks);
+  }
   // the Inbox panel, the nudges and the briefs all read `brief`; rebuild it from every bridged account
   const all = Object.entries(inbox.accounts).flatMap(([acct, a]) => a.items.map((m) => ({ business: a.business, account: acct, threadId: m.threadId, from: m.from.replace(/<.*>/, "").trim() || m.fromEmail, when: new Date(m.date).toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }), received: m.date, subject: m.subject, snippet: m.summary || m.snippet?.slice(0, 120) || "", url: m.link, needs_reply: !!m.needs_reply, unread: !!m.unread, priority: m.priority || 3, kind: m.kind || "" })));
   all.sort((a, b) => (b.needs_reply - a.needs_reply) || (a.priority - b.priority) || b.received.localeCompare(a.received));
