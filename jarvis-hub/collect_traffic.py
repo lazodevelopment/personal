@@ -18,7 +18,14 @@ sys.path.insert(0, HERE)
 from collect_metrics import client_for, ts
 
 HUB = "https://jarvis-hub.floral-credit-e4f0.workers.dev"
-TZ = ZoneInfo("America/Chicago")
+def _home_tz():
+    try:
+        key = open(os.path.join(HERE, ".hub-key")).read().strip()
+        r = subprocess.run(["curl", "-s", "-m", "15", "-H", f"x-hub-key: {key}", HUB + "/api/config"], capture_output=True, text=True, timeout=20)
+        return json.loads(r.stdout).get("tz") or "America/Chicago"
+    except Exception:
+        return "America/Chicago"
+TZ = ZoneInfo(_home_tz())
 NOW = dt.datetime.now(dt.timezone.utc)
 DAY_START = dt.datetime.now(TZ).replace(hour=0, minute=0, second=0, microsecond=0).astimezone(dt.timezone.utc)
 ACTIVE = NOW - dt.timedelta(minutes=5)

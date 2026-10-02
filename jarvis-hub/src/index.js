@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -568,9 +568,31 @@ async function googleLogin(request, env) {
   return json({ ok: true, email: info.email }, 200, { "set-cookie": setCookie("sess", await makeSession(env, info.email), 30 * 86400) });
 }
 
+/* ---------------- home location: Texas or Arizona ---------------- */
+const HOMES = {
+  tx: { tz: "America/Chicago", place: { name: "Frisco, Texas", lat: 33.1507, lon: -96.8236 }, label: "Texas" },
+  az: { tz: "America/Phoenix", place: { name: "Phoenix, Arizona", lat: 33.4484, lon: -112.074 }, label: "Arizona" },
+};
+async function applyHome(env) { try { const h = await kv.get(env, "home"); if (h?.tz) env.TZ = h.tz; } catch {} }
+async function setHome(env, body) {
+  const cur = (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: HOMES.tx.tz };
+  let key = cur.key, mode = body.mode || cur.mode;
+  if (body.key && HOMES[body.key]) { key = body.key; mode = body.mode || "manual"; }
+  else if (body.deviceTz && mode === "auto") { const hit = Object.entries(HOMES).find(([, v]) => v.tz === body.deviceTz) || (body.deviceTz === "America/Denver" ? ["az"] : null); if (hit) key = hit[0]; }
+  const next = { mode, key, tz: HOMES[key].tz, label: HOMES[key].label, at: new Date().toISOString() };
+  if (next.key !== cur.key) {
+    const place = await kv.get(env, "place");
+    if (!place || Object.values(HOMES).some((h) => h.place.name === place.name)) await kv.put(env, "place", HOMES[key].place);
+    await pushAlert(env, { kind: "watch", text: `Home set to ${next.label} (${next.tz}); briefs follow ${next.label} time` });
+  }
+  await kv.put(env, "home", next);
+  return next;
+}
+
 /* ---------------- worker ---------------- */
 export default {
   async scheduled(event, env, ctx) {
+    await applyHome(env);
     const cron = event.cron || "";
     if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)));
     else ctx.waitUntil((async () => {
@@ -585,6 +607,7 @@ export default {
   },
 
   async fetch(request, env, ctx) {
+    await applyHome(env);
     const url = new URL(request.url); const p = url.pathname;
     if (p === "/auth" && request.method === "POST") {
       const form = await request.formData(); const key = String(form.get("key") || "");
@@ -603,7 +626,7 @@ export default {
     }
     if (p === "/" || p === "/index.html" || p === "/wall") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
-    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago" });
+    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago" });
     if (p === "/api/status") {
       const cached = url.searchParams.get("fresh") ? null : await kv.get(env, "status");
       if (cached && Date.now() - new Date(cached.checkedAt) < 6 * 60000) return json({ ...cached, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
@@ -623,6 +646,7 @@ export default {
     if (p === "/api/morning/run" && request.method === "POST") return json(await makeMorning(env, request, url.searchParams.get("slot") || undefined));
     if (p === "/api/test-alert" && request.method === "POST") return json({ ok: true, results: await notify(env, "JARVIS test", "Push notifications are wired up.", { tags: "robot" }) });
 
+    if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
     if (p === "/api/inbox/bridges") { const hooks = (await kv.get(env, "inbox_hooks")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; return json(Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, business: v.business, at: v.at, items: v.items.length, actions: !!hooks[a]?.url }))); }
     // action queue: confirmed by Jesse on the page. Email kinds run right now through the Gmail bridge; the rest wait for the hands script on his PC

@@ -69,6 +69,7 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .clock{text-align:right;font-family:var(--mono);line-height:1.15;white-space:nowrap}
 .clock .t{font-size:32px;color:#fff;text-shadow:0 0 14px rgba(var(--glow),.45)}
 .clock .d{font-size:12px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
+.clock .home{font-family:var(--mono);font-size:inherit;letter-spacing:.1em;color:var(--cyan2);border:1px solid var(--line2);padding:0 6px}
 .clock .u{font-size:12px;color:var(--dim);letter-spacing:.1em;margin-top:4px}.clock .u a{color:var(--dim)}
 .clock .z{font-size:14px;color:var(--dim);letter-spacing:.05em;margin-top:6px;display:flex;gap:14px;justify-content:flex-end;flex-wrap:wrap}
 .clock .mk{font-size:14px;letter-spacing:.03em;margin-top:5px;display:flex;gap:16px;justify-content:flex-end;flex-wrap:wrap;font-family:var(--mono)}
@@ -363,7 +364,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div><h1>JARVIS</h1><small id="greet">BOOTING</small></div>
   </div>
   <div class="attn" id="attn"><span class="quiet">scanning…</span></div>
-  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="mk" id="ticker"></div><div class="u"><span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
+  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="mk" id="ticker"></div><div class="u"><button class="home" id="homeBtn" title="Home location: tap to switch between Texas and Arizona (AUTO follows this device)">TX</button> · <span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
 </header>
 
 <main class="grid" id="main">
@@ -1176,6 +1177,10 @@ function showView(v) { $("#main").dataset.view = v; $("#nav").querySelectorAll("
 $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.dataset.view));
 addEventListener("resize", () => { if (map) map.invalidateSize(); });
 
+/* ---------- home location ---------- */
+function renderHome() { const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
+async function setHome(body) { try { state.cfg.home = await fetch("/api/home", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()); renderHome(); loadWeather(); } catch {} }
+$("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = hm.mode === "auto" ? { key: hm.key === "az" ? "tx" : "az", mode: "manual" } : hm.key === "tx" ? { key: "az", mode: "manual" } : { mode: "auto", deviceTz: Intl.DateTimeFormat().resolvedOptions().timeZone }; setHome(order); };
 /* ---------- start ---------- */
 $("#launch").innerHTML = LAUNCH.map(([n,u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("");
 $("#recheck").onclick = () => checkStatus(true);
@@ -1183,7 +1188,9 @@ renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? 
 (async () => {
   try { state.cfg = await fetch("/api/config").then(r => r.json()); } catch {}
   $("#who").textContent = state.cfg.user && state.cfg.user.includes("@") ? state.cfg.user.split("@")[0] : "key";
-  pickVoices();
+  pickVoices(); renderHome();
+  const devTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if ((state.cfg.home?.mode || "auto") === "auto" && devTz !== state.cfg.home?.tz && ["America/Chicago", "America/Phoenix", "America/Denver"].includes(devTz)) await setHome({ deviceTz: devTz });
   let v = "jarvis"; try { v = localStorage.getItem("jarvisView") || v; } catch {} showView(v);
   await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
   if (location.pathname === "/wall") setTimeout(enterWall, 500);
