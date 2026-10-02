@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -308,6 +308,54 @@ const STATES = { AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA:
 const stateName = (ab) => STATES[ab.toUpperCase()] || ab;
 const wxdaysSummary = (wd) => Object.values(wd?.days || {}).sort((a, b) => a.date.localeCompare(b.date)).map((d) => `${d.date} ${d.title} at ${d.where}: ${WMO[d.code] || "code " + d.code}, high ${d.hi} low ${d.lo}, rain ${d.rain}%, wind ${d.wind} mph, sunset ${d.sunset}`).join("; ") || "no booked weddings in the next 10 days with a known venue";
 
+
+/* ---------------- Gmail bridges (Apps Script in each account) ---------------- */
+const BIZ_LABEL = { atavia: "Atavia", es: "Elizabeth Scott", lazo: "Lazo", roven: "Roven", lr: "LeaseReputation", brisk: "Brisk", other: "Other" };
+
+// Claude triages new threads: needs a reply? one-line summary, priority. Cached per thread+last message.
+async function triage(env, items) {
+  if (!env.ANTHROPIC_API_KEY || !items.length) return {};
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const list = items.map((m, i) => `${i + 1}. from: ${m.from} | subject: ${m.subject} | last message from us: ${m.lastFromMe} | messages: ${m.count} | text: ${(m.snippet || "").slice(0, 300)}`).join("\n");
+  const r = await client.beta.messages.create({
+    model: MODEL, max_tokens: 3000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+    system: "You triage a small business owner's inbox (wedding films, a wedding-planner app, a hiring platform, apartment reviews). For each numbered thread return JSON only: an array of objects {\"n\": number, \"needs_reply\": boolean, \"summary\": string (max 110 chars, plain, what it is or asks), \"priority\": 1|2|3, \"kind\": \"lead\"|\"client\"|\"booking\"|\"payment\"|\"vendor\"|\"notification\"|\"newsletter\"|\"other\"}. needs_reply is true only when a real person is asking the business something and the last message is not from us. priority 1 = money or a client waiting, 2 = worth reading today, 3 = noise.",
+    messages: [{ role: "user", content: list }],
+  });
+  const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+  try { const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1)); return Object.fromEntries(arr.map((x) => [items[x.n - 1]?.threadId, x]).filter(([k]) => k)); } catch { return {}; }
+}
+
+async function ingestInbox(env, body, ctx) {
+  const account = String(body.account || "").toLowerCase(); if (!account) return json({ error: "no account" }, 400);
+  const inbox = (await kv.get(env, "inbox")) || { accounts: {} };
+  const cache = (await kv.get(env, "inbox_class")) || {};
+  const items = (body.items || []).slice(0, 60);
+  const fresh = items.filter((m) => !cache[m.threadId] || cache[m.threadId].date !== m.date);
+  let classes = {}; try { classes = await triage(env, fresh); } catch (e) { console.log("triage failed", e.message); }
+  for (const m of fresh) { const c = classes[m.threadId]; if (c) cache[m.threadId] = { date: m.date, needs_reply: !!c.needs_reply, summary: c.summary, priority: c.priority, kind: c.kind }; }
+  const keep = Object.fromEntries(Object.entries(cache).filter(([, v]) => Date.now() - new Date(v.date) < 14 * 86400e3)); await kv.put(env, "inbox_class", keep);
+  inbox.accounts[account] = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}) })) };
+  await kv.put(env, "inbox", inbox);
+  if (body.hookUrl && body.secret) { const hooks = (await kv.get(env, "inbox_hooks")) || {}; hooks[account] = { url: body.hookUrl, secret: body.secret, business: body.business || "other", at: new Date().toISOString() }; await kv.put(env, "inbox_hooks", hooks); }
+  // the Inbox panel, the nudges and the briefs all read `brief`; rebuild it from every bridged account
+  const all = Object.entries(inbox.accounts).flatMap(([acct, a]) => a.items.map((m) => ({ business: a.business, account: acct, threadId: m.threadId, from: m.from.replace(/<.*>/, "").trim() || m.fromEmail, when: new Date(m.date).toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }), received: m.date, subject: m.subject, snippet: m.summary || m.snippet?.slice(0, 120) || "", url: m.link, needs_reply: !!m.needs_reply, unread: !!m.unread, priority: m.priority || 3, kind: m.kind || "" })));
+  all.sort((a, b) => (b.needs_reply - a.needs_reply) || (a.priority - b.priority) || b.received.localeCompare(a.received));
+  const needs = all.filter((m) => m.needs_reply).length, unread = all.filter((m) => m.unread).length;
+  await kv.put(env, "brief", { at: new Date().toISOString(), source: "bridge", accounts: Object.keys(inbox.accounts), note: all.length ? `${unread} unread across ${Object.keys(inbox.accounts).length} inbox${Object.keys(inbox.accounts).length > 1 ? "es" : ""}, ${needs} need${needs === 1 ? "s" : ""} a reply` : "All inboxes clear.", items: all.slice(0, 40) });
+  return json({ ok: true, account, items: items.length, triaged: fresh.length, hook: !!body.hookUrl });
+}
+
+async function emailAction(env, item) {
+  const hooks = (await kv.get(env, "inbox_hooks")) || {}; const p = item.params || {};
+  const hook = hooks[String(p.account || "").toLowerCase()] || Object.values(hooks).find((h) => h.business === p.business);
+  if (!hook?.url) return { ok: false, message: "no Gmail bridge for " + (p.account || p.business || "that account") };
+  const action = item.kind.replace("email_", "");
+  const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject }), redirect: "follow" });
+  const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch {}
+  return j.ok ? { ok: true, message: j.did || action } : { ok: false, message: j.error || ("bridge " + r.status) };
+}
+
 /* ---------------- context for the brain ---------------- */
 async function buildContext(env, request) {
   const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue, traffic, wxdays] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue", "traffic", "wxdays"].map((k) => kv.get(env, k)));
@@ -333,7 +381,7 @@ async function buildContext(env, request) {
     }
     if (metrics.money) lines.push(`MONEY: this month $${Math.round(metrics.money.thisMonth).toLocaleString()} (last month $${Math.round(metrics.money.lastMonth).toLocaleString()}); recent months: ` + metrics.money.months.slice(-6).map((m) => `${m.ym} $${Math.round(m.total)}`).join(", "));
   } else lines.push("METRICS: none collected yet");
-  lines.push(`INBOX BRIEF (${brief?.at || "none"}): ${brief?.note || ""} ` + (brief?.items || []).slice(0, 12).map((m) => `[${m.business || m.account || ""}] ${m.from}: ${m.subject}${m.needs_reply ? " (NEEDS REPLY)" : ""} — ${m.snippet || ""}`).join(" | "));
+  lines.push(`INBOX (${brief?.source === "bridge" ? "live Gmail bridges" : "hourly snapshot"}, ${brief?.at || "none"}): ${brief?.note || ""} ` + (brief?.items || []).slice(0, 20).map((m) => `[${BIZ_LABEL[m.business] || m.business || ""} | ${m.account || ""} | ${m.threadId || "no-id"}] ${m.from}: ${m.subject}${m.needs_reply ? " (NEEDS REPLY)" : ""}${m.unread ? " (unread)" : ""} — ${m.snippet || ""}`).join(" | "));
   lines.push(`ALERTS (latest): ` + (alerts || []).slice(0, 6).map((a) => `${a.at.slice(0, 16)} ${a.text}`).join(" | "));
   if (cal?.events?.length) lines.push(`CALENDAR (next 60d): ` + cal.events.slice(0, 20).map((e) => `${e.start.slice(0, 16)} ${e.title}${e.location ? " @ " + e.location : ""}`).join("; "));
   else lines.push("CALENDAR: not connected");
@@ -358,7 +406,7 @@ Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding plan
 Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
-Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded). request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.`;
+Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.`;
 
 const BRAIN_TOOLS = [
   { name: "open_link", description: "Open a URL in a new tab on Jesse's screen.", input_schema: { type: "object", properties: { url: { type: "string" }, label: { type: "string" } }, required: ["url", "label"], additionalProperties: false }, strict: true },
@@ -366,7 +414,7 @@ const BRAIN_TOOLS = [
   { name: "remember", description: "Store a durable fact or preference in JARVIS's memory.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false }, strict: true },
   { name: "forget", description: "Delete a memory by its id (shown in MEMORY as [id]).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false }, strict: true },
   { name: "draft_reply", description: "Draft an email reply. Shown to Jesse with an Open in Gmail button; nothing is sent automatically.", input_schema: { type: "object", properties: { to: { type: "string" }, subject: { type: "string" }, body: { type: "string" }, business: { type: "string", enum: ["atavia", "es", "lazo", "roven", "lr", "brisk"] } }, required: ["to", "subject", "body", "business"], additionalProperties: false }, strict: true },
-  { name: "request_action", description: "Queue a business-data change for Jesse's confirmation. kinds: roven_approve_job (params.jobId), roven_reject_job (params.jobId), roven_approve_employer (params.employerId), lazo_claim (params.claimId, params.decision 'approved'|'rejected'), booking_note (params.business 'atavia'|'es', params.bookingId, params.note), lazo_inquiry_responded (params.inquiryId).", input_schema: { type: "object", properties: { kind: { type: "string", enum: ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded"] }, params: { type: "object", properties: { jobId: { type: "string" }, employerId: { type: "string" }, claimId: { type: "string" }, decision: { type: "string" }, business: { type: "string" }, bookingId: { type: "string" }, note: { type: "string" }, inquiryId: { type: "string" } }, additionalProperties: false }, summary: { type: "string", description: "One line Jesse will confirm, e.g. 'Approve Roven job Senior RN at Mercy'" } }, required: ["kind", "params", "summary"], additionalProperties: false }, strict: true },
+  { name: "request_action", description: "Queue a business-data change for Jesse's confirmation. kinds: roven_approve_job (params.jobId), roven_reject_job (params.jobId), roven_approve_employer (params.employerId), lazo_claim (params.claimId, params.decision 'approved'|'rejected'), booking_note (params.business 'atavia'|'es', params.bookingId, params.note), lazo_inquiry_responded (params.inquiryId), email_reply (params.account, params.threadId, params.body), email_archive (params.account, params.threadId), email_read (params.account, params.threadId), email_send (params.account, params.to, params.subject, params.body).", input_schema: { type: "object", properties: { kind: { type: "string", enum: ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"] }, params: { type: "object", properties: { jobId: { type: "string" }, employerId: { type: "string" }, claimId: { type: "string" }, decision: { type: "string" }, business: { type: "string" }, bookingId: { type: "string" }, note: { type: "string" }, inquiryId: { type: "string" }, account: { type: "string" }, threadId: { type: "string" }, body: { type: "string" }, to: { type: "string" }, subject: { type: "string" } }, additionalProperties: false }, summary: { type: "string", description: "One line Jesse will confirm, e.g. 'Approve Roven job Senior RN at Mercy'" } }, required: ["kind", "params", "summary"], additionalProperties: false }, strict: true },
 ];
 
 async function runTool(name, input, env, actions) {
@@ -560,9 +608,17 @@ export default {
     if (p === "/api/morning/run" && request.method === "POST") return json(await makeMorning(env, request, url.searchParams.get("slot") || undefined));
     if (p === "/api/test-alert" && request.method === "POST") return json({ ok: true, results: await notify(env, "JARVIS test", "Push notifications are wired up.", { tags: "robot" }) });
 
-    // action queue: confirmed by Jesse on the page, executed by the hands script on his PC
+    if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
+    if (p === "/api/inbox/bridges") { const hooks = (await kv.get(env, "inbox_hooks")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; return json(Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, business: v.business, at: v.at, items: v.items.length, actions: !!hooks[a]?.url }))); }
+    // action queue: confirmed by Jesse on the page. Email kinds run right now through the Gmail bridge; the rest wait for the hands script on his PC
     if (p === "/api/act" && request.method === "POST") {
       const item = await request.json(); const q = (await kv.get(env, "queue")) || [];
+      if (String(item.kind || "").startsWith("email_")) {
+        const res = await emailAction(env, item);
+        q.unshift({ ...item, status: res.ok ? "done" : "failed", result: res.message, confirmedAt: new Date().toISOString(), doneAt: new Date().toISOString() });
+        await kv.put(env, "queue", q.slice(0, 50)); await pushAlert(env, { kind: res.ok ? "done" : "failed", text: (res.ok ? "Done: " : "Failed: ") + item.summary + (res.message ? " — " + res.message : "") });
+        return json({ ok: res.ok, id: item.id, executed: true, result: res.message });
+      }
       q.unshift({ ...item, status: "pending", confirmedAt: new Date().toISOString() });
       await kv.put(env, "queue", q.slice(0, 50)); return json({ ok: true, id: item.id });
     }
@@ -579,7 +635,10 @@ export default {
       if (request.method === "GET") { const out = {}; await Promise.all(STATE_KEYS.map(async (k) => { const v = await kv.get(env, k); if (v != null) out[k] = v; })); return json(out); }
       if (request.method === "POST" || request.method === "PUT") {
         const body = await request.json(); const saved = [];
-        for (const k of STATE_KEYS) if (k in body) { await kv.put(env, k, body[k]); saved.push(k); }
+        for (const k of STATE_KEYS) if (k in body) {
+          if (k === "brief" && body.brief?.source !== "bridge" && !body.brief?.force) { const cur = await kv.get(env, "brief"); if (cur?.source === "bridge") continue; } // live bridges outrank the hourly snapshot
+          await kv.put(env, k, body[k]); saved.push(k);
+        }
         if (body.metrics) ctx.waitUntil(Promise.all([watchMetrics(env, body.metrics), weddingWeather(env)]));
         return json({ saved, at: new Date().toISOString() });
       }

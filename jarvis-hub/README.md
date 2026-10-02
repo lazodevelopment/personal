@@ -103,6 +103,15 @@ makes are documented in the queue item kinds: `roven_approve_job` → jobs/{id} 
 `booking_note` → bookings/{id} admin_notes arrayUnion({at,text,by}); `lazo_inquiry_responded` → status responded + respondedAt.
 Writing that executor was blocked by the assistant's permission rules (it changes production business data unattended), so it is left for Jesse to add or approve explicitly.
 
+## Gmail bridges (the email that actually works)
+`gmail_bridge.gs` is a Google Apps Script you paste into each Gmail account (script.google.com). It runs on Google's
+servers every 5 minutes, posts the inbox to `POST /api/inbox` (triaged by Claude: needs-reply, summary, priority, kind),
+and, once deployed as a web app, lets the hub archive, mark read, reply and send through that account. Steps are in the
+file header and behind CONNECT INBOX on the hub. Bridged data (`brief.source = "bridge"`) outranks the old hourly
+Claude-routine snapshot, so the `jarvis-inbox-brief` scheduled task can be disabled once the accounts are connected.
+Email actions (`email_reply`, `email_archive`, `email_read`, `email_send`) execute immediately on CONFIRM; everything
+else still goes to the hands script.
+
 ## Using it
 - **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
 - **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.

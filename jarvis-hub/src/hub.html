@@ -233,6 +233,14 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .mail .subj{grid-column:1/-1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mail .subj span{color:var(--dim)}
 .mail .grp{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);margin-top:6px}
+.howto{border:1px solid var(--line2);padding:10px 12px;margin-bottom:10px;font-size:13px;line-height:1.5}
+.howto ol{margin:6px 0 6px 18px;padding:0}.howto code{font-family:var(--mono);color:var(--cyan2)}
+.mail li{grid-template-columns:1fr auto auto}
+.mail .acts{grid-row:1/3;align-self:center;display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;max-width:150px}
+.mail .acts button{font-family:var(--mono);font-size:9px;letter-spacing:.1em;border:1px solid var(--line);padding:2px 6px;color:var(--dim)}
+.mail .acts button:hover{color:var(--cyan2);border-color:var(--line2)}
+.mail li.p1 .from::before{content:"●";color:var(--red);margin-right:6px;font-size:9px;vertical-align:middle}
+.mail .kind{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);margin-left:6px}
 .tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;padding:1px 6px;border:1px solid var(--amber);color:var(--amber);vertical-align:middle;margin-left:6px}
 .events{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .events li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;font-size:14px;min-width:0}
@@ -412,8 +420,19 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   </section>
 
   <section class="panel c7" data-v="ops">
-    <h2>Inbox <span class="sub" id="briefAt"></span><a class="btn sm" href="https://mail.google.com/" target="_blank" rel="noopener">GMAIL</a></h2>
-    <ul class="mail" id="mail"><li class="empty">No brief yet.</li></ul>
+    <h2>Inbox <span class="sub" id="briefAt"></span><button class="btn sm" id="inboxConnect">CONNECT INBOX</button><a class="btn sm" href="https://mail.google.com/" target="_blank" rel="noopener">GMAIL</a></h2>
+    <div class="howto" id="inboxHow" hidden>
+      <b>Connect a Gmail account to JARVIS (5 minutes, once per account)</b>
+      <ol>
+        <li>Signed in as that account, open <a href="https://script.google.com/home/projects/create" target="_blank" rel="noopener">script.google.com → New project</a>.</li>
+        <li>Replace the code with <code>gmail_bridge.gs</code> from the jarvis-hub folder. Fill in HUB_KEY (from .hub-key), BUSINESS (atavia, es, lazo, roven, lr, brisk) and a long random SECRET.</li>
+        <li>Run <code>setup</code> once (▶ in the toolbar) and approve the permissions.</li>
+        <li>Deploy → New deployment → Web app → Execute as Me → Anyone → Deploy. Then run <code>setup</code> once more.</li>
+      </ol>
+      <span class="empty">After that the inbox syncs every 5 minutes on Google's servers, and JARVIS can archive, mark read and send replies you confirm.</span>
+      <div id="bridges" class="empty" style="margin-top:8px"></div>
+    </div>
+    <ul class="mail" id="mail"><li class="empty">No inbox connected yet.</li></ul>
   </section>
 
   <section class="panel c5" data-v="ops">
@@ -665,8 +684,12 @@ function proposeAction(item) {
   item.id = item.id || Math.random().toString(36).slice(2, 10);
   closeDrill(); showView("jarvis");
   const el = document.createElement("div"); el.className = "card"; el.dataset.id = item.id;
-  el.innerHTML = `<div class="k">CONFIRM ACTION</div><div>${esc(item.summary)}</div><div class="row"><button class="btn primary" data-ok>CONFIRM</button><button class="btn sm" data-no>CANCEL</button><span class="st"></span></div>`;
-  el.querySelector("[data-ok]").onclick = async () => { el.querySelector("[data-ok]").disabled = true; await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }); el.querySelector(".st").textContent = "queued · waiting for the hands script on your PC"; el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove()); state.queue.unshift({ ...item, status: "pending" }); renderAttention(); speak("Queued. I'll confirm when it's done."); };
+  const preview = item.kind === "email_reply" || item.kind === "email_send" ? `<textarea style="min-height:120px;font:14px var(--display);line-height:1.45">${esc(item.params?.body || "")}</textarea>` : "";
+  el.innerHTML = `<div class="k">${item.kind?.startsWith("email_") ? "CONFIRM EMAIL" : "CONFIRM ACTION"}</div><div>${esc(item.summary)}</div>${preview}<div class="row"><button class="btn primary" data-ok>CONFIRM</button><button class="btn sm" data-no>CANCEL</button><span class="st"></span></div>`;
+  el.querySelector("[data-ok]").onclick = async () => { const ta = el.querySelector("textarea"); if (ta) item.params.body = ta.value; el.querySelector("[data-ok]").disabled = true; el.querySelector(".st").textContent = "working…"; const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+    el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove());
+    if (r.executed) { el.querySelector(".st").textContent = (r.ok ? "done · " : "failed · ") + (r.result || ""); speak(r.ok ? "Done. " + (r.result || "") : "That didn't go through: " + (r.result || "")); setTimeout(loadState, 4000); }
+    else { el.querySelector(".st").textContent = "queued · waiting for the hands script on your PC"; state.queue.unshift({ ...item, status: "pending" }); renderAttention(); speak("Queued. I'll confirm when it's done."); } };
   el.querySelector("[data-no]").onclick = () => { el.querySelector(".st").textContent = "cancelled"; el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove()); };
   $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; $("#brainPanel").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -812,12 +835,17 @@ async function loadNews() {
 async function loadWxDays() { try { state.wxdays = await fetch("/api/wxdays").then(r => r.json()); renderEvents(); } catch {} }
 /* ---------- inbox, upcoming, money, memory, alerts, morning ---------- */
 function renderBrief() {
-  const b = state.brief;
-  if (!b || !b.items?.length) { $("#mail").innerHTML = `<li class="empty">${esc(b?.note || "No brief yet. The hourly routine fills this.")}</li>`; $("#briefAt").textContent = b?.at ? (b.accounts?.length ? b.accounts.length + " inboxes · " : "") + fmtAgo(b.at) : ""; return; }
-  $("#briefAt").textContent = `${b.items.length} items · ${b.accounts?.length || 1} inbox${(b.accounts?.length || 1) > 1 ? "es" : ""} · ${fmtAgo(b.at)}`;
+  const b = state.brief; const live = b?.source === "bridge";
+  if (!b || !b.items?.length) { $("#mail").innerHTML = `<li class="empty">${esc(b?.note || "No inbox connected yet. Press CONNECT INBOX.")}</li>`; $("#briefAt").textContent = b?.at ? (live ? "live · " : "snapshot · ") + fmtAgo(b.at) : ""; return; }
+  $("#briefAt").textContent = `${live ? "live" : "snapshot"} · ${b.accounts?.length || 1} inbox${(b.accounts?.length || 1) > 1 ? "es" : ""} · ${b.items.filter(m => m.needs_reply).length} need reply · ${fmtAgo(b.at)}`;
   const groups = {}; for (const m of b.items) (groups[m.business || m.account || "inbox"] ||= []).push(m);
-  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` + items.map(m => `<li class="${m.needs_reply ? "needs" : ""}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}</span><span class="when">${esc(m.when||"")}</span><a class="subj" href="${esc(m.url||"https://mail.google.com/")}" target="_blank" rel="noopener">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</a></li>`).join("")).join("");
+  const acts = (m) => live && m.threadId ? `<span class="acts">${m.needs_reply ? `<button data-mail="reply">REPLY</button>` : ""}${m.unread ? `<button data-mail="read">READ</button>` : ""}<button data-mail="archive">ARCHIVE</button></span>` : "";
+  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` + items.map((m, i) => `<li class="${m.needs_reply ? "needs" : ""} ${m.priority === 1 ? "p1" : ""}" data-t="${esc(m.threadId || "")}" data-a="${esc(m.account || "")}" data-from="${esc(m.from)}" data-subj="${esc(m.subject)}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}${m.kind && m.kind !== "other" ? `<span class="kind">${esc(m.kind.toUpperCase())}</span>` : ""}</span><span class="when">${esc(m.when||"")}</span>${acts(m)}<a class="subj" href="${esc(m.url||"https://mail.google.com/")}" target="_blank" rel="noopener">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</a></li>`).join("")).join("");
+  $("#mail").querySelectorAll("[data-mail]").forEach(btn => btn.onclick = () => { const li = btn.closest("li"); const act = btn.dataset.mail; const who = li.dataset.from, subj = li.dataset.subj, a = li.dataset.a, t = li.dataset.t;
+    if (act === "reply") { showView("jarvis"); ask(`Draft and send a reply to ${who} about "${subj}" (account ${a}, thread ${t}). Write it for me, then queue it as email_reply for my confirmation.`); return; }
+    proposeAction({ kind: "email_" + act, params: { account: a, threadId: t }, summary: `${act === "archive" ? "Archive" : "Mark read"}: ${who} — ${subj}` }); });
 }
+$("#inboxConnect").onclick = async () => { const el = $("#inboxHow"); el.hidden = !el.hidden; if (!el.hidden) { try { const br = await fetch("/api/inbox/bridges").then(r => r.json()); $("#bridges").innerHTML = br.length ? "Connected: " + br.map(x => `<b style="color:#fff">${esc(x.account)}</b> (${esc(bizOf(x.business).name || x.business)}, ${x.items} threads, ${fmtAgo(x.at)}${x.actions ? ", actions on" : ", read-only until the web app is deployed"})`).join(" · ") : "No accounts connected yet."; } catch {} } };
 function renderEvents() {
   const wd = state.wxdays?.days || {};
   const ev = Object.entries(state.metrics?.businesses || {}).flatMap(([id, b]) => (b.upcoming || []).map(e => ({ date: e.date, title: e.title + (e.where ? " · " + e.where : ""), biz: bizOf(id).name, cls: "", wx: wd[`${id}:${e.id || e.date}`] })))
@@ -1057,7 +1085,9 @@ const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const mic = $("#mic"); let rec, wake, listening = false, hasMic = false, micAnalyser = null, micStream = null;
 async function detectMic() {
   try { const devs = await navigator.mediaDevices.enumerateDevices(); hasMic = devs.some(d => d.kind === "audioinput"); } catch { hasMic = false; }
+  if (PHONE && SR) hasMic = true; // phones always have one; enumeration can't be trusted before permission is granted
   if (SR && hasMic) { mic.hidden = false; $("#wakeWrap").hidden = false; $("#convWrap").hidden = false; setupVoice(); }
+  else if (!SR) addMsg("sys", "Voice input needs Chrome, Edge or Safari. Typing works everywhere.");
 }
 function onSpeechEnd() {
   pendingReply = false;
@@ -1067,11 +1097,11 @@ function onSpeechEnd() {
 }
 let startListen = () => {};
 function setupVoice() {
-  rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1;
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
   rec.onresult = (e) => { const r = e.results[e.results.length-1]; $("#coreState").textContent = "» " + r[0].transcript.slice(-40); if (r.isFinal) ask(r[0].transcript); };
   rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) setViz("idle"); if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
-  rec.onerror = (e) => { if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
-  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); listening = true; mic.classList.add("on"); await grabMic(); setViz("listening", micAnalyser); try { rec.start(); } catch {} };
+  rec.onerror = (e) => { const why = { "not-allowed": "Microphone blocked. In Chrome: tap the lock icon in the address bar → Permissions → Microphone → Allow, then reload.", "service-not-allowed": "Speech recognition is disabled in this browser.", "audio-capture": "No microphone could be opened. Close other apps using the mic and try again.", "network": "Speech recognition needs an internet connection (Google's service).", "language-not-supported": "Speech language not supported." }[e.error]; if (why) addMsg("sys", why); else if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
+  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
   const stop = () => { try { rec.stop(); } catch {} };
   mic.onclick = () => listening ? stop() : startListen();
   document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "j" && !e.repeat && !/input|textarea/i.test(e.target.tagName)) startListen(); });
