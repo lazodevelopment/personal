@@ -1025,7 +1025,8 @@ function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqu
 function enqueueSpeech(segment) {
   if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
   const gen = speakGen;
-  const item = { text: segment, gen, blob: state.cfg.tts ? fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: segment }) }).then(r => r.ok ? r.blob() : null).catch(() => null) : Promise.resolve(null) };
+  const streamIt = state.cfg.tts && !speaking && !speakQueue.length && segment.length < 1500;
+  const item = { text: segment, gen, stream: streamIt, blob: !state.cfg.tts || streamIt ? Promise.resolve(null) : fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: segment }) }).then(r => r.ok ? r.blob() : null).catch(() => null) };
   speakQueue.push(item); if (!speaking) pumpSpeech();
 }
 async function pumpSpeech() {
@@ -1034,6 +1035,12 @@ async function pumpSpeech() {
     const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
     const blob = await item.blob; if (item.gen !== speakGen) continue;
     currentSpeech = item.text;
+    if (item.stream) {
+      if (PHONE) await settleMic();
+      const ok = await new Promise(res => { player.src = "/api/tts?t=" + encodeURIComponent(item.text); setViz("speaking", playerViz()); player.onended = () => res(true); player.onerror = () => res(false); player.play().catch(() => res(false)); });
+      if (ok || item.gen !== speakGen) continue;
+      item.blob = Promise.resolve(null); // streaming failed: fall through to the browser voice below
+    }
     if (blob) {
       if (PHONE) await settleMic();
       await new Promise(res => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });

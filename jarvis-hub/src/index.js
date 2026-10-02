@@ -464,7 +464,8 @@ async function chat(request, env, ctx) {
     try {
       if (!env.ANTHROPIC_API_KEY) { await send("delta", { text: "My reasoning core isn't connected. Set the Anthropic key on the worker." }); await send("done", { reply: "", messages: history, actions: [] }); return; }
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-      const context = await buildContext(env, request);
+      const T0 = Date.now(); const timing = {};
+      const context = await buildContext(env, request); timing.context = Date.now() - T0;
       const messages = [...history.slice(-12), { role: "user", content: text }];
       const actions = []; let reply = "";
       for (let i = 0; i < 4; i++) {
@@ -474,7 +475,7 @@ async function chat(request, env, ctx) {
           tools: BRAIN_TOOLS, messages,
         });
         let turnText = "";
-        stream.on("text", (d) => { turnText += d; send("delta", { text: d }); });
+        stream.on("text", (d) => { if (timing.firstText == null) timing.firstText = Date.now() - T0; turnText += d; send("delta", { text: d }); });
         const msg = await stream.finalMessage();
         if (turnText.trim()) reply = (reply ? reply + " " : "") + turnText.trim();
         messages.push({ role: "assistant", content: msg.content });
@@ -489,7 +490,8 @@ async function chat(request, env, ctx) {
         if (i < 3) await send("delta", { text: " " });
       }
       const compact = messages.map((m) => ({ role: m.role, content: typeof m.content === "string" ? m.content : m.content.filter((b) => b.type === "text").map((b) => b.text).join(" ") })).filter((m) => m.content.trim());
-      await send("done", { reply, actions, messages: compact.slice(-12) });
+      timing.total = Date.now() - T0; timing.ctxChars = context.length;
+      await send("done", { reply, actions, messages: compact.slice(-12), timing });
     } catch (e) { await send("error", { message: String(e.message || e) }); }
     finally { try { await writer.close(); } catch {} }
   };
@@ -551,17 +553,17 @@ async function checkStale(env) {
   return flags;
 }
 /* ---------------- ElevenLabs ---------------- */
-function elevenlabs(env, text, format = "mp3_44100_128") {
+function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v2_5") {
   const voice = env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
   return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=${format}`, {
     method: "POST", headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ text: String(text).slice(0, 4800), model_id: "eleven_turbo_v2_5", voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
+    body: JSON.stringify({ text: String(text).slice(0, 4800), model_id: model, voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
   });
 }
 async function tts(request, env) {
   if (!env.ELEVENLABS_API_KEY) return json({ error: "tts not configured" }, 501);
-  const { text } = await request.json();
-  const r = await elevenlabs(env, text);
+  const text = request.method === "GET" ? new URL(request.url).searchParams.get("t") || "" : (await request.json()).text;
+  const r = await elevenlabs(env, text, "mp3_44100_128", "eleven_flash_v2_5");
   if (!r.ok) return json({ error: "tts failed", status: r.status }, 502);
   return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } });
 }
@@ -650,7 +652,7 @@ export default {
     if (p === "/api/wxdays") return json(url.searchParams.get("fresh") ? { days: await weddingWeather(env) } : ((await kv.get(env, "wxdays")) || { days: {} }));
     if (p === "/api/calendar") return json((await loadCalendar(env, !!url.searchParams.get("fresh"))) || { events: [], off: true });
     if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx);
-    if (p === "/api/tts" && request.method === "POST") return tts(request, env);
+    if (p === "/api/tts" && (request.method === "POST" || request.method === "GET")) return tts(request, env);
     if (p === "/api/morning") return json({ latest: (await kv.get(env, "morning")) || null, history: (await kv.get(env, "briefs")) || [], stale: (await kv.get(env, "stale")) || {} });
     if (p === "/api/morning/audio") { const id = url.searchParams.get("id"); const a = await env.HUB.get(id ? "brief_audio_" + id : "brief_audio_" + ((await kv.get(env, "morning"))?.id || ""), "arrayBuffer"); return a ? new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }) : new Response("no audio", { status: 404 }); }
     if (p === "/api/morning/run" && request.method === "POST") return json(await makeMorning(env, request, url.searchParams.get("slot") || undefined));
