@@ -359,6 +359,14 @@ async function ingestInbox(env, body, ctx) {
   return json({ ok: true, account, items: items.length, triaged: fresh.length, hook: !!body.hookUrl });
 }
 
+async function bridgeCall(env, account, payload) {
+  const hooks = (await kv.get(env, "inbox_hooks")) || {};
+  const hook = hooks[String(account || "").toLowerCase()];
+  if (!hook?.url) return { error: "no Gmail bridge with actions for " + account };
+  const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" });
+  const t = await r.text(); try { return JSON.parse(t); } catch { return { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : "") }; }
+}
+
 async function emailAction(env, item) {
   const hooks = (await kv.get(env, "inbox_hooks")) || {}; const p = item.params || {};
   const hook = hooks[String(p.account || "").toLowerCase()] || Object.values(hooks).find((h) => h.business === p.business);
@@ -512,7 +520,7 @@ async function runTool(name, input, env, actions) {
 
 /* ---------------- streaming chat ---------------- */
 async function chat(request, env, ctx) {
-  const { messages: history = [], text, model: modelPick } = await request.json();
+  const { messages: history = [], text, model: modelPick, noTools } = await request.json();
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter(); const enc = new TextEncoder();
   const send = (ev, data) => writer.write(enc.encode(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`)).catch(() => {});
@@ -529,7 +537,7 @@ async function chat(request, env, ctx) {
           model: (modelPick || env.CHAT_MODEL) === "sonnet" ? "claude-sonnet-5-5" : MODEL, ...((modelPick || env.CHAT_MODEL) === "sonnet" ? { thinking: { type: "between_tools" } } : {}),
           max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
           system: [{ type: "text", text: BRAIN_SYSTEM + "\nKnown links: " + JSON.stringify(LINKS), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }],
-          tools: BRAIN_TOOLS, messages,
+          ...(noTools ? {} : { tools: BRAIN_TOOLS }), messages,
         });
         let turnText = "";
         stream.on("text", (d) => { if (timing.firstText == null) timing.firstText = Date.now() - T0; turnText += d; send("delta", { text: d }); });
@@ -724,6 +732,7 @@ export default {
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
+    if (p === "/api/inbox/thread") { const r = await bridgeCall(env, url.searchParams.get("account"), { action: "get", threadId: url.searchParams.get("t") }); if (r.error === "unknown action") r.error = "This inbox's bridge script is the older version. Paste the updated script and deploy a new version to read full emails."; return json(r, r.error ? 502 : 200); }
     if (p === "/api/inbox/bridges") { const hooks = (await kv.get(env, "inbox_hooks")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; return json(Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, business: v.business, at: v.at, items: v.items.length, actions: !!hooks[a]?.url }))); }
     // action queue: confirmed by Jesse on the page. Email kinds run right now through the Gmail bridge; the rest wait for the hands script on his PC
     if (p === "/api/act" && request.method === "POST") {

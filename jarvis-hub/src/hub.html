@@ -263,6 +263,18 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .mail .acts button{font-family:var(--mono);font-size:9px;letter-spacing:.1em;border:1px solid var(--line);padding:2px 6px;color:var(--dim)}
 .mail .acts button:hover{color:var(--cyan2);border-color:var(--line2)}
 .mail li.p1 .from::before{content:"●";color:var(--red);margin-right:6px;font-size:9px;vertical-align:middle}
+.mail li.open{border-left-color:var(--cyan);background:rgba(var(--glow),.04)}
+.mail .subj{cursor:pointer}
+.thread{grid-column:1/-1;display:grid;gap:10px;margin-top:8px}
+.thread .m{border:1px solid var(--line);padding:8px 10px;background:rgba(4,10,20,.6)}
+.thread .mh{display:flex;justify-content:space-between;gap:8px;font-family:var(--mono);font-size:11px;color:var(--dim);flex-wrap:wrap}
+.thread .mh b{color:#fff;font-weight:400}
+.thread .mb{white-space:pre-wrap;font-size:14px;line-height:1.5;margin-top:6px;max-height:340px;overflow:auto;overflow-wrap:anywhere}
+.thread .mb.q{color:var(--dim)}
+.thread .att{font-family:var(--mono);font-size:10px;color:var(--cyan2);margin-top:4px}
+.thread .rbox{display:grid;gap:6px}
+.thread textarea{min-height:120px;font:14px var(--display);line-height:1.45}
+.thread .rrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .mail .kind{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);margin-left:6px}
 .tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;padding:1px 6px;border:1px solid var(--amber);color:var(--amber);vertical-align:middle;margin-left:6px}
 .events{list-style:none;margin:0;padding:0;display:grid;gap:6px}
@@ -897,10 +909,47 @@ function renderBrief() {
   $("#briefAt").textContent = `${live ? "live" : "snapshot"} · ${b.accounts?.length || 1} inbox${(b.accounts?.length || 1) > 1 ? "es" : ""} · ${b.items.filter(m => m.needs_reply).length} need reply · ${fmtAgo(b.at)}`;
   const groups = {}; for (const m of b.items) (groups[m.business || m.account || "inbox"] ||= []).push(m);
   const acts = (m) => live && m.threadId ? `<span class="acts">${m.needs_reply ? `<button data-mail="reply">REPLY</button>` : ""}${m.unread ? `<button data-mail="read">READ</button>` : ""}<button data-mail="archive">ARCHIVE</button></span>` : "";
-  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` + items.map((m, i) => `<li class="${m.needs_reply ? "needs" : ""} ${m.priority === 1 ? "p1" : ""}" data-t="${esc(m.threadId || "")}" data-a="${esc(m.account || "")}" data-from="${esc(m.from)}" data-subj="${esc(m.subject)}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}${m.kind && m.kind !== "other" ? `<span class="kind">${esc(m.kind.toUpperCase())}</span>` : ""}</span><span class="when">${esc(m.when||"")}</span>${acts(m)}<a class="subj" href="${esc(m.url||"https://mail.google.com/")}" target="_blank" rel="noopener">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</a></li>`).join("")).join("");
+  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` + items.map((m, i) => `<li class="${m.needs_reply ? "needs" : ""} ${m.priority === 1 ? "p1" : ""}" data-t="${esc(m.threadId || "")}" data-a="${esc(m.account || "")}" data-from="${esc(m.from)}" data-subj="${esc(m.subject)}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}${m.kind && m.kind !== "other" ? `<span class="kind">${esc(m.kind.toUpperCase())}</span>` : ""}</span><span class="when">${esc(m.when||"")}</span>${acts(m)}<span class="subj" data-open="1" title="${live ? "Open the full email" : ""}">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</span></li>`).join("")).join("");
+  $("#mail").querySelectorAll("[data-open]").forEach(el => el.onclick = () => { const li = el.closest("li"); if (live && li.dataset.t) openThread(li); else window.open(b.items.find(m => m.threadId === li.dataset.t)?.url || "https://mail.google.com/", "_blank"); });
   $("#mail").querySelectorAll("[data-mail]").forEach(btn => btn.onclick = () => { const li = btn.closest("li"); const act = btn.dataset.mail; const who = li.dataset.from, subj = li.dataset.subj, a = li.dataset.a, t = li.dataset.t;
-    if (act === "reply") { showView("jarvis"); ask(`Draft and send a reply to ${who} about "${subj}" (account ${a}, thread ${t}). Write it for me, then queue it as email_reply for my confirmation.`); return; }
+    if (act === "reply") { openThread(li, true); return; }
     proposeAction({ kind: "email_" + act, params: { account: a, threadId: t }, summary: `${act === "archive" ? "Archive" : "Mark read"}: ${who} — ${subj}` }); });
+}
+let openThreadId = null;
+async function openThread(li, focusReply) {
+  const t = li.dataset.t, a = li.dataset.a;
+  const prev = $("#mail").querySelector(".thread"); if (prev) { const pli = prev.closest("li"); prev.remove(); pli.classList.remove("open"); if (pli === li && !focusReply) { openThreadId = null; return; } }
+  openThreadId = t; li.classList.add("open");
+  const box = document.createElement("div"); box.className = "thread"; box.innerHTML = `<div class="empty">Opening…</div>`; li.appendChild(box);
+  let d; try { d = await fetch(`/api/inbox/thread?account=${encodeURIComponent(a)}&t=${encodeURIComponent(t)}`).then(r => r.json()); } catch (e) { d = { error: e.message }; }
+  if (openThreadId !== t) return;
+  if (d.error) { box.innerHTML = `<div class="empty">${esc(d.error)}</div>`; return; }
+  const strip = (txt) => { const i = txt.search(/\n(On .{5,120}wrote:|-{2,}\s*Original Message|From: .+\nSent: )/); return i > 40 ? [txt.slice(0, i).trim(), txt.slice(i).trim()] : [txt.trim(), ""]; };
+  const msgs = d.messages || []; const last = msgs[msgs.length - 1] || {};
+  box.innerHTML = msgs.map((m, i) => { const [main, quoted] = strip(m.body || ""); return `<div class="m"><div class="mh"><span><b>${esc((m.from || "").replace(/<.*>/, "").trim() || m.from)}</b> → ${esc((m.to || "").slice(0, 80))}</span><span>${new Date(m.date).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div><div class="mb">${esc(main)}</div>${quoted && i === msgs.length - 1 ? `<details><summary class="empty" style="cursor:pointer">show quoted text</summary><div class="mb q">${esc(quoted)}</div></details>` : ""}${m.attachments?.length ? `<div class="att">📎 ${m.attachments.map(esc).join(" · ")}</div>` : ""}</div>`; }).join("") +
+    `<div class="rbox"><textarea id="rb_${esc(t)}" placeholder="Write a reply to ${esc((last.from || "").replace(/<.*>/, "").trim())}…"></textarea>
+      <div class="rrow"><button class="btn primary" data-r="send">SEND REPLY</button><button class="btn" data-r="draft">DRAFT WITH JARVIS</button><a class="btn sm" href="${esc(d.link)}" target="_blank" rel="noopener">OPEN IN GMAIL</a><span class="empty" data-r="st"></span></div></div>`;
+  const ta = box.querySelector("textarea"), st = box.querySelector('[data-r="st"]');
+  if (focusReply) ta.focus();
+  box.querySelector('[data-r="draft"]').onclick = async () => {
+    st.textContent = "JARVIS is drafting…"; ta.disabled = true;
+    const convo = msgs.map(m => `From: ${m.from}\nDate: ${m.date}\n\n${strip(m.body || "")[0].slice(0, 3000)}`).join("\n\n---\n\n");
+    let draft = "";
+    try {
+      const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ noTools: true, text: `Write ONLY the body of my email reply to this thread (no subject line, no commentary, no tools). Warm, brief and professional, signed appropriately for ${bizOf(state.brief.items.find(x => x.threadId === t)?.business || "").name || "my business"}. ${ta.value.trim() ? "Use these notes: " + ta.value.trim() : ""}\n\nTHREAD:\n${convo}`, messages: [] }) });
+      const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "";
+      while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n\n")) >= 0) { const fr = buf.slice(0, i); buf = buf.slice(i + 2); if (/^event: delta/m.test(fr)) { draft += JSON.parse((fr.match(/^data: (.*)$/m) || [])[1] || "{}").text || ""; ta.value = draft.trimStart(); } } }
+      st.textContent = "Draft ready. Edit it, then SEND REPLY.";
+    } catch (e) { st.textContent = "Couldn't draft: " + e.message; }
+    ta.disabled = false; ta.focus();
+  };
+  box.querySelector('[data-r="send"]').onclick = async () => {
+    const body = ta.value.trim(); if (!body) { st.textContent = "Write something first."; return; }
+    const btn = box.querySelector('[data-r="send"]'); btn.disabled = true; st.textContent = "sending…";
+    const item = { id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: a, threadId: t, body }, summary: `Reply to ${(last.from || "").replace(/<.*>/, "").trim()} — ${d.subject}` };
+    const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+    if (r.ok) { st.textContent = "Sent."; ta.value = ""; setTimeout(loadState, 4000); } else { st.textContent = "Not sent: " + (r.result || "error"); btn.disabled = false; }
+  };
 }
 $("#inboxConnect").onclick = async () => { const el = $("#inboxHow"); el.hidden = !el.hidden; if (!el.hidden) { try { const br = await fetch("/api/inbox/bridges").then(r => r.json()); $("#bridges").innerHTML = br.length ? "Connected: " + br.map(x => `<b style="color:#fff">${esc(x.account)}</b> (${esc(bizOf(x.business).name || x.business)}, ${x.items} threads, ${fmtAgo(x.at)}${x.actions ? ", actions on" : ", read-only until the web app is deployed"})`).join(" · ") : "No accounts connected yet."; } catch {} } };
 function renderEvents() {

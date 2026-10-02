@@ -2,7 +2,7 @@
  * JARVIS Gmail bridge — paste this into a Google Apps Script project inside the Gmail account
  * you want JARVIS to watch (script.google.com → New project → replace the code → fill the 4 lines below).
  *
- * It runs on Google's servers every 5 minutes, independent of your PC:
+ * Version 2 (adds full-thread reading). It runs on Google's servers every 5 minutes, independent of your PC:
  *   sync()   sends the inbox (last 2 days, up to 40 threads) to the hub
  *   doPost() lets the hub archive, mark read, or send a reply you confirmed on the hub
  *
@@ -59,6 +59,14 @@ function doPost(e) {
     if (body.action === "send") { GmailApp.sendEmail(body.to, body.subject, body.body, { htmlBody: String(body.body).replace(/\n/g, "<br>") }); sync(); return out_({ ok: true, did: "sent to " + body.to }); }
     var t = GmailApp.getThreadById(body.threadId);
     if (!t) return out_({ error: "thread not found" });
+    if (body.action === "get") {
+      var msgs = t.getMessages().slice(-12).map(function (m) {
+        var txt = ""; try { txt = m.getPlainBody() || ""; } catch (e) {}
+        return { id: m.getId(), from: m.getFrom(), to: m.getTo(), cc: m.getCc(), date: m.getDate().toISOString(), subject: m.getSubject(), body: txt.slice(0, 20000), unread: m.isUnread(),
+                 attachments: m.getAttachments().map(function (a) { return a.getName(); }) };
+      });
+      return out_({ ok: true, subject: t.getFirstMessageSubject(), messages: msgs, link: "https://mail.google.com/mail/u/0/#all/" + t.getId() });
+    }
     if (body.action === "archive") { t.markRead(); t.moveToArchive(); }
     else if (body.action === "read") { t.markRead(); }
     else if (body.action === "reply") { t.reply(body.body, { htmlBody: String(body.body).replace(/\n/g, "<br>") }); t.markRead(); }
