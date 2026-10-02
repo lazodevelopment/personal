@@ -1395,7 +1395,7 @@ const wcamEls = new Map();
 async function loadWebcamsInView() {
   if (!globe || !worldLayers.webcams || !state.cfg.windy) { webcams = []; return; }
   const v = globe.pointOfView(); if (v.altitude > 1.2) { webcams = []; renderWorld(false); return; }
-  const km = Math.max(10, Math.min(250, v.altitude * 3000)); const key = [v.lat.toFixed(1), v.lng.toFixed(1), Math.round(km)].join(",");
+  const km = Math.max(5, Math.min(250, v.altitude * 1000)); const key = [v.lat.toFixed(1), v.lng.toFixed(1), Math.round(km)].join(",");
   if (key === webcamsKey) return; webcamsKey = key;
   try { const d = await fetch(`/api/world/windy?lat=${v.lat.toFixed(3)}&lon=${v.lng.toFixed(3)}&km=${Math.round(km)}`).then(x => x.json()); webcams = d.cams || []; if (d.error) console.warn(d.error); } catch { webcams = []; }
   renderWorld(false);
