@@ -241,6 +241,21 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .homepin::after{content:"";display:block;width:8px;height:8px;margin:2px auto 0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(25,211,255,.5),0 0 12px rgba(25,211,255,1)}
 .wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
 @media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globeBox,#globe{min-height:380px}}
+/* watch */
+.watch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.watch h3{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim);font-weight:400;margin:0 0 6px}
+.wrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:baseline;font-size:13px;padding:4px 0;border-bottom:1px solid var(--line)}
+.wrow > span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wrow small{color:var(--dim);font-family:var(--mono);font-size:10px}
+.wtag{font-family:var(--mono);font-size:9px;letter-spacing:.12em;padding:1px 5px;border:1px solid var(--line2);color:var(--dim)}
+.wtag.ok{color:var(--green);border-color:var(--green)}.wtag.bad{color:var(--red);border-color:var(--red)}.wtag.warn{color:var(--amber);border-color:var(--amber)}
+.wfix{font-size:12px;color:var(--amber);line-height:1.4}.wfix a{color:var(--cyan2)}
+.wspark{display:block;width:100%;height:28px}
+@media(max-width:1100px){.watch{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.watch{grid-template-columns:1fr}}
+.tripf{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.tripf input,.tripf select{background:#070d18;border:1px solid var(--line2);color:var(--fg);padding:5px 8px;font:13px var(--mono);min-width:0;flex:1 1 120px}
+.pend .fu{display:block}.pend .fu textarea{width:100%;min-height:110px;margin-top:6px;background:#070d18;border:1px solid var(--line2);color:var(--fg);font:13px/1.45 var(--display);padding:8px}
+.pend .fu .row{display:flex;gap:6px;margin-top:6px;align-items:center}
+.ralarm{display:block;margin-top:10px;font-size:12px;color:var(--dim)}.ralarm b{color:#fff;font-weight:600}.ralarm small{display:block;color:var(--amber)}
 /* radio */
 .radio{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
 .radio input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--cyan)}
@@ -549,7 +564,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   </section>
 
   <section class="panel c4" data-v="ops">
-    <h2>Upcoming <span class="sub" id="evSub"></span></h2>
+    <h2>Upcoming <span class="sub" id="evSub"></span><button class="btn sm" id="tripAdd">+ TRIP</button></h2>
+    <form class="tripf" id="tripForm" hidden><input id="tripFl" placeholder="Flight, e.g. AA 2612" required><input id="tripDate" type="date" required><select id="tripHome"><option value="none">home stays</option><option value="az">→ Arizona</option><option value="tx">→ Texas</option></select><button class="btn sm">ADD</button></form>
     <ul class="events" id="events"><li class="empty">Bookings and calendar items appear here.</li></ul>
     <div class="empty" id="calHint" style="margin-top:8px"></div>
   </section>
@@ -561,7 +577,18 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div class="rnow"><b id="radioName">Classic FM</b><small id="radioState">off</small></div>
       <input type="range" id="radioVol" min="0" max="100" value="70" aria-label="Radio volume">
     </div>
+    <label class="ralarm"><input type="checkbox" id="alarmOn"> Wake-up: play the morning brief at <b id="alarmAt">5:00</b>, then fade in this station <small id="alarmNote"></small></label>
     <div class="rst" id="radioStations"></div>
+  </section>
+
+  <section class="panel" data-v="ops" id="watchPanel">
+    <h2>Watch <span class="sub" id="watchSub"></span></h2>
+    <div class="watch">
+      <div><h3>BALANCE CHARGES</h3><div id="wPay"></div></div>
+      <div><h3>APP STORES</h3><div id="wApps"></div></div>
+      <div><h3>SOCIAL TODAY</h3><div id="wSocial"></div></div>
+      <div><h3>SEARCH · 7 DAYS</h3><div id="wSearch"></div></div>
+    </div>
   </section>
 
   <section class="panel c7" data-v="ops" id="sportsPanel">
@@ -695,6 +722,11 @@ function renderAttention() {
   for (const g of (state.sports?.games || []).filter(x => x.fav && x.state === "in")) { const [a, b] = g.teams; chips.push({ cls: "good", n: `${a.score}-${b.score}`, t: `${a.abbr} @ ${b.abbr} live`, go: "#sportsPanel" }); }
   for (const a of state.wx?.nws || []) chips.push({ cls: /Extreme|Severe/.test(a.severity) ? "crit" : "warn", n: "!", t: a.event, go: "#wxPanel" });
   for (const k of Object.keys(state.stale || {})) chips.push({ cls: "crit", n: "!", t: `${k} feed stopped`, go: "#opsPanel" });
+  const pays = Array.isArray(state.watch?.payments) ? state.watch.payments : [];
+  const failed = pays.filter(x => x.state === "failed"); if (failed.length) chips.push({ cls: "crit", n: failed.length, t: "balance charge" + (failed.length > 1 ? "s" : "") + " declined", go: "#watchPanel" });
+  const fups = (state.followups || []).filter(f => f.status === "ready").length; if (fups) chips.push({ cls: "warn", n: fups, t: "follow-up" + (fups > 1 ? "s" : "") + " ready to send", go: "#decisionsPanel" });
+  const missed = (state.watch?.social?.brands || []).filter(b => !b.today); if (missed.length && new Date().getHours() >= 19) chips.push({ cls: "warn", n: missed.length, t: "brands not posted today", go: "#watchPanel" });
+  for (const t of (state.trips || []).filter(t => t.phase === "airborne")) chips.push({ cls: "good", n: "✈", t: t.flight + " in the air", go: "#events" });
   const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
   const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
   $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
@@ -922,10 +954,18 @@ $("#radarPlay").onclick = () => {
 /* ---------- decisions ---------- */
 function renderDecisions() {
   const items = state.decisions?.items || [];
+  const fups = (state.followups || []).filter(f => f.status === "ready");
   $("#decSub").textContent = items.length ? `${items.length} pending · ${fmtAgo(state.decisions.at)}` : (state.decisions?.at ? "clear · " + fmtAgo(state.decisions.at) : "");
-  $("#decisionsPanel").classList.toggle("alarm", items.length > 0);
-  $("#decisions").innerHTML = items.length ? items.map(d => `<div><span class="dl"><b>${esc(bizOf(d.business).name.toUpperCase())}</b>${esc(d.label)}<small>${esc(Object.entries(d.detail || {}).map(([k, v]) => k + ": " + v).join(" · "))} · ${fmtAgo(d.at)}</small></span><span>${actionButtons({ id: d.id, kind: d.kind, label: d.label })}</span></div>`).join("") : `<div class="empty">Nothing waiting on you.</div>`;
+  $("#decisionsPanel").classList.toggle("alarm", items.length + fups.length > 0);
+  if (fups.length) $("#decSub").textContent = `${items.length + fups.length} pending`;
+  const fuHtml = fups.map(f => `<div class="fu" data-fu="${esc(f.id)}"><span class="dl"><b>${esc(bizOf(f.business).name.toUpperCase())} · FOLLOW-UP</b>${esc(f.from)}: ${esc(f.subject)}<small>to ${esc(f.to)} · waited since ${fmtAgo(f.received)} · drafted ${fmtAgo(f.at)}</small></span><textarea>${esc(f.body)}</textarea><div class="row"><button class="btn sm primary" data-fusend>REVIEW & SEND</button><button class="btn sm" data-fuskip>SKIP</button></div></div>`).join("");
+  $("#decisions").innerHTML = fuHtml + (items.length || !fups.length ? "" : "") + (items.length ? items.map(d => `<div><span class="dl"><b>${esc(bizOf(d.business).name.toUpperCase())}</b>${esc(d.label)}<small>${esc(Object.entries(d.detail || {}).map(([k, v]) => k + ": " + v).join(" · "))} · ${fmtAgo(d.at)}</small></span><span>${actionButtons({ id: d.id, kind: d.kind, label: d.label })}</span></div>`).join("") : (fups.length ? "" : `<div class="empty">Nothing waiting on you.</div>`));
   wireActionButtons($("#decisions"));
+  $("#decisions").querySelectorAll("[data-fu]").forEach(el => {
+    const f = fups.find(x => x.id === el.dataset.fu);
+    el.querySelector("[data-fusend]").onclick = () => proposeAction({ kind: "email_reply", params: { account: f.account, threadId: f.threadId, body: el.querySelector("textarea").value, followupId: f.id }, summary: `Send follow-up to ${f.from} (${bizOf(f.business).name}): ${f.subject}` });
+    el.querySelector("[data-fuskip]").onclick = async () => { await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: f.id }) }).catch(() => {}); state.followups = state.followups.filter(x => x.id !== f.id); renderDecisions(); renderAttention(); };
+  });
 }
 /* ---------- scores, markets, news, wedding-day weather ---------- */
 async function loadSports() {
@@ -1019,11 +1059,37 @@ $("#inboxConnect").onclick = async () => { const el = $("#inboxHow"); el.hidden 
 function renderEvents() {
   const wd = state.wxdays?.days || {};
   const ev = Object.entries(state.metrics?.businesses || {}).flatMap(([id, b]) => (b.upcoming || []).map(e => ({ date: e.date, title: e.title + (e.where ? " · " + e.where : ""), biz: bizOf(id).name, cls: "", wx: wd[`${id}:${e.id || e.date}`] })))
+    .concat((state.trips || []).map(t => ({ date: t.date, title: `✈ ${t.flight}${t.route?.from ? " · " + (t.route.from.city || t.route.from.iata) + " → " + (t.route.to?.city || t.route.to?.iata) : ""}${t.phase && t.phase !== "scheduled" ? " · " + t.phase : ""}`, biz: "TRIP", cls: "cal", trip: t.id })))
     .concat((state.calendar?.events || []).map(e => ({ date: e.start, title: e.title + (e.location ? " · " + e.location : ""), biz: e.allDay ? "CAL" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), cls: "cal" })))
     .filter(e => e.date && new Date(e.date.length === 10 ? e.date + "T12:00" : e.date) >= new Date(Date.now() - 86400e3)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12);
   $("#evSub").textContent = ev.length ? `next ${ev.length}` : "";
-  $("#events").innerHTML = ev.length ? ev.map(e => { const d = new Date(e.date.length === 10 ? e.date + "T12:00" : e.date); const days = Math.ceil((d - Date.now()) / 86400e3); const w = e.wx ? `<span class="wxd ${e.wx.rain >= 40 ? "wet" : ""}" title="${esc(e.wx.where)} · wind ${e.wx.wind} mph · sunset ${esc(e.wx.sunset)}">${wmo(e.wx.code)[1]} <b>${e.wx.hi}°</b>/${e.wx.lo}° ${e.wx.rain}%</span>` : ""; return `<li style="${w ? "grid-template-columns:auto 1fr auto auto" : ""}"><span class="bz ${e.cls}">${esc(e.biz)}</span><span>${esc(e.title)}</span>${w}<span class="in">${d.toLocaleDateString([], {month:"short", day:"numeric"})} · ${days <= 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + " d"}</span></li>`; }).join("") : `<li class="empty">Bookings and calendar items appear here.</li>`;
+  $("#events").innerHTML = ev.length ? ev.map(e => { const d = new Date(e.date.length === 10 ? e.date + "T12:00" : e.date); const days = Math.ceil((d - Date.now()) / 86400e3); const w = e.wx ? `<span class="wxd ${e.wx.rain >= 40 ? "wet" : ""}" title="${esc(e.wx.where)} · wind ${e.wx.wind} mph · sunset ${esc(e.wx.sunset)}">${wmo(e.wx.code)[1]} <b>${e.wx.hi}°</b>/${e.wx.lo}° ${e.wx.rain}%</span>` : ""; return `<li style="${w ? "grid-template-columns:auto 1fr auto auto" : ""}"><span class="bz ${e.cls}">${esc(e.biz)}</span><span>${esc(e.title)}</span>${w}<span class="in">${d.toLocaleDateString([], {month:"short", day:"numeric"})} · ${days <= 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + " d"}${e.trip ? ` <button class="btn sm" data-deltrip="${esc(e.trip)}" title="Remove trip">✕</button>` : ""}</span></li>`; }).join("") : `<li class="empty">Bookings and calendar items appear here.</li>`;
   $("#calHint").textContent = "";
+  $("#events").querySelectorAll("[data-deltrip]").forEach(b => b.onclick = async () => { await fetch("/api/trips/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: b.dataset.deltrip }) }).catch(() => {}); state.trips = state.trips.filter(t => t.id !== b.dataset.deltrip); renderEvents(); });
+}
+$("#tripAdd").onclick = () => { const f = $("#tripForm"); f.hidden = !f.hidden; if (!f.hidden) { $("#tripDate").value = new Date().toLocaleDateString("en-CA"); $("#tripFl").focus(); } };
+$("#tripForm").onsubmit = async (e) => { e.preventDefault(); const t = await fetch("/api/trips", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ flight: $("#tripFl").value, date: $("#tripDate").value, home: $("#tripHome").value }) }).then(r => r.json()).catch(() => ({ error: "offline" })); if (t.error) return addMsg("sys", "Trip not added: " + t.error); $("#tripForm").hidden = true; $("#tripFl").value = ""; await loadState(); };
+
+/* ---------- watch: balance charges, app stores, social, search ---------- */
+function spark(days) {
+  if (!days?.length) return ""; const v = days.map(d => d[2]); const max = Math.max(1, ...v); const w = 200, h = 28;
+  const pts = v.map((x, i) => `${(i / Math.max(1, v.length - 1) * w).toFixed(1)},${(h - 2 - x / max * (h - 4)).toFixed(1)}`).join(" ");
+  return `<svg class="wspark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="rgb(var(--glow))" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function renderWatch() {
+  const w = state.watch || {};
+  $("#watchSub").textContent = w.at ? "updated " + fmtAgo(w.at) : "waiting for the PC collector";
+  const pays = Array.isArray(w.payments) ? w.payments : [];
+  const tag = { charged: ["ok", "CHARGED"], failed: ["bad", "DECLINED"], link_sent: ["warn", "LINK SENT"], due_now: ["warn", "DUE"], upcoming: ["", "UPCOMING"] };
+  $("#wPay").innerHTML = pays.filter(x => x.id).map(x => { const [c, t] = tag[x.state] || ["", x.state]; const why = x.state === "failed" ? ((x.error.match(/"message":"([^"]+)"/) || [])[1] || "declined") + ` · try ${x.attempts}/3` : ""; return `<div class="wrow" title="${esc(why)}"><span class="wtag ${c}">${t}</span><span>${esc(x.names)} <small>${esc(bizOf(x.business).name)}${why ? " · " + esc(why) : ""}</small></span><span>${money(x.amount)} <small>${new Date(x.paid || x.due).toLocaleDateString([], { month: "short", day: "numeric" })}</small></span></div>`; }).join("")
+    + pays.filter(x => !x.id).map(x => `<div class="wfix">${esc(bizOf(x.business).name)}: ${esc(x.error)}</div>`).join("") || `<div class="empty">No balances due in the last or next 7 days.</div>`;
+  const apps = Object.values(state.apps || {});
+  $("#wApps").innerHTML = apps.map(a => `<div class="wrow"><span class="wtag ${a.listed ? "ok" : ""}">${a.listed ? "LIVE" : "NOT YET"}</span><span>${a.url ? `<a href="${esc(a.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(a.name)}</a>` : esc(a.name)}</span><span><small>${a.version ? "v" + esc(a.version) : ""}${a.released ? " · " + esc(/^\d{4}-/.test(a.released) ? new Date(a.released).toLocaleDateString([], { month: "short", day: "numeric" }) : a.released) : ""}</small></span></div>`).join("") || `<div class="empty">Checking the stores hourly.</div>`;
+  const brands = w.social?.brands || [];
+  $("#wSocial").innerHTML = brands.map(b => `<div class="wrow"><span class="wtag ${b.today ? "ok" : new Date().getHours() >= 19 ? "bad" : ""}">${b.today ? "POSTED" : "NOT YET"}</span><span>${esc(b.name)}${b.error ? ` <small>${esc(b.error)}</small>` : ""}</span><span><small>${b.total} posts</small></span></div>`).join("") || `<div class="empty">No posting logs yet.</div>`;
+  const sc = w.search || {};
+  $("#wSearch").innerHTML = (sc.sites || []).map(x => { const d = x.days || []; const sum = (r, i) => r.reduce((a, q) => a + q[i], 0); const c7 = sum(d.slice(-7), 1), i7 = sum(d.slice(-7), 2), cp = sum(d.slice(-14, -7), 1), ip = sum(d.slice(-14, -7), 2); const up = i7 >= ip; return `<div style="margin-bottom:8px"><div class="wrow" style="border:0"><span class="wtag ${up ? "ok" : "warn"}">${up ? "▲" : "▼"} ${ip ? Math.abs(Math.round((i7 - ip) / ip * 100)) + "%" : "–"}</span><span>${esc(x.site.replace(/^sc-domain:|^https?:\/\/|\/$/g, ""))}</span><span><small>${c7} clicks · ${i7.toLocaleString()} impr</small></span></div>${spark(d.slice(-28))}</div>`; }).join("")
+    || (sc.fix || sc.error ? `<div class="wfix">${esc(sc.fix || sc.error).replace(/(https:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener">open</a>')}</div>` : `<div class="empty">Waiting for the first Search Console pull.</div>`);
 }
 function renderMoney() {
   const mo = state.metrics?.money; if (!mo?.months?.length) return;
@@ -1087,11 +1153,11 @@ async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
     const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
-    state.decisions = d.decisions || null; state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
+    state.decisions = d.decisions || null; state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null; state.watch = d.watch || null; state.followups = d.followups || []; state.trips = d.trips || []; state.apps = d.apps || null;
     if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}
-  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderAttention(); renderSys(); syncQueueCards();
+  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderWatch(); renderAttention(); renderSys(); syncQueueCards();
   window.__stateLoaded = true;
 }
 async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
@@ -1254,6 +1320,7 @@ function handleAction(a) {
   if (a.type === "open") { const w = window.open(a.url, "_blank"); if (!w) addMsg("sys", "Popup blocked: " + a.url); }
   if (a.type === "notes") { state.notes = a.value; $("#notes").value = a.value; }
   if (a.type === "memory") { state.memory = a.value; renderMemory(); }
+  if (a.type === "trips") setTimeout(loadState, 800);
   if (a.type === "draft") draftCard(a);
   if (a.type === "confirm") proposeAction(a.item);
   if (a.type === "world") { if (PHONE) showView("world"); initGlobe(); if (a.flight) { $("#trackQ").value = a.flight; trackIt(a.flight); } else loadFlights(); }
@@ -1616,6 +1683,25 @@ $("#radioPlay").onclick = () => { if (radioOn && !radio.paused) radioStop(); els
 $("#radioStations").onclick = (e) => { const b = e.target.closest("[data-ri]"); if (b) radioPlay(+b.dataset.ri); };
 $("#radioVol").oninput = () => { try { localStorage.setItem("radioVol", $("#radioVol").value); } catch {} radioDuck(speaking); };
 radioUI();
+
+/* ---------- wake-up: morning brief, then the radio fades in (this device, page open) ---------- */
+let alarmFired = ""; try { $("#alarmOn").checked = localStorage.getItem("alarmOn") === "1"; alarmFired = localStorage.getItem("alarmFired") || ""; } catch {}
+$("#alarmOn").onchange = () => { try { localStorage.setItem("alarmOn", $("#alarmOn").checked ? "1" : "0"); } catch {} unlockPlayer(); alarmNote(); };
+const alarmHour = () => { const bh = state.cfg?.briefHours || { 5: "morning" }; const h = Object.entries(bh).find(([, s]) => s === "morning"); return h ? +h[0] : 5; };
+const homeNow = () => { const tz = state.cfg?.home?.tz || state.cfg?.tz; const p = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date()); const g = (t) => p.find(x => x.type === t)?.value; return { day: `${g("year")}-${g("month")}-${g("day")}`, h: +g("hour") % 24, m: +g("minute") }; };
+function alarmNote() { const h = alarmHour(); $("#alarmAt").textContent = `${h % 12 || 12}:00 ${h < 12 ? "am" : "pm"}`; $("#alarmNote").textContent = $("#alarmOn").checked ? "Keep JARVIS open on this device (wall mode is ideal) and the volume up." : ""; }
+function fadeInRadio(sec = 60) { radioPlay(radioIdx); const target = radioLevel(); radio.volume = 0; const t0 = Date.now(); const iv = setInterval(() => { const k = Math.min(1, (Date.now() - t0) / (sec * 1000)); if (!radioOn) return clearInterval(iv); if (!speaking) radio.volume = target * k; if (k >= 1) clearInterval(iv); }, 500); }
+async function alarmTick(at) {
+  if (!$("#alarmOn").checked) return; const n = at || homeNow(); const h = alarmHour();
+  if (alarmFired === n.day || n.h !== h || n.m > 45) return;
+  let brief = state.morning; try { const d = await fetch("/api/morning").then(r => r.json()); brief = d.latest || brief; } catch {}
+  const fresh = brief?.slot === "morning" && brief.audio && (Date.now() - new Date(brief.at)) < 3 * 3600e3;
+  if (!fresh && n.m < 20) return; // give the brief up to 20 minutes to be written, then just play the radio
+  alarmFired = n.day; try { localStorage.setItem("alarmFired", n.day); } catch {}
+  if (fresh) { playUrl("/api/morning/audio?id=" + encodeURIComponent(brief.id)); const prevEnd = player.onended; player.onended = player.onerror = (e) => { try { prevEnd && prevEnd(e); } catch {} setTimeout(() => fadeInRadio(60), 1500); }; }
+  else fadeInRadio(60);
+}
+setInterval(alarmTick, 30000); setTimeout(() => { alarmNote(); alarmTick(); }, 4000);
 
 /* ---------- scanner (Broadcastify; opened in their player, not re-streamed) ---------- */
 const SCANNER = {

@@ -112,6 +112,37 @@ Claude-routine snapshot, so the `jarvis-inbox-brief` scheduled task can be disab
 Email actions (`email_reply`, `email_archive`, `email_read`, `email_send`) execute immediately on CONFIRM; everything
 else still goes to the hands script.
 
+## Watch (added 2026-10-02)
+- **Collector** `collect_watch.py` (Task Scheduler "JARVIS watch", every 15 min) posts KV `watch`:
+  `payments` (Atavia + ES bookings with `balance_due_at` in the last/next 7 days: charged, failed + Zoho error, link sent, due),
+  `social` (posted today? from `jovi-social/posted.json` and `brand-social/<brand>/posted.json`),
+  `search` (Search Console daily clicks/impressions, 42 days, every property the LR service account
+  `site-builder@lease-reputation.iam.gserviceaccount.com` can read; cached 3 h) and `ios` (App Store listings, because
+  Apple's lookup API refuses Cloudflare). `--only social` / `--only payments,search,ios` post just those sections;
+  the hub merges sections, so the PC and a cloud feeder can share the key.
+- **Hub** `watchWatch` alerts + pushes: declined balance charge (once per attempt), balance charged, brands not posted by 7 pm,
+  Search Console impressions down 50%+ (last 3 days vs prior 4 weeks), Search Console not connected (weekly).
+  Alerts from one run are written in a single KV write (`flushAlerts`); KV is eventually consistent and back-to-back
+  read-modify-writes lost alerts.
+- **App stores** `appStores` (hourly cron + on each watch post): Lazo iOS/Android, Jovi iOS (search "Jovi Health"), plus
+  anything added with the brain's `watch_app` tool (KV `apps_watch`). Pushes when an app first goes live, a version
+  changes, or a listing disappears. Apple/Google review emails landing in a bridged inbox also push.
+- **Executor watchdog**: approved actions still pending after 10 min raise an alert (the hands script isn't running).
+- **Follow-ups** `makeFollowups` (hourly): leads/clients/bookings that need a reply and waited 24 h+ get a Sonnet-drafted
+  reply from the full thread (via the Gmail bridge). They appear at the top of Decisions with REVIEW & SEND (normal
+  confirm card, sends through the bridge) or SKIP. `POST /api/followups/run?dry=1&minAge=1` drafts without storing.
+- **Trips** KV `trips`: brain tools `add_trip` / `remove_trip`, or + TRIP in Upcoming. On the day the 5-min cron keeps the
+  flight in `track_req`, pushes wheels-up and landed, and on landing sets home (TX/AZ) when the trip says so.
+- **Radio alarm**: Radio panel checkbox (per device). At the morning brief hour (`/api/config` `briefHours`) it plays
+  the fresh morning brief, then fades in the selected station over 60 s; if the brief isn't ready by :20 it plays the
+  radio alone. The page must be open on that device.
+
+## Cloud feeder (prepared, not yet run)
+`cloud/setup_feeder.ps1 -Project <id>` creates an e2-micro VM with its own service account (read-only Firestore on the
+five projects, no key files) and moves flights, traffic/sports/decisions, metrics, cameras and payments/search/iOS
+there via cron (`cloud/crontab.txt`, `cloud/install.sh`, which also tests whether the VM can reach the feeds that
+refuse Cloudflare). The PC keeps the social check and the executor. Run with `-DryRun` first.
+
 ## Using it
 - **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
 - **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.

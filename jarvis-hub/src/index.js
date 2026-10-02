@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -110,6 +110,13 @@ async function runChecks(env) {
       }
     }
     if (changed) await kv.put(env, "nudged", seen);
+  }
+  // approved actions the PC executor hasn't picked up: it isn't running
+  const q = (await kv.get(env, "queue")) || [];
+  for (const x of q.filter((x) => x.status === "pending" && Date.now() - new Date(x.confirmedAt || x.at) > 10 * 60e3)) {
+    if (!(await onceKey(env, "stuck:" + x.id, 7 * 86400e3))) continue;
+    await pushAlert(env, { kind: "failed", text: `Approved but not done yet: ${x.summary}. The JARVIS hands script on the PC isn't picking up actions.` });
+    await notify(env, "Approved action is stuck", `${x.summary}\nThe JARVIS hands script on the PC isn't running. It starts at sign-in; double-click jarvis_hands.bat to start it now.`, { priority: "high", tags: "warning" });
   }
   return results;
 }
@@ -350,6 +357,12 @@ async function ingestInbox(env, body, ctx) {
   const keep = Object.fromEntries(Object.entries(cache).filter(([, v]) => Date.now() - new Date(v.date) < 14 * 86400e3)); await kv.put(env, "inbox_class", keep);
   inbox.accounts[account] = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}) })) };
   await kv.put(env, "inbox", inbox);
+  for (const m of fresh) {
+    if (!/apple\.com|googleplay|play-console|google-play|android-developer/i.test(m.fromEmail || "") || !/review|submission|rejected|approved|ready for|status|policy|removed|suspend/i.test(m.subject || "")) continue;
+    if (!(await onceKey(env, "store_mail:" + m.threadId + ":" + m.date, 30 * 86400e3))) continue;
+    await pushAlert(env, { kind: "watch", text: `App store: ${m.subject}`, url: m.link });
+    await notify(env, "App store update", `${m.subject}\n${(m.snippet || "").slice(0, 200)}`, { priority: "high", tags: "iphone", url: m.link });
+  }
   if (body.secret) {
     // Apps Script reports its signed-in test URL (/a/<domain>/macros/...); only a public /macros/s/.../exec deployment URL works for the hub.
     const hooks = (await kv.get(env, "inbox_hooks")) || {}; const cur = hooks[account] || {};
@@ -530,6 +543,14 @@ async function buildContext(env, request) {
   lines.push(`MEMORY: ` + ((memory || []).map((m) => `[${m.id}] ${m.text}`).join(" | ") || "(nothing remembered yet)"));
   const dec = await kv.get(env, "decisions");
   lines.push(`WAITING ON JESSE (${dec?.at || "none"}): ` + ((dec?.items || []).map((d) => `[${d.id}] ${d.label} (${d.kind}, ${d.at.slice(0, 10)})`).join(" | ") || "nothing pending"));
+  const [watch, fups, trips, apps] = await Promise.all(["watch", "followups", "trips", "apps"].map((k) => kv.get(env, k)));
+  if (Array.isArray(watch?.payments)) lines.push(`BALANCE CHARGES (last 7 / next 7 days, ${watch.at}): ` + (watch.payments.filter((p) => p.id).map((p) => `${BIZ_LABEL[p.business]} ${p.names} ${fmtUsd(p.amount)} due ${String(p.due).slice(0, 10)} ${p.state}${p.state === "failed" ? " (attempt " + p.attempts + "/3: " + payWhy(p.error) + ")" : ""}`).join("; ") || "none"));
+  if (watch?.social?.brands) lines.push(`SOCIAL POSTS TODAY (${watch.social.day}): ` + watch.social.brands.map((b) => `${b.name} ${b.today ? "posted" : "NOT posted (last " + (b.last || "never") + ")"}`).join(", "));
+  if (watch?.search) lines.push(`SEARCH CONSOLE: ` + (watch.search.sites?.length ? watch.search.sites.map((x) => { const d = x.days || []; const sum = (rows, i) => rows.reduce((a, r) => a + r[i], 0); return `${siteName(x.site)} last 7d ${sum(d.slice(-7), 1)} clicks / ${sum(d.slice(-7), 2)} impressions (prior 7d ${sum(d.slice(-14, -7), 1)} / ${sum(d.slice(-14, -7), 2)})`; }).join("; ") : "not connected yet (" + (watch.search.fix || watch.search.error || "") + ")"));
+  if (apps) lines.push(`APP STORES: ` + Object.values(apps).map((a) => `${a.name} ${a.listed ? "live" + (a.version ? " v" + a.version : "") + (a.released ? " released " + String(a.released).slice(0, 10) : "") : "not listed yet"}`).join("; "));
+  const readyF = (fups || []).filter((f) => f.status === "ready");
+  if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
+  if (trips?.length) lines.push(`TRIPS: ` + trips.map((t) => `${t.date} ${t.flight}${t.route?.from ? " " + (t.route.from.city || t.route.from.iata) + " to " + (t.route.to?.city || t.route.to?.iata) : ""} ${t.phase || "scheduled"}${t.home ? " (home becomes " + HOMES[t.home]?.label + " on landing)" : ""}`).join("; "));
   if (queue?.length) lines.push(`RECENT ACTIONS: ` + queue.slice(0, 5).map((q) => `${q.summary} → ${q.status}${q.result ? " (" + q.result + ")" : ""}`).join(" | "));
   if (morning?.at) lines.push(`LATEST BRIEF (${morning.slot || "morning"}, ${morning.at}): ${(morning.text || "").slice(0, 600)}`);
   return lines.join("\n");
@@ -551,7 +572,9 @@ Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
-Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.`;
+Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
+Trips: when he mentions a flight he is taking ("I fly AA 2612 to Phoenix on Friday"), call add_trip with the flight number, the local date (YYYY-MM-DD) and home 'az' when he is flying to Arizona or 'tx' when flying to Texas. JARVIS then tracks it on the day, pushes wheels-up and landed, and switches home on landing. remove_trip cancels one.
+App stores: watch_app adds an app listing to watch (iOS numeric id or bundle id, Android package name), e.g. once Jovi's app exists.`;
 
 const BRAIN_TOOLS = [
   { name: "track_flight", description: "Live position of a flight by flight number or callsign (e.g. 'AA 2612', 'SWA653', 'N123AB'). Returns altitude (ft), ground speed (kt), heading and coordinates. Also shows it on the World globe.", input_schema: { type: "object", properties: { flight: { type: "string" } }, required: ["flight"], additionalProperties: false }, strict: true },
@@ -561,6 +584,9 @@ const BRAIN_TOOLS = [
   { name: "remember", description: "Store a durable fact or preference in JARVIS's memory.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false }, strict: true },
   { name: "forget", description: "Delete a memory by its id (shown in MEMORY as [id]).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false }, strict: true },
   { name: "draft_reply", description: "Draft an email reply. Shown to Jesse with an Open in Gmail button; nothing is sent automatically.", input_schema: { type: "object", properties: { to: { type: "string" }, subject: { type: "string" }, body: { type: "string" }, business: { type: "string", enum: ["atavia", "es", "lazo", "roven", "lr", "brisk"] } }, required: ["to", "subject", "body", "business"], additionalProperties: false }, strict: true },
+  { name: "add_trip", description: "Add a flight Jesse is taking. JARVIS tracks it on the day, pushes wheels-up and landed, and switches home on landing.", input_schema: { type: "object", properties: { flight: { type: "string", description: "e.g. 'AA 2612'" }, date: { type: "string", description: "local departure date YYYY-MM-DD" }, home: { type: "string", enum: ["tx", "az", "none"] }, note: { type: "string" } }, required: ["flight", "date", "home", "note"], additionalProperties: false }, strict: true },
+  { name: "remove_trip", description: "Remove a trip by its id (shown in TRIPS or from add_trip).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false }, strict: true },
+  { name: "watch_app", description: "Watch an app store listing and push when it goes live or updates.", input_schema: { type: "object", properties: { name: { type: "string" }, platform: { type: "string", enum: ["ios", "android"] }, id: { type: "string", description: "iOS numeric app id or bundle id; Android package name" } }, required: ["name", "platform", "id"], additionalProperties: false }, strict: true },
   { name: "request_action", description: "Queue a business-data change for Jesse's confirmation. kinds: roven_approve_job (params.jobId), roven_reject_job (params.jobId), roven_approve_employer (params.employerId), lazo_claim (params.claimId, params.decision 'approved'|'rejected'), booking_note (params.business 'atavia'|'es', params.bookingId, params.note), lazo_inquiry_responded (params.inquiryId), email_reply (params.account, params.threadId, params.body), email_archive (params.account, params.threadId), email_read (params.account, params.threadId), email_send (params.account, params.to, params.subject, params.body).", input_schema: { type: "object", properties: { kind: { type: "string", enum: ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"] }, params: { type: "object", properties: { jobId: { type: "string" }, employerId: { type: "string" }, claimId: { type: "string" }, decision: { type: "string" }, business: { type: "string" }, bookingId: { type: "string" }, note: { type: "string" }, inquiryId: { type: "string" }, account: { type: "string" }, threadId: { type: "string" }, body: { type: "string" }, to: { type: "string" }, subject: { type: "string" } } }, summary: { type: "string", description: "One line Jesse will confirm, e.g. 'Approve Roven job Senior RN at Mercy'" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
 ];
 
@@ -572,6 +598,9 @@ async function runTool(name, input, env, actions) {
     case "append_note": { const cur = (await kv.get(env, "notes")) || ""; const next = (cur ? cur.replace(/\s+$/, "") + "\n" : "") + "- " + input.text; await kv.put(env, "notes", next); actions.push({ type: "notes", value: next }); return "Added."; }
     case "remember": { const mem = (await kv.get(env, "memory")) || []; const m = { id: uid(), text: input.text, at: new Date().toISOString() }; mem.unshift(m); await kv.put(env, "memory", mem.slice(0, 200)); actions.push({ type: "memory", value: mem }); return "Remembered [" + m.id + "]."; }
     case "forget": { const mem = ((await kv.get(env, "memory")) || []).filter((m) => m.id !== input.id); await kv.put(env, "memory", mem); actions.push({ type: "memory", value: mem }); return "Forgotten."; }
+    case "add_trip": { const t = await addTrip(env, input); actions.push({ type: "trips" }); return JSON.stringify(t); }
+    case "remove_trip": { const trips = ((await kv.get(env, "trips")) || []).filter((t) => t.id !== input.id); await kv.put(env, "trips", trips); actions.push({ type: "trips" }); return "Removed."; }
+    case "watch_app": { const list = (await kv.get(env, "apps_watch")) || []; const key = (input.platform + "_" + input.id).toLowerCase(); if (!list.some((a) => a.key === key)) list.push({ key, name: input.name, ...(input.platform === "ios" ? { ios: /^\d+$/.test(input.id) ? { id: input.id } : { bundle: input.id } } : { android: input.id }) }); await kv.put(env, "apps_watch", list); return "Watching " + input.name + ". The first check lands within 15 minutes."; }
     case "draft_reply": { actions.push({ type: "draft", ...input }); return "Draft shown to Jesse with an Open in Gmail button."; }
     case "request_action": { const KINDS = ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"]; if (!KINDS.includes(input.kind) || typeof input.params !== "object" || !input.summary) return "Invalid action: kind must be one of " + KINDS.join(", ") + " with params and summary.";
       const item = { id: uid(), kind: input.kind, params: input.params, summary: input.summary, status: "awaiting confirmation", at: new Date().toISOString() }; actions.push({ type: "confirm", item }); return "Queued for confirmation: " + input.summary; }
@@ -643,7 +672,7 @@ async function makeMorning(env, request, slot) {
   const prevToday = history.filter((b) => b.at.slice(0, 10) === new Date().toISOString().slice(0, 10) && b.slot !== slot).map((b) => `${b.slot.toUpperCase()} (${b.at}): ${b.text}`).join("\n\n");
   const params = {
     model: MODEL, max_tokens: 6000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
-    system: BRAIN_SYSTEM + "\nYou are composing one of Jesse's three daily spoken briefs. " + SLOT_PROMPTS[slot] + " Flowing prose, no lists, no headers. For Lazo, report ONLY sign-ups (new couples, new vendor claims); never mention unanswered vendor inquiries in a brief.",
+    system: BRAIN_SYSTEM + "\nYou are composing one of Jesse's three daily spoken briefs. " + SLOT_PROMPTS[slot] + " Flowing prose, no lists, no headers. When they apply, also cover: any balance charge that was declined (name, amount, attempt) and charges due in the next day; follow-up drafts waiting for him to send; a trip today (flight, route, and that JARVIS is tracking it); a brand that missed today's social post (evening only); a new app version that went live; a search traffic drop. For Lazo, report ONLY sign-ups (new couples, new vendor claims); never mention unanswered vendor inquiries in a brief.",
     messages: [{ role: "user", content: `Compose the ${slot} brief.\n\n${prevToday ? "EARLIER BRIEFS TODAY (do not repeat their content):\n" + prevToday + "\n\n" : ""}LIVE CONTEXT:\n${context}` }],
   };
   let text = "", r;
@@ -727,15 +756,201 @@ async function setHome(env, body) {
   return next;
 }
 
+/* ---------------- watchtower: payments, social, search, app stores, follow-ups, trips ---------------- */
+const fmtUsd = (n) => "$" + Math.round(n || 0).toLocaleString();
+const payWhy = (e) => (String(e || "").match(/"message":"([^"]+)"/) || [])[1] || String(e || "").slice(0, 100);
+const siteName = (s) => String(s || "").replace(/^sc-domain:|^https?:\/\/|\/$/g, "");
+async function onceKey(env, key, ttlMs) {
+  const seen = (await kv.get(env, "once")) || {}; const now = Date.now();
+  if (seen[key] && now - seen[key] < ttlMs) return false;
+  seen[key] = now; for (const k of Object.keys(seen)) if (now - seen[k] > 60 * 86400e3) delete seen[k];
+  await kv.put(env, "once", seen); return true;
+}
+
+// KV is eventually consistent: read-modify-write twice in a row can lose the first write.
+// Watchers therefore collect their alerts and "already told him" keys and write each list once.
+async function onceStore(env) {
+  const seen = (await kv.get(env, "once")) || {}; let dirty = false;
+  return {
+    fresh(key, ttlMs) { const now = Date.now(); if (seen[key] && now - seen[key] < ttlMs) return false; seen[key] = now; dirty = true; return true; },
+    async save() { if (!dirty) return; const now = Date.now(); for (const k of Object.keys(seen)) if (now - seen[k] > 90 * 86400e3) delete seen[k]; await kv.put(env, "once", seen); },
+  };
+}
+async function flushAlerts(env, out) {
+  if (!out.length) return;
+  const list = (await kv.get(env, "alerts")) || [];
+  const at = new Date().toISOString();
+  list.unshift(...out.map((x) => ({ ...x.alert, at, id: uid() })).reverse());
+  await kv.put(env, "alerts", list.slice(0, 80));
+  await Promise.all(out.filter((x) => x.push).map((x) => notify(env, x.push.title, x.push.body, x.push.opts || {}).catch(() => null)));
+}
+
+// the PC posts `watch` every 15 minutes: balance charges, social posting logs, Search Console, iOS listings
+async function watchWatch(env, w) {
+  const once = await onceStore(env); const out = [];
+  for (const p of Array.isArray(w.payments) ? w.payments : []) {
+    if (!p.id) continue; /* collector error row, not a booking */ const biz = BIZ_NAME[p.business] || p.business;
+    if (p.state === "failed" && once.fresh(`payfail:${p.id}:${p.attempts}`, 90 * 86400e3)) {
+      const text = `${biz} balance declined: ${p.names} ${fmtUsd(p.amount)}, attempt ${p.attempts} of 3 (${payWhy(p.error)})${p.attempts < 3 ? ". Zoho retries tomorrow morning" : ". Retries are over; the couple was emailed a pay link"}`;
+      out.push({ alert: { kind: "failed", text }, push: { title: "Balance charge declined", body: text, opts: { priority: "high", tags: "credit_card" } } });
+    }
+    if (p.state === "charged" && p.paid && Date.now() - new Date(p.paid) < 3 * 86400e3 && once.fresh(`paid:${p.id}`, 90 * 86400e3)) {
+      const text = `${biz} balance charged: ${p.names} ${fmtUsd(p.amount)}`;
+      out.push({ alert: { kind: "done", text }, push: { title: "Balance charged", body: text, opts: { tags: "moneybag" } } });
+    }
+  }
+  const brands = w.social?.brands || [];
+  if (brands.length && localHour(env) >= 19) {
+    const missed = brands.filter((b) => !b.today).map((b) => b.name);
+    if (missed.length && once.fresh("social:" + w.social.day, 20 * 3600e3)) {
+      const text = `Not posted today: ${missed.join(", ")}`;
+      out.push({ alert: { kind: "watch", text }, push: { title: "Social posts missing", body: text + ". The daily posting tasks run from the Claude app on the PC; check it's awake and open.", opts: { priority: "high", tags: "camera" } } });
+    }
+  }
+  const sc = w.search || {};
+  if (sc.fix && once.fresh("gsc_setup", 7 * 86400e3)) out.push({ alert: { kind: "watch", text: "Search Console isn't connected yet. " + sc.fix } });
+  for (const site of sc.sites || []) {
+    const d = site.days || []; if (d.length < 20) continue;
+    const avg = (rows, i) => rows.reduce((a, r) => a + r[i], 0) / Math.max(1, rows.length);
+    const recent = d.slice(-3), base = d.slice(-31, -3);
+    const ri = avg(recent, 2), bi = avg(base, 2), rc = avg(recent, 1), bc = avg(base, 1);
+    if (bi >= 20 && ri < bi * 0.5 && once.fresh("gsc_drop:" + site.site, 3 * 86400e3)) {
+      const text = `${siteName(site.site)} search impressions fell to ${Math.round(ri)} a day from ${Math.round(bi)} (clicks ${rc.toFixed(1)} vs ${bc.toFixed(1)}), last 3 days vs the 4 weeks before`;
+      out.push({ alert: { kind: "watch", text }, push: { title: "Search traffic drop", body: text + ". Check Search Console for manual actions, coverage and crawl errors.", opts: { priority: "high", tags: "chart_with_downwards_trend", url: "https://search.google.com/search-console" } } });
+    }
+  }
+  await once.save(); await flushAlerts(env, out);
+  if (w.ios && Object.keys(w.ios).length) { await kv.put(env, "ios_results", { at: w.at || new Date().toISOString(), v: w.ios }); await appStores(env); }
+}
+
+// App Store / Google Play listings: push when an app first goes live or a new version ships.
+// Google Play is read from here; Apple's lookup API refuses Cloudflare, so the PC collector reads iOS and posts it in `watch.ios`.
+const APPS = [
+  { key: "lazo_ios", name: "Lazo · iOS", ios: { id: "6812863675" } },
+  { key: "lazo_android", name: "Lazo · Android", android: "com.meetlazo.app" },
+  { key: "jovi_ios", name: "Jovi · iOS", ios: { search: "Jovi Health" } },
+];
+async function appStores(env) {
+  const extra = (await kv.get(env, "apps_watch")) || [];
+  const prev = (await kv.get(env, "apps")) || {}; const out = {}; const ios = await kv.get(env, "ios_results");
+  const once = await onceStore(env); const alerts = [];
+  for (const a of [...APPS, ...extra]) {
+    const p = prev[a.key]; let cur = null;
+    try {
+      if (a.ios) {
+        const r = ios?.v?.[a.key];
+        if (!r || Date.now() - new Date(ios.at) > 3 * 3600e3) { out[a.key] = p || { name: a.name, store: "ios", listed: false, pending: true }; continue; }
+        if (r.error) throw new Error(r.error);
+        cur = { name: a.name, store: "ios", listed: !!r.listed, version: r.version || null, released: r.released || null, url: r.url || null };
+      } else if (a.android) {
+        const url = `https://play.google.com/store/apps/details?id=${encodeURIComponent(a.android)}&hl=en_US&gl=US`;
+        const r = await within(fetch(url, { headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", "accept-language": "en-US" } }), 10000, null);
+        if (!r) throw new Error("Play timeout");
+        if (r.status === 404) cur = { name: a.name, store: "android", listed: false };
+        else if (!r.ok) throw new Error("Play " + r.status);
+        else { const h = await r.text(); cur = { name: a.name, store: "android", listed: true, version: (h.match(/\[\[\["(\d+\.\d+(?:\.\d+)?)"\]\]/) || [])[1] || null, released: (h.match(/Updated on<\/div><div[^>]*>([^<]+)</) || [])[1] || null, url }; }
+      }
+    } catch (e) { out[a.key] = { ...(p || { name: a.name, listed: false }), error: String(e.message || e).slice(0, 120) }; continue; }
+    cur.checkedAt = new Date().toISOString(); out[a.key] = cur;
+    if (!p || p.pending || p.error || p.listed === undefined) continue; // first real look (or the last look failed): just record
+    let msg = null;
+    if (cur.listed && !p.listed) msg = `${a.name} is live on the ${cur.store === "ios" ? "App Store" : "Play Store"}${cur.version ? " (v" + cur.version + ")" : ""}`;
+    else if (cur.listed && p.listed && cur.version && p.version && cur.version !== p.version) msg = `${a.name} v${cur.version} is live (was v${p.version})`;
+    else if (cur.listed && p.listed && !cur.version && cur.released && p.released && cur.released !== p.released) msg = `${a.name} update is live (${cur.released})`;
+    else if (!cur.listed && p.listed) msg = `${a.name} is no longer listed in the store`;
+    if (msg && once.fresh("store:" + msg, 7 * 86400e3)) alerts.push({ alert: { kind: cur.listed ? "done" : "failed", text: msg, url: cur.url }, push: { title: "App store", body: msg, opts: { priority: cur.listed ? "default" : "urgent", tags: "iphone", url: cur.url || "" } } });
+  }
+  await kv.put(env, "apps", out); await once.save(); await flushAlerts(env, alerts);
+  return out;
+}
+
+// leads, clients and bookings left unanswered for a day: JARVIS drafts the reply, Jesse sends it from Decisions
+async function makeFollowups(env, { minAgeH = 24, dry = false } = {}) {
+  if (!env.ANTHROPIC_API_KEY) return;
+  const brief = await kv.get(env, "brief"); const list = (await kv.get(env, "followups")) || [];
+  const items = brief?.items || [];
+  const have = new Set(list.map((f) => f.threadId + "|" + f.received));
+  const due = items.filter((m) => m.needs_reply && m.threadId && m.account && ["lead", "client", "booking"].includes(m.kind) && Date.now() - new Date(m.received) > minAgeH * 3600e3 && !have.has(m.threadId + "|" + m.received)).slice(0, 3);
+  if (dry && !due.length) return [{ skip: "none due", candidates: items.filter((m) => m.needs_reply).map((m) => ({ kind: m.kind, ageH: Math.round((Date.now() - new Date(m.received)) / 3600e3), acct: !!m.account, thread: !!m.threadId })) }];
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }); const out = [];
+  for (const m of due) {
+    const t = await bridgeCall(env, m.account, { action: "get", threadId: m.threadId }).catch(() => ({ error: "bridge" }));
+    if (t.error || !t.messages?.length) { if (dry) out.push({ skip: "bridge", error: t.error || "no messages" }); continue; }
+    const last = t.messages[t.messages.length - 1];
+    const thread = t.messages.slice(-6).map((x) => `FROM: ${x.from}\nDATE: ${x.date}\n${String(x.body || "").slice(0, 3000)}`).join("\n---\n");
+    const r = await client.beta.messages.create({
+      model: "claude-sonnet-5-5", max_tokens: 1500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+      system: `You write email replies for ${BIZ_NAME[m.business] || BIZ_LABEL[m.business] || "the business"}, owned by Jesse Clark. ${m.business === "atavia" || m.business === "es" ? "It is a wedding film studio; couples write in about dates, packages and availability." : ""} Warm, brief, specific to what they asked, professional. Apologise briefly for the slow reply only if it reads naturally. Never invent prices, availability or facts that are not in the thread; where something must be confirmed, offer a quick call or say you'll confirm. End with a clear next step. Sign off as "${BIZ_NAME[m.business] || "the team"}". Output only the email body, no subject line, no commentary.`,
+      messages: [{ role: "user", content: `This ${m.kind} has waited more than a day for a reply. Write the reply to the latest message.\n\nTHREAD (oldest first):\n${thread}` }],
+    });
+    const body = r.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim(); if (!body) continue;
+    const f = { id: uid(), business: m.business, account: m.account, threadId: m.threadId, received: m.received, from: m.from, to: (String(last.from).match(/<([^>]+)>/) || [null, last.from])[1], subject: m.subject, body, status: "ready", at: new Date().toISOString() };
+    if (dry) { out.push({ dry: true, business: f.business, kind: m.kind, chars: f.body.length, signoff: f.body.split(/\n/).slice(-2).join(" / ") }); continue; }
+    list.unshift(f);
+    out.push({ alert: { kind: "lead", text: `Follow-up drafted for ${m.from}: ${m.subject}. Review and send it from Decisions.` }, push: { title: "Follow-up ready to send", body: `${m.from}: ${m.subject}\nWaited ${Math.round((Date.now() - new Date(m.received)) / 3600e3)}h. Open JARVIS → Decisions to review and send.`, opts: { priority: "high", tags: "envelope_with_arrow", url: "https://jarvis-hub.floral-credit-e4f0.workers.dev/#decisions" } } });
+  }
+  if (dry) return out;
+  await flushAlerts(env, out);
+  // drafts whose thread got a reply in Gmail are no longer needed
+  const byThread = Object.fromEntries(items.map((m) => [m.threadId, m]));
+  for (const f of list) if (f.status === "ready" && byThread[f.threadId] && !byThread[f.threadId].needs_reply) f.status = "answered";
+  await kv.put(env, "followups", list.filter((f) => Date.now() - new Date(f.at) < 14 * 86400e3).slice(0, 30));
+}
+
+// trips: track Jesse's own flights on the day, push wheels-up / landed, switch home on landing
+async function addTrip(env, input) {
+  const trips = (await kv.get(env, "trips")) || [];
+  const t = { id: uid(), flight: String(input.flight || "").toUpperCase().trim(), date: String(input.date || "").slice(0, 10), home: HOMES[input.home] ? input.home : null, note: input.note || "", phase: "scheduled", at: new Date().toISOString() };
+  if (!t.flight || !/^\d{4}-\d{2}-\d{2}$/.test(t.date)) return { error: "need a flight number and a YYYY-MM-DD date" };
+  const r = await flightRoute(env, toCallsign(t.flight)).catch(() => null); if (r?.from) t.route = { from: r.from, to: r.to, airline: r.airline };
+  trips.push(t); trips.sort((a, b) => a.date.localeCompare(b.date));
+  await kv.put(env, "trips", trips);
+  return t;
+}
+const place = (a) => a ? (a.city || a.iata || a.name) : "?";
+async function tripWatch(env) {
+  const trips = (await kv.get(env, "trips")) || []; if (!trips.length) return;
+  const tz = env.TZ || "America/Chicago";
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: tz }), yday = new Date(Date.now() - 86400e3).toLocaleDateString("en-CA", { timeZone: tz });
+  const f = await kv.get(env, "flights"); const want = (await kv.get(env, "track_req")) || {}; let changed = false;
+  for (const t of trips) {
+    if (t.phase === "landed") continue;
+    if (t.date !== today && !(t.date === yday && t.phase === "airborne")) continue;
+    const cs = toCallsign(t.flight); want[cs] = Date.now(); changed = true;
+    if (!t.route) { const r = await flightRoute(env, cs).catch(() => null); if (r?.from) t.route = { from: r.from, to: r.to, airline: r.airline }; }
+    const ac = (f?.tracks?.[cs] || []).find((a) => a.lat != null);
+    const up = ac && (ac.alt || 0) > 300 && (ac.gs || 0) > 80;
+    const leg = t.route?.from ? `${place(t.route.from)} → ${place(t.route.to)}` : "";
+    if (up) {
+      t.last = { lat: ac.lat, lon: ac.lon, alt: ac.alt, gs: ac.gs, at: f.at }; t.miss = 0;
+      if (t.phase !== "airborne") { t.phase = "airborne"; t.upAt = new Date().toISOString(); const text = `Wheels up: ${t.flight} ${leg}`.trim(); await pushAlert(env, { kind: "watch", text }); await notify(env, "Wheels up", text + ". Tracking on the World globe.", { tags: "airplane_departure", url: "https://jarvis-hub.floral-credit-e4f0.workers.dev/" }); }
+    } else if (t.phase === "airborne") {
+      const ground = ac && ((ac.alt || 0) <= 300 || (ac.gs || 0) < 80);
+      t.miss = (t.miss || 0) + 1;
+      if (ground || (t.miss >= 3 && (t.last?.alt || 0) < 15000)) {
+        t.phase = "landed"; t.landedAt = new Date().toISOString();
+        const text = `Landed: ${t.flight}${t.route?.to ? " in " + place(t.route.to) : ""}`;
+        await pushAlert(env, { kind: "done", text }); await notify(env, "Landed", text + (t.home ? `. Home is now ${HOMES[t.home].label}.` : "."), { tags: "airplane_arriving" });
+        if (t.home) await setHome(env, { key: t.home, mode: "auto" });
+      }
+    }
+  }
+  if (changed) await kv.put(env, "track_req", want);
+  const keep = trips.filter((t) => t.date >= new Date(Date.now() - 3 * 86400e3).toLocaleDateString("en-CA", { timeZone: tz }));
+  await kv.put(env, "trips", keep);
+}
+
 /* ---------------- worker ---------------- */
 export default {
   async scheduled(event, env, ctx) {
     await applyHome(env);
     const cron = event.cron || "";
-    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)));
+    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).catch((e) => console.log("5-min cron", e.message)));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
+      await appStores(env).catch((e) => console.log("app stores", e.message));
+      await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
       const slot = SLOT_HOURS(env)[localHour(env)];
       if (slot) {
         const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} });
@@ -764,7 +979,7 @@ export default {
     }
     if (p === "/" || p === "/index.html" || p === "/wall") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
-    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago" });
+    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago", briefHours: SLOT_HOURS(env) });
     if (p === "/api/status") {
       const cached = url.searchParams.get("fresh") ? null : await kv.get(env, "status");
       if (cached && Date.now() - new Date(cached.checkedAt) < 6 * 60000) return json({ ...cached, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
@@ -813,6 +1028,12 @@ export default {
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
+    if (p === "/api/apps/targets") return json([...APPS, ...((await kv.get(env, "apps_watch")) || [])].filter((a) => a.ios));
+    if (p === "/api/apps") return json(url.searchParams.get("fresh") ? await appStores(env) : ((await kv.get(env, "apps")) || {}));
+    if (p === "/api/followups/run" && request.method === "POST") { if (url.searchParams.get("dry")) return json(await makeFollowups(env, { minAgeH: +url.searchParams.get("minAge") || 0, dry: true })); await makeFollowups(env); return json((await kv.get(env, "followups")) || []); }
+    if (p === "/api/followups/skip" && request.method === "POST") { const { id } = await request.json(); const list = ((await kv.get(env, "followups")) || []).map((f) => f.id === id ? { ...f, status: "skipped" } : f); await kv.put(env, "followups", list); return json({ ok: true }); }
+    if (p === "/api/trips" && request.method === "POST") return json(await addTrip(env, await request.json()));
+    if (p === "/api/trips/delete" && request.method === "POST") { const { id } = await request.json(); await kv.put(env, "trips", ((await kv.get(env, "trips")) || []).filter((t) => t.id !== id)); return json({ ok: true }); }
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
     if (p === "/api/inbox/thread") { const r = await bridgeCall(env, url.searchParams.get("account"), { action: "get", threadId: url.searchParams.get("t") }); if (r.error === "unknown action") r.error = "This inbox's bridge script is the older version. Paste the updated script and deploy a new version to read full emails."; return json(r, r.error ? 502 : 200); }
@@ -822,6 +1043,7 @@ export default {
       const item = await request.json(); const q = (await kv.get(env, "queue")) || [];
       if (String(item.kind || "").startsWith("email_")) {
         const res = await emailAction(env, item);
+        if (res.ok && item.params?.followupId) { const fl = ((await kv.get(env, "followups")) || []).map((f) => f.id === item.params.followupId ? { ...f, status: "sent", sentAt: new Date().toISOString() } : f); await kv.put(env, "followups", fl); }
         q.unshift({ ...item, status: res.ok ? "done" : "failed", result: res.message, confirmedAt: new Date().toISOString(), doneAt: new Date().toISOString() });
         await kv.put(env, "queue", q.slice(0, 50)); await pushAlert(env, { kind: res.ok ? "done" : "failed", text: (res.ok ? "Done: " : "Failed: ") + item.summary + (res.message ? " — " + res.message : "") });
         return json({ ok: res.ok, id: item.id, executed: true, result: res.message });
@@ -844,10 +1066,12 @@ export default {
         const body = await request.json(); const saved = [];
         for (const k of STATE_KEYS) if (k in body) {
           if (k === "brief" && body.brief?.source !== "bridge" && !body.brief?.force) { const cur = await kv.get(env, "brief"); if (cur?.source === "bridge") continue; } // live bridges outrank the hourly snapshot
+          if (k === "watch" && body.watch && !Array.isArray(body.watch)) body.watch = { ...((await kv.get(env, "watch")) || {}), ...body.watch }; // PC and cloud feeder each post their own sections
           await kv.put(env, k, body[k]); saved.push(k);
         }
         if (body.metrics) ctx.waitUntil(Promise.all([watchMetrics(env, body.metrics), weddingWeather(env)]));
         if (body.decisions) ctx.waitUntil(watchDecisions(env, body.decisions));
+        if (body.watch) ctx.waitUntil(watchWatch(env, body.watch).catch((e) => console.log("watch", e.message)));
         return json({ saved, at: new Date().toISOString() });
       }
     }

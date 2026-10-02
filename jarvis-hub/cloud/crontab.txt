@@ -1,0 +1,7 @@
+# JARVIS cloud feeder (installed by cloud/install.sh). Times are UTC.
+* * * * * cd __HOME__/jarvis && .venv/bin/python collect_flights.py >> flights.log 2>&1
+*/5 * * * * cd __HOME__/jarvis && .venv/bin/python collect_traffic.py >> traffic.log 2>&1
+7 * * * * cd __HOME__/jarvis && .venv/bin/python collect_metrics.py >> metrics.log 2>&1
+30 9 * * * cd __HOME__/jarvis && .venv/bin/python collect_cams.py >> cams.log 2>&1
+*/15 * * * * cd __HOME__/jarvis && .venv/bin/python collect_watch.py --only payments,search,ios >> watch.log 2>&1
+0 4 * * 0 cd __HOME__/jarvis && for f in *.log; do tail -n 3000 "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done
