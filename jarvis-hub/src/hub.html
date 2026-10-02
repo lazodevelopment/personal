@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/globe.gl@2.34.2/dist/globe.gl.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js" defer></script>
 <style>
 /* Layout: HUD header with an attention strip, then a composed 12-column grid: the console leads,
    operations tiles, a full-width weather band with the map behind the numbers, then reference panels.
@@ -196,6 +198,18 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .nws div.Extreme,.nws div.Severe{border-color:var(--red);background:rgba(255,77,94,.12)}
 .nws b{display:block;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase}
 
+/* world */
+.worldwrap{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:12px;min-height:520px}
+#globe{position:relative;min-height:520px;background:radial-gradient(circle at 50% 50%,#06121f,#02050a 70%);border:1px solid var(--line);overflow:hidden}
+#globe canvas{display:block}
+.wside{display:grid;gap:8px;align-content:start;min-width:0}
+.winfo{font-size:13px;display:grid;gap:8px;max-height:460px;overflow:auto}
+.winfo h3{margin:6px 0 2px;font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);font-weight:400}
+.winfo .row{display:flex;justify-content:space-between;gap:8px;border-left:2px solid var(--line);padding:2px 8px;cursor:pointer}
+.winfo .row:hover{border-color:var(--cyan)}.winfo .row small{font-family:var(--mono);color:var(--dim);font-size:11px;white-space:nowrap}
+.wl{font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:var(--dim);text-transform:none;display:flex;gap:4px;align-items:center;font-weight:400}
+.wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
+@media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globe{min-height:360px;touch-action:pan-y}}
 /* scores, news */
 .scores{display:grid;gap:6px}
 .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
@@ -342,9 +356,9 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   .teams{grid-template-columns:1fr}
   /* phone views */
   main[data-view] > .panel{display:none}main[data-view] > .panel[data-v~="all"]{display:block}
-  main[data-view="ops"] > .panel[data-v~="ops"],main[data-view="jarvis"] > .panel[data-v~="jarvis"],main[data-view="weather"] > .panel[data-v~="weather"],main[data-view="feeds"] > .panel[data-v~="feeds"],main[data-view="more"] > .panel[data-v~="more"]{display:block}
+  main[data-view="ops"] > .panel[data-v~="ops"],main[data-view="jarvis"] > .panel[data-v~="jarvis"],main[data-view="weather"] > .panel[data-v~="weather"],main[data-view="feeds"] > .panel[data-v~="feeds"],main[data-view="world"] > .panel[data-v~="world"],main[data-view="more"] > .panel[data-v~="more"]{display:block}
   main[data-view="weather"] > .panel.band{display:flex}
-  .nav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(4,7,13,.94);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(10px)}
+  .nav{display:grid;grid-template-columns:repeat(6,1fr);position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(4,7,13,.94);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));backdrop-filter:blur(10px)}
   .nav button{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--dim);padding:6px 2px;display:grid;gap:3px;justify-items:center}
   .nav button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
   .nav button.on{color:var(--cyan2)}
@@ -412,6 +426,22 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   <section class="panel" id="opsPanel" data-v="ops">
     <h2>Operations <span class="sub" id="statusAt">checking…</span><button class="btn sm" id="recheck">RECHECK</button></h2>
     <div class="biz" id="biz"></div>
+  </section>
+
+  <section class="panel" id="worldPanel" data-v="world">
+    <h2>World <span class="sub" id="worldSub"></span>
+      <label class="wl"><input type="checkbox" data-layer="flights" checked> flights</label>
+      <label class="wl"><input type="checkbox" data-layer="sats" checked> satellites</label>
+      <label class="wl"><input type="checkbox" data-layer="quakes" checked> quakes</label>
+      <label class="wl"><input type="checkbox" data-layer="fires" checked> wildfires</label>
+      <button class="btn sm" id="worldHome">HOME</button><button class="btn sm" id="worldGlobe">GLOBE</button></h2>
+    <div class="worldwrap"><div id="globe"></div>
+      <div class="wside">
+        <form id="trackForm" class="ask" style="margin:0"><input id="trackQ" placeholder="Track a flight: AA 2612, SWA653, N123AB" autocomplete="off" aria-label="Flight number"><button class="btn primary">TRACK</button></form>
+        <div id="trackOut" class="empty" style="margin-top:6px"></div>
+        <div id="worldInfo" class="winfo"></div>
+      </div>
+    </div>
   </section>
 
   <section class="panel band" id="wxPanel" data-v="weather">
@@ -505,6 +535,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   <button data-view="jarvis" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>JARVIS</button>
   <button data-view="ops"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1"/><path d="M7 15l3-4 3 3 4-6"/></svg>OPS</button>
   <button data-view="weather"><svg viewBox="0 0 24 24"><path d="M7 17a4 4 0 010-8 5 5 0 019.6-1.5A3.5 3.5 0 0117 17z"/></svg>WEATHER</button>
+  <button data-view="world"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>WORLD</button>
   <button data-view="feeds"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1"/><path d="M10 9l5 2-5 2z"/></svg>FEEDS</button>
   <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>MORE</button>
 </nav>
@@ -940,6 +971,7 @@ async function loadState() {
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}
   renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderAttention(); renderSys(); syncQueueCards();
+  window.__stateLoaded = true;
 }
 async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
 function renderSys() {
@@ -1099,6 +1131,7 @@ function handleAction(a) {
   if (a.type === "memory") { state.memory = a.value; renderMemory(); }
   if (a.type === "draft") draftCard(a);
   if (a.type === "confirm") proposeAction(a.item);
+  if (a.type === "world") { if (PHONE) showView("world"); initGlobe(); if (a.flight) { $("#trackQ").value = a.flight; trackIt(a.flight); } else loadFlights(); }
 }
 $("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
 $("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
@@ -1180,14 +1213,97 @@ function exitWall() { document.body.classList.remove("wall"); clearInterval(wall
 $("#wallBtn").onclick = (e) => { e.preventDefault(); enterWall(); }; $("#wallExit").onclick = exitWall;
 
 /* ---------- phone navigation ---------- */
-function showView(v) { $("#main").dataset.view = v; $("#nav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.view === v)); if (v === "weather" && map) setTimeout(() => map.invalidateSize(), 50); try { localStorage.setItem("jarvisView", v); } catch {} }
+function showView(v) { $("#main").dataset.view = v; if (v === "world") setTimeout(() => { initGlobe(); globe && globe.width($("#globe").clientWidth).height($("#globe").clientHeight || 360); }, 60); $("#nav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.view === v)); if (v === "weather" && map) setTimeout(() => map.invalidateSize(), 50); try { localStorage.setItem("jarvisView", v); } catch {} }
 $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.dataset.view));
 addEventListener("resize", () => { if (map) map.invalidateSize(); });
 
 /* ---------- home location ---------- */
 function renderHome() { const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
-async function setHome(body) { try { state.cfg.home = await fetch("/api/home", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()); renderHome(); loadWeather(); } catch {} }
+async function setHome(body) { try { state.cfg.home = await fetch("/api/home", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()); renderHome(); await loadState(); loadWeather(); if (globe) { globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200); loadFlights(); } } catch {} }
 $("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = hm.mode === "auto" ? { key: hm.key === "az" ? "tx" : "az", mode: "manual" } : hm.key === "tx" ? { key: "az", mode: "manual" } : { mode: "auto", deviceTz: Intl.DateTimeFormat().resolvedOptions().timeZone }; setHome(order); };
+
+/* ---------- World (OSIRIS-style) ---------- */
+let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true };
+const KT_MPH = 1.15078;
+function worldHome() { const p = state.place || state.wx || {}; return { lat: +(p.lat || 33.15), lng: +(p.lon || -96.82) }; }
+function initGlobe() {
+  if (globe || !window.Globe || !$("#globe")) return;
+  const el = $("#globe");
+  globe = Globe()(el).width(el.clientWidth).height(el.clientHeight || 520)
+    .globeImageUrl("https://cdn.jsdelivr.net/npm/three-globe@2.41.12/example/img/earth-night.jpg")
+    .bumpImageUrl("https://cdn.jsdelivr.net/npm/three-globe@2.41.12/example/img/earth-topology.png")
+    .backgroundColor("rgba(0,0,0,0)").atmosphereColor("#19d3ff").atmosphereAltitude(0.18)
+    .pointsMerge(false).pointAltitude("alt").pointRadius("r").pointColor("c").pointLabel("tip").onPointClick(d => d.onClick && d.onClick())
+    .ringsData([]).ringColor(() => t => `rgba(255,120,80,${1 - t})`).ringMaxRadius("maxR").ringPropagationSpeed(1.5).ringRepeatPeriod(1400)
+    .labelsData([]).labelText("text").labelSize(0.6).labelDotRadius(0.25).labelColor(() => "#7be8ff").labelResolution(2).labelAltitude(0.01);
+  globe.controls().autoRotate = false; globe.controls().enableZoom = true;
+  const h = worldHome(); globe.pointOfView({ ...h, altitude: 0.22 }, 0);
+  new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
+  if (PHONE) { el.style.touchAction = "pan-y"; }
+  loadWorld(); loadSats();
+  worldTimers.push(setInterval(loadFlights, 30000), setInterval(moveFlights, 2000), setInterval(loadEvents, 5 * 60000), setInterval(tickSats, 2000));
+}
+async function loadWorld() { await Promise.all([loadFlights(), loadEvents()]); }
+let flightsAt = 0, flightsBase = [];
+async function loadFlights() {
+  try { const d = await fetch("/api/world/flights").then(r => r.json()); flightsBase = d.ac || []; flightsAt = d.at ? new Date(d.at).getTime() : Date.now(); worldData.feedAt = d.at;
+    if (worldData.tracked) { const t = d.tracks?.[worldData.tracked.q] || flightsBase.filter(a => a.flight === worldData.tracked.q || a.reg === worldData.tracked.q); worldData.tracked.ac = t?.[0] || worldData.tracked.ac; worldData.tracked.base = worldData.tracked.ac; renderTracked(); } } catch {}
+  moveFlights();
+}
+// dead reckoning: advance each aircraft along its heading at its ground speed since the feed time
+function project(a, secs) { if (!a || a.gs == null || a.track == null || !a.alt) return a; const nm = a.gs * secs / 3600, br = a.track * Math.PI / 180, R = 3440.065, la = a.lat * Math.PI / 180, lo = a.lon * Math.PI / 180, d = nm / R;
+  const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(br)), lo2 = lo + Math.atan2(Math.sin(br) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
+  return { ...a, lat: la2 * 180 / Math.PI, lon: lo2 * 180 / Math.PI }; }
+function moveFlights() { const secs = Math.min(180, (Date.now() - flightsAt) / 1000); worldData.flights = worldLayers.flights ? flightsBase.map(a => project(a, secs)) : []; if (worldData.tracked?.base) worldData.tracked.ac = project(worldData.tracked.base, secs); renderWorld(); }
+async function loadEvents() { try { const d = await fetch("/api/world/events").then(r => r.json()); worldData.quakes = d.quakes || []; worldData.fires = d.fires || []; worldData.iss = d.iss; } catch {} renderWorld(); }
+async function loadSats() {
+  if (!window.satellite) { setTimeout(loadSats, 800); return; }
+  try { const tles = await fetch("/api/world/sats").then(r => r.json()); satRecs = tles.map(([name, l1, l2]) => { try { return { name, rec: satellite.twoline2satrec(l1, l2) }; } catch { return null; } }).filter(Boolean); } catch {}
+  tickSats();
+}
+function tickSats() {
+  if (!globe || !window.satellite || !satRecs.length) return;
+  const now = new Date(), gmst = satellite.gstime(now);
+  worldData.sats = satRecs.map(s => { try { const pv = satellite.propagate(s.rec, now); if (!pv.position) return null; const g = satellite.eciToGeodetic(pv.position, gmst); return { name: s.name, lat: satellite.degreesLat(g.latitude), lng: satellite.degreesLong(g.longitude), altKm: g.height }; } catch { return null; } }).filter(Boolean);
+  renderWorld(true);
+}
+let lastWorldRender = 0;
+function renderWorld(satsOnly) {
+  if (!globe) return;
+  const pts = [];
+  if (worldLayers.flights) for (const a of worldData.flights) pts.push({ lat: a.lat, lng: a.lon, alt: Math.max(0.004, (a.alt || 0) / 1.2e6), r: worldData.tracked?.ac?.hex === a.hex ? 0.3 : 0.09, c: a.emergency ? "#ff4d5e" : worldData.tracked?.ac?.hex === a.hex ? "#ffb340" : "#7be8ff", tip: `<div class="wtip"><b>${esc(a.flight || a.reg || a.hex)}</b> ${esc(a.type)}<br>${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "on ground"} · ${a.gs ? Math.round(a.gs * KT_MPH) + " mph" : ""} · hdg ${a.track != null ? Math.round(a.track) + "°" : "–"}${a.ownOp ? "<br>" + esc(a.ownOp) : ""}${a.emergency ? "<br><b style='color:#ff4d5e'>EMERGENCY " + esc(a.emergency) + "</b>" : ""}</div>`, onClick: () => { $("#trackQ").value = a.flight || a.reg; trackIt(a.flight || a.reg); } });
+  if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === worldData.tracked.ac.hex)) { const a = worldData.tracked.ac; pts.push({ lat: a.lat, lng: a.lon, alt: Math.max(0.002, (a.alt || 0) / 3.6e6), r: 0.4, c: "#ffb340", tip: `<div class="wtip"><b>${esc(a.flight)}</b> ${esc(a.type)}<br>${Math.round(a.alt || 0).toLocaleString()} ft · ${Math.round((a.gs || 0) * KT_MPH)} mph</div>` }); }
+  if (worldLayers.sats) for (const s of worldData.sats) pts.push({ lat: s.lat, lng: s.lng, alt: Math.min(0.6, s.altKm / 6371), r: /ISS/.test(s.name) ? 0.5 : 0.18, c: /ISS/.test(s.name) ? "#ffffff" : "#a78bfa", tip: `<div class="wtip"><b>${esc(s.name)}</b><br>${Math.round(s.altKm)} km up</div>` });
+  if (worldLayers.fires) for (const f of worldData.fires) pts.push({ lat: f.lat, lng: f.lon, alt: 0.005, r: Math.min(0.3, 0.06 + Math.sqrt(f.acres) / 1600), c: "rgba(255,138,61,.85)", tip: `<div class="wtip"><b>${esc(f.name)} fire</b> ${esc(f.state)}<br>${f.acres.toLocaleString()} acres · ${f.contained ?? "?"}% contained</div>` });
+  globe.pointsData(pts);
+  if (!satsOnly) globe.ringsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 3).map(q => ({ lat: q.lat, lng: q.lon, maxR: Math.max(1, (q.mag - 2) * 2.2) })) : []);
+  globe.labelsData([{ ...worldHome(), text: (state.place?.name || "Home").split(",")[0] }].concat(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 5).map(q => ({ lat: q.lat, lng: q.lon, text: "M" + q.mag.toFixed(1) })) : []));
+  const now = Date.now(); if (satsOnly && now - lastWorldRender < 10000) return; lastWorldRender = now;
+  $("#worldSub").textContent = `${worldData.feedAt ? "flights " + fmtAgo(worldData.feedAt) + " · " : ""}${worldData.flights.length} aircraft near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
+  const big = [...worldData.quakes].sort((a, b) => b.mag - a.mag).slice(0, 5), fires = worldData.fires.slice(0, 5);
+  const nearest = [...worldData.flights].filter(a => a.alt > 0).sort((a, b) => (b.alt || 0) - (a.alt || 0)).slice(0, 6);
+  $("#worldInfo").innerHTML = `${worldData.iss ? `<h3>SPACE STATION</h3><div class="row" data-go="${worldData.iss.lat},${worldData.iss.lon}"><span>ISS over ${worldData.iss.lat.toFixed(1)}°, ${worldData.iss.lon.toFixed(1)}°</span><small>${worldData.iss.alt} km · ${Math.round(worldData.iss.vel * 0.621)} mph</small></div>` : ""}
+    <h3>OVERHEAD</h3>${nearest.map(a => `<div class="row" data-go="${a.lat},${a.lon}" data-fl="${esc(a.flight || a.reg)}"><span>${esc(a.flight || a.reg || a.hex)} <small>${esc(a.type)}</small></span><small>${Math.round(a.alt).toLocaleString()} ft</small></div>`).join("") || '<div class="empty">no aircraft reported</div>'}
+    <h3>EARTHQUAKES · 24H</h3>${big.map(q => `<div class="row" data-go="${q.lat},${q.lon}"><span>M${q.mag.toFixed(1)} ${esc(q.place || "")}</span><small>${fmtAgo(new Date(q.time).toISOString())}</small></div>`).join("") || '<div class="empty">none</div>'}
+    <h3>LARGEST WILDFIRES</h3>${fires.map(f => `<div class="row" data-go="${f.lat},${f.lon}"><span>${esc(f.name)} <small>${esc(f.state)}</small></span><small>${f.acres.toLocaleString()} ac · ${f.contained ?? "?"}%</small></div>`).join("") || '<div class="empty">none</div>'}`;
+  $("#worldInfo").querySelectorAll("[data-go]").forEach(r => r.onclick = () => { const [lat, lng] = r.dataset.go.split(",").map(Number); globe.pointOfView({ lat, lng, altitude: 0.6 }, 1200); if (r.dataset.fl) { $("#trackQ").value = r.dataset.fl; trackIt(r.dataset.fl); } });
+}
+function renderTracked() {
+  const t = worldData.tracked; if (!t) { $("#trackOut").textContent = ""; return; }
+  const a = t.ac;
+  $("#trackOut").innerHTML = a ? `<b style="color:#ffb340">${esc(a.flight || t.q)}</b> ${esc(a.type)} ${esc(a.reg)} · ${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "on the ground"} · ${a.gs ? Math.round(a.gs * KT_MPH) + " mph" : ""} · heading ${a.track != null ? Math.round(a.track) + "°" : "–"} <button class="btn sm" id="trackStop">STOP</button>` : `Tracking ${esc(t.q)}. It appears here within a minute once it's airborne and in receiver range. <button class="btn sm" id="trackStop">STOP</button>`;
+  const st = $("#trackStop"); if (st) st.onclick = () => { fetch("/api/world/untrack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ q: t.q }) }); worldData.tracked = null; renderTracked(); renderWorld(); };
+}
+async function trackIt(q) {
+  q = String(q || "").trim(); if (!q) return; worldData.tracked = { q, ac: null }; $("#trackOut").textContent = "looking…";
+  try { const t = await fetch("/api/world/track?q=" + encodeURIComponent(q)).then(r => r.json()); worldData.tracked.ac = t.aircraft?.[0] || null; worldData.tracked.base = worldData.tracked.ac; worldData.tracked.q = t.callsign || q; } catch {}
+  renderTracked(); renderWorld(); const a = worldData.tracked.ac; if (a && globe) globe.pointOfView({ lat: a.lat, lng: a.lon, altitude: 0.5 }, 1500);
+}
+$("#trackForm").onsubmit = (e) => { e.preventDefault(); trackIt($("#trackQ").value); };
+$("#worldHome").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200);
+$("#worldGlobe").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 2.4 }, 1500);
+document.querySelectorAll("[data-layer]").forEach(cb => cb.onchange = () => { worldLayers[cb.dataset.layer] = cb.checked; if (cb.dataset.layer === "flights") loadFlights(); renderWorld(); });
+(function waitGlobe() { if (window.Globe && window.__stateLoaded) { if ($("#worldPanel").offsetParent !== null || !PHONE) initGlobe(); else setTimeout(waitGlobe, 1500); } else setTimeout(waitGlobe, 500); })();
 /* ---------- start ---------- */
 $("#launch").innerHTML = LAUNCH.map(([n,u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("");
 $("#recheck").onclick = () => checkStatus(true);

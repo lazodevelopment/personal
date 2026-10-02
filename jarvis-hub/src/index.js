@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -378,6 +378,55 @@ async function cached(env, key, ttlMs, fn) {
   return v;
 }
 
+
+/* ---------------- World: flights, satellites, quakes, wildfires ---------------- */
+const AIRLINES = { AA: "AAL", UA: "UAL", DL: "DAL", WN: "SWA", AS: "ASA", B6: "JBU", NK: "NKS", F9: "FFT", G4: "AAY", HA: "HAL", SY: "SCX", AC: "ACA", WS: "WJA", MX: "MXY", QX: "QXE", OO: "SKW", YX: "RPA", MQ: "ENY", "9E": "EDV", BA: "BAW", LH: "DLH", AF: "AFR", KL: "KLM", AM: "AMX", Y4: "VOI" };
+function toCallsign(q) {
+  const t = String(q || "").toUpperCase().replace(/[\s-]+/g, "");
+  const m = t.match(/^([A-Z0-9]{2})(\d{1,4}[A-Z]?)$/); if (m && AIRLINES[m[1]]) return AIRLINES[m[1]] + m[2];
+  return t;
+}
+const acOut = (a) => ({ hex: a.hex, flight: (a.flight || "").trim(), reg: a.r || "", type: a.t || "", lat: a.lat, lon: a.lon, alt: a.alt_baro === "ground" ? 0 : (a.alt_baro ?? a.alt_geom ?? null), gs: a.gs != null ? Math.round(a.gs) : null, track: a.track ?? null, squawk: a.squawk || "", emergency: a.emergency && a.emergency !== "none" ? a.emergency : "", desc: a.desc || "", ownOp: a.ownOp || "" });
+async function flightsNear(env, lat, lon, nm = 40) {
+  const f = await kv.get(env, "flights"); if (!f?.ac) return [];
+  const R = 3440.065, toR = Math.PI / 180;
+  const dist = (a) => 2 * R * Math.asin(Math.sqrt(Math.sin((a.lat - lat) * toR / 2) ** 2 + Math.cos(lat * toR) * Math.cos(a.lat * toR) * Math.sin((a.lon - lon) * toR / 2) ** 2));
+  return f.ac.filter((a) => dist(a) <= nm);
+}
+async function trackFlight(env, q) {
+  const cs = toCallsign(q);
+  const want = (await kv.get(env, "track_req")) || {}; want[cs] = Date.now(); await kv.put(env, "track_req", want);
+  const f = await kv.get(env, "flights");
+  const ac = f?.tracks?.[cs] || (f?.ac || []).filter((a) => a.flight === cs || a.reg === cs);
+  return { query: q, callsign: cs, found: ac.length > 0, aircraft: ac, asOf: f?.at || null, note: ac.length ? undefined : "Tracking requested; the PC feed checks it within a minute." };
+}
+async function worldEvents(env) {
+  return cached(env, "world_events", 5 * 60e3, async () => {
+    const [q, f, iss] = await Promise.all([
+      fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson").then((r) => r.json()).catch(() => ({ features: [] })),
+      fetch("https://services3.arcgis.com/T4QMspbfLg3qTGWY/arcgis/rest/services/WFIGS_Incident_Locations_Current/FeatureServer/0/query?where=IncidentSize%3E%3D100&outFields=IncidentName,IncidentSize,PercentContained,POOState,FireDiscoveryDateTime&orderByFields=IncidentSize%20DESC&resultRecordCount=150&f=geojson").then((r) => r.json()).catch(() => ({ features: [] })),
+      fetch("https://api.wheretheiss.at/v1/satellites/25544").then((r) => r.json()).catch(() => null),
+    ]);
+    return {
+      at: new Date().toISOString(),
+      quakes: (q.features || []).map((x) => ({ mag: x.properties.mag, place: x.properties.place, time: x.properties.time, url: x.properties.url, lon: x.geometry.coordinates[0], lat: x.geometry.coordinates[1], depth: x.geometry.coordinates[2], tsunami: !!x.properties.tsunami })),
+      fires: (f.features || []).filter((x) => x.geometry).map((x) => ({ name: x.properties.IncidentName, acres: Math.round(x.properties.IncidentSize || 0), contained: x.properties.PercentContained, state: (x.properties.POOState || "").replace("US-", ""), lon: x.geometry.coordinates[0], lat: x.geometry.coordinates[1] })),
+      iss: iss ? { lat: iss.latitude, lon: iss.longitude, alt: Math.round(iss.altitude), vel: Math.round(iss.velocity) } : null,
+    };
+  });
+}
+async function satTles(env) {
+  const c = await kv.get(env, "cache_tles");
+  if (c && Date.now() - c.t < 12 * 3600e3) return c.v;
+  try {
+    const txt = await (await fetch("https://celestrak.org/NORAD/elements/gp.php?GROUP=visual&FORMAT=tle", { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" } })).text();
+    const L = txt.split(/\r?\n/).map((x) => x.trimEnd()).filter(Boolean); const out = [];
+    for (let i = 0; i + 2 < L.length + 1; i += 3) if (L[i + 1]?.startsWith("1 ") && L[i + 2]?.startsWith("2 ")) out.push([L[i].trim(), L[i + 1], L[i + 2]]);
+    if (out.length) await kv.put(env, "cache_tles", { t: Date.now(), v: out });
+    return out.length ? out : c?.v || [];
+  } catch { return c?.v || []; }
+}
+
 /* ---------------- context for the brain ---------------- */
 async function buildContext(env, request) {
   const [status, metrics, brief, notes, memory, alerts, place, cal, morning, queue, traffic, wxdays] = await Promise.all(["status", "metrics", "brief", "notes", "memory", "alerts", "place", "calendar", "morning", "queue", "traffic", "wxdays"].map((k) => kv.get(env, k)));
@@ -386,6 +435,8 @@ async function buildContext(env, request) {
   lines.push(`TIME: ${localTime(env)} (${env.TZ || "America/Chicago"})`);
   lines.push(`SITES: ` + (status?.sites || []).map((s) => `${s.name} ${s.ok ? "up" : "DOWN"} ${s.ms}ms`).join(", "));
   lines.push(`WEATHER: ${weatherSummary(wx)}`);
+  const we = await kv.get(env, "cache_world_events");
+  if (we?.v) lines.push(`WORLD: ${we.v.quakes.filter((q) => q.mag >= 4.5).length} quakes M4.5+ in the last day${we.v.quakes.length ? ", largest M" + Math.max(...we.v.quakes.map((q) => q.mag)).toFixed(1) + " " + (we.v.quakes.sort((a, b) => b.mag - a.mag)[0]?.place || "") : ""}; ${we.v.fires.length} active US wildfires over 100 acres${we.v.fires[0] ? ", largest " + we.v.fires[0].name + " (" + we.v.fires[0].state + ") " + we.v.fires[0].acres.toLocaleString() + " acres " + (we.v.fires[0].contained ?? "?") + "% contained" : ""}; ISS at ${we.v.iss ? we.v.iss.lat.toFixed(1) + "," + we.v.iss.lon.toFixed(1) : "?"}`);
   lines.push(`WEDDING-DAY WEATHER (next 10 days): ${wxdaysSummary(wxdays)}`);
   lines.push(`SPORTS (his teams: Cowboys, Patriots, Rangers, Rockies, Red Sox, Diamondbacks): ${sportsSummary(sp)}`);
   lines.push(`MARKETS: ${marketsSummary(mk)}`);
@@ -430,9 +481,12 @@ Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding plan
 Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
+Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.`;
 
 const BRAIN_TOOLS = [
+  { name: "track_flight", description: "Live position of a flight by flight number or callsign (e.g. 'AA 2612', 'SWA653', 'N123AB'). Returns altitude (ft), ground speed (kt), heading and coordinates. Also shows it on the World globe.", input_schema: { type: "object", properties: { flight: { type: "string" } }, required: ["flight"], additionalProperties: false }, strict: true },
+  { name: "flights_overhead", description: "Aircraft currently within N nautical miles of Jesse's home location (default 25).", input_schema: { type: "object", properties: { nm: { type: "number" } }, required: ["nm"], additionalProperties: false }, strict: true },
   { name: "open_link", description: "Open a URL in a new tab on Jesse's screen.", input_schema: { type: "object", properties: { url: { type: "string" }, label: { type: "string" } }, required: ["url", "label"], additionalProperties: false }, strict: true },
   { name: "append_note", description: "Add a line to the notes board.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false }, strict: true },
   { name: "remember", description: "Store a durable fact or preference in JARVIS's memory.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false }, strict: true },
@@ -443,6 +497,8 @@ const BRAIN_TOOLS = [
 
 async function runTool(name, input, env, actions) {
   switch (name) {
+    case "track_flight": { const r = await trackFlight(env, input.flight); actions.push({ type: "world", flight: r.callsign }); return JSON.stringify(r).slice(0, 2500); }
+    case "flights_overhead": { const place = await kv.get(env, "place"); const ac = await flightsNear(env, +(place?.lat || 33.15), +(place?.lon || -96.82), input.nm || 25); actions.push({ type: "world" }); return JSON.stringify({ near: place?.name, count: ac.length, aircraft: ac.slice(0, 25) }); }
     case "open_link": actions.push({ type: "open", url: input.url, label: input.label }); return "Opened " + input.label + ".";
     case "append_note": { const cur = (await kv.get(env, "notes")) || ""; const next = (cur ? cur.replace(/\s+$/, "") + "\n" : "") + "- " + input.text; await kv.put(env, "notes", next); actions.push({ type: "notes", value: next }); return "Added."; }
     case "remember": { const mem = (await kv.get(env, "memory")) || []; const m = { id: uid(), text: input.text, at: new Date().toISOString() }; mem.unshift(m); await kv.put(env, "memory", mem.slice(0, 200)); actions.push({ type: "memory", value: mem }); return "Remembered [" + m.id + "]."; }
@@ -541,7 +597,7 @@ async function makeMorning(env, request, slot) {
 
 /* ---------------- staleness: PC-fed feeds that stopped arriving ---------------- */
 async function checkStale(env) {
-  const feeds = [["metrics", "metrics", 2 * 3600e3, (m) => m?.collectedAt], ["traffic", "traffic", 25 * 60e3, (t) => t?.at], ["sports", "scores", 25 * 60e3, (s) => s?.at], ["brief", "inbox brief", 3 * 3600e3, (b) => b?.at]];
+  const feeds = [["metrics", "metrics", 2 * 3600e3, (m) => m?.collectedAt], ["traffic", "traffic", 25 * 60e3, (t) => t?.at], ["sports", "scores", 25 * 60e3, (s) => s?.at], ["flights", "flights", 10 * 60e3, (f) => f?.at], ["brief", "inbox brief", 3 * 3600e3, (b) => b?.at]];
   const flags = (await kv.get(env, "stale")) || {}; const h = localHour(env); let changed = false;
   for (const [key, label, maxAge, getAt] of feeds) {
     const at = getAt(await kv.get(env, key)); if (!at) continue;
@@ -659,6 +715,13 @@ export default {
     if (p === "/api/morning/run" && request.method === "POST") return json(await makeMorning(env, request, url.searchParams.get("slot") || undefined));
     if (p === "/api/test-alert" && request.method === "POST") return json({ ok: true, results: await notify(env, "JARVIS test", "Push notifications are wired up.", { tags: "robot" }) });
 
+    if (p === "/api/world/flights") { const f = (await kv.get(env, "flights")) || {}; return json({ at: f.at || null, center: f.center || null, ac: f.ac || [], tracks: f.tracks || {} }); }
+    if (p === "/api/world/track") return json(await trackFlight(env, url.searchParams.get("q") || ""));
+    if (p === "/api/world/want") { const place = await kv.get(env, "place"); const want = (await kv.get(env, "track_req")) || {}; const live = Object.fromEntries(Object.entries(want).filter(([, t]) => Date.now() - t < 6 * 3600e3)); if (Object.keys(live).length !== Object.keys(want).length) await kv.put(env, "track_req", live); return json({ lat: +(place?.lat || 33.15), lon: +(place?.lon || -96.82), nm: 80, track: Object.keys(live) }); }
+    if (p === "/api/world/feed" && request.method === "POST") { const body = await request.json(); await kv.put(env, "flights", body); return json({ ok: true, ac: (body.ac || []).length }); }
+    if (p === "/api/world/untrack" && request.method === "POST") { const { q } = await request.json(); const want = (await kv.get(env, "track_req")) || {}; delete want[toCallsign(q)]; await kv.put(env, "track_req", want); return json({ ok: true }); }
+    if (p === "/api/world/events") return json((await worldEvents(env)) || { quakes: [], fires: [], iss: null });
+    if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
     if (p === "/api/inbox/bridges") { const hooks = (await kv.get(env, "inbox_hooks")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; return json(Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, business: v.business, at: v.at, items: v.items.length, actions: !!hooks[a]?.url }))); }
