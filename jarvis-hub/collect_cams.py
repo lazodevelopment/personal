@@ -59,6 +59,19 @@ def caltrans(n):
     return out
 
 
+def arlington():
+    """City of Arlington, TX: its own intersection cameras (ArcGIS layer), refreshed every 5 minutes by the city."""
+    j = get("https://services.arcgis.com/jXi5GuMZwfCYtZP9/arcgis/rest/services/Traffic_Camera_Updates_view/FeatureServer/0/query?where=Status%20LIKE%20%27Online%25%27&outFields=Camera_Location,Status,Pic_URL&outSR=4326&f=json")
+    out = []
+    for f in j.get("features", []):
+        a, g = f.get("attributes", {}), f.get("geometry") or {}
+        url = (a.get("Pic_URL") or "").strip().replace("http://", "https://")
+        if url and g.get("y"):
+            base, _, name = url.rpartition("/")
+            out.append([r5(g["y"]), r5(g["x"]), (a.get("Camera_Location") or "")[:90], "Arlington", base + "/" + urllib.parse.quote(name)])
+    return out
+
+
 def nyc():
     return [[r5(x["latitude"]), r5(x["longitude"]), x["name"][:90], "NYC", x["imageUrl"]] for x in get("https://webcams.nyctmc.org/api/cameras") if x.get("isOnline") == "true" and x.get("imageUrl")]
 
@@ -76,16 +89,26 @@ def main():
     jobs = [(f"iteris {h}", lambda h=h, l=l: iteris(h, l)) for h, l in ITERIS.items()]
     jobs += [(f"txdot {d}", lambda d=d: txdot(d)) for d in TX_DISTRICTS]
     jobs += [(f"caltrans d{n}", lambda n=n: caltrans(n)) for n in range(1, 13)]
-    jobs += [("nyc", nyc), ("london", london)]
+    jobs += [("nyc", nyc), ("london", london), ("arlington", arlington)]
     cams, counts = [], {}
+    cache_path = os.path.join(HERE, "cams_cache.json")
+    cache = json.load(open(cache_path)) if os.path.exists(cache_path) else {}
     def run(job):
         name, fn = job
-        try: return name, fn()
-        except Exception as e: print(f"{name}: failed {str(e)[:80]}"); return name, []
+        rows = []
+        for attempt in range(2):  # sources time out now and then; one retry
+            try: rows = fn(); break
+            except Exception as e: err = str(e)[:80]
+        prev = cache.get(name, [])
+        if len(rows) < 0.5 * len(prev):  # failed or came back short: keep the last good list for this source
+            print(f"{name}: got {len(rows)}, keeping last good {len(prev)}"); return name, prev
+        cache[name] = rows
+        return name, rows
     with ThreadPoolExecutor(max_workers=8) as ex:
         for name, rows in ex.map(run, jobs):
             cams += rows
             for r in rows: counts[r[3]] = counts.get(r[3], 0) + 1
+    json.dump(cache, open(cache_path, "w"))
     print(f"{len(cams)} cameras:", ", ".join(f"{k} {v}" for k, v in sorted(counts.items(), key=lambda kv: -kv[1])))
     body = json.dumps({"cams": cams})
     r = subprocess.run(["curl", "-s", "-m", "120", "-X", "POST", "-H", "content-type: application/json", "-H", f"x-hub-key: {KEY}", "--data-binary", "@-", HUB + "/api/world/camsfeed"],
