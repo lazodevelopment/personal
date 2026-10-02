@@ -453,6 +453,26 @@ async function camsAll(env) {
   if (camMem && Date.now() - camMem.t < 10 * 60e3) return camMem.v;
   const v = (await env.HUB.get("cams", "json")) || []; camMem = { t: Date.now(), v }; return v;
 }
+// Windy webcams: search near the view centre (radius km, max 250). Free-tier image URLs carry a token that expires in 10 min.
+async function windyNear(env, lat, lon, km) {
+  if (!env.WINDY_KEY) return { off: true, cams: [] };
+  const key = `${lat.toFixed(1)},${lon.toFixed(1)},${Math.round(km)}`;
+  const mem = (windyMem.get(key)); if (mem && Date.now() - mem.t < 8 * 60e3) return mem.v;
+  const u = `https://api.windy.com/webcams/api/v3/webcams?nearby=${lat.toFixed(4)},${lon.toFixed(4)},${Math.min(250, Math.max(5, Math.round(km)))}&include=images,location,player,urls&limit=50`;
+  const r = await within(fetch(u, { headers: { "x-windy-api-key": env.WINDY_KEY, accept: "application/json" } }), 8000, null);
+  if (!r) return { error: "Windy timed out", cams: [] };
+  const t = await r.text(); let j; try { j = JSON.parse(t); } catch { return { error: "Windy " + r.status + ": " + t.slice(0, 120), cams: [] }; }
+  if (!r.ok) return { error: "Windy " + r.status + ": " + (j.message || j.error || ""), cams: [] };
+  const cams = (j.webcams || j.result?.webcams || []).map((w) => {
+    const loc = w.location || {}, im = w.images?.current || w.image?.current || {}, day = w.images?.daylight || {};
+    return { id: String(w.webcamId || w.id), n: w.title || loc.city || "Webcam", lat: +loc.latitude, lon: +loc.longitude, img: im.preview || im.thumbnail || day.preview || "", thumb: im.thumbnail || im.icon || "",
+      live: w.player?.live || w.player?.day || "", page: w.urls?.detail || (w.webcamId ? `https://www.windy.com/webcams/${w.webcamId}` : ""), city: [loc.city, loc.region, loc.country].filter(Boolean).join(", ") };
+  }).filter((c) => Number.isFinite(c.lat) && Number.isFinite(c.lon));
+  const v = { total: j.total ?? cams.length, cams }; windyMem.set(key, { t: Date.now(), v }); if (windyMem.size > 300) windyMem.clear();
+  return v;
+}
+const windyMem = new Map();
+
 async function txSnapshot(d, id) {
   const j = await (await fetch(`https://its.txdot.gov/its/DistrictIts/GetCctvSnapshotByIcdId?districtCode=${encodeURIComponent(d)}&icdId=${encodeURIComponent(id)}`, { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" }, cf: { cacheTtl: 30, cacheEverything: true } })).json();
   if (!j.snippet) return null;
@@ -743,7 +763,7 @@ export default {
     }
     if (p === "/" || p === "/index.html" || p === "/wall") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
-    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago" });
+    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago" });
     if (p === "/api/status") {
       const cached = url.searchParams.get("fresh") ? null : await kv.get(env, "status");
       if (cached && Date.now() - new Date(cached.checkedAt) < 6 * 60000) return json({ ...cached, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
@@ -786,6 +806,7 @@ export default {
       for (const pl of all) { if (Math.abs(pl[1] - lat) < r && Math.abs(pl[2] - lon) * kx < r * 1.6) { out.push(pl); if (out.length >= n) break; } } // list is sorted by rank, so the first hits are the most important
       return json(out, 200, { "cache-control": "public, max-age=600" });
     }
+    if (p === "/api/world/windy") { const v = await windyNear(env, +url.searchParams.get("lat"), +url.searchParams.get("lon"), +url.searchParams.get("km") || 50); return json(v, v.error ? 502 : 200); }
     if (p === "/api/world/cam") { try { const r = await txSnapshot(url.searchParams.get("d"), url.searchParams.get("id")); return r || new Response("no image", { status: 404 }); } catch (e) { return new Response("camera error: " + e.message, { status: 502 }); } }
     if (p === "/api/world/globalfeed" && request.method === "POST") { const body = await request.json(); await env.HUB.put("flights_global", JSON.stringify(body)); return json({ ok: true, ac: (body.ac || []).length }); }
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
