@@ -299,6 +299,9 @@ td.num{font-family:var(--mono);text-align:right}
 .hbar i{height:8px;background:var(--cyan);display:block;opacity:.8}
 .pend{display:grid;gap:6px}
 .pend div{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:13px;border:1px solid var(--line);padding:6px 10px}
+.pend .dl{min-width:0}.pend .dl small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pend .dl b{font-family:var(--mono);font-size:9px;letter-spacing:.15em;color:var(--cyan);font-weight:400;margin-right:6px}
+#decisionsPanel.alarm{border-color:var(--amber);box-shadow:inset 0 0 40px rgba(255,179,64,.08)}
 
 /* wall */
 body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav{display:none}
@@ -435,6 +438,11 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <ul class="mail" id="mail"><li class="empty">No inbox connected yet.</li></ul>
   </section>
 
+  <section class="panel c5" data-v="ops" id="decisionsPanel">
+    <h2>Decisions <span class="sub" id="decSub"></span></h2>
+    <div class="pend" id="decisions"><div class="empty">Nothing waiting on you.</div></div>
+  </section>
+
   <section class="panel c5" data-v="ops">
     <h2>Upcoming <span class="sub" id="evSub"></span></h2>
     <ul class="events" id="events"><li class="empty">Bookings and calendar items appear here.</li></ul>
@@ -509,7 +517,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 <script>
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const state = { briefs: [], stale: {}, sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
+const state = { decisions: null, briefs: [], stale: {}, sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
 const fmtAgo = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m/60) + " h ago" : new Date(iso).toLocaleDateString(); };
 const money = (n) => "$" + (n >= 10000 ? Math.round(n/1000) + "k" : n >= 1000 ? (n/1000).toFixed(1) + "k" : Math.round(n));
 const moneyFull = (n) => "$" + Math.round(n || 0).toLocaleString();
@@ -562,8 +570,9 @@ function renderAttention() {
   const slow = Object.entries(state.uptime || {}).filter(([, u]) => u.slow); if (slow.length) chips.push({ cls: "warn", n: slow.length, t: "slow", go: "#opsPanel" });
   const needs = (state.brief?.items || []).filter(i => i.needs_reply).length; if (needs) chips.push({ cls: "warn", n: needs, t: "emails need reply", go: "#mail" });
   const unans = m.lazo?.counts?.inquiries_unanswered; if (unans) chips.push({ cls: "warn", n: unans, t: "Lazo inquiries unanswered", go: "lazo" });
-  const claims = m.lazo?.counts?.claims_pending; if (claims) chips.push({ cls: "warn", n: claims, t: "vendor claims pending", go: "lazo" });
-  const jobs = m.roven?.counts?.jobs_pending_review; if (jobs) chips.push({ cls: "warn", n: jobs, t: "Roven jobs to review", go: "roven" });
+  const decs = state.decisions?.items || []; const claims = decs.filter(d => d.kind === "lazo_claim").length, rjobs = decs.filter(d => d.kind !== "lazo_claim").length;
+  if (claims) chips.push({ cls: "warn", n: claims, t: "Lazo claim" + (claims > 1 ? "s" : "") + " to review", go: "#decisionsPanel" });
+  if (rjobs) chips.push({ cls: "warn", n: rjobs, t: "Roven review" + (rjobs > 1 ? "s" : ""), go: "#decisionsPanel" });
   for (const id of ["atavia", "es"]) { const k = m[id]?.headline?.find(x => x.label === "Leads 7d"); if (k?.value) chips.push({ cls: "good", n: k.value, t: bizOf(id).name + " leads this week", go: id }); const b = m[id]?.headline?.find(x => x.label === "Balances due"); if (b?.value) chips.push({ cls: "", n: money(b.value), t: bizOf(id).name + " balances due", go: id }); }
   const ver = m.lr?.headline?.find(x => /Verifications/.test(x.label)); if (ver?.value) chips.push({ cls: "warn", n: ver.value, t: "LR verifications", go: "lr" });
   for (const [id, t] of Object.entries(state.traffic?.sites || {})) if (t.online) chips.push({ cls: "good", n: t.online, t: `on ${bizOf(id).name} now`, go: id });
@@ -575,7 +584,7 @@ function renderAttention() {
   $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
   $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
 }
-const viewOf = (sel) => ({ "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
+const viewOf = (sel) => ({ "#decisionsPanel": "ops", "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
 
 /* ---------- business tiles ---------- */
 function hourBars(hours) {
@@ -794,6 +803,14 @@ $("#radarPlay").onclick = () => {
   $("#radarPlay").textContent = "❚❚"; radarTimer = setInterval(() => showRadar((radarIdx + 1) % radarFrames.length), 500);
 };
 
+/* ---------- decisions ---------- */
+function renderDecisions() {
+  const items = state.decisions?.items || [];
+  $("#decSub").textContent = items.length ? `${items.length} pending · ${fmtAgo(state.decisions.at)}` : (state.decisions?.at ? "clear · " + fmtAgo(state.decisions.at) : "");
+  $("#decisionsPanel").classList.toggle("alarm", items.length > 0);
+  $("#decisions").innerHTML = items.length ? items.map(d => `<div><span class="dl"><b>${esc(bizOf(d.business).name.toUpperCase())}</b>${esc(d.label)}<small>${esc(Object.entries(d.detail || {}).map(([k, v]) => k + ": " + v).join(" · "))} · ${fmtAgo(d.at)}</small></span><span>${actionButtons({ id: d.id, kind: d.kind, label: d.label })}</span></div>`).join("") : `<div class="empty">Nothing waiting on you.</div>`;
+  wireActionButtons($("#decisions"));
+}
 /* ---------- scores, markets, news, wedding-day weather ---------- */
 async function loadSports() {
   try { state.sports = await fetch("/api/sports").then(r => r.json()); } catch { return; }
@@ -917,11 +934,11 @@ async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
     const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
-    state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
+    state.decisions = d.decisions || null; state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null;
     if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}
-  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderAttention(); renderSys(); syncQueueCards();
+  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderAttention(); renderSys(); syncQueueCards();
 }
 async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
 function renderSys() {
@@ -1171,6 +1188,7 @@ renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? 
   await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
   if (location.pathname === "/wall") setTimeout(enterWall, 500);
   if (location.hash === "#morning") { showView("jarvis"); $("#alertPanel").scrollIntoView(); }
+  if (location.hash === "#decisions") { showView("ops"); setTimeout(() => $("#decisionsPanel").scrollIntoView({ block: "center" }), 600); }
 })();
 setInterval(checkStatus, 5 * 60000); setInterval(loadWeather, 15 * 60000); setInterval(loadSports, 60000); setInterval(loadMarkets, 2 * 60000); setInterval(loadNews, 15 * 60000); setInterval(loadWxDays, 30 * 60000); setInterval(loadState, 60000); setInterval(wallInfo, 60000);
 </script>

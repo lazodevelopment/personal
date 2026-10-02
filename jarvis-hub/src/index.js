@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const MODEL = "claude-opus-5-5";
 
@@ -144,6 +144,19 @@ async function watchMetrics(env, next) {
     await notify(env, "JARVIS noticed", n, { tags: "eyes" });
   }
   await kv.put(env, "watch_seen", seen);
+}
+
+// new items waiting on Jesse (Lazo claims, Roven reviews): push once per item
+async function watchDecisions(env, dec) {
+  const seen = (await kv.get(env, "decisions_seen")) || {}; const now = Date.now(); let changed = false;
+  for (const it of dec.items || []) {
+    if (seen[it.id]) continue; seen[it.id] = now; changed = true;
+    const title = it.kind === "lazo_claim" ? "Lazo claim to review" : it.kind === "roven_approve_job" ? "Roven job to review" : "Roven employer to review";
+    await pushAlert(env, { kind: "watch", text: `${title}: ${it.label.replace(/^[^:]+:\s*/, "")}` });
+    await notify(env, title, it.label.replace(/^[^:]+:\s*/, "") + "\nOpen JARVIS → Decisions to approve or reject.", { priority: "high", tags: "ballot_box_with_check", url: "https://jarvis-hub.floral-credit-e4f0.workers.dev/#decisions" });
+  }
+  for (const id of Object.keys(seen)) if (now - seen[id] > 30 * 86400e3) { delete seen[id]; changed = true; }
+  if (changed) await kv.put(env, "decisions_seen", seen);
 }
 
 /* ---------------- notifications ---------------- */
@@ -387,6 +400,8 @@ async function buildContext(env, request) {
   else lines.push("CALENDAR: not connected");
   lines.push(`NOTES:\n${notes || "(empty)"}`);
   lines.push(`MEMORY: ` + ((memory || []).map((m) => `[${m.id}] ${m.text}`).join(" | ") || "(nothing remembered yet)"));
+  const dec = await kv.get(env, "decisions");
+  lines.push(`WAITING ON JESSE (${dec?.at || "none"}): ` + ((dec?.items || []).map((d) => `[${d.id}] ${d.label} (${d.kind}, ${d.at.slice(0, 10)})`).join(" | ") || "nothing pending"));
   if (queue?.length) lines.push(`RECENT ACTIONS: ` + queue.slice(0, 5).map((q) => `${q.summary} → ${q.status}${q.result ? " (" + q.result + ")" : ""}`).join(" | "));
   if (morning?.at) lines.push(`LATEST BRIEF (${morning.slot || "morning"}, ${morning.at}): ${(morning.text || "").slice(0, 600)}`);
   return lines.join("\n");
@@ -640,6 +655,7 @@ export default {
           await kv.put(env, k, body[k]); saved.push(k);
         }
         if (body.metrics) ctx.waitUntil(Promise.all([watchMetrics(env, body.metrics), weddingWeather(env)]));
+        if (body.decisions) ctx.waitUntil(watchDecisions(env, body.decisions));
         return json({ saved, at: new Date().toISOString() });
       }
     }

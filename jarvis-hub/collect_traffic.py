@@ -202,6 +202,32 @@ def sports(leagues=("nfl", "mlb")):
     return {"at": NOW.isoformat(), "fav": FAV, "games": games, "teams": cards, "standings": st}
 
 
+def decisions():
+    """Things waiting on Jesse: Lazo vendor claims, Roven jobs and employer applications."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    items = []
+    try:
+        db = client_for("lazo")
+        for d in db.collection("claimRequests").where(filter=FieldFilter("status", "==", "pending")).stream():
+            c = d.to_dict() or {}
+            name = c.get("businessName") or c.get("vendorName") or c.get("vendorId") or "vendor"
+            items.append({"id": d.id, "kind": "lazo_claim", "business": "lazo", "label": f"Vendor claim: {name} by {c.get('email') or c.get('name') or c.get('uid') or 'unknown'}", "at": (ts(c.get("createdAt")) or NOW).isoformat(), "detail": {k: str(c.get(k))[:80] for k in ("businessName", "vendorName", "email", "name", "phone", "role", "note", "message") if c.get(k)}})
+    except Exception as e:
+        print(f"decisions lazo: {str(e)[:120]}")
+    try:
+        db = client_for("roven")
+        for d in db.collection("jobs").where(filter=FieldFilter("status", "==", "pending_review")).stream():
+            j = d.to_dict() or {}
+            items.append({"id": d.id, "kind": "roven_approve_job", "business": "roven", "label": f"Job to review: {j.get('title') or d.id}", "at": (ts(j.get("createdAt")) or NOW).isoformat(), "detail": {k: str(j.get(k))[:80] for k in ("title", "metro", "salaryMin", "salaryMax", "employerId") if j.get(k) is not None}})
+        for d in db.collection("employerApplications").where(filter=FieldFilter("status", "==", "pending")).stream():
+            a = d.to_dict() or {}
+            items.append({"id": d.id, "kind": "roven_approve_employer", "business": "roven", "label": f"Employer application: {a.get('companyName') or d.id} ({a.get('email') or ''})", "at": (ts(a.get("createdAt")) or NOW).isoformat(), "detail": {k: str(a.get(k))[:80] for k in ("companyName", "website", "industry", "metro", "email") if a.get(k)}})
+    except Exception as e:
+        print(f"decisions roven: {str(e)[:120]}")
+    items.sort(key=lambda x: x["at"], reverse=True)
+    return {"at": NOW.isoformat(), "items": items}
+
+
 def main():
     out = {"at": NOW.isoformat(), "day": DAY_START.astimezone(TZ).strftime("%Y-%m-%d"), "sites": {}}
     for biz in ("atavia", "es"):
@@ -215,11 +241,13 @@ def main():
             print(f"{biz}: FAILED {msg[:160]}")
     sp = sports()
     print(f"sports: {len(sp['games'])} games, {sum(1 for g in sp['games'] if g['fav'])} for the favourites")
+    dec = decisions()
+    print(f"decisions: {len(dec['items'])} pending")
     if "--dry-run" in sys.argv:
         print(json.dumps(out, indent=1)); return
     key = open(os.path.join(HERE, ".hub-key")).read().strip()
     r = subprocess.run(["curl", "-s", "-X", "POST", "-H", "content-type: application/json", "-H", f"x-hub-key: {key}", "--data-binary", "@-", HUB + "/api/state"],
-                       input=json.dumps({"traffic": out, "sports": sp}), capture_output=True, text=True, timeout=60)
+                       input=json.dumps({"traffic": out, "sports": sp, "decisions": dec}), capture_output=True, text=True, timeout=60)
     print("posted:", r.stdout.strip() or r.stderr.strip())
 
 
