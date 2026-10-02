@@ -230,6 +230,10 @@ input:focus,textarea:focus{border-color:var(--cyan);outline:0}
 .camview img{width:100%;aspect-ratio:4/3;object-fit:cover;background:#000;border:1px solid var(--line)}
 .camhead{display:flex;justify-content:space-between;gap:8px;align-items:center;font-family:var(--mono);font-size:11px;color:#fff}
 .fire{width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff3c4 0,#ffb340 35%,rgba(255,90,40,.55) 60%,rgba(255,90,40,0) 72%);pointer-events:auto;cursor:pointer}
+.plabel{transform:translate(-50%,-50%);font-family:var(--display);font-weight:600;letter-spacing:.06em;color:rgba(215,236,249,.78);text-shadow:0 0 3px #000,0 0 6px #000;white-space:nowrap;pointer-events:none;font-size:11px}
+.plabel.big{font-size:13px;color:#e8f6ff}.plabel.huge{font-size:15px;color:#fff;letter-spacing:.1em;text-transform:uppercase}
+.phits{display:grid;gap:3px}.phits button{text-align:left;font-size:13px;border-left:2px solid var(--line2);padding:3px 8px;color:var(--fg)}.phits button:hover{border-color:var(--cyan);color:var(--cyan2)}
+.phits button small{color:var(--dim);font-family:var(--mono);font-size:10px;margin-left:6px}
 .homepin{transform:translate(-50%,-100%);font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:#fff;text-shadow:0 0 6px rgba(25,211,255,1);pointer-events:none;white-space:nowrap}
 .homepin::after{content:"";display:block;width:8px;height:8px;margin:2px auto 0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(25,211,255,.5),0 0 12px rgba(25,211,255,1)}
 .wtip{font-family:var(--mono);font-size:11px;background:rgba(4,7,13,.9);border:1px solid var(--line2);padding:4px 8px;color:var(--fg);line-height:1.4}
@@ -476,6 +480,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div class="zoomctl"><button class="btn sm" id="zIn" title="Zoom in">+</button><button class="btn sm" id="zOut" title="Zoom out">−</button></div>
       <div class="gate" id="globeGate" hidden>TAP TO USE THE GLOBE</div></div>
       <div class="wside">
+        <form id="placeForm" class="ask" style="margin:0"><input id="placeQ" placeholder="Go to a place: Frisco, Scottsdale, Denver…" autocomplete="off" aria-label="Find a place"><button class="btn">GO</button></form>
+        <div id="placeHits" class="phits"></div>
         <form id="trackForm" class="ask" style="margin:0"><input id="trackQ" placeholder="Track a flight: AA 2612, SWA653, N123AB" autocomplete="off" aria-label="Flight number"><button class="btn primary">TRACK</button></form>
         <div id="trackOut" class="empty" style="margin-top:6px"></div>
         <div id="flightCard" class="fcard" hidden></div>
@@ -1324,12 +1330,12 @@ function initGlobe() {
   const zoomBy = (f) => { const v = globe.pointOfView(); globe.pointOfView({ ...v, altitude: Math.max(0.01, Math.min(4, v.altitude * f)) }, 400); };
   $("#zIn").onclick = () => zoomBy(0.55); $("#zOut").onclick = () => zoomBy(1.8);
   if (PHONE && matchMedia("(pointer: coarse)").matches) { const g = $("#globeGate"); g.hidden = false; globe.controls().enabled = false; g.onclick = () => { g.hidden = true; globe.controls().enabled = true; }; }
-  let viewT = null; const onView = () => { clearTimeout(viewT); viewT = setTimeout(() => { loadCamsInView(); renderWorld(false); }, 350); };
+  let viewT = null; const onView = () => { clearTimeout(viewT); viewT = setTimeout(() => { loadCamsInView(); loadPlacesInView(); renderWorld(false); }, 350); };
   globe.controls().addEventListener("change", onView); if (globe.onZoom) globe.onZoom(onView);
   loadGlobal(); worldTimers.push(setInterval(loadGlobal, 2 * 60000));
   new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
   if (PHONE) el.style.touchAction = "pan-y";
-  loadWorld(); loadSats(); loadCams();
+  loadWorld(); loadSats(); loadCams(); loadPlacesInView();
   globe.onZoom && globe.onZoom(() => { clearTimeout(window.__camT); window.__camT = setTimeout(() => renderWorld(false), 200); });
   worldTimers.push(setInterval(loadFlights, 30000), setInterval(moveFlights, 2000), setInterval(loadEvents, 5 * 60000), setInterval(tickSats, 2000));
 }
@@ -1357,7 +1363,19 @@ function fireMarker(f) {
 let homeEl = null;
 const CAM_SVG = '<svg viewBox="0 0 24 24"><rect x="2" y="7" width="14" height="10" rx="2" fill="#39f0a8"/><path d="M16 10l6-3v10l-6-3z" fill="#39f0a8"/><circle cx="9" cy="12" r="2.5" fill="#04070d"/></svg>';
 const camEls = new Map();
-let camsTotal = 0, camsKey = "";
+let camsTotal = 0, camsKey = "", places = [], placesKey = "";
+const placeEls = new Map();
+async function loadPlacesInView() {
+  if (!globe) return; const v = globe.pointOfView();
+  const r = Math.max(0.25, Math.min(60, v.altitude * 35)), n = v.altitude > 1.5 ? 40 : v.altitude > 0.4 ? 60 : 80;
+  const key = [v.lat.toFixed(1), v.lng.toFixed(1), r.toFixed(2)].join(","); if (key === placesKey) return; placesKey = key;
+  try { places = await fetch(`/api/world/places?lat=${v.lat.toFixed(3)}&lon=${v.lng.toFixed(3)}&r=${r.toFixed(2)}&n=${n}`).then(x => x.json()); } catch { places = []; }
+  renderWorld(false);
+}
+function placeMarker(p, i) {
+  let el = placeEls.get(p[0] + p[1]); if (!el) { el = document.createElement("div"); el.textContent = p[0].replace(/, [A-Z]{2}$/, ""); placeEls.set(p[0] + p[1], el); }
+  el.className = "plabel" + (i < 6 ? " huge" : i < 20 ? " big" : ""); return el;
+}
 async function loadCams() { loadCamsInView(); }
 async function loadCamsInView() {
   if (!globe || !worldLayers.cams) { worldData.cams = []; return; }
@@ -1420,6 +1438,7 @@ function renderWorld(satsOnly) {
   if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === tHex)) { const a = worldData.tracked.ac; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, true) }); }
   if (worldLayers.fires) for (const f of worldData.fires) html.push({ lat: f.lat, lng: f.lon, alt: 0, el: fireMarker(f) });
   for (const c of visibleCams()) html.push({ lat: c.lat, lng: c.lon, alt: 0, el: camMarker(c) });
+  places.forEach((p, i) => html.push({ lat: p[1], lng: p[2], alt: 0.0005, el: placeMarker(p, i) }));
   if (!homeEl) { homeEl = document.createElement("div"); homeEl.className = "homepin"; }
   homeEl.textContent = (state.place?.name || "Home").split(",")[0].toUpperCase(); html.push({ ...worldHome(), alt: 0, el: homeEl });
   globe.htmlElementsData(html);
@@ -1466,6 +1485,23 @@ async function trackIt(q) {
   try { const t = await fetch("/api/world/track?q=" + encodeURIComponent(q)).then(r => r.json()); worldData.tracked.ac = t.aircraft?.[0] || null; worldData.tracked.base = worldData.tracked.ac; worldData.tracked.q = t.callsign || q; } catch {}
   renderTracked(); renderWorld(); const a = worldData.tracked.ac; if (a && globe) globe.pointOfView({ lat: a.lat, lng: a.lon, altitude: 0.5 }, 1500);
 }
+function flyTo(lat, lon, label) {
+  if (!globe) return; globe.pointOfView({ lat, lng: lon, altitude: 0.06 }, 1600);
+  setTimeout(() => { camsKey = ""; placesKey = ""; loadCamsInView(); loadPlacesInView(); }, 1700);
+  $("#placeHits").innerHTML = label ? `<div class="empty">${esc(label)} · cameras load as the map arrives</div>` : "";
+}
+$("#placeForm").onsubmit = async (e) => {
+  e.preventDefault(); const q = $("#placeQ").value.trim(); if (!q) return;
+  const [name, region] = q.split(",").map(x => x.trim());
+  $("#placeHits").innerHTML = `<div class="empty">searching…</div>`;
+  let res = [];
+  try { res = (await fetch("https://geocoding-api.open-meteo.com/v1/search?count=8&name=" + encodeURIComponent(name)).then(r => r.json())).results || []; } catch {}
+  if (region) { const rg = region.toLowerCase(); const f = res.filter(r => [r.admin1, r.country, r.country_code].some(x => String(x || "").toLowerCase().startsWith(rg)) || (rg.length === 2 && String(r.admin1 || "").toLowerCase().startsWith(rg))); if (f.length) res = f; }
+  if (!res.length) { $("#placeHits").innerHTML = `<div class="empty">No place called "${esc(q)}" found.</div>`; return; }
+  if (res.length === 1 || res[0].population > 20 * (res[1]?.population || 0)) { const r = res[0]; flyTo(r.latitude, r.longitude, [r.name, r.admin1, r.country_code].filter(Boolean).join(", ")); return; }
+  $("#placeHits").innerHTML = res.slice(0, 6).map((r, i) => `<button data-i="${i}">${esc(r.name)}<small>${esc([r.admin1, r.country_code].filter(Boolean).join(", "))}${r.population ? " · " + r.population.toLocaleString() : ""}</small></button>`).join("");
+  $("#placeHits").querySelectorAll("button").forEach(b => b.onclick = () => { const r = res[+b.dataset.i]; flyTo(r.latitude, r.longitude, [r.name, r.admin1, r.country_code].filter(Boolean).join(", ")); });
+};
 $("#trackForm").onsubmit = (e) => { e.preventDefault(); trackIt($("#trackQ").value); };
 $("#worldHome").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200);
 $("#worldGlobe").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 2.4 }, 1500);

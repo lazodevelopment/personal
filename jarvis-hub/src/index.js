@@ -444,6 +444,11 @@ async function satTles(env) {
 
 /* ---------------- cameras (directory from the PC), global flights, routes ---------------- */
 let camMem = null; // per-isolate cache of the camera directory
+let placeMem = null;
+async function placesAll(env) {
+  if (placeMem && Date.now() - placeMem.t < 5 * 60e3) return placeMem.v;
+  const v = (await env.HUB.get("places", "json")) || []; placeMem = { t: Date.now(), v }; return v;
+}
 async function camsAll(env) {
   if (camMem && Date.now() - camMem.t < 10 * 60e3) return camMem.v;
   const v = (await env.HUB.get("cams", "json")) || []; camMem = { t: Date.now(), v }; return v;
@@ -773,6 +778,13 @@ export default {
       // nearest to the view centre first, so zooming into a city shows that city's cameras
       near.sort((a, b) => ((a[0] - lat) ** 2 + ((a[1] - lon) * kx) ** 2) - ((b[0] - lat) ** 2 + ((b[1] - lon) * kx) ** 2));
       return json({ total: all.length, inView: near.length, cams: near.slice(0, 500) }, 200, { "cache-control": "public, max-age=300" });
+    }
+    if (p === "/api/world/placesfeed" && request.method === "POST") { const { places } = await request.json(); await env.HUB.put("places", JSON.stringify(places || [])); placeMem = null; return json({ ok: true, places: (places || []).length }); }
+    if (p === "/api/world/places") {
+      const all = await placesAll(env); const lat = +url.searchParams.get("lat"), lon = +url.searchParams.get("lon"), r = +url.searchParams.get("r") || 5, n = Math.min(120, +url.searchParams.get("n") || 50);
+      const kx = Math.max(0.2, Math.cos(lat * Math.PI / 180)); const out = [];
+      for (const pl of all) { if (Math.abs(pl[1] - lat) < r && Math.abs(pl[2] - lon) * kx < r * 1.6) { out.push(pl); if (out.length >= n) break; } } // list is sorted by rank, so the first hits are the most important
+      return json(out, 200, { "cache-control": "public, max-age=600" });
     }
     if (p === "/api/world/cam") { try { const r = await txSnapshot(url.searchParams.get("d"), url.searchParams.get("id")); return r || new Response("no image", { status: 404 }); } catch (e) { return new Response("camera error: " + e.message, { status: 502 }); } }
     if (p === "/api/world/globalfeed" && request.method === "POST") { const body = await request.json(); await env.HUB.put("flights_global", JSON.stringify(body)); return json({ ok: true, ac: (body.ac || []).length }); }
