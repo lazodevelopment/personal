@@ -456,7 +456,7 @@ async function runTool(name, input, env, actions) {
 
 /* ---------------- streaming chat ---------------- */
 async function chat(request, env, ctx) {
-  const { messages: history = [], text } = await request.json();
+  const { messages: history = [], text, model: modelPick } = await request.json();
   const { readable, writable } = new TransformStream();
   const writer = writable.getWriter(); const enc = new TextEncoder();
   const send = (ev, data) => writer.write(enc.encode(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`)).catch(() => {});
@@ -470,7 +470,8 @@ async function chat(request, env, ctx) {
       const actions = []; let reply = "";
       for (let i = 0; i < 4; i++) {
         const stream = client.beta.messages.stream({
-          model: MODEL, max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+          model: (modelPick || env.CHAT_MODEL) === "sonnet" ? "claude-sonnet-5-5" : MODEL, ...((modelPick || env.CHAT_MODEL) === "sonnet" ? { thinking: { type: "between_tools" } } : {}),
+          max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
           system: [{ type: "text", text: BRAIN_SYSTEM + "\nKnown links: " + JSON.stringify(LINKS), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }],
           tools: BRAIN_TOOLS, messages,
         });
