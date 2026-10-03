@@ -8,7 +8,7 @@ sudo apt-get install -y -qq python3-venv curl >/dev/null
 .venv/bin/pip install -q --upgrade pip
 .venv/bin/pip install -q firebase-admin google-cloud-firestore google-auth requests tzdata
 chmod 600 .hub-key
-sed "s#__HOME__#$HOME#g" crontab.txt | crontab -
+sed "s#__HOME__#$HOME#g" crontab.txt | tr -d "" | crontab -
 echo "cron installed:"; crontab -l | grep -v '^#'
 
 echo; echo "Can this VM reach the feeds that refuse Cloudflare?"
