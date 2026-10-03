@@ -1,5 +1,5 @@
 /* lazo.js - JC-LAZO-JS-0915-004
-   The site's only script. It does eight small things and nothing else:
+   The site's only script. It does nine small things and nothing else:
      1. html.motion  - set unless the visitor asked for reduced motion; every
                        CSS animation and reveal keys off it, so with it absent
                        the page simply appears.
@@ -22,6 +22,8 @@
                        smart banner) a dismissible bar offers the store listing.
      8. scroll motion - hero parallax and ease-away, count-ups, gliding rails, the
                        app hero phones. See the block at the end.
+     9. cookie notice - the Meta pixel loads only after the visitor allows it;
+                       "Cookie choices" in the footer reopens the notice.
    (0915-002 replaces a file that had been overwritten with a Python patch
    script, so none of this had been running.) */
 (function () {
@@ -156,6 +158,46 @@
     });
   });
 
+  /* ---- 9. cookie notice (JC-LAZO-CONSENT-1003) ----
+     base.html defines window.lzPixel.load() and window.lzConsentState ('', 'yes', 'no'
+     or 'gpc'). With no decision stored, a small notice asks; Allow loads the pixel now
+     and for a year, Decline is remembered too. "Cookie choices" in the footer
+     (data-lz-consent) reopens it. Never inside an iframe. */
+  (function () {
+    if (window.top !== window.self) return;
+    var box = null;
+    function save(v) { try { localStorage.setItem('lz_consent', v + ':' + Date.now()); } catch (e) {} window.lzConsentState = v; }
+    function close() {
+      if (!box) return;
+      var b = box; box = null;
+      b.classList.remove('show');
+      setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 450);
+    }
+    function open() {
+      if (box) return;
+      box = d.createElement('aside');
+      box.className = 'lz-consent';
+      box.setAttribute('role', 'dialog');
+      box.setAttribute('aria-label', 'Cookie choices');
+      box.innerHTML = '<p><b>One pixel, your call.</b> We use a Meta pixel on our marketing pages to learn which ads bring couples to Lazo. It never runs on a couple\u2019s wedding website, and nothing loads until you allow it. <a href="/privacy/#cookies">Privacy policy</a></p>' +
+        '<div class="b"><button type="button" class="yes">Allow</button><button type="button" class="no">Decline</button></div>';
+      d.body.appendChild(box);
+      void box.offsetWidth; /* commit the start state so the transition runs, even in a hidden tab */
+      box.classList.add('show');
+      box.querySelector('.yes').addEventListener('click', function () {
+        save('yes');
+        try { if (window.lzPixel) window.lzPixel.load(); } catch (e) {}
+        close();
+      });
+      box.querySelector('.no').addEventListener('click', function () { save('no'); close(); });
+    }
+    if (window.lzConsentState === '') open();
+    [].slice.call(d.querySelectorAll('[data-lz-consent]')).forEach(function (a) {
+      a.addEventListener('click', function (e) { e.preventDefault(); open(); try { box.scrollIntoView({ block: 'end' }); } catch (_) {} });
+    });
+    window.lzConsentOpen = open;
+  })();
+
   /* ---- app install bar (phones) - JC-LAZO-APPBAR-1003 ----
      iOS Safari already shows Apple's smart banner (meta apple-itunes-app), so this
      only appears where that banner can't: Android, and iOS browsers that aren't
@@ -164,6 +206,7 @@
   (function () {
     try {
       if (window.top !== window.self) return;
+      if (d.querySelector('.lz-consent')) return;
       if (/^\/app\/?$/.test(location.pathname)) return;
       if (!window.matchMedia('(max-width:760px)').matches) return;
       var ua = navigator.userAgent || '';
@@ -186,7 +229,8 @@
       d.body.appendChild(bar);
       html.classList.add('has-appbar');
       function remember() { try { localStorage.setItem('lz_appbar_off', String(Date.now())); } catch (e) {} }
-      requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add('show'); }); });
+      void bar.offsetWidth;
+      bar.classList.add('show');
       bar.querySelector('.x').addEventListener('click', function () {
         remember();
         bar.classList.remove('show'); html.classList.remove('has-appbar');

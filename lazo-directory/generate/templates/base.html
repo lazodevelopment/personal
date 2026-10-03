@@ -44,23 +44,33 @@
 {#- nav_key names the current page for the header ('find','why','sites','vendors'); pages that don't
     set it get no marker. Defined inside a never-true branch so the value is only read via self.nav_key(). -#}
 {% if false %}{% block nav_key %}{% endblock %}{% endif %}
-<!-- Meta Pixel Code (JC-LAZO-PIXEL-0903) -->
+<!-- Meta Pixel (JC-LAZO-PIXEL-0903), gated by consent (JC-LAZO-CONSENT-1003): nothing is
+     requested from Meta until the visitor allows it in the cookie notice (lazo.js item 9).
+     A stored "yes" is honoured for a year; Global Privacy Control counts as a decline. -->
 <script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '1245257617279907');
-fbq('track', 'PageView');
+(function(){
+  var ID='1245257617279907';
+  function load(){
+    if(window.fbq)return;
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', ID);
+    fbq('track', 'PageView');
+  }
+  window.lzPixel={load:load,id:ID};
+  var c='';try{c=localStorage.getItem('lz_consent')||'';}catch(e){}
+  var state=navigator.globalPrivacyControl===true?'gpc':(c.indexOf('yes:')===0?'yes':(c.indexOf('no:')===0?'no':''));
+  if(state==='yes'){var at=+c.slice(4)||0;if(Date.now()-at<365*864e5)load();else state='';}
+  window.lzConsentState=state;
+})();
 </script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=1245257617279907&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Meta Pixel Code -->
+<!-- End Meta Pixel -->
 </head>
 <body>
 <header class="site-head">
