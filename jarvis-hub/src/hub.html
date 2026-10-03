@@ -263,7 +263,13 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 @media(max-width:899px){.worldwrap{grid-template-columns:1fr;min-height:0}#globeBox,#globe{min-height:380px}}
 /* watch */
 .watch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
-.watch h3{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim);font-weight:400;margin:0 0 6px}
+.watch h3,.wh3{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--dim);font-weight:400;margin:0 0 6px}
+.comp{border:1px solid var(--line);padding:8px 10px;font-size:13px;display:grid;gap:3px}.comp b{color:#fff;font-weight:600}.comp small{font-family:var(--mono);font-size:10px;color:var(--dim)}.comp .ch{color:var(--amber);font-size:12px;line-height:1.35}
+.fc{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:end;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.fc .big{font-family:var(--mono);color:#fff;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}.fc .big small{display:block;font-size:10px;color:var(--dim);letter-spacing:.2em;margin-bottom:4px}
+.fc .pd{font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:6px;line-height:1.5}
+.closecard{border:1px solid var(--cyan);background:rgba(var(--glow),.06);padding:10px 12px;display:grid;gap:8px;font-size:14px;width:100%}
+.closecard .k{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan)}.closecard .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.closecard textarea{min-height:100px;font:14px var(--display);line-height:1.45}
 .wrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:baseline;font-size:13px;padding:5px 0;border-bottom:1px solid rgba(18,58,85,.6)}
 .wrow:last-child{border-bottom:0}
 .wrow > span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wrow small{color:var(--dim);font-family:var(--mono);font-size:10px}
@@ -568,7 +574,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   </section>
 
   <section class="panel c7" data-v="ops">
-    <h2>Inbox <span class="sub" id="briefAt"></span><button class="btn sm" id="inboxConnect">CONNECT INBOX</button><a class="btn sm" href="https://mail.google.com/" target="_blank" rel="noopener">GMAIL</a></h2>
+    <h2>Inbox <span class="sub" id="briefAt"></span><button class="btn sm" id="pbToggle" title="How JARVIS replies to new leads">PLAYBOOK</button><button class="btn sm" id="inboxConnect">CONNECT INBOX</button><a class="btn sm" href="https://mail.google.com/" target="_blank" rel="noopener">GMAIL</a></h2>
     <div class="howto" id="inboxHow" hidden>
       <b>Connect a Gmail account to JARVIS (5 minutes, once per account)</b>
       <ol>
@@ -580,6 +586,12 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <span class="empty">After that the inbox syncs every 5 minutes on Google's servers, and JARVIS can archive, mark read and send replies you confirm.</span>
       <div id="bridges" class="empty" style="margin-top:8px"></div>
     </div>
+    <div class="howto" id="pbBox" hidden>
+      <b>Reply playbook</b> <span class="empty">· what JARVIS may say in a first reply: packages, prices, availability rules, tone. He drafts within minutes of a new lead; you send.</span>
+      <div class="rst" id="pbTabs" style="margin:8px 0"></div>
+      <textarea id="pbText" style="min-height:120px"></textarea>
+      <div class="row" style="display:flex;gap:8px;margin-top:6px;align-items:center"><button class="btn sm primary" id="pbSave">SAVE</button><span class="empty" id="pbState"></span></div>
+    </div>
     <ul class="mail" id="mail"><li class="empty">No inbox connected yet.</li></ul>
   </section>
 
@@ -590,7 +602,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   </section>
 
   <section class="panel c4" data-v="ops" id="decisionsPanel">
-    <h2>Decisions <span class="sub" id="decSub"></span></h2>
+    <h2>Decisions <span class="sub" id="decSub"></span><button class="btn sm" id="closeDay" title="Walk through everything still open, one item at a time">CLOSE THE DAY</button></h2>
     <div class="pend" id="decisions"><div class="empty">Nothing waiting on you.</div></div>
   </section>
 
@@ -620,6 +632,10 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div><h3>SOCIAL TODAY</h3><div id="wSocial"></div></div>
       <div><h3>SEARCH · 7 DAYS</h3><div id="wSearch"></div></div>
     </div>
+    <h3 class="wh3" style="margin-top:14px">COMPETITORS · <span id="compSub" style="letter-spacing:0;color:var(--dim)">weekly price scan, Sunday evening</span> <button class="btn sm" id="compScan" style="margin-left:8px">SCAN NOW</button></h3>
+    <div id="comps" class="watch" style="grid-template-columns:repeat(2,minmax(0,1fr))"></div>
+    <form class="addcam" id="compAdd" style="margin-top:8px"><input id="compUrl" placeholder="Competitor pricing or packages page URL" aria-label="Competitor URL"><input id="compLabel" placeholder="Label" style="flex:0 1 140px"><select id="compBiz" style="background:#070d18;border:1px solid var(--line);color:var(--fg);font:13px var(--mono);padding:6px"><option value="atavia">Atavia</option><option value="es">Elizabeth Scott</option><option value="lazo">Lazo</option><option value="roven">Roven</option><option value="lr">LeaseReputation</option></select><button class="btn sm">WATCH</button></form>
+    <div class="empty" id="compMsg" style="margin-top:6px;min-height:1.2em"></div>
   </section>
 
   <section class="panel c7" data-v="ops" id="sportsPanel">
@@ -1102,6 +1118,21 @@ function renderEvents() {
 $("#tripAdd").onclick = () => { const f = $("#tripForm"); f.hidden = !f.hidden; if (!f.hidden) { $("#tripDate").value = new Date().toLocaleDateString("en-CA"); $("#tripFl").focus(); } };
 $("#tripForm").onsubmit = async (e) => { e.preventDefault(); const t = await fetch("/api/trips", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ flight: $("#tripFl").value, date: $("#tripDate").value, home: $("#tripHome").value }) }).then(r => r.json()).catch(() => ({ error: "offline" })); if (t.error) return addMsg("sys", "Trip not added: " + t.error); $("#tripForm").hidden = true; $("#tripFl").value = ""; await loadState(); };
 
+/* ---------- reply playbook ---------- */
+let pbBiz = "atavia";
+function renderPlaybook() { $("#pbTabs").innerHTML = BIZ.map(b => `<button type="button" data-pb="${b.id}" class="${b.id === pbBiz ? "sel" : ""}">${esc(b.name.toUpperCase())}</button>`).join(""); $("#pbText").value = state.playbook?.[pbBiz] || ""; $("#pbText").placeholder = "e.g. Packages: Highlight film $3,500, Feature film $5,500, add-ons … Availability: Saturdays book first; never promise a date without checking. Tone: warm, first names, one question at a time."; $("#pbTabs").querySelectorAll("[data-pb]").forEach(b => b.onclick = () => { pbBiz = b.dataset.pb; renderPlaybook(); }); }
+$("#pbToggle").onclick = () => { const box = $("#pbBox"); box.hidden = !box.hidden; if (!box.hidden) renderPlaybook(); };
+$("#pbSave").onclick = async () => { state.playbook = { ...(state.playbook || {}), [pbBiz]: $("#pbText").value.trim() }; await save({ playbook: state.playbook }); $("#pbState").textContent = "saved · used for the next draft"; setTimeout(() => $("#pbState").textContent = "", 3000); };
+
+/* ---------- competitors ---------- */
+function renderCompetitors() {
+  const list = state.competitors || [], ch = state.competitorChanges || [];
+  $("#comps").innerHTML = list.length ? list.map(c => { const last = ch.find(x => x.url === c.url); return `<div class="comp"><span><b>${esc(c.label)}</b> <small>${esc(bizOf(c.business || "atavia").name)} · ${c.lastScan ? "scanned " + fmtAgo(c.lastScan) + " · " + (c.priceCount || 0) + " prices" : "not scanned yet"}${c.lastError ? " · " + esc(c.lastError) : ""}</small></span><small><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.url.replace(/^https?:\/\//, "").slice(0, 60))}</a></small>${last ? `<div class="ch">${esc(last.at.slice(0, 10))}: ${esc(last.summary)}</div>` : ""}<button class="btn sm" data-uncomp="${esc(c.url)}" style="justify-self:start">STOP WATCHING</button></div>`; }).join("") : `<div class="empty">Add a competitor's pricing page. JARVIS checks it every Sunday and tells you what moved, in the Monday review and by push.</div>`;
+  $("#comps").querySelectorAll("[data-uncomp]").forEach(b => b.onclick = async () => { state.competitors = state.competitors.filter(c => c.url !== b.dataset.uncomp); await save({ competitors: state.competitors }); renderCompetitors(); });
+}
+$("#compAdd").onsubmit = async (e) => { e.preventDefault(); let url = $("#compUrl").value.trim(); if (!url) return; if (!/^https?:/i.test(url)) url = "https://" + url; const label = $("#compLabel").value.trim() || url.replace(/^https?:\/\//, "").split("/")[0]; state.competitors = [...(state.competitors || []), { url, label, business: $("#compBiz").value, added: new Date().toISOString() }]; await save({ competitors: state.competitors }); $("#compUrl").value = ""; $("#compLabel").value = ""; renderCompetitors(); $("#compMsg").textContent = `Watching ${label}. Scanning now to take the first snapshot…`; await fetch("/api/competitors/scan", { method: "POST" }).catch(() => {}); await loadState(); $("#compMsg").textContent = `Watching ${label}. First snapshot taken; changes show from the next scan.`; };
+$("#compScan").onclick = async () => { $("#compMsg").textContent = "Scanning…"; const r = await fetch("/api/competitors/scan", { method: "POST" }).then(x => x.json()).catch(() => ({})); await loadState(); $("#compMsg").textContent = r.changes?.length ? `${r.changes.length} change${r.changes.length > 1 ? "s" : ""} found.` : "Scanned. No price changes since last time."; };
+
 /* ---------- watch: balance charges, app stores, social, search ---------- */
 function spark(days) {
   if (!days?.length) return ""; const v = days.map(d => d[2]); const max = Math.max(1, ...v); const w = 200, h = 28;
@@ -1130,6 +1161,12 @@ function renderMoney() {
   $("#moneySub").textContent = "cash in, all businesses";
   $("#money").innerHTML = `<div class="money"><div><div class="big"><small>THIS MONTH</small><span id="moneyNow">${moneyFull(mo.thisMonth)}</span></div><div class="cmp">last month ${moneyFull(mo.lastMonth)} · <b class="${diff >= 0 ? "up" : "down"}">${diff >= 0 ? "▲" : "▼"} ${moneyFull(Math.abs(diff))}${pct != null ? " (" + Math.abs(pct) + "%)" : ""}</b></div></div><div>${barsSvg(mo.months, colors, labels)}<div class="legend">${BIZ.map(b => `<span><i style="background:${b.color}"></i>${b.name}</span>`).join("")}<span style="margin-left:auto">12 months · ${moneyFull(mo.months.reduce((a, m) => a + m.total, 0))}</span></div></div></div>`;
   tick($("#moneyNow"), "moneyNow", mo.thisMonth, moneyFull);
+  if (mo.forecast) {
+    const weeks = mo.forecast.map(w => ({ ym: w.week.slice(5), atavia: w.atavia || 0, es: w.es || 0, lazo: w.lazo || 0, roven: w.roven || 0, lr: w.lr || 0, total: w.total }));
+    const thin = weeks.filter(w => !w.total).length;
+    const pd = (mo.pastDue || []).map(x => `${esc(x.who)} ${moneyFull(x.amount)} · due ${x.due}${x.attempts ? " · " + x.attempts + " failed" : ""}`).join("<br>");
+    $("#money").insertAdjacentHTML("beforeend", `<div class="fc"><div><div class="big"><small>NEXT 90 DAYS</small>${moneyFull(mo.forecast90 || 0)}</div><div class="cmp">${weeks.filter(w => w.total).length} of 13 weeks have balances due${thin ? ` · <b class="down">${thin} thin</b>` : ""}</div>${mo.pastDue?.length ? `<div class="pd">PAST DUE ${moneyFull(mo.pastDueTotal)}<br>${pd}</div>` : ""}</div><div>${barsSvg(weeks, colors, labels)}<div class="legend"><span>13 weeks from Monday · hover a bar for who</span></div></div></div>`);
+  }
 }
 function renderMemory() {
   const m = state.memory || []; $("#memSub").textContent = m.length ? `${m.length} facts` : "";
@@ -1145,8 +1182,11 @@ function renderAlerts() {
   lastAlertAt = a[0]?.at || lastAlertAt || new Date(0).toISOString();
 }
 let briefSel = null;
+let closeOffered = ""; try { closeOffered = localStorage.getItem("closeOffered") || ""; } catch {}
 function renderMorning() {
   const list = state.briefs?.length ? state.briefs : (state.morning?.text ? [state.morning] : []);
+  const ev = list.find(b => b.slot === "evening" && Date.now() - new Date(b.at) < 2 * 3600e3);
+  if (ev && closeOffered !== ev.id && window.__stateLoaded && closeItems().length) { closeOffered = ev.id; try { localStorage.setItem("closeOffered", ev.id); } catch {} setTimeout(() => { const t = `Evening brief is in, and ${closeItems().length} item${closeItems().length > 1 ? "s are" : " is"} still open. Say "close the day" when you're ready.`; addMsg("ai", t); speak(t); }, 4000); }
   const m = list.find(b => b.id === briefSel) || list[0];
   const pick = $("#briefPick"); pick.style.display = list.length > 1 ? "" : "none";
   pick.innerHTML = list.map(b => `<option value="${esc(b.id)}" ${b === m ? "selected" : ""}>${esc((b.slot || "morning").toUpperCase())} · ${new Date(b.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</option>`).join("");
@@ -1215,11 +1255,11 @@ async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
     const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
-    state.decisions = d.decisions || null; state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null; state.watch = d.watch || null; state.followups = d.followups || []; state.trips = d.trips || []; state.apps = d.apps || null;
+    state.decisions = d.decisions || null; state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null; state.watch = d.watch || null; state.followups = d.followups || []; state.trips = d.trips || []; state.apps = d.apps || null; state.playbook = d.playbook || {}; state.competitors = d.competitors || []; state.competitorChanges = d.competitor_changes || [];
     if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
     if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
   } catch {}
-  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderWatch(); renderAttention(); renderSys(); syncQueueCards();
+  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderWatch(); renderCompetitors(); renderAttention(); renderSys(); syncQueueCards();
   window.__stateLoaded = true;
 }
 async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
@@ -1423,10 +1463,59 @@ function localAnswer(t) {
   const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+)?(radio|music|some music|.+?)(?:\s+radio)?$/);
   if (rp) { const want = /^(radio|music|some music)$/.test(rp[1]) ? "" : rp[1].replace(/\s+/g, ""); const i = want ? (RADIO_MATCH.find(j => RADIO[j].k.some(k => want.includes(k))) ?? -1) : radioIdx; if (i >= 0) { radioPlay(i); return ""; } }
   if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
+  if (/^scan (the )?competitors( now)?$/.test(t)) { $("#compScan").click(); return "Scanning the competitor pages now."; }
   return null;
+}
+/* ---------- close the day: one open item at a time, by voice or buttons ---------- */
+let closeMode = null;
+function closeItems() {
+  const items = [];
+  for (const f of (state.followups || []).filter(f => f.status === "ready")) items.push({ kind: "followup", f, say: `${f.first ? "New lead" : "Follow-up"}: ${f.from}, about ${f.subject}. I've drafted a reply. Send, skip, or next?`, actions: ["send", "skip", "next"] });
+  for (const d of (state.decisions?.items || [])) items.push({ kind: "decision", d, say: `${bizOf(d.business).name}: ${d.label}. Approve, reject, or next?`, actions: d.kind === "roven_approve_employer" ? ["approve", "next"] : ["approve", "reject", "next"] });
+  const drafted = new Set((state.followups || []).map(f => f.threadId));
+  for (const m of (state.brief?.items || []).filter(m => m.needs_reply && m.threadId && !drafted.has(m.threadId))) items.push({ kind: "email", m, say: `${bizOf(m.business).name} email from ${m.from}: ${m.subject}. Shall I draft a reply, or next?`, actions: ["draft", "next"] });
+  for (const p of (state.watch?.payments || []).filter(p => p.state === "failed")) items.push({ kind: "info", say: `${bizOf(p.business).name}: ${p.names}' balance of ${money(p.amount)} was declined, attempt ${p.attempts} of three. Nothing to do until the retry. Next.`, actions: ["next"] });
+  for (const q of (state.queue || []).filter(q => q.status === "pending")) items.push({ kind: "info", say: `Still queued for the PC: ${q.summary}. Next.`, actions: ["next"] });
+  return items;
+}
+async function closeDay() {
+  const items = closeItems(); if (closeMode) return;
+  if (!items.length) { const t = "Nothing is open. The day is closed."; addMsg("ai", t); speak(t); return; }
+  closeMode = { items, i: 0 };
+  const intro = `Closing the day. ${items.length} item${items.length > 1 ? "s" : ""}.`; addMsg("ai", intro); speak(intro);
+  setTimeout(closeStep, 300);
+}
+function closeStep() {
+  const cm = closeMode; if (!cm) return;
+  if (cm.i >= cm.items.length) { closeMode = null; const t = "That's everything. Day closed."; addMsg("ai", t); speak(t); return; }
+  const it = cm.items[cm.i];
+  const el = document.createElement("div"); el.className = "closecard"; el.dataset.close = "1";
+  el.innerHTML = `<div class="k">CLOSE THE DAY · ${cm.i + 1} OF ${cm.items.length}</div><div>${esc(it.say)}</div>${it.kind === "followup" ? `<textarea>${esc(it.f.body)}</textarea>` : ""}<div class="row">${it.actions.map(a => `<button class="btn sm ${a === "send" || a === "approve" || a === "draft" ? "primary" : ""}" data-ca="${a}">${a.toUpperCase()}</button>`).join("")}<button class="btn sm" data-ca="stop">STOP</button></div>`;
+  el.querySelectorAll("[data-ca]").forEach(b => b.onclick = () => closeAct(b.dataset.ca, el));
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; cm.el = el; speak(it.say);
+}
+async function closeAct(a, el) {
+  const cm = closeMode; if (!cm) return; const it = cm.items[cm.i];
+  el.querySelectorAll("button").forEach(b => b.disabled = true);
+  if (a === "stop") { closeMode = null; const t = "Stopped. The rest keeps for later."; addMsg("ai", t); speak(t); return; }
+  if (a === "send" && it.kind === "followup") { const body = el.querySelector("textarea")?.value || it.f.body; const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: it.f.account, threadId: it.f.threadId, body, followupId: it.f.id }, summary: "Send reply to " + it.f.from }) }).then(x => x.json()).catch(() => ({})); addMsg("sys", r.ok ? "Sent." : "Send failed: " + (r.result || "")); state.followups = state.followups.filter(f => f.id !== it.f.id); }
+  if (a === "skip" && it.kind === "followup") { await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: it.f.id }) }).catch(() => {}); state.followups = state.followups.filter(f => f.id !== it.f.id); }
+  if ((a === "approve" || a === "reject") && it.kind === "decision") { const d = it.d; const item = d.kind === "lazo_claim" ? { kind: "lazo_claim", params: { claimId: d.id, decision: a === "approve" ? "approved" : "rejected" } } : d.kind === "roven_approve_employer" ? { kind: "roven_approve_employer", params: { employerId: d.id } } : { kind: a === "approve" ? "roven_approve_job" : "roven_reject_job", params: { jobId: d.id } }; await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), ...item, summary: (a === "approve" ? "Approve " : "Reject ") + d.label }) }).catch(() => {}); addMsg("sys", (a === "approve" ? "Approved" : "Rejected") + " · queued for the PC."); state.decisions.items = state.decisions.items.filter(x => x.id !== d.id); }
+  if (a === "draft" && it.kind === "email") { addMsg("sys", "Drafting…"); const r = await fetch("/api/followups/run?dry=0&minAge=0", { method: "POST" }).then(x => x.json()).catch(() => []); const f = (Array.isArray(r) ? r : []).find(x => x.threadId === it.m.threadId && x.status === "ready"); if (f) { state.followups = [f, ...(state.followups || []).filter(x => x.id !== f.id)]; cm.items.splice(cm.i + 1, 0, { kind: "followup", f, say: `Draft ready for ${f.from}. Send, skip, or next?`, actions: ["send", "skip", "next"] }); } else addMsg("sys", "Couldn't draft that one; it stays in the inbox."); }
+  renderDecisions(); renderAttention(); cm.i++; setTimeout(closeStep, 400);
+}
+$("#closeDay").onclick = closeDay;
+function closeVoice(t) {
+  const cm = closeMode; if (!cm) return false; const w = t.toLowerCase().replace(/[^a-z ]/g, " ").trim();
+  const map = [["stop", /^(stop|that's enough|enough|cancel|quit)$/], ["send", /\b(send|send it|yes send|go ahead|approve and send)\b/], ["approve", /\b(approve|approved|yes|accept)\b/], ["reject", /\b(reject|decline|no)\b/], ["draft", /\b(draft|draft it|write it|reply)\b/], ["skip", /\b(skip|later|not now|remind me)\b/], ["next", /\b(next|pass|move on|continue)\b/]];
+  const it = cm.items[cm.i]; const hit = map.find(([a, re]) => re.test(w) && (a === "stop" || it.actions.includes(a)));
+  if (!hit) { speak("Say " + it.actions.join(", ") + ", or stop."); return true; }
+  closeAct(hit[0], cm.el); return true;
 }
 async function ask(text) {
   text = text.trim(); if (!text) return;
+  if (closeMode) { addMsg("me", text); if (closeVoice(text)) return; }
+  if (/^(close|let's close|lets close|close out|wrap up) (the |my )?day$/i.test(text.trim())) { addMsg("me", text); closeDay(); return; }
   pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
   const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
   const myReply = {}; replyOpen = myReply;
@@ -1461,7 +1550,7 @@ function handleAction(a) {
   if (a.type === "open") { const w = window.open(a.url, "_blank"); if (!w) addMsg("sys", "Popup blocked: " + a.url); }
   if (a.type === "notes") { state.notes = a.value; $("#notes").value = a.value; }
   if (a.type === "memory") { state.memory = a.value; renderMemory(); }
-  if (a.type === "trips") setTimeout(loadState, 800);
+  if (a.type === "trips" || a.type === "competitors") setTimeout(loadState, 800);
   if (a.type === "draft") draftCard(a);
   if (a.type === "confirm") proposeAction(a.item);
   if (a.type === "world") { if (PHONE) showView("world"); initGlobe(); if (a.flight) { $("#trackQ").value = a.flight; trackIt(a.flight); } else loadFlights(); }

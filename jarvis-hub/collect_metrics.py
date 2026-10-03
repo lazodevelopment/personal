@@ -204,6 +204,25 @@ def collect_films(db):
             if at: months[at.strftime("%Y-%m")] += num(gd.get("amount"))
     except Exception:
         pass
+    # cash forecast: unpaid balances by the week they fall due (13 weeks), plus anything already past due
+    forecast = defaultdict(lambda: {"amount": 0.0, "items": []}); past_due = []
+    for b in signed:
+        if b.get("balance_paid_at") or b.get("test_mode"): continue
+        due = ts(b.get("balance_due_at")); amt = num(b.get("balance"))
+        if not due or amt <= 0: continue
+        who = (b.get("client_names") or b.get("email") or "?")[:40]
+        if due < NOW - timedelta(days=1):
+            past_due.append({"who": who, "amount": round(amt), "due": due.date().isoformat(), "attempts": int(b.get("balance_attempts") or 0)})
+        elif due < NOW + timedelta(days=91):
+            wk = (due.date() - timedelta(days=due.weekday())).isoformat()   # Monday of that week
+            forecast[wk]["amount"] += amt; forecast[wk]["items"].append(f"{who} ${round(amt):,}")
+    # the same trailing 7 days one year ago (bookings signed, cash in, leads)
+    Y7, Y0 = NOW - timedelta(days=372), NOW - timedelta(days=365)
+    yoy = {"bookings": sum(1 for b in signed if created(b) and Y7 <= created(b) < Y0),
+           "revenue": round(revenue(Y7, Y0)),
+           "leads": sum(1 for l in leads if ts(l.get("created_at")) and Y7 <= ts(l.get("created_at")) < Y0),
+           "bookings_now": sum(1 for b in signed if created(b) and created(b) >= D7), "revenue_now": round(revenue(D7, NOW)), "leads_now": l7,
+           "has_history": any(created(b) and created(b) < Y0 for b in signed)}
     recent = sorted([b for b in live if created(b)], key=created, reverse=True)[:12]
     src = defaultdict(int)
     for l in leads_full:
@@ -213,6 +232,8 @@ def collect_films(db):
         "recent": [{"id": b["_id"], "names": b.get("client_names") or b.get("email") or "?", "date": str(b.get("event_date_raw") or "")[:10], "package": b.get("package_name") or b.get("package_id") or "", "total": round(num(b.get("total"))), "status": b.get("status"), "balance": round(num(b.get("balance"))), "balance_paid": bool(b.get("balance_paid_at"))} for b in recent],
         "leadsBySource": dict(sorted(src.items(), key=lambda kv: -kv[1])[:8]),
         "monthly": {k: round(v) for k, v in sorted(months.items())[-12:]},
+        "forecast": {k: {"amount": round(v["amount"]), "items": v["items"][:6]} for k, v in sorted(forecast.items())},
+        "pastDue": sorted(past_due, key=lambda x: x["due"]),
     }
     return {
         "detail": detail,
@@ -225,6 +246,7 @@ def collect_films(db):
         "series": {"name": "bookings / week", "values": weekly([created(b) for b in signed]), "color": "#39f0a8"},
         "upcoming": upcoming[:8],
         "counts": {"bookings_live": len(live), "signed": len(signed), "upcoming": len(upcoming)},
+        "yoy": yoy,
     }
 
 
@@ -375,7 +397,18 @@ def main():
             row[biz] = (b.get("detail") or {}).get("monthly", {}).get(ym, 0)
         row["total"] = sum(v for k, v in row.items() if k not in ("ym", "total"))
         months.append(row)
-    out["money"] = {"months": months, "thisMonth": next((m["total"] for m in months if m["ym"] == cur), 0), "lastMonth": next((m["total"] for m in months if m["ym"] == last), 0)}
+    monday = (TODAY - timedelta(days=TODAY.weekday()))
+    weeks = []
+    for i in range(13):
+        wk = (monday + timedelta(days=7 * i)).isoformat(); row = {"week": wk, "total": 0, "items": []}
+        for biz, b in out["businesses"].items():
+            f = ((b.get("detail") or {}).get("forecast") or {}).get(wk)
+            if f: row[biz] = f["amount"]; row["total"] += f["amount"]; row["items"] += [f"{biz}: {x}" for x in f["items"]]
+        weeks.append(row)
+    past_due = [dict(x, business=biz) for biz, b in out["businesses"].items() for x in ((b.get("detail") or {}).get("pastDue") or [])]
+    out["money"] = {"months": months, "thisMonth": next((m["total"] for m in months if m["ym"] == cur), 0), "lastMonth": next((m["total"] for m in months if m["ym"] == last), 0),
+                    "forecast": weeks, "forecast90": sum(w["total"] for w in weeks), "pastDue": past_due, "pastDueTotal": sum(x["amount"] for x in past_due),
+                    "yoy": {biz: b.get("yoy") for biz, b in out["businesses"].items() if b.get("yoy")}}
     body = json.dumps({"metrics": out})
     if "--dry-run" in sys.argv:
         print(body); return

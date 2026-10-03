@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const BUILD = (() => { let h = 0; for (let i = 0; i < html.length; i += 7) h = (h * 31 + html.charCodeAt(i)) >>> 0; return h.toString(36) + "-" + html.length.toString(36); })();   // changes with every deploy of the page
 const MODEL = "claude-opus-5-5";
@@ -378,7 +378,9 @@ async function ingestInbox(env, body, ctx) {
   all.sort((a, b) => (b.needs_reply - a.needs_reply) || (a.priority - b.priority) || b.received.localeCompare(a.received));
   const needs = all.filter((m) => m.needs_reply).length, unread = all.filter((m) => m.unread).length;
   await kv.put(env, "brief", { at: new Date().toISOString(), source: "bridge", accounts: Object.keys(inbox.accounts), note: all.length ? `${unread} unread across ${Object.keys(inbox.accounts).length} inbox${Object.keys(inbox.accounts).length > 1 ? "es" : ""}, ${needs} need${needs === 1 ? "s" : ""} a reply` : "All inboxes clear.", items: all.slice(0, 40) });
-  return json({ ok: true, account, items: items.length, triaged: fresh.length, hook: !!body.hookUrl });
+  const quick = fresh.filter((m) => { const c = keep[m.threadId]; return c?.needs_reply && !m.lastFromMe && ["lead", "client", "booking"].includes(c.kind) && !isBot(m.fromEmail) && Date.now() - new Date(m.date) < 6 * 3600e3; }).map((m) => m.threadId);
+  if (quick.length && ctx) ctx.waitUntil(makeFollowups(env, { minAgeH: 0, onlyThreads: quick, first: true }).catch((e) => console.log("first reply", e.message)));
+  return json({ ok: true, account, items: items.length, triaged: fresh.length, hook: !!body.hookUrl, drafting: quick.length });
 }
 
 async function bridgeCall(env, account, payload) {
@@ -536,6 +538,8 @@ async function buildContext(env, request) {
       if (b.detail?.pending?.length) lines.push(`  pending items (ids for actions): ` + b.detail.pending.slice(0, 10).map((e) => `[${e.id}] ${e.label}`).join("; "));
       if (b.detail?.leadsBySource) lines.push(`  leads by source (90d): ` + Object.entries(b.detail.leadsBySource).map(([k, v]) => `${k} ${v}`).join(", "));
     }
+    if (metrics.money?.forecast) lines.push(`CASH FORECAST (unpaid balances by due week, next 90 days, total $${Math.round(metrics.money.forecast90 || 0).toLocaleString()}): ` + metrics.money.forecast.filter((w) => w.total).map((w) => `week of ${w.week} $${Math.round(w.total).toLocaleString()} (${w.items.join("; ")})`).join(" | ") + (metrics.money.pastDue?.length ? ` | PAST DUE $${Math.round(metrics.money.pastDueTotal).toLocaleString()}: ` + metrics.money.pastDue.map((x) => `${BIZ_NAME[x.business] || x.business} ${x.who} $${x.amount} due ${x.due}${x.attempts ? " (" + x.attempts + " failed attempts)" : ""}`).join("; ") : ""));
+    if (metrics.money?.yoy) lines.push(`YEAR-AGO (same 7 days last year vs the last 7 days): ` + Object.entries(metrics.money.yoy).map(([id, y]) => y.has_history ? `${BIZ_NAME[id]}: revenue $${y.revenue} → $${y.revenue_now}, bookings ${y.bookings} → ${y.bookings_now}, leads ${y.leads} → ${y.leads_now}` : `${BIZ_NAME[id]}: no prior-year data yet`).join(" | "));
     if (metrics.money) lines.push(`MONEY: this month $${Math.round(metrics.money.thisMonth).toLocaleString()} (last month $${Math.round(metrics.money.lastMonth).toLocaleString()}); recent months: ` + metrics.money.months.slice(-6).map((m) => `${m.ym} $${Math.round(m.total)}`).join(", "));
   } else lines.push("METRICS: none collected yet");
   lines.push(`INBOX (${brief?.source === "bridge" ? "live Gmail bridges" : "hourly snapshot"}, ${brief?.at || "none"}): ${brief?.note || ""} ` + (brief?.items || []).slice(0, 20).map((m) => `[${BIZ_LABEL[m.business] || m.business || ""} | ${m.account || ""} | ${m.threadId || "no-id"}] ${m.from}: ${m.subject}${m.needs_reply ? " (NEEDS REPLY)" : ""}${m.unread ? " (unread)" : ""} — ${m.snippet || ""}`).join(" | "));
@@ -550,6 +554,8 @@ async function buildContext(env, request) {
   if (Array.isArray(watch?.payments)) lines.push(`BALANCE CHARGES (last 7 / next 7 days, ${watch.at}): ` + (watch.payments.filter((p) => p.id).map((p) => `${BIZ_LABEL[p.business]} ${p.names} ${fmtUsd(p.amount)} due ${String(p.due).slice(0, 10)} ${p.state}${p.state === "failed" ? " (attempt " + p.attempts + "/3: " + payWhy(p.error) + ")" : ""}`).join("; ") || "none"));
   if (watch?.social?.brands) lines.push(`SOCIAL POSTS TODAY (${watch.social.day}): ` + watch.social.brands.map((b) => `${b.name} ${b.today ? "posted" : "NOT posted (last " + (b.last || "never") + ")"}`).join(", "));
   if (watch?.search) lines.push(`SEARCH CONSOLE: ` + (watch.search.sites?.length ? watch.search.sites.map((x) => { const d = x.days || []; const sum = (rows, i) => rows.reduce((a, r) => a + r[i], 0); return `${siteName(x.site)} last 7d ${sum(d.slice(-7), 1)} clicks / ${sum(d.slice(-7), 2)} impressions (prior 7d ${sum(d.slice(-14, -7), 1)} / ${sum(d.slice(-14, -7), 2)})`; }).join("; ") : "not connected yet (" + (watch.search.fix || watch.search.error || "") + ")"));
+  const compCh = await kv.get(env, "competitor_changes"); const comps = await kv.get(env, "competitors");
+  if (comps?.length) lines.push(`COMPETITORS WATCHED: ` + comps.map((c) => `${c.label} (${c.business || "?"}) ${c.url}`).join("; ") + ` | CHANGES (last scan): ` + ((compCh || []).slice(0, 8).map((c) => `${c.at.slice(0, 10)} ${c.label}: ${c.summary}`).join(" | ") || "none detected"));
   if (apps) lines.push(`APP STORES: ` + Object.values(apps).map((a) => `${a.name} ${a.listed ? "live" + (a.version ? " v" + a.version : "") + (a.released ? " released " + String(a.released).slice(0, 10) : "") : "not listed yet"}`).join("; "));
   const readyF = (fups || []).filter((f) => f.status === "ready");
   if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
@@ -576,6 +582,7 @@ Your replies are spoken aloud through text-to-speech: plain prose, no markdown, 
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
+Competitors: watch_competitor adds a pricing/packages page to the Sunday scan; changes appear in COMPETITORS and the Monday review.
 Trips: when he mentions a flight he is taking ("I fly AA 2612 to Phoenix on Friday"), call add_trip with the flight number, the local date (YYYY-MM-DD) and home 'az' when he is flying to Arizona or 'tx' when flying to Texas. JARVIS then tracks it on the day, pushes wheels-up and landed, and switches home on landing. remove_trip cancels one.
 App stores: watch_app adds an app listing to watch (iOS numeric id or bundle id, Android package name), e.g. once Jovi's app exists.`;
 
@@ -590,6 +597,7 @@ const BRAIN_TOOLS = [
   { name: "add_trip", description: "Add a flight Jesse is taking. JARVIS tracks it on the day, pushes wheels-up and landed, and switches home on landing.", input_schema: { type: "object", properties: { flight: { type: "string", description: "e.g. 'AA 2612'" }, date: { type: "string", description: "local departure date YYYY-MM-DD" }, home: { type: "string", enum: ["tx", "az", "none"] }, note: { type: "string" } }, required: ["flight", "date", "home", "note"], additionalProperties: false }, strict: true },
   { name: "remove_trip", description: "Remove a trip by its id (shown in TRIPS or from add_trip).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false }, strict: true },
   { name: "watch_app", description: "Watch an app store listing and push when it goes live or updates.", input_schema: { type: "object", properties: { name: { type: "string" }, platform: { type: "string", enum: ["ios", "android"] }, id: { type: "string", description: "iOS numeric app id or bundle id; Android package name" } }, required: ["name", "platform", "id"], additionalProperties: false }, strict: true },
+  { name: "watch_competitor", description: "Add a competitor web page (pricing or packages page) to the weekly price-change scan.", input_schema: { type: "object", properties: { url: { type: "string" }, label: { type: "string" }, business: { type: "string", enum: ["atavia", "es", "lazo", "roven", "lr"] } }, required: ["url", "label", "business"], additionalProperties: false }, strict: true },
   { name: "request_action", description: "Queue a business-data change for Jesse's confirmation. kinds: roven_approve_job (params.jobId), roven_reject_job (params.jobId), roven_approve_employer (params.employerId), lazo_claim (params.claimId, params.decision 'approved'|'rejected'), booking_note (params.business 'atavia'|'es', params.bookingId, params.note), lazo_inquiry_responded (params.inquiryId), email_reply (params.account, params.threadId, params.body), email_archive (params.account, params.threadId), email_read (params.account, params.threadId), email_send (params.account, params.to, params.subject, params.body).", input_schema: { type: "object", properties: { kind: { type: "string", enum: ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"] }, params: { type: "object", properties: { jobId: { type: "string" }, employerId: { type: "string" }, claimId: { type: "string" }, decision: { type: "string" }, business: { type: "string" }, bookingId: { type: "string" }, note: { type: "string" }, inquiryId: { type: "string" }, account: { type: "string" }, threadId: { type: "string" }, body: { type: "string" }, to: { type: "string" }, subject: { type: "string" } } }, summary: { type: "string", description: "One line Jesse will confirm, e.g. 'Approve Roven job Senior RN at Mercy'" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
 ];
 
@@ -604,6 +612,7 @@ async function runTool(name, input, env, actions) {
     case "add_trip": { const t = await addTrip(env, input); actions.push({ type: "trips" }); return JSON.stringify(t); }
     case "remove_trip": { const trips = ((await kv.get(env, "trips")) || []).filter((t) => t.id !== input.id); await kv.put(env, "trips", trips); actions.push({ type: "trips" }); return "Removed."; }
     case "watch_app": { const list = (await kv.get(env, "apps_watch")) || []; const key = (input.platform + "_" + input.id).toLowerCase(); if (!list.some((a) => a.key === key)) list.push({ key, name: input.name, ...(input.platform === "ios" ? { ios: /^\d+$/.test(input.id) ? { id: input.id } : { bundle: input.id } } : { android: input.id }) }); await kv.put(env, "apps_watch", list); return "Watching " + input.name + ". The first check lands within 15 minutes."; }
+    case "watch_competitor": { const list = (await kv.get(env, "competitors")) || []; if (!list.some((c) => c.url === input.url)) list.push({ url: input.url, label: input.label, business: input.business, added: new Date().toISOString() }); await kv.put(env, "competitors", list); actions.push({ type: "competitors" }); return "Watching " + input.label + ". First scan Sunday evening, or say 'scan competitors now'."; }
     case "draft_reply": { actions.push({ type: "draft", ...input }); return "Draft shown to Jesse with an Open in Gmail button."; }
     case "request_action": { const KINDS = ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"]; if (!KINDS.includes(input.kind) || typeof input.params !== "object" || !input.summary) return "Invalid action: kind must be one of " + KINDS.join(", ") + " with params and summary.";
       const item = { id: uid(), kind: input.kind, params: input.params, summary: input.summary, status: "awaiting confirmation", at: new Date().toISOString() }; actions.push({ type: "confirm", item }); return "Queued for confirmation: " + input.summary; }
@@ -661,6 +670,7 @@ async function chat(request, env, ctx) {
 const SLOT_PROMPTS = {
   morning: "This is the MORNING brief. About 220 to 300 words, two minutes read aloud. Greeting with the date and today's weather in one breath; what needs his attention today (unanswered leads, alerts, anything slow or down, anything JARVIS noticed); each business in a sentence or two with the numbers that matter and the week-over-week direction; today's and this week's weddings with their venue weather; his teams' games today and last night's results; one line on the markets and the top local headline if it matters; finish with one dry, encouraging line.",
   afternoon: "This is the AFTERNOON brief. About 150 to 220 words. Only what is NEW since the morning brief: fresh leads or bookings, web traffic so far today for Atavia and Elizabeth Scott, actions completed, alerts, any site that got slow, scores of games in progress or finished today, markets at midday, and anything that changed in the forecast for tonight or this week's weddings. Do not repeat the morning numbers or re-describe the day's weather unless it changed. If genuinely nothing changed, say so in two sentences.",
+  weekly: "This is the MONDAY WEEKLY REVIEW. About 350 to 450 words, five minutes read aloud. For each business in turn: last week against the week before (revenue or cash in, bookings or sign-ups, leads, web traffic, search clicks), and against the same week last year where YEAR-AGO figures exist (say plainly when there is no prior year yet). Then the money picture: the 90-day cash forecast by week, any thin weeks, and anything past due. Then the competitor changes from the last scan, if any. Finish with exactly one thing to fix this week for each business, stated as an instruction. Flowing prose, no lists, no headers.",
   evening: "This is the EVENING brief. About 180 to 250 words. Wrap the day: what came in today across the businesses (leads, bookings, sign-ups, revenue if any), today's final web traffic, final scores and tomorrow's games, how the markets closed; then look ahead: tomorrow's weather, tomorrow's and the weekend's weddings with venue weather, balances due, anything still unresolved that he should sleep on or handle first thing. Do not repeat what the morning or afternoon brief already said unless it resolved.",
 };
 const SLOT_HOURS = (env) => Object.fromEntries((env.BRIEF_HOURS || "5:morning,12:afternoon,18:evening").split(",").map((x) => { const [h, slot] = x.split(":"); return [+h, slot || "morning"]; }));
@@ -689,7 +699,7 @@ async function makeMorning(env, request, slot) {
   if (env.ELEVENLABS_API_KEY && text) {
     try { const a = await elevenlabs(env, text); if (a.ok) { await env.HUB.put("brief_audio_" + brief.id, await a.arrayBuffer(), { expirationTtl: 8 * 86400 }); brief.audio = true; } } catch {}
   }
-  const list = [brief, ...history].slice(0, 7);
+  const list = [brief, ...history].slice(0, 10);
   await kv.put(env, "briefs", list); await kv.put(env, "morning", brief);
   const headline = text.split(/(?<=[.!?])\s/).slice(0, 2).join(" ");
   await notify(env, `${slot[0].toUpperCase() + slot.slice(1)} brief`, headline, { tags: slot === "morning" ? "sunrise" : slot === "evening" ? "city_sunset" : "sun", url: new URL(request.url).origin + "/#morning" });
@@ -868,12 +878,14 @@ async function appStores(env) {
 }
 
 // leads, clients and bookings left unanswered for a day: JARVIS drafts the reply, Jesse sends it from Decisions
-async function makeFollowups(env, { minAgeH = 24, dry = false } = {}) {
+const DEFAULT_PLAYBOOK = { atavia: "Wedding films. Warm and confident. Ask for the date and venue if missing. Offer a 15-minute call. Do not quote prices unless the playbook lists them.", es: "Wedding films. Warm and personal. Ask for the date and venue if missing. Offer a 15-minute call. Do not quote prices unless the playbook lists them.", lazo: "Wedding planner app and vendor directory. Friendly, short. Point couples to the app, vendors to claiming their listing.", roven: "Hiring platform. Professional, concise.", lr: "Apartment reviews. Professional, concise.", brisk: "Professional, concise." };
+async function makeFollowups(env, { minAgeH = 24, dry = false, onlyThreads = null, first = false } = {}) {
   if (!env.ANTHROPIC_API_KEY) return;
   const brief = await kv.get(env, "brief"); const list = (await kv.get(env, "followups")) || [];
   const items = brief?.items || [];
   const have = new Set(list.map((f) => f.threadId + "|" + f.received));
-  const due = items.filter((m) => m.needs_reply && m.threadId && m.account && !isBot(m.fromEmail) && ["lead", "client", "booking"].includes(m.kind) && Date.now() - new Date(m.received) > minAgeH * 3600e3 && !have.has(m.threadId + "|" + m.received)).slice(0, 3);
+  const due = items.filter((m) => m.needs_reply && m.threadId && m.account && !isBot(m.fromEmail) && ["lead", "client", "booking"].includes(m.kind) && Date.now() - new Date(m.received) > minAgeH * 3600e3 && (!onlyThreads || onlyThreads.includes(m.threadId)) && !have.has(m.threadId + "|" + m.received)).slice(0, 3);
+  const playbook = (await kv.get(env, "playbook")) || {}; const metrics = await kv.get(env, "metrics");
   if (dry && !due.length) return [{ skip: "none due", candidates: items.filter((m) => m.needs_reply).map((m) => ({ kind: m.kind, ageH: Math.round((Date.now() - new Date(m.received)) / 3600e3), acct: !!m.account, thread: !!m.threadId })) }];
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }); const out = [];
   for (const m of due) {
@@ -883,14 +895,18 @@ async function makeFollowups(env, { minAgeH = 24, dry = false } = {}) {
     const thread = t.messages.slice(-6).map((x) => `FROM: ${x.from}\nDATE: ${x.date}\n${String(x.body || "").slice(0, 3000)}`).join("\n---\n");
     const r = await client.beta.messages.create({
       model: "claude-sonnet-5-5", max_tokens: 1500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
-      system: `You write email replies for ${BIZ_NAME[m.business] || BIZ_LABEL[m.business] || "the business"}, owned by Jesse Clark. ${m.business === "atavia" || m.business === "es" ? "It is a wedding film studio; couples write in about dates, packages and availability." : ""} Warm, brief, specific to what they asked, professional. Apologise briefly for the slow reply only if it reads naturally. Never invent prices, availability or facts that are not in the thread; where something must be confirmed, offer a quick call or say you'll confirm. End with a clear next step. Sign off as "${BIZ_NAME[m.business] || "the team"}". Output only the email body, no subject line, no commentary.`,
+      system: `You write email replies for ${BIZ_NAME[m.business] || BIZ_LABEL[m.business] || "the business"}, owned by Jesse Clark.
+HOW THIS BUSINESS REPLIES (Jesse's playbook; follow it, it may include prices and packages you are allowed to quote):
+${playbook[m.business] || DEFAULT_PLAYBOOK[m.business] || DEFAULT_PLAYBOOK.brisk}
+${(metrics?.businesses?.[m.business]?.upcoming || []).length ? "DATES ALREADY BOOKED (if the inquiry asks for one of these, say the date is taken and offer to check nearby dates): " + metrics.businesses[m.business].upcoming.map((u) => u.date).join(", ") : ""}
+Warm, brief, specific to what they asked, professional. ${first ? "This is the FIRST reply to a new inquiry: thank them, answer what you can from the playbook, ask the one or two things needed to quote or hold a date, and propose a quick call." : "Apologise briefly for the slow reply only if it reads naturally."} Never invent prices, availability or facts that are not in the thread or the playbook; where something must be confirmed, offer a quick call or say you'll confirm. End with a clear next step. Sign off as "${BIZ_NAME[m.business] || "the team"}". Output only the email body, no subject line, no commentary.`,
       messages: [{ role: "user", content: `This ${m.kind} has waited more than a day for a reply. Write the reply to the latest message.\n\nTHREAD (oldest first):\n${thread}` }],
     });
     const body = r.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim(); if (!body) continue;
-    const f = { id: uid(), business: m.business, account: m.account, threadId: m.threadId, received: m.received, from: m.from, to: (String(last.from).match(/<([^>]+)>/) || [null, last.from])[1], subject: m.subject, body, status: "ready", at: new Date().toISOString() };
+    const f = { id: uid(), first, business: m.business, account: m.account, threadId: m.threadId, received: m.received, from: m.from, to: (String(last.from).match(/<([^>]+)>/) || [null, last.from])[1], subject: m.subject, body, status: "ready", at: new Date().toISOString() };
     if (dry) { out.push({ dry: true, business: f.business, kind: m.kind, chars: f.body.length, signoff: f.body.split(/\n/).slice(-2).join(" / ") }); continue; }
     list.unshift(f);
-    out.push({ alert: { kind: "lead", text: `Follow-up drafted for ${m.from}: ${m.subject}. Review and send it from Decisions.` }, push: { title: "Follow-up ready to send", body: `${m.from}: ${m.subject}\nWaited ${Math.round((Date.now() - new Date(m.received)) / 3600e3)}h. Open JARVIS → Decisions to review and send.`, opts: { priority: "high", tags: "envelope_with_arrow", url: "https://jarvis-hub.floral-credit-e4f0.workers.dev/#decisions" } } });
+    out.push({ alert: { kind: "lead", text: `${first ? "Reply" : "Follow-up"} drafted for ${m.from}: ${m.subject}. Review and send it from Decisions.` }, push: { title: first ? "New lead: reply drafted" : "Follow-up ready to send", body: `${m.from}: ${m.subject}\nWaited ${Math.round((Date.now() - new Date(m.received)) / 3600e3)}h. Open JARVIS → Decisions to review and send.`, opts: { priority: "high", tags: "envelope_with_arrow", url: "https://jarvis-hub.floral-credit-e4f0.workers.dev/#decisions" } } });
   }
   if (dry) return out;
   await flushAlerts(env, out);
@@ -943,6 +959,40 @@ async function tripWatch(env) {
   await kv.put(env, "trips", keep);
 }
 
+/* ---------------- competitors: weekly price/package scan ---------------- */
+const pageText = (h) => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+function priceLines(t) {
+  const out = new Set(); const re = /\$\s?\d[\d,]*(?:\.\d{2})?(?:\s?(?:k|K|\+|per\s+\w+|\/\s?\w+))?/g; let m;
+  while ((m = re.exec(t))) { const a = Math.max(0, m.index - 70), b = Math.min(t.length, m.index + m[0].length + 50); out.add(t.slice(a, b).trim()); if (out.size > 60) break; }
+  return [...out];
+}
+async function scanCompetitors(env) {
+  const comps = (await kv.get(env, "competitors")) || []; if (!comps.length) return [];
+  const snaps = (await kv.get(env, "competitor_snaps")) || {}; const changes = (await kv.get(env, "competitor_changes")) || []; const fresh = [];
+  for (const c of comps) {
+    try {
+      const r = await within(fetch(c.url, { headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", "accept-language": "en-US,en;q=0.9" }, redirect: "follow" }), 12000, null);
+      if (!r || !r.ok) { c.lastError = "HTTP " + (r?.status || "timeout"); continue; }
+      const text = pageText(await r.text()); const prices = priceLines(text); const key = c.url;
+      const prev = snaps[key]; const now = { at: new Date().toISOString(), prices, words: text.split(" ").length };
+      if (prev) {
+        const added = prices.filter((x) => !prev.prices.includes(x)), removed = prev.prices.filter((x) => !prices.includes(x));
+        const amt = (x) => (x.match(/\$\s?\d[\d,]*/) || [""])[0];
+        const addedAmts = added.map(amt), removedAmts = removed.map(amt);
+        const realAdded = added.filter((x) => !removedAmts.includes(amt(x))), realRemoved = removed.filter((x) => !addedAmts.includes(amt(x)));
+        if (realAdded.length || realRemoved.length) {
+          const summary = [realAdded.length ? "new/changed prices: " + realAdded.slice(0, 4).map((x) => "“" + x.slice(0, 90) + "”").join("; ") : "", realRemoved.length ? "no longer shown: " + realRemoved.slice(0, 3).map(amt).join(", ") : ""].filter(Boolean).join(" · ");
+          const ch = { at: now.at, label: c.label, url: c.url, business: c.business || "", summary }; changes.unshift(ch); fresh.push(ch);
+        }
+      }
+      snaps[key] = now; c.lastScan = now.at; c.priceCount = prices.length; delete c.lastError;
+    } catch (e) { c.lastError = String(e.message || e).slice(0, 80); }
+  }
+  await kv.put(env, "competitor_snaps", snaps); await kv.put(env, "competitors", comps); await kv.put(env, "competitor_changes", changes.slice(0, 30));
+  if (fresh.length) { await flushAlerts(env, fresh.map((ch) => ({ alert: { kind: "watch", text: `Competitor change: ${ch.label}: ${ch.summary}`.slice(0, 300), url: ch.url }, push: { title: "Competitor change: " + ch.label, body: ch.summary.slice(0, 400), opts: { tags: "eyes", url: ch.url } } }))); }
+  return fresh;
+}
+
 /* ---------------- worker ---------------- */
 export default {
   async scheduled(event, env, ctx) {
@@ -954,6 +1004,9 @@ export default {
       await weddingWeather(env).catch(() => null);
       await appStores(env).catch((e) => console.log("app stores", e.message));
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
+      const dow = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }), hr = localHour(env);
+      if (dow === "Sun" && hr === 20) await scanCompetitors(env).catch((e) => console.log("competitors", e.message));
+      if (dow === "Mon" && hr === 6) { const hadWeekly = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === "weekly" && Date.now() - new Date(b.at) < 3 * 86400e3); if (!hadWeekly) { const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} }); await makeMorning(env, fake, "weekly").catch((e) => pushAlert(env, { kind: "watch", text: "weekly review failed: " + e.message })); } }
       const slot = SLOT_HOURS(env)[localHour(env)];
       const recent = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === slot && Date.now() - new Date(b.at) < 3 * 3600e3); // never two of the same brief in one morning
       if (slot && !recent) {
@@ -1032,6 +1085,7 @@ export default {
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
+    if (p === "/api/competitors/scan" && request.method === "POST") return json({ changes: await scanCompetitors(env), competitors: (await kv.get(env, "competitors")) || [] });
     if (p === "/api/apps/targets") return json([...APPS, ...((await kv.get(env, "apps_watch")) || [])].filter((a) => a.ios));
     if (p === "/api/apps") return json(url.searchParams.get("fresh") ? await appStores(env) : ((await kv.get(env, "apps")) || {}));
     if (p === "/api/followups/run" && request.method === "POST") { if (url.searchParams.get("dry")) return json(await makeFollowups(env, { minAgeH: +url.searchParams.get("minAge") || 0, dry: true })); await makeFollowups(env); return json((await kv.get(env, "followups")) || []); }
