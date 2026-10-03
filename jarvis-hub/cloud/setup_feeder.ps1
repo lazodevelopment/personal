@@ -24,7 +24,8 @@ Undo:
 param(
   [Parameter(Mandatory = $true)][string]$Project,
   [string]$Zone = "us-central1-a",
-  [switch]$DryRun
+  [switch]$DryRun,
+  [switch]$OnlyInstall   # the VM already exists: just copy the files and (re)install
 )
 $ErrorActionPreference = "Stop"
 $gc = "C:\Users\kurvh\google-cloud-sdk\bin\gcloud.cmd"
@@ -39,6 +40,7 @@ function G([string[]]$a, [switch]$OkToFail) {
   if ($LASTEXITCODE -ne 0 -and -not $OkToFail) { throw "gcloud failed: $($a -join ' ')" }
 }
 
+if (-not $OnlyInstall) {
 G @("services", "enable", "compute.googleapis.com", "iam.googleapis.com", "searchconsole.googleapis.com", "--project", $Project)
 G @("iam", "service-accounts", "create", "jarvis-feeder", "--display-name", "JARVIS feeder", "--project", $Project) -OkToFail
 $needOwner = @()
@@ -55,11 +57,13 @@ G @("compute", "instances", "create", "jarvis-feeder", "--project", $Project, "-
     "--boot-disk-size", "30GB", "--boot-disk-type", "pd-standard",
     "--service-account", $sa, "--scopes", "cloud-platform,https://www.googleapis.com/auth/webmasters.readonly") -OkToFail
 if (-not $DryRun) { Write-Host "Waiting 60 s for the VM to boot..."; Start-Sleep -Seconds 60 }
+} else { $needOwner = @() }
 
 $files = @("collect_metrics.py", "collect_traffic.py", "collect_flights.py", "collect_cams.py", "collect_watch.py", ".hub-key", "cloud\install.sh", "cloud\crontab.txt") | ForEach-Object { Join-Path $here $_ }
-G @("compute", "ssh", "jarvis-feeder", "--project", $Project, "--zone", $Zone, "--command", "mkdir -p ~/jarvis")
-G (@("compute", "scp") + $files + @("jarvis-feeder:~/jarvis/", "--project", $Project, "--zone", $Zone))
-G @("compute", "ssh", "jarvis-feeder", "--project", $Project, "--zone", $Zone, "--command", "bash ~/jarvis/install.sh")
+$sshOpts = @("--project", $Project, "--zone", $Zone, "--strict-host-key-checking=no", "--quiet")
+G (@("compute", "ssh", "jarvis-feeder") + $sshOpts + @("--command", "mkdir -p ~/jarvis"))
+G (@("compute", "scp") + $files + @("jarvis-feeder:~/jarvis/") + $sshOpts)
+G (@("compute", "ssh", "jarvis-feeder") + $sshOpts + @("--command", "bash ~/jarvis/install.sh"))
 
 Write-Host ""
 Write-Host "Check the hub's System strip and Watch panel over the next 15 minutes. When the feeds look right," -ForegroundColor Green
