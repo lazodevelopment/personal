@@ -552,7 +552,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
         <form id="trackForm" class="ask" style="margin:0"><input id="trackQ" placeholder="Track a flight: AA 2612, SWA653, N123AB" autocomplete="off" aria-label="Flight number"><button class="btn primary">TRACK</button></form>
         <div id="trackOut" class="empty" style="margin-top:6px"></div>
         <div id="flightCard" class="fcard" hidden></div>
-        <div id="camView" class="camview" hidden><div class="camhead"><span id="camName"></span><button class="btn sm" id="camClose">✕</button></div><img id="camImg" alt="Traffic camera"><div class="empty" id="camMeta"></div></div>
+        <div id="camView" class="camview" hidden><div class="camhead"><span id="camTitle"></span><button class="btn sm" id="camClose">✕</button></div><img id="camImg" alt="Traffic camera"><div class="empty" id="camMeta"></div></div>
         <div id="worldInfo" class="winfo"></div>
       </div>
     </div>
@@ -1655,7 +1655,7 @@ function wcamMarker(w) {
 }
 function openWebcam(w) {
   clearInterval(camTimer);
-  $("#camName").textContent = w.n; $("#camView").hidden = false; $("#camImg").src = w.img || w.thumb;
+  $("#camTitle").textContent = w.n; $("#camView").hidden = false; $("#camImg").src = w.img || w.thumb;
   $("#camMeta").innerHTML = `${esc(w.city)} · Windy webcam${w.live || w.page ? ` · <a href="${esc(w.live || w.page)}" target="_blank" rel="noopener">watch live / timelapse</a>` : ""}`;
 }
 async function loadGlobal() { try { const d = await fetch("/api/world/global").then(r => r.json()); globalAc = d.ac || []; globalAt = d.at ? new Date(d.at).getTime() : Date.now(); } catch {} renderWorld(false); }
@@ -1668,7 +1668,7 @@ let camTimer = null;
 function camSrc(c) { if (c.img.startsWith("tx:")) { const [, d, ...id] = c.img.split(":"); return `/api/world/cam?d=${d}&id=${encodeURIComponent(id.join(":"))}`; } return c.img; }
 function openCam(c) {
   const show = () => { const u = camSrc(c); $("#camImg").src = u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(); $("#camMeta").textContent = `${c.src} · updated ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })} · refreshes every 30 s`; };
-  $("#camName").textContent = c.n; $("#camView").hidden = false; show(); clearInterval(camTimer); camTimer = setInterval(show, 30000);
+  $("#camTitle").textContent = c.n; $("#camView").hidden = false; show(); clearInterval(camTimer); camTimer = setInterval(show, 30000);
 }
 $("#camClose").onclick = () => { $("#camView").hidden = true; clearInterval(camTimer); $("#camImg").removeAttribute("src"); };
 // only draw cameras near the current view so thousands of markers don't bog down the page
