@@ -62,7 +62,7 @@ if (-not $DryRun) { Write-Host "Waiting 60 s for the VM to boot..."; Start-Sleep
 $files = @("collect_metrics.py", "collect_traffic.py", "collect_flights.py", "collect_cams.py", "collect_watch.py", ".hub-key", "cloud\install.sh", "cloud\crontab.txt") | ForEach-Object { Join-Path $here $_ }
 $sshOpts = @("--project", $Project, "--zone", $Zone, "--strict-host-key-checking=no", "--quiet")
 G (@("compute", "ssh", "jarvis-feeder") + $sshOpts + @("--command", "mkdir -p ~/jarvis"))
-G (@("compute", "scp") + $files + @("jarvis-feeder:~/jarvis/") + $sshOpts)
+G (@("compute", "scp") + $files + @("jarvis-feeder:jarvis/") + $sshOpts)
 G (@("compute", "ssh", "jarvis-feeder") + $sshOpts + @("--command", "bash ~/jarvis/install.sh"))
 
 Write-Host ""

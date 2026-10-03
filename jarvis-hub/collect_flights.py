@@ -56,16 +56,19 @@ def global_flights():
 
 
 def main():
-    import time
+    import time, sys
+    # --global-only: the PC (OpenSky refuses Google Cloud)   --local-only: the cloud feeder (adsb.lol/adsb.fi are fine from there)
+    do_global, do_local = "--local-only" not in sys.argv, "--global-only" not in sys.argv
     try:
         last = float(open(STAMP).read()) if os.path.exists(STAMP) else 0
-        if time.time() - last >= GLOBAL_EVERY:
+        if do_global and time.time() - last >= GLOBAL_EVERY:
             g = global_flights()
             r = hub("/api/world/globalfeed", g)
             open(STAMP, "w").write(str(time.time()))
             print(datetime.now().strftime("%H:%M:%S"), f"global: {len(g['ac'])} aircraft ->", r)
     except Exception as e:
         print("global flights failed:", str(e)[:120])
+    if not do_local: return
     want = hub("/api/world/want") or {}
     lat, lon, nm = want.get("lat", 33.15), want.get("lon", -96.82), want.get("nm", 80)
     near = [slim(a) for a in adsb(f"/lat/{lat:.3f}/lon/{lon:.3f}/dist/{nm}") if a.get("lat") is not None]

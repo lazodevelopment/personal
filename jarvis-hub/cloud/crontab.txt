@@ -1,5 +1,5 @@
 # JARVIS cloud feeder (installed by cloud/install.sh). Times are UTC.
-* * * * * cd __HOME__/jarvis && .venv/bin/python collect_flights.py >> flights.log 2>&1
+* * * * * cd __HOME__/jarvis && .venv/bin/python collect_flights.py --local-only >> flights.log 2>&1
 */5 * * * * cd __HOME__/jarvis && .venv/bin/python collect_traffic.py >> traffic.log 2>&1
 7 * * * * cd __HOME__/jarvis && .venv/bin/python collect_metrics.py >> metrics.log 2>&1
 30 9 * * * cd __HOME__/jarvis && .venv/bin/python collect_cams.py >> cams.log 2>&1
