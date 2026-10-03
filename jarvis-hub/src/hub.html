@@ -119,7 +119,7 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .core canvas{position:absolute;inset:0;width:100%;height:100%}
 .core .r1{animation:spin 14s linear infinite;transform-origin:50% 50%;stroke:rgb(var(--glow))}
 .core .r2{animation:spin 9s linear infinite reverse;transform-origin:50% 50%;stroke:rgb(var(--glow2))}
-.core .pulse{animation:pulse 2.4s ease-in-out infinite;transform-origin:50% 50%;fill:rgb(var(--glow))}
+.core .pulse{animation:pulse 2.4s ease-in-out infinite;transform-origin:50% 50%;fill:rgb(var(--glow));opacity:.12!important}
 .core.listening .pulse{animation-duration:.6s}.core.listening .r1{stroke:var(--amber)}
 .core.thinking .r1{animation-duration:2s}.core.thinking .r2{animation-duration:1.2s}
 .core.talking .pulse{animation:none;opacity:.25}
@@ -1213,33 +1213,86 @@ function clockTick() {
 }
 setInterval(clockTick, 1000); clockTick(); setInterval(setLighting, 60000);
 
-/* ---------- visualizer ---------- */
-const viz = $("#viz"), vctx = viz.getContext("2d");
+/* ---------- visualizer: the living core ----------
+   A sphere of points, drawn on the 2D canvas with a hand-rolled 3D projection (no extra library).
+   Bass swells the whole sphere, higher bands ripple its surface by latitude, a waveform halo runs round
+   the outside while sound plays. Each state has its own motion: idle drifts, listening tightens and turns
+   amber, thinking churns, speaking and radio follow the audio. Values ease frame to frame; the gain adapts to
+   the source so the radio doesn't peg it; phones use fewer points and half the frame rate. */
+const viz = $("#viz"), vctx = viz.getContext("2d"); const VIZ_PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
-function drawViz() {
-  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2, R = 48, glow = getComputedStyle(document.documentElement).getPropertyValue("--glow").trim();
-  vctx.clearRect(0, 0, W, H);
-  if (vizMode === "idle") { vizRaf = null; return; }
-  let data;
-  if (analyser) { data = new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(data); }
-  const bars = 72;
-  for (let i = 0; i < bars; i++) {
-    let v;
-    if (data) { const idx = Math.floor(Math.pow(i / bars, 1.6) * (data.length * 0.6)); v = data[idx] / 255; }
-    else { fakePhase += 0.0009; v = 0.25 + 0.35 * Math.abs(Math.sin(i * 0.5 + fakePhase * 40)) * (0.6 + 0.4 * Math.sin(fakePhase * 90 + i)); }
-    if (vizMode === "listening") v = v * 0.7; else if (vizMode === "radio") v = v * 0.6;
-    const len = 6 + v * 46, a = (i / bars) * Math.PI * 2 - Math.PI / 2;
-    const x1 = cx + Math.cos(a) * R, y1 = cy + Math.sin(a) * R, x2 = cx + Math.cos(a) * (R + len), y2 = cy + Math.sin(a) * (R + len);
-    vctx.strokeStyle = `rgba(${vizMode === "listening" ? "255,179,64" : glow},${0.35 + v * 0.65})`; vctx.lineWidth = 3; vctx.lineCap = "round";
-    vctx.beginPath(); vctx.moveTo(x1, y1); vctx.lineTo(x2, y2); vctx.stroke();
+const CORE = (() => {
+  const N = VIZ_PHONE ? 650 : 1500, pts = [], GA = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = GA * i; pts.push({ x: Math.cos(t) * r, y, z: Math.sin(t) * r, t, band: Math.min(23, Math.floor(Math.abs(y) * 24)), seed: Math.random() * 6.283 }); }
+  return { pts, bands: new Float32Array(24), smooth: new Float32Array(24), wave: new Float32Array(180), rotY: 0, rotX: 0.35, swell: 0, level: 0, gain: 60, tint: [25, 211, 255], mix: 0, last: 0, fps: 60 };
+})();
+const STATE_TINT = { idle: [25, 211, 255], listening: [255, 179, 64], thinking: [167, 139, 250], speaking: [160, 236, 255], radio: [57, 240, 168] };
+const freqBuf = new Uint8Array(256), timeBuf = new Uint8Array(512);
+function readAudio() {
+  const C = CORE;
+  if (analyser) {
+    analyser.getByteFrequencyData(freqBuf); analyser.getByteTimeDomainData(timeBuf);
+    // 24 log-spaced bands from 256 bins; adaptive gain tracks the recent peak so speech and music both fill the range
+    let peak = 0;
+    for (let b = 0; b < 24; b++) { const lo = Math.floor(Math.pow(b / 24, 1.7) * 150), hi = Math.max(lo + 1, Math.floor(Math.pow((b + 1) / 24, 1.7) * 150)); let sum = 0; for (let i = lo; i < hi; i++) sum += freqBuf[i]; C.bands[b] = sum / (hi - lo); if (C.bands[b] > peak) peak = C.bands[b]; }
+    C.gain = Math.max(40, peak > C.gain ? C.gain + (peak - C.gain) * 0.3 : C.gain * 0.995);
+    for (let b = 0; b < 24; b++) { const v = Math.min(1, C.bands[b] / C.gain); C.smooth[b] += (v - C.smooth[b]) * (v > C.smooth[b] ? 0.45 : 0.12); }
+    for (let i = 0; i < 180; i++) { const v = (timeBuf[Math.floor(i * 512 / 180)] - 128) / 128; C.wave[i] += (v - C.wave[i]) * 0.5; }
+    const bass = (C.smooth[0] + C.smooth[1] + C.smooth[2]) / 3; C.swell += (bass - C.swell) * 0.25; C.level += (C.smooth.reduce((a, v) => a + v, 0) / 24 - C.level) * 0.2;
+  } else {
+    const t = fakePhase; let target = 0;
+    if (vizMode === "thinking") target = 0.35 + 0.25 * Math.sin(t * 7); else if (vizMode === "listening") target = 0.15; else if (vizMode === "speaking") target = 0.3 + 0.3 * Math.abs(Math.sin(t * 9)); // browser voice has no analyser
+    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1;
+    for (let b = 0; b < 24; b++) { const v = vizMode === "idle" ? 0 : target * (0.5 + 0.5 * Math.sin(t * 5 + b * 0.8)); C.smooth[b] += (v - C.smooth[b]) * 0.15; }
+    for (let i = 0; i < 180; i++) C.wave[i] *= 0.9;
   }
-  // inner glow disc
-  const g = vctx.createRadialGradient(cx, cy, 4, cx, cy, R); const lvl = data ? data.slice(0, 16).reduce((a, b) => a + b, 0) / (16 * 255) : 0.4 + 0.2 * Math.sin(fakePhase * 120);
-  g.addColorStop(0, `rgba(255,255,255,${0.5 + lvl * 0.5})`); g.addColorStop(0.4, `rgba(${glow},${0.3 + lvl * 0.5})`); g.addColorStop(1, `rgba(${glow},0)`);
-  vctx.fillStyle = g; vctx.beginPath(); vctx.arc(cx, cy, R, 0, Math.PI * 2); vctx.fill();
+}
+function drawViz(now = 0) {
+  const C = CORE; vizRaf = null;
+  if (document.hidden) return;
+  const want = (VIZ_PHONE || vizMode === "idle") ? 1000 / 30 : 1000 / 60;
+  if (now - C.last < want - 2) { vizRaf = requestAnimationFrame(drawViz); return; }
+  const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt;
+  readAudio();
+  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2;
+  const tint = STATE_TINT[vizMode] || STATE_TINT.idle; for (let i = 0; i < 3; i++) C.tint[i] += (tint[i] - C.tint[i]) * 0.08;
+  const [tr, tg, tb] = C.tint.map(Math.round);
+  const spin = vizMode === "thinking" ? 1.6 : vizMode === "listening" ? 0.9 : vizMode === "idle" ? 0.18 : 0.45 + C.level * 0.8;
+  C.rotY += dt * spin; C.rotX += ((vizMode === "thinking" ? 0.35 + 0.5 * Math.sin(fakePhase * 1.3) : 0.35 + 0.08 * Math.sin(fakePhase * 0.4)) - C.rotX) * 0.05;
+  const base = (vizMode === "listening" ? 72 : 84) * (1 + C.swell * (vizMode === "radio" ? 0.12 : 0.2));
+  const sy = Math.sin(C.rotY), cyy = Math.cos(C.rotY), sx = Math.sin(C.rotX), cxx = Math.cos(C.rotX);
+  vctx.clearRect(0, 0, W, H);
+  // glow behind the sphere
+  const g = vctx.createRadialGradient(cx, cy, 2, cx, cy, base * 1.15);
+  const gl = vizMode === "idle" ? 0.25 : 0.35 + C.swell * 0.6;
+  g.addColorStop(0, `rgba(255,255,255,${0.35 * gl})`); g.addColorStop(0.35, `rgba(${tr},${tg},${tb},${0.28 * gl})`); g.addColorStop(1, `rgba(${tr},${tg},${tb},0)`);
+  vctx.fillStyle = g; vctx.beginPath(); vctx.arc(cx, cy, base * 1.15, 0, Math.PI * 2); vctx.fill();
+  // points: two depth passes so near points sit on top
+  const ripple = vizMode === "idle" ? 0 : vizMode === "radio" ? 0.22 : 0.3, breathe = vizMode === "idle" ? 0.035 : 0.02;
+  for (let pass = 0; pass < 2; pass++) {
+    for (const p of C.pts) {
+      const d = 1 + C.smooth[p.band] * ripple * (0.6 + 0.4 * Math.sin(p.t * 2 + fakePhase * 3)) + breathe * Math.sin(fakePhase * 1.7 + p.seed) + (vizMode === "thinking" ? 0.1 * Math.sin(fakePhase * 6 - p.y * 7 + p.t) : 0);
+      let x = p.x * d, y = p.y * d, z = p.z * d;
+      let x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy;                 // around Y
+      let y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx;                // tilt X
+      if ((pass === 0) !== (z2 < 0)) continue;
+      const persp = 1 / (1.9 - z2 * 0.6), px = cx + x1 * base * persp * 1.9, py = cy + y2 * base * persp * 1.9;
+      const depth = (z2 + 1) / 2, a = (0.18 + depth * 0.82) * (vizMode === "idle" ? 0.55 : 0.75 + C.level * 0.25), sz = (VIZ_PHONE ? 1.6 : 1.3) + depth * 1.6 + C.smooth[p.band] * 1.2;
+      vctx.fillStyle = depth > 0.82 ? `rgba(255,255,255,${a})` : `rgba(${tr},${tg},${tb},${a})`;
+      vctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
+    }
+  }
+  // waveform halo while sound plays
+  if (analyser && C.level > 0.02) {
+    vctx.beginPath();
+    for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * 14; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
+    vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.25 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.shadowColor = `rgb(${tr},${tg},${tb})`; vctx.shadowBlur = 8; vctx.stroke(); vctx.shadowBlur = 0;
+  }
   vizRaf = requestAnimationFrame(drawViz);
 }
-function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode === "radio" ? "♪ " + RADIO[radioIdx].n.toLowerCase() : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (mode !== "idle" && !vizRaf) drawViz(); if (mode === "idle") { vctx.clearRect(0, 0, viz.width, viz.height); } }
+function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode === "radio" ? "♪ " + RADIO[radioIdx].n.toLowerCase() : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !vizRaf) vizRaf = requestAnimationFrame(drawViz); });
+vizRaf = requestAnimationFrame(drawViz);
 function attachAudio(el) {
   try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(el); const an = actx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = .8; src.connect(an); an.connect(actx.destination); return an; } catch { return null; }
 }
