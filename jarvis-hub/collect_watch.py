@@ -139,7 +139,7 @@ def search():
                 rows = [[x["keys"][0], int(x["clicks"]), int(x["impressions"])] for x in q.json().get("rows", [])]
                 tq = s.post(f"https://searchconsole.googleapis.com/webmasters/v3/sites/{__import__('urllib.parse').parse.quote(site, safe='')}/searchAnalytics/query",
                             json={"startDate": str(end - dt.timedelta(days=6)), "endDate": str(end), "dimensions": ["query"], "rowLimit": 5}, timeout=60)
-                top = [[x["keys"][0], int(x["clicks"]), int(x["impressions"])] for x in tq.json().get("rows", [])]
+                top = [[x["keys"][0][:80], int(x["clicks"]), int(x["impressions"])] for x in tq.json().get("rows", [])]   # people search whole essays sometimes
                 v["sites"].append({"site": site, "days": rows, "top": top})
             except Exception as e:
                 v["sites"].append({"site": site, "error": str(e)[:160]})
