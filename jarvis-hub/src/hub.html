@@ -1163,10 +1163,21 @@ function blip(freq) { try { actx = actx || new (window.AudioContext || window.we
 
 /* ---------- webcams ---------- */
 function toEmbed(u) {
-  try { const url = new URL(u.trim());
-    if (url.hostname.includes("youtu.be")) return "https://www.youtube.com/embed/" + url.pathname.slice(1) + "?autoplay=1&mute=1";
-    if (url.hostname.includes("youtube.com")) { if (url.pathname.startsWith("/embed/")) return url.href; const v = url.searchParams.get("v"); if (v) return `https://www.youtube.com/embed/${v}?autoplay=1&mute=1`; const live = url.pathname.match(/\/live\/([\w-]+)/); if (live) return `https://www.youtube.com/embed/${live[1]}?autoplay=1&mute=1`; const ch = url.pathname.match(/\/(@[\w.-]+|channel\/[\w-]+)/); if (ch) return `https://www.youtube.com/embed/live_stream?channel=${ch[1].replace("channel/","")}&autoplay=1&mute=1`; }
-    return null; } catch { return undefined; }
+  u = String(u || "").trim();
+  if (/^[\w-]{11}$/.test(u)) return `https://www.youtube.com/embed/${u}?autoplay=1&mute=1`;           // a bare video id
+  if (!/^[a-z]+:\/\//i.test(u)) u = "https://" + u;                                                  // pasted without https://
+  try { const url = new URL(u); const yt = (id) => `https://www.youtube.com/embed/${id}?autoplay=1&mute=1`;
+    if (url.hostname.includes("youtu.be")) return yt(url.pathname.split("/")[1]);
+    if (/(^|\.)youtube(-nocookie)?\.com$/.test(url.hostname)) {
+      if (url.pathname.startsWith("/embed/")) return url.href;
+      const v = url.searchParams.get("v"); if (v) return yt(v);
+      const m = url.pathname.match(/\/(?:live|shorts|v)\/([\w-]{11})/); if (m) return yt(m[1]);
+      const ch = url.pathname.match(/\/channel\/(UC[\w-]+)/); if (ch) return `https://www.youtube.com/embed/live_stream?channel=${ch[1]}&autoplay=1&mute=1`;
+      if (/^\/@/.test(url.pathname)) return { ask: "That's a channel page. Open the channel's live video and paste that link (it contains /live/ or watch?v=)." };
+      return { ask: "I couldn't find a video id in that YouTube link. Use the Share button on the video and paste that link." };
+    }
+    if (!/\.[a-z]{2,}$/i.test(url.hostname)) return { ask: "That doesn't look like a web address." };
+    return null; } catch { return { ask: "That doesn't look like a web address." }; }
 }
 // YouTube refuses embeds that arrive without the page's origin (Error 153): send it explicitly
 function ytSrc(u) { try { const x = new URL(u); if (/youtube(-nocookie)?\.com$/.test(x.hostname)) { x.searchParams.set("origin", location.origin); x.searchParams.set("playsinline", "1"); x.searchParams.set("enablejsapi", "1"); } return x.href; } catch { return u; } }
@@ -1177,7 +1188,7 @@ function renderCams() {
   $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
   $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
 }
-$("#addcam").onsubmit = async (e) => { e.preventDefault(); const raw = $("#camUrl").value.trim(); const embed = toEmbed(raw); if (embed === undefined) return; const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); };
+$("#addcam").onsubmit = async (e) => { e.preventDefault(); const raw = $("#camUrl").value.trim(); if (!raw) return; const embed = toEmbed(raw); if (embed && embed.ask) { addMsg("sys", embed.ask); $("#camCount").textContent = "not added"; setTimeout(renderCams.bind(null), 2500); return; } const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); $("#camCount").textContent = `${state.webcams.length} feeds · added ${name}`; };
 $("#cams").onclick = async (e) => { const b = e.target.closest(".x"); if (!b) return; state.webcams.splice(+b.dataset.i, 1); renderCams(); await save({ webcams: state.webcams }); };
 
 /* ---------- notes, state, system, clock ---------- */
@@ -1203,10 +1214,11 @@ function renderSys() {
 }
 function clockTick() {
   const n = new Date(), phone = innerWidth < 900;
-  $("#clock").textContent = phone ? n.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) : n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  $("#date").textContent = phone ? n.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : n.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric",year:"numeric"});
-  $("#wallClock").textContent = n.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-  const here = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const here = state.cfg?.home?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone;   // the big clock shows home time (TX or AZ), wherever the device is
+  const o = { timeZone: here };
+  $("#clock").textContent = phone ? n.toLocaleTimeString([], {...o, hour:"numeric",minute:"2-digit"}) : n.toLocaleTimeString([], {...o, hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("#date").textContent = phone ? n.toLocaleDateString([], {...o, weekday:"short",month:"short",day:"numeric"}) : n.toLocaleDateString([], {...o, weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  $("#wallClock").textContent = n.toLocaleTimeString([], {...o, hour:"2-digit",minute:"2-digit"});
   const zones = [["ET", "America/New_York"], ["CT", "America/Chicago"], ["MT", "America/Denver"], ["AZ", "America/Phoenix"], ["PT", "America/Los_Angeles"], ["AK", "America/Anchorage"], ["HI", "Pacific/Honolulu"]];
   const zHtml = zones.map(([k, tz]) => `<span class="${tz === here ? "here" : ""}"><b>${k}</b>${n.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).replace(" ", "").toLowerCase()}</span>`).join("");
   $("#zones").innerHTML = zHtml; const z2 = $("#zones2"); if (z2) z2.innerHTML = zHtml;
@@ -1525,7 +1537,7 @@ $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.d
 addEventListener("resize", () => { if (map) map.invalidateSize(); });
 
 /* ---------- home location ---------- */
-function renderHome() { try { renderScanner(); } catch {} const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
+function renderHome() { try { renderScanner(); clockTick(); } catch {} const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
 async function setHome(body) { try { state.cfg.home = await fetch("/api/home", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()); renderHome(); await loadState(); loadWeather(); if (globe) { globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200); loadFlights(); } } catch {} }
 $("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = hm.mode === "auto" ? { key: hm.key === "az" ? "tx" : "az", mode: "manual" } : hm.key === "tx" ? { key: "az", mode: "manual" } : { mode: "auto", deviceTz: Intl.DateTimeFormat().resolvedOptions().timeZone }; setHome(order); };
 
