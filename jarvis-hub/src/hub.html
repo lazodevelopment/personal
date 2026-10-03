@@ -1409,7 +1409,7 @@ function addMsg(role, text) { const el = document.createElement("div"); el.class
 function localAnswer(t) {
   const rawText = t.trim(); t = t.toLowerCase().trim();
   // "add cam <link>", "add feed called Lake Louise <link>", "add <link> as Lake Louise": the link keeps its case (YouTube ids are case-sensitive)
-  if (/^(add|save)\s/.test(t) && /(cam|camera|feed|webcam|stream|youtu|http)/.test(t)) { const um = rawText.match(/(https?:\/\/\S+|[\w.-]+\.[a-z]{2,}\/\S*|youtu\S+)/i); if (um) { const url = um[1]; const rest = rawText.replace(url, " ").replace(/^(add|save)\s+(a\s+|this\s+|the\s+)?(cam|camera|feed|webcam|live feed|stream)?\s*/i, "").replace(/(called|named|as)/i, " ").replace(/[\s:]+/g, " ").trim(); if (PHONE) showView("feeds"); addFeed(url, rest ? rest.replace(/\w/g, (c) => c.toUpperCase()) : ""); return "Adding it to Live Feeds."; } }
+  if (/^(add|save)\s/.test(t) && /(cam|camera|feed|webcam|stream|youtu|http)/.test(t)) { const um = rawText.match(/(https?:\/\/\S+|\b[\w.-]+\.[a-z]{2,}\/\S*|\byoutu\S+)/i); if (um) { const url = um[1]; const rest = rawText.replace(url, " ").replace(/^(add|save)\s+(a\s+|this\s+|the\s+)?(cam|camera|feed|webcam|live feed|stream)?\s*/i, "").replace(/\b(called|named|as)\b/i, " ").replace(/[\s:]+/g, " ").trim(); if (PHONE) showView("feeds"); addFeed(url, rest ? rest.replace(/\b\w/g, (c) => c.toUpperCase()) : ""); return "Adding it to Live Feeds."; } }
   if (/^(what('s| is) the )?time\??$/.test(t)) return "It's " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + ".";
   if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
   if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
