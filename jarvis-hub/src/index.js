@@ -1067,6 +1067,9 @@ export default {
       if (request.method === "GET") { const out = {}; await Promise.all(STATE_KEYS.map(async (k) => { const v = await kv.get(env, k); if (v != null) out[k] = v; })); return json(out); }
       if (request.method === "POST" || request.method === "PUT") {
         const body = await request.json(); const saved = [];
+        // two feeders (PC and cloud) may post the same snapshot; a feeder that cannot read a business must not wipe the other's good numbers
+        if (body.metrics?.businesses) { const cur = await kv.get(env, "metrics"); for (const [id, b] of Object.entries(body.metrics.businesses)) { const prev = cur?.businesses?.[id]; if (b?.error && prev && !prev.error && Date.now() - new Date(cur.collectedAt) < 6 * 3600e3) body.metrics.businesses[id] = prev; } }
+        if (body.traffic?.sites) { const cur = await kv.get(env, "traffic"); for (const [id, t] of Object.entries(body.traffic.sites)) { const prev = cur?.sites?.[id]; if (t?.error && prev && !prev.error && Date.now() - new Date(cur.at) < 30 * 60e3) body.traffic.sites[id] = prev; } }
         for (const k of STATE_KEYS) if (k in body) {
           if (k === "brief" && body.brief?.source !== "bridge" && !body.brief?.force) { const cur = await kv.get(env, "brief"); if (cur?.source === "bridge") continue; } // live bridges outrank the hourly snapshot
           if (k === "watch" && body.watch && !Array.isArray(body.watch)) body.watch = { ...((await kv.get(env, "watch")) || {}), ...body.watch }; // PC and cloud feeder each post their own sections

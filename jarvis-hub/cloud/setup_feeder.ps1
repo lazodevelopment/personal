@@ -41,10 +41,14 @@ function G([string[]]$a, [switch]$OkToFail) {
 
 G @("services", "enable", "compute.googleapis.com", "iam.googleapis.com", "searchconsole.googleapis.com", "--project", $Project)
 G @("iam", "service-accounts", "create", "jarvis-feeder", "--display-name", "JARVIS feeder", "--project", $Project) -OkToFail
+$needOwner = @()
 foreach ($p in $firestoreProjects) {
+  $ok = $true
   foreach ($role in @("roles/datastore.viewer", "roles/serviceusage.serviceUsageConsumer")) {
-    G @("projects", "add-iam-policy-binding", $p, "--member", "serviceAccount:$sa", "--role", $role, "--condition", "None", "--quiet")
+    G @("projects", "add-iam-policy-binding", $p, "--member", "serviceAccount:$sa", "--role", $role, "--condition", "None", "--quiet") -OkToFail
+    if (-not $DryRun -and $LASTEXITCODE -ne 0) { $ok = $false }
   }
+  if (-not $ok) { $needOwner += $p; Write-Host "  (no permission on $p from this account; grant it from that project's owner, see the end)" -ForegroundColor Yellow }
 }
 G @("compute", "instances", "create", "jarvis-feeder", "--project", $Project, "--zone", $Zone,
     "--machine-type", "e2-micro", "--image-family", "debian-12", "--image-project", "debian-cloud",
@@ -63,3 +67,12 @@ Write-Host "turn off the PC copies (the PC keeps the social check and the execut
 Write-Host '  Disable-ScheduledTask -TaskName "JARVIS flights","JARVIS traffic","JARVIS metrics","JARVIS cameras"'
 Write-Host '  then edit collect_watch.bat so the PC runs:  collect_watch.py --only social'
 Write-Host "Search Console: add $sa as a Restricted user on each property (Settings > Users and permissions)."
+if ($needOwner.Count) {
+  Write-Host ""
+  Write-Host "These projects need their owner to grant read access. Sign in as that owner (gcloud auth login) and run:" -ForegroundColor Yellow
+  foreach ($p in $needOwner) {
+    Write-Host "  gcloud projects add-iam-policy-binding $p --member serviceAccount:$sa --role roles/datastore.viewer --condition None"
+    Write-Host "  gcloud projects add-iam-policy-binding $p --member serviceAccount:$sa --role roles/serviceusage.serviceUsageConsumer --condition None"
+  }
+  Write-Host "Until then the PC keeps feeding those businesses; the hub keeps the last good numbers for a project the server cannot read."
+}
