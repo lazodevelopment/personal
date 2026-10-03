@@ -12,3 +12,4 @@ collect_flights.log
 collect_cams.log
 cams_cache.json
 .gsc_cache.json
+wrangler.remote.toml

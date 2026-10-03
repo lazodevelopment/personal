@@ -1053,6 +1053,10 @@ export default {
         return json({ videoId: id, live: /"isLiveNow":true/.test(h), title, channel: handle || null });
       } catch (e) { return json({ error: String(e.message || e) }, 500); }
     }
+    if (p === "/api/err") {   // the page reports its own script errors here, so a broken device can be diagnosed without its console
+      if (request.method === "POST") { const e = await request.json().catch(() => ({})); const list = (await kv.get(env, "client_errors")) || []; list.unshift({ at: new Date().toISOString(), who, ua: String(request.headers.get("user-agent") || "").slice(0, 160), ...Object.fromEntries(Object.entries(e).map(([k, v]) => [k, String(v ?? "").slice(0, 400)])) }); await kv.put(env, "client_errors", list.slice(0, 40)); return json({ ok: true }); }
+      return json((await kv.get(env, "client_errors")) || []);
+    }
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
     if (p === "/api/inbox/thread") { const r = await bridgeCall(env, url.searchParams.get("account"), { action: "get", threadId: url.searchParams.get("t") }); if (r.error === "unknown action") r.error = "This inbox's bridge script is the older version. Paste the updated script and deploy a new version to read full emails."; return json(r, r.error ? 502 : 200); }
