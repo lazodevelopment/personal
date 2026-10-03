@@ -142,7 +142,7 @@
 
 <section class="band" style="padding-top:0">
   <div style="max-width:760px;margin:0 auto">
-    <h2 class="band-title" style="text-align:center;margin-bottom:26px">Questions about the app</h2>
+    <h2 class="band-title ap-faq-h" style="text-align:center;margin-bottom:26px">Questions about the app</h2>
     <details class="faq"><summary>Is the Lazo app free?</summary><p>Yes, completely. Every planning tool is free for couples, with no subscription, no ads and no guest cap. Lazo's business is an optional Pro plan for vendors, which sharpens their tools and never touches the rankings.</p></details>
     <details class="faq"><summary>Is Lazo on Android as well as iPhone?</summary><p>Yes. Lazo: Wedding Planner is on the App Store for iPhone and on Google Play for Android, and the same plan is at <a href="https://app.meetlazo.com">app.meetlazo.com</a> in any browser. Everything stays in sync.</p></details>
     <details class="faq"><summary>Can my partner use the app too?</summary><p>Yes. One wedding, two phones: your partner signs in to the same plan and sees the same guest list, budget, vendor threads and website. Nothing to forward.</p></details>
@@ -164,6 +164,96 @@
   </div>
 </section>
 
+<style>
+/* JC-LAZO-APP-1003-MOTION: scroll-driven motion. Everything here is transform/opacity only
+   and keys off html.motion (lazo.js sets it unless the visitor prefers reduced motion),
+   so with motion off the page simply appears. */
+@keyframes apUp{from{opacity:0;transform:translateY(calc(var(--base,0px) + 56px))}to{opacity:1;transform:translateY(calc(var(--base,0px) + var(--py,0px)))}}
+.ap-shots img{--base:0px;--py:0px;transform:translateY(calc(var(--base) + var(--py)));will-change:transform}
+.ap-shots img:nth-child(2){--base:-26px;transform:translateY(calc(var(--base) + var(--py)))}
+html.motion .ap-shots img{animation:apUp 1.1s var(--ease-out) both}
+html.motion .ap-shots img:nth-child(1){animation-delay:.25s}
+html.motion .ap-shots img:nth-child(2){animation-delay:.1s}
+html.motion .ap-shots img:nth-child(3){animation-delay:.4s}
+html.motion .ap-wrap>div:first-child>*{animation:rise .9s var(--ease-out) both;animation-delay:calc(var(--i,0)*90ms)}
+.ap-wrap>div:first-child>:nth-child(1){--i:0}.ap-wrap>div:first-child>:nth-child(2){--i:1}.ap-wrap>div:first-child>:nth-child(3){--i:2}
+.ap-wrap>div:first-child>:nth-child(4){--i:3}.ap-wrap>div:first-child>:nth-child(5){--i:4}.ap-wrap>div:first-child>:nth-child(6){--i:5}.ap-wrap>div:first-child>:nth-child(7){--i:6}
+.ap-wrap>div:first-child{will-change:transform,opacity}
+.ap-rv{opacity:1;transform:none}
+html.motion .ap-rv{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease-out),transform .9s var(--ease-out);transition-delay:calc(var(--i,0)*80ms)}
+html.motion .ap-vs>div:first-child.ap-rv{transform:translateX(-28px)}
+html.motion .ap-vs>div:last-child.ap-rv{transform:translateX(28px)}
+html.motion .ap-rv.ap-on{opacity:1;transform:none}
+html.motion .ap-f .im img{transform:scale(1.1);transition:transform 1.6s var(--ease-out)}
+html.motion .ap-f.ap-on .im img{transform:none}
+html.motion .ap-rail figure{transition-delay:calc(var(--i,0)*60ms)}
+html.motion .ap-rail img{transition:transform .5s var(--ease-out)}
+.ap-rail figure:hover img{transform:translateY(-6px)}
+.ap-hero::before{will-change:transform;transform:translateY(var(--gy,0px))}
+</style>
+<script>
+(function(){
+  var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){}
+  if(reduce)return;
+  var d=document,q=function(s){return d.querySelector(s);},qa=function(s){return [].slice.call(d.querySelectorAll(s));};
+  /* 1. reveals, staggered within each group */
+  var groups=['.ap-strip .head > *','.ap-rail figure','.ap-feats .ap-f','.ap-vs > div','.ap-faq-h','.ap-cta > *'];
+  var targets=[];
+  groups.forEach(function(sel){qa(sel).forEach(function(el,i){el.style.setProperty('--i',Math.min(i,7));el.classList.add('ap-rv');targets.push(el);});});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(en){if(!en.isIntersecting)return;en.target.classList.add('ap-on');io.unobserve(en.target);});},{rootMargin:'0px 0px -8% 0px',threshold:0.08});
+    targets.forEach(function(el){io.observe(el);});
+  }else targets.forEach(function(el){el.classList.add('ap-on');});
+  /* 2. the numbers count up the first time they are seen */
+  var counted=false;
+  function countUp(b){
+    var m=/^([^\d]*)([\d,]+)(.*)$/.exec(b.textContent.trim());if(!m)return;
+    var end=parseInt(m[2].replace(/,/g,''),10);if(!end)return;
+    var t0=null,dur=1400;
+    function step(t){if(t0===null)t0=t;var p=Math.min((t-t0)/dur,1),e=1-Math.pow(1-p,3);b.textContent=m[1]+Math.round(end*e).toLocaleString('en-US')+m[3];if(p<1)requestAnimationFrame(step);}
+    requestAnimationFrame(step);
+  }
+  var proof=q('.ap-proof');
+  if(proof&&'IntersectionObserver' in window){new IntersectionObserver(function(es,o){if(!es[0].isIntersecting||counted)return;counted=true;qa('.ap-proof b').forEach(countUp);o.disconnect();},{threshold:0.6}).observe(proof);}
+  /* 3. scroll-linked: hero phones drift at three speeds, the hero text eases away,
+        the glow shifts, and the screenshot rail glides sideways while you scroll past it */
+  var shots=qa('.ap-shots img'),text=q('.ap-wrap > div:first-child'),hero=q('.ap-hero'),rail=q('.ap-rail');
+  var speeds=[0.10,0.18,0.06],manual=false,tx=0,ty=0,ticking=false;
+  if(rail){
+    rail.addEventListener('wheel',function(e){if(Math.abs(e.deltaX)>Math.abs(e.deltaY))manual=true;},{passive:true});
+    rail.addEventListener('touchstart',function(e){tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+    rail.addEventListener('touchmove',function(e){if(Math.abs(e.touches[0].clientX-tx)>Math.abs(e.touches[0].clientY-ty)+4)manual=true;},{passive:true});
+    rail.addEventListener('pointerdown',function(e){if(e.pointerType==='mouse')manual=true;});
+    rail.addEventListener('keydown',function(){manual=true;});
+  }
+  var wide=matchMedia('(min-width:900px)');
+  function frame(){
+    ticking=false;
+    var y=window.scrollY||window.pageYOffset||0,vh=window.innerHeight||1;
+    if(hero){
+      var hh=hero.offsetHeight;
+      if(y<hh+vh){
+        var k=wide.matches?1:0.45;
+        shots.forEach(function(im,i){im.style.setProperty('--py',(-y*speeds[i]*k).toFixed(1)+'px');});
+        if(text&&wide.matches){var p=Math.min(y/(hh*0.9),1);text.style.opacity=String(1-p*0.55);text.style.transform='translateY('+(y*0.12).toFixed(1)+'px)';}
+        hero.style.setProperty('--gy',(y*0.25).toFixed(1)+'px');
+      }
+    }
+    if(rail&&!manual){
+      var r=rail.getBoundingClientRect();
+      if(r.bottom>0&&r.top<vh){
+        var prog=(vh-r.top)/(vh+r.height);prog=Math.max(0,Math.min(1,prog));
+        var e=prog*prog*(3-2*prog);
+        rail.scrollLeft=e*(rail.scrollWidth-rail.clientWidth)*0.85;
+      }
+    }
+  }
+  function onScroll(){if(ticking)return;ticking=true;requestAnimationFrame(frame);}
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  frame();
+})();
+</script>
 <script>
 /* Put the visitor's own store first; ?go sends a phone straight there (the QR and ads use it). */
 (function(){
