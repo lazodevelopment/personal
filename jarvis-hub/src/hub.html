@@ -1244,7 +1244,7 @@ function pickVoices() {
 }
 try { speechSynthesis.onvoiceschanged = pickVoices; } catch {}
 $("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the ElevenLabs voice."); if (!VOICES.length) return; VOICE = VOICES[(VOICES.indexOf(VOICE) + 1) % VOICES.length]; try { localStorage.setItem("jarvisVoice", VOICE.name); } catch {} pickVoices(); speak("This is the " + clean(VOICE.name) + " voice."); };
-function stopSpeaking() { speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); onSpeechEnd(); }
+function stopSpeaking() { const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
 function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
 function enqueueSpeech(segment) {
   if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
@@ -1351,7 +1351,7 @@ function onSpeechEnd() {
   if (replyOpen) return; // the rest of the reply is still on its way; keep the mic closed
   pendingReply = false;
   if (!hasMic || speaking || listening) return;
-  if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && $("#convOn").checked) startListen(); }, 400);
+  if ($("#convOn")?.checked && !radioOn) setTimeout(() => { if (!speaking && !listening && !replyOpen && !radioOn && $("#convOn").checked) startListen(); }, 400);
   else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
 }
 let startListen = () => {};
@@ -1371,7 +1371,7 @@ function setupVoice() {
   $("#convOn").onchange = () => { try { localStorage.setItem("jarvisConv", $("#convOn").checked ? "1" : ""); } catch {} if ($("#convOn").checked) { addMsg("sys", "Conversation mode: I'll listen after each reply. Speak over me to interrupt."); startListen(); } };
   try { if (localStorage.getItem("jarvisWake")) { $("#wakeOn").checked = true; startWake(); } if (localStorage.getItem("jarvisConv")) $("#convOn").checked = true; } catch {}
   function startWake() {
-    if (wake || listening) return;
+    if (wake || listening || (PHONE && radioOn)) return;
     wake = new SR(); wake.continuous = true; wake.interimResults = true; wake.lang = "en-US";
     wake.onresult = (e) => {
       const r = e.results[e.results.length-1]; const t = r[0].transcript.toLowerCase();
@@ -1682,10 +1682,11 @@ function radioPlay(i = radioIdx) {
   radioOn = true; unlockPlayer(); radioViz();
   radio.src = "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
   radioUI("tuning…");
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
   radio.play().then(() => { radioRetry = 0; radioUI(); if (!speaking && !listening) setViz("idle"); })
     .catch(e => { if (e.name === "AbortError") return; radioOn = false; radioUI("couldn't start: " + (e.name === "NotAllowedError" ? "tap play once to allow audio" : e.message)); });
 }
-function radioStop() { radioOn = false; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); }
+function radioStop() { radioOn = false; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); if (PHONE && $("#wakeOn")?.checked && !listening && typeof startWakeAgain === "function") setTimeout(() => startWakeAgain(), 300); }
 function radioDuck(on) { if (!radioOn) return; radio.volume = on ? radioLevel() * 0.15 : radioLevel(); if (!on && radio.paused && radio.getAttribute("src")) radio.play().catch(() => {}); }
 radio.onerror = () => { if (!radioOn) return; if (radioRetry++ < 5) { radioUI("reconnecting…"); setTimeout(() => radioOn && radioPlay(radioIdx), 2000 * radioRetry); } else { radioOn = false; radioUI("stream unavailable right now"); } };
 radio.onpause = () => { if (radioOn && radio.getAttribute("src")) radioUI("paused by the device · tap ▶"); };
