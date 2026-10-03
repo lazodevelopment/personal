@@ -1190,7 +1190,9 @@ function renderCams() {
   $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
 }
 const camMsg = (t, bad) => { const el = $("#camMsg"); el.textContent = t; el.style.color = bad ? "var(--amber)" : "var(--green)"; };
-$("#addcam").onsubmit = async (e) => { e.preventDefault(); const raw = $("#camUrl").value.trim(); if (!raw) return camMsg("Paste a link first.", true); let embed = toEmbed(raw);
+$("#addcam").onsubmit = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };
+$("#camAdd").onclick = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };   // belt and braces: some browsers swallow the form submit
+async function addFeed(rawIn, nameIn) { const raw = String(rawIn || "").trim(); if (!raw) return camMsg("Paste a link first.", true); if (nameIn) $("#camName").value = nameIn; let embed = toEmbed(raw);
   if (embed && embed.ask && /youtu/i.test(raw)) { camMsg("Looking up the live stream on that page…"); const r = await fetch("/api/yt/resolve?u=" + encodeURIComponent(raw)).then(x => x.json()).catch(() => ({ error: "lookup failed" })); if (r.videoId) { embed = `https://www.youtube.com/embed/${r.videoId}?autoplay=1&mute=1`; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); if (!r.live) camMsg("That channel isn't live right now; added its latest video instead.", true); } else { camMsg((embed.ask || "") + " (" + (r.error || "no live video found") + ")", true); return; } }
   if (embed && embed.ask) return camMsg(embed.ask, true);
   const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); if (!/isn't live/.test($("#camMsg").textContent)) camMsg(`Added ${name}.`); $("#cams").lastElementChild?.scrollIntoView({ block: "nearest" }); };
@@ -1405,7 +1407,9 @@ function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); radioDuck(true); pl
 /* ---------- the brain: streaming chat ---------- */
 function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
 function localAnswer(t) {
-  t = t.toLowerCase().trim();
+  const rawText = t.trim(); t = t.toLowerCase().trim();
+  // "add cam <link>", "add feed called Lake Louise <link>", "add <link> as Lake Louise": the link keeps its case (YouTube ids are case-sensitive)
+  if (/^(add|save)\s/.test(t) && /(cam|camera|feed|webcam|stream|youtu|http)/.test(t)) { const um = rawText.match(/(https?:\/\/\S+|[\w.-]+\.[a-z]{2,}\/\S*|youtu\S+)/i); if (um) { const url = um[1]; const rest = rawText.replace(url, " ").replace(/^(add|save)\s+(a\s+|this\s+|the\s+)?(cam|camera|feed|webcam|live feed|stream)?\s*/i, "").replace(/(called|named|as)/i, " ").replace(/[\s:]+/g, " ").trim(); if (PHONE) showView("feeds"); addFeed(url, rest ? rest.replace(/\w/g, (c) => c.toUpperCase()) : ""); return "Adding it to Live Feeds."; } }
   if (/^(what('s| is) the )?time\??$/.test(t)) return "It's " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + ".";
   if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
   if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
