@@ -143,6 +143,14 @@ five projects, no key files) and moves flights, traffic/sports/decisions, metric
 there via cron (`cloud/crontab.txt`, `cloud/install.sh`, which also tests whether the VM can reach the feeds that
 refuse Cloudflare). The PC keeps the social check and the executor. Run with `-DryRun` first.
 
+## Acting on what he sees (added 2026-10-03, evening)
+- **First replies**: when a bridged inbox delivers a new lead/client/booking thread (needs_reply, human sender, under 6 h old), `ingestInbox` queues `makeFollowups({first:true})`, which drafts from the full thread plus the business **playbook** (KV `playbook`, edited behind PLAYBOOK in the Inbox panel) and the booked dates in `metrics`. The draft lands at the top of Decisions with REVIEW & SEND, and a push says "New lead: reply drafted". 24 h follow-ups work the same way.
+- **Close the day**: CLOSE THE DAY in Decisions, or say "close the day". `closeItems()` gathers ready drafts, pending decisions, un-drafted needs-reply emails, declined charges and stuck queue items; `closeStep` speaks each with buttons (SEND/SKIP, APPROVE/REJECT, DRAFT, NEXT, STOP) and `closeVoice` maps spoken answers to them. Offered aloud once when the evening brief lands with items open.
+- **Cash forecast**: `collect_metrics.py` emits `detail.forecast` (unpaid balances by due week, 13 weeks) and `detail.pastDue`; the rollup gives `money.forecast`, `forecast90`, `pastDue`, `pastDueTotal`, `yoy` (same 7 days a year ago, films only; `has_history` false until a business is a year old). Money panel shows a NEXT 90 DAYS block; the brain gets CASH FORECAST and YEAR-AGO lines.
+- **Monday review**: slot `weekly` at 06:00 home time on Mondays (hourly cron), prompt in `SLOT_PROMPTS.weekly`; appears in the Briefing dropdown as WEEKLY. `POST /api/morning/run?slot=weekly` runs one now.
+- **Competitors**: KV `competitors` [{url,label,business}] via the Watch panel form, the brain tool `watch_competitor`, or "scan competitors now". `scanCompetitors` (Sundays 20:00, or `POST /api/competitors/scan`) strips each page to text, keeps `$` price lines with context in `competitor_snaps`, and records real differences (an amount that appeared or vanished, not just re-ordered text) in `competitor_changes`, pushing each one. The Monday review reads them.
+- **Remaining inboxes**: filled bridge scripts for lazo, roven, lr and brisk are in `secrets/bridges/` (gitignored); each is pasted into Apps Script while signed in as that account, `setup` run, deployed as a web app, `setup` run again.
+
 ## Using it
 - **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
 - **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.
