@@ -1032,3 +1032,35 @@ main .vp-guides a:active{transform:scale(.985);transition-duration:var(--t-press
 .lz-appbar .go{flex:none;background:linear-gradient(180deg,#E3C78F,var(--gold));color:var(--plum-deep);font-weight:700;font-size:14px;text-decoration:none;padding:9px 18px;border-radius:999px}
 .lz-appbar .x{flex:none;background:none;border:0;color:rgba(250,246,240,.6);font-size:24px;line-height:1;padding:4px 6px;cursor:pointer;font-family:inherit}
 html.has-appbar body{padding-bottom:84px}
+
+/* ---------- scroll motion - JC-LAZO-MOTION-1003 ----------
+   lazo.js (item 8) drives these with transforms only, and only under html.motion. */
+/* photo heroes: lazo.js moves the picture into .hero-bg, which scrolls slower than the page */
+.hero-bg{position:absolute;left:0;right:0;top:-14%;bottom:-14%;background-size:cover;background-position:center 32%;
+  transform:translateY(var(--hy,0px));will-change:transform;z-index:0}
+.hero::before{z-index:1}
+.hero-inner{z-index:2}
+/* pictures inside revealing cards settle from a slight zoom */
+html.motion .reveal .ph,html.motion .reveal.frame img,html.motion .ww.reveal .demo img,html.motion .ap-f.reveal .im img,html.motion .fc.reveal .mk img{
+  transform:scale(1.08);transition:transform 1.6s var(--ease-out)}
+html.motion .reveal.in-view .ph,html.motion .reveal.frame.in-view img,html.motion .ww.reveal.in-view .demo img,html.motion .ap-f.reveal.in-view .im img,html.motion .fc.reveal.in-view .mk img{transform:none}
+/* two-column stances slide in from their own sides */
+@keyframes riseL{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes riseR{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+html.motion .ap-vs>div:first-child.reveal.in-view,html.motion .stance .cols>.them.reveal.in-view,html.motion .why-cols>.them.reveal.in-view{animation-name:riseL}
+html.motion .ap-vs>div:last-child.reveal.in-view,html.motion .stance .cols>div:last-child.reveal.in-view,html.motion .why-cols>div:last-child.reveal.in-view{animation-name:riseR}
+/* the app page hero: phones rise in, then drift at three speeds (--py from lazo.js) */
+@keyframes apUp{from{opacity:0;transform:translateY(calc(var(--base,0px) + 56px))}to{opacity:1;transform:translateY(calc(var(--base,0px) + var(--py,0px)))}}
+.ap-shots img{--base:0px;--py:0px;transform:translateY(calc(var(--base) + var(--py)));will-change:transform}
+.ap-shots img:nth-child(2){--base:-26px;transform:translateY(calc(var(--base) + var(--py)))}
+html.motion .ap-shots img{animation:apUp 1.1s var(--ease-out) both}
+html.motion .ap-shots img:nth-child(1){animation-delay:.25s}
+html.motion .ap-shots img:nth-child(2){animation-delay:.1s}
+html.motion .ap-shots img:nth-child(3){animation-delay:.4s}
+html.motion .ap-wrap>div:first-child>*{animation:rise .9s var(--ease-out) both;animation-delay:calc(var(--i,0)*90ms)}
+.ap-wrap>div:first-child>:nth-child(1){--i:0}.ap-wrap>div:first-child>:nth-child(2){--i:1}.ap-wrap>div:first-child>:nth-child(3){--i:2}
+.ap-wrap>div:first-child>:nth-child(4){--i:3}.ap-wrap>div:first-child>:nth-child(5){--i:4}.ap-wrap>div:first-child>:nth-child(6){--i:5}.ap-wrap>div:first-child>:nth-child(7){--i:6}
+.ap-wrap>div:first-child{will-change:transform,opacity}
+.ap-hero::before{will-change:transform;transform:translateY(var(--gy,0px))}
+html.motion .ap-rail img{transition:transform .5s var(--ease-out)}
+.ap-rail figure:hover img{transform:translateY(-6px)}

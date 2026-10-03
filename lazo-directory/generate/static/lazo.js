@@ -1,5 +1,5 @@
 /* lazo.js - JC-LAZO-JS-0915-004
-   The site's only script. It does seven small things and nothing else:
+   The site's only script. It does eight small things and nothing else:
      1. html.motion  - set unless the visitor asked for reduced motion; every
                        CSS animation and reveal keys off it, so with it absent
                        the page simply appears.
@@ -20,6 +20,8 @@
                        they are out of the tab order too.
      7. app install bar - on Android phones (and iOS browsers without Apple's own
                        smart banner) a dismissible bar offers the store listing.
+     8. scroll motion - hero parallax and ease-away, count-ups, gliding rails, the
+                       app hero phones. See the block at the end.
    (0915-002 replaces a file that had been overwritten with a Python patch
    script, so none of this had been running.) */
 (function () {
@@ -206,7 +208,9 @@
     '.promises > *', '.claims > li', '.stance .cols > *', '.ww', '.claim-strip',
     '.cat-grid > *', '.metro-grid > *', '.vendor-list > *', '.why-list > *', '.faq',
     '.founder-grid > *', '.june-inner > *', '.fv-card', '.fv-step', '.fv-tier', '.fv-stat',
-    '.vp-h2', '.vp-price', '.vp-about > *', '.v-review', '.v-peer', '.v-cal-month', '.ww-strip', '.vp-card'
+    '.vp-h2', '.vp-price', '.vp-about > *', '.v-review', '.v-peer', '.v-cal-month', '.ww-strip', '.vp-card',
+    '.apphome .ag > *', '.vf3 > *', '.pz > *', '.fc', '.phones > *', '.pcap', '.all', '.hdr',
+    '.ap-strip .head > *', '.ap-rail figure', '.ap-feats .ap-f', '.ap-vs > div', '.ap-faq-h', '.ap-cta > *', '.why-cols > *', '.score'
   ].join(',');
   var els = [].slice.call(d.querySelectorAll(SEL)).filter(function (e) {
     return !e.closest('.hero') && !e.closest('.site-head') && !e.closest('.site-foot');
@@ -232,4 +236,101 @@
     });
   }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
   tagged.forEach(function (e) { io.observe(e); });
+
+  /* ---- 8. scroll motion (JC-LAZO-MOTION-1003) ----
+     The same hand everywhere: photo heroes carry a background layer that scrolls
+     slower than the page while the headline eases away; the home and app counts
+     count up the first time they are seen; horizontal rails (the app screens, a
+     vendor's sheet pages) glide sideways while the reader scrolls past them, and
+     stop the moment the reader steers one; the app hero phones drift at three
+     speeds. Transforms and opacity only, one rAF per scroll, and none of it
+     without html.motion. */
+  (function () {
+    var q = function (s) { return d.querySelector(s); }, qa = function (s) { return [].slice.call(d.querySelectorAll(s)); };
+    var wide = window.matchMedia('(min-width:900px)');
+
+    function countUp(b) {
+      var m = /^([^\d]*)([\d,]+)(.*)$/.exec(b.textContent.trim()); if (!m) return;
+      var end = parseInt(m[2].replace(/,/g, ''), 10); if (!end) return;
+      var t0 = null, dur = 1400;
+      function step(t) {
+        if (t0 === null) t0 = t;
+        var p = Math.min((t - t0) / dur, 1), e = 1 - Math.pow(1 - p, 3);
+        b.textContent = m[1] + Math.round(end * e).toLocaleString('en-US') + m[3];
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    qa('.hm-facts b, .ap-proof b, .fv-stat b').forEach(function (b) {
+      var o = new IntersectionObserver(function (es) { if (!es[0].isIntersecting) return; o.disconnect(); countUp(b); }, { threshold: 0.6 });
+      o.observe(b);
+    });
+
+    var heroes = qa('.hero').map(function (h) {
+      var bg = null;
+      if (h.classList.contains('hero-photo') && h.style.backgroundImage) {
+        bg = d.createElement('div'); bg.className = 'hero-bg';
+        bg.style.backgroundImage = h.style.backgroundImage;
+        h.insertBefore(bg, h.firstChild);
+        h.style.backgroundImage = 'none';
+      }
+      return { el: h, bg: bg, inner: h.querySelector('.hero-inner') };
+    });
+    var shots = qa('.ap-shots img'), speeds = [0.10, 0.18, 0.06];
+    var apHero = q('.ap-hero'), apText = q('.ap-wrap > div:first-child');
+    var rails = qa('.ap-rail, .v-sheet-pages').map(function (r) {
+      var m = { el: r, manual: false }, tx = 0, ty = 0;
+      r.addEventListener('wheel', function (e) { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) m.manual = true; }, { passive: true });
+      r.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive: true });
+      r.addEventListener('touchmove', function (e) { if (Math.abs(e.touches[0].clientX - tx) > Math.abs(e.touches[0].clientY - ty) + 4) m.manual = true; }, { passive: true });
+      r.addEventListener('pointerdown', function (e) { if (e.pointerType === 'mouse') m.manual = true; });
+      r.addEventListener('keydown', function () { m.manual = true; });
+      return m;
+    });
+    if (!heroes.length && !shots.length && !rails.length) return;
+
+    var busy = false;
+    function frame() {
+      busy = false;
+      var y = window.scrollY || window.pageYOffset || 0, vh = window.innerHeight || 1;
+      heroes.forEach(function (h) {
+        var r = h.el.getBoundingClientRect(); if (r.bottom < 0) return;
+        var into = Math.max(0, -r.top);
+        if (h.bg) h.bg.style.setProperty('--hy', (into * 0.25).toFixed(1) + 'px');
+        if (h.inner) {
+          if (wide.matches) {
+            var p = Math.min(into / (r.height * 0.9), 1);
+            h.inner.style.opacity = String(1 - p * 0.55);
+            h.inner.style.transform = 'translateY(' + (into * 0.12).toFixed(1) + 'px)';
+          } else { h.inner.style.opacity = ''; h.inner.style.transform = ''; }
+        }
+      });
+      if (apHero) {
+        var rh = apHero.getBoundingClientRect();
+        if (rh.bottom > 0) {
+          var k = wide.matches ? 1 : 0.45;
+          shots.forEach(function (im, i) { im.style.setProperty('--py', (-y * speeds[i] * k).toFixed(1) + 'px'); });
+          if (apText) {
+            if (wide.matches) {
+              var p2 = Math.min(y / (rh.height * 0.9), 1);
+              apText.style.opacity = String(1 - p2 * 0.55);
+              apText.style.transform = 'translateY(' + (y * 0.12).toFixed(1) + 'px)';
+            } else { apText.style.opacity = ''; apText.style.transform = ''; }
+          }
+          apHero.style.setProperty('--gy', (y * 0.25).toFixed(1) + 'px');
+        }
+      }
+      rails.forEach(function (m) {
+        if (m.manual) return;
+        var r = m.el.getBoundingClientRect(); if (r.bottom <= 0 || r.top >= vh) return;
+        var prog = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
+        var e = prog * prog * (3 - 2 * prog);
+        m.el.scrollLeft = e * (m.el.scrollWidth - m.el.clientWidth) * 0.85;
+      });
+    }
+    function tick() { if (busy) return; busy = true; requestAnimationFrame(frame); }
+    window.addEventListener('scroll', tick, { passive: true });
+    window.addEventListener('resize', tick);
+    frame();
+  })();
 })();
