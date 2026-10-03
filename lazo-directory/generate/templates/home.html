@@ -8,7 +8,7 @@
 {% block jsonld %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"Lazo wedding planner","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Web","url":"https://app.meetlazo.com","offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free for couples: guest list, budget, seating charts, dream board, timeline, wedding website and June."}},
+ {"@type":"SoftwareApplication","name":"Lazo: Wedding Planner","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Android, Web","url":"https://meetlazo.com/app/","installUrl":["https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675","https://play.google.com/store/apps/details?id=com.meetlazo.app"],"screenshot":["https://meetlazo.com/assets/app-1.webp","https://meetlazo.com/assets/app-3.webp","https://meetlazo.com/assets/app-8.webp"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free for couples: guest list, budget, seating charts, dream board, timeline, wedding website and June."}},
  {"@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is Lazo really free for couples?","acceptedAnswer":{"@type":"Answer","text":"Yes. There is no paid tier for couples and nothing is capped. Lazo takes 0% of what couples pay vendors. The business is an optional Pro plan for vendors who want more tools, which sharpens the tools and never touches the rankings, so the couple tools stay free and the rankings stay honest."}},
   {"@type":"Question","name":"How are vendors ranked?","acceptedAnswer":{"@type":"Answer","text":"By the Lazo Score, built only from verified reviews from couples who proved the wedding happened, weighted for recency. No vendor can pay for a better position."}},
@@ -50,7 +50,7 @@
   @media(max-width:640px){.hm-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:0 10px;margin-top:22px;padding-top:16px;border-top:1px solid rgba(250,246,240,.22);text-align:center;font-size:12px;letter-spacing:.02em}.hm-facts span{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.25}.hm-facts b{font-size:24px;margin:0;min-width:0;text-align:center}}
   .rowhead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
   .rowhead .more{color:var(--plum);font-weight:600;border-bottom:1px solid var(--gold);text-decoration:none;white-space:nowrap}
-  .vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:36px}
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;margin-top:36px}
   .vf{background:var(--card);border:1px solid var(--gold-line);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:transform .18s ease,box-shadow .18s ease}
   .vf:hover{transform:translateY(-3px);box-shadow:0 18px 44px rgba(61,28,59,.14)}
   .vf .ph{aspect-ratio:4/5;background:var(--plum-deep) center/cover}
@@ -127,6 +127,12 @@
 .apphome .get small{font-size:12.5px;color:var(--muted)}
 .apphome .get .web{font-weight:700;color:var(--plum,#52284F);text-decoration:none;border-bottom:2px solid var(--gold,#D9B77C);padding-bottom:2px;font-size:14.5px}
 .apphome .vs{margin-top:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink,#8A6A2F);font-weight:700}
+.apphome .qr{display:none;align-items:center;gap:12px;margin-top:22px;padding:10px 14px 10px 10px;border:1px solid var(--gold-line);border-radius:14px;background:var(--card);max-width:330px;text-decoration:none;color:inherit}
+.apphome .qr img{width:68px;height:68px;display:block;border-radius:8px}
+.apphome .qr span{font-size:13px;line-height:1.4;color:var(--muted)}
+.apphome .qr span b{display:block;color:var(--plum,#52284F);font-size:14px}
+@media(min-width:920px){.apphome .qr{display:flex}}
+@media(max-width:480px){.apphome .get{gap:10px}.apphome .get img{height:44px}.apphome .get .web{flex-basis:100%;margin-top:4px}}
 @media(max-width:919px){.apphome .shots{max-width:520px;margin:0 auto}}
 </style>
   <div class="ag">
@@ -136,7 +142,7 @@
       <img src="/assets/app-8.webp" alt="Design your seating chart in the Lazo app" loading="lazy" decoding="async" width="600" height="1298">
     </div>
     <div>
-      <p class="eyebrow">The Lazo app, now on iPhone</p>
+      <p class="eyebrow">The Lazo app &middot; free on iPhone and Android</p>
       <h2 class="band-title">The whole wedding, planned from your phone.</h2>
       <p class="band-sub">Vendors you can trust, a planner that knows what to do next, and a wedding website that works the room on the day. Free, no ads, no upsells.</p>
       <p class="vs">Why couples pick Lazo over Zola and The Knot</p>
@@ -148,9 +154,10 @@
       </ul>
       <div class="get">
         <a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675" aria-label="Download Lazo on the App Store"><img src="/assets/appstore-badge.svg" alt="Download on the App Store" width="156" height="52"></a>
-        <small>Android is in review with Google Play.</small>
+        <a href="https://play.google.com/store/apps/details?id=com.meetlazo.app" aria-label="Get Lazo on Google Play"><img src="/assets/googleplay-badge.png" alt="Get it on Google Play" width="175" height="52"></a>
         <a class="web" href="https://app.meetlazo.com">Or start on the web &rarr;</a>
       </div>
+      <a class="qr" href="/app/"><img src="/assets/app-qr.svg" alt="QR code for meetlazo.com/app" width="68" height="68" loading="lazy"><span><b>Scan to download</b>Or see everything the app does at meetlazo.com/app</span></a>
     </div>
   </div>
 </section>
@@ -161,7 +168,7 @@
     <div>
       <p class="eyebrow" style="color:var(--gold-ink)"><span data-geo-name>{{ home_metro.name }}</span>, this week</p>
       <h2 class="band-title">Verified, and answering.</h2>
-      <p class="band-sub" id="geo-featured-sub">{% if featured|length < 4 %}The first {{ featured|length }} {{ home_metro.name }} businesses to prove they're real. Claiming opened this month; this row fills as vendors verify, and no one will ever pay to be on it.{% else %}Real businesses who proved they're real, in the order couples who booked them put them. No one on this row paid to be here.{% endif %}</p>
+      <p class="band-sub" id="geo-featured-sub">{% if featured|length == 1 %}The first {{ home_metro.name }} business to prove it's real. This row fills as vendors verify, and no one will ever pay to be on it.{% elif featured|length < 4 %}The first {{ featured|length }} {{ home_metro.name }} businesses to prove they're real. Claiming opened this month; this row fills as vendors verify, and no one will ever pay to be on it.{% else %}Real businesses who proved they're real, in the order couples who booked them put them. No one on this row paid to be here.{% endif %}</p>
     </div>
     <a class="more" href="/{{ home_metro.id }}/" data-geo-metro-link>All <span data-geo-name>{{ home_metro.name }}</span> vendors &rarr;</a>
   </div>
@@ -305,7 +312,7 @@
       var html=list.map(function(f){return '<a class="vf" href="'+esc(f.path)+'"><div class="ph"'+(f.image?' style="background-image:url(\''+esc(f.image)+'\')"':'')+'></div><div class="b"><div class="c">'+esc(f.category)+'</div><h3>'+esc(f.name)+'</h3><div class="m">'+esc(f.metro)+(f.startingPrice?' &middot; from '+esc(f.startingPrice):'')+'</div>'+(f.verified?'<span class="pill">&#10003; Lazo verified</span>':(f.reviewCount?'<span class="pill">'+f.reviewCount+' verified review'+(f.reviewCount===1?'':'s')+'</span>':''))+'</div></a>';}).join('');
       grid.innerHTML=html;
       /* geo-featured-hide */ var band=grid.closest('section'); if(band)band.style.display=list.length?'':'none';
-      if(sub)sub.textContent=list.length?(list.length<4?('The first '+list.length+' '+name+' business'+(list.length===1?'':'es')+' to prove they\'re real. This row fills as vendors verify, and no one will ever pay to be on it.'):('Real '+name+' businesses who proved they\'re real, in the order couples who booked them put them. No one on this row paid to be here.')):('No '+name+' vendor has claimed yet - the first one is on this row the day they do. Claiming is free, forever.');
+      if(sub)sub.textContent=list.length?(list.length===1?('The first '+name+' business to prove it\'s real. This row fills as vendors verify, and no one will ever pay to be on it.'):list.length<4?('The first '+list.length+' '+name+' businesses to prove they\'re real. This row fills as vendors verify, and no one will ever pay to be on it.'):('Real '+name+' businesses who proved they\'re real, in the order couples who booked them put them. No one on this row paid to be here.')):('No '+name+' vendor has claimed yet - the first one is on this row the day they do. Claiming is free, forever.');
     }).catch(function(){});
   }
   var chosen='';

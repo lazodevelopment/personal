@@ -796,7 +796,7 @@ def build(vendors: list[dict]):
     # JC-LAZO-CFORM-0916-001: delete-account joins the list. It used to be a
     # hand-rolled standalone file carrying an August footer and no site nav;
     # it now extends base.html like every other page here.
-    STATIC_PAGES = ["why-lazo", "for-vendors", "about", "contact", "couples", "delete-account", "terms", "privacy", "the-knot-alternative", "zola-alternative", "weddingwire-alternative", "the-knot-alternative-for-vendors", "weddingwire-alternative-for-vendors", "honeybook-alternative", "folia-alternative"]
+    STATIC_PAGES = ["app", "why-lazo", "for-vendors", "about", "contact", "couples", "delete-account", "terms", "privacy", "the-knot-alternative", "zola-alternative", "weddingwire-alternative", "the-knot-alternative-for-vendors", "weddingwire-alternative-for-vendors", "honeybook-alternative", "folia-alternative"]
     for slug in STATIC_PAGES:
         t = env.get_template(f"pages/{slug}.html")
         pdir = DIST / slug

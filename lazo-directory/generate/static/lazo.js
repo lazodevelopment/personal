@@ -1,5 +1,5 @@
 /* lazo.js - JC-LAZO-JS-0915-004
-   The site's only script. It does six small things and nothing else:
+   The site's only script. It does seven small things and nothing else:
      1. html.motion  - set unless the visitor asked for reduced motion; every
                        CSS animation and reveal keys off it, so with it absent
                        the page simply appears.
@@ -18,6 +18,8 @@
                        every link is visible and crawlable; here the headings
                        become toggles and the closed columns go `inert` so
                        they are out of the tab order too.
+     7. app install bar - on Android phones (and iOS browsers without Apple's own
+                       smart banner) a dismissible bar offers the store listing.
    (0915-002 replaces a file that had been overwritten with a Python patch
    script, so none of this had been running.) */
 (function () {
@@ -151,6 +153,49 @@
         });
     });
   });
+
+  /* ---- app install bar (phones) - JC-LAZO-APPBAR-1003 ----
+     iOS Safari already shows Apple's smart banner (meta apple-itunes-app), so this
+     only appears where that banner can't: Android, and iOS browsers that aren't
+     Safari. Dismissed = quiet for 30 days. Never on /app/ (that page IS the pitch),
+     never inside an iframe (the wedding-website hub previews), never on a desktop. */
+  (function () {
+    try {
+      if (window.top !== window.self) return;
+      if (/^\/app\/?$/.test(location.pathname)) return;
+      if (!window.matchMedia('(max-width:760px)').matches) return;
+      var ua = navigator.userAgent || '';
+      var android = /Android/i.test(ua);
+      var ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!android && !ios) return;
+      if (ios && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|GSA/i.test(ua)) return;
+      var off = +(localStorage.getItem('lz_appbar_off') || 0);
+      if (off && Date.now() - off < 30 * 864e5) return;
+      var store = android ? 'play' : 'apple';
+      var href = android ? 'https://play.google.com/store/apps/details?id=com.meetlazo.app'
+                         : 'https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675';
+      var bar = d.createElement('aside');
+      bar.className = 'lz-appbar';
+      bar.setAttribute('aria-label', 'Get the Lazo app');
+      bar.innerHTML = '<button type="button" class="x" aria-label="Not now">&times;</button>' +
+        '<img src="/assets/appicon.png" alt="" width="44" height="44">' +
+        '<div class="t"><b>Lazo: Wedding Planner</b><span>Free on ' + (android ? 'Google Play' : 'the App Store') + '. Vendors, June, your website.</span></div>' +
+        '<a class="go" href="' + href + '" rel="noopener">Get</a>';
+      d.body.appendChild(bar);
+      html.classList.add('has-appbar');
+      function remember() { try { localStorage.setItem('lz_appbar_off', String(Date.now())); } catch (e) {} }
+      requestAnimationFrame(function () { requestAnimationFrame(function () { bar.classList.add('show'); }); });
+      bar.querySelector('.x').addEventListener('click', function () {
+        remember();
+        bar.classList.remove('show'); html.classList.remove('has-appbar');
+        setTimeout(function () { if (bar.parentNode) bar.parentNode.removeChild(bar); }, 400);
+      });
+      bar.querySelector('.go').addEventListener('click', function () {
+        remember();
+        try { if (window.fbq) fbq('trackCustom', 'AppStoreClick', { store: store, from: 'bar' }); } catch (e) {}
+      });
+    } catch (e) {}
+  })();
 
   /* reveal */
   if (reduce || !('IntersectionObserver' in window)) return;

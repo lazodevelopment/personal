@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{#- JC-LAZO-APP-1003: /app/ - the one link for the Lazo app now that it is live on both
+    stores. QR codes, social bios and ads point here; the page puts the visitor's own
+    store first (a small inline script reads the UA), and ?go sends a phone straight
+    to its store. Screens are the real App Store screenshots (/assets/app-*.webp). -#}
+{% block title %}Lazo: Wedding Planner App for iPhone and Android &mdash; Free{% endblock %}
+{% block desc %}The Lazo wedding planner app, free on the App Store and Google Play. Verified vendors in {{ metro_count }} cities, June your AI planner, seating charts, budget, guest list and a wedding website your guests will actually use.{% endblock %}
+{% block canonical %}{{ base }}/app/{% endblock %}
+{% block ogimage %}{{ base }}/assets/app-og.jpg{% endblock %}
+{% block jsonld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+ {"@type":"MobileApplication","@id":"{{ base }}/app/#app","name":"Lazo: Wedding Planner","alternateName":"Lazo","applicationCategory":"LifestyleApplication","operatingSystem":"iOS, Android","url":"{{ base }}/app/","image":"{{ base }}/assets/app-og.jpg","screenshot":["{{ base }}/assets/app-1.webp","{{ base }}/assets/app-3.webp","{{ base }}/assets/app-6.webp","{{ base }}/assets/app-4.webp","{{ base }}/assets/app-8.webp","{{ base }}/assets/app-5.webp","{{ base }}/assets/app-7.webp"],"installUrl":["https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675","https://play.google.com/store/apps/details?id=com.meetlazo.app"],"sameAs":["https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675","https://play.google.com/store/apps/details?id=com.meetlazo.app","https://app.meetlazo.com"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Lazo","url":"{{ base }}/"},"description":"Free wedding planner: verified vendors, June the AI planner, guest list, budget, seating charts, day-of timeline, music for the DJ and a free wedding website."},
+ {"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"The app","item":"{{ base }}/app/"}]},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is the Lazo app free?","acceptedAnswer":{"@type":"Answer","text":"Yes, completely. Every planning tool is free for couples, with no subscription, no ads and no guest cap. Lazo's business is an optional Pro plan for vendors, which never touches the rankings."}},
+  {"@type":"Question","name":"Is Lazo on Android as well as iPhone?","acceptedAnswer":{"@type":"Answer","text":"Yes. Lazo: Wedding Planner is on the App Store for iPhone and on Google Play for Android, and the same plan is at app.meetlazo.com in any browser."}},
+  {"@type":"Question","name":"Can my partner use the app too?","acceptedAnswer":{"@type":"Answer","text":"Yes. One wedding, two phones: your partner signs in to the same plan and sees the same guest list, budget, vendor threads and website. Nothing to forward."}},
+  {"@type":"Question","name":"Can I bring my guest list from The Knot or Zola?","acceptedAnswer":{"@type":"Answer","text":"Yes. Export it as a CSV and import it in one step. June can also read a pasted budget or vendor list."}}
+ ]}
+]}
+</script>
+{% endblock %}
+{% block main %}
+<style>
+.ap-hero{background:var(--night);color:var(--ivory);padding:72px 28px 0;overflow:hidden;position:relative}
+.ap-hero::before{content:"";position:absolute;inset:auto -20% -40% 30%;height:120%;background:radial-gradient(closest-side,rgba(138,74,130,.55),transparent 70%);pointer-events:none}
+.ap-wrap{max-width:1180px;margin:0 auto;display:grid;gap:40px;grid-template-columns:1fr;align-items:end;position:relative}
+@media(min-width:900px){.ap-wrap{grid-template-columns:1fr 1fr;gap:56px}}
+.ap-hero .eyebrow{color:var(--gold)}
+.ap-hero h1{color:var(--ivory);font-size:clamp(42px,5.6vw,74px);margin:0 0 16px}
+.ap-hero h1 em{color:var(--gold)}
+.ap-hero .lede{color:rgba(250,246,240,.82);font-size:17.5px;max-width:48ch;margin:0 0 26px}
+.ap-get{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.ap-get img{height:54px;width:auto;display:block}
+.ap-get a.badge{transition:transform .18s ease}
+.ap-get a.badge:hover{transform:translateY(-2px)}
+.ap-web{margin:16px 0 0;font-size:14.5px;color:rgba(250,246,240,.72)}
+.ap-web a{color:var(--gold);font-weight:600;text-decoration:none;border-bottom:1px solid rgba(217,183,124,.6)}
+.ap-proof{display:flex;gap:28px;flex-wrap:wrap;margin:34px 0 48px;font-size:13.5px;color:rgba(250,246,240,.8)}
+.ap-proof b{font-family:var(--serif);font-size:24px;color:var(--ivory);margin-right:6px;font-weight:500;font-feature-settings:"lnum" 1}
+.ap-qr{display:none;align-items:center;gap:14px;margin:0 0 48px;padding:12px 16px 12px 12px;border:1px solid rgba(217,183,124,.35);border-radius:16px;background:rgba(250,246,240,.06);max-width:320px}
+.ap-qr img{width:84px;height:84px;background:#fff;border-radius:10px;padding:5px;box-sizing:border-box;display:block}
+.ap-qr span{font-size:13px;line-height:1.4;color:rgba(250,246,240,.78)}
+.ap-qr span b{display:block;color:var(--ivory);font-weight:600;font-size:14px}
+@media(min-width:900px){.ap-qr{display:flex}}
+.ap-shots{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end;max-width:560px;margin:0 auto}
+.ap-shots img{width:100%;height:auto;display:block;border-radius:22px 22px 0 0;box-shadow:0 30px 60px -20px rgba(0,0,0,.7)}
+.ap-shots img:nth-child(2){transform:translateY(-26px);border-radius:22px}
+@media(max-width:899px){.ap-hero{padding-top:56px}.ap-shots{max-width:440px}.ap-proof{margin-bottom:36px}}
+@media(max-width:480px){.ap-get{gap:10px}.ap-get img{height:46px}}
+.ap-strip{padding:72px 0 0}
+.ap-strip .head{max-width:1180px;margin:0 auto 26px;padding:0 28px}
+.ap-rail{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px 28px 28px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.ap-rail figure{flex:0 0 clamp(200px,24vw,250px);margin:0;scroll-snap-align:center}
+.ap-rail img{width:100%;height:auto;display:block;border-radius:22px;box-shadow:0 20px 44px -22px rgba(36,30,43,.55)}
+.ap-rail figcaption{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--gold-ink);margin-top:12px;text-align:center}
+.ap-feats{display:grid;gap:18px;grid-template-columns:1fr;margin-top:36px}
+@media(min-width:720px){.ap-feats{grid-template-columns:1fr 1fr}}
+@media(min-width:1040px){.ap-feats{grid-template-columns:repeat(3,1fr)}}
+.ap-f{background:var(--card);border:1px solid var(--gold-line);border-radius:22px;overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.ap-f .im{background:var(--plum-deep);aspect-ratio:5/3;overflow:hidden}
+.ap-f .im img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.ap-f .tx{padding:20px 22px 24px}
+.ap-f .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-ink);font-weight:700}
+.ap-f h3{font-size:24px;margin:4px 0 8px;line-height:1.1}
+.ap-f p{margin:0;color:var(--muted);font-size:15px;line-height:1.55}
+.ap-vs{background:var(--card);border:1px solid var(--gold-line);border-radius:24px;padding:36px;display:grid;gap:32px;grid-template-columns:1fr;max-width:1180px;margin:0 auto}
+@media(min-width:860px){.ap-vs{grid-template-columns:1fr 1fr;padding:44px}}
+.ap-vs h3{font-size:28px;margin:0 0 10px}
+.ap-vs ul{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.ap-vs li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.5;color:var(--ink)}
+.ap-vs li::before{content:"\2713";flex:none;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--plum-deep);font-size:12px;font-weight:800;display:grid;place-items:center;margin-top:3px}
+.ap-vs .them li::before{content:"\2715";background:#EFE4EE;color:#9A8FA1}
+.ap-vs .them li{color:#786C83}
+.ap-vs .them h3{color:#786C83}
+.ap-cta{background:var(--night);color:var(--ivory);border-radius:26px;padding:48px 36px;text-align:center;border:1px solid rgba(217,183,124,.4);box-shadow:0 30px 60px -24px rgba(46,21,48,.5)}
+.ap-cta h2{color:var(--ivory);font-size:clamp(30px,4vw,48px)}
+.ap-cta p{color:rgba(250,246,240,.8);max-width:52ch;margin:0 auto 24px}
+.ap-cta .ap-get{justify-content:center}
+</style>
+
+<section class="ap-hero">
+  <div class="ap-wrap">
+    <div>
+      <p class="eyebrow">The Lazo app &middot; free on iPhone and Android</p>
+      <h1>Your whole wedding, <em>in your pocket.</em></h1>
+      <p class="lede">Verified vendors in {{ metro_count }} cities, June, your AI planner, your guest list, budget and seating chart, and a wedding website your guests will actually use. Free, with no ads, no upsells and no guest cap.</p>
+      <div class="ap-get">
+        <a class="badge" data-store="apple" href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675" aria-label="Download Lazo on the App Store"><img src="/assets/appstore-badge.svg" alt="Download on the App Store" width="162" height="54"></a>
+        <a class="badge" data-store="play" href="https://play.google.com/store/apps/details?id=com.meetlazo.app" aria-label="Get Lazo on Google Play"><img src="/assets/googleplay-badge.png" alt="Get it on Google Play" width="182" height="54"></a>
+      </div>
+      <p class="ap-web">No phone handy? The same plan is at <a href="https://app.meetlazo.com">app.meetlazo.com</a>, and it stays in sync.</p>
+      <div class="ap-proof"><span><b>{{ vendor_total_display }}</b>vendors</span><span><b>{{ metro_count }}</b>cities</span><span><b>$0</b>forever</span></div>
+      <div class="ap-qr"><img src="/assets/app-qr.svg" alt="QR code linking to meetlazo.com/app" width="84" height="84"><span><b>Scan to download</b>Point your phone's camera here and it opens the right store.</span></div>
+    </div>
+    <div class="ap-shots" aria-label="Screens from the Lazo app">
+      <img src="/assets/app-6.webp" alt="Browse vetted vendors: photographers in Phoenix ranked by verified reviews, never by who paid" width="600" height="1298" decoding="async" fetchpriority="high">
+      <img src="/assets/app-1.webp" alt="Home: a better way to plan your wedding, 287 days to go, your vendor team and budget" width="600" height="1298" decoding="async" fetchpriority="high">
+      <img src="/assets/app-3.webp" alt="Ask June anything: the AI planner suggesting verified venues in your city" width="600" height="1298" decoding="async">
+    </div>
+  </div>
+</section>
+
+<section class="ap-strip" aria-labelledby="ap-screens">
+  <div class="head">
+    <p class="eyebrow" style="color:var(--gold-ink)">What's inside</p>
+    <h2 class="band-title" id="ap-screens">Every tool a wedding needs. <em>Nothing it doesn't.</em></h2>
+    <p class="band-sub">Swipe through the screens. Each one is the real app, not a mock-up.</p>
+  </div>
+  <div class="ap-rail" tabindex="0">
+    <figure><img src="/assets/app-1.webp" alt="Home screen: 287 days to go, this week's three things, vendor team and budget" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Home</figcaption></figure>
+    <figure><img src="/assets/app-3.webp" alt="June answering a question about wedding venues in Dallas with verified options" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Ask June anything</figcaption></figure>
+    <figure><img src="/assets/app-6.webp" alt="Find vendors: photographers in Phoenix ranked by verified reviews" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Vetted vendors</figcaption></figure>
+    <figure><img src="/assets/app-4.webp" alt="One thread per vendor: sneak-peek photos, the signed agreement and the paid retainer in one conversation" loading="lazy" decoding="async" width="600" height="1298"><figcaption>One thread per vendor</figcaption></figure>
+    <figure><img src="/assets/app-8.webp" alt="Seating chart: drag guests onto tables, reception and ceremony" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Seating chart</figcaption></figure>
+    <figure><img src="/assets/app-5.webp" alt="Your wedding day: the team, the weather for your date, music and what to share with vendors" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Your wedding day</figcaption></figure>
+    <figure><img src="/assets/app-7.webp" alt="Music: every moment gets a song, guests request through a link, send the list to your DJ" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Send your DJ the playlist</figcaption></figure>
+    <figure><img src="/assets/app-2.webp" alt="Two phones showing the wedding day view and the home screen" loading="lazy" decoding="async" width="600" height="1298"><figcaption>Two phones, one plan</figcaption></figure>
+  </div>
+</section>
+
+<section class="band" style="padding-top:36px">
+  <p class="eyebrow" style="color:var(--gold-ink)">How couples use it</p>
+  <h2 class="band-title">From first inquiry <em>to last dance.</em></h2>
+  <div class="ap-feats">
+    <div class="ap-f"><div class="im"><img src="/assets/photos/app/find-vendors.webp" alt="" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Vendors</div><h3>Book people you can trust</h3><p>{{ vendor_total_display }} businesses in {{ metro_count }} cities, ranked by couples who booked them. No vendor can pay to rank, and the one you message hears from you alone.</p></div></div>
+    <div class="ap-f"><div class="im"><img src="/assets/photos/app/june.webp" alt="" loading="lazy" decoding="async"></div><div class="tx"><div class="k">June</div><h3>A planner who knows your wedding</h3><p>She reads your date, city, budget and bookings, tells you what to do this week, drafts the vendor message and seats your guests from their parties and sides.</p></div></div>
+    <div class="ap-f"><div class="im"><img src="/assets/photos/app/thread.webp" alt="" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Threads</div><h3>Contract, invoice, payment, in the chat</h3><p>One thread per vendor. The agreement you signed and the retainer you paid sit in the conversation, so nothing lives in a forwarded email.</p></div></div>
+    <div class="ap-f"><div class="im"><img src="/assets/photos/app/seating.webp" alt="" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Guests</div><h3>Guest list, RSVPs and the seating chart</h3><p>RSVPs from your website land in the list, meals show on the table, and the caterer gets a live link instead of a spreadsheet.</p></div></div>
+    <div class="ap-f"><div class="im"><img src="/assets/photos/app/day-of.webp" alt="" loading="lazy" decoding="async"></div><div class="tx"><div class="k">The day</div><h3>Timeline, weather and the DJ's list</h3><p>Build the day backwards from the ceremony, see the weather for your date, pick a song for every moment and send it all to your vendors in one tap.</p></div></div>
+    <div class="ap-f"><div class="im"><img src="/assets/photos/app/home.webp" alt="" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Website</div><h3>A site that works the room</h3><p>Twenty designs, live in minutes. Guests RSVP, find their table, add photos from their phones and see what's happening now. <a href="/wedding-websites/">See the designs &rarr;</a></p></div></div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="ap-vs">
+    <div class="them"><h3>The other wedding apps</h3><ul><li>A paid tier for the tools that matter</li><li>Guest list capped until you upgrade</li><li>Rankings sold to the highest bidder</li><li>Your inquiry sold as a lead to a dozen vendors</li><li>Ads in the planner</li></ul></div>
+    <div><h3>Lazo</h3><ul><li>Every tool free, forever, no card</li><li>No guest cap, no ads, no upsell</li><li>Rankings earned from verified couples only</li><li>You choose who hears from you</li><li>June, an AI planner that never sells you anything</li></ul></div>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div style="max-width:760px;margin:0 auto">
+    <h2 class="band-title" style="text-align:center;margin-bottom:26px">Questions about the app</h2>
+    <details class="faq"><summary>Is the Lazo app free?</summary><p>Yes, completely. Every planning tool is free for couples, with no subscription, no ads and no guest cap. Lazo's business is an optional Pro plan for vendors, which sharpens their tools and never touches the rankings.</p></details>
+    <details class="faq"><summary>Is Lazo on Android as well as iPhone?</summary><p>Yes. Lazo: Wedding Planner is on the App Store for iPhone and on Google Play for Android, and the same plan is at <a href="https://app.meetlazo.com">app.meetlazo.com</a> in any browser. Everything stays in sync.</p></details>
+    <details class="faq"><summary>Can my partner use the app too?</summary><p>Yes. One wedding, two phones: your partner signs in to the same plan and sees the same guest list, budget, vendor threads and website. Nothing to forward.</p></details>
+    <details class="faq"><summary>Can I bring my guest list from The Knot or Zola?</summary><p>Yes. Export it as a CSV and import it in one step. June can also read a pasted budget or vendor list. Registry links stay wherever they are.</p></details>
+    <details class="faq"><summary>How do I delete my account?</summary><p>Open Account, scroll to the bottom and tap Delete my account. <a href="/delete-account/">The full process is here.</a></p></details>
+  </div>
+</section>
+
+<section class="band" style="padding-top:0">
+  <div class="ap-cta">
+    <p class="eyebrow" style="color:var(--gold)">Get Lazo</p>
+    <h2>Free on iPhone and Android.</h2>
+    <p>Download it, type your names and your date, and June takes it from there.</p>
+    <div class="ap-get">
+      <a class="badge" data-store="apple" href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675" aria-label="Download Lazo on the App Store"><img src="/assets/appstore-badge.svg" alt="Download on the App Store" width="162" height="54" loading="lazy"></a>
+      <a class="badge" data-store="play" href="https://play.google.com/store/apps/details?id=com.meetlazo.app" aria-label="Get Lazo on Google Play"><img src="/assets/googleplay-badge.png" alt="Get it on Google Play" width="182" height="54" loading="lazy"></a>
+    </div>
+    <p class="ap-web" style="margin-top:20px">Or <a href="https://app.meetlazo.com">start on the web</a>.</p>
+  </div>
+</section>
+
+<script>
+/* Put the visitor's own store first; ?go sends a phone straight there (the QR and ads use it). */
+(function(){
+  var ua=navigator.userAgent||'';
+  var android=/Android/i.test(ua);
+  var ios=/iPhone|iPad|iPod/i.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  var mine=android?'play':(ios?'apple':'');
+  document.querySelectorAll('.ap-get a').forEach(function(a){a.addEventListener('click',function(){try{if(window.fbq)fbq('trackCustom','AppStoreClick',{store:a.getAttribute('data-store'),from:'app-page'});}catch(e){}});});
+  if(!mine)return;
+  document.querySelectorAll('.ap-get').forEach(function(g){var a=g.querySelector('[data-store="'+mine+'"]');if(a)g.insertBefore(a,g.firstChild);});
+  if(/[?&]go(=|&|$)/.test(location.search)){var a=document.querySelector('.ap-get [data-store="'+mine+'"]');if(a)location.replace(a.href);}
+})();
+</script>
+{% endblock %}
