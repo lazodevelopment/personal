@@ -115,7 +115,7 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .console{display:grid;grid-template-columns:190px 1fr;gap:18px;min-height:320px}
 .corebox{display:grid;align-content:start;justify-items:center;gap:8px}
 .core{width:180px;height:180px;position:relative}
-.core svg{width:100%;height:100%;overflow:visible;position:absolute;inset:0}
+.core svg{width:100%;height:100%;overflow:visible;position:absolute;inset:0;opacity:.28}
 .core canvas{position:absolute;inset:0;width:100%;height:100%}
 .core .r1{animation:spin 14s linear infinite;transform-origin:50% 50%;stroke:rgb(var(--glow))}
 .core .r2{animation:spin 9s linear infinite reverse;transform-origin:50% 50%;stroke:rgb(var(--glow2))}
@@ -500,7 +500,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
             <circle class="r2" cx="50" cy="50" r="33" fill="none" stroke-width="1.5" stroke-dasharray="20 15 5 40"/>
             <circle class="pulse" cx="50" cy="50" r="18" opacity=".7"/>
           </svg>
-          <canvas id="viz" width="400" height="400"></canvas>
+          <canvas id="viz" width="320" height="320"></canvas>
         </div>
         <div class="corestate" id="coreState">idle</div>
       </div>
@@ -1228,6 +1228,7 @@ const CORE = (() => {
 })();
 const STATE_TINT = { idle: [25, 211, 255], listening: [255, 179, 64], thinking: [167, 139, 250], speaking: [160, 236, 255], radio: [57, 240, 168] };
 const freqBuf = new Uint8Array(256), timeBuf = new Uint8Array(512);
+function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
 function readAudio() {
   const C = CORE;
   if (analyser) {
@@ -1250,7 +1251,7 @@ function readAudio() {
 function drawViz(now = 0) {
   const C = CORE; vizRaf = null;
   if (document.hidden) return;
-  const want = (VIZ_PHONE || vizMode === "idle") ? 1000 / 30 : 1000 / 60;
+  const want = vizMode === "idle" ? 1000 / 24 : VIZ_PHONE ? 1000 / 30 : 1000 / 60;
   if (now - C.last < want - 2) { vizRaf = requestAnimationFrame(drawViz); return; }
   const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt;
   readAudio();
@@ -1261,16 +1262,29 @@ function drawViz(now = 0) {
   C.rotY += dt * spin; C.rotX += ((vizMode === "thinking" ? 0.35 + 0.5 * Math.sin(fakePhase * 1.3) : 0.35 + 0.08 * Math.sin(fakePhase * 0.4)) - C.rotX) * 0.05;
   const base = W * (vizMode === "listening" ? 0.257 : 0.3) * (1 + C.swell * (vizMode === "radio" ? 0.12 : 0.2));
   const sy = Math.sin(C.rotY), cyy = Math.cos(C.rotY), sx = Math.sin(C.rotX), cxx = Math.cos(C.rotX);
-  vctx.clearRect(0, 0, W, H);
+  const fade = vizMode === "idle" ? 0.55 : vizMode === "thinking" ? 0.22 : 0.3;   // lower = longer trails
+  vctx.globalCompositeOperation = "destination-out"; vctx.fillStyle = `rgba(0,0,0,${fade})`; vctx.fillRect(0, 0, W, H); vctx.globalCompositeOperation = "source-over";
   // glow behind the sphere
-  const g = vctx.createRadialGradient(cx, cy, 2, cx, cy, base * 1.15);
-  const gl = vizMode === "idle" ? 0.25 : 0.35 + C.swell * 0.6;
-  g.addColorStop(0, `rgba(255,255,255,${0.35 * gl})`); g.addColorStop(0.35, `rgba(${tr},${tg},${tb},${0.28 * gl})`); g.addColorStop(1, `rgba(${tr},${tg},${tb},0)`);
-  vctx.fillStyle = g; vctx.beginPath(); vctx.arc(cx, cy, base * 1.15, 0, Math.PI * 2); vctx.fill();
+  const gl = vizMode === "idle" ? 0.25 : 0.35 + C.swell * 0.6, key = tr + "," + tg + "," + tb;
+  if (C.spriteKey !== key) { C.spriteKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, "rgba(255,255,255,.12)"); g.addColorStop(0.35, `rgba(${key},.1)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(64, (g) => { g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.3, `rgba(${key},.8)`); g.addColorStop(1, `rgba(${key},0)`); }); }
+  vctx.globalAlpha = gl; const gr = base * 1.15; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
   // points: two depth passes so near points sit on top
   const ripple = vizMode === "idle" ? 0 : vizMode === "radio" ? 0.22 : 0.3, breathe = vizMode === "idle" ? 0.035 : 0.02;
+  const proj = (x, y, z) => { const x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy, y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx, k = 1 / (1.9 - z2 * 0.6) * 1.9; return [cx + x1 * base * k, cy + y2 * base * k, z2]; };
+  const ring = (rad, tiltA, tiltB, phase, alpha, far) => {           // a great circle, tilted, precessing with its own phase; drawn in two halves by depth
+    const ca = Math.cos(tiltA), sa = Math.sin(tiltA), cb = Math.cos(tiltB), sb = Math.sin(tiltB);
+    vctx.beginPath(); let pen = false;
+    for (let i = 0; i <= 96; i++) { const t = i / 96 * Math.PI * 2 + phase; let x = Math.cos(t) * rad, y = 0, z = Math.sin(t) * rad; let y1 = y * ca - z * sa, z1 = y * sa + z * ca; let x2 = x * cb - y1 * sb, y2 = x * sb + y1 * cb; const [px, py, pz] = proj(x2, y2, z1); const show = far ? pz < 0 : pz >= 0; if (show) { pen ? vctx.lineTo(px, py) : vctx.moveTo(px, py); pen = true; } else pen = false; }
+    vctx.strokeStyle = `rgba(${tr},${tg},${tb},${alpha * (far ? 0.35 : 1)})`; vctx.lineWidth = far ? 0.8 : 1.3; vctx.stroke();
+  };
+  const ringA = 1.12 + C.swell * 0.05, ringB = 1.24 + C.level * 0.06, ra = vizMode === "idle" ? 0.35 : 0.6 + C.level * 0.4;
+  const pA = fakePhase * (vizMode === "thinking" ? 0.9 : 0.25), pB = -fakePhase * (vizMode === "thinking" ? 1.3 : 0.4);
+  const nucleus = () => { const nr = W * 0.045 * (1 + C.swell * 0.9) * (vizMode === "idle" ? 0.8 : 1) * 2.2; vctx.globalAlpha = vizMode === "idle" ? 0.6 : Math.min(1, 0.85 + C.level * 0.15); vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1; };
+  const step = vizMode === "idle" ? 2 : 1;
   for (let pass = 0; pass < 2; pass++) {
-    for (const p of C.pts) {
+    if (pass === 0) { ring(ringA, 1.15, 0.3, pA, ra, true); ring(ringB, 0.5, 1.9, pB, ra * 0.8, true); }
+    if (pass === 1) { nucleus(); }
+    for (let pi = 0; pi < C.pts.length; pi += step) { const p = C.pts[pi];
       const d = 1 + C.smooth[p.band] * ripple * (0.6 + 0.4 * Math.sin(p.t * 2 + fakePhase * 3)) + breathe * Math.sin(fakePhase * 1.7 + p.seed) + (vizMode === "thinking" ? 0.1 * Math.sin(fakePhase * 6 - p.y * 7 + p.t) : 0);
       let x = p.x * d, y = p.y * d, z = p.z * d;
       let x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy;                 // around Y
@@ -1282,11 +1296,12 @@ function drawViz(now = 0) {
       vctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
     }
   }
+  ring(ringA, 1.15, 0.3, pA, ra, false); ring(ringB, 0.5, 1.9, pB, ra * 0.8, false);
   // waveform halo while sound plays
   if (analyser && C.level > 0.02) {
     vctx.beginPath();
     for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * W * 0.05; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
-    vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.25 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.shadowColor = `rgb(${tr},${tg},${tb})`; vctx.shadowBlur = 8; vctx.stroke(); vctx.shadowBlur = 0;
+    vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.08 + C.level * 0.15})`; vctx.lineWidth = 5; vctx.stroke(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.3 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.stroke();
   }
   vizRaf = requestAnimationFrame(drawViz);
 }
