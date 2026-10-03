@@ -1201,6 +1201,10 @@ let notesTimer;
 $("#notes").oninput = () => { $("#notesState").textContent = "unsaved"; clearTimeout(notesTimer); notesTimer = setTimeout(saveNotes, 1500); };
 $("#notesSave").onclick = saveNotes;
 async function saveNotes() { state.notes = $("#notes").value; await save({ notes: state.notes }); $("#notesState").textContent = "saved " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
+// a newer page was deployed: reload when nothing is in progress, so no one runs stale code for days
+let pageBuild = null;
+async function checkBuild() { try { const c = await fetch("/api/config", { cache: "no-store" }).then(r => r.json()); if (!c.build) return; if (pageBuild === null) { pageBuild = c.build; return; } if (c.build !== pageBuild && !speaking && !listening && !radioOn && !document.body.classList.contains("wall") && !/input|textarea/i.test(document.activeElement?.tagName || "")) { addMsg("sys", "JARVIS was updated. Reloading…"); setTimeout(() => location.reload(), 1200); } } catch {} }
+setInterval(checkBuild, 5 * 60000); setTimeout(checkBuild, 15000);
 async function loadState() {
   try {
     const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
