@@ -112,9 +112,9 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 @media(min-width:900px){.c4{grid-column:span 4}.c5{grid-column:span 5}.c6{grid-column:span 6}.c7{grid-column:span 7}.c8{grid-column:span 8}}
 
 /* console */
-.console{display:grid;grid-template-columns:150px 1fr;gap:16px;min-height:320px}
+.console{display:grid;grid-template-columns:190px 1fr;gap:18px;min-height:320px}
 .corebox{display:grid;align-content:start;justify-items:center;gap:8px}
-.core{width:140px;height:140px;position:relative}
+.core{width:180px;height:180px;position:relative}
 .core svg{width:100%;height:100%;overflow:visible;position:absolute;inset:0}
 .core canvas{position:absolute;inset:0;width:100%;height:100%}
 .core .r1{animation:spin 14s linear infinite;transform-origin:50% 50%;stroke:rgb(var(--glow))}
@@ -450,7 +450,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   .attn .chip{padding:4px 8px;font-size:10px}.attn .chip b{font-size:13px}
   .clock .t{font-size:20px}.clock .d,.clock .z,.clock .mk{display:none}.clock .u{margin-top:0;font-size:10px}
   /* panels */
-  .panel{padding:14px;animation:none}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:100px;height:100px}.chat{max-height:240px}
+  .panel{padding:14px;animation:none}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:120px;height:120px}.chat{max-height:240px}
   .tile .name{font-size:16px}
   /* weather band: map below the numbers; the map only takes touch after you tap it */
   .band{min-height:0;display:flex;flex-direction:column}.band .glass{order:0}.band #map{order:1;position:relative;height:280px;margin:0 -12px 0;touch-action:pan-y}.band .mapctl{order:2}
@@ -500,7 +500,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
             <circle class="r2" cx="50" cy="50" r="33" fill="none" stroke-width="1.5" stroke-dasharray="20 15 5 40"/>
             <circle class="pulse" cx="50" cy="50" r="18" opacity=".7"/>
           </svg>
-          <canvas id="viz" width="280" height="280"></canvas>
+          <canvas id="viz" width="400" height="400"></canvas>
         </div>
         <div class="corestate" id="coreState">idle</div>
       </div>
@@ -1259,7 +1259,7 @@ function drawViz(now = 0) {
   const [tr, tg, tb] = C.tint.map(Math.round);
   const spin = vizMode === "thinking" ? 1.6 : vizMode === "listening" ? 0.9 : vizMode === "idle" ? 0.18 : 0.45 + C.level * 0.8;
   C.rotY += dt * spin; C.rotX += ((vizMode === "thinking" ? 0.35 + 0.5 * Math.sin(fakePhase * 1.3) : 0.35 + 0.08 * Math.sin(fakePhase * 0.4)) - C.rotX) * 0.05;
-  const base = (vizMode === "listening" ? 72 : 84) * (1 + C.swell * (vizMode === "radio" ? 0.12 : 0.2));
+  const base = W * (vizMode === "listening" ? 0.257 : 0.3) * (1 + C.swell * (vizMode === "radio" ? 0.12 : 0.2));
   const sy = Math.sin(C.rotY), cyy = Math.cos(C.rotY), sx = Math.sin(C.rotX), cxx = Math.cos(C.rotX);
   vctx.clearRect(0, 0, W, H);
   // glow behind the sphere
@@ -1277,7 +1277,7 @@ function drawViz(now = 0) {
       let y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx;                // tilt X
       if ((pass === 0) !== (z2 < 0)) continue;
       const persp = 1 / (1.9 - z2 * 0.6), px = cx + x1 * base * persp * 1.9, py = cy + y2 * base * persp * 1.9;
-      const depth = (z2 + 1) / 2, a = (0.18 + depth * 0.82) * (vizMode === "idle" ? 0.55 : 0.75 + C.level * 0.25), sz = (VIZ_PHONE ? 1.6 : 1.3) + depth * 1.6 + C.smooth[p.band] * 1.2;
+      const depth = (z2 + 1) / 2, a = (0.18 + depth * 0.82) * (vizMode === "idle" ? 0.55 : 0.75 + C.level * 0.25), sz = (W / 280) * ((VIZ_PHONE ? 1.6 : 1.3) + depth * 1.6 + C.smooth[p.band] * 1.2);
       vctx.fillStyle = depth > 0.82 ? `rgba(255,255,255,${a})` : `rgba(${tr},${tg},${tb},${a})`;
       vctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
     }
@@ -1285,7 +1285,7 @@ function drawViz(now = 0) {
   // waveform halo while sound plays
   if (analyser && C.level > 0.02) {
     vctx.beginPath();
-    for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * 14; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
+    for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * W * 0.05; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
     vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.25 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.shadowColor = `rgb(${tr},${tg},${tb})`; vctx.shadowBlur = 8; vctx.stroke(); vctx.shadowBlur = 0;
   }
   vizRaf = requestAnimationFrame(drawViz);
