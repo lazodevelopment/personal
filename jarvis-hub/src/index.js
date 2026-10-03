@@ -65,6 +65,7 @@ async function pushAlert(env, alert) {
   await kv.put(env, "alerts", list.slice(0, 80));
 }
 
+const isBot = (addr) => /no-?reply|donotreply|do-not-reply|notifications?@|mailer-daemon|postmaster|alerts?@/i.test(String(addr || ""));
 async function runChecks(env) {
   const results = await Promise.all(SITES.map(checkSite));
   const prev = (await kv.get(env, "uptime")) || {};
@@ -105,8 +106,9 @@ async function runChecks(env) {
       const age = m.received ? Date.now() - new Date(m.received) : 0;
       if (age > 2 * 3600e3) {
         seen[m.url] = Date.now(); changed = true;
-        await pushAlert(env, { kind: "lead", text: `Unanswered for ${Math.round(age / 3600e3)}h: ${m.from} — ${m.subject}`, url: m.url });
-        await notify(env, "Lead waiting on you", `${m.from}: ${m.subject}\n${m.snippet || ""}`, { priority: "high", tags: "envelope", url: m.url });
+        const bot = isBot(m.fromEmail || m.from); // an automated notice (missed call, form): name what it is about, not the no-reply address
+        await pushAlert(env, { kind: "lead", text: `Waiting ${Math.round(age / 3600e3)}h: ${bot ? (m.snippet || m.subject) : m.from + " — " + m.subject}`, url: m.url });
+        await notify(env, bot ? "Lead waiting on you" : "Reply waiting on you", `${bot ? m.subject : m.from + ": " + m.subject}\n${m.snippet || ""}`, { priority: "high", tags: "envelope", url: m.url });
       }
     }
     if (changed) await kv.put(env, "nudged", seen);
@@ -371,7 +373,7 @@ async function ingestInbox(env, body, ctx) {
     await kv.put(env, "inbox_hooks", hooks);
   }
   // the Inbox panel, the nudges and the briefs all read `brief`; rebuild it from every bridged account
-  const all = Object.entries(inbox.accounts).flatMap(([acct, a]) => a.items.map((m) => ({ business: a.business, account: acct, threadId: m.threadId, from: m.from.replace(/<.*>/, "").trim() || m.fromEmail, when: new Date(m.date).toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }), received: m.date, subject: m.subject, snippet: m.summary || m.snippet?.slice(0, 120) || "", url: m.link, needs_reply: !!m.needs_reply, unread: !!m.unread, priority: m.priority || 3, kind: m.kind || "" })));
+  const all = Object.entries(inbox.accounts).flatMap(([acct, a]) => a.items.map((m) => ({ business: a.business, account: acct, threadId: m.threadId, from: m.from.replace(/<.*>/, "").trim() || m.fromEmail, fromEmail: m.fromEmail || "", when: new Date(m.date).toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }), received: m.date, subject: m.subject, snippet: m.summary || m.snippet?.slice(0, 120) || "", url: m.link, needs_reply: !!m.needs_reply, unread: !!m.unread, priority: m.priority || 3, kind: m.kind || "" })));
   all.sort((a, b) => (b.needs_reply - a.needs_reply) || (a.priority - b.priority) || b.received.localeCompare(a.received));
   const needs = all.filter((m) => m.needs_reply).length, unread = all.filter((m) => m.unread).length;
   await kv.put(env, "brief", { at: new Date().toISOString(), source: "bridge", accounts: Object.keys(inbox.accounts), note: all.length ? `${unread} unread across ${Object.keys(inbox.accounts).length} inbox${Object.keys(inbox.accounts).length > 1 ? "es" : ""}, ${needs} need${needs === 1 ? "s" : ""} a reply` : "All inboxes clear.", items: all.slice(0, 40) });
@@ -870,7 +872,7 @@ async function makeFollowups(env, { minAgeH = 24, dry = false } = {}) {
   const brief = await kv.get(env, "brief"); const list = (await kv.get(env, "followups")) || [];
   const items = brief?.items || [];
   const have = new Set(list.map((f) => f.threadId + "|" + f.received));
-  const due = items.filter((m) => m.needs_reply && m.threadId && m.account && ["lead", "client", "booking"].includes(m.kind) && Date.now() - new Date(m.received) > minAgeH * 3600e3 && !have.has(m.threadId + "|" + m.received)).slice(0, 3);
+  const due = items.filter((m) => m.needs_reply && m.threadId && m.account && !isBot(m.fromEmail) && ["lead", "client", "booking"].includes(m.kind) && Date.now() - new Date(m.received) > minAgeH * 3600e3 && !have.has(m.threadId + "|" + m.received)).slice(0, 3);
   if (dry && !due.length) return [{ skip: "none due", candidates: items.filter((m) => m.needs_reply).map((m) => ({ kind: m.kind, ageH: Math.round((Date.now() - new Date(m.received)) / 3600e3), acct: !!m.account, thread: !!m.threadId })) }];
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }); const out = [];
   for (const m of due) {
@@ -952,7 +954,8 @@ export default {
       await appStores(env).catch((e) => console.log("app stores", e.message));
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
       const slot = SLOT_HOURS(env)[localHour(env)];
-      if (slot) {
+      const recent = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === slot && Date.now() - new Date(b.at) < 3 * 3600e3); // never two of the same brief in one morning
+      if (slot && !recent) {
         const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} });
         await makeMorning(env, fake, slot).catch((e) => pushAlert(env, { kind: "watch", text: slot + " brief failed: " + e.message }));
       }
