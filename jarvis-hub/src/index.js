@@ -1037,6 +1037,21 @@ export default {
     if (p === "/api/followups/skip" && request.method === "POST") { const { id } = await request.json(); const list = ((await kv.get(env, "followups")) || []).map((f) => f.id === id ? { ...f, status: "skipped" } : f); await kv.put(env, "followups", list); return json({ ok: true }); }
     if (p === "/api/trips" && request.method === "POST") return json(await addTrip(env, await request.json()));
     if (p === "/api/trips/delete" && request.method === "POST") { const { id } = await request.json(); await kv.put(env, "trips", ((await kv.get(env, "trips")) || []).filter((t) => t.id !== id)); return json({ ok: true }); }
+    if (p === "/api/yt/resolve") {   // a channel page or any YouTube URL -> the live (or latest) video id, so the Live Feeds box accepts channel links
+      try {
+        let u = String(url.searchParams.get("u") || "").trim(); if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+        const x = new URL(u); if (!/(^|\.)youtube\.com$/.test(x.hostname)) return json({ error: "not a YouTube link" }, 400);
+        const handle = (x.pathname.match(/^\/(@[\w.-]+|channel\/UC[\w-]+|c\/[\w.-]+|user\/[\w.-]+)/) || [])[1];
+        const page = handle ? `https://www.youtube.com/${handle}/live` : u;
+        const r = await within(fetch(page, { headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", "accept-language": "en-US,en;q=0.9", cookie: "CONSENT=YES+1; SOCS=CAI" }, redirect: "follow" }), 9000, null);
+        if (!r || !r.ok) return json({ error: "YouTube didn't answer (" + (r?.status || "timeout") + ")" }, 502);
+        const h = await r.text();
+        const id = (h.match(/"videoId":"([\w-]{11})"/) || [])[1] || (h.match(/<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})/) || [])[1];
+        if (!id) return json({ error: "no video found on that page" }, 404);
+        const title = (h.match(/<title>([^<]*)<\/title>/) || [])[1]?.replace(/ - YouTube$/, "") || "";
+        return json({ videoId: id, live: /"isLiveNow":true/.test(h), title, channel: handle || null });
+      } catch (e) { return json({ error: String(e.message || e) }, 500); }
+    }
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
     if (p === "/api/inbox/thread") { const r = await bridgeCall(env, url.searchParams.get("account"), { action: "get", threadId: url.searchParams.get("t") }); if (r.error === "unknown action") r.error = "This inbox's bridge script is the older version. Paste the updated script and deploy a new version to read full emails."; return json(r, r.error ? 502 : 200); }
@@ -1072,7 +1087,7 @@ export default {
         if (body.traffic?.sites) { const cur = await kv.get(env, "traffic"); for (const [id, t] of Object.entries(body.traffic.sites)) { const prev = cur?.sites?.[id]; if (t?.error && prev && !prev.error && Date.now() - new Date(cur.at) < 30 * 60e3) body.traffic.sites[id] = prev; } }
         for (const k of STATE_KEYS) if (k in body) {
           if (k === "brief" && body.brief?.source !== "bridge" && !body.brief?.force) { const cur = await kv.get(env, "brief"); if (cur?.source === "bridge") continue; } // live bridges outrank the hourly snapshot
-          if (k === "watch" && body.watch && !Array.isArray(body.watch)) body.watch = { ...((await kv.get(env, "watch")) || {}), ...body.watch }; // PC and cloud feeder each post their own sections
+          if (k === "watch" && body.watch && !Array.isArray(body.watch)) { const cur = (await kv.get(env, "watch")) || {}; const inPay = body.watch.payments, curPay = cur.payments; if (Array.isArray(inPay) && Array.isArray(curPay) && !inPay.some((x) => x.id) && curPay.some((x) => x.id) && Date.now() - new Date(cur.at || 0) < 2 * 3600e3) body.watch.payments = curPay; body.watch = { ...cur, ...body.watch }; } // PC and cloud feeder each post their own sections; a feeder that cannot read the bookings keeps the other's list
           await kv.put(env, k, body[k]); saved.push(k);
         }
         if (body.metrics) ctx.waitUntil(Promise.all([watchMetrics(env, body.metrics), weddingWeather(env)]));
