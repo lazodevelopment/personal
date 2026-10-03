@@ -1216,7 +1216,7 @@ function attachAudio(el) {
 /* ---------- voice output: sentence-streamed ElevenLabs, browser fallback ---------- */
 let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0, currentSpeech = "";
 const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
-let pendingReply = false, settleMic = async () => {};
+let pendingReply = false, replyOpen = null, settleMic = async () => {};
 const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter(w => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter(w => w.length > 3); return words.length > 0 && words.filter(w => said.has(w)).length / words.length >= 0.5; };
 // One persistent <audio> element. Phones only allow playback on an element that was started by a user
 // gesture, so we unlock it on the first tap and then reuse it for every segment (no gaps, no blocked plays).
@@ -1255,6 +1255,7 @@ function enqueueSpeech(segment) {
 }
 async function pumpSpeech() {
   speaking = true; radioDuck(true);
+  if (listening && typeof closeMicQuietly === "function") closeMicQuietly();
   while (speakQueue.length) {
     const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
     const blob = await item.blob; if (item.gen !== speakGen) continue;
@@ -1295,6 +1296,7 @@ async function ask(text) {
   text = text.trim(); if (!text) return;
   pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
   const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
+  const myReply = {}; replyOpen = myReply;
   const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
   let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
   const flushSentences = (final) => {
@@ -1319,6 +1321,7 @@ async function ask(text) {
       }
     }
   } catch (e) { el.textContent = (full || "") + " I lost the connection to my reasoning core. " + e.message; }
+  if (replyOpen === myReply) replyOpen = false; else return; // a newer question took over
   $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) { pendingReply = false; setViz("idle"); onSpeechEnd(); }
 }
 function handleAction(a) {
@@ -1345,6 +1348,7 @@ async function detectMic() {
   else if (!SR) addMsg("sys", "Voice input needs Chrome, Edge or Safari. Typing works everywhere.");
 }
 function onSpeechEnd() {
+  if (replyOpen) return; // the rest of the reply is still on its way; keep the mic closed
   pendingReply = false;
   if (!hasMic || speaking || listening) return;
   if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && $("#convOn").checked) startListen(); }, 400);
@@ -1353,7 +1357,9 @@ function onSpeechEnd() {
 let startListen = () => {};
 function setupVoice() {
   rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
-  rec.onresult = (e) => { const r = e.results[e.results.length-1]; $("#coreState").textContent = "» " + r[0].transcript.slice(-40); if (r.isFinal) ask(r[0].transcript); };
+  let recIgnore = false;
+  rec.onresult = (e) => { if (recIgnore) return; const r = e.results[e.results.length-1]; const t = r[0].transcript; if (speaking && soundsLikeSelf(t)) return; $("#coreState").textContent = "» " + t.slice(-40); if (r.isFinal) ask(t); };
+  window.closeMicQuietly = () => { recIgnore = true; try { rec.abort(); } catch {} setTimeout(() => { recIgnore = false; }, 600); };
   rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) { radioDuck(false); setViz("idle"); } if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
   rec.onerror = (e) => { const why = { "not-allowed": "Microphone blocked. In Chrome: tap the lock icon in the address bar → Permissions → Microphone → Allow, then reload.", "service-not-allowed": "Speech recognition is disabled in this browser.", "audio-capture": "No microphone could be opened. Close other apps using the mic and try again.", "network": "Speech recognition needs an internet connection (Google's service).", "language-not-supported": "Speech language not supported." }[e.error]; if (why) addMsg("sys", why); else if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
   startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); radioDuck(true); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
