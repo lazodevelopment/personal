@@ -1032,17 +1032,29 @@ async function fetchReadings(env, dateStr) {
   if (!r || !r.ok) throw new Error("USCCB feed " + (r?.status || "timeout"));
   const xml = await r.text(); const want = dateStr.slice(5, 7) + dateStr.slice(8, 10) + dateStr.slice(2, 4);   // MMDDYY in the link
   const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
-  const item = items.find((it) => it.includes(`/readings/${want}.cfm`)) || items[0]; if (!item) throw new Error("no readings in feed");
+  const item = items.find((it) => it.includes(`/readings/${want}.cfm`)); if (!item) throw new Error("feed has no readings for " + dateStr);
   const title = stripHtml(unesc((item.match(/<title>([\s\S]*?)<\/title>/) || [])[1])), link = ((item.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || "").trim();
   const desc = unesc((item.match(/<description>([\s\S]*?)<\/description>/) || [])[1]);
   const parts = []; const re = /<h4>\s*([^<]+?)\s*(?:<a[^>]*>([\s\S]*?)<\/a>)?\s*<\/h4>([\s\S]*?)(?=<h4>|$)/g; let m;
   while ((m = re.exec(desc))) { const kind = m[1].trim(), ref = stripHtml(m[2] || ""), text = stripHtml(m[3]); if (text.length > 20) parts.push({ kind, ref, text }); }
   return { date: dateStr, title, link, parts };
 }
-async function dailyReadings(env, { fresh = false } = {}) {
-  const dateStr = new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" });
+async function fetchReadingsPage(env, dateStr) {
+  const mmddyy = dateStr.slice(5, 7) + dateStr.slice(8, 10) + dateStr.slice(2, 4), link = `https://bible.usccb.org/bible/readings/${mmddyy}.cfm`;
+  const r = await within(fetch(link, { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub; personal dashboard)" } }), 10000, null);
+  if (!r || !r.ok) throw new Error("USCCB page " + (r?.status || "timeout"));
+  const h = await r.text(); const title = stripHtml((h.match(/<title>([^<|]+)/) || [])[1] || "").trim();
+  const parts = []; const re = /<h3 class="name">([\s\S]*?)<\/h3>\s*<div class="address">([\s\S]*?)<\/div>\s*<\/div>\s*<div class="content-body">([\s\S]*?)<\/div>/g; let m;
+  while ((m = re.exec(h))) { const kind = stripHtml(m[1]), ref = stripHtml(m[2]), text = stripHtml(m[3]); if (text.length > 20) parts.push({ kind, ref, text }); }
+  if (!parts.length) throw new Error("no readings on that page");
+  return { date: dateStr, title, link, parts };
+}
+async function dailyReadings(env, { fresh = false, date = null } = {}) {
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); const dateStr = date || today;
   const cached = await kv.get(env, "readings_" + dateStr); if (cached?.reflection && !fresh) return cached;
-  const base = await fetchReadings(env, dateStr); let reflection = null;
+  let base, firstErr; try { base = dateStr === today ? await fetchReadings(env, dateStr) : await fetchReadingsPage(env, dateStr); } catch (e) { firstErr = e.message; try { base = dateStr === today ? await fetchReadingsPage(env, dateStr) : await fetchReadings(env, dateStr); } catch (e2) { throw new Error(firstErr + " / " + e2.message); } }
+  if (base.date !== dateStr && !base.link.includes(dateStr.slice(5, 7) + dateStr.slice(8, 10) + dateStr.slice(2, 4))) throw new Error("readings for " + dateStr + " not published yet");
+  let reflection = null;
   if (env.ANTHROPIC_API_KEY) {
     const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
     const r = await client.beta.messages.create({
@@ -1112,7 +1124,7 @@ export default {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
       await appStores(env).catch((e) => console.log("app stores", e.message));
-      if (localHour(env) === 4) await dailyReadings(env).catch((e) => console.log("readings", e.message));   // ready before the morning brief
+      if (localHour(env) === 4) { await dailyReadings(env).catch((e) => console.log("readings", e.message)); const dowF = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }); if (dowF === "Sat") { const sun = new Date(Date.now() + 86400e3).toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); await dailyReadings(env, { date: sun }).catch((e) => console.log("vigil readings", e.message)); } }   // ready before the morning brief; Sunday's for the vigil
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
       const dow = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }), hr = localHour(env);
       if (dow === "Sun" && hr === 20) await scanCompetitors(env).catch((e) => console.log("competitors", e.message));
@@ -1195,7 +1207,8 @@ export default {
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
-    if (p === "/api/faith") { const m = mysteriesFor(env); let readings = null, err = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh") }); } catch (e) { err = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err }); }
+    if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err }); }
+    if (p === "/api/faith/page") { try { const r = await fetchReadingsPage(env, url.searchParams.get("date")); return json({ title: r.title, parts: r.parts.map((x) => [x.kind, x.ref, x.text.length]) }); } catch (e) { return json({ error: e.message }, 502); } }
     if (p === "/api/faith/rosary/audio") return rosaryAudio(env, url.searchParams.get("set") || "glorious", url.searchParams.get("seg") || "open");
     if (p === "/api/competitors/scan" && request.method === "POST") return json({ changes: await scanCompetitors(env), competitors: (await kv.get(env, "competitors")) || [] });
     if (p === "/api/apps/targets") return json([...APPS, ...((await kv.get(env, "apps_watch")) || [])].filter((a) => a.ios));

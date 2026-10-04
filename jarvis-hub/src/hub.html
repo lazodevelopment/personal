@@ -647,7 +647,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
         <div class="empty" id="rosState">JARVIS leads it aloud: opening prayers, five decades with a short meditation each, closing prayers. About twenty minutes.</div>
       </div>
       <div class="readings">
-        <h3 class="wh3">TODAY'S MASS READINGS · <span id="rdTitle"></span></h3>
+        <h3 class="wh3">MASS READINGS · <span id="rdTitle"></span></h3>
+        <div class="rsets" id="rdDays"></div>
         <div class="rctl"><button class="btn primary" id="rdListen">▶ LISTEN</button><button class="btn sm" id="rdStop" hidden>STOP</button><a class="btn sm" id="rdLink" target="_blank" rel="noopener" href="https://bible.usccb.org/daily-bible-reading">USCCB</a></div>
         <div id="rdTheme" class="theme"></div>
         <div id="rdParts"></div>
@@ -1151,9 +1152,12 @@ $("#tripAdd").onclick = () => { const f = $("#tripForm"); f.hidden = !f.hidden; 
 $("#tripForm").onsubmit = async (e) => { e.preventDefault(); const t = await fetch("/api/trips", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ flight: $("#tripFl").value, date: $("#tripDate").value, home: $("#tripHome").value }) }).then(r => r.json()).catch(() => ({ error: "offline" })); if (t.error) return addMsg("sys", "Trip not added: " + t.error); $("#tripForm").hidden = true; $("#tripFl").value = ""; await loadState(); };
 
 /* ---------- faith: rosary led aloud, readings in plain words ---------- */
-var faith = null, rosSet = null, ros = null, rdPlay = null;
+var faith = null, rosSet = null, ros = null, rdPlay = null, rdDay = "today", rdCache = {};
+const homeDate = (offset = 0) => new Date(Date.now() + offset * 86400e3).toLocaleDateString("en-CA", { timeZone: state.cfg?.home?.tz || state.cfg?.tz || undefined });
+const sundayOffset = () => (7 - new Date(homeDate() + "T12:00:00").getDay()) % 7;   // 0 on Sunday itself
 async function loadFaith(fresh) {
-  try { faith = await fetch("/api/faith" + (fresh ? "?fresh=1" : "") + (rosSet ? (fresh ? "&" : "?") + "set=" + rosSet : "")).then(r => r.json()); } catch { return; }
+  const q = new URLSearchParams(); if (fresh) q.set("fresh", "1"); if (rosSet) q.set("set", rosSet); if (rdDay === "sunday" && sundayOffset()) q.set("date", homeDate(sundayOffset()));
+  try { const f = await fetch("/api/faith?" + q).then(r => r.json()); if (f.readings) rdCache[f.readings.date] = f.readings; faith = f; } catch { return; }
   renderFaith();
 }
 function renderFaith() {
@@ -1163,6 +1167,9 @@ function renderFaith() {
   $("#rosSets").innerHTML = ["joyful", "sorrowful", "glorious", "luminous"].map(k => `<button data-set="${k}" class="${k === R.key ? "sel" : ""}">${k.toUpperCase()}${k === m.key ? " ·TODAY" : ""}</button>`).join("");
   $("#rosSets").querySelectorAll("[data-set]").forEach(b => b.onclick = () => { if (ros) return; rosSet = b.dataset.set; loadFaith(); });
   $("#rosList").innerHTML = R.segments.filter(x => x.ref).map((x, i) => `<li data-seg="${x.id}"><b>${esc(x.label.replace(/^\d\.\s*/, ""))}</b><small>${esc(x.ref)} · for ${esc(x.fruit)}</small><span class="med">${esc(x.med || "")}</span></li>`).join("");
+  const sat = new Date(homeDate() + "T12:00:00").getDay() === 6, off = sundayOffset();
+  $("#rdDays").innerHTML = `<button data-day="today" class="${rdDay === "today" ? "sel" : ""}">TODAY</button>` + (off ? `<button data-day="sunday" class="${rdDay === "sunday" ? "sel" : ""}">${sat ? "SATURDAY VIGIL · SUNDAY" : "SUNDAY"}</button>` : "");
+  $("#rdDays").querySelectorAll("[data-day]").forEach(b => b.onclick = () => { if (rdPlay) return; rdDay = b.dataset.day; const want = rdDay === "sunday" ? homeDate(off) : homeDate(); if (rdCache[want]) { faith.readings = rdCache[want]; renderFaith(); } else { $("#rdParts").innerHTML = `<div class="empty">Loading…</div>`; loadFaith(); } });
   const rd = faith.readings;
   if (!rd) { $("#rdTitle").textContent = ""; $("#rdTheme").textContent = ""; $("#rdParts").innerHTML = `<div class="empty">${esc(faith.error || "Readings not available yet.")}</div>`; $("#rdConc").innerHTML = ""; return; }
   $("#rdTitle").textContent = rd.title; $("#rdLink").href = rd.link || $("#rdLink").href;
