@@ -391,10 +391,20 @@ async function bridgeCall(env, account, payload) {
   const t = await r.text(); try { return JSON.parse(t); } catch { return { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : "") }; }
 }
 
+// which Gmail bridge should carry this action: the exact address, else the inbox that holds the thread, else the business by id or name
+async function resolveHook(env, p) {
+  const hooks = (await kv.get(env, "inbox_hooks")) || {}; const want = String(p.account || "").toLowerCase().trim();
+  if (hooks[want]?.url) return hooks[want];
+  if (p.threadId) { const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; const acct = Object.entries(inbox.accounts).find(([, a]) => (a.items || []).some((m) => m.threadId === p.threadId))?.[0]; if (acct && hooks[acct]?.url) return hooks[acct]; }
+  const bizId = Object.entries(BIZ_LABEL).find(([id, name]) => [id, name.toLowerCase(), (BIZ_NAME[id] || "").toLowerCase()].includes(want) || [id, name.toLowerCase()].includes(String(p.business || "").toLowerCase()))?.[0];
+  const byBiz = Object.values(hooks).find((h) => h.url && h.business === (bizId || p.business));
+  if (byBiz) return byBiz;
+  const partial = Object.entries(hooks).find(([a, h]) => h.url && want && (a.includes(want) || want.includes(a.split("@")[1] || "~")));
+  return partial ? partial[1] : null;
+}
 async function emailAction(env, item) {
-  const hooks = (await kv.get(env, "inbox_hooks")) || {}; const p = item.params || {};
-  const hook = hooks[String(p.account || "").toLowerCase()] || Object.values(hooks).find((h) => h.business === p.business);
-  if (!hook?.url) return { ok: false, message: "no Gmail bridge for " + (p.account || p.business || "that account") };
+  const p = item.params || {}; const hook = await resolveHook(env, p);
+  if (!hook?.url) { const have = Object.keys((await kv.get(env, "inbox_hooks")) || {}); return { ok: false, message: `no Gmail bridge for ${p.account || p.business || "that account"}; connected inboxes: ${have.join(", ") || "none"}. Connect the others with the scripts in secrets/bridges.` }; }
   const action = item.kind.replace("email_", "");
   const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject }), redirect: "follow" });
   const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch {}
@@ -583,7 +593,7 @@ Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
-Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
+Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account = the exact Gmail address shown in the INBOX line brackets for that thread, e.g. info@ataviaweddings.com, never a business name; params.threadId; params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
 Faith: he is Catholic. For "what are today's readings / gospel" or "what does it mean", answer from the FAITH line (theme and plain-words conclusion). For "pray the rosary" the page itself leads it; say you're starting it.
 Competitors: watch_competitor adds a pricing/packages page to the Sunday scan; changes appear in COMPETITORS and the Monday review.
 Trips: when he mentions a flight he is taking ("I fly AA 2612 to Phoenix on Friday"), call add_trip with the flight number, the local date (YYYY-MM-DD) and home 'az' when he is flying to Arizona or 'tx' when flying to Texas. JARVIS then tracks it on the day, pushes wheels-up and landed, and switches home on landing. remove_trip cancels one.
