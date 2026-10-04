@@ -283,6 +283,18 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .pend .fu{display:block}.pend .fu textarea{width:100%;min-height:110px;margin-top:6px;background:#070d18;border:1px solid var(--line2);color:var(--fg);font:13px/1.45 var(--display);padding:8px}
 .pend .fu .row{display:flex;gap:6px;margin-top:6px;align-items:center}
 .ralarm{display:block;margin-top:10px;font-size:12px;color:var(--dim)}.ralarm b{color:#fff;font-weight:600}.ralarm small{display:block;color:var(--amber)}
+/* faith */
+.faith{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:22px}
+@media(max-width:899px){.faith{grid-template-columns:1fr}}
+.rsets{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.rsets button{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:4px 8px;border:1px solid var(--line);color:var(--dim)}.rsets button.sel{border-color:var(--cyan);color:#fff;background:rgba(var(--glow),.1)}
+.myst{margin:0 0 12px;padding:0 0 0 22px;display:grid;gap:7px;font-size:14px}.myst li::marker{font-family:var(--mono);color:var(--cyan)}
+.myst b{color:#fff;font-weight:600}.myst small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim)}.myst .med{display:block;color:var(--fg);font-size:13px;line-height:1.4;margin-top:1px}
+.myst li.now b{color:var(--cyan2)}.myst li.now{border-left:2px solid var(--cyan);margin-left:-10px;padding-left:8px}.myst li.done{opacity:.55}
+.rctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 8px}
+.theme{font-size:15px;color:#fff;font-weight:600;margin:4px 0 10px;line-height:1.4}
+.rd{border-left:2px solid var(--line);padding:6px 10px;margin-bottom:10px}.rd .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--cyan)}.rd .k span{color:var(--dim);letter-spacing:.05em;margin-left:8px}
+.rd .plain{font-size:14px;line-height:1.5;margin:4px 0 0}.rd details{margin-top:6px}.rd summary{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--dim);cursor:pointer}.rd .txt{white-space:pre-wrap;font-size:13px;line-height:1.5;color:var(--fg);margin-top:6px;max-height:260px;overflow:auto}
+.conc{border:1px solid var(--line2);background:rgba(var(--glow),.05);padding:10px 12px;font-size:14px;line-height:1.55}.conc .k{font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:var(--cyan);display:block;margin-bottom:4px}
 /* radio */
 .radio{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
 .radio input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--cyan)}
@@ -622,6 +634,26 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     </div>
     <label class="ralarm"><input type="checkbox" id="alarmOn"> Wake-up: play the morning brief at <b id="alarmAt">5:00</b>, then fade in this station <small id="alarmNote"></small></label>
     <div class="rst" id="radioStations"></div>
+  </section>
+
+  <section class="panel" data-v="jarvis more" id="faithPanel">
+    <h2>Faith <span class="sub" id="faithSub"></span><button class="btn sm" id="faithRefresh" title="Reload today's readings">REFRESH</button></h2>
+    <div class="faith">
+      <div class="rosary">
+        <h3 class="wh3">THE ROSARY · <span id="rosWhich"></span></h3>
+        <div class="rsets" id="rosSets"></div>
+        <ol class="myst" id="rosList"></ol>
+        <div class="rctl"><button class="btn primary" id="rosPlay">▶ PRAY THE ROSARY</button><button class="btn sm" id="rosPause" hidden>PAUSE</button><button class="btn sm" id="rosNext" hidden>NEXT DECADE ›</button><button class="btn sm" id="rosStop" hidden>STOP</button></div>
+        <div class="empty" id="rosState">JARVIS leads it aloud: opening prayers, five decades with a short meditation each, closing prayers. About twenty minutes.</div>
+      </div>
+      <div class="readings">
+        <h3 class="wh3">TODAY'S MASS READINGS · <span id="rdTitle"></span></h3>
+        <div class="rctl"><button class="btn primary" id="rdListen">▶ LISTEN</button><button class="btn sm" id="rdStop" hidden>STOP</button><a class="btn sm" id="rdLink" target="_blank" rel="noopener" href="https://bible.usccb.org/daily-bible-reading">USCCB</a></div>
+        <div id="rdTheme" class="theme"></div>
+        <div id="rdParts"></div>
+        <div id="rdConc" class="conc"></div>
+      </div>
+    </div>
   </section>
 
   <section class="panel" data-v="ops" id="watchPanel">
@@ -1118,6 +1150,63 @@ function renderEvents() {
 $("#tripAdd").onclick = () => { const f = $("#tripForm"); f.hidden = !f.hidden; if (!f.hidden) { $("#tripDate").value = new Date().toLocaleDateString("en-CA"); $("#tripFl").focus(); } };
 $("#tripForm").onsubmit = async (e) => { e.preventDefault(); const t = await fetch("/api/trips", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ flight: $("#tripFl").value, date: $("#tripDate").value, home: $("#tripHome").value }) }).then(r => r.json()).catch(() => ({ error: "offline" })); if (t.error) return addMsg("sys", "Trip not added: " + t.error); $("#tripForm").hidden = true; $("#tripFl").value = ""; await loadState(); };
 
+/* ---------- faith: rosary led aloud, readings in plain words ---------- */
+var faith = null, rosSet = null, ros = null, rdPlay = null;
+async function loadFaith(fresh) {
+  try { faith = await fetch("/api/faith" + (fresh ? "?fresh=1" : "") + (rosSet ? (fresh ? "&" : "?") + "set=" + rosSet : "")).then(r => r.json()); } catch { return; }
+  renderFaith();
+}
+function renderFaith() {
+  if (!faith) return; const m = faith.mysteries, R = faith.rosary; rosSet = rosSet || m.key;
+  $("#faithSub").textContent = `${m.season} · ${new Date().toLocaleDateString([], { weekday: "long" })}`;
+  $("#rosWhich").textContent = R.name + (R.key === m.key ? " · today" : "");
+  $("#rosSets").innerHTML = ["joyful", "sorrowful", "glorious", "luminous"].map(k => `<button data-set="${k}" class="${k === R.key ? "sel" : ""}">${k.toUpperCase()}${k === m.key ? " ·TODAY" : ""}</button>`).join("");
+  $("#rosSets").querySelectorAll("[data-set]").forEach(b => b.onclick = () => { if (ros) return; rosSet = b.dataset.set; loadFaith(); });
+  $("#rosList").innerHTML = R.segments.filter(x => x.ref).map((x, i) => `<li data-seg="${x.id}"><b>${esc(x.label.replace(/^\d\.\s*/, ""))}</b><small>${esc(x.ref)} · for ${esc(x.fruit)}</small><span class="med">${esc(x.text.split(". We ask")[0].split(": ").slice(1).join(": ") || "")}</span></li>`).join("");
+  const rd = faith.readings;
+  if (!rd) { $("#rdTitle").textContent = ""; $("#rdTheme").textContent = ""; $("#rdParts").innerHTML = `<div class="empty">${esc(faith.error || "Readings not available yet.")}</div>`; $("#rdConc").innerHTML = ""; return; }
+  $("#rdTitle").textContent = rd.title; $("#rdLink").href = rd.link || $("#rdLink").href;
+  const refl = rd.reflection || { parts: [] }; $("#rdTheme").textContent = refl.theme || "";
+  $("#rdParts").innerHTML = rd.parts.map((p, i) => { const pl = (refl.parts || []).find(x => x.kind === p.kind) || refl.parts?.[i]; return `<div class="rd"><div class="k">${esc(p.kind.toUpperCase())}<span>${esc(p.ref)}</span></div>${pl ? `<p class="plain">${esc(pl.plain)}</p>` : ""}<details><summary>READ THE TEXT</summary><div class="txt">${esc(p.text)}</div></details></div>`; }).join("");
+  $("#rdConc").innerHTML = refl.conclusion ? `<span class="k">WHAT IT MEANS TODAY</span>${esc(refl.conclusion)}` : "";
+}
+$("#faithRefresh").onclick = () => { $("#rdParts").innerHTML = `<div class="empty">Loading today's readings…</div>`; loadFaith(true); };
+// the rosary: segment audio from the hub (cached there after the first time), played through the one player
+function rosaryUI(msg) { const on = !!ros; $("#rosPlay").hidden = on; $("#rosPause").hidden = !on; $("#rosNext").hidden = !on; $("#rosStop").hidden = !on; if (msg) $("#rosState").textContent = msg; $("#rosList").querySelectorAll("li").forEach(li => { const idx = ros ? ros.segs.findIndex(x => x.id === li.dataset.seg) : -1; li.classList.toggle("now", !!ros && idx === ros.i); li.classList.toggle("done", !!ros && idx >= 0 && idx < ros.i); }); }
+function rosaryStart() {
+  if (!faith) return; stopSpeaking(); unlockPlayer(); if (typeof radioDuck === "function") radioDuck(true);
+  ros = { key: faith.rosary.key, segs: faith.rosary.segments, i: 0, paused: false }; rosaryUI("Beginning the " + faith.rosary.name + ".");
+  rosaryPlaySeg();
+}
+function rosaryPlaySeg() {
+  if (!ros) return; if (ros.i >= ros.segs.length) { const n = faith.rosary.name; ros = null; rosaryUI("Finished the " + n + ". Amen."); radioDuck(false); setViz("idle"); return; }
+  const seg = ros.segs[ros.i]; rosaryUI(`${seg.label}${seg.ref ? " · " + seg.ref : ""}`);
+  player.src = `/api/faith/rosary/audio?set=${ros.key}&seg=${seg.id}`; setViz("speaking", playerViz());
+  player.onended = () => { if (!ros) return; ros.i++; setTimeout(rosaryPlaySeg, 900); };
+  player.onerror = () => { if (!ros) return; rosaryUI("The voice stumbled on that part; moving on."); ros.i++; setTimeout(rosaryPlaySeg, 1200); };
+  player.play().catch(() => rosaryUI("Tap ▶ once more to allow audio."));
+  // the next part streams while this one plays, so there is no gap
+  const nxt = ros.segs[ros.i + 1]; if (nxt) fetch(`/api/faith/rosary/audio?set=${ros.key}&seg=${nxt.id}`).catch(() => {});
+}
+$("#rosPlay").onclick = rosaryStart;
+$("#rosPause").onclick = () => { if (!ros) return; ros.paused = !ros.paused; if (ros.paused) { player.pause(); $("#rosPause").textContent = "RESUME"; } else { $("#rosPause").textContent = "PAUSE"; if (player.src.includes("/api/faith/rosary/audio")) { setViz("speaking", playerViz()); player.play().catch(() => {}); } else rosaryPlaySeg(); } };
+$("#rosNext").onclick = () => { if (!ros) return; player.onended = null; ros.i++; rosaryPlaySeg(); };
+$("#rosStop").onclick = () => { if (!ros) return; ros = null; player.pause(); player.onended = null; rosaryUI("Stopped."); $("#rosPause").textContent = "PAUSE"; radioDuck(false); setViz("idle"); };
+// the readings, read aloud in order, then the plain-words conclusion
+function chunks(t, n = 1400) { const out = []; let cur = ""; for (const s of String(t).split(/(?<=[.!?])\s+/)) { if ((cur + " " + s).length > n && cur) { out.push(cur); cur = s; } else cur = cur ? cur + " " + s : s; } if (cur) out.push(cur); return out; }
+function readingsListen() {
+  const rd = faith?.readings; if (!rd) return; stopSpeaking(); unlockPlayer(); radioDuck(true);
+  const refl = rd.reflection || {}; const texts = [`Today's readings. ${rd.title}.`];
+  rd.parts.forEach((p, i) => { texts.push(`${p.kind}, ${p.ref}.`); texts.push(...chunks(p.text.replace(/\n+/g, " "))); const pl = (refl.parts || []).find(x => x.kind === p.kind) || refl.parts?.[i]; if (pl?.plain) texts.push("In plain words: " + pl.plain); });
+  if (refl.conclusion) texts.push("What it means today. " + refl.conclusion);
+  rdPlay = { texts, i: 0 }; $("#rdListen").hidden = true; $("#rdStop").hidden = false;
+  const next = () => { if (!rdPlay) return; if (rdPlay.i >= rdPlay.texts.length) { rdPlay = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; radioDuck(false); setViz("idle"); return; } player.src = "/api/tts?t=" + encodeURIComponent(rdPlay.texts[rdPlay.i]); setViz("speaking", playerViz()); player.onended = () => { if (!rdPlay) return; rdPlay.i++; next(); }; player.onerror = player.onended; player.play().catch(() => {}); const n = rdPlay.texts[rdPlay.i + 1]; if (n) fetch("/api/tts?t=" + encodeURIComponent(n), { method: "HEAD" }).catch(() => {}); };
+  next();
+}
+$("#rdListen").onclick = readingsListen;
+$("#rdStop").onclick = () => { rdPlay = null; player.pause(); player.onended = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; radioDuck(false); setViz("idle"); };
+setTimeout(() => loadFaith(), 2500); setInterval(() => { if (!ros && !rdPlay) loadFaith(); }, 6 * 3600e3);
+
 /* ---------- reply playbook ---------- */
 let pbBiz = "atavia";
 function renderPlaybook() { $("#pbTabs").innerHTML = BIZ.map(b => `<button type="button" data-pb="${b.id}" class="${b.id === pbBiz ? "sel" : ""}">${esc(b.name.toUpperCase())}</button>`).join(""); $("#pbText").value = state.playbook?.[pbBiz] || ""; $("#pbText").placeholder = "e.g. Packages: Highlight film $3,500, Feature film $5,500, add-ons … Availability: Saturdays book first; never promise a date without checking. Tone: warm, first names, one question at a time."; $("#pbTabs").querySelectorAll("[data-pb]").forEach(b => b.onclick = () => { pbBiz = b.dataset.pb; renderPlaybook(); }); }
@@ -1415,7 +1504,8 @@ function pickVoices() {
 }
 try { speechSynthesis.onvoiceschanged = pickVoices; } catch {}
 $("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the ElevenLabs voice."); if (!VOICES.length) return; VOICE = VOICES[(VOICES.indexOf(VOICE) + 1) % VOICES.length]; try { localStorage.setItem("jarvisVoice", VOICE.name); } catch {} pickVoices(); speak("This is the " + clean(VOICE.name) + " voice."); };
-function stopSpeaking() { const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
+function stopSpeaking() { if (typeof ros !== "undefined" && ros && !ros.paused) { /* a question interrupts the rosary: pause it, resume after */ ros.paused = true; try { player.pause(); } catch {} $("#rosPause").textContent = "RESUME"; } if (typeof rdPlay !== "undefined" && rdPlay) { rdPlay = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; }
+  const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
 function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
 function enqueueSpeech(segment) {
   if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
@@ -1463,6 +1553,10 @@ function localAnswer(t) {
   const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+)?(radio|music|some music|.+?)(?:\s+radio)?$/);
   if (rp) { const want = /^(radio|music|some music)$/.test(rp[1]) ? "" : rp[1].replace(/\s+/g, ""); const i = want ? (RADIO_MATCH.find(j => RADIO[j].k.some(k => want.includes(k))) ?? -1) : radioIdx; if (i >= 0) { radioPlay(i); return ""; } }
   if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
+  if (/^(pray|start|lead|say) (the )?rosary$|^rosary$/.test(rm)) { if (PHONE) showView("jarvis"); $("#faithPanel").scrollIntoView({ block: "start" }); rosaryStart(); return ""; }
+  if (/^(stop|pause) (the )?rosary$/.test(rm)) { if (ros) { if (/pause/.test(rm)) $("#rosPause").click(); else $("#rosStop").click(); } return ""; }
+  if (/^(read|play|listen to) (me )?(today's |the )?(mass )?(readings|gospel)( for today)?$|^today'?s (readings|gospel)$/.test(rm)) { if (PHONE) showView("jarvis"); $("#faithPanel").scrollIntoView({ block: "start" }); readingsListen(); return ""; }
+  if (/^what (do|does) (today's |the )?(readings|gospel) mean( today)?\??$/.test(rm) && faith?.readings?.reflection?.conclusion) return faith.readings.reflection.conclusion;
   if (/^scan (the )?competitors( now)?$/.test(t)) { $("#compScan").click(); return "Scanning the competitor pages now."; }
   return null;
 }

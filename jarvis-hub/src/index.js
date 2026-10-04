@@ -556,6 +556,8 @@ async function buildContext(env, request) {
   if (watch?.search) lines.push(`SEARCH CONSOLE: ` + (watch.search.sites?.length ? watch.search.sites.map((x) => { const d = x.days || []; const sum = (rows, i) => rows.reduce((a, r) => a + r[i], 0); return `${siteName(x.site)} last 7d ${sum(d.slice(-7), 1)} clicks / ${sum(d.slice(-7), 2)} impressions (prior 7d ${sum(d.slice(-14, -7), 1)} / ${sum(d.slice(-14, -7), 2)})`; }).join("; ") : "not connected yet (" + (watch.search.fix || watch.search.error || "") + ")"));
   const compCh = await kv.get(env, "competitor_changes"); const comps = await kv.get(env, "competitors");
   if (comps?.length) lines.push(`COMPETITORS WATCHED: ` + comps.map((c) => `${c.label} (${c.business || "?"}) ${c.url}`).join("; ") + ` | CHANGES (last scan): ` + ((compCh || []).slice(0, 8).map((c) => `${c.at.slice(0, 10)} ${c.label}: ${c.summary}`).join(" | ") || "none detected"));
+  try { const rd = await kv.get(env, "readings_" + new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" })); const my = mysteriesFor(env);
+    lines.push(`FAITH: today's rosary is the ${my.name} (${my.why}; ${my.season}). ` + (rd ? `Mass readings: ${rd.title}: ${rd.parts.map((x) => x.kind + " " + x.ref).join("; ")}. Theme: ${rd.reflection?.theme || ""}. Plain-words conclusion: ${(rd.reflection?.conclusion || "").slice(0, 500)}` : "Mass readings not loaded yet (the Faith panel loads them).")); } catch {}
   if (apps) lines.push(`APP STORES: ` + Object.values(apps).map((a) => `${a.name} ${a.listed ? "live" + (a.version ? " v" + a.version : "") + (a.released ? " released " + String(a.released).slice(0, 10) : "") : "not listed yet"}`).join("; "));
   const readyF = (fups || []).filter((f) => f.status === "ready");
   if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
@@ -582,6 +584,7 @@ Your replies are spoken aloud through text-to-speech: plain prose, no markdown, 
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account, params.threadId, params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
+Faith: he is Catholic. For "what are today's readings / gospel" or "what does it mean", answer from the FAITH line (theme and plain-words conclusion). For "pray the rosary" the page itself leads it; say you're starting it.
 Competitors: watch_competitor adds a pricing/packages page to the Sunday scan; changes appear in COMPETITORS and the Monday review.
 Trips: when he mentions a flight he is taking ("I fly AA 2612 to Phoenix on Friday"), call add_trip with the flight number, the local date (YYYY-MM-DD) and home 'az' when he is flying to Arizona or 'tx' when flying to Texas. JARVIS then tracks it on the day, pushes wheels-up and landed, and switches home on landing. remove_trip cancels one.
 App stores: watch_app adds an app listing to watch (iOS numeric id or bundle id, Android package name), e.g. once Jovi's app exists.`;
@@ -721,11 +724,11 @@ async function checkStale(env) {
   return flags;
 }
 /* ---------------- ElevenLabs ---------------- */
-function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v2_5") {
+function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v2_5", settings = {}) {
   const voice = env.ELEVENLABS_VOICE_ID || "JBFqnCBsd6RMkjVDRZzb";
   return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=${format}`, {
     method: "POST", headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json" },
-    body: JSON.stringify({ text: String(text).slice(0, 4800), model_id: model, voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true } }),
+    body: JSON.stringify({ text: String(text).slice(0, 4800), model_id: model, voice_settings: { stability: 0.6, similarity_boost: 0.8, style: 0.15, use_speaker_boost: true, ...settings } }),
   });
 }
 async function tts(request, env) {
@@ -959,6 +962,112 @@ async function tripWatch(env) {
   await kv.put(env, "trips", keep);
 }
 
+
+/* ---------------- faith: the rosary (led aloud) and the daily Mass readings with a plain-words reading ---------------- */
+const PRAYERS = {
+  sign: "In the name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+  creed: "I believe in God, the Father almighty, Creator of heaven and earth, and in Jesus Christ, his only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; he descended into hell; on the third day he rose again from the dead; he ascended into heaven, and is seated at the right hand of God the Father almighty; from there he will come to judge the living and the dead. I believe in the Holy Spirit, the holy catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen.",
+  our: "Our Father, who art in heaven, hallowed be thy name; thy kingdom come, thy will be done on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.",
+  hail: "Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+  glory: "Glory be to the Father, and to the Son, and to the Holy Spirit, as it was in the beginning, is now, and ever shall be, world without end. Amen.",
+  fatima: "O my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to heaven, especially those in most need of thy mercy.",
+  salve: "Hail, holy Queen, Mother of mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve; to thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this our exile show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O holy Mother of God, that we may be made worthy of the promises of Christ.",
+  closing: "Let us pray. O God, whose only begotten Son, by his life, death and resurrection, has purchased for us the rewards of eternal life: grant, we beseech thee, that by meditating upon these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain and obtain what they promise, through the same Christ our Lord. Amen.",
+};
+const MYSTERIES = {
+  joyful: { name: "Joyful Mysteries", days: "Mondays and Saturdays", list: [
+    ["The Annunciation", "Luke 1:26-38", "humility", "The angel Gabriel tells Mary she will bear the Son of God, and she answers: let it be done to me according to your word."],
+    ["The Visitation", "Luke 1:39-56", "love of neighbour", "Mary hurries to help her cousin Elizabeth, and the child in Elizabeth's womb leaps for joy."],
+    ["The Nativity", "Luke 2:1-20", "poverty of spirit", "Jesus is born in a stable at Bethlehem, and shepherds are the first to find him."],
+    ["The Presentation in the Temple", "Luke 2:22-38", "obedience", "Mary and Joseph bring the child to the Temple, where old Simeon holds him and calls him a light for all nations."],
+    ["The Finding in the Temple", "Luke 2:41-52", "joy in finding Jesus", "After three days of searching, Mary and Joseph find the twelve-year-old Jesus among the teachers, about his Father's business."] ] },
+  sorrowful: { name: "Sorrowful Mysteries", days: "Tuesdays and Fridays", list: [
+    ["The Agony in the Garden", "Matthew 26:36-46", "sorrow for sin", "In Gethsemane Jesus sweats blood and prays: not my will, but yours be done."],
+    ["The Scourging at the Pillar", "John 19:1", "purity", "Pilate has Jesus scourged; he bears it in silence for us."],
+    ["The Crowning with Thorns", "Matthew 27:27-31", "courage", "Soldiers press a crown of thorns onto his head and mock him as a king."],
+    ["The Carrying of the Cross", "John 19:17", "patience", "Jesus carries his cross to Calvary, falling and rising, helped by Simon of Cyrene."],
+    ["The Crucifixion", "Luke 23:33-46", "perseverance", "Jesus forgives his executioners, entrusts his mother to John, and gives up his spirit."] ] },
+  glorious: { name: "Glorious Mysteries", days: "Wednesdays and Sundays", list: [
+    ["The Resurrection", "Matthew 28:1-10", "faith", "On the third day the tomb is empty; death has lost."],
+    ["The Ascension", "Acts 1:6-11", "hope", "Forty days later Jesus is taken up to heaven, promising to be with us always."],
+    ["The Descent of the Holy Spirit", "Acts 2:1-4", "love of God", "At Pentecost the Spirit comes as wind and fire, and frightened disciples become apostles."],
+    ["The Assumption of Mary", "Revelation 12:1", "the grace of a happy death", "At the end of her life Mary is taken body and soul into heaven."],
+    ["The Coronation of Mary", "Revelation 12:1", "trust in Mary's intercession", "Mary is crowned Queen of heaven and earth, and prays for us still."] ] },
+  luminous: { name: "Luminous Mysteries", days: "Thursdays", list: [
+    ["The Baptism in the Jordan", "Matthew 3:13-17", "openness to the Holy Spirit", "John baptises Jesus; the heavens open and the Father says: this is my beloved Son."],
+    ["The Wedding at Cana", "John 2:1-11", "to Jesus through Mary", "At Mary's word, do whatever he tells you, Jesus turns water into wine, his first sign."],
+    ["The Proclamation of the Kingdom", "Mark 1:14-15", "repentance and trust", "Jesus preaches: the kingdom of God is at hand; repent and believe the good news."],
+    ["The Transfiguration", "Matthew 17:1-8", "desire for holiness", "On the mountain Jesus shines like the sun, with Moses and Elijah beside him."],
+    ["The Institution of the Eucharist", "Matthew 26:26-28", "adoration", "At the Last Supper Jesus takes bread and wine: this is my body, this is my blood, given for you."] ] },
+};
+function easter(y) { const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1; return new Date(Date.UTC(y, mo - 1, da)); }
+function liturgicalSeason(d) {   // d: UTC midnight of the local date
+  const y = d.getUTCFullYear(), E = easter(y), day = 86400e3;
+  if (d >= new Date(E - 46 * day) && d < E) return "Lent";
+  if (d >= E && d < new Date(+E + 50 * day)) return "Easter";
+  const xmas = new Date(Date.UTC(y, 11, 25)), adv = new Date(xmas - ((xmas.getUTCDay() || 7) + 21) * day);
+  if (d >= adv && d < xmas) return "Advent";
+  if (d >= xmas || d < new Date(Date.UTC(y, 0, 13))) return "Christmas";
+  return "Ordinary Time";
+}
+function mysteriesFor(env, when = new Date()) {
+  const local = new Date(when.toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago" })); const dow = local.getDay();
+  const d = new Date(Date.UTC(local.getFullYear(), local.getMonth(), local.getDate())); const season = liturgicalSeason(d);
+  let key = ["glorious", "joyful", "sorrowful", "glorious", "luminous", "sorrowful", "joyful"][dow], why = MYSTERIES[key].days;
+  if (dow === 0 && (season === "Advent" || season === "Christmas")) { key = "joyful"; why = "Sundays of Advent and Christmas"; }
+  if (dow === 0 && season === "Lent") { key = "sorrowful"; why = "Sundays of Lent"; }
+  return { key, season, why, date: d.toISOString().slice(0, 10), ...MYSTERIES[key] };
+}
+function rosaryScript(key) {
+  const M = MYSTERIES[key] || MYSTERIES.glorious, hail10 = Array(10).fill(PRAYERS.hail).join(" "), segs = [];
+  segs.push({ id: "open", label: "Opening prayers", text: `${PRAYERS.sign} ${PRAYERS.creed} ${PRAYERS.our} For faith: ${PRAYERS.hail} For hope: ${PRAYERS.hail} For charity: ${PRAYERS.hail} ${PRAYERS.glory}` });
+  M.list.forEach(([name, ref, fruit, med], i) => segs.push({ id: "d" + (i + 1), label: `${i + 1}. ${name}`, ref, fruit, text: `The ${["first", "second", "third", "fourth", "fifth"][i]} ${M.name.replace(" Mysteries", "").toLowerCase()} mystery: ${name}. ${med} We ask for the grace of ${fruit}. ${PRAYERS.our} ${hail10} ${PRAYERS.glory} ${PRAYERS.fatima}` }));
+  segs.push({ id: "close", label: "Closing prayers", text: `${PRAYERS.salve} ${PRAYERS.closing} ${PRAYERS.sign}` });
+  return { key, name: M.name, segments: segs };
+}
+const stripHtml = (h) => String(h || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n\n").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#8217;|&rsquo;/g, "’").replace(/&#8220;|&ldquo;/g, "“").replace(/&#8221;|&rdquo;/g, "”").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+const unesc = (t) => String(t || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#039;/g, "'").replace(/&amp;/g, "&");
+async function fetchReadings(env, dateStr) {
+  const r = await within(fetch("https://bible.usccb.org/readings.rss", { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub; personal dashboard)" } }), 10000, null);
+  if (!r || !r.ok) throw new Error("USCCB feed " + (r?.status || "timeout"));
+  const xml = await r.text(); const want = dateStr.slice(5, 7) + dateStr.slice(8, 10) + dateStr.slice(2, 4);   // MMDDYY in the link
+  const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => m[1]);
+  const item = items.find((it) => it.includes(`/readings/${want}.cfm`)) || items[0]; if (!item) throw new Error("no readings in feed");
+  const title = stripHtml(unesc((item.match(/<title>([\s\S]*?)<\/title>/) || [])[1])), link = ((item.match(/<link>([\s\S]*?)<\/link>/) || [])[1] || "").trim();
+  const desc = unesc((item.match(/<description>([\s\S]*?)<\/description>/) || [])[1]);
+  const parts = []; const re = /<h4>\s*([^<]+?)\s*(?:<a[^>]*>([\s\S]*?)<\/a>)?\s*<\/h4>([\s\S]*?)(?=<h4>|$)/g; let m;
+  while ((m = re.exec(desc))) { const kind = m[1].trim(), ref = stripHtml(m[2] || ""), text = stripHtml(m[3]); if (text.length > 20) parts.push({ kind, ref, text }); }
+  return { date: dateStr, title, link, parts };
+}
+async function dailyReadings(env, { fresh = false } = {}) {
+  const dateStr = new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" });
+  const cached = await kv.get(env, "readings_" + dateStr); if (cached?.reflection && !fresh) return cached;
+  const base = await fetchReadings(env, dateStr); let reflection = null;
+  if (env.ANTHROPIC_API_KEY) {
+    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+    const r = await client.beta.messages.create({
+      model: MODEL, max_tokens: 2500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+      system: "You explain the Catholic daily Mass readings to a busy layman in plain, warm, modern English, faithful to Catholic teaching. No jargon, no sermon voice, no headers or markdown. Return JSON only: {\"theme\": one short line tying the day together, \"parts\": [{\"kind\": the reading's kind exactly as given, \"plain\": 2-4 sentences on what this passage is saying and why it is here today}], \"conclusion\": 90-140 words: what the readings and gospel together mean for an ordinary person's day, ending with one concrete thing to do or notice today}. Keep the parts in the same order as given; include every part.",
+      messages: [{ role: "user", content: `${base.title} (${base.date})\n\n` + base.parts.map((p) => `${p.kind} ${p.ref}\n${p.text}`).join("\n\n---\n\n") }],
+    });
+    const txt = r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+    try { reflection = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch { reflection = { theme: "", parts: [], conclusion: txt.slice(0, 900) }; }
+  }
+  const out = { ...base, reflection, at: new Date().toISOString() };
+  await env.HUB.put("readings_" + dateStr, JSON.stringify(out), { expirationTtl: 3 * 86400 });
+  return out;
+}
+async function rosaryAudio(env, key, segId) {
+  const kvKey = `rosary_audio_${key}_${segId}`; const have = await env.HUB.get(kvKey, "arrayBuffer");
+  if (have) return new Response(have, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=86400" } });
+  const seg = rosaryScript(key).segments.find((x) => x.id === segId); if (!seg) return json({ error: "no such segment" }, 404);
+  let r = await elevenlabs(env, seg.text, "mp3_44100_128", "eleven_turbo_v2_5", { speed: 0.92, stability: 0.7, style: 0 });
+  if (!r.ok) r = await elevenlabs(env, seg.text, "mp3_44100_128", "eleven_turbo_v2_5");
+  if (!r.ok) return json({ error: "voice failed", status: r.status }, 502);
+  const buf = await r.arrayBuffer(); await env.HUB.put(kvKey, buf, { expirationTtl: 60 * 86400 });
+  return new Response(buf, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=86400" } });
+}
+
 /* ---------------- competitors: weekly price/package scan ---------------- */
 const pageText = (h) => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 function priceLines(t) {
@@ -1003,6 +1112,7 @@ export default {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
       await appStores(env).catch((e) => console.log("app stores", e.message));
+      if (localHour(env) === 4) await dailyReadings(env).catch((e) => console.log("readings", e.message));   // ready before the morning brief
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
       const dow = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }), hr = localHour(env);
       if (dow === "Sun" && hr === 20) await scanCompetitors(env).catch((e) => console.log("competitors", e.message));
@@ -1085,6 +1195,8 @@ export default {
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
+    if (p === "/api/faith") { const m = mysteriesFor(env); let readings = null, err = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh") }); } catch (e) { err = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err }); }
+    if (p === "/api/faith/rosary/audio") return rosaryAudio(env, url.searchParams.get("set") || "glorious", url.searchParams.get("seg") || "open");
     if (p === "/api/competitors/scan" && request.method === "POST") return json({ changes: await scanCompetitors(env), competitors: (await kv.get(env, "competitors")) || [] });
     if (p === "/api/apps/targets") return json([...APPS, ...((await kv.get(env, "apps_watch")) || [])].filter((a) => a.ios));
     if (p === "/api/apps") return json(url.searchParams.get("fresh") ? await appStores(env) : ((await kv.get(env, "apps")) || {}));
