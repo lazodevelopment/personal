@@ -1021,7 +1021,7 @@ function mysteriesFor(env, when = new Date()) {
 function rosaryScript(key) {
   const M = MYSTERIES[key] || MYSTERIES.glorious, hail10 = Array(10).fill(PRAYERS.hail).join(" "), segs = [];
   segs.push({ id: "open", label: "Opening prayers", text: `${PRAYERS.sign} ${PRAYERS.creed} ${PRAYERS.our} For faith: ${PRAYERS.hail} For hope: ${PRAYERS.hail} For charity: ${PRAYERS.hail} ${PRAYERS.glory}` });
-  M.list.forEach(([name, ref, fruit, med], i) => segs.push({ id: "d" + (i + 1), label: `${i + 1}. ${name}`, ref, fruit, text: `The ${["first", "second", "third", "fourth", "fifth"][i]} ${M.name.replace(" Mysteries", "").toLowerCase()} mystery: ${name}. ${med} We ask for the grace of ${fruit}. ${PRAYERS.our} ${hail10} ${PRAYERS.glory} ${PRAYERS.fatima}` }));
+  M.list.forEach(([name, ref, fruit, med], i) => segs.push({ id: "d" + (i + 1), label: `${i + 1}. ${name}`, ref, fruit, med, text: `The ${["first", "second", "third", "fourth", "fifth"][i]} ${M.name.replace(" Mysteries", "").toLowerCase()} mystery: ${name}. ${med} We ask for the grace of ${fruit}. ${PRAYERS.our} ${hail10} ${PRAYERS.glory} ${PRAYERS.fatima}` }));
   segs.push({ id: "close", label: "Closing prayers", text: `${PRAYERS.salve} ${PRAYERS.closing} ${PRAYERS.sign}` });
   return { key, name: M.name, segments: segs };
 }

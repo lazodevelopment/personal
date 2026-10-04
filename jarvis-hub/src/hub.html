@@ -1162,7 +1162,7 @@ function renderFaith() {
   $("#rosWhich").textContent = R.name + (R.key === m.key ? " · today" : "");
   $("#rosSets").innerHTML = ["joyful", "sorrowful", "glorious", "luminous"].map(k => `<button data-set="${k}" class="${k === R.key ? "sel" : ""}">${k.toUpperCase()}${k === m.key ? " ·TODAY" : ""}</button>`).join("");
   $("#rosSets").querySelectorAll("[data-set]").forEach(b => b.onclick = () => { if (ros) return; rosSet = b.dataset.set; loadFaith(); });
-  $("#rosList").innerHTML = R.segments.filter(x => x.ref).map((x, i) => `<li data-seg="${x.id}"><b>${esc(x.label.replace(/^\d\.\s*/, ""))}</b><small>${esc(x.ref)} · for ${esc(x.fruit)}</small><span class="med">${esc(x.text.split(". We ask")[0].split(": ").slice(1).join(": ") || "")}</span></li>`).join("");
+  $("#rosList").innerHTML = R.segments.filter(x => x.ref).map((x, i) => `<li data-seg="${x.id}"><b>${esc(x.label.replace(/^\d\.\s*/, ""))}</b><small>${esc(x.ref)} · for ${esc(x.fruit)}</small><span class="med">${esc(x.med || "")}</span></li>`).join("");
   const rd = faith.readings;
   if (!rd) { $("#rdTitle").textContent = ""; $("#rdTheme").textContent = ""; $("#rdParts").innerHTML = `<div class="empty">${esc(faith.error || "Readings not available yet.")}</div>`; $("#rdConc").innerHTML = ""; return; }
   $("#rdTitle").textContent = rd.title; $("#rdLink").href = rd.link || $("#rdLink").href;
