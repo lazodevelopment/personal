@@ -556,8 +556,8 @@ async function buildContext(env, request) {
   if (watch?.search) lines.push(`SEARCH CONSOLE: ` + (watch.search.sites?.length ? watch.search.sites.map((x) => { const d = x.days || []; const sum = (rows, i) => rows.reduce((a, r) => a + r[i], 0); return `${siteName(x.site)} last 7d ${sum(d.slice(-7), 1)} clicks / ${sum(d.slice(-7), 2)} impressions (prior 7d ${sum(d.slice(-14, -7), 1)} / ${sum(d.slice(-14, -7), 2)})`; }).join("; ") : "not connected yet (" + (watch.search.fix || watch.search.error || "") + ")"));
   const compCh = await kv.get(env, "competitor_changes"); const comps = await kv.get(env, "competitors");
   if (comps?.length) lines.push(`COMPETITORS WATCHED: ` + comps.map((c) => `${c.label} (${c.business || "?"}) ${c.url}`).join("; ") + ` | CHANGES (last scan): ` + ((compCh || []).slice(0, 8).map((c) => `${c.at.slice(0, 10)} ${c.label}: ${c.summary}`).join(" | ") || "none detected"));
-  try { const rd = await kv.get(env, "readings_" + new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" })); const my = mysteriesFor(env);
-    lines.push(`FAITH: today's rosary is the ${my.name} (${my.why}; ${my.season}). ` + (rd ? `Mass readings: ${rd.title}: ${rd.parts.map((x) => x.kind + " " + x.ref).join("; ")}. Theme: ${rd.reflection?.theme || ""}. Plain-words conclusion: ${(rd.reflection?.conclusion || "").slice(0, 500)}` : "Mass readings not loaded yet (the Faith panel loads them).")); } catch {}
+  try { const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); const rd = await kv.get(env, "readings_" + todayKey); const st = await kv.get(env, "saint_" + todayKey); const my = mysteriesFor(env);
+    lines.push(`FAITH: today's rosary is the ${my.name} (${my.why}; ${my.season}). ` + (st ? `Saint of the day: ${st.name}${st.plain?.title ? ", " + st.plain.title : ""}. ${st.plain?.why || st.blurb || ""} ${st.plain?.today || ""} ` : "") +  + (rd ? `Mass readings: ${rd.title}: ${rd.parts.map((x) => x.kind + " " + x.ref).join("; ")}. Theme: ${rd.reflection?.theme || ""}. Plain-words conclusion: ${(rd.reflection?.conclusion || "").slice(0, 500)}` : "Mass readings not loaded yet (the Faith panel loads them).")); } catch {}
   if (apps) lines.push(`APP STORES: ` + Object.values(apps).map((a) => `${a.name} ${a.listed ? "live" + (a.version ? " v" + a.version : "") + (a.released ? " released " + String(a.released).slice(0, 10) : "") : "not listed yet"}`).join("; "));
   const readyF = (fups || []).filter((f) => f.status === "ready");
   if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
@@ -1057,16 +1057,73 @@ async function dailyReadings(env, { fresh = false, date = null } = {}) {
   let reflection = null;
   if (env.ANTHROPIC_API_KEY) {
     const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-    const r = await client.beta.messages.create({
-      model: MODEL, max_tokens: 2500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+    const params_rd = {
+      model: MODEL, max_tokens: 6000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
       system: "You explain the Catholic daily Mass readings to a busy layman in plain, warm, modern English, faithful to Catholic teaching. No jargon, no sermon voice, no headers or markdown. Return JSON only: {\"theme\": one short line tying the day together, \"parts\": [{\"kind\": the reading's kind exactly as given, \"plain\": 2-4 sentences on what this passage is saying and why it is here today}], \"conclusion\": 90-140 words: what the readings and gospel together mean for an ordinary person's day, ending with one concrete thing to do or notice today}. Keep the parts in the same order as given; include every part.",
       messages: [{ role: "user", content: `${base.title} (${base.date})\n\n` + base.parts.map((p) => `${p.kind} ${p.ref}\n${p.text}`).join("\n\n---\n\n") }],
-    });
-    const txt = r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
-    try { reflection = JSON.parse(txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1)); } catch { reflection = { theme: "", parts: [], conclusion: txt.slice(0, 900) }; }
+    };
+    const r = await client.beta.messages.create(params_rd);
+    const txt = await finishText(client, r, params_rd);
+    reflection = parseJsonLoose(txt) || { theme: "", parts: [], conclusion: txt.replace(/[{}"]/g, " ").slice(0, 900) };
   }
   const out = { ...base, reflection, at: new Date().toISOString() };
   await env.HUB.put("readings_" + dateStr, JSON.stringify(out), { expirationTtl: 3 * 86400 });
+  return out;
+}
+const parseJsonLoose = (txt) => {
+  const cut = txt.slice(txt.indexOf("{"), txt.lastIndexOf("}") + 1);
+  const clean = cut.replace(/[\u0000-\u001f]+/g, " ")                 // raw newlines inside strings
+    .replace(/\\(?!["\\\/bfnrtu])/g, "")                                 // invalid escapes such as \' or \-
+    .replace(/,\s*([}\]])/g, "$1");                                      // trailing commas
+  for (const c of [cut, clean]) { try { return JSON.parse(c); } catch {} }
+  return null;
+};
+// saint of the day: Vatican News keeps a page per calendar date, with a story page per saint
+async function fetchSaint(env, dateStr) {
+  const mm = dateStr.slice(5, 7), dd = dateStr.slice(8, 10), base = "https://www.vaticannews.va";
+  const hdr = { "user-agent": "Mozilla/5.0 (JARVIS hub; personal dashboard)", "accept-language": "en-US,en;q=0.9" };
+  const r = await within(fetch(`${base}/en/saints/${mm}/${dd}.html`, { headers: hdr }), 10000, null);
+  if (!r || !r.ok) throw new Error("Vatican News " + (r?.status || "timeout"));
+  const h = await r.text(); const entries = [];
+  const chunksRe = /([\s\S]*?)<a class="saintReadMore" href="([^"]+)"/g; let m, last = 0;
+  while ((m = chunksRe.exec(h))) {
+    const before = m[1]; const h2s = [...before.matchAll(/<h2[^>]*>([\s\S]*?)<\/h2>/g)]; const name = stripHtml((h2s.pop() || [])[1] || "").replace(/\s+/g, " ").trim();
+    const ps = [...before.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]; const blurb = stripHtml((ps.pop() || [])[1] || "").replace(/\s+/g, " ").trim();
+    const img = (before.match(/data-original="([^"]+)"/g) || []).pop(); const image = img ? base + img.match(/data-original="([^"]+)"/)[1] : null;
+    if (name && !/^(menu|search)$/i.test(name)) entries.push({ name, blurb, link: base + m[2], image });
+  }
+  if (!entries.length) throw new Error("no saint listed for " + dateStr);
+  const main = entries[0]; let story = "";
+  try {
+    const d = await within(fetch(main.link, { headers: hdr }), 10000, null);
+    if (d && d.ok) { const dh = await d.text(); const i = dh.indexOf('class="section__content'); const seg = dh.slice(i, i + 60000); story = [...seg.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)].map((x) => stripHtml(x[1]).replace(/\s+/g, " ").trim()).filter((t) => t.length > 40 && !/©/.test(t)).join("\n\n").slice(0, 6000); }
+  } catch {}
+  return { date: dateStr, name: main.name, blurb: main.blurb, link: main.link, image: main.image, story, others: entries.slice(1).map((e) => ({ name: e.name, link: e.link })) };
+}
+async function finishText(client, r, params) {
+  let txt = r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+  if (r.stop_reason === "max_tokens" && params) {
+    try { const r2 = await client.beta.messages.create({ ...params, messages: [...params.messages, { role: "assistant", content: r.content }, { role: "user", content: "You were cut off. Continue exactly where you stopped; output only the remainder." }] }); txt += r2.content.filter((b) => b.type === "text").map((b) => b.text).join(""); } catch {}
+  }
+  return txt;
+}
+async function saintOfDay(env, { fresh = false, date = null } = {}) {
+  const dateStr = date || new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" });
+  const cached = await kv.get(env, "saint_" + dateStr); if (cached?.plain && !fresh) return cached;
+  const base = await fetchSaint(env, dateStr); let plain = null;
+  if (env.ANTHROPIC_API_KEY) {
+    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+    const params_saint_marker = {
+      model: MODEL, max_tokens: 5000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+      system: "You introduce the Catholic saint of the day to a busy layman in plain, warm, modern English, faithful to Catholic teaching and to the source text; do not invent dates or facts that are not in the source. Return JSON only: {\"title\": the saint's role in a few words (e.g. 'Founder of the Franciscans, patron of Italy'), \"life\": 110-150 words telling the life story simply, \"why\": 2-3 sentences on why this saint still matters, \"today\": one sentence, a concrete thing to carry into today inspired by this saint, \"patron\": what they are patron of if known from the source or well established, else \"\"}.",
+      messages: [{ role: "user", content: `${base.name}\n\n${base.blurb}\n\n${base.story || "(no longer story available; use what is above and well-established facts only)"}` }],
+    };
+    const r = await client.beta.messages.create(params_saint_marker);
+    const txt = await finishText(client, r, params_saint_marker);
+    plain = parseJsonLoose(txt) || { title: "", life: txt.replace(/[{}"`]/g, " ").replace(/^\s*json\s*/i, "").slice(0, 800), why: "", today: "", patron: "", raw: txt.slice(0, 3000), stop: r.stop_reason, out: r.usage?.output_tokens, blocks: r.content.map((b) => b.type) };
+  }
+  const out = { ...base, plain, at: new Date().toISOString() };
+  await env.HUB.put("saint_" + dateStr, JSON.stringify(out), { expirationTtl: 3 * 86400 });
   return out;
 }
 async function rosaryAudio(env, key, segId) {
@@ -1124,7 +1181,7 @@ export default {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
       await appStores(env).catch((e) => console.log("app stores", e.message));
-      if (localHour(env) === 4) { await dailyReadings(env).catch((e) => console.log("readings", e.message)); const dowF = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }); if (dowF === "Sat") { const sun = new Date(Date.now() + 86400e3).toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); await dailyReadings(env, { date: sun }).catch((e) => console.log("vigil readings", e.message)); } }   // ready before the morning brief; Sunday's for the vigil
+      if (localHour(env) === 4) { await dailyReadings(env).catch((e) => console.log("readings", e.message)); await saintOfDay(env).catch((e) => console.log("saint", e.message)); const dowF = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }); if (dowF === "Sat") { const sun = new Date(Date.now() + 86400e3).toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); await dailyReadings(env, { date: sun }).catch((e) => console.log("vigil readings", e.message)); } }   // ready before the morning brief; Sunday's for the vigil
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
       const dow = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }), hr = localHour(env);
       if (dow === "Sun" && hr === 20) await scanCompetitors(env).catch((e) => console.log("competitors", e.message));
@@ -1207,7 +1264,7 @@ export default {
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
-    if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err }); }
+    if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null, saint = null, saintErr = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } try { saint = await saintOfDay(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { saintErr = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err, saint, saintError: saintErr }); }
     if (p === "/api/faith/page") { try { const r = await fetchReadingsPage(env, url.searchParams.get("date")); return json({ title: r.title, parts: r.parts.map((x) => [x.kind, x.ref, x.text.length]) }); } catch (e) { return json({ error: e.message }, 502); } }
     if (p === "/api/faith/rosary/audio") return rosaryAudio(env, url.searchParams.get("set") || "glorious", url.searchParams.get("seg") || "open");
     if (p === "/api/competitors/scan" && request.method === "POST") return json({ changes: await scanCompetitors(env), competitors: (await kv.get(env, "competitors")) || [] });

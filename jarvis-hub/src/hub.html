@@ -291,6 +291,10 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .myst b{color:#fff;font-weight:600}.myst small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim)}.myst .med{display:block;color:var(--fg);font-size:13px;line-height:1.4;margin-top:1px}
 .myst li.now b{color:var(--cyan2)}.myst li.now{border-left:2px solid var(--cyan);margin-left:-10px;padding-left:8px}.myst li.done{opacity:.55}
 .rctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0 8px}
+.saint{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}.saint img{width:84px;height:84px;object-fit:cover;border:1px solid var(--line)}
+.saint b{display:block;color:#fff;font-size:16px;font-weight:600;line-height:1.2}.saint .st{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--cyan);margin:2px 0 6px}
+.saint p{margin:0 0 6px;font-size:14px;line-height:1.5}.saint .why{color:var(--fg)}.saint .tdy{border-left:2px solid var(--cyan);padding-left:8px;color:#fff}
+.saint small{display:block;font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:4px}
 .theme{font-size:15px;color:#fff;font-weight:600;margin:4px 0 10px;line-height:1.4}
 .rd{border-left:2px solid var(--line);padding:6px 10px;margin-bottom:10px}.rd .k{font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--cyan)}.rd .k span{color:var(--dim);letter-spacing:.05em;margin-left:8px}
 .rd .plain{font-size:14px;line-height:1.5;margin:4px 0 0}.rd details{margin-top:6px}.rd summary{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--dim);cursor:pointer}.rd .txt{white-space:pre-wrap;font-size:13px;line-height:1.5;color:var(--fg);margin-top:6px;max-height:260px;overflow:auto}
@@ -645,6 +649,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
         <ol class="myst" id="rosList"></ol>
         <div class="rctl"><button class="btn primary" id="rosPlay">▶ PRAY THE ROSARY</button><button class="btn sm" id="rosPause" hidden>PAUSE</button><button class="btn sm" id="rosNext" hidden>NEXT DECADE ›</button><button class="btn sm" id="rosStop" hidden>STOP</button></div>
         <div class="empty" id="rosState">JARVIS leads it aloud: opening prayers, five decades with a short meditation each, closing prayers. About twenty minutes.</div>
+        <h3 class="wh3" style="margin-top:16px">SAINT OF THE DAY</h3>
+        <div class="saint" id="saint"><div class="empty">Loading…</div></div>
       </div>
       <div class="readings">
         <h3 class="wh3">MASS READINGS · <span id="rdTitle"></span></h3>
@@ -1170,6 +1176,9 @@ function renderFaith() {
   const sat = new Date(homeDate() + "T12:00:00").getDay() === 6, off = sundayOffset();
   $("#rdDays").innerHTML = `<button data-day="today" class="${rdDay === "today" ? "sel" : ""}">TODAY</button>` + (off ? `<button data-day="sunday" class="${rdDay === "sunday" ? "sel" : ""}">${sat ? "SATURDAY VIGIL · SUNDAY" : "SUNDAY"}</button>` : "");
   $("#rdDays").querySelectorAll("[data-day]").forEach(b => b.onclick = () => { if (rdPlay) return; rdDay = b.dataset.day; const want = rdDay === "sunday" ? homeDate(off) : homeDate(); if (rdCache[want]) { faith.readings = rdCache[want]; renderFaith(); } else { $("#rdParts").innerHTML = `<div class="empty">Loading…</div>`; loadFaith(); } });
+  const st = faith.saint;
+  $("#saint").innerHTML = st ? `${st.image ? `<img src="${esc(st.image)}" alt="">` : "<span></span>"}<div><b>${esc(st.name)}</b>${st.plain?.title ? `<div class="st">${esc(st.plain.title.toUpperCase())}</div>` : ""}<p>${esc(st.plain?.life || st.blurb || "")}</p>${st.plain?.why ? `<p class="why">${esc(st.plain.why)}</p>` : ""}${st.plain?.today ? `<p class="tdy">${esc(st.plain.today)}</p>` : ""}<div class="rctl"><button class="btn sm" id="stListen">▶ LISTEN</button><a class="btn sm" href="${esc(st.link)}" target="_blank" rel="noopener">VATICAN NEWS</a></div>${st.others?.length ? `<small>Also today: ${st.others.map(o => esc(o.name)).join(" · ")}</small>` : ""}</div>` : `<div class="empty">${esc(faith.saintError || "No saint listed today.")}</div>`;
+  const sl = $("#stListen"); if (sl) sl.onclick = () => { const t = [`Saint of the day: ${st.name}.` + (st.plain?.title ? ` ${st.plain.title}.` : ""), st.plain?.life || st.blurb || "", st.plain?.why || "", st.plain?.today || ""].filter(Boolean); playTexts(t); };
   const rd = faith.readings;
   if (!rd) { $("#rdTitle").textContent = ""; $("#rdTheme").textContent = ""; $("#rdParts").innerHTML = `<div class="empty">${esc(faith.error || "Readings not available yet.")}</div>`; $("#rdConc").innerHTML = ""; return; }
   $("#rdTitle").textContent = rd.title; $("#rdLink").href = rd.link || $("#rdLink").href;
@@ -1201,6 +1210,11 @@ $("#rosNext").onclick = () => { if (!ros) return; player.onended = null; ros.i++
 $("#rosStop").onclick = () => { if (!ros) return; ros = null; player.pause(); player.onended = null; rosaryUI("Stopped."); $("#rosPause").textContent = "PAUSE"; radioDuck(false); setViz("idle"); };
 // the readings, read aloud in order, then the plain-words conclusion
 function chunks(t, n = 1400) { const out = []; let cur = ""; for (const s of String(t).split(/(?<=[.!?])\s+/)) { if ((cur + " " + s).length > n && cur) { out.push(cur); cur = s; } else cur = cur ? cur + " " + s : s; } if (cur) out.push(cur); return out; }
+function playTexts(texts, onDone) {
+  stopSpeaking(); unlockPlayer(); radioDuck(true); rdPlay = { texts: texts.flatMap(t => chunks(t)), i: 0 }; $("#rdListen").hidden = true; $("#rdStop").hidden = false;
+  const next = () => { if (!rdPlay) return; if (rdPlay.i >= rdPlay.texts.length) { rdPlay = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; radioDuck(false); setViz("idle"); onDone && onDone(); return; } player.src = "/api/tts?t=" + encodeURIComponent(rdPlay.texts[rdPlay.i]); setViz("speaking", playerViz()); player.onended = () => { if (!rdPlay) return; rdPlay.i++; next(); }; player.onerror = player.onended; player.play().catch(() => {}); };
+  next();
+}
 function readingsListen() {
   const rd = faith?.readings; if (!rd) return; stopSpeaking(); unlockPlayer(); radioDuck(true);
   const refl = rd.reflection || {}; const texts = [`Today's readings. ${rd.title}.`];
@@ -1564,6 +1578,7 @@ function localAnswer(t) {
   if (/^(stop|pause) (the )?rosary$/.test(rm)) { if (ros) { if (/pause/.test(rm)) $("#rosPause").click(); else $("#rosStop").click(); } return ""; }
   if (/^(read|play|listen to) (me )?(today's |the )?(mass )?(readings|gospel)( for today)?$|^today'?s (readings|gospel)$/.test(rm)) { if (PHONE) showView("jarvis"); $("#faithPanel").scrollIntoView({ block: "start" }); readingsListen(); return ""; }
   if (/^what (do|does) (today's |the )?(readings|gospel) mean( today)?\??$/.test(rm) && faith?.readings?.reflection?.conclusion) return faith.readings.reflection.conclusion;
+  if (/^(who( is|'s) )?(the )?saint of the day\??$|^who is today's saint\??$/.test(rm) && faith?.saint) { const st = faith.saint; return `${st.name}${st.plain?.title ? ", " + st.plain.title : ""}. ${st.plain?.life || st.blurb || ""} ${st.plain?.today || ""}`.trim(); }
   if (/^scan (the )?competitors( now)?$/.test(t)) { $("#compScan").click(); return "Scanning the competitor pages now."; }
   return null;
 }
