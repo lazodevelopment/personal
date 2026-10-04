@@ -64,10 +64,18 @@
     fbq('track', 'PageView');
   }
   window.lzPixel={load:load,id:ID};
+  /* JC-LAZO-CONSENT-1004: the worker puts window.LAZO_CF={c,r} at the top of <head>.
+     Opt-in (notice first) for the EU/EEA, the UK and California, and whenever the hint is
+     missing; everywhere else the pixel runs by default, disclosed in the privacy policy,
+     and "Cookie choices" in the footer turns it off. A stored choice and GPC win everywhere. */
+  var OPTIN=/^(AT|BE|BG|HR|CY|CZ|DK|EE|FI|FR|DE|GR|HU|IE|IT|LV|LT|LU|MT|NL|PL|PT|RO|SK|SI|ES|SE|IS|LI|NO|GB)$/;
+  var cf=window.LAZO_CF||null;
+  var optin=!cf||OPTIN.test(cf.c)||(cf.c==='US'&&cf.r==='CA');
   var c='';try{c=localStorage.getItem('lz_consent')||'';}catch(e){}
   var state=navigator.globalPrivacyControl===true?'gpc':(c.indexOf('yes:')===0?'yes':(c.indexOf('no:')===0?'no':''));
   if(state==='yes'){var at=+c.slice(4)||0;if(Date.now()-at<365*864e5)load();else state='';}
-  window.lzConsentState=state;
+  if(state===''&&!optin){state='optout';load();}
+  window.lzConsentState=state;window.lzConsentOptIn=optin;
 })();
 </script>
 <!-- End Meta Pixel -->

@@ -22,8 +22,9 @@
                        smart banner) a dismissible bar offers the store listing.
      8. scroll motion - hero parallax and ease-away, count-ups, gliding rails, the
                        app hero phones. See the block at the end.
-     9. cookie notice - the Meta pixel loads only after the visitor allows it;
-                       "Cookie choices" in the footer reopens the notice.
+     9. cookie notice - the Meta pixel waits for consent in the EU/EEA, UK and
+                       California, runs opt-out elsewhere; "Cookie choices" in the footer
+                       opens the notice for everyone.
    (0915-002 replaces a file that had been overwritten with a Python patch
    script, so none of this had been running.) */
 (function () {
@@ -158,11 +159,13 @@
     });
   });
 
-  /* ---- 9. cookie notice (JC-LAZO-CONSENT-1003) ----
-     base.html defines window.lzPixel.load() and window.lzConsentState ('', 'yes', 'no'
-     or 'gpc'). With no decision stored, a small notice asks; Allow loads the pixel now
-     and for a year, Decline is remembered too. "Cookie choices" in the footer
-     (data-lz-consent) reopens it. Never inside an iframe. */
+  /* ---- 9. cookie notice (JC-LAZO-CONSENT-1003 / -1004) ----
+     base.html defines window.lzPixel.load() and window.lzConsentState ('', 'yes', 'no',
+     'gpc' or 'optout'). '' means an opt-in region with no decision stored: a small notice
+     asks; Allow loads the pixel now and for a year, Decline is remembered too. 'optout'
+     means the pixel is already running (disclosed in the privacy policy) and the notice
+     only appears from "Cookie choices" in the footer (data-lz-consent), where Decline
+     stops it from the next page. Never inside an iframe. */
   (function () {
     if (window.top !== window.self) return;
     var box = null;
@@ -179,8 +182,9 @@
       box.className = 'lz-consent';
       box.setAttribute('role', 'dialog');
       box.setAttribute('aria-label', 'Cookie choices');
-      box.innerHTML = '<p><b>One pixel, your call.</b> We use a Meta pixel on our marketing pages to learn which ads bring couples to Lazo. It never runs on a couple\u2019s wedding website, and nothing loads until you allow it. <a href="/privacy/#cookies">Privacy policy</a></p>' +
-        '<div class="b"><button type="button" class="yes">Allow</button><button type="button" class="no">Decline</button></div>';
+      var on = !!window.fbq;
+      box.innerHTML = '<p><b>One pixel, your call.</b> We use a Meta pixel on our marketing pages to learn which ads bring couples to Lazo. It never runs on a couple\u2019s wedding website' + (on ? ', and you can turn it off here; your choice is kept for a year and applies from the next page.' : ', and nothing loads until you allow it.') + ' <a href="/privacy/#cookies">Privacy policy</a></p>' +
+        '<div class="b"><button type="button" class="yes">' + (on ? 'Keep it on' : 'Allow') + '</button><button type="button" class="no">' + (on ? 'Turn it off' : 'Decline') + '</button></div>';
       d.body.appendChild(box);
       void box.offsetWidth; /* commit the start state so the transition runs, even in a hidden tab */
       box.classList.add('show');

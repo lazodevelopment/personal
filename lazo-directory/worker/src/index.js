@@ -45,7 +45,7 @@
 //   + registryNote, rsvpBy and vendorTeam passed to the templates (v2 reads them)
 //   + the home page follows the visitor: geo.js picks the nearest metro from
 //     request.cf and injects window.LAZO_GEO (home template JC-LAZO-HOME-0907-005)
-import { withGeo } from "./geo.js";
+import { withGeo, withRegion } from "./geo.js";
 // JC-LAZO-TRACK-0916-001: first-party visitor analytics, injected at the edge
 // so the built site never has to be rebuilt to change it.
 import { geoResponse, trackerResponse, withTracker } from "./track.js";
@@ -1054,7 +1054,8 @@ export default {
     }});
     // The home page follows the visitor (no-op for anyone far from a live metro).
     // Every HTML page then gets the tracker tag appended to <head>.
-    return withTracker(req, key === "index.html" ? withGeo(req, resp) : resp);
+    // JC-LAZO-CONSENT-1004: the country/region hint goes on every page (pixel consent gate).
+    return withTracker(req, withRegion(req, key === "index.html" ? withGeo(req, resp) : resp));
   }
 };
 

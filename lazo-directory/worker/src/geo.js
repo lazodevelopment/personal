@@ -137,3 +137,23 @@ export function withGeo(request, response) {
     return response;
   }
 }
+
+// JC-LAZO-CONSENT-1004: every HTML page gets window.LAZO_CF = {c: country, r: region code}
+// at the top of <head>, before base.html's pixel gate runs. The gate asks for consent in the
+// EU/EEA, the UK and California and runs opt-out everywhere else; with no hint it asks.
+export function withRegion(request, response) {
+  try {
+    const ct = response.headers.get('content-type') || '';
+    if (!ct.includes('text/html')) return response;
+    const cf = request.cf || {};
+    const c = String(cf.country || '').slice(0, 2).toUpperCase();
+    const r = String(cf.regionCode || '').slice(0, 3).toUpperCase();
+    if (!c) return response;
+    const tag = `<script>window.LAZO_CF=${JSON.stringify({ c, r })};</script>`;
+    return new HTMLRewriter()
+      .on('head', { element(el) { el.prepend(tag, { html: true }); } })
+      .transform(response);
+  } catch (e) {
+    return response;
+  }
+}
