@@ -1318,6 +1318,10 @@ function toEmbed(u) {
   if (/^[\w-]{11}$/.test(u)) return `https://www.youtube.com/embed/${u}?autoplay=1&mute=1`;           // a bare video id
   if (!/^[a-z]+:\/\//i.test(u)) u = "https://" + u;                                                  // pasted without https://
   try { const url = new URL(u); const yt = (id) => `https://www.youtube.com/embed/${id}?autoplay=1&mute=1`;
+    if (/(^|\.)angelcam\.com$/.test(url.hostname)) { const v = url.searchParams.get("v") || (url.pathname.match(/\/(?:iframe|embed|player)\/([\w-]+)/) || [])[1]; if (v) return `https://v.angelcam.com/iframe?v=${v}&autoplay=1`; }
+    if (/(^|\.)(player\.vimeo\.com)$/.test(url.hostname)) return url.href;
+    if (/(^|\.)vimeo\.com$/.test(url.hostname)) { const v = (url.pathname.match(/\/(\d+)/) || [])[1]; if (v) return `https://player.vimeo.com/video/${v}?autoplay=1&muted=1`; }
+    if (/(^|\.)(ipcamlive\.com|earthcam\.com|skylinewebcams\.com|windy\.com)$/.test(url.hostname) && /player|embed|webcam/.test(url.pathname + url.search)) return url.href;
     if (url.hostname.includes("youtu.be")) return yt(url.pathname.split("/")[1]);
     if (/(^|\.)youtube(-nocookie)?\.com$/.test(url.hostname)) {
       if (url.pathname.startsWith("/embed/")) return url.href;
@@ -1343,6 +1347,7 @@ const camMsg = (t, bad) => { const el = $("#camMsg"); el.textContent = t; el.sty
 $("#addcam").onsubmit = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };
 $("#camAdd").onclick = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };   // belt and braces: some browsers swallow the form submit
 async function addFeed(rawIn, nameIn) { const raw = String(rawIn || "").trim(); if (!raw) return camMsg("Paste a link first.", true); if (nameIn) $("#camName").value = nameIn; let embed = toEmbed(raw);
+  if (embed === null) { camMsg("Looking for a video player on that page…"); const r = await fetch("/api/yt/resolve?u=" + encodeURIComponent(raw)).then(x => x.json()).catch(() => ({})); if (r.embed) { embed = r.embed; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); } else if (r.videoId) { embed = `https://www.youtube.com/embed/${r.videoId}?autoplay=1&mute=1`; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); } else camMsg("No player found inside that page; added as a link that opens in a tab.", true); }
   if (embed && embed.ask && /youtu/i.test(raw)) { camMsg("Looking up the live stream on that page…"); const r = await fetch("/api/yt/resolve?u=" + encodeURIComponent(raw)).then(x => x.json()).catch(() => ({ error: "lookup failed" })); if (r.videoId) { embed = `https://www.youtube.com/embed/${r.videoId}?autoplay=1&mute=1`; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); if (!r.live) camMsg("That channel isn't live right now; added its latest video instead.", true); } else { camMsg((embed.ask || "") + " (" + (r.error || "no live video found") + ")", true); return; } }
   if (embed && embed.ask) return camMsg(embed.ask, true);
   const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); if (!/isn't live/.test($("#camMsg").textContent)) camMsg(`Added ${name}.`); $("#cams").lastElementChild?.scrollIntoView({ block: "nearest" }); };

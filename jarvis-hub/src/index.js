@@ -1284,10 +1284,20 @@ export default {
     if (p === "/api/followups/skip" && request.method === "POST") { const { id } = await request.json(); const list = ((await kv.get(env, "followups")) || []).map((f) => f.id === id ? { ...f, status: "skipped" } : f); await kv.put(env, "followups", list); return json({ ok: true }); }
     if (p === "/api/trips" && request.method === "POST") return json(await addTrip(env, await request.json()));
     if (p === "/api/trips/delete" && request.method === "POST") { const { id } = await request.json(); await kv.put(env, "trips", ((await kv.get(env, "trips")) || []).filter((t) => t.id !== id)); return json({ ok: true }); }
-    if (p === "/api/yt/resolve") {   // a channel page or any YouTube URL -> the live (or latest) video id, so the Live Feeds box accepts channel links
+    if (p === "/api/yt/resolve") {   // a channel page or any YouTube URL -> the live (or latest) video id; any other page -> an embeddable player found inside it
       try {
         let u = String(url.searchParams.get("u") || "").trim(); if (!/^https?:\/\//i.test(u)) u = "https://" + u;
-        const x = new URL(u); if (!/(^|\.)youtube\.com$/.test(x.hostname)) return json({ error: "not a YouTube link" }, 400);
+        const x = new URL(u);
+        if (!/(^|\.)youtube\.com$/.test(x.hostname)) {
+          const r0 = await within(fetch(u, { headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", "accept-language": "en-US,en;q=0.9" }, redirect: "follow" }), 10000, null);
+          if (!r0 || !r0.ok) return json({ error: "page didn't answer (" + (r0?.status || "timeout") + ")" }, 502);
+          const h0 = await r0.text(); const title = stripHtml((h0.match(/<title>([^<]*)<\/title>/) || [])[1] || "").split(/[|\-–]/)[0].trim();
+          const ang = h0.match(/v\.angelcam\.com\/iframe\?v=([\w-]+)/) || h0.match(/angelcam\.com\/[^"'\s]*[?&]v=([\w-]+)/); if (ang) return json({ embed: `https://v.angelcam.com/iframe?v=${ang[1]}&autoplay=1`, title, kind: "angelcam" });
+          const ytv = h0.match(/youtube(?:-nocookie)?\.com\/embed\/([\w-]{11})/) || h0.match(/youtube\.com\/watch\?v=([\w-]{11})/) || h0.match(/youtu\.be\/([\w-]{11})/); if (ytv) return json({ videoId: ytv[1], title, live: true });
+          const vim = h0.match(/player\.vimeo\.com\/video\/(\d+)/); if (vim) return json({ embed: `https://player.vimeo.com/video/${vim[1]}?autoplay=1&muted=1`, title, kind: "vimeo" });
+          const m3u = h0.match(/https?:\/\/[^"'\s]+\.m3u8[^"'\s]*/); if (m3u) return json({ error: "that page streams HLS video directly (" + m3u[0].slice(0, 60) + "…); it can't be framed, open it in a tab", title });
+          return json({ error: "no player found", title });
+        }
         const handle = (x.pathname.match(/^\/(@[\w.-]+|channel\/UC[\w-]+|c\/[\w.-]+|user\/[\w.-]+)/) || [])[1];
         const page = handle ? `https://www.youtube.com/${handle}/live` : u;
         const r = await within(fetch(page, { headers: { "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36", "accept-language": "en-US,en;q=0.9", cookie: "CONSENT=YES+1; SOCS=CAI" }, redirect: "follow" }), 9000, null);
