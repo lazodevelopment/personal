@@ -237,6 +237,7 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     <h2>Radio <span class="n" id="radioSub">off</span></h2>
     <div class="radio"><button class="rplay" id="radioPlay" aria-label="Play radio">▶</button><div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName"></b><small id="radioState"></small></div><input type="range" id="radioVol" min="0" max="100" value="60" aria-label="Radio volume"></div>
     <div class="rst" id="radioStations"></div>
+    <div class="sub" id="radioCredit" style="margin-top:10px"></div>
   </section>
 
   <section class="card" id="pagePanel">
@@ -717,6 +718,7 @@ function radioUI(msg) {
   const r = RADIO[radioIdx]; $("#radioName").textContent = r.n; $("#radioPanel").classList.toggle("on", radioOn && !radio.paused); $("#radioPlay").textContent = radioOn ? "❚❚" : "▶"; $("#radioPlay").classList.toggle("on", radioOn);
   $("#radioSub").textContent = radioOn ? "live" : "off"; $("#radioState").textContent = msg || (radioOn ? "She turns it down while she talks." : "Tap play, or say \"June, play Classic FM\".");
   $("#radioStations").innerHTML = RADIO.map((x, i) => `<button data-ri="${i}" class="${i === radioIdx ? "sel" : ""}">${esc(x.n)}</button>`).join("");
+  $("#radioCredit").innerHTML = /radioparadise/.test(r.s) ? `${esc(r.n)} is <a href="https://radioparadise.com/" target="_blank" rel="noopener">Radio Paradise</a>: commercial-free, listener-supported radio, programmed by people. If you enjoy it, <a href="https://radioparadise.com/support" target="_blank" rel="noopener">support them</a>.` : `${esc(r.n)} is from <a href="https://www.global.com/" target="_blank" rel="noopener">Global</a>, live from London.`;
 }
 function radioPlay(i = radioIdx) {
   radioIdx = i; try { localStorage.setItem("juneRadio", i); } catch {}
