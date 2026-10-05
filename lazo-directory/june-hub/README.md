@@ -84,3 +84,7 @@ python -c "import json,sys; sys.path.insert(0,'config'); from metros import METR
   (the app's own send path may rely on a function for those).
 - Wedding-day weather uses the metro centre, not the venue address.
 - Tasks due today come from `nextTaskTitle/nextTaskAt` on the inquiry (no collection-group rule for tasks).
+
+## To decide later
+
+- Vendors sign in to June once more in the browser, since the app's session cannot be handed across. If that turns out to be friction, the hub can accept a short-lived token the app mints (a callable returns a custom token; the hub exchanges it at Identity Toolkit), and the Talk to June button would open it already signed in.
