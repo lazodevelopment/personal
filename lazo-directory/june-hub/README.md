@@ -132,6 +132,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx w
 ```
 Rotating `JUNE_SECRET` invalidates every stored refresh token; vendors just turn alerts on again.
 
+## Radio (2026-10-05)
+
+A second `<audio>` beside June's voice, in the Radio card: Radio Paradise (main, mellow, rock, global; they publish their streams for third-party players) and three Global stations (Classic FM, Classic FM Calm, Smooth Chill; the same streams JARVIS plays). June ducks it to 15% while she speaks or listens and brings it back after; the core turns sage and follows the music when the stream allows cross-origin audio, otherwise it plays without driving the core. Voice: "June, play Classic FM", "play some music", "stop the radio", "louder", "quieter". Station and volume remembered per browser. Conversation mode does not auto-listen while the radio is on. Note: Global's streams are offered for personal listening; if June's vendor count grows, swap them for stations with an explicit third-party licence (the list is `RADIO` in june.html).
+
 ## To decide later
 
 - (done 2026-10-05) The app hands the vendor to June signed in, through the juneToken callable and dashboard v181.

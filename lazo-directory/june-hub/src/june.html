@@ -120,6 +120,19 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:14
 .wxdays div{background:var(--well);border-radius:12px;padding:9px 4px;text-align:center;font-size:11.5px;color:var(--muted);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}.wxdays b{display:block;color:var(--ivory);font-size:13px;letter-spacing:.04em}
 .alert{background:rgba(232,132,122,.14);border:1px solid rgba(232,132,122,.3);color:#F3B5AE;border-radius:12px;padding:8px 11px;font-size:12.5px;margin-top:12px}
 .wxchip{font-size:11px;color:var(--gold);background:rgba(217,183,124,.14);border-radius:7px;padding:2px 7px;white-space:nowrap}
+/* ---- radio ---- */
+.radio{display:grid;grid-template-columns:52px minmax(0,1fr) 110px;gap:12px;align-items:center;margin-top:10px}
+.rplay{width:52px;height:52px;border-radius:50%;border:1px solid rgba(217,183,124,.5);background:var(--glass);color:var(--gold);font-size:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12);transition:transform .18s var(--spring),box-shadow .3s}
+.rplay:active{transform:scale(.92)}.rplay.on{background:linear-gradient(180deg,#E6C98F,#D2AE6E);color:var(--plumDeep);box-shadow:0 0 24px -4px rgba(217,183,124,.6)}
+.rnow{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center}.rnow b{display:block;color:var(--ivory);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rnow small{grid-column:1/-1;color:var(--muted);font-size:11.5px}
+.eq{display:none;gap:2px;align-items:flex-end;height:14px;margin-right:8px}.eq i{width:3px;background:var(--sage);border-radius:2px;animation:eqb 1s ease-in-out infinite;height:40%}.eq i:nth-child(2){animation-delay:.2s;height:90%}.eq i:nth-child(3){animation-delay:.4s;height:60%}.eq i:nth-child(4){animation-delay:.1s;height:75%}
+@keyframes eqb{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+#radioPanel.on .eq{display:inline-flex}
+#radioVol{accent-color:var(--gold);width:100%}
+.rst{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.rst button{font:600 10.5px Inter;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border:1px solid var(--edge);border-radius:999px;background:var(--glass);color:var(--muted);transition:color .15s,border-color .15s,background .15s,transform .18s var(--spring)}
+.rst button:hover{color:var(--ivory)}.rst button:active{transform:scale(.95)}.rst button.sel{border-color:rgba(217,183,124,.7);color:var(--plumDeep);background:linear-gradient(180deg,#E6C98F,#D2AE6E)}
+@media(max-width:640px){.radio{grid-template-columns:48px minmax(0,1fr)}#radioVol{grid-column:1/-1}}
 /* ---- news, memory ---- */
 .news a{color:var(--ivory);text-decoration:none;font-weight:500}.news a:hover{color:var(--goldSoft)}.news .src{font-size:11.5px;color:var(--faint);margin-top:2px}
 .mem{display:flex;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);font-size:13.5px}.mem:first-child{border-top:0}.mem span{flex:1}.mem button{border:0;background:none;color:var(--faint);padding:4px 6px;border-radius:8px}.mem button:hover{color:var(--ivory);background:rgba(255,255,255,.06)}
@@ -218,6 +231,12 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
   <section class="card" id="wxPanel">
     <h2>Weather <span class="n" id="wxPlace"></span></h2>
     <div id="wx"></div>
+  </section>
+
+  <section class="card" id="radioPanel">
+    <h2>Radio <span class="n" id="radioSub">off</span></h2>
+    <div class="radio"><button class="rplay" id="radioPlay" aria-label="Play radio">▶</button><div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName"></b><small id="radioState"></small></div><input type="range" id="radioVol" min="0" max="100" value="60" aria-label="Radio volume"></div>
+    <div class="rst" id="radioStations"></div>
   </section>
 
   <section class="card" id="pagePanel">
@@ -516,8 +535,8 @@ function stopBrief() { if (!briefPlaying) return; briefPlaying = false; stopSpea
 $("#briefListen").onclick = async () => {
   if (briefPlaying) return stopBrief();
   const b = briefCurrent(); if (!b?.text) return;
-  stopSpeaking(); unlockPlayer(); briefPlaying = true; $("#briefListen").textContent = "■ Stop"; $("#briefListen").classList.remove("gold");
-  const view = briefView, done = () => { if (briefPlaying && briefView === view) { briefPlaying = false; $("#briefListen").textContent = "▶ Listen"; $("#briefListen").classList.add("gold"); } setViz("idle"); };
+  stopSpeaking(); unlockPlayer(); briefPlaying = true; radioDuck(true); $("#briefListen").textContent = "■ Stop"; $("#briefListen").classList.remove("gold");
+  const view = briefView, done = () => { if (briefPlaying && briefView === view) { briefPlaying = false; $("#briefListen").textContent = "▶ Listen"; $("#briefListen").classList.add("gold"); } radioDuck(false); setViz("idle"); };
   if (state.cfg.tts) {
     for (let i = 0; i < 6 && !briefAudio[view] && briefPlaying; i++) {
       const r = await api(view === "weekly" ? "/api/weekly/audio" : "/api/brief/audio"); if (r.ok) { briefAudio[view] = URL.createObjectURL(await r.blob()); break; }
@@ -537,7 +556,7 @@ function unlockPlayer() { if (playerUnlocked) return; playerUnlocked = true; try
 function playerViz() { if (playerAnalyser) return playerAnalyser; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaElementSource(player); playerAnalyser = actx.createAnalyser(); playerAnalyser.fftSize = 512; playerAnalyser.smoothingTimeConstant = .8; src.connect(playerAnalyser); playerAnalyser.connect(actx.destination); } catch { playerAnalyser = null; } return playerAnalyser; }
 function pickVoices() { let all = []; try { all = speechSynthesis.getVoices(); } catch {} const gb = all.filter((v) => /en[-_]GB/i.test(v.lang)); const rank = (v) => (/natural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : /online/i.test(v.name) ? 2 : 3) + (/sonia|libby|hazel|susan|serena|kate|female|woman/i.test(v.name) ? 0 : .5); VOICES = (gb.length ? gb : all.filter((v) => /^en/i.test(v.lang))).sort((a, b) => rank(a) - rank(b)); VOICE = VOICES[0] || null; }
 try { speechSynthesis.onvoiceschanged = pickVoices; pickVoices(); } catch {}
-function stopSpeaking() { const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
+function stopSpeaking() { const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
 function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
 function enqueueSpeech(segment) {
   if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
@@ -546,7 +565,7 @@ function enqueueSpeech(segment) {
   speakQueue.push(item); if (!speaking) pumpSpeech();
 }
 async function pumpSpeech() {
-  speaking = true; if (listening && typeof closeMicQuietly === "function") closeMicQuietly();
+  speaking = true; radioDuck(true); if (listening && typeof closeMicQuietly === "function") closeMicQuietly();
   while (speakQueue.length) {
     const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
     const blob = await item.blob; if (item.gen !== speakGen) continue;
@@ -555,14 +574,20 @@ async function pumpSpeech() {
     if (blob) await new Promise((res) => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
     else await new Promise((res) => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .97; u.pitch = 1.05; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
   }
-  speaking = false; setViz("idle"); onSpeechEnd();
+  speaking = false; radioDuck(false); setViz("idle"); onSpeechEnd();
 }
 
 /* ---------- the brain: streaming chat ---------- */
 let pendingReply = false, replyOpen = null, settleMic = async () => {};
 const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter((w) => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter((w) => w.length > 3); return words.length > 0 && words.filter((w) => said.has(w)).length / words.length >= 0.5; };
 function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
-function localAnswer(t) { t = t.toLowerCase().trim(); if (/^(stop|quiet|shush|never mind|nevermind|cancel)[.!]?$/.test(t)) { stopSpeaking(); return ""; } if (/^(what time is it|time)\??$/.test(t)) return "It's " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + "."; return null; }
+function localAnswer(t) { t = t.toLowerCase().trim();
+  const rm = t.replace(/^june,?\s*/, "").replace(/[.!?]+$/, "");
+  if (/^(stop|pause|turn off|kill|mute) (the )?(radio|music)$|^radio off$/.test(rm)) { radioStop(); return "Radio off."; }
+  const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+|some\s+)?(radio|music|.+?)(?:\s+radio)?$/);
+  if (rp) { const want = /^(radio|music)$/.test(rp[1]) ? "" : rp[1].replace(/\s+/g, ""); const i = want ? RADIO.findIndex((r) => r.k.some((k) => want.includes(k))) : radioIdx; if (i >= 0) { radioPlay(i); return ""; } }
+  if (/^(louder|turn it up|volume up)$/.test(rm)) { $("#radioVol").value = Math.min(100, +$("#radioVol").value + 15); radioDuck(false); return ""; }
+  if (/^(quieter|softer|turn it down|volume down)$/.test(rm)) { $("#radioVol").value = Math.max(0, +$("#radioVol").value - 15); radioDuck(false); return ""; } if (/^(stop|quiet|shush|never mind|nevermind|cancel)[.!]?$/.test(t)) { stopSpeaking(); return ""; } if (/^(what time is it|time)\??$/.test(t)) return "It's " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + "."; return null; }
 async function ask(text) {
   text = text.trim(); if (!text) return;
   pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
@@ -615,7 +640,7 @@ function proposeAction(item) {
 }
 $("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
 $("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
-["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "Draft an Instagram post", "What's in the news?", "Remember that…"].forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "Remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "Draft an Instagram post", "Play some music", "What's in the news?", "Remember that…"].forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "Remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else stopSpeaking(); } });
 
 /* ---------- voice in: hold-to-talk, "June" wake word, conversation mode ---------- */
@@ -628,7 +653,7 @@ async function detectMic() {
 }
 function onSpeechEnd() {
   if (replyOpen) return; pendingReply = false; if (!hasMic || speaking || listening) return;
-  if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && !replyOpen && $("#convOn").checked) startListen(); }, 400);
+  if ($("#convOn")?.checked && !radioOn) setTimeout(() => { if (!speaking && !listening && !replyOpen && !radioOn && $("#convOn").checked) startListen(); }, 400);
   else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
 }
 let startListen = () => {};
@@ -637,9 +662,9 @@ function setupVoice() {
   let recIgnore = false;
   rec.onresult = (e) => { if (recIgnore) return; const r = e.results[e.results.length - 1]; const t = r[0].transcript; if (speaking && soundsLikeSelf(t)) return; $("#coreState").textContent = "» " + t.slice(-40); if (r.isFinal) ask(t); };
   window.closeMicQuietly = () => { recIgnore = true; try { rec.abort(); } catch {} setTimeout(() => { recIgnore = false; }, 600); };
-  rec.onend = () => { listening = false; mic.classList.remove("on"); if (!speaking) setViz("idle"); if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
+  rec.onend = () => { listening = false; mic.classList.remove("on"); if (!speaking) { radioDuck(false); setViz("idle"); } if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
   rec.onerror = (e) => { const why = { "not-allowed": "Microphone blocked. Allow the microphone for this site in your browser, then reload.", "service-not-allowed": "Speech recognition is disabled in this browser.", "audio-capture": "No microphone could be opened.", network: "Speech recognition needs an internet connection." }[e.error]; if (why) addMsg("sys", why); };
-  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
+  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); radioDuck(true); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
   const stop = () => { try { rec.stop(); } catch {} };
   mic.onclick = () => (listening ? stop() : startListen());
   document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "j" && !e.repeat && !/input|textarea/i.test(e.target.tagName)) startListen(); });
@@ -671,13 +696,53 @@ function setupVoice() {
 }
 async function grabMic() { try { if (!micStream) { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaStreamSource(micStream); micAnalyser = actx.createAnalyser(); micAnalyser.fftSize = 512; src.connect(micAnalyser); } } catch { micAnalyser = null; } }
 
+/* ---------- radio: a second player beside June's voice. Ducks to 15% while she speaks or listens.
+   Radio Paradise publishes its streams for third-party players; the Global stations are the same ones
+   JARVIS plays. Streams that refuse cross-origin audio still play, just without driving the core. ---------- */
+const RADIO = [
+  { n: "Radio Paradise", s: "https://stream.radioparadise.com/aac-320", k: ["paradise", "mainmix", "eclectic"] },
+  { n: "Paradise Mellow", s: "https://stream.radioparadise.com/mellow-320", k: ["mellow", "soft"] },
+  { n: "Paradise Rock", s: "https://stream.radioparadise.com/rock-320", k: ["rock"] },
+  { n: "Paradise Global", s: "https://stream.radioparadise.com/global-320", k: ["global", "world"] },
+  { n: "Classic FM", s: "https://media-ssl.musicradio.com/ClassicFM", k: ["classicfm", "classical", "classic"] },
+  { n: "Classic FM Calm", s: "https://media-ssl.musicradio.com/ClassicFMCalm", k: ["calm", "relax"] },
+  { n: "Smooth Chill", s: "https://media-ssl.musicradio.com/SmoothChill", k: ["chill", "smooth"] },
+];
+const radio = new Audio(); radio.preload = "none";
+var radioOn = false, radioIdx = 0, radioAn = null, radioRetry = 0, radioCors = true;
+try { const i = +localStorage.getItem("juneRadio"); if (RADIO[i]) radioIdx = i; const v = localStorage.getItem("juneRadioVol"); if (v !== null) $("#radioVol").value = v; } catch {}
+const radioLevel = () => +$("#radioVol").value / 100;
+function radioViz() { if (radioAn || !radioCors) return radioAn; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(radio); radioAn = actx.createAnalyser(); radioAn.fftSize = 512; radioAn.smoothingTimeConstant = .8; src.connect(radioAn); radioAn.connect(actx.destination); } catch { radioAn = null; } return radioAn; }
+function radioUI(msg) {
+  const r = RADIO[radioIdx]; $("#radioName").textContent = r.n; $("#radioPanel").classList.toggle("on", radioOn && !radio.paused); $("#radioPlay").textContent = radioOn ? "❚❚" : "▶"; $("#radioPlay").classList.toggle("on", radioOn);
+  $("#radioSub").textContent = radioOn ? "live" : "off"; $("#radioState").textContent = msg || (radioOn ? "She turns it down while she talks." : "Tap play, or say \"June, play Classic FM\".");
+  $("#radioStations").innerHTML = RADIO.map((x, i) => `<button data-ri="${i}" class="${i === radioIdx ? "sel" : ""}">${esc(x.n)}</button>`).join("");
+}
+function radioPlay(i = radioIdx) {
+  radioIdx = i; try { localStorage.setItem("juneRadio", i); } catch {}
+  radioOn = true; unlockPlayer(); if (radioCors) { radio.crossOrigin = "anonymous"; radioViz(); } else radio.removeAttribute("crossorigin");
+  radio.src = RADIO[i].s; radio.volume = speaking || listening ? radioLevel() * 0.15 : radioLevel(); radioUI("tuning…");
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
+  radio.play().then(() => { radioRetry = 0; radioUI(); if (!speaking && !listening) setViz("idle"); })
+    .catch((e) => { if (e.name === "AbortError") return; radioOn = false; radioUI("couldn't start: " + (e.name === "NotAllowedError" ? "tap play once to allow audio" : e.message)); });
+}
+function radioStop() { radioOn = false; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); }
+function radioDuck(on) { if (!radioOn) return; radio.volume = on ? radioLevel() * 0.15 : radioLevel(); if (!on && radio.paused && radio.getAttribute("src")) radio.play().catch(() => {}); }
+radio.onerror = () => { if (!radioOn) return; if (radioCors && !radioAn) { radioCors = false; radioPlay(radioIdx); return; } if (radioCors && radioRetry === 0 && radioAn) { /* a CORS-blocked stream after the analyser is attached: give up on the analyser for this session */ } if (radioRetry++ < 5) { radioUI("reconnecting…"); setTimeout(() => radioOn && radioPlay(radioIdx), 2000 * radioRetry); } else { radioOn = false; radioUI("stream unavailable right now"); } };
+radio.onpause = () => { if (radioOn && radio.getAttribute("src")) radioUI("paused by the device · tap ▶"); };
+radio.onplaying = () => { if (radioOn) radioUI(); };
+$("#radioPlay").onclick = () => { if (radioOn && !radio.paused) radioStop(); else radioPlay(); };
+$("#radioStations").onclick = (e) => { const b = e.target.closest("[data-ri]"); if (b) radioPlay(+b.dataset.ri); };
+$("#radioVol").oninput = () => { try { localStorage.setItem("juneRadioVol", $("#radioVol").value); } catch {} radioDuck(speaking || listening); };
+radioUI();
+
 /* ---------- the living core: a sphere of gold points on deep plum. Bass swells it, higher bands ripple
    its surface, a waveform halo runs round it while June speaks. Idle drifts gold; listening warms to
    rose; thinking churns in light plum; speaking glows ivory-gold. Phones use fewer points and half the frame rate. ---------- */
 const viz = $("#viz"), vctx = viz.getContext("2d"); const VIZ_PHONE = PHONE;
 let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
 const CORE = (() => { const N = VIZ_PHONE ? 650 : 1500, pts = [], GA = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = GA * i; pts.push({ x: Math.cos(t) * r, y, z: Math.sin(t) * r, t, band: Math.min(23, Math.floor(Math.abs(y) * 24)), seed: Math.random() * 6.283 }); } return { pts, bands: new Float32Array(24), smooth: new Float32Array(24), wave: new Float32Array(180), rotY: 0, rotX: 0.35, swell: 0, level: 0, gain: 60, tint: [217, 183, 124], last: 0 }; })();
-const STATE_TINT = { idle: [217, 183, 124], listening: [226, 160, 120], thinking: [196, 150, 196], speaking: [245, 228, 180] };
+const STATE_TINT = { idle: [217, 183, 124], listening: [226, 160, 120], thinking: [196, 150, 196], speaking: [245, 228, 180], radio: [169, 196, 163] };
 const freqBuf = new Uint8Array(256), timeBuf = new Uint8Array(512);
 function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
 function readAudio() {
@@ -742,7 +807,7 @@ function drawViz(now = 0) {
   if (analyser && C.level > 0.02) { vctx.beginPath(); for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * W * 0.05; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); } vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.08 + C.level * 0.15})`; vctx.lineWidth = 5; vctx.stroke(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.3 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.stroke(); }
   vizRaf = requestAnimationFrame(drawViz);
 }
-function setViz(mode, node) { vizMode = mode; analyser = node || null; $("#coreState").textContent = mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
+function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "radio" ? "♪ " + RADIO[radioIdx].n : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !vizRaf) vizRaf = requestAnimationFrame(drawViz); });
 
 /* ---------- boot ---------- */
