@@ -195,8 +195,34 @@ function vendorCard(v) {
     rank: v.rank && typeof v.rank === "object" && v.rank.pos != null ? { pos: Math.round(+v.rank.pos), of: Math.round(+v.rank.of), label: str(v.rank.label) } : null,
     reviewCount: +v.reviewCount || 0, reviewAverage: +v.reviewAverage || 0, score: v.score != null ? +v.score : null, startingPrice: v.startingPrice ?? null, unavailableDates: Array.isArray(v.unavailableDates) ? v.unavailableDates : [],
     pipeline: Array.isArray(v.pipeline) ? v.pipeline : [], tagPalette: Array.isArray(v.tagPalette) ? v.tagPalette : [], tz: str(v.scheduler?.tz) || null, publicUrl: `https://meetlazo.com/vendors/${str(v.metroId)}/${str(v.slug || v.id)}`,
+    studio: str(v.tier) === "studio",
+    gallery: (Array.isArray(v.gallery) ? v.gallery : []).map(String).filter((u) => /^https?:\/\//.test(u)).slice(0, 24),
+    // showcases are galleries the couple agreed to have featured (galleryShowcase asks for consent), so June may post from them
+    showcases: (Array.isArray(v.showcases) ? v.showcases : []).map((s) => ({ slug: str(s.slug), title: str(s.title), blurb: str(s.blurb), dateIso: str(s.dateIso), cover: s.coverId ? `https://meetlazo.com/g/${str(s.slug)}/i/${str(s.coverId)}/web` : null })).filter((s) => s.cover).slice(0, 12),
+    instagram: str(v.instagram || v.social?.instagram) || null, facebook: str(v.facebook || v.social?.facebook) || null,
   };
 }
+
+/* ---------------- social posting (June Studio): Ayrshare, one profile per vendor ---------------- */
+const AYR = "https://api.ayrshare.com/api";
+const socialReady = (env) => !!(env.AYRSHARE_API_KEY && env.AYRSHARE_PRIVATE_KEY && env.AYRSHARE_DOMAIN);
+async function ayr(env, path, { method = "GET", body, profileKey } = {}) {
+  const r = await fetch(AYR + path, { method, headers: { authorization: "Bearer " + env.AYRSHARE_API_KEY, "content-type": "application/json", ...(profileKey ? { "Profile-Key": profileKey } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({})); if (!r.ok || j.status === "error") throw new Error(j.message || j.errors?.[0]?.message || ("posting service " + r.status)); return j;
+}
+async function socialProfile(env, card, create = false) {
+  let s = await kv.get(env, "social_" + card.id);
+  if (!s?.profileKey && create && socialReady(env)) { const j = await ayr(env, "/profiles", { method: "POST", body: { title: `${card.name} (${card.id})` } }); s = { profileKey: j.profileKey, at: new Date().toISOString() }; await kv.put(env, "social_" + card.id, s); }
+  return s || null;
+}
+async function socialStatus(env, card) {
+  const out = { studio: card.studio, available: socialReady(env), connected: [], names: {}, posts: (await kv.get(env, "posts_" + card.id)) || [] };
+  if (!card.studio || !out.available) return out;
+  const s = await socialProfile(env, card); if (!s?.profileKey) return out;
+  try { const u = await ayr(env, "/user", { profileKey: s.profileKey }); out.connected = (u.activeSocialAccounts || []).filter((p) => ["instagram", "facebook"].includes(p)); out.names = u.displayNames ? Object.fromEntries((u.displayNames || []).map((d) => [d.platform, d.displayName || d.username])) : {}; } catch (e) { out.error = e.message; }
+  return out;
+}
+const socialSummary = (so, card) => !so.studio ? `not on June Studio (auto-posting is a Studio feature; June can still draft posts for the vendor to copy)` : !so.available ? `June Studio, posting service not configured yet` : so.connected.length ? `June Studio, connected: ${so.connected.join(" + ")}; last post ${so.posts[0]?.at?.slice(0, 10) || "never"}` : `June Studio, no social accounts connected yet (Connect in the Social panel)`;
 
 /* ---------------- weather + news for the metro ---------------- */
 const WMO = { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 48: "fog", 51: "drizzle", 53: "drizzle", 55: "drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 71: "snow", 73: "snow", 75: "snow", 80: "showers", 81: "showers", 82: "heavy showers", 95: "thunderstorms", 96: "thunderstorms", 99: "thunderstorms" };
@@ -249,6 +275,7 @@ async function snapshot(env, who, vend, { deep = true } = {}) {
     metro ? within(weatherFor(env, card.metroId, metro.lat, metro.lon), 4000) : null, within(localNews(env, metro), 3500, { items: [] }), within(industryNews(env), 3500, { items: [] }),
     kv.get(env, "memory_" + vendorId), kv.get(env, "queue_" + vendorId), kv.get(env, "brief_" + vendorId),
   ]);
+  const social = await within(socialStatus(env, card), 4000, { studio: card.studio, available: socialReady(env), connected: [], names: {}, posts: [] });
   const tz = card.tz || wx?.tz || "America/Phoenix";
   const today = dayKey(tz), in14 = dayKey(tz, new Date(Date.now() + 14 * 86400e3)), in30 = dayKey(tz, new Date(Date.now() + 30 * 86400e3));
   const waiting = rows.filter((r) => r.waitingOnVendor && r.status !== "lost" && !r.blocked).sort((a, b) => str(a.lastMessageAt).localeCompare(str(b.lastMessageAt))).map((r) => ({ ...r, waitedHours: hoursAgo(r.lastMessageAt) }));
@@ -261,7 +288,7 @@ async function snapshot(env, who, vend, { deep = true } = {}) {
     counts: { threads: rows.length, waiting: waiting.length, unread: rows.filter((r) => r.unread).length, booked: rows.filter((r) => r.status === "booked").length, next30: weddings.filter((w) => w.weddingDate <= in30).length, byStage: rows.reduce((a, r) => { a[r.stage] = (a[r.stage] || 0) + 1; return a; }, {}) },
     waiting: waiting.slice(0, 12), weddings: weddings.slice(0, 12), consults: consultsOut.slice(0, 8), quiet, tasksDue,
     money: deep ? moneyOf(invoices, rows) : null, weather: wx, news: news?.items || [], industry: ind?.items || [],
-    memory: memory || [], recent: (queue || []).slice(0, 8), brief: brief && brief.day === today ? brief : null, briefStale: !!(brief && brief.day !== today),
+    memory: memory || [], recent: (queue || []).slice(0, 8), brief: brief && brief.day === today ? brief : null, briefStale: !!(brief && brief.day !== today), social,
     _rows: rows, _customKeys: customKeys,
   };
 }
@@ -282,6 +309,7 @@ function buildContext(s) {
   L.push(`WEATHER: ${weatherSummary(s.weather, v.metro)}`);
   L.push(`LOCAL NEWS (${v.metro}): ` + (s.news.slice(0, 6).map((n) => n.title).join(" / ") || "unavailable"));
   L.push(`WEDDING INDUSTRY NEWS: ` + (s.industry.slice(0, 4).map((n) => n.title).join(" / ") || "unavailable"));
+  L.push(`SOCIAL: ${socialSummary(s.social, v)}. Photos June may use in a post: ` + (v.showcases.length ? "SHOWCASES (couple consented): " + v.showcases.map((x, i) => `[S${i + 1}] "${x.title}"${x.dateIso ? " " + x.dateIso.slice(0, 10) : ""}${x.blurb ? " - " + clip(x.blurb, 80) : ""}`).join("; ") : "no showcases yet") + (v.gallery.length ? `; PORTFOLIO: ${v.gallery.length} gallery photos [G1..G${v.gallery.length}]` : "; no portfolio photos") + (s.social.posts?.length ? `. RECENT POSTS: ` + s.social.posts.slice(0, 4).map((p) => `${p.at.slice(0, 10)} ${p.platforms.join("+")}: ${clip(p.caption, 60)}`).join(" | ") : ""));
   L.push(`MEMORY (what the vendor asked June to remember): ` + (s.memory.map((m) => `[${m.id}] ${m.text}`).join(" | ") || "nothing yet"));
   L.push(`RECENT ACTIONS: ` + (s.recent.map((q) => `${q.summary} → ${q.status}${q.result ? " (" + q.result + ")" : ""}`).join(" | ") || "none"));
   if (s.brief?.text) L.push(`TODAY'S BRIEF (already given): ${s.brief.text.slice(0, 500)}`);
@@ -293,7 +321,8 @@ Persona: warm, bright, precise, British; a brilliant studio manager who read eve
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs or ids read aloud. Two to four sentences unless they ask for detail. Lead with the answer. Name couples by name, money in dollars, round sensibly.
 Everything current is in the LIVE CONTEXT; answer from it and never invent figures or names. For anything deeper use the tools: lazo_thread before discussing one couple in detail, lazo_search to find a couple, lazo_pipeline for the whole list, lazo_money for invoices, lazo_upcoming for dates. If something isn't there, say so.
 Actions: request_action queues send_message, add_task, complete_task, tag or set_stage for the vendor's confirmation; a card appears on screen and nothing happens until they tap Confirm, so say it is ready to confirm. When asked to reply to a couple, write the reply yourself in the vendor's voice (warm, brief, professional, first person, signed with the business name), submit it as send_message with the full text, and read the gist aloud. Never claim an action is done until RECENT ACTIONS shows it done. Booking, marking lost, contracts and money changes happen in the Lazo app: use open_thread to take them there.
-remember / forget hold durable preferences (use remember whenever they say "remember", "note that", "from now on"). Use the ids shown in brackets for every tool call.`;
+remember / forget hold durable preferences (use remember whenever they say "remember", "note that", "from now on"). Use the ids shown in brackets for every tool call.
+Social: draft_post writes an Instagram or Facebook post for the vendor: a caption in their voice (warm, first person, specific to the wedding or the work, 2 to 4 short sentences, a line break, then 6 to 10 hashtags mixing their metro, category and the moment; no emoji walls), paired with a photo chosen from SOCIAL by its code (S1.. are showcase weddings the couple agreed to share, G1.. portfolio photos). Prefer a showcase; never invent names of couples not listed. The draft appears as a card; on June Studio with accounts connected the vendor can post or schedule it from the card, otherwise they copy it into the app themselves. Posting never happens without their tap, so say the draft is ready. If a vendor who is not on Studio asks June to post automatically, draft the post anyway and mention in one sentence that auto-posting comes with June Studio.`;
 
 const TOOLS = [
   { name: "lazo_pipeline", description: "List every thread (leads and couples) with stage, tags, wedding date, venue, last message and next task. Filter by stage or tag.", input_schema: { type: "object", properties: { stage: { type: "string" }, tag: { type: "string" } }, required: [], additionalProperties: false } },
@@ -304,6 +333,7 @@ const TOOLS = [
   { name: "open_thread", description: "Open a thread in the Lazo dashboard on the vendor's screen.", input_schema: { type: "object", properties: { inquiryId: { type: "string" }, label: { type: "string" } }, required: ["inquiryId", "label"], additionalProperties: false } },
   { name: "remember", description: "Store a durable fact or preference in June's memory for this vendor.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false } },
   { name: "forget", description: "Delete a memory by its id (shown in MEMORY as [id]).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false } },
+  { name: "draft_post", description: "Draft a social post (Instagram and/or Facebook) for the vendor: caption plus one photo code from SOCIAL (S1.. showcase, G1.. portfolio). Shows a card; the vendor posts, schedules or copies it.", input_schema: { type: "object", properties: { caption: { type: "string" }, photo: { type: "string", description: "S1, S2.. or G1, G2.." }, platforms: { type: "array", items: { type: "string", enum: ["instagram", "facebook"] } }, note: { type: "string", description: "one line on why this photo and angle" } }, required: ["caption", "photo", "platforms", "note"], additionalProperties: false } },
   { name: "request_action", description: "Queue a change for the vendor's confirmation. kinds: send_message (params.inquiryId, params.text = the full message), add_task (params.inquiryId, params.title, params.dueDate YYYY-MM-DD optional, params.assignedTo 'vendor'|'couple', params.note), complete_task (params.inquiryId, params.taskId), tag (params.inquiryId, params.tag, params.remove true|false), set_stage (params.inquiryId, params.stage: new, talking or a custom stage key). summary = one plain sentence of what will happen.",
     input_schema: { type: "object", properties: { kind: { type: "string", enum: ["send_message", "add_task", "complete_task", "tag", "set_stage"] }, params: { type: "object", properties: { inquiryId: { type: "string" }, text: { type: "string" }, title: { type: "string" }, dueDate: { type: "string" }, assignedTo: { type: "string" }, note: { type: "string" }, taskId: { type: "string" }, tag: { type: "string" }, remove: { type: "boolean" }, stage: { type: "string" } }, required: ["inquiryId"], additionalProperties: false }, summary: { type: "string" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
 ];
@@ -339,6 +369,13 @@ async function runTool(name, input, env, who, vend, snap, actions) {
     case "open_thread": actions.push({ type: "open", url: `${env.APP_URL || "https://app.meetlazo.com/dashboard"}?thread=${encodeURIComponent(input.inquiryId)}`, label: input.label }); return "Opened " + input.label + " in the dashboard.";
     case "remember": { const mem = (await kv.get(env, "memory_" + vendorId)) || []; const m = { id: uid(), text: clip(input.text, 400), at: new Date().toISOString() }; mem.unshift(m); await kv.put(env, "memory_" + vendorId, mem.slice(0, 100)); actions.push({ type: "memory", value: mem }); return "Remembered [" + m.id + "]."; }
     case "forget": { const mem = ((await kv.get(env, "memory_" + vendorId)) || []).filter((m) => m.id !== input.id); await kv.put(env, "memory_" + vendorId, mem); actions.push({ type: "memory", value: mem }); return "Forgotten."; }
+    case "draft_post": {
+      const v = snap.vendor, code = str(input.photo).toUpperCase().trim(); let photo = null, title = "";
+      const m = code.match(/^([SG])(\d+)$/); if (m) { const i = +m[2] - 1; if (m[1] === "S" && v.showcases[i]) { photo = v.showcases[i].cover; title = v.showcases[i].title; } if (m[1] === "G" && v.gallery[i]) { photo = v.gallery[i]; title = "Portfolio " + (i + 1); } }
+      if (!photo) return "No photo with that code; pick one of the codes listed under SOCIAL.";
+      const draft = { id: uid(), caption: clip(input.caption, 2100), photo, title, platforms: (input.platforms || []).filter((p) => ["instagram", "facebook"].includes(p)), note: clip(input.note, 160), at: new Date().toISOString(), canPost: !!(snap.social.studio && snap.social.connected.length) };
+      actions.push({ type: "post", draft }); return "Draft shown as a card" + (draft.canPost ? " with Post and Schedule buttons." : snap.social.studio ? " (no social accounts connected yet; Connect is in the Social panel)." : " (copy and share; auto-posting comes with June Studio).");
+    }
     case "request_action": {
       const KINDS = ["send_message", "add_task", "complete_task", "tag", "set_stage"]; if (!KINDS.includes(input.kind) || !input.params?.inquiryId || !input.summary) return "Invalid action.";
       const row = rows.find((r) => r.inquiryId === input.params.inquiryId); if (!row) return "No thread with that id on this account; check the ids in the context.";
@@ -488,6 +525,30 @@ export default {
         await recordAction(env, vend.vendorId, rec); return json(rec);
       }
       if (p === "/api/read" && request.method === "POST") { const { inquiryId } = await request.json(); const m = await ownThread(who.token, vend.vendorId, inquiryId); await fsPatch(who.token, `inquiries/${m.id}`, { vendorLastReadAt: new Date(), seenByVendorAt: new Date() }); return json({ ok: true }); }
+      if (p === "/api/social" && request.method === "GET") { const card = vendorCard(await loadVendor(who.token, vend.vendorId)); return json(await socialStatus(env, card)); }
+      if (p === "/api/social/connect" && request.method === "POST") {
+        const card = vendorCard(await loadVendor(who.token, vend.vendorId));
+        if (!card.studio) return json({ error: "June Studio only", upgrade: "https://meetlazo.com/for-vendors/#pricing" }, 402);
+        if (!socialReady(env)) return json({ error: "The posting service isn't configured yet." }, 501);
+        const s = await socialProfile(env, card, true);
+        const j = await ayr(env, "/profiles/generateJWT", { method: "POST", body: { domain: env.AYRSHARE_DOMAIN, privateKey: env.AYRSHARE_PRIVATE_KEY, profileKey: s.profileKey, redirect: url.origin + "/?connected=1", logout: true, allowedSocial: ["instagram", "facebook"] } });
+        return json({ url: j.url });
+      }
+      if (p === "/api/social/post" && request.method === "POST") {
+        const card = vendorCard(await loadVendor(who.token, vend.vendorId));
+        if (!card.studio) return json({ error: "Auto-posting is part of June Studio.", upgrade: "https://meetlazo.com/for-vendors/#pricing" }, 402);
+        if (!socialReady(env)) return json({ error: "The posting service isn't configured yet." }, 501);
+        const s = await socialProfile(env, card); if (!s?.profileKey) return json({ error: "Connect Instagram or Facebook first." }, 400);
+        const { caption, photo, platforms, scheduleDate } = await request.json();
+        const plats = (platforms || []).filter((x) => ["instagram", "facebook"].includes(x)); if (!plats.length) return json({ error: "Pick Instagram, Facebook or both." }, 400);
+        const allowed = [...card.gallery, ...card.showcases.map((x) => x.cover)]; if (photo && !allowed.includes(photo)) return json({ error: "That photo isn't in your gallery or showcases." }, 400);
+        if (plats.includes("instagram") && !photo) return json({ error: "Instagram needs a photo." }, 400);
+        const body = { post: clip(caption, 2100), platforms: plats, ...(photo ? { mediaUrls: [photo] } : {}), ...(scheduleDate ? { scheduleDate: new Date(scheduleDate).toISOString() } : {}) };
+        const j = await ayr(env, "/post", { method: "POST", body, profileKey: s.profileKey });
+        const rec = { id: j.id || uid(), at: new Date().toISOString(), scheduled: scheduleDate ? new Date(scheduleDate).toISOString() : null, platforms: plats, caption: body.post, photo: photo || null, links: (j.postIds || []).map((x) => ({ platform: x.platform, url: x.postUrl || null, status: x.status })) };
+        const log = (await kv.get(env, "posts_" + vend.vendorId)) || []; log.unshift(rec); await kv.put(env, "posts_" + vend.vendorId, log.slice(0, 50));
+        return json(rec);
+      }
       if (p === "/api/memory" && request.method === "POST") { const { id, text } = await request.json(); let mem = (await kv.get(env, "memory_" + vend.vendorId)) || []; if (id) mem = mem.filter((m) => m.id !== id); if (text) mem.unshift({ id: uid(), text: clip(text, 400), at: new Date().toISOString() }); await kv.put(env, "memory_" + vend.vendorId, mem.slice(0, 100)); return json(mem); }
       return json({ error: "not found" }, 404);
     } catch (e) { return json({ error: String(e.message || e) }, 500); }

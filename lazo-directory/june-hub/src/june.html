@@ -193,6 +193,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
     <div id="money"></div>
   </section>
 
+  <section class="card" id="socialPanel">
+    <h2>Social <span class="n" id="socialTier"></span><span class="act"><button class="btn sm gold" id="socialConnect" hidden>Connect accounts</button></span></h2>
+    <div id="social"></div>
+  </section>
+
   <section class="card news" id="newsPanel">
     <h2>Around town <span class="n" id="newsPlace"></span></h2>
     <div id="news"></div>
@@ -306,9 +311,37 @@ function render(s) {
   $("#newsPlace").textContent = v.metro.split(",")[0];
   $("#news").innerHTML = s.news.length ? s.news.slice(0, 6).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">No local headlines right now.</div>';
   $("#industry").innerHTML = s.industry.length ? s.industry.slice(0, 5).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">Quiet week in the trade press.</div>';
+  renderSocial(s.social || {});
   renderMemory(s.memory);
   document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openThread(b.dataset.open)));
   document.querySelectorAll("[data-reply]").forEach((b) => (b.onclick = () => { $("#q").value = `Draft a reply to ${b.dataset.name}`; ask($("#q").value); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+}
+/* ---------- social (June Studio) ---------- */
+function renderSocial(so) {
+  const v = state.s?.vendor || {}; state.social = so;
+  $("#socialTier").textContent = so.studio ? "June Studio" : "";
+  $("#socialConnect").hidden = !(so.studio && so.available);
+  const posts = (so.posts || []).slice(0, 4).map((p) => `<div class="row"><div class="main"><div class="t">${p.platforms.map((x) => `<span class="tag ok">${esc(x)}</span>`).join("")}${p.scheduled && new Date(p.scheduled) > new Date() ? '<span class="tag">scheduled</span>' : ""}</div><div class="d">${esc(p.caption)}</div></div><div class="side">${esc(fmtDay(String(p.scheduled || p.at).slice(0, 10)))}</div></div>`).join("");
+  if (!so.studio) $("#social").innerHTML = `<div class="sub">June drafts Instagram and Facebook posts from your showcase weddings and portfolio; you copy and share them. <b>Auto-posting and scheduling straight from June come with June Studio.</b></div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm gold" onclick="ask('Draft an Instagram post from my latest showcase')">Draft a post</button><a class="btn sm" href="https://meetlazo.com/for-vendors/#pricing" target="_blank" rel="noopener">See June Studio</a></div>`;
+  else if (!so.available) $("#social").innerHTML = `<div class="sub">Auto-posting is switching on shortly for Studio vendors. June can draft posts now; you copy and share them.</div><div style="margin-top:10px"><button class="btn sm gold" onclick="ask('Draft an Instagram post from my latest showcase')">Draft a post</button></div>`;
+  else $("#social").innerHTML = `<div class="sub">${so.connected.length ? "Connected: " + so.connected.map((p) => `<span class="tag ok">${esc(p)}${so.names?.[p] ? " · " + esc(so.names[p]) : ""}</span>`).join(" ") : "No accounts connected yet. Connect Instagram and Facebook, then ask June for a post."}${so.error ? `<div class="alert">${esc(so.error)}</div>` : ""}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm gold" onclick="ask('Draft an Instagram post from my latest showcase')">Draft a post</button><button class="btn sm" onclick="ask('Draft a Facebook post about my availability this season')">Availability post</button></div>${posts ? `<div style="margin-top:8px">${posts}</div>` : ""}`;
+}
+$("#socialConnect").onclick = async () => { try { const r = await api("/api/social/connect", { method: "POST" }); const j = await r.json(); if (!r.ok) throw new Error(j.error); window.open(j.url, "_blank"); addMsg("sys", "Connect your accounts in the tab that opened, then come back; I'll refresh in a moment."); setTimeout(() => loadState(false), 45000); } catch (e) { addMsg("sys", "Couldn't start the connection: " + e.message); } };
+function postCard(d) {
+  const el = document.createElement("div"); el.className = "confirm"; const so = state.social || {};
+  el.innerHTML = `<div class="s">Post draft${d.title ? ": " + esc(d.title) : ""}</div><div class="sub">${esc(d.note || "")}</div>
+    <div style="display:flex;gap:10px;margin:8px 0;align-items:flex-start"><img src="${esc(d.photo)}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:10px;flex:none;background:var(--soft)"><textarea style="flex:1;min-height:110px;border:1px solid var(--goldLine);border-radius:10px;padding:8px;font:13px/1.45 Inter">${esc(d.caption)}</textarea></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12.5px;color:var(--muted)"><label><input type="checkbox" data-p="instagram" ${d.platforms.includes("instagram") ? "checked" : ""}> Instagram</label><label><input type="checkbox" data-p="facebook" ${d.platforms.includes("facebook") ? "checked" : ""}> Facebook</label>${d.canPost ? '<input type="datetime-local" data-when style="border:1px solid var(--goldLine);border-radius:8px;padding:4px 6px;font:12px Inter">' : ""}</div>
+    <div class="b" style="margin-top:8px"><button class="btn sm" data-copy>Copy caption</button><a class="btn sm" href="https://www.instagram.com/" target="_blank" rel="noopener">Open Instagram</a>${d.canPost ? '<button class="btn sm gold" data-post>Post</button>' : so.studio ? '<span class="sub">connect accounts to post from here</span>' : '<a class="btn sm" href="https://meetlazo.com/for-vendors/#pricing" target="_blank" rel="noopener">Auto-post with Studio</a>'}</div>`;
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9;
+  const cap = () => el.querySelector("textarea").value, plats = () => [...el.querySelectorAll("[data-p]:checked")].map((x) => x.dataset.p);
+  el.querySelector("[data-copy]").onclick = async () => { try { await navigator.clipboard.writeText(cap()); addMsg("sys", "Caption copied. Save the photo from the card, then paste in the app."); } catch { addMsg("sys", "Select the caption and copy it."); } };
+  const pb = el.querySelector("[data-post]"); if (pb) pb.onclick = async () => {
+    const when = el.querySelector("[data-when]")?.value || ""; if (!plats().length) return addMsg("sys", "Pick Instagram, Facebook or both."); pb.disabled = true; pb.textContent = when ? "Scheduling…" : "Posting…";
+    try { const r = await api("/api/social/post", { method: "POST", body: JSON.stringify({ caption: cap(), photo: d.photo, platforms: plats(), scheduleDate: when || null }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error);
+      el.classList.add("done"); el.querySelector(".b").innerHTML = `<span class="sub">${when ? "Scheduled for " + esc(fmtWhen(j.scheduled)) : "Posted"} to ${esc(j.platforms.join(" and "))}.</span>`; speak(when ? "Scheduled." : "Posted."); loadState(false); }
+    catch (e) { pb.disabled = false; pb.textContent = "Post"; addMsg("sys", "That didn't go through: " + e.message); }
+  };
 }
 function renderMemory(mem) { state.memory = mem || []; $("#memory").innerHTML = state.memory.length ? state.memory.map((m) => `<div class="mem"><span>${esc(m.text)}</span><button title="forget" data-forget="${esc(m.id)}">✕</button></div>`).join("") : '<div class="empty">Nothing remembered yet.</div>'; document.querySelectorAll("[data-forget]").forEach((b) => (b.onclick = async () => { const r = await api("/api/memory", { method: "POST", body: JSON.stringify({ id: b.dataset.forget }) }); renderMemory(await r.json()); })); }
 
@@ -420,6 +453,7 @@ function handleAction(a) {
   if (a.type === "open") { const w = window.open(a.url, "_blank"); if (!w) addMsg("sys", "Popup blocked: " + a.url); }
   if (a.type === "memory") renderMemory(a.value);
   if (a.type === "confirm") proposeAction(a.item);
+  if (a.type === "post") postCard(a.draft);
 }
 function proposeAction(item) {
   const el = document.createElement("div"); el.className = "confirm";
@@ -439,7 +473,7 @@ function proposeAction(item) {
 }
 $("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
 $("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
-["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "What's in the news?", "Remember that…"].forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "Remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "Draft an Instagram post", "What's in the news?", "Remember that…"].forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "Remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else stopSpeaking(); } });
 
 /* ---------- voice in: hold-to-talk, "June" wake word, conversation mode ---------- */

@@ -85,6 +85,31 @@ python -c "import json,sys; sys.path.insert(0,'config'); from metros import METR
 - Wedding-day weather uses the metro centre, not the venue address.
 - Tasks due today come from `nextTaskTitle/nextTaskAt` on the inquiry (no collection-group rule for tasks).
 
+## Social posting (June Studio)
+
+Auto-posting to Instagram and Facebook is gated to `vendors.tier == 'studio'`. Every tier gets
+`draft_post`: June writes a caption in the vendor's voice and pairs it with a showcase cover (galleries
+the couple consented to feature, `vendors.showcases[]`) or a portfolio photo (`vendors.gallery[]`); the
+card offers Copy caption and Open Instagram. Studio vendors with accounts connected also get Post and
+a schedule picker on the same card.
+
+Provider: Ayrshare (Business plan, one Ayrshare profile per vendor, stored in KV `social_<vendorId>`).
+Vendors link their own Instagram and Facebook through Ayrshare's hosted page (`/api/social/connect`
+returns the link). Posts go through `/api/social/post` (caption, one photo from the allowed set,
+platforms, optional scheduleDate) and are logged in KV `posts_<vendorId>`.
+
+To switch it on (Jesse): sign up for Ayrshare Business, then
+```bash
+npx wrangler secret put AYRSHARE_API_KEY
+npx wrangler secret put AYRSHARE_PRIVATE_KEY     # the PEM from Ayrshare -> Profiles -> Generate JWT
+```
+and set `AYRSHARE_DOMAIN` in wrangler.toml to the domain Ayrshare shows, then deploy. Until then the
+Social panel tells Studio vendors it is switching on shortly, and drafting still works.
+
+Later, to drop the per-post cost: a Lazo Meta app with `instagram_content_publish` and
+`pages_manage_posts` through App Review, swapping `ayr()` for the Graph API behind the same routes.
+Instagram needs JPEG media at a public URL; showcase covers are served by the site worker.
+
 ## To decide later
 
 - Vendors sign in to June once more in the browser, since the app's session cannot be handed across. If that turns out to be friction, the hub can accept a short-lived token the app mints (a callable returns a custom token; the hub exchanges it at Identity Toolkit), and the Talk to June button would open it already signed in.
