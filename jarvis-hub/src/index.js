@@ -401,7 +401,13 @@ async function bridgeCall(env, account, payload) {
   const hooks = (await kv.get(env, "inbox_hooks")) || {};
   const hook = hooks[String(account || "").toLowerCase()];
   if (!hook?.url) return { error: "no Gmail bridge with actions for " + account };
-  let out; try { const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" }); const t = await r.text(); try { out = JSON.parse(t); } catch { out = { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : "") }; } } catch (e) { out = { error: "bridge unreachable: " + e.message }; }
+  let out;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1200 * attempt));
+    try { const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" }); const t = await r.text(); try { out = JSON.parse(t); } catch { out = { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : ""), transient: true }; } } catch (e) { out = { error: "bridge unreachable: " + e.message, transient: true }; }
+    if (!out.transient) break;
+  }
+  delete out.transient;
   if (out.error && !/thread not found/i.test(out.error)) await healthNote(env, "bridge", { account: String(account || "").toLowerCase(), error: String(out.error).slice(0, 120) });
   return out;
 }
@@ -436,9 +442,15 @@ async function emailAction(env, item) {
   const p = item.params || {}; const hook = await resolveHook(env, p);
   if (!hook?.url) { const have = Object.keys((await kv.get(env, "inbox_hooks")) || {}); return { ok: false, message: `no Gmail bridge for ${p.account || p.business || "that account"}; connected inboxes: ${have.join(", ") || "none"}. Connect the others with the scripts in secrets/bridges.` }; }
   const action = item.kind.replace("email_", ""); if (p.threadId) try { await env.HUB.delete("thread_" + p.threadId); } catch {}
-  const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject }), redirect: "follow" });
-  const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch {}
-  return j.ok ? { ok: true, message: j.did || action } : { ok: false, message: j.error || ("bridge " + r.status) };
+  let j = {}, status = 0;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
+    try { const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject }), redirect: "follow" }); status = r.status; const txt = await r.text(); j = {}; try { j = JSON.parse(txt); } catch {} } catch (e) { j = { error: "bridge unreachable: " + e.message }; }
+    if (j.ok || (j.error && !/^bridge /.test(j.error))) break;   // a real answer (success or a script-level error) ends the retries; 404/HTML pages do not
+    if (!j.error) j = { error: "bridge " + status };
+  }
+  if (j.error) await healthNote(env, "bridge", { account: hook.url.slice(-24), error: String(j.error).slice(0, 120) });
+  return j.ok ? { ok: true, message: j.did || action } : { ok: false, message: j.error || ("bridge " + status) };
 }
 
 const within = (p, ms, fallback = null) => Promise.race([p.catch(() => fallback), new Promise((r) => setTimeout(() => r(fallback), ms))]);
