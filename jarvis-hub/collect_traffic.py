@@ -1,4 +1,4 @@
-"""JARVIS traffic collector: live web traffic for Atavia and Elizabeth Scott.
+"""JARVIS traffic collector: live web traffic for Atavia, Elizabeth Scott and Lazo (meetlazo.com).
 
 Both sites log visits to Firestore (sessions with first_seen/last_seen, hits subcollection with t/path).
 Every 5 minutes (Task Scheduler "JARVIS traffic") this posts, per site:
@@ -237,7 +237,7 @@ def decisions():
 
 def main():
     out = {"at": NOW.isoformat(), "day": DAY_START.astimezone(TZ).strftime("%Y-%m-%d"), "sites": {}}
-    for biz in ("atavia", "es"):
+    for biz in ("atavia", "es", "lazo"):
         try:
             out["sites"][biz] = collect(biz)
             r = out["sites"][biz]
