@@ -250,6 +250,9 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .ac.tracked{width:24px;height:24px;filter:drop-shadow(0 0 6px rgba(255,179,64,1))}
 .ac.emerg{filter:drop-shadow(0 0 6px rgba(255,77,94,1))}
 .ac .cs{position:absolute;left:18px;top:-2px;font-family:var(--mono);font-size:9px;color:#cfefff;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
+.ship{width:14px;height:14px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;filter:drop-shadow(0 0 3px rgba(57,240,168,.8))}
+.ship svg{width:100%;height:100%;display:block}.ship.big{width:18px;height:18px}.ship.sel{filter:drop-shadow(0 0 7px rgba(255,255,255,1))}
+.ship .cs{position:absolute;left:16px;top:-1px;font-family:var(--mono);font-size:9px;color:#c8ffe9;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000;pointer-events:none}
 .wcam{width:15px;height:15px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:.9}
 .wcam svg{width:100%;height:100%;display:block}.wcam:hover{opacity:1;transform:translate(-50%,-50%) scale(1.3)}
 .gcam{width:14px;height:14px;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;opacity:.85}
@@ -568,6 +571,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <label class="wl"><input type="checkbox" data-layer="sats" checked> satellites</label>
       <label class="wl"><input type="checkbox" data-layer="quakes" checked> quakes</label>
       <label class="wl"><input type="checkbox" data-layer="fires" checked> wildfires</label>
+      <label class="wl" id="shipsWrap"><input type="checkbox" data-layer="ships" checked> ships</label>
       <label class="wl"><input type="checkbox" data-layer="cams" checked> traffic cams</label>
       <label class="wl" id="windyWrap"><input type="checkbox" data-layer="webcams" checked> webcams</label>
       <button class="btn sm" id="worldHome">HOME</button><button class="btn sm" id="worldGlobe">GLOBE</button></h2>
@@ -575,7 +579,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div class="zoomctl"><button class="btn sm" id="zIn" title="Zoom in">+</button><button class="btn sm" id="zOut" title="Zoom out">−</button></div>
       <div class="gate" id="globeGate" hidden>TAP TO USE THE GLOBE</div></div>
       <div class="wside">
-        <form id="placeForm" class="ask" style="margin:0"><input id="placeQ" placeholder="Go to a place: Frisco, Scottsdale, Denver…" autocomplete="off" aria-label="Find a place"><button class="btn">GO</button></form>
+        <form id="placeForm" class="ask" style="margin:0"><input id="placeQ" placeholder="Go to a place or ship: Frisco, Scottsdale, Icon of the Seas…" autocomplete="off" aria-label="Find a place"><button class="btn">GO</button></form>
         <div id="placeHits" class="phits"></div>
         <form id="trackForm" class="ask" style="margin:0"><input id="trackQ" placeholder="Track a flight: AA 2612, SWA653, N123AB" autocomplete="off" aria-label="Flight number"><button class="btn primary">TRACK</button></form>
         <div id="trackOut" class="empty" style="margin-top:6px"></div>
@@ -1691,6 +1695,7 @@ function handleAction(a) {
   if (a.type === "notes") { state.notes = a.value; $("#notes").value = a.value; }
   if (a.type === "memory") { state.memory = a.value; renderMemory(); }
   if (a.type === "trips" || a.type === "competitors") setTimeout(loadState, 800);
+  if (a.type === "ship") { if (PHONE) showView("world"); initGlobe(); setTimeout(() => { const sh = ships.find(x => x[0] === a.mmsi); if (sh) openShip(sh); else if (globe) globe.pointOfView({ lat: a.lat, lng: a.lon, altitude: 0.6 }, 900); }, 400); }
   if (a.type === "reminders") setTimeout(loadReminders, 600); if (a.type === "alarm") setTimeout(loadAlarm, 600);
   if (a.type === "draft") draftCard(a);
   if (a.type === "confirm") proposeAction(a.item);
@@ -1790,6 +1795,21 @@ $("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = h
 
 /* ---------- World (OSIRIS-style) ---------- */
 let globalAc = [], globalAt = 0, routeCache = {};
+let ships = [], shipsAt = 0, shipEls = new Map(), shipSel = null;
+const SHIP_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2 L17 10 L17 19 L12 22 L7 19 L7 10 Z" fill="#39f0a8" stroke="#04070d" stroke-width="1"/><circle cx="12" cy="12" r="2" fill="#04070d"/></svg>`;
+async function loadShips() { try { const d = await fetch("/api/world/ships").then(r => r.json()); ships = d.ships || []; shipsAt = d.at ? new Date(d.at).getTime() : 0; } catch {} renderWorld(); }
+function shipMarker(r) {
+  const key = r[0]; let el = shipEls.get(key);
+  if (!el) { el = document.createElement("div"); el.className = "ship"; el.innerHTML = SHIP_SVG + `<span class="cs"></span>`; el.onclick = (e) => { e.stopPropagation(); openShip(r); }; shipEls.set(key, el); }
+  el.querySelector("svg").style.transform = `rotate(${r[4] || 0}deg)`; el.querySelector(".cs").textContent = r[1] || ""; el.classList.toggle("sel", shipSel === key); el.classList.toggle("big", (r[8] || 0) >= 200); el.title = `${r[1] || r[0]} · ${r[5] ?? "?"} kt · to ${r[7] || "?"}`;
+  return el;
+}
+function openShip(r) {
+  shipSel = r[0]; if (PHONE) showView("world");
+  $("#camView").hidden = true; $("#flightCard").hidden = false;
+  $("#flightCard").innerHTML = `<div class="route"><div><b>${esc(r[1] || "Unnamed")}</b><small>${(r[8] || 0) >= 200 ? "cruise ship" : "passenger vessel"} · ${r[8] ? r[8] + " m" : "length unknown"}</small></div><span class="arrow">⚓</span><div><b>${esc(r[7] || "—")}</b><small>destination</small></div></div><div class="facts"><span>speed <b>${r[5] != null ? Math.round(r[5] * 1.15) + " mph" : "?"}</b></span><span>heading <b>${r[4] != null ? Math.round(r[4]) + "°" : "?"}</b></span><span>reported <b>${r[9] < 120 ? "just now" : Math.round(r[9] / 60) + " min ago"}</b></span><span>MMSI <b>${r[0]}</b></span></div>`;
+  globe && globe.pointOfView({ lat: r[2], lng: r[3], altitude: Math.min(globe.pointOfView().altitude, 0.6) }, 900); renderWorld();
+}
 let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null, cams: [] }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true, cams: true, webcams: true };
 const KT_MPH = 1.15078;
 function worldHome() { const p = state.place || state.wx || {}; return { lat: +(p.lat || 33.15), lng: +(p.lon || -96.82) }; }
@@ -1814,7 +1834,7 @@ function initGlobe() {
   if (PHONE && matchMedia("(pointer: coarse)").matches) { const g = $("#globeGate"); g.hidden = false; globe.controls().enabled = false; g.onclick = () => { g.hidden = true; globe.controls().enabled = true; }; }
   let viewT = null; const onView = () => { clearTimeout(viewT); viewT = setTimeout(() => { loadCamsInView(); loadPlacesInView(); loadWebcamsInView(); renderWorld(false); }, 350); };
   globe.controls().addEventListener("change", onView); if (globe.onZoom) globe.onZoom(onView);
-  loadGlobal(); worldTimers.push(setInterval(loadGlobal, 2 * 60000));
+  loadGlobal(); worldTimers.push(setInterval(loadGlobal, 2 * 60000)); loadShips(); worldTimers.push(setInterval(loadShips, 90000));
   new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
   if (PHONE) el.style.touchAction = "pan-y";
   loadWorld(); loadSats(); loadCams(); loadPlacesInView(); loadWebcamsInView();
@@ -1939,6 +1959,8 @@ function renderWorld(satsOnly) {
   if (worldLayers.flights && pov.altitude < 0.5) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0;
     for (const a of gProj) { if (localHex.has(a.hex) || Math.abs(a.lat - pov.lat) > r || Math.abs(a.lon - pov.lng) * kx > r * 1.6) continue; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) }); if (++n > 350) break; } }
   if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === tHex)) { const a = worldData.tracked.ac; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, true) }); }
+  if (worldLayers.ships && pov.altitude < 0.7) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0;
+    for (const sh of ships) { if (sh[0] !== shipSel && (Math.abs(sh[2] - pov.lat) > r || Math.abs(sh[3] - pov.lng) * kx > r * 1.6)) continue; html.push({ lat: sh[2], lng: sh[3], alt: 0.0008, el: shipMarker(sh) }); if (++n > 400) break; } }
   if (worldLayers.fires) for (const f of worldData.fires) html.push({ lat: f.lat, lng: f.lon, alt: 0, el: fireMarker(f) });
   for (const c of visibleCams()) html.push({ lat: c.lat, lng: c.lon, alt: 0, el: camMarker(c) });
   places.forEach((p, i) => html.push({ lat: p[1], lng: p[2], alt: 0.0005, el: placeMarker(p, i) }));
@@ -1949,13 +1971,14 @@ function renderWorld(satsOnly) {
   const satPts = worldLayers.sats ? worldData.sats.filter(s => !/ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: Math.min(0.5, s.altKm / 6371) })) : [];
   const issPts = worldLayers.sats ? worldData.sats.filter(s => /ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: s.altKm / 6371 })) : [];
   const acPts = worldLayers.flights && pov.altitude >= 0.5 ? gProj.map(a => ({ lat: a.lat, lng: a.lon, alt: 0.004 })) : [];
-  globe.particlesData([{ pts: acPts, color: "#7be8ff" }, { pts: satPts, color: "#b9a6ff" }, { pts: issPts, color: "#ffffff" }]);
+  const shipPts = worldLayers.ships && pov.altitude >= 0.7 ? ships.map(sh => ({ lat: sh[2], lng: sh[3], alt: 0.003 })) : [];
+  globe.particlesData([{ pts: acPts, color: "#7be8ff" }, { pts: satPts, color: "#b9a6ff" }, { pts: issPts, color: "#ffffff" }, { pts: shipPts, color: "#39f0a8" }]);
   if (!satsOnly) {
     globe.ringsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 3).map(q => ({ lat: q.lat, lng: q.lon, maxR: Math.max(0.6, (q.mag - 2.5) * 1.2) })) : []);
     globe.labelsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 4.5).map(q => ({ lat: q.lat, lng: q.lon, text: "M" + q.mag.toFixed(1) })) : []);
   }
   const now = Date.now(); if (satsOnly && now - lastWorldRender < 10000) return; lastWorldRender = now;
-  $("#worldSub").textContent = `${globalAc.length.toLocaleString()} aircraft worldwide · ${camsTotal ? camsTotal.toLocaleString() + " cameras (zoom in) · " : ""}${worldData.flights.length} near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
+  $("#worldSub").textContent = `${globalAc.length.toLocaleString()} aircraft · ${ships.length ? ships.length.toLocaleString() + " ships · " : ""}${camsTotal ? camsTotal.toLocaleString() + " cameras (zoom in) · " : ""}${worldData.flights.length} near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
   const big = [...worldData.quakes].sort((a, b) => b.mag - a.mag).slice(0, 5), fires = worldData.fires.slice(0, 5);
   const nearest = [...worldData.flights].filter(a => a.alt > 0).sort((a, b) => (b.alt || 0) - (a.alt || 0)).slice(0, 6);
   $("#worldInfo").innerHTML = `${worldData.iss ? `<h3>SPACE STATION</h3><div class="row" data-go="${worldData.iss.lat},${worldData.iss.lon}"><span>ISS over ${worldData.iss.lat.toFixed(1)}°, ${worldData.iss.lon.toFixed(1)}°</span><small>${worldData.iss.alt} km · ${Math.round(worldData.iss.vel * 0.621)} mph</small></div>` : ""}
@@ -1994,8 +2017,10 @@ function flyTo(lat, lon, label) {
   setTimeout(() => { camsKey = ""; placesKey = ""; loadCamsInView(); loadPlacesInView(); }, 1700);
   $("#placeHits").innerHTML = label ? `<div class="empty">${esc(label)} · cameras load as the map arrives</div>` : "";
 }
+const shipByName = (q) => { const u = q.toUpperCase().trim(); return u.length > 2 ? ships.find(sh => String(sh[1]).toUpperCase().includes(u)) : null; };
 $("#placeForm").onsubmit = async (e) => {
   e.preventDefault(); const q = $("#placeQ").value.trim(); if (!q) return;
+  const sh = shipByName(q); if (sh) { $("#placeHits").innerHTML = `<div class="empty">ship: ${esc(sh[1])}</div>`; openShip(sh); return; }   // a ship name finds the ship
   const [name, region] = q.split(",").map(x => x.trim());
   $("#placeHits").innerHTML = `<div class="empty">searching…</div>`;
   let res = [];
