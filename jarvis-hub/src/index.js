@@ -381,6 +381,7 @@ async function ingestInbox(env, body, ctx) {
   await kv.put(env, "brief", { at: new Date().toISOString(), source: "bridge", accounts: Object.keys(inbox.accounts), note: all.length ? `${unread} unread across ${Object.keys(inbox.accounts).length} inbox${Object.keys(inbox.accounts).length > 1 ? "es" : ""}, ${needs} need${needs === 1 ? "s" : ""} a reply` : "All inboxes clear.", items: all.slice(0, 40) });
   const quick = fresh.filter((m) => { const c = keep[m.threadId]; return c?.needs_reply && !m.lastFromMe && ["lead", "client", "booking"].includes(c.kind) && !isBot(m.fromEmail) && Date.now() - new Date(m.date) < 6 * 3600e3; }).map((m) => m.threadId);
   if (quick.length && ctx) ctx.waitUntil(makeFollowups(env, { minAgeH: 0, onlyThreads: quick, first: true }).catch((e) => console.log("first reply", e.message)));
+  if (ctx) ctx.waitUntil(prefetchThreads(env, account, inbox.accounts[account].items).catch((e) => console.log("prefetch", e.message)));
   return json({ ok: true, account, items: items.length, triaged: fresh.length, hook: !!body.hookUrl, drafting: quick.length });
 }
 
@@ -403,10 +404,25 @@ async function resolveHook(env, p) {
   const partial = Object.entries(hooks).find(([a, h]) => h.url && want && (a.includes(want) || want.includes(a.split("@")[1] || "~")));
   return partial ? partial[1] : null;
 }
+async function threadCached(env, account, threadId, date, fresh = false) {
+  const key = "thread_" + threadId; const c = fresh ? null : await kv.get(env, key);
+  if (c && (!date || c.date === date) && c.data?.messages) return { ...c.data, cached: true };
+  const r = await bridgeCall(env, account, { action: "get", threadId });
+  if (r.error === "unknown action") r.error = "This inbox's bridge script is the older version. Paste the updated script and deploy a new version to read full emails.";
+  if (!r.error && r.messages) await env.HUB.put(key, JSON.stringify({ date: date || r.messages[r.messages.length - 1]?.date || "", data: r, at: Date.now() }), { expirationTtl: 3 * 86400 });
+  return r;
+}
+async function prefetchThreads(env, account, items) {
+  const want = items.filter((m) => m.needs_reply || m.unread || m.priority === 1).slice(0, 4);   // a few Gmail reads per sync, never a flood
+  const cache = await Promise.all(want.map((m) => kv.get(env, "thread_" + m.threadId)));
+  const todo = want.filter((m, i) => !(cache[i]?.date === m.date && cache[i]?.data?.messages));
+  await Promise.allSettled(todo.map((m) => threadCached(env, account, m.threadId, m.date)));
+  return todo.length;
+}
 async function emailAction(env, item) {
   const p = item.params || {}; const hook = await resolveHook(env, p);
   if (!hook?.url) { const have = Object.keys((await kv.get(env, "inbox_hooks")) || {}); return { ok: false, message: `no Gmail bridge for ${p.account || p.business || "that account"}; connected inboxes: ${have.join(", ") || "none"}. Connect the others with the scripts in secrets/bridges.` }; }
-  const action = item.kind.replace("email_", "");
+  const action = item.kind.replace("email_", ""); if (p.threadId) try { await env.HUB.delete("thread_" + p.threadId); } catch {}
   const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject }), redirect: "follow" });
   const txt = await r.text(); let j = {}; try { j = JSON.parse(txt); } catch {}
   return j.ok ? { ok: true, message: j.did || action } : { ok: false, message: j.error || ("bridge " + r.status) };
@@ -1379,7 +1395,7 @@ export default {
     }
     if (p === "/api/home" && request.method === "POST") return json(await setHome(env, await request.json()));
     if (p === "/api/inbox" && request.method === "POST") return ingestInbox(env, await request.json(), ctx);
-    if (p === "/api/inbox/thread") { const r = await bridgeCall(env, url.searchParams.get("account"), { action: "get", threadId: url.searchParams.get("t") }); if (r.error === "unknown action") r.error = "This inbox's bridge script is the older version. Paste the updated script and deploy a new version to read full emails."; return json(r, r.error ? 502 : 200); }
+    if (p === "/api/inbox/thread") { const r = await threadCached(env, url.searchParams.get("account"), url.searchParams.get("t"), url.searchParams.get("d") || "", !!url.searchParams.get("fresh")); return json(r, r.error ? 502 : 200); }
     if (p === "/api/inbox/bridges") { const hooks = (await kv.get(env, "inbox_hooks")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; return json(Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, business: v.business, at: v.at, items: v.items.length, actions: !!hooks[a]?.url }))); }
     // action queue: confirmed by Jesse on the page. Email kinds run right now through the Gmail bridge; the rest wait for the hands script on his PC
     if (p === "/api/act" && request.method === "POST") {
