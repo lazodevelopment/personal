@@ -1,0 +1,27 @@
+name = "june-hub"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# June: every Lazo vendor's own assistant hub (brief read aloud, weather, local news,
+# who is waiting, this week's weddings, money, the page, and a streaming chat with hands).
+# Vendors sign in with their Lazo login; the worker reads and writes Firestore AS THEM,
+# so the security rules decide what June can see. Nothing here holds a vendor credential.
+#
+# Secrets (npx wrangler secret put NAME): ANTHROPIC_API_KEY, ELEVENLABS_API_KEY
+# Custom domain (later, in the Cloudflare dash): june.meetlazo.com
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
+
+[[kv_namespaces]]
+binding = "JUNE"
+id = "857b7d96321a495a897c3898fdf3b75a"
+
+[vars]
+FIREBASE_API_KEY = "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU"   # the public web key of lazo-513ec (same as the site worker)
+JUNE_VOICE_ID = "pFZP5JQG7iQjIQuC4Bku"                        # ElevenLabs "Lily": warm, British
+CHAT_MODEL = "claude-sonnet-5-5"
+BRIEF_MODEL = "claude-sonnet-5-5"
+APP_URL = "https://app.meetlazo.com/dashboard"

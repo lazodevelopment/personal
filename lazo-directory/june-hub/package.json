@@ -1,0 +1,10 @@
+{
+  "name": "june-hub",
+  "version": "1.0.0",
+  "description": "June: the Lazo vendor's own assistant hub (Cloudflare Worker).",
+  "private": true,
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.129.0"
+  }
+}

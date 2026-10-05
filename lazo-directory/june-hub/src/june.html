@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>June · Lazo</title>
+<meta name="description" content="June, the Lazo vendor's own assistant: today's brief read aloud, who is waiting, this week's weddings and their weather, money, your page, local news.">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#3D1C3B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--plum:#52284F;--plumDeep:#3D1C3B;--gold:#D9B77C;--goldDeep:#8A6A2F;--goldLine:#E6D6B8;--ivory:#FAF6F0;--ink:#241E2B;--muted:#6B5F72;--card:#FFFFFF;--soft:#F1E9E0;--rose:#C9856B;--sage:#7E9A7A;--red:#B5473F;--shadow:0 10px 30px rgba(61,28,59,.08)}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ivory);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;min-height:100vh}
+h1,h2,h3,.serif{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;letter-spacing:.01em;margin:0}
+a{color:var(--plum)}button{font:inherit;cursor:pointer}
+.hidden{display:none!important}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px 48px}
+/* header */
+header{position:sticky;top:0;z-index:20;background:rgba(250,246,240,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--goldLine)}
+.bar{max-width:1240px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:14px}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--plumDeep);display:grid;place-items:center;flex:none}
+.mark svg{width:26px;height:26px}
+.brand h1{font-size:26px;line-height:1;color:var(--plum)}
+.brand small{display:block;font-size:11.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.bar .grow{flex:1}
+.clock{font-family:"Cormorant Garamond",serif;font-size:22px;color:var(--plum);white-space:nowrap}
+.bar .who{font-size:12px;color:var(--muted);text-align:right;line-height:1.3}
+.btn{border:1px solid var(--goldLine);background:#fff;color:var(--plum);border-radius:12px;padding:8px 14px;font-weight:600;font-size:13px;transition:transform .08s}
+.btn:active{transform:scale(.97)}.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--plumDeep)}.btn.plum{background:var(--plum);border-color:var(--plum);color:#fff}
+.btn.sm{padding:5px 10px;font-size:12px;border-radius:9px}.btn[disabled]{opacity:.5;cursor:default}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--goldLine);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--muted);background:#fff}
+.pill input{accent-color:var(--plum)}
+/* layout */
+.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;margin-top:18px}
+@media(max-width:960px){.grid{grid-template-columns:1fr}.clock,.bar .who{display:none}}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card{background:var(--card);border:1px solid var(--goldLine);border-radius:18px;padding:16px 18px;box-shadow:var(--shadow);animation:rise .4s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card h2{font-size:21px;color:var(--plum);display:flex;align-items:center;gap:10px}
+.card h2 .n{font:600 11.5px Inter;background:var(--soft);color:var(--goldDeep);border-radius:999px;padding:2px 9px;letter-spacing:.04em}
+.card h2 .act{margin-left:auto;display:flex;gap:6px}
+.sub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.row{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--soft)}
+.row:first-of-type{border-top:0}.row .main{flex:1;min-width:0}.row .t{font-weight:600;color:var(--ink)}.row .d{color:var(--muted);font-size:12.5px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.row .side{text-align:right;font-size:12px;color:var(--muted);white-space:nowrap}
+.tag{display:inline-block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--goldDeep);background:var(--soft);border-radius:6px;padding:2px 6px;margin-right:4px}
+.tag.hot{color:#fff;background:var(--rose)}.tag.ok{color:#fff;background:var(--sage)}.tag.red{color:#fff;background:var(--red)}
+.empty{color:var(--muted);font-size:13.5px;padding:8px 0}
+.stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.stat .k{background:var(--soft);border-radius:12px;padding:10px 12px}.stat .k b{display:block;font:600 22px "Cormorant Garamond",serif;color:var(--plum);line-height:1.1}.stat .k span{font-size:11.5px;color:var(--muted)}
+.delta{font-size:11.5px;font-weight:600}.delta.up{color:var(--sage)}.delta.down{color:var(--red)}
+/* June console */
+.console{display:grid;grid-template-columns:200px 1fr;gap:16px;align-items:start}
+@media(max-width:640px){.console{grid-template-columns:1fr}.corebox{margin:0 auto}}
+.corebox{display:flex;flex-direction:column;align-items:center;gap:6px}
+.core{width:190px;height:190px;position:relative;border-radius:50%;background:radial-gradient(circle at 50% 45%,#5a2d57 0%,#3D1C3B 55%,#2a1229 100%);box-shadow:0 0 0 1px var(--goldLine),0 18px 40px rgba(61,28,59,.25),inset 0 0 40px rgba(0,0,0,.35);overflow:hidden;cursor:pointer;transition:box-shadow .3s}
+.core.talking{box-shadow:0 0 0 2px var(--gold),0 18px 50px rgba(217,183,124,.35),inset 0 0 40px rgba(0,0,0,.3)}
+.core.listening{box-shadow:0 0 0 2px var(--rose),0 18px 50px rgba(201,133,107,.35),inset 0 0 40px rgba(0,0,0,.3)}
+.core canvas{position:absolute;inset:0;width:100%;height:100%}
+.corestate{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--goldDeep);min-height:16px;text-align:center}
+.chat{height:300px;overflow:auto;background:var(--soft);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+.msg{max-width:88%;padding:9px 13px;border-radius:14px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:var(--plum);color:#fff;border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:#fff;border:1px solid var(--goldLine);border-bottom-left-radius:4px}
+.msg.sys{align-self:center;background:transparent;color:var(--muted);font-size:12px;text-align:center}
+.confirm{align-self:stretch;background:#fff;border:1px solid var(--gold);border-radius:14px;padding:12px 14px}
+.confirm .s{font-weight:600;color:var(--plum)}.confirm pre{white-space:pre-wrap;font:13px/1.45 Inter;background:var(--soft);border-radius:10px;padding:10px;margin:8px 0;max-height:220px;overflow:auto}
+.confirm .b{display:flex;gap:8px;justify-content:flex-end}.confirm.done{border-color:var(--sage)}.confirm.failed{border-color:var(--red)}
+.ask{display:flex;gap:8px;margin-top:10px}
+.ask input{flex:1;border:1px solid var(--goldLine);border-radius:12px;padding:10px 14px;font:inherit;background:#fff;min-width:0}
+.ask input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(217,183,124,.25)}
+.mic{width:42px;height:42px;border-radius:50%;border:1px solid var(--goldLine);background:#fff;display:grid;place-items:center;color:var(--plum);flex:none}
+.mic.on{background:var(--rose);border-color:var(--rose);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(201,133,107,.25)}}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chips button{border:1px solid var(--goldLine);background:#fff;color:var(--plum);border-radius:999px;padding:5px 11px;font-size:12px}
+.toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* brief */
+.brief{font-family:"Cormorant Garamond",serif;font-size:19px;line-height:1.55;color:var(--ink);margin-top:8px}
+.brief.wait{color:var(--muted);font-style:italic}
+/* weather */
+.wxnow{display:flex;align-items:center;gap:14px;margin-top:6px}.wxnow b{font:600 44px/1 "Cormorant Garamond",serif;color:var(--plum)}.wxnow .c{color:var(--muted);font-size:13px;line-height:1.4}
+.wxdays{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:12px}
+.wxdays div{background:var(--soft);border-radius:10px;padding:8px 4px;text-align:center;font-size:11.5px;color:var(--muted)}.wxdays b{display:block;color:var(--plum);font-size:14px}
+.alert{background:#FBE9E6;color:var(--red);border-radius:10px;padding:8px 10px;font-size:12.5px;margin-top:10px}
+.wxchip{font-size:11px;color:var(--goldDeep);background:var(--soft);border-radius:6px;padding:2px 6px;white-space:nowrap}
+/* news */
+.news a{color:var(--ink);text-decoration:none;font-weight:500}.news a:hover{color:var(--plum)}.news .src{font-size:11.5px;color:var(--muted)}
+/* memory */
+.mem{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--soft);font-size:13.5px}.mem:first-child{border-top:0}.mem span{flex:1}.mem button{border:0;background:none;color:var(--muted)}
+/* sign-in */
+.signin{min-height:100vh;display:grid;place-items:center;padding:24px}
+.signin .box{width:100%;max-width:400px;background:#fff;border:1px solid var(--goldLine);border-radius:22px;padding:28px;box-shadow:var(--shadow);text-align:center}
+.signin .mark{width:64px;height:64px;border-radius:18px;margin:0 auto 12px}.signin .mark svg{width:48px;height:48px}
+.signin h1{font-size:40px;color:var(--plum)}.signin p{color:var(--muted);font-size:13.5px;margin:6px 0 18px}
+.signin input{width:100%;border:1px solid var(--goldLine);border-radius:12px;padding:11px 14px;font:inherit;margin-bottom:10px}
+.signin .err{color:var(--red);font-size:13px;min-height:18px;margin:4px 0 8px}
+.signin .btn{width:100%;padding:11px}
+.signin .foot{font-size:12px;color:var(--muted);margin-top:14px}
+/* drill */
+.drill{position:fixed;inset:0;background:rgba(36,30,43,.45);display:none;z-index:50;padding:20px}
+.drill.open{display:grid;place-items:center}
+.drill .box{background:var(--ivory);border-radius:20px;max-width:720px;width:100%;max-height:88vh;overflow:auto;padding:20px}
+.drill .m{padding:8px 12px;border-radius:12px;margin:6px 0;font-size:13.5px;max-width:85%}.drill .m.couple{background:#fff;border:1px solid var(--goldLine)}.drill .m.vendor{background:var(--plum);color:#fff;margin-left:auto}.drill .m.system{color:var(--muted);font-size:12px;background:transparent;text-align:center;max-width:100%}
+.drill .m small{display:block;opacity:.7;font-size:11px;margin-top:3px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:30px}
+</style>
+</head>
+<body>
+
+<!-- sign in -->
+<div class="signin" id="signin">
+  <form class="box" id="loginForm">
+    <div class="mark"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg></div>
+    <h1>June</h1>
+    <p>Your Lazo assistant. Sign in with the same email and password you use in the Lazo app.</p>
+    <input type="email" id="email" placeholder="Email" autocomplete="username" required>
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password" required>
+    <div class="err" id="loginErr"></div>
+    <button class="btn gold" type="submit" id="loginBtn">Sign in</button>
+    <div class="foot"><a href="#" id="forgot">Forgot your password?</a> · <a href="https://meetlazo.com/for-vendors/" target="_blank" rel="noopener">Not on Lazo yet?</a></div>
+  </form>
+</div>
+
+<!-- the hub -->
+<div id="app" class="hidden">
+<header><div class="bar">
+  <div class="mark"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg></div>
+  <div class="brand"><h1>June</h1><small id="vendorLine">Lazo</small></div>
+  <div class="grow"></div>
+  <div class="clock" id="clock"></div>
+  <label class="pill"><input type="checkbox" id="speakOn" checked> voice</label>
+  <a class="btn sm" id="dashLink" href="https://app.meetlazo.com/dashboard" target="_blank" rel="noopener">Dashboard</a>
+  <button class="btn sm" id="signout">Sign out</button>
+</div></header>
+
+<div class="wrap">
+<div class="grid">
+<div class="col">
+
+  <section class="card" id="junePanel">
+    <h2>Ask June <span class="n" id="brainState"></span></h2>
+    <div class="sub">She reads your real leads, dates and money. Hold the mic or press J to talk; say "June, …" when the wake word is on.</div>
+    <div class="console" style="margin-top:12px">
+      <div class="corebox">
+        <div class="core" id="core" aria-hidden="true"><canvas id="viz" width="380" height="380"></canvas></div>
+        <div class="corestate" id="coreState">idle</div>
+      </div>
+      <div>
+        <div class="chat" id="chat"></div>
+        <form class="ask" id="ask"><input id="q" placeholder="Who is waiting on me? What's the weather for Saturday's wedding?" autocomplete="off"><button type="button" class="mic" id="mic" hidden title="Hold to talk"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/></svg></button><button class="btn plum" type="submit">Ask</button></form>
+        <div class="chips" id="chips"></div>
+        <div class="toggles"><label class="pill" id="wakeWrap" hidden><input type="checkbox" id="wakeOn"> "June" wake word</label><label class="pill" id="convWrap" hidden><input type="checkbox" id="convOn"> conversation mode</label><button class="btn sm" id="clearChat" type="button">Clear</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="briefPanel">
+    <h2>Today's brief <span class="n" id="briefDay"></span><span class="act"><button class="btn sm gold" id="briefListen">▶ Listen</button><button class="btn sm" id="briefStop" hidden>■ Stop</button><button class="btn sm" id="briefRefresh" title="Write it again with the latest numbers">↻</button></span></h2>
+    <div class="brief wait" id="briefText">June is reading your morning…</div>
+  </section>
+
+  <section class="card" id="waitingPanel">
+    <h2>Waiting on you <span class="n" id="waitingN"></span></h2>
+    <div id="waiting"></div>
+  </section>
+
+  <section class="card" id="weekPanel">
+    <h2>Coming up <span class="n" id="weekN"></span></h2>
+    <div class="sub">Booked weddings and consults, with the day's forecast inside two weeks.</div>
+    <div id="upcoming"></div>
+  </section>
+
+</div>
+<div class="col">
+
+  <section class="card" id="wxPanel">
+    <h2>Weather <span class="n" id="wxPlace"></span></h2>
+    <div id="wx"></div>
+  </section>
+
+  <section class="card" id="pagePanel">
+    <h2>Your page <span class="act"><a class="btn sm" id="pageLink" href="#" target="_blank" rel="noopener">View</a></span></h2>
+    <div id="page"></div>
+  </section>
+
+  <section class="card" id="moneyPanel">
+    <h2>Money</h2>
+    <div id="money"></div>
+  </section>
+
+  <section class="card news" id="newsPanel">
+    <h2>Around town <span class="n" id="newsPlace"></span></h2>
+    <div id="news"></div>
+  </section>
+
+  <section class="card news" id="indPanel">
+    <h2>The industry</h2>
+    <div id="industry"></div>
+  </section>
+
+  <section class="card" id="memPanel">
+    <h2>June remembers</h2>
+    <div class="sub">Say "remember that…" and it lands here.</div>
+    <div id="memory"></div>
+  </section>
+
+</div>
+</div>
+<footer>June is part of Lazo · <span id="acct"></span> · <a href="https://meetlazo.com/privacy/" target="_blank" rel="noopener">Privacy</a></footer>
+</div>
+</div>
+
+<div class="drill" id="drill"><div class="box" id="drillBox"></div></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+const state = { cfg: {}, s: null, chat: [] };
+const WMO = { 0: ["Clear", "☀️"], 1: ["Mostly clear", "🌤️"], 2: ["Partly cloudy", "⛅"], 3: ["Overcast", "☁️"], 45: ["Fog", "🌫️"], 48: ["Fog", "🌫️"], 51: ["Drizzle", "🌦️"], 53: ["Drizzle", "🌦️"], 55: ["Drizzle", "🌦️"], 61: ["Light rain", "🌧️"], 63: ["Rain", "🌧️"], 65: ["Heavy rain", "🌧️"], 71: ["Snow", "🌨️"], 73: ["Snow", "🌨️"], 75: ["Snow", "🌨️"], 80: ["Showers", "🌦️"], 81: ["Showers", "🌧️"], 82: ["Heavy showers", "⛈️"], 95: ["Thunderstorms", "⛈️"], 96: ["Thunderstorms", "⛈️"], 99: ["Thunderstorms", "⛈️"] };
+const wmo = (c) => WMO[c] || ["", ""];
+const money = (n) => "$" + Math.round(+n || 0).toLocaleString();
+const fmtDay = (iso) => { try { return new Date(iso.length === 10 ? iso + "T12:00" : iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }); } catch { return iso; } };
+const fmtWhen = (iso) => { try { return new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch { return iso; } };
+const ago = (h) => h == null ? "" : h < 1 ? "just now" : h < 48 ? h + "h" : Math.round(h / 24) + "d";
+
+/* ---------- sign-in: Firebase Auth over REST (the page talks to Google directly; the worker never sees the password) ---------- */
+let auth = { idToken: "", exp: 0, refreshToken: "" };
+try { auth.refreshToken = localStorage.getItem("juneRefresh") || ""; } catch {}
+async function fbSignIn(email, password) {
+  const r = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + state.cfg.apiKey, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password, returnSecureToken: true }) });
+  const j = await r.json(); if (!r.ok) throw new Error(({ EMAIL_NOT_FOUND: "No Lazo account with that email.", INVALID_PASSWORD: "That password isn't right.", INVALID_LOGIN_CREDENTIALS: "Email or password isn't right.", USER_DISABLED: "This account is disabled.", TOO_MANY_ATTEMPTS_TRY_LATER: "Too many tries; wait a minute." })[(j.error?.message || "").split(" ")[0]] || j.error?.message || "Sign-in failed");
+  setAuth(j.idToken, j.expiresIn, j.refreshToken);
+}
+function setAuth(idToken, expiresIn, refreshToken) { auth = { idToken, exp: Date.now() + (+expiresIn || 3600) * 1000, refreshToken: refreshToken || auth.refreshToken }; try { localStorage.setItem("juneRefresh", auth.refreshToken); } catch {} }
+async function refreshAuth() {
+  if (!auth.refreshToken) return false;
+  const r = await fetch("https://securetoken.googleapis.com/v1/token?key=" + state.cfg.apiKey, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(auth.refreshToken) });
+  if (!r.ok) { signOut(false); return false; }
+  const j = await r.json(); setAuth(j.id_token, j.expires_in, j.refresh_token); return true;
+}
+async function token() { if (!auth.idToken || Date.now() > auth.exp - 5 * 60e3) await refreshAuth(); return auth.idToken; }
+async function api(path, opts = {}) {
+  const t = await token(); if (!t) throw new Error("sign in");
+  const r = await fetch(path, { ...opts, headers: { ...(opts.headers || {}), authorization: "Bearer " + t, ...(opts.body && typeof opts.body === "string" ? { "content-type": "application/json" } : {}) } });
+  if (r.status === 401) { signOut(false); throw new Error("Signed out"); }
+  return r;
+}
+function signOut(clear = true) { auth = { idToken: "", exp: 0, refreshToken: "" }; try { localStorage.removeItem("juneRefresh"); } catch {} $("#app").classList.add("hidden"); $("#signin").classList.remove("hidden"); if (clear) $("#loginErr").textContent = ""; }
+$("#loginForm").onsubmit = async (e) => { e.preventDefault(); const b = $("#loginBtn"); b.disabled = true; $("#loginErr").textContent = ""; try { await fbSignIn($("#email").value.trim(), $("#pw").value); await enter(); } catch (err) { $("#loginErr").textContent = err.message; } b.disabled = false; };
+$("#forgot").onclick = async (e) => { e.preventDefault(); const email = $("#email").value.trim(); if (!email) return ($("#loginErr").textContent = "Type your email first."); const r = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=" + state.cfg.apiKey, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ requestType: "PASSWORD_RESET", email }) }); $("#loginErr").textContent = r.ok ? "Reset email sent. Check your inbox." : "Couldn't send a reset email for that address."; };
+$("#signout").onclick = () => { stopSpeaking(); signOut(); };
+
+/* ---------- enter the hub ---------- */
+async function enter() {
+  $("#signin").classList.add("hidden"); $("#app").classList.remove("hidden"); unlockPlayer();
+  if (!vizRaf) vizRaf = requestAnimationFrame(drawViz);
+  addMsg("sys", "Good to see you. Ask me anything about your couples, dates or money.");
+  await loadState(true);
+  detectMic();
+}
+async function loadState(first) {
+  try {
+    const r = await api("/api/state"); const s = await r.json();
+    if (!r.ok) { if (r.status === 403) { addMsg("sys", s.message || s.error); $("#briefText").textContent = s.message || "No vendor listing on this login."; $("#briefText").className = "brief wait"; } else addMsg("sys", "Couldn't load your data: " + (s.error || r.status)); return; }
+    state.s = s; render(s);
+    if (first) { if (s.brief?.text) showBrief(s.brief); else makeBrief(false); }
+  } catch (e) { addMsg("sys", "Couldn't load your data: " + e.message); }
+}
+setInterval(() => { if (state.s && !document.hidden) loadState(false); }, 3 * 60e3);
+const clockTick = () => { $("#clock").textContent = new Date().toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" }); }; clockTick(); setInterval(clockTick, 15000);
+
+/* ---------- render ---------- */
+function render(s) {
+  const v = s.vendor;
+  $("#vendorLine").textContent = `${v.name} · ${v.metro}`; $("#acct").textContent = s.user.email; $("#dashLink").href = state.cfg.app || $("#dashLink").href; $("#pageLink").href = v.publicUrl;
+  // waiting
+  $("#waitingN").textContent = s.counts.waiting || "";
+  $("#waiting").innerHTML = s.waiting.length ? s.waiting.map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.couple)} ${r.unread ? '<span class="tag hot">new</span>' : ""}${r.offPlatform ? '<span class="tag">lead</span>' : ""}${r.weddingDate ? `<span class="tag">${esc(fmtDay(r.weddingDate))}</span>` : ""}</div><div class="d">${esc(r.lastMessagePreview || (r.venue ? "Venue: " + r.venue : "No message yet"))}</div></div><div class="side">waited ${ago(r.waitedHours)}<br><button class="btn sm" data-open="${esc(r.inquiryId)}">Open</button> <button class="btn sm gold" data-reply="${esc(r.inquiryId)}" data-name="${esc(r.couple)}">Reply</button></div></div>`).join("") : '<div class="empty">Nobody is waiting. Lovely.</div>';
+  // upcoming
+  const ups = [...s.weddings.map((w) => ({ when: w.weddingDate, kind: "Wedding", who: w.couple, where: w.venue, wx: w.wx, id: w.inquiryId })), ...s.consults.map((c) => ({ when: c.startAt, kind: c.type || "Consult", who: c.who, where: c.mode, wx: c.wx, id: c.inquiryId, time: true }))].sort((a, b) => a.when.localeCompare(b.when)).slice(0, 10);
+  $("#weekN").textContent = s.counts.next30 ? s.counts.next30 + " in 30 days" : "";
+  $("#upcoming").innerHTML = ups.length ? ups.map((u) => `<div class="row"><div class="main"><div class="t">${esc(u.who)} <span class="tag ${u.kind === "Wedding" ? "ok" : ""}">${esc(u.kind)}</span></div><div class="d">${esc(u.time ? fmtWhen(u.when) : fmtDay(u.when))}${u.where ? " · " + esc(u.where) : ""}</div></div><div class="side">${u.wx ? `<span class="wxchip">${wmo(u.wx.code)[1]} ${u.wx.hi}° · rain ${u.wx.rain}%</span><br>` : ""}${u.id ? `<button class="btn sm" data-open="${esc(u.id)}">Open</button>` : ""}</div></div>`).join("") : '<div class="empty">Nothing booked ahead yet.</div>';
+  // weather
+  const w = s.weather;
+  $("#wxPlace").textContent = v.metro.split(",")[0];
+  if (w?.current) {
+    const c = w.current, d = w.daily;
+    $("#wx").innerHTML = `<div class="wxnow"><b>${Math.round(c.temperature_2m)}°</b><div class="c">${wmo(c.weather_code)[1]} ${esc(wmo(c.weather_code)[0])}<br>feels ${Math.round(c.apparent_temperature)}° · wind ${Math.round(c.wind_speed_10m)} mph · humidity ${c.relative_humidity_2m}%<br>high ${Math.round(d.temperature_2m_max[0])}° low ${Math.round(d.temperature_2m_min[0])}° · sunset ${esc(String(d.sunset[0]).slice(11))}</div></div>
+      <div class="wxdays">${d.time.slice(1, 6).map((t, i) => `<div><b>${new Date(t + "T12:00").toLocaleDateString("en-US", { weekday: "short" })}</b>${wmo(d.weather_code[i + 1])[1]}<br>${Math.round(d.temperature_2m_max[i + 1])}°/${Math.round(d.temperature_2m_min[i + 1])}°<br>${d.precipitation_probability_max[i + 1] ?? 0}%</div>`).join("")}</div>
+      ${(w.nws || []).map((a) => `<div class="alert">⚠️ ${esc(a.headline || a.event)}</div>`).join("")}`;
+  } else $("#wx").innerHTML = '<div class="empty">Weather unavailable right now.</div>';
+  // page
+  const vw = v.views, delta = vw ? vw.d7 - vw.d7Prev : null;
+  $("#page").innerHTML = `<div class="stat"><div class="k"><b>${vw ? vw.d7 : "–"}</b><span>views, 7 days</span>${delta != null ? `<div class="delta ${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "+" : ""}${delta} vs prior week</div>` : ""}</div><div class="k"><b>${v.rank ? "#" + v.rank.pos : "–"}</b><span>${v.rank ? "of " + v.rank.of + " " + esc(v.rank.label) : "rank"}</span></div><div class="k"><b>${v.reviewCount ? v.reviewAverage.toFixed(1) : "–"}</b><span>${v.reviewCount ? v.reviewCount + " review" + (v.reviewCount === 1 ? "" : "s") : "no reviews yet"}</span></div></div>
+    <div class="sub" style="margin-top:10px">${v.verified ? '<span class="tag ok">verified</span>' : '<span class="tag">not yet verified</span>'}<span class="tag">${esc(v.tier)} plan</span>${v.badges.map((b) => `<span class="tag">${esc(b)}</span>`).join("")} ${esc(v.category)} · ${s.counts.threads} threads · ${s.counts.booked} booked</div>`;
+  // money
+  const m = s.money;
+  $("#money").innerHTML = m ? `<div class="stat"><div class="k"><b>${money(m.outstanding)}</b><span>outstanding</span></div><div class="k"><b style="${m.overdue ? "color:var(--red)" : ""}">${money(m.overdue)}</b><span>overdue</span></div><div class="k"><b>${money(m.collected30)}</b><span>collected, 30 days</span></div></div>` + (m.open.length ? m.open.slice(0, 6).map((i) => `<div class="row"><div class="main"><div class="t">${esc(i.couple || "—")} <span class="tag ${i.overdue ? "red" : i.dueThisWeek ? "hot" : ""}">${i.overdue ? "overdue" : i.dueThisWeek ? "due this week" : "open"}</span></div><div class="d">${esc(i.title)}${i.installment ? " · " + esc(i.installment) : ""}${i.dueDate ? " · due " + esc(fmtDay(String(i.dueDate).slice(0, 10))) : ""}</div></div><div class="side"><b>${money(i.total)}</b></div></div>`).join("") : '<div class="empty" style="margin-top:8px">No open invoices.</div>') : '<div class="empty">Money details unavailable.</div>';
+  // news
+  $("#newsPlace").textContent = v.metro.split(",")[0];
+  $("#news").innerHTML = s.news.length ? s.news.slice(0, 6).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">No local headlines right now.</div>';
+  $("#industry").innerHTML = s.industry.length ? s.industry.slice(0, 5).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">Quiet week in the trade press.</div>';
+  renderMemory(s.memory);
+  document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openThread(b.dataset.open)));
+  document.querySelectorAll("[data-reply]").forEach((b) => (b.onclick = () => { $("#q").value = `Draft a reply to ${b.dataset.name}`; ask($("#q").value); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+}
+function renderMemory(mem) { state.memory = mem || []; $("#memory").innerHTML = state.memory.length ? state.memory.map((m) => `<div class="mem"><span>${esc(m.text)}</span><button title="forget" data-forget="${esc(m.id)}">✕</button></div>`).join("") : '<div class="empty">Nothing remembered yet.</div>'; document.querySelectorAll("[data-forget]").forEach((b) => (b.onclick = async () => { const r = await api("/api/memory", { method: "POST", body: JSON.stringify({ id: b.dataset.forget }) }); renderMemory(await r.json()); })); }
+
+/* ---------- thread drill ---------- */
+async function openThread(id) {
+  $("#drillBox").innerHTML = '<div class="empty">Opening…</div>'; $("#drill").classList.add("open");
+  try {
+    const r = await api("/api/thread?id=" + encodeURIComponent(id)); const t = await r.json(); if (!r.ok) throw new Error(t.error);
+    $("#drillBox").innerHTML = `<h2 style="font-size:26px;color:var(--plum)">${esc(t.couple)} <span class="tag">${esc(t.stage)}</span></h2><div class="sub">${t.weddingDate ? fmtDay(t.weddingDate) + " · " : ""}${esc(t.venue || "")}${t.intent?.guests ? " · " + esc(t.intent.guests) + " guests" : ""}${t.budget ? " · budget " + esc(t.budget) : ""}${t.contact?.email ? " · " + esc(t.contact.email) : ""}${t.contact?.phone ? " · " + esc(t.contact.phone) : ""}</div>
+      <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm plum" href="${esc((state.cfg.app || "https://app.meetlazo.com/dashboard") + "?thread=" + encodeURIComponent(id))}" target="_blank" rel="noopener">Open in the dashboard</a><button class="btn sm gold" id="drillReply">Draft a reply with June</button><button class="btn sm" id="drillClose">Close</button></div>
+      ${t.tasks?.length ? `<div class="sub" style="margin-top:8px"><b>Tasks:</b> ${t.tasks.map((x) => `${x.done ? "✓" : "○"} ${esc(x.title)}${x.dueAt ? " (" + fmtDay(String(x.dueAt).slice(0, 10)) + ")" : ""}`).join(" · ")}</div>` : ""}
+      ${t.invoices?.length ? `<div class="sub"><b>Invoices:</b> ${t.invoices.map((x) => `${esc(x.title)} ${money(x.total)} ${esc(x.status)}`).join(" · ")}</div>` : ""}
+      <div style="margin-top:12px">${(t.messages || []).map((m) => `<div class="m ${esc(m.from)}">${esc(m.text)}<small>${esc(fmtWhen(m.at))}${m.via ? " · " + esc(m.via) : ""}</small></div>`).join("") || '<div class="empty">No messages yet.</div>'}</div>`;
+    $("#drillClose").onclick = closeDrill; $("#drillReply").onclick = () => { closeDrill(); ask(`Draft a reply to ${t.couple}`); };
+    api("/api/read", { method: "POST", body: JSON.stringify({ inquiryId: id }) }).catch(() => {});
+  } catch (e) { $("#drillBox").innerHTML = `<div class="empty">${esc(e.message)}</div><button class="btn sm" onclick="closeDrill()">Close</button>`; }
+}
+function closeDrill() { $("#drill").classList.remove("open"); }
+$("#drill").onclick = (e) => { if (e.target === $("#drill")) closeDrill(); };
+
+/* ---------- today's brief ---------- */
+let briefAudioUrl = null;
+function showBrief(b) { $("#briefText").textContent = b.text || ""; $("#briefText").className = "brief"; $("#briefDay").textContent = new Date(b.at).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }); briefAudioUrl = null; }
+async function makeBrief(force) {
+  $("#briefText").textContent = force ? "June is writing it again with the latest numbers…" : "June is reading your morning…"; $("#briefText").className = "brief wait"; $("#briefRefresh").disabled = true;
+  try { const r = await api("/api/brief", { method: "POST", body: JSON.stringify({ force }) }); const b = await r.json(); if (!r.ok || b.error) throw new Error(b.error || r.status); showBrief(b); if (state.s) state.s.brief = b; }
+  catch (e) { $("#briefText").textContent = "I couldn't write the brief: " + e.message; }
+  $("#briefRefresh").disabled = false;
+}
+$("#briefRefresh").onclick = () => makeBrief(true);
+$("#briefListen").onclick = async () => {
+  const b = state.s?.brief; if (!b?.text) return;
+  stopSpeaking(); unlockPlayer(); $("#briefListen").hidden = true; $("#briefStop").hidden = false;
+  const done = () => { $("#briefListen").hidden = false; $("#briefStop").hidden = true; setViz("idle"); };
+  if (state.cfg.tts) {
+    for (let i = 0; i < 6 && !briefAudioUrl; i++) {
+      const r = await api("/api/brief/audio"); if (r.ok) { briefAudioUrl = URL.createObjectURL(await r.blob()); break; }
+      const bb = await (await api("/api/brief")).json(); if (!bb?.audioPending) break; await new Promise((res) => setTimeout(res, 2500));
+    }
+    if (briefAudioUrl) { player.src = briefAudioUrl; setViz("speaking", playerViz()); player.onended = player.onerror = done; player.play().catch(done); return; }
+  }
+  // no stored audio: speak it sentence by sentence
+  speakGen++; speakQueue = []; b.text.split(/(?<=[.!?])\s+/).forEach((s) => enqueueSpeech(s)); const t = setInterval(() => { if (!speaking && !speakQueue.length) { clearInterval(t); done(); } }, 500);
+};
+$("#briefStop").onclick = () => { stopSpeaking(); $("#briefListen").hidden = false; $("#briefStop").hidden = true; };
+
+/* ---------- voice out: ElevenLabs through the worker, browser en-GB voice as fallback ---------- */
+const player = new Audio(); player.preload = "auto"; let playerUnlocked = false, actx = null, playerAnalyser = null;
+let speakQueue = [], speaking = false, speakGen = 0, currentSpeech = "", VOICE = null, VOICES = [];
+function unlockPlayer() { if (playerUnlocked) return; playerUnlocked = true; try { player.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAGbZHBgG1OF6zM82DWbZaUmMBptgQhGjsyYqc9ae9XFz280948NMBWInluyfr1yq7Ny//TcCQBAEWzP8bzE3A+MWgHOOyphGxMfR7oPp3G7A8MPCbNu5Cz0MC5KmoRMuUsBA8nnb6oN1LlDzPT7X23wvGPMaKmqCJAWAAAA=="; const p = player.play(); if (p) p.catch(() => {}); } catch {} try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {} }
+["pointerdown", "keydown", "touchstart"].forEach((ev) => document.addEventListener(ev, unlockPlayer, { once: true, passive: true }));
+function playerViz() { if (playerAnalyser) return playerAnalyser; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaElementSource(player); playerAnalyser = actx.createAnalyser(); playerAnalyser.fftSize = 512; playerAnalyser.smoothingTimeConstant = .8; src.connect(playerAnalyser); playerAnalyser.connect(actx.destination); } catch { playerAnalyser = null; } return playerAnalyser; }
+function pickVoices() { let all = []; try { all = speechSynthesis.getVoices(); } catch {} const gb = all.filter((v) => /en[-_]GB/i.test(v.lang)); const rank = (v) => (/natural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : /online/i.test(v.name) ? 2 : 3) + (/sonia|libby|hazel|susan|serena|kate|female|woman/i.test(v.name) ? 0 : .5); VOICES = (gb.length ? gb : all.filter((v) => /^en/i.test(v.lang))).sort((a, b) => rank(a) - rank(b)); VOICE = VOICES[0] || null; }
+try { speechSynthesis.onvoiceschanged = pickVoices; pickVoices(); } catch {}
+function stopSpeaking() { const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
+function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
+function enqueueSpeech(segment) {
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
+  const gen = speakGen;
+  const item = { text: segment, gen, blob: state.cfg.tts ? api("/api/tts", { method: "POST", body: JSON.stringify({ text: segment }) }).then((r) => (r.ok ? r.blob() : null)).catch(() => null) : Promise.resolve(null) };
+  speakQueue.push(item); if (!speaking) pumpSpeech();
+}
+async function pumpSpeech() {
+  speaking = true; if (listening && typeof closeMicQuietly === "function") closeMicQuietly();
+  while (speakQueue.length) {
+    const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
+    const blob = await item.blob; if (item.gen !== speakGen) continue;
+    currentSpeech = item.text;
+    if (PHONE) await settleMic();
+    if (blob) await new Promise((res) => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
+    else await new Promise((res) => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .97; u.pitch = 1.05; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
+  }
+  speaking = false; setViz("idle"); onSpeechEnd();
+}
+
+/* ---------- the brain: streaming chat ---------- */
+let pendingReply = false, replyOpen = null, settleMic = async () => {};
+const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter((w) => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter((w) => w.length > 3); return words.length > 0 && words.filter((w) => said.has(w)).length / words.length >= 0.5; };
+function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
+function localAnswer(t) { t = t.toLowerCase().trim(); if (/^(stop|quiet|shush|never mind|nevermind|cancel)[.!]?$/.test(t)) { stopSpeaking(); return ""; } if (/^(what time is it|time)\??$/.test(t)) return "It's " + new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + "."; return null; }
+async function ask(text) {
+  text = text.trim(); if (!text) return;
+  pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
+  const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
+  const myReply = {}; replyOpen = myReply;
+  const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
+  let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
+  const flushSentences = (final) => { if (!final && firstSent) return; const rest = full.slice(spoken); const m = final ? [rest] : rest.match(/^[\s\S]*?[.!?](?=\s|$)/); if (!m) return; const chunk = (final ? rest : m[0]).trim(); if (!chunk) return; spoken += final ? rest.length : m[0].length; firstSent = true; if ($("#speakOn").checked) enqueueSpeech(chunk); };
+  try {
+    const r = await api("/api/chat", { method: "POST", body: JSON.stringify({ text, messages: state.chat }) });
+    const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
+    while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true }); let idx;
+      while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const frame = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        const ev = (frame.match(/^event: (.*)$/m) || [])[1]; const data = (frame.match(/^data: (.*)$/m) || [])[1]; if (!ev || !data) continue;
+        const d = JSON.parse(data);
+        if (ev === "delta") { full += d.text; el.textContent = full; $("#chat").scrollTop = 1e9; if (vizMode === "thinking" && !speaking) $("#brainState").textContent = "speaking"; flushSentences(false); }
+        else if (ev === "done") { full = full.trim(); el.textContent = full || "…"; flushSentences(true); state.chat = d.messages || state.chat; for (const a of d.actions || []) handleAction(a); }
+        else if (ev === "error") { el.textContent = full + "\n[" + d.message + "]"; }
+      }
+    }
+  } catch (e) { el.textContent = (full || "") + " I lost the connection for a moment. " + e.message; }
+  if (replyOpen === myReply) replyOpen = false; else return;
+  $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) { pendingReply = false; setViz("idle"); onSpeechEnd(); }
+}
+function handleAction(a) {
+  if (a.type === "open") { const w = window.open(a.url, "_blank"); if (!w) addMsg("sys", "Popup blocked: " + a.url); }
+  if (a.type === "memory") renderMemory(a.value);
+  if (a.type === "confirm") proposeAction(a.item);
+}
+function proposeAction(item) {
+  const el = document.createElement("div"); el.className = "confirm";
+  const body = item.kind === "send_message" ? item.params.text : item.kind === "add_task" ? `${item.params.title}${item.params.dueDate ? " · by " + item.params.dueDate : ""}${item.params.note ? "\n" + item.params.note : ""}` : "";
+  el.innerHTML = `<div class="s">${esc(item.summary)}</div>${body ? `<pre>${esc(body)}</pre>` : ""}<div class="b"><button class="btn sm" data-no>Cancel</button><button class="btn sm gold" data-yes>Confirm</button></div>`;
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9;
+  const decide = async (decision) => {
+    el.querySelectorAll("button").forEach((b) => (b.disabled = true));
+    try {
+      const r = await api("/api/act", { method: "POST", body: JSON.stringify({ item, decision }) }); const rec = await r.json();
+      el.classList.add(rec.status === "done" ? "done" : rec.status === "failed" ? "failed" : "");
+      el.querySelector(".b").innerHTML = `<span class="sub">${esc(rec.status === "done" ? "Done. " + (rec.result || "") : rec.status === "failed" ? "Couldn't do it: " + rec.result : "Cancelled.")}</span>`;
+      if (rec.status === "done") { speak(rec.result || "Done."); setTimeout(() => loadState(false), 1200); } else if (rec.status === "failed") speak("That didn't go through. " + rec.result);
+    } catch (e) { el.querySelector(".b").innerHTML = `<span class="sub">${esc(e.message)}</span>`; }
+  };
+  el.querySelector("[data-yes]").onclick = () => decide("confirm"); el.querySelector("[data-no]").onclick = () => decide("cancel");
+}
+$("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
+$("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
+["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "What's in the news?", "Remember that…"].forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "Remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else stopSpeaking(); } });
+
+/* ---------- voice in: hold-to-talk, "June" wake word, conversation mode ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = $("#mic"); let rec, wake, listening = false, hasMic = false, micAnalyser = null, micStream = null;
+async function detectMic() {
+  try { const devs = await navigator.mediaDevices.enumerateDevices(); hasMic = devs.some((d) => d.kind === "audioinput"); } catch { hasMic = false; }
+  if (PHONE && SR) hasMic = true;
+  if (SR && hasMic) { mic.hidden = false; $("#wakeWrap").hidden = false; $("#convWrap").hidden = false; setupVoice(); }
+}
+function onSpeechEnd() {
+  if (replyOpen) return; pendingReply = false; if (!hasMic || speaking || listening) return;
+  if ($("#convOn")?.checked) setTimeout(() => { if (!speaking && !listening && !replyOpen && $("#convOn").checked) startListen(); }, 400);
+  else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
+}
+let startListen = () => {};
+function setupVoice() {
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
+  let recIgnore = false;
+  rec.onresult = (e) => { if (recIgnore) return; const r = e.results[e.results.length - 1]; const t = r[0].transcript; if (speaking && soundsLikeSelf(t)) return; $("#coreState").textContent = "» " + t.slice(-40); if (r.isFinal) ask(t); };
+  window.closeMicQuietly = () => { recIgnore = true; try { rec.abort(); } catch {} setTimeout(() => { recIgnore = false; }, 600); };
+  rec.onend = () => { listening = false; mic.classList.remove("on"); if (!speaking) setViz("idle"); if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
+  rec.onerror = (e) => { const why = { "not-allowed": "Microphone blocked. Allow the microphone for this site in your browser, then reload.", "service-not-allowed": "Speech recognition is disabled in this browser.", "audio-capture": "No microphone could be opened.", network: "Speech recognition needs an internet connection." }[e.error]; if (why) addMsg("sys", why); };
+  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
+  const stop = () => { try { rec.stop(); } catch {} };
+  mic.onclick = () => (listening ? stop() : startListen());
+  document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "j" && !e.repeat && !/input|textarea/i.test(e.target.tagName)) startListen(); });
+  document.addEventListener("keyup", (e) => { if (e.key.toLowerCase() === "j" && listening) stop(); });
+  $("#wakeOn").onchange = () => { try { localStorage.setItem("juneWake", $("#wakeOn").checked ? "1" : ""); } catch {} $("#wakeOn").checked ? startWake() : stopWake(); };
+  $("#convOn").onchange = () => { try { localStorage.setItem("juneConv", $("#convOn").checked ? "1" : ""); } catch {} if ($("#convOn").checked) { addMsg("sys", "Conversation mode: I'll listen after each reply. Speak over me to interrupt."); startListen(); } };
+  try { if (localStorage.getItem("juneWake")) { $("#wakeOn").checked = true; startWake(); } if (localStorage.getItem("juneConv")) $("#convOn").checked = true; } catch {}
+  function startWake() {
+    if (wake || listening) return;
+    wake = new SR(); wake.continuous = true; wake.interimResults = true; wake.lang = "en-US";
+    wake.onresult = (e) => {
+      const r = e.results[e.results.length - 1]; const t = r[0].transcript.toLowerCase();
+      if (speaking && r.isFinal && t.trim().split(/\s+/).length >= 2) { if (soundsLikeSelf(t)) return; stopSpeaking(); ask(t.replace(/^june[,.]?\s*/, "")); return; }
+      if (!r.isFinal) return;
+      const m = t.match(/\bjune[,.]?\s*(.*)/); if (m) { if (m[1].trim().length > 2) ask(m[1]); else { stopWake(); startListen(); } }
+    };
+    wake.onend = () => { if (wake && ($("#wakeOn").checked || $("#convOn").checked) && !listening) { try { wake.start(); } catch {} } };
+    wake.onerror = () => {};
+    try { wake.start(); } catch {}
+  }
+  function stopWake() { if (!wake) return; const w = wake; wake = null; try { w.onend = null; w.stop(); } catch {} }
+  window.stopWakeForSpeech = stopWake; window.startWakeAgain = startWake;
+  settleMic = () => new Promise((res) => { let pending = 0, done = false; const fin = () => { if (!done) { done = true; res(); } };
+    if (wake) { const w = wake; wake = null; pending++; w.onend = () => { pending--; if (!pending) fin(); }; try { w.abort(); } catch { pending--; } }
+    if (listening) { pending++; const prev = rec.onend; rec.onend = (e) => { rec.onend = prev; prev && prev(e); pending--; if (!pending) fin(); }; try { rec.abort(); } catch { pending--; } }
+    if (!pending) fin(); else setTimeout(fin, 700); });
+  if (!PHONE) setInterval(() => { if (speaking && ($("#convOn").checked || $("#wakeOn").checked) && !wake && !listening) startWake(); }, 800);
+  $("#core").onclick = () => { if (speaking) { stopSpeaking(); if (hasMic && ($("#convOn").checked || $("#wakeOn").checked)) startListen(); } else if (hasMic) startListen(); };
+}
+async function grabMic() { try { if (!micStream) { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaStreamSource(micStream); micAnalyser = actx.createAnalyser(); micAnalyser.fftSize = 512; src.connect(micAnalyser); } } catch { micAnalyser = null; } }
+
+/* ---------- the living core: a sphere of gold points on deep plum. Bass swells it, higher bands ripple
+   its surface, a waveform halo runs round it while June speaks. Idle drifts gold; listening warms to
+   rose; thinking churns in light plum; speaking glows ivory-gold. Phones use fewer points and half the frame rate. ---------- */
+const viz = $("#viz"), vctx = viz.getContext("2d"); const VIZ_PHONE = PHONE;
+let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
+const CORE = (() => { const N = VIZ_PHONE ? 650 : 1500, pts = [], GA = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = GA * i; pts.push({ x: Math.cos(t) * r, y, z: Math.sin(t) * r, t, band: Math.min(23, Math.floor(Math.abs(y) * 24)), seed: Math.random() * 6.283 }); } return { pts, bands: new Float32Array(24), smooth: new Float32Array(24), wave: new Float32Array(180), rotY: 0, rotX: 0.35, swell: 0, level: 0, gain: 60, tint: [217, 183, 124], last: 0 }; })();
+const STATE_TINT = { idle: [217, 183, 124], listening: [226, 160, 120], thinking: [196, 150, 196], speaking: [245, 228, 180] };
+const freqBuf = new Uint8Array(256), timeBuf = new Uint8Array(512);
+function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
+function readAudio() {
+  const C = CORE;
+  if (analyser) {
+    analyser.getByteFrequencyData(freqBuf); analyser.getByteTimeDomainData(timeBuf); let peak = 0;
+    for (let b = 0; b < 24; b++) { const lo = Math.floor(Math.pow(b / 24, 1.7) * 150), hi = Math.max(lo + 1, Math.floor(Math.pow((b + 1) / 24, 1.7) * 150)); let sum = 0; for (let i = lo; i < hi; i++) sum += freqBuf[i]; C.bands[b] = sum / (hi - lo); if (C.bands[b] > peak) peak = C.bands[b]; }
+    C.gain = Math.max(40, peak > C.gain ? C.gain + (peak - C.gain) * 0.3 : C.gain * 0.995);
+    for (let b = 0; b < 24; b++) { const v = Math.min(1, C.bands[b] / C.gain); C.smooth[b] += (v - C.smooth[b]) * (v > C.smooth[b] ? 0.45 : 0.12); }
+    let sq = 0; for (let i = 0; i < 512; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
+    const rms = Math.sqrt(sq / 512); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.997, 0.02); const env = Math.min(1, rms / C.rmsPeak);
+    C.swell += (env - C.swell) * (env > C.swell ? 0.65 : 0.2); C.kick = Math.max((C.kick || 0) * 0.85, env - (C.prevEnv || 0) > 0.25 ? 1 : 0); C.prevEnv = env;
+    for (let i = 0; i < 180; i++) { const v = (timeBuf[Math.floor(i * 512 / 180)] - 128) / 128; C.wave[i] += (v - C.wave[i]) * 0.5; }
+    C.level += (C.smooth.reduce((a, v) => a + v, 0) / 24 - C.level) * 0.2;
+  } else {
+    const t = fakePhase; let target = 0;
+    if (vizMode === "thinking") target = 0.35 + 0.25 * Math.sin(t * 7); else if (vizMode === "listening") target = 0.15; else if (vizMode === "speaking") target = 0.3 + 0.3 * Math.abs(Math.sin(t * 9));
+    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1; C.kick = (C.kick || 0) * 0.85;
+    for (let b = 0; b < 24; b++) { const v = vizMode === "idle" ? 0 : target * (0.5 + 0.5 * Math.sin(t * 5 + b * 0.8)); C.smooth[b] += (v - C.smooth[b]) * 0.15; }
+    for (let i = 0; i < 180; i++) C.wave[i] *= 0.9;
+  }
+}
+function drawViz(now = 0) {
+  const C = CORE; vizRaf = null; if (document.hidden) return;
+  const want = vizMode === "idle" ? 1000 / 24 : VIZ_PHONE ? 1000 / 30 : 1000 / 60;
+  if (now - C.last < want - 2) { vizRaf = requestAnimationFrame(drawViz); return; }
+  const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt; readAudio();
+  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2;
+  const tint = STATE_TINT[vizMode] || STATE_TINT.idle; for (let i = 0; i < 3; i++) C.tint[i] += (tint[i] - C.tint[i]) * 0.08;
+  const [tr, tg, tb] = C.tint.map(Math.round);
+  const spin = vizMode === "thinking" ? 1.6 : vizMode === "listening" ? 0.9 : vizMode === "idle" ? 0.18 : 0.35 + C.swell * 1.4;
+  C.rotY += dt * spin; C.rotX += ((vizMode === "thinking" ? 0.35 + 0.5 * Math.sin(fakePhase * 1.3) : 0.35 + 0.08 * Math.sin(fakePhase * 0.4)) - C.rotX) * 0.05;
+  const base = W * (vizMode === "listening" ? 0.257 : vizMode === "idle" ? 0.3 : 0.26) * (1 + C.swell * 0.32 + (C.kick || 0) * 0.06);
+  const sy = Math.sin(C.rotY), cyy = Math.cos(C.rotY), sx = Math.sin(C.rotX), cxx = Math.cos(C.rotX);
+  const fade = vizMode === "idle" ? 0.55 : vizMode === "thinking" ? 0.22 : 0.3;
+  vctx.globalCompositeOperation = "destination-out"; vctx.fillStyle = `rgba(0,0,0,${fade})`; vctx.fillRect(0, 0, W, H); vctx.globalCompositeOperation = "source-over";
+  const gl = vizMode === "idle" ? 0.25 : 0.35 + C.swell * 0.6, key = tr + "," + tg + "," + tb;
+  if (C.spriteKey !== key) { C.spriteKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, "rgba(250,246,240,.14)"); g.addColorStop(0.35, `rgba(${key},.12)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(64, (g) => { g.addColorStop(0, "rgba(250,246,240,1)"); g.addColorStop(0.3, `rgba(${key},.85)`); g.addColorStop(1, `rgba(${key},0)`); }); }
+  vctx.globalAlpha = gl; const gr = base * 1.15; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
+  const ripple = vizMode === "idle" ? 0 : 0.26, breathe = vizMode === "idle" ? 0.035 : 0.02;
+  const proj = (x, y, z) => { const x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy, y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx, k = 1 / (1.9 - z2 * 0.6) * 1.9; return [cx + x1 * base * k, cy + y2 * base * k, z2]; };
+  const ring = (rad, tiltA, tiltB, phase, alpha, far) => { const ca = Math.cos(tiltA), sa = Math.sin(tiltA), cb = Math.cos(tiltB), sb = Math.sin(tiltB); vctx.beginPath(); let pen = false;
+    for (let i = 0; i <= 96; i++) { const t = i / 96 * Math.PI * 2 + phase; let x = Math.cos(t) * rad, y = 0, z = Math.sin(t) * rad; let y1 = y * ca - z * sa, z1 = y * sa + z * ca; let x2 = x * cb - y1 * sb, y2 = x * sb + y1 * cb; const [px, py, pz] = proj(x2, y2, z1); const show = far ? pz < 0 : pz >= 0; if (show) { pen ? vctx.lineTo(px, py) : vctx.moveTo(px, py); pen = true; } else pen = false; }
+    vctx.strokeStyle = `rgba(${tr},${tg},${tb},${alpha * (far ? 0.35 : 1)})`; vctx.lineWidth = far ? 0.8 : 1.3; vctx.stroke(); };
+  const ringA = 1.12 + C.swell * 0.05, ringB = 1.24 + C.level * 0.06, ra = vizMode === "idle" ? 0.35 : 0.6 + C.level * 0.4;
+  const pA = fakePhase * (vizMode === "thinking" ? 0.9 : 0.25), pB = -fakePhase * (vizMode === "thinking" ? 1.3 : 0.4);
+  const nucleus = () => { const nr = W * 0.045 * (1 + C.swell * 1.4 + (C.kick || 0) * 0.5) * (vizMode === "idle" ? 0.8 : 1) * 2.2; vctx.globalAlpha = vizMode === "idle" ? 0.6 : Math.min(1, 0.85 + C.level * 0.15); vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1; };
+  const step = vizMode === "idle" ? 2 : 1;
+  for (let pass = 0; pass < 2; pass++) {
+    if (pass === 0) { ring(ringA, 1.15, 0.3, pA, ra, true); ring(ringB, 0.5, 1.9, pB, ra * 0.8, true); }
+    if (pass === 1) nucleus();
+    for (let pi = 0; pi < C.pts.length; pi += step) { const p = C.pts[pi];
+      const d = 1 + C.smooth[p.band] * ripple * (0.6 + 0.4 * Math.sin(p.t * 2 + fakePhase * 3)) + breathe * Math.sin(fakePhase * 1.7 + p.seed) + (vizMode === "thinking" ? 0.1 * Math.sin(fakePhase * 6 - p.y * 7 + p.t) : 0);
+      let x = p.x * d, y = p.y * d, z = p.z * d; let x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy; let y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx;
+      if ((pass === 0) !== (z2 < 0)) continue;
+      const persp = 1 / (1.9 - z2 * 0.6), px = cx + x1 * base * persp * 1.9, py = cy + y2 * base * persp * 1.9;
+      const depth = (z2 + 1) / 2, a = (0.18 + depth * 0.82) * (vizMode === "idle" ? 0.55 : 0.55 + C.swell * 0.45), sz = (W / 280) * ((VIZ_PHONE ? 1.6 : 1.3) + depth * 1.6 + C.smooth[p.band] * 1.2);
+      vctx.fillStyle = depth > 0.82 ? `rgba(250,246,240,${a})` : `rgba(${tr},${tg},${tb},${a})`; vctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
+    }
+  }
+  ring(ringA, 1.15, 0.3, pA, ra, false); ring(ringB, 0.5, 1.9, pB, ra * 0.8, false);
+  if (analyser && C.level > 0.02) { vctx.beginPath(); for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * W * 0.05; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); } vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.08 + C.level * 0.15})`; vctx.lineWidth = 5; vctx.stroke(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.3 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.stroke(); }
+  vizRaf = requestAnimationFrame(drawViz);
+}
+function setViz(mode, node) { vizMode = mode; analyser = node || null; $("#coreState").textContent = mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !vizRaf) vizRaf = requestAnimationFrame(drawViz); });
+
+/* ---------- boot ---------- */
+(async () => {
+  try { state.cfg = await (await fetch("/api/config")).json(); } catch { state.cfg = {}; }
+  if (auth.refreshToken && (await refreshAuth().catch(() => false))) enter();
+})();
+</script>
+</body>
+</html>
