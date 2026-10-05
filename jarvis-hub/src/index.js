@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes", "reminders", "alarm"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes", "reminders", "alarm", "social_log"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const BUILD = (() => { let h = 0; for (let i = 0; i < html.length; i += 7) h = (h * 31 + html.charCodeAt(i)) >>> 0; return h.toString(36) + "-" + html.length.toString(36); })();   // changes with every deploy of the page
 const MODEL = "claude-opus-5-5";
@@ -389,8 +389,9 @@ async function bridgeCall(env, account, payload) {
   const hooks = (await kv.get(env, "inbox_hooks")) || {};
   const hook = hooks[String(account || "").toLowerCase()];
   if (!hook?.url) return { error: "no Gmail bridge with actions for " + account };
-  const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" });
-  const t = await r.text(); try { return JSON.parse(t); } catch { return { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : "") }; }
+  let out; try { const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" }); const t = await r.text(); try { out = JSON.parse(t); } catch { out = { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : "") }; } } catch (e) { out = { error: "bridge unreachable: " + e.message }; }
+  if (out.error && !/thread not found/i.test(out.error)) await healthNote(env, "bridge", { account: String(account || "").toLowerCase(), error: String(out.error).slice(0, 120) });
+  return out;
 }
 
 // which Gmail bridge should carry this action: the exact address, else the inbox that holds the thread, else the business by id or name
@@ -589,6 +590,7 @@ async function buildContext(env, request) {
   const readyF = (fups || []).filter((f) => f.status === "ready");
   if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
   if (trips?.length) lines.push(`TRIPS: ` + trips.map((t) => `${t.date} ${t.flight}${t.route?.from ? " " + (t.route.from.city || t.route.from.iata) + " to " + (t.route.to?.city || t.route.to?.iata) : ""} ${t.phase || "scheduled"}${t.home ? " (home becomes " + HOMES[t.home]?.label + " on landing)" : ""}`).join("; "));
+  try { const hr = await healthReport(env, 7); lines.push(`JARVIS HEALTH (last 7 days): ${healthSummary(hr)}`); } catch {}
   const [rems, alarmCfg] = await Promise.all([kv.get(env, "reminders"), kv.get(env, "alarm")]);
   lines.push(`REMINDERS: ` + ((rems || []).filter((r) => !r.done).slice(0, 12).map((r) => `[${r.id}] ${new Date(r.at).toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ${r.text}${r.repeat !== "none" ? " (" + r.repeat + ")" : ""}`).join(" | ") || "none"));
   lines.push(`WAKE-UP ALARM: ` + (alarmCfg?.enabled ? `${alarmCfg.time} ${!alarmCfg.days?.length ? "every day" : "days " + alarmCfg.days.join(",")}` : "off"));
@@ -710,7 +712,7 @@ async function chat(request, env, ctx) {
 const SLOT_PROMPTS = {
   morning: "This is the MORNING brief. About 220 to 300 words, two minutes read aloud. Greeting with the date and today's weather in one breath; what needs his attention today (unanswered leads, alerts, anything slow or down, anything JARVIS noticed); each business in a sentence or two with the numbers that matter and the week-over-week direction; today's and this week's weddings with their venue weather; his teams' games today and last night's results; one line on the markets and the top local headline if it matters; finish with one dry, encouraging line.",
   afternoon: "This is the AFTERNOON brief. About 150 to 220 words. Only what is NEW since the morning brief: fresh leads or bookings, web traffic so far today for Atavia and Elizabeth Scott, actions completed, alerts, any site that got slow, scores of games in progress or finished today, markets at midday, and anything that changed in the forecast for tonight or this week's weddings. Do not repeat the morning numbers or re-describe the day's weather unless it changed. If genuinely nothing changed, say so in two sentences.",
-  weekly: "This is the MONDAY WEEKLY REVIEW. About 350 to 450 words, five minutes read aloud. For each business in turn: last week against the week before (revenue or cash in, bookings or sign-ups, leads, web traffic, search clicks), and against the same week last year where YEAR-AGO figures exist (say plainly when there is no prior year yet). Then the money picture: the 90-day cash forecast by week, any thin weeks, and anything past due. Then the competitor changes from the last scan, if any. Finish with exactly one thing to fix this week for each business, stated as an instruction. Flowing prose, no lists, no headers.",
+  weekly: "This is the MONDAY WEEKLY REVIEW. About 350 to 450 words, five minutes read aloud. For each business in turn: last week against the week before (revenue or cash in, bookings or sign-ups, leads, web traffic, search clicks), and against the same week last year where YEAR-AGO figures exist (say plainly when there is no prior year yet). Then the money picture: the 90-day cash forecast by week, any thin weeks, and anything past due. Then the competitor changes from the last scan, if any. Then one short paragraph on JARVIS's own reliability from the JARVIS HEALTH line: missed cron runs, feed stalls, bridge errors, failed briefs; say plainly if it was a clean week. Finish with exactly one thing to fix this week for each business, stated as an instruction. Flowing prose, no lists, no headers.",
   evening: "This is the EVENING brief. About 180 to 250 words. Wrap the day: what came in today across the businesses (leads, bookings, sign-ups, revenue if any), today's final web traffic, final scores and tomorrow's games, how the markets closed; then look ahead: tomorrow's weather, tomorrow's and the weekend's weddings with venue weather, balances due, anything still unresolved that he should sleep on or handle first thing. Do not repeat what the morning or afternoon brief already said unless it resolved.",
 };
 const SLOT_HOURS = (env) => Object.fromEntries((env.BRIEF_HOURS || "5:morning,12:afternoon,18:evening").split(",").map((x) => { const [h, slot] = x.split(":"); return [+h, slot || "morning"]; }));
@@ -754,7 +756,7 @@ async function checkStale(env) {
     const at = getAt(await kv.get(env, key)); if (!at) continue;
     if (key === "brief" && (h < 8 || h > 21)) continue; // the inbox routine only runs 7am-9pm while the Claude app is open
     const age = Date.now() - new Date(at); const stale = age > maxAge;
-    if (stale && !flags[key]) { flags[key] = Date.now(); changed = true; await pushAlert(env, { kind: "watch", text: `${label} feed is ${Math.round(age / 60000)} min old: is the PC awake and signed in?` }); await notify(env, "Feed stopped", `${label} last arrived ${Math.round(age / 60000)} min ago. Check the PC (collectors / Claude app).`, { priority: "high", tags: "warning" }); }
+    if (stale && !flags[key]) { flags[key] = Date.now(); changed = true; await healthNote(env, "stale", { feed: label, minutes: Math.round(age / 60000) }); await pushAlert(env, { kind: "watch", text: `${label} feed is ${Math.round(age / 60000)} min old: is the PC awake and signed in?` }); await notify(env, "Feed stopped", `${label} last arrived ${Math.round(age / 60000)} min ago. Check the PC (collectors / Claude app).`, { priority: "high", tags: "warning" }); }
     if (!stale && flags[key]) { delete flags[key]; changed = true; await pushAlert(env, { kind: "up", text: `${label} feed is back` }); }
   }
   if (changed) await kv.put(env, "stale", flags);
@@ -1174,6 +1176,38 @@ async function rosaryAudio(env, key, segId) {
   return new Response(buf, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=86400" } });
 }
 
+/* ---------------- health ledger: JARVIS watching JARVIS ---------------- */
+const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
+async function healthNote(env, kind, data) {
+  try {
+    const h = (await kv.get(env, "health")) || { cron: {}, events: [] }; const today = dayKey();
+    if (kind === "cron") { const c = (h.cron[data] ||= { days: {}, lastAt: null }); c.days[today] = (c.days[today] || 0) + 1; c.lastAt = new Date().toISOString(); for (const d of Object.keys(c.days)) if (Date.now() - new Date(d) > 9 * 86400e3) delete c.days[d]; }
+    else { h.events.unshift({ at: new Date().toISOString(), kind, ...data }); h.events = h.events.filter((e) => Date.now() - new Date(e.at) < 8 * 86400e3).slice(0, 300); }
+    await kv.put(env, "health", h);
+  } catch {}
+}
+const SOCIAL_BRANDS = [["jovi", "Jovi Health"], ["atavia", "Atavia"], ["elizabethscott", "Elizabeth Scott"], ["trylazo", "Lazo"], ["lazovendors", "Lazo Vendors"], ["roven", "Roven"], ["leasereputation", "LeaseReputation"]];
+async function socialFromLog(env) {
+  const log = (await kv.get(env, "social_log")) || {}; const today = new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" });
+  const days = Object.keys(log).sort();
+  const brands = SOCIAL_BRANDS.map(([key, name]) => { const last = [...days].reverse().find((d) => log[d][key]); return { brand: key, name, today: !!log[today]?.[key], last, total: days.filter((d) => log[d][key]).length, linkedin: !!log[today]?.[key]?.linkedin_urn, slug: log[today]?.[key]?.day || "" }; });
+  const w = (await kv.get(env, "watch")) || {}; w.social = { day: today, brands, source: "hub" }; w.at = w.at || new Date().toISOString(); await kv.put(env, "watch", w);
+  return w.social;
+}
+const CRON_EXPECT = { "* * * * *": 1440, "*/5 * * * *": 288, "0 * * * *": 24 };
+async function healthReport(env, days = 7) {
+  const h = (await kv.get(env, "health")) || { cron: {}, events: [] }; const since = Date.now() - days * 86400e3;
+  const cron = Object.entries(CRON_EXPECT).map(([c, perDay]) => { const d = h.cron[c]?.days || {}; const keys = Object.keys(d).filter((k) => new Date(k) >= since && k !== dayKey()); const runs = keys.reduce((a, k) => a + d[k], 0); const exp = keys.length * perDay; return { cron: c, runs, expected: exp, pct: exp ? Math.round(runs / exp * 100) : null, lastAt: h.cron[c]?.lastAt || null }; });
+  const ev = h.events.filter((e) => new Date(e.at) >= since);
+  const count = (k) => ev.filter((e) => e.kind === k).length;
+  const byAcct = {}; for (const e of ev.filter((e) => e.kind === "bridge")) byAcct[e.account] = (byAcct[e.account] || 0) + 1;
+  const errs = (await kv.get(env, "client_errors")) || [];
+  const inbox = (await kv.get(env, "inbox")) || { accounts: {} };
+  const syncAge = Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, minutes: Math.round((Date.now() - new Date(v.at)) / 60000) }));
+  return { days, cron, stale: ev.filter((e) => e.kind === "stale").map((e) => `${e.at.slice(5, 16)} ${e.feed} ${e.minutes}m`), bridgeErrors: byAcct, bridgeSamples: ev.filter((e) => e.kind === "bridge").slice(0, 5).map((e) => `${e.at.slice(5, 16)} ${e.account}: ${e.error}`), briefFailures: count("brief"), clientErrors: errs.filter((e) => new Date(e.at) >= since).length, syncAge, issues: cron.filter((c) => c.pct != null && c.pct < 90).length + (count("stale") > 3 ? 1 : 0) + (Object.keys(byAcct).length ? 1 : 0) + (count("brief") ? 1 : 0) };
+}
+const healthSummary = (r) => `cron minute ${r.cron[0].pct ?? "?"}%, five-minute ${r.cron[1].pct ?? "?"}%, hourly ${r.cron[2].pct ?? "?"}% of expected runs; ${r.stale.length} feed stalls${r.stale.length ? " (" + r.stale.slice(0, 4).join("; ") + ")" : ""}; bridge errors ${Object.entries(r.bridgeErrors).map(([a, n]) => a + " ×" + n).join(", ") || "none"}${r.bridgeSamples.length ? " e.g. " + r.bridgeSamples[0] : ""}; brief failures ${r.briefFailures}; page script errors ${r.clientErrors}; inbox syncs ${r.syncAge.map((x) => x.account.split("@")[0] + " " + x.minutes + "m ago").join(", ") || "none"}`;
+
 /* ---------------- reminders and the wake-up alarm (server side, every minute) ---------------- */
 const HUB_ORIGIN = "https://jarvis-hub.floral-credit-e4f0.workers.dev";
 // "2026-10-05T07:30" in the home zone -> a real instant
@@ -1258,9 +1292,9 @@ async function scanCompetitors(env) {
 export default {
   async scheduled(event, env, ctx) {
     await applyHome(env);
-    const cron = event.cron || "";
+    const cron = event.cron || ""; ctx.waitUntil(healthNote(env, "cron", cron));
     if (cron === "* * * * *") { ctx.waitUntil(tickMinute(env).catch((e) => console.log("minute", e.message))); return; }
-    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(() => tickMinute(env)).catch((e) => console.log("5-min cron", e.message)));
+    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(() => tickMinute(env)).then(() => socialFromLog(env)).then(() => kv.get(env, "watch")).then((w) => w && watchWatch(env, { social: w.social, at: w.at })).catch((e) => console.log("5-min cron", e.message)));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
@@ -1274,7 +1308,7 @@ export default {
       const recent = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === slot && Date.now() - new Date(b.at) < 3 * 3600e3); // never two of the same brief in one morning
       if (slot && !recent) {
         const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} });
-        await makeMorning(env, fake, slot).catch((e) => pushAlert(env, { kind: "watch", text: slot + " brief failed: " + e.message }));
+        await makeMorning(env, fake, slot).catch(async (e) => { await healthNote(env, "brief", { slot, error: String(e.message).slice(0, 120) }); await pushAlert(env, { kind: "watch", text: slot + " brief failed: " + e.message }); });
       }
     })());
   },
@@ -1349,6 +1383,8 @@ export default {
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
     if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null, saint = null, saintErr = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } try { saint = await saintOfDay(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { saintErr = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err, saint, saintError: saintErr }); }
+    if (p === "/api/health") return json(await healthReport(env, +url.searchParams.get("days") || 7));
+    if (p === "/api/social/posted" && request.method === "POST") { const b = await request.json(); const log = (await kv.get(env, "social_log")) || {}; const day = /^\d{4}-\d{2}-\d{2}$/.test(b.at || "") ? b.at : new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); (log[day] ||= {})[String(b.brand || "").toLowerCase()] = { day: b.day, media_id: b.media_id, linkedin_urn: b.linkedin_urn || null, at: new Date().toISOString() }; for (const k of Object.keys(log)) if (Date.now() - new Date(k) > 40 * 86400e3) delete log[k]; await kv.put(env, "social_log", log); await socialFromLog(env); return json({ ok: true, day, brand: b.brand }); }
     if (p === "/api/reminders" && request.method === "GET") return json(((await kv.get(env, "reminders")) || []).filter((r) => !r.done));
     if (p === "/api/reminders" && request.method === "POST") { const r = await addReminder(env, await request.json()); return json(r, r.error ? 400 : 200); }
     if (p === "/api/reminders/delete" && request.method === "POST") { const { id } = await request.json(); await kv.put(env, "reminders", ((await kv.get(env, "reminders")) || []).filter((r) => r.id !== id)); return json({ ok: true }); }

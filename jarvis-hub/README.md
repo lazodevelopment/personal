@@ -161,6 +161,12 @@ refuse Cloudflare). The PC keeps the social check and the executor. Run with `-D
 - The **alarm** (KV `alarm`: enabled, time HH:MM home zone, days [] = every day, station) fires once a day at that minute: a Pushover *emergency* push (priority 2, repeats every 60 s for 30 min until acknowledged) with the first lines of the morning brief and a link to `/#wake`, plus a flag the PC polls. Settings: Radio panel (SAVE) or the brain tool `set_alarm` ("wake me at 6:30 on weekdays"). `#wake` shows a GOOD MORNING button that plays the brief and fades in the radio; in the PC kiosk it starts by itself.
 - **PC**: Task Scheduler "JARVIS wake" runs `jarvis_wake.py` every minute; when `GET /api/alarm/due` says yes (once per alarm) it opens Chrome in kiosk mode with its own profile (`%LOCALAPPDATA%\JarvisKiosk`) and `--autoplay-policy=no-user-gesture-required` at `/#wake`. Unlock JARVIS in that window once with the access key. Close the window to stop.
 
+## Executor on the server, social log, health (2026-10-05)
+- **Executor**: `jarvis_hands.py --once` runs every minute on the VM under `flock` (cron). It uses the Lazo and Roven service-account keys copied to `~/jarvis/secrets/<project>.json` (needed for Roven's Auth custom claims via `firebase_admin.get_app("roven")`). Atavia/ES `booking_note` would need their keys or roles there too. The PC executor is stopped and its Startup entry moved to `JARVIS hands.vbs.disabled`.
+- **Social log**: the posting tasks call `report_post.py <brand> <day> <media_id> <urn|null>` after each post → `POST /api/social/posted` → KV `social_log`; `socialFromLog` rebuilds `watch.social` every 5 min on the hub. The PC "JARVIS watch" task is disabled; nothing in the watch section depends on the PC any more.
+- **Health**: `healthNote` records cron runs per day, feed stalls, bridge errors (`bridgeCall`), brief failures; `GET /api/health` summarises 7 days (cron % of expected runs, stalls, bridge errors by account, client script errors, inbox sync age). The System strip shows "health clean · 7d" or "N issues"; the brain context has a JARVIS HEALTH line and the Monday review reports on it.
+- Still on the PC: `collect_flights.py --global-only` (OpenSky refuses Google Cloud) and `jarvis_wake.py` (it has to be the machine with the speakers).
+
 ## Using it
 - **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
 - **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.
