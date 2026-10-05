@@ -56,8 +56,7 @@ it ever appearing on screen:
 "C:\Users\kurvh\google-cloud-sdk\bin\gcloud" secrets versions access latest --secret=ANTHROPIC_API_KEY --project=lazo-513ec | npx wrangler secret put ANTHROPIC_API_KEY
 ```
 
-Custom domain later: add `june.meetlazo.com` to the worker in the Cloudflare dash (Workers → june-hub →
-Settings → Domains). Email/password sign-in works from any origin; if Google or Apple sign-in is wanted
+Custom domain: `june.meetlazo.com` is a Workers custom domain in wrangler.toml (`routes`), created on deploy; the workers.dev address keeps working. `PUBLIC_URL` (email links) points at it; the dashboard's `kJuneHubUrl` should move to it in the next vendor patch. Email/password sign-in works from any origin; if Google or Apple sign-in is wanted
 later, that domain must also be added to Firebase Auth → Authorized domains.
 
 Local: `npx wrangler dev` (KV is simulated locally; sign in with a real Lazo vendor login to see data).
