@@ -15,7 +15,7 @@ binding = "HUB"
 id = "1592670000454ad4b1cfe3967d837f37"
 
 [triggers]
-crons = ["*/5 * * * *", "0 * * * *"]
+crons = ["* * * * *", "*/5 * * * *", "0 * * * *"]
 
 [vars]
 ALLOWED_EMAILS = "jesse@briskhealth.com"

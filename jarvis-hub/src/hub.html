@@ -55,6 +55,10 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .empty::before{content:"— ";opacity:.5}
 .mono{font-family:var(--mono)}
 
+/* wake-up overlay (opened from the alarm push or the PC wake task) */
+#wake{position:fixed;inset:0;z-index:55;background:radial-gradient(900px 600px at 50% 40%,rgba(255,170,90,.18),transparent 60%),var(--bg);display:grid;place-items:center}
+#wakeGo{display:grid;justify-items:center;gap:10px;font-family:var(--mono);color:#fff;font-size:64px;line-height:1;padding:40px 60px;border:1px solid var(--line2);background:rgba(8,18,34,.8);cursor:pointer}
+#wakeGo span{font-size:16px;letter-spacing:.4em}#wakeGo small{font-size:11px;letter-spacing:.15em;color:var(--dim)}
 /* boot */
 #boot{position:fixed;inset:0;z-index:60;background:var(--bg);display:grid;place-items:center;font-family:var(--mono);color:var(--cyan2);letter-spacing:.2em;font-size:13px;transition:opacity .5s}
 #boot.done{opacity:0;pointer-events:none}
@@ -499,6 +503,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
 <body>
 
 <div id="boot" aria-hidden="true"><div class="lines" id="bootlines"></div></div>
+<div id="wake" hidden><button id="wakeGo">▶<span>GOOD MORNING</span><small>tap to hear the brief, then the radio</small></button></div>
 
 <header class="hud">
   <div class="brand">
@@ -626,6 +631,9 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <h2>Upcoming <span class="sub" id="evSub"></span><button class="btn sm" id="tripAdd">+ TRIP</button></h2>
     <form class="tripf" id="tripForm" hidden><input id="tripFl" placeholder="Flight, e.g. AA 2612" required><input id="tripDate" type="date" required><select id="tripHome"><option value="none">home stays</option><option value="az">→ Arizona</option><option value="tx">→ Texas</option></select><button class="btn sm">ADD</button></form>
     <ul class="events" id="events"><li class="empty">Bookings and calendar items appear here.</li></ul>
+    <h3 class="wh3" style="margin-top:12px" id="remHead">REMINDERS</h3>
+    <ul class="events" id="reminders"><li class="empty">Say "remind me at 3 to call the venue", or add one below.</li></ul>
+    <form class="tripf" id="remForm" style="margin-top:8px"><input id="remText" placeholder="Remind me to…" required style="flex:2 1 160px"><input id="remWhen" type="datetime-local" required><select id="remRepeat"><option value="none">once</option><option value="daily">daily</option><option value="weekdays">weekdays</option><option value="weekly">weekly</option></select><button class="btn sm">ADD</button></form>
     <div class="empty" id="calHint" style="margin-top:8px"></div>
   </section>
 
@@ -636,7 +644,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName">Classic FM</b><small id="radioState">off</small></div>
       <input type="range" id="radioVol" min="0" max="100" value="70" aria-label="Radio volume">
     </div>
-    <label class="ralarm"><input type="checkbox" id="alarmOn"> Wake-up: play the morning brief at <b id="alarmAt">5:00</b>, then fade in this station <small id="alarmNote"></small></label>
+    <div class="ralarm"><label><input type="checkbox" id="alarmOn"> Wake-up alarm at <input type="time" id="alarmTime" value="05:00" style="width:auto;padding:2px 6px;font:13px var(--mono)"> <select id="alarmDays" style="background:#070d18;border:1px solid var(--line);color:var(--fg);font:12px var(--mono);padding:3px"><option value="all">every day</option><option value="weekdays">weekdays</option><option value="weekends">weekends</option></select> <button class="btn sm" id="alarmSave">SAVE</button></label><small id="alarmNote"></small></div>
     <div class="rst" id="radioStations"></div>
   </section>
 
@@ -1584,6 +1592,7 @@ function localAnswer(t) {
   if (/^(read|play|listen to) (me )?(today's |the )?(mass )?(readings|gospel)( for today)?$|^today'?s (readings|gospel)$/.test(rm)) { if (PHONE) showView("jarvis"); $("#faithPanel").scrollIntoView({ block: "start" }); readingsListen(); return ""; }
   if (/^what (do|does) (today's |the )?(readings|gospel) mean( today)?\??$/.test(rm) && faith?.readings?.reflection?.conclusion) return faith.readings.reflection.conclusion;
   if (/^(who( is|'s) )?(the )?saint of the day\??$|^who is today's saint\??$/.test(rm) && faith?.saint) { const st = faith.saint; return `${st.name}${st.plain?.title ? ", " + st.plain.title : ""}. ${st.plain?.life || st.blurb || ""} ${st.plain?.today || ""}`.trim(); }
+  const qr = quickReminder(rawText.replace(/^jarvis,?\s*/i, "")); if (qr) { fetch("/api/reminders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: qr.text, when: qr.when, repeat: "none" }) }).then(r => r.json()).then(r => { if (!r.error) loadReminders(); }).catch(() => {}); return `Reminder set for ${qr.say}: ${qr.text}.`; }
   if (/^scan (the )?competitors( now)?$/.test(t)) { $("#compScan").click(); return "Scanning the competitor pages now."; }
   return null;
 }
@@ -1672,6 +1681,7 @@ function handleAction(a) {
   if (a.type === "notes") { state.notes = a.value; $("#notes").value = a.value; }
   if (a.type === "memory") { state.memory = a.value; renderMemory(); }
   if (a.type === "trips" || a.type === "competitors") setTimeout(loadState, 800);
+  if (a.type === "reminders") setTimeout(loadReminders, 600); if (a.type === "alarm") setTimeout(loadAlarm, 600);
   if (a.type === "draft") draftCard(a);
   if (a.type === "confirm") proposeAction(a.item);
   if (a.type === "world") { if (PHONE) showView("world"); initGlobe(); if (a.flight) { $("#trackQ").value = a.flight; trackIt(a.flight); } else loadFlights(); }
@@ -2040,23 +2050,54 @@ $("#radioVol").oninput = () => { try { localStorage.setItem("radioVol", $("#radi
 radioUI();
 
 /* ---------- wake-up: morning brief, then the radio fades in (this device, page open) ---------- */
-let alarmFired = ""; try { $("#alarmOn").checked = localStorage.getItem("alarmOn") === "1"; alarmFired = localStorage.getItem("alarmFired") || ""; } catch {}
-$("#alarmOn").onchange = () => { try { localStorage.setItem("alarmOn", $("#alarmOn").checked ? "1" : "0"); } catch {} unlockPlayer(); alarmNote(); };
-const alarmHour = () => { const bh = state.cfg?.briefHours || { 5: "morning" }; const h = Object.entries(bh).find(([, s]) => s === "morning"); return h ? +h[0] : 5; };
-const homeNow = () => { const tz = state.cfg?.home?.tz || state.cfg?.tz; const p = new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date()); const g = (t) => p.find(x => x.type === t)?.value; return { day: `${g("year")}-${g("month")}-${g("day")}`, h: +g("hour") % 24, m: +g("minute") }; };
-function alarmNote() { const h = alarmHour(); $("#alarmAt").textContent = `${h % 12 || 12}:00 ${h < 12 ? "am" : "pm"}`; $("#alarmNote").textContent = $("#alarmOn").checked ? "Keep JARVIS open on this device (wall mode is ideal) and the volume up." : ""; }
+/* alarm settings live on the server; the minute cron fires the phone push and flags the PC */
+let alarmCfg = null;
+async function loadAlarm() { try { alarmCfg = await fetch("/api/alarm").then(r => r.json()); } catch { return; } $("#alarmOn").checked = !!alarmCfg.enabled; $("#alarmTime").value = alarmCfg.time || "05:00"; $("#alarmDays").value = !alarmCfg.days?.length ? "all" : alarmCfg.days.includes(1) ? "weekdays" : "weekends"; alarmNote(); }
+function alarmNote() { $("#alarmNote").textContent = $("#alarmOn").checked ? "Fires on the server: your phone gets an alarm that repeats until you acknowledge it, and the PC opens JARVIS and plays the brief, then this station, if the JARVIS wake task is installed." : ""; }
+$("#alarmSave").onclick = async () => { const days = $("#alarmDays").value; const body = { enabled: $("#alarmOn").checked, time: $("#alarmTime").value, days: days === "weekdays" ? [1, 2, 3, 4, 5] : days === "weekends" ? [0, 6] : [], station: radioIdx }; alarmCfg = await fetch("/api/alarm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()).catch(() => alarmCfg); alarmNote(); $("#alarmNote").textContent = (alarmCfg?.enabled ? `Saved: ${alarmCfg.time}, ${days}. ` : "Alarm off. ") + $("#alarmNote").textContent; };
+$("#alarmOn").onchange = alarmNote;
 function fadeInRadio(sec = 60) { radioPlay(radioIdx); const target = radioLevel(); radio.volume = 0; const t0 = Date.now(); const iv = setInterval(() => { const k = Math.min(1, (Date.now() - t0) / (sec * 1000)); if (!radioOn) return clearInterval(iv); if (!speaking) radio.volume = target * k; if (k >= 1) clearInterval(iv); }, 500); }
-async function alarmTick(at) {
-  if (!$("#alarmOn").checked) return; const n = at || homeNow(); const h = alarmHour();
-  if (alarmFired === n.day || n.h !== h || n.m > 45) return;
+async function wakeSequence() {
   let brief = state.morning; try { const d = await fetch("/api/morning").then(r => r.json()); brief = d.latest || brief; } catch {}
-  const fresh = brief?.slot === "morning" && brief.audio && (Date.now() - new Date(brief.at)) < 3 * 3600e3;
-  if (!fresh && n.m < 20) return; // give the brief up to 20 minutes to be written, then just play the radio
-  alarmFired = n.day; try { localStorage.setItem("alarmFired", n.day); } catch {}
+  const fresh = brief?.slot === "morning" && brief.audio && (Date.now() - new Date(brief.at)) < 6 * 3600e3;
   if (fresh) { playUrl("/api/morning/audio?id=" + encodeURIComponent(brief.id)); const prevEnd = player.onended; player.onended = player.onerror = (e) => { try { prevEnd && prevEnd(e); } catch {} setTimeout(() => fadeInRadio(60), 1500); }; }
-  else fadeInRadio(60);
+  else { speak("Good morning, sir. The brief isn't ready yet; here is the radio."); setTimeout(() => fadeInRadio(60), 4000); }
 }
-setInterval(alarmTick, 30000); setTimeout(() => { alarmNote(); alarmTick(); }, 4000);
+if (location.hash === "#wake") {
+  $("#wake").hidden = false; history.replaceState(null, "", "/");
+  const go = () => { $("#wake").hidden = true; unlockPlayer(); if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); };
+  $("#wakeGo").onclick = go;
+  // the PC kiosk allows autoplay: try at once, keep the button for phones
+  setTimeout(async () => { try { await player.play(); player.pause(); go(); } catch {} }, 2500);
+}
+setTimeout(loadAlarm, 3000);
+
+/* reminders: the server pushes them; an open page also says them aloud */
+let remSpoken = new Set(); try { remSpoken = new Set(JSON.parse(localStorage.getItem("remSpoken") || "[]")); } catch {}
+async function loadReminders() { try { state.reminders = await fetch("/api/reminders").then(r => r.json()); } catch { return; } renderReminders(); }
+function renderReminders() {
+  const list = (state.reminders || []).slice().sort((a, b) => a.at.localeCompare(b.at));
+  $("#remHead").textContent = `REMINDERS${list.length ? " · " + list.length : ""}`;
+  $("#reminders").innerHTML = list.length ? list.map(r => { const d = new Date(r.at); const soon = d - Date.now() < 3600e3; return `<li><span class="bz ${soon ? "" : "cal"}">${d.toLocaleDateString([], { weekday: "short" })}</span><span>${esc(r.text)}${r.repeat !== "none" ? ` <small class="empty" style="display:inline">${esc(r.repeat)}</small>` : ""}</span><span class="in">${d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} <button class="btn sm" data-delrem="${esc(r.id)}" title="Cancel">✕</button></span></li>`; }).join("") : `<li class="empty">Say "remind me at 3 to call the venue", or add one below.</li>`;
+  $("#reminders").querySelectorAll("[data-delrem]").forEach(b => b.onclick = async () => { await fetch("/api/reminders/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: b.dataset.delrem }) }).catch(() => {}); state.reminders = state.reminders.filter(r => r.id !== b.dataset.delrem); renderReminders(); });
+  // say any that just came due (the server already pushed them)
+  for (const r of list) { const age = Date.now() - new Date(r.at); if (age >= 0 && age < 10 * 60e3 && !remSpoken.has(r.id + r.at)) { remSpoken.add(r.id + r.at); try { localStorage.setItem("remSpoken", JSON.stringify([...remSpoken].slice(-50))); } catch {} blip(1000); addMsg("ai", "Reminder: " + r.text); speak("Reminder, sir: " + r.text); } }
+}
+$("#remForm").onsubmit = async (e) => { e.preventDefault(); const when = $("#remWhen").value; const r = await fetch("/api/reminders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: $("#remText").value, when, repeat: $("#remRepeat").value }) }).then(x => x.json()).catch(() => ({ error: "offline" })); if (r.error) return addMsg("sys", "Reminder not set: " + r.error); $("#remText").value = ""; await loadReminders(); };
+setTimeout(loadReminders, 3500); setInterval(loadReminders, 60000);
+// quick phrases without the brain: "remind me in 20 minutes to call Sam", "remind me at 3pm to ..."
+function quickReminder(t) {
+  const m = t.match(/^remind me (?:(?:in (\d+)\s*(min(?:ute)?s?|hours?|hrs?))|(?:at (\d{1,2})(?::(\d{2}))?\s*(am|pm)?)|(tomorrow(?: morning| at (\d{1,2})(?::(\d{2}))?\s*(am|pm)?)?))?\s*(?:to\s+)?(.+)$/i);
+  if (!m) return null; const text = m[10].trim(); if (!text) return null;
+  const tz = state.cfg?.home?.tz || state.cfg?.tz; const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: tz }));
+  let d = new Date(nowLocal);
+  if (m[1]) d = new Date(+nowLocal + (+m[1]) * (/h/i.test(m[2]) ? 3600e3 : 60e3));
+  else if (m[3]) { let h = +m[3]; const ap = (m[5] || "").toLowerCase(); if (ap === "pm" && h < 12) h += 12; if (ap === "am" && h === 12) h = 0; if (!ap && h <= 7) h += 12; d.setHours(h, +(m[4] || 0), 0, 0); if (d <= nowLocal) d = new Date(+d + 86400e3); }
+  else if (m[6]) { d = new Date(+nowLocal + 86400e3); let h = 8, mi = 0; if (m[7]) { h = +m[7]; mi = +(m[8] || 0); const ap = (m[9] || "").toLowerCase(); if (ap === "pm" && h < 12) h += 12; if (ap === "am" && h === 12) h = 0; } d.setHours(h, mi, 0, 0); }
+  else return null;
+  const pad = (n) => String(n).padStart(2, "0"); const when = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return { text, when, say: d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) };
+}
 
 /* ---------- scanner (Broadcastify; opened in their player, not re-streamed) ---------- */
 const SCANNER = {
@@ -2095,6 +2136,7 @@ renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? 
   let v = "jarvis"; try { v = localStorage.getItem("jarvisView") || v; } catch {} showView(v);
   await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
   if (location.pathname === "/wall") setTimeout(enterWall, 500);
+  if (location.hash === "#reminders") { showView("ops"); setTimeout(() => $("#reminders").scrollIntoView({ block: "center" }), 600); }
   if (location.hash === "#morning") { showView("jarvis"); $("#alertPanel").scrollIntoView(); }
   if (location.hash === "#decisions") { showView("ops"); setTimeout(() => $("#decisionsPanel").scrollIntoView({ block: "center" }), 600); }
 })();

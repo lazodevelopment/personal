@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes", "reminders", "alarm"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const BUILD = (() => { let h = 0; for (let i = 0; i < html.length; i += 7) h = (h * 31 + html.charCodeAt(i)) >>> 0; return h.toString(36) + "-" + html.length.toString(36); })();   // changes with every deploy of the page
 const MODEL = "claude-opus-5-5";
@@ -170,10 +170,11 @@ async function watchDecisions(env, dec) {
 }
 
 /* ---------------- notifications ---------------- */
-async function notify(env, title, body, { priority = "default", tags = "", url = "" } = {}) {
+async function notify(env, title, body, { priority = "default", tags = "", url = "", sound = "" } = {}) {
   const out = [];
   if (env.PUSHOVER_TOKEN && env.PUSHOVER_USER) {
-    const form = new URLSearchParams({ token: env.PUSHOVER_TOKEN, user: env.PUSHOVER_USER, title: "JARVIS: " + title, message: body, priority: priority === "urgent" ? "1" : priority === "high" ? "0" : "-1", sound: priority === "urgent" ? "siren" : "pushover", ...(url ? { url } : {}) });
+    const pr = priority === "alarm" ? "2" : priority === "urgent" || priority === "reminder" ? "1" : priority === "high" ? "0" : "-1";
+    const form = new URLSearchParams({ token: env.PUSHOVER_TOKEN, user: env.PUSHOVER_USER, title: "JARVIS: " + title, message: body, priority: pr, sound: sound || (priority === "alarm" ? "spacealarm" : priority === "reminder" ? "incoming" : priority === "urgent" ? "siren" : "pushover"), ...(priority === "alarm" ? { retry: "60", expire: "1800" } : {}), ...(url ? { url, url_title: "Open JARVIS" } : {}) });
     out.push(fetch("https://api.pushover.net/1/messages.json", { method: "POST", body: form }).then(async (r) => ({ pushover: r.status, detail: r.ok ? undefined : (await r.text()).slice(0, 200) })).catch((e) => ({ pushover: "error", detail: String(e.message || e) })));
   }
   if (env.NTFY_TOPIC) {
@@ -572,6 +573,9 @@ async function buildContext(env, request) {
   const readyF = (fups || []).filter((f) => f.status === "ready");
   if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
   if (trips?.length) lines.push(`TRIPS: ` + trips.map((t) => `${t.date} ${t.flight}${t.route?.from ? " " + (t.route.from.city || t.route.from.iata) + " to " + (t.route.to?.city || t.route.to?.iata) : ""} ${t.phase || "scheduled"}${t.home ? " (home becomes " + HOMES[t.home]?.label + " on landing)" : ""}`).join("; "));
+  const [rems, alarmCfg] = await Promise.all([kv.get(env, "reminders"), kv.get(env, "alarm")]);
+  lines.push(`REMINDERS: ` + ((rems || []).filter((r) => !r.done).slice(0, 12).map((r) => `[${r.id}] ${new Date(r.at).toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ${r.text}${r.repeat !== "none" ? " (" + r.repeat + ")" : ""}`).join(" | ") || "none"));
+  lines.push(`WAKE-UP ALARM: ` + (alarmCfg?.enabled ? `${alarmCfg.time} ${!alarmCfg.days?.length ? "every day" : "days " + alarmCfg.days.join(",")}` : "off"));
   if (queue?.length) lines.push(`RECENT ACTIONS: ` + queue.slice(0, 5).map((q) => `${q.summary} → ${q.status}${q.result ? " (" + q.result + ")" : ""}`).join(" | "));
   if (morning?.at) lines.push(`LATEST BRIEF (${morning.slot || "morning"}, ${morning.at}): ${(morning.text || "").slice(0, 600)}`);
   return lines.join("\n");
@@ -594,6 +598,7 @@ Your replies are spoken aloud through text-to-speech: plain prose, no markdown, 
 Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account = the exact Gmail address shown in the INBOX line brackets for that thread, e.g. info@ataviaweddings.com, never a business name; params.threadId; params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
+Reminders and alarm: set_reminder for "remind me…" (compute the local date-time from TIME), cancel_reminder, set_alarm for "wake me at…". Confirm the time back in words.
 Faith: he is Catholic. For "what are today's readings / gospel" or "what does it mean", answer from the FAITH line (theme and plain-words conclusion). For "pray the rosary" the page itself leads it; say you're starting it.
 Competitors: watch_competitor adds a pricing/packages page to the Sunday scan; changes appear in COMPETITORS and the Monday review.
 Trips: when he mentions a flight he is taking ("I fly AA 2612 to Phoenix on Friday"), call add_trip with the flight number, the local date (YYYY-MM-DD) and home 'az' when he is flying to Arizona or 'tx' when flying to Texas. JARVIS then tracks it on the day, pushes wheels-up and landed, and switches home on landing. remove_trip cancels one.
@@ -610,6 +615,9 @@ const BRAIN_TOOLS = [
   { name: "add_trip", description: "Add a flight Jesse is taking. JARVIS tracks it on the day, pushes wheels-up and landed, and switches home on landing.", input_schema: { type: "object", properties: { flight: { type: "string", description: "e.g. 'AA 2612'" }, date: { type: "string", description: "local departure date YYYY-MM-DD" }, home: { type: "string", enum: ["tx", "az", "none"] }, note: { type: "string" } }, required: ["flight", "date", "home", "note"], additionalProperties: false }, strict: true },
   { name: "remove_trip", description: "Remove a trip by its id (shown in TRIPS or from add_trip).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false }, strict: true },
   { name: "watch_app", description: "Watch an app store listing and push when it goes live or updates.", input_schema: { type: "object", properties: { name: { type: "string" }, platform: { type: "string", enum: ["ios", "android"] }, id: { type: "string", description: "iOS numeric app id or bundle id; Android package name" } }, required: ["name", "platform", "id"], additionalProperties: false }, strict: true },
+  { name: "set_reminder", description: "Set a reminder. JARVIS pushes it to Jesse's phone at that time (and says it aloud if the page is open). Convert relative times ('in 20 minutes', 'tomorrow at 9', 'Friday 3pm') to a local date-time using TIME in the context.", input_schema: { type: "object", properties: { text: { type: "string" }, when: { type: "string", description: "local date-time YYYY-MM-DD HH:MM in the home zone" }, repeat: { type: "string", enum: ["none", "daily", "weekdays", "weekly"] } }, required: ["text", "when", "repeat"], additionalProperties: false }, strict: true },
+  { name: "cancel_reminder", description: "Cancel a reminder by its id (shown in REMINDERS as [id]).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false }, strict: true },
+  { name: "set_alarm", description: "Set or change the wake-up alarm (server side: phone alarm push, PC plays the brief then the radio). days: 'all', 'weekdays' or 'weekends'.", input_schema: { type: "object", properties: { time: { type: "string", description: "HH:MM 24h local" }, enabled: { type: "boolean" }, days: { type: "string", enum: ["all", "weekdays", "weekends"] } }, required: ["time", "enabled", "days"], additionalProperties: false }, strict: true },
   { name: "watch_competitor", description: "Add a competitor web page (pricing or packages page) to the weekly price-change scan.", input_schema: { type: "object", properties: { url: { type: "string" }, label: { type: "string" }, business: { type: "string", enum: ["atavia", "es", "lazo", "roven", "lr"] } }, required: ["url", "label", "business"], additionalProperties: false }, strict: true },
   { name: "request_action", description: "Queue a business-data change for Jesse's confirmation. kinds: roven_approve_job (params.jobId), roven_reject_job (params.jobId), roven_approve_employer (params.employerId), lazo_claim (params.claimId, params.decision 'approved'|'rejected'), booking_note (params.business 'atavia'|'es', params.bookingId, params.note), lazo_inquiry_responded (params.inquiryId), email_reply (params.account, params.threadId, params.body), email_archive (params.account, params.threadId), email_read (params.account, params.threadId), email_send (params.account, params.to, params.subject, params.body).", input_schema: { type: "object", properties: { kind: { type: "string", enum: ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"] }, params: { type: "object", properties: { jobId: { type: "string" }, employerId: { type: "string" }, claimId: { type: "string" }, decision: { type: "string" }, business: { type: "string" }, bookingId: { type: "string" }, note: { type: "string" }, inquiryId: { type: "string" }, account: { type: "string" }, threadId: { type: "string" }, body: { type: "string" }, to: { type: "string" }, subject: { type: "string" } } }, summary: { type: "string", description: "One line Jesse will confirm, e.g. 'Approve Roven job Senior RN at Mercy'" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
 ];
@@ -625,6 +633,9 @@ async function runTool(name, input, env, actions) {
     case "add_trip": { const t = await addTrip(env, input); actions.push({ type: "trips" }); return JSON.stringify(t); }
     case "remove_trip": { const trips = ((await kv.get(env, "trips")) || []).filter((t) => t.id !== input.id); await kv.put(env, "trips", trips); actions.push({ type: "trips" }); return "Removed."; }
     case "watch_app": { const list = (await kv.get(env, "apps_watch")) || []; const key = (input.platform + "_" + input.id).toLowerCase(); if (!list.some((a) => a.key === key)) list.push({ key, name: input.name, ...(input.platform === "ios" ? { ios: /^\d+$/.test(input.id) ? { id: input.id } : { bundle: input.id } } : { android: input.id }) }); await kv.put(env, "apps_watch", list); return "Watching " + input.name + ". The first check lands within 15 minutes."; }
+    case "set_reminder": { const r = await addReminder(env, input); actions.push({ type: "reminders" }); return r.error ? r.error : `Reminder [${r.id}] set for ${r.local}${r.repeat !== "none" ? ", repeating " + r.repeat : ""}.`; }
+    case "cancel_reminder": { await kv.put(env, "reminders", ((await kv.get(env, "reminders")) || []).filter((r) => r.id !== input.id)); actions.push({ type: "reminders" }); return "Cancelled."; }
+    case "set_alarm": { const cur = (await kv.get(env, "alarm")) || {}; const days = input.days === "weekdays" ? [1, 2, 3, 4, 5] : input.days === "weekends" ? [0, 6] : []; const next = { ...cur, enabled: !!input.enabled, time: input.time, days, at: new Date().toISOString() }; await kv.put(env, "alarm", next); actions.push({ type: "alarm" }); return `Alarm ${next.enabled ? "set for " + next.time + " " + (input.days === "all" ? "every day" : input.days) : "off"}.`; }
     case "watch_competitor": { const list = (await kv.get(env, "competitors")) || []; if (!list.some((c) => c.url === input.url)) list.push({ url: input.url, label: input.label, business: input.business, added: new Date().toISOString() }); await kv.put(env, "competitors", list); actions.push({ type: "competitors" }); return "Watching " + input.label + ". First scan Sunday evening, or say 'scan competitors now'."; }
     case "draft_reply": { actions.push({ type: "draft", ...input }); return "Draft shown to Jesse with an Open in Gmail button."; }
     case "request_action": { const KINDS = ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"]; if (!KINDS.includes(input.kind) || typeof input.params !== "object" || !input.summary) return "Invalid action: kind must be one of " + KINDS.join(", ") + " with params and summary.";
@@ -1147,6 +1158,52 @@ async function rosaryAudio(env, key, segId) {
   return new Response(buf, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=86400" } });
 }
 
+/* ---------------- reminders and the wake-up alarm (server side, every minute) ---------------- */
+const HUB_ORIGIN = "https://jarvis-hub.floral-credit-e4f0.workers.dev";
+// "2026-10-05T07:30" in the home zone -> a real instant
+function zonedToUtc(local, tz) {
+  const m = String(local).match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/); if (!m) return null;
+  const guess = Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+  const offAt = (t) => { const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(t)); const g = (k) => +p.find((x) => x.type === k).value; return Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute")) - t; };
+  let t = guess - offAt(guess); t = guess - offAt(t); return new Date(t);
+}
+const localParts = (env, d = new Date()) => { const tz = env.TZ || "America/Chicago"; const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, hourCycle: "h23", weekday: "short", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(d); const g = (k) => p.find((x) => x.type === k)?.value; return { date: `${g("year")}-${g("month")}-${g("day")}`, hm: `${g("hour")}:${g("minute")}`, dow: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(g("weekday")) }; };
+function nextRepeat(at, repeat, tz) {
+  const d = new Date(at); const lp = (x) => new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "short" }).format(x);
+  if (repeat === "weekly") return new Date(+d + 7 * 86400e3);
+  let n = new Date(+d + 86400e3); if (repeat === "weekdays") while (["Sat", "Sun"].includes(lp(n))) n = new Date(+n + 86400e3);
+  return n;
+}
+async function addReminder(env, { text, when, repeat = "none" }) {
+  const tz = env.TZ || "America/Chicago"; const at = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(when) ? new Date(when) : zonedToUtc(when, tz);
+  if (!text || !at || isNaN(at)) return { error: "need text and a time like 2026-10-05 15:00" };
+  const list = (await kv.get(env, "reminders")) || []; const r = { id: uid(), text: String(text).slice(0, 300), at: at.toISOString(), repeat: ["daily", "weekdays", "weekly"].includes(repeat) ? repeat : "none", created: new Date().toISOString() };
+  list.push(r); list.sort((a, b) => a.at.localeCompare(b.at)); await kv.put(env, "reminders", list.slice(0, 200));
+  return { ...r, local: at.toLocaleString("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) };
+}
+async function tickMinute(env) {
+  const now = Date.now(); const tz = env.TZ || "America/Chicago"; const lp = localParts(env);
+  // reminders
+  const list = (await kv.get(env, "reminders")) || []; const out = []; let changed = false;
+  for (const r of list) {
+    if (r.done || new Date(r.at) > now) continue;
+    out.push({ alert: { kind: "watch", text: "Reminder: " + r.text }, push: { title: "Reminder", body: r.text, opts: { priority: "reminder", tags: "alarm_clock", url: HUB_ORIGIN + "/#reminders" } } });
+    r.fired = new Date().toISOString(); changed = true;
+    if (r.repeat && r.repeat !== "none") r.at = nextRepeat(r.at, r.repeat, tz).toISOString(); else r.done = true;
+  }
+  if (changed) await kv.put(env, "reminders", list.filter((r) => !r.done || now - new Date(r.fired || r.at) < 7 * 86400e3));
+  // the wake-up alarm
+  const al = (await kv.get(env, "alarm")) || {};
+  if (al.enabled && al.time === lp.hm && al.lastFired !== lp.date && (!al.days?.length || al.days.includes(lp.dow))) {
+    const m = await kv.get(env, "morning"); const fresh = m?.slot === "morning" && now - new Date(m.at) < 3 * 3600e3;
+    const headline = fresh ? m.text.split(/(?<=[.!?])\s/).slice(0, 2).join(" ") : "Your morning brief is on its way. Tap to open JARVIS.";
+    out.push({ alert: { kind: "watch", text: "Wake-up alarm fired (" + al.time + ")" }, push: { title: "Good morning, sir", body: headline.slice(0, 500), opts: { priority: "alarm", tags: "sunrise", url: HUB_ORIGIN + "/#wake" } } });
+    al.lastFired = lp.date; al.pcDue = lp.date; await kv.put(env, "alarm", al);
+  }
+  await flushAlerts(env, out);
+  return out.length;
+}
+
 /* ---------------- competitors: weekly price/package scan ---------------- */
 const pageText = (h) => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
 function priceLines(t) {
@@ -1186,6 +1243,7 @@ export default {
   async scheduled(event, env, ctx) {
     await applyHome(env);
     const cron = event.cron || "";
+    if (cron === "* * * * *") { ctx.waitUntil(tickMinute(env).catch((e) => console.log("minute", e.message))); return; }
     if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).catch((e) => console.log("5-min cron", e.message)));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
@@ -1275,6 +1333,12 @@ export default {
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
     if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null, saint = null, saintErr = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } try { saint = await saintOfDay(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { saintErr = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err, saint, saintError: saintErr }); }
+    if (p === "/api/reminders" && request.method === "GET") return json(((await kv.get(env, "reminders")) || []).filter((r) => !r.done));
+    if (p === "/api/reminders" && request.method === "POST") { const r = await addReminder(env, await request.json()); return json(r, r.error ? 400 : 200); }
+    if (p === "/api/reminders/delete" && request.method === "POST") { const { id } = await request.json(); await kv.put(env, "reminders", ((await kv.get(env, "reminders")) || []).filter((r) => r.id !== id)); return json({ ok: true }); }
+    if (p === "/api/alarm" && request.method === "GET") return json((await kv.get(env, "alarm")) || { enabled: false, time: "05:00", days: [] });
+    if (p === "/api/alarm" && request.method === "POST") { const b = await request.json(); const cur = (await kv.get(env, "alarm")) || {}; const next = { ...cur, enabled: !!b.enabled, time: /^\d{2}:\d{2}$/.test(b.time || "") ? b.time : (cur.time || "05:00"), days: Array.isArray(b.days) ? b.days.map(Number).filter((d) => d >= 0 && d <= 6) : (cur.days || []), station: b.station ?? cur.station ?? 0, at: new Date().toISOString() }; await kv.put(env, "alarm", next); return json(next); }
+    if (p === "/api/alarm/due") { const al = (await kv.get(env, "alarm")) || {}; const lp = localParts(env); const due = !!al.pcDue && al.pcDue === lp.date; if (due) { delete al.pcDue; await kv.put(env, "alarm", al); } return json({ due, time: al.time || null, station: al.station || 0 }); }
     if (p === "/api/faith/page") { try { const r = await fetchReadingsPage(env, url.searchParams.get("date")); return json({ title: r.title, parts: r.parts.map((x) => [x.kind, x.ref, x.text.length]) }); } catch (e) { return json({ error: e.message }, 502); } }
     if (p === "/api/faith/rosary/audio") return rosaryAudio(env, url.searchParams.get("set") || "glorious", url.searchParams.get("seg") || "open");
     if (p === "/api/competitors/scan" && request.method === "POST") return json({ changes: await scanCompetitors(env), competitors: (await kv.get(env, "competitors")) || [] });
