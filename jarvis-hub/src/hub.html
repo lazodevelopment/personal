@@ -165,6 +165,7 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .alerts li{display:grid;grid-template-columns:8px auto 1fr;gap:9px;align-items:baseline;color:var(--fg);animation:slide .4s ease-out;--k:var(--dim);padding:2px 0}
 .alerts li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--k);box-shadow:0 0 6px var(--k);transform:translateY(-1px)}
 .alerts .when{color:var(--dim);font-size:11px;white-space:nowrap}.alerts li > span:last-child{min-width:0;overflow-wrap:anywhere}
+.alerts li.obs{--k:var(--cyan)}.alerts li.mail{--k:var(--amber)}
 .alerts li.down,.alerts li.failed{--k:var(--red);color:#ffd9dd}.alerts li.up,.alerts li.done{--k:var(--green)}.alerts li.lead,.alerts li.slow{--k:var(--amber)}.alerts li.watch{--k:var(--violet)}
 .alerts li a{color:inherit}.alerts li a:hover{color:var(--cyan2)}
 
@@ -1303,7 +1304,7 @@ let lastAlertAt = null;
 function renderAlerts() {
   const a = state.alerts || []; $("#alertCount").textContent = a.length ? `${a.length}` : "";
   $("#alerts").innerHTML = a.length ? a.slice(0, 25).map(x => `<li class="${esc(x.kind)}"><span class="when">${new Date(x.at).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span><span>${x.url ? `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.text)}</a>` : esc(x.text)}</span></li>`).join("") : `<li class="empty">Nothing yet. Sites are checked every 5 minutes; leads are flagged after 2 hours; JARVIS also reports what it notices.</li>`;
-  if (a[0] && lastAlertAt && a[0].at > lastAlertAt) { blip(a[0].kind === "down" ? 220 : 880); speak(a[0].text); }
+  if (a[0] && lastAlertAt && a[0].at > lastAlertAt) { const fresh = a.filter(x => x.at > lastAlertAt).reverse(); for (const x of fresh.slice(-3)) { if (x.kind === "obs" || x.kind === "mail") addMsg("ai", x.text); } blip(a[0].kind === "down" ? 220 : 880); speak(fresh.slice(-2).map(x => x.text).join(" ")); }
   lastAlertAt = a[0]?.at || lastAlertAt || new Date(0).toISOString();
 }
 let briefSel = null;

@@ -379,6 +379,18 @@ async function ingestInbox(env, body, ctx) {
   all.sort((a, b) => (b.needs_reply - a.needs_reply) || (a.priority - b.priority) || b.received.localeCompare(a.received));
   const needs = all.filter((m) => m.needs_reply).length, unread = all.filter((m) => m.unread).length;
   await kv.put(env, "brief", { at: new Date().toISOString(), source: "bridge", accounts: Object.keys(inbox.accounts), note: all.length ? `${unread} unread across ${Object.keys(inbox.accounts).length} inbox${Object.keys(inbox.accounts).length > 1 ? "es" : ""}, ${needs} need${needs === 1 ? "s" : ""} a reply` : "All inboxes clear.", items: all.slice(0, 40) });
+  // announce new mail from real people that matters (leads, clients, bookings, payments): push now, and any open page says it
+  try {
+    const told = (await kv.get(env, "mail_told")) || {}; const outM = []; const bizName = BIZ_NAME[body.business] || BIZ_LABEL[body.business] || body.business || "";
+    for (const m of fresh) { const c = keep[m.threadId]; const key = m.threadId + "|" + m.date;
+      if (!c || told[key] || m.lastFromMe || isBot(m.fromEmail) || !["lead", "client", "booking", "payment"].includes(c.kind) || (c.priority || 3) > 2 || Date.now() - new Date(m.date) > 3 * 3600e3) continue;
+      told[key] = Date.now(); const who = String(m.from || "").replace(/<.*>/, "").trim() || m.fromEmail;
+      outM.push({ alert: { kind: "mail", text: `New ${c.kind === "lead" ? "lead" : "email"} for ${bizName} from ${who}: ${m.subject}. ${c.summary || ""}`.trim(), url: m.link }, push: { title: `${bizName}: new ${c.kind}`, body: `${who}: ${m.subject}
+${c.summary || m.snippet || ""}`, opts: { priority: c.priority === 1 ? "high" : "default", tags: "email", url: HUB_ORIGIN + "/#mail" } } });
+    }
+    for (const k of Object.keys(told)) if (Date.now() - told[k] > 7 * 86400e3) delete told[k];
+    if (outM.length) { await kv.put(env, "mail_told", told); await flushAlerts(env, outM); }
+  } catch (e) { console.log("mail announce", e.message); }
   const quick = fresh.filter((m) => { const c = keep[m.threadId]; return c?.needs_reply && !m.lastFromMe && ["lead", "client", "booking"].includes(c.kind) && !isBot(m.fromEmail) && Date.now() - new Date(m.date) < 6 * 3600e3; }).map((m) => m.threadId);
   if (quick.length && ctx) ctx.waitUntil(makeFollowups(env, { minAgeH: 0, onlyThreads: quick, first: true }).catch((e) => console.log("first reply", e.message)));
   if (ctx) ctx.waitUntil(prefetchThreads(env, account, inbox.accounts[account].items).catch((e) => console.log("prefetch", e.message)));
@@ -613,7 +625,7 @@ const BRAIN_SYSTEM = `You are JARVIS, the personal operations assistant for Jess
 Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding planner app + vendor directory), Roven HR (hiring platform), LeaseReputation (apartment reviews).
 Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
-Everything you need is in the LIVE CONTEXT; answer from it directly and do not invent figures. If something isn't there, say so.
+Everything about his businesses is in the LIVE CONTEXT; answer from it directly and do not invent figures. For anything outside it (news, facts, prices, places, people, how-to questions, "look up", "search") use the web_search tool, then answer in two to four spoken sentences and name the source in words (no URLs). If something isn't in the context and can't be searched, say so.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account = the exact Gmail address shown in the INBOX line brackets for that thread, e.g. info@ataviaweddings.com, never a business name; params.threadId; params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
 Reminders and alarm: set_reminder for "remind me…" (compute the local date-time from TIME), cancel_reminder, set_alarm for "wake me at…". Confirm the time back in words.
@@ -681,7 +693,7 @@ async function chat(request, env, ctx) {
           model: (modelPick || env.CHAT_MODEL) === "sonnet" ? "claude-sonnet-5-5" : MODEL, ...((modelPick || env.CHAT_MODEL) === "sonnet" ? { thinking: { type: "between_tools" } } : {}),
           max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
           system: [{ type: "text", text: BRAIN_SYSTEM + "\nKnown links: " + JSON.stringify(LINKS), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }],
-          ...(noTools ? {} : { tools: BRAIN_TOOLS }), messages,
+          ...(noTools ? {} : { tools: [...BRAIN_TOOLS, { type: "web_search_20250305", name: "web_search", max_uses: 3 }] }), messages,
         });
         let turnText = "";
         stream.on("text", (d) => { if (timing.firstText == null) timing.firstText = Date.now() - T0; turnText += d; send("delta", { text: d }); });
@@ -691,6 +703,7 @@ async function chat(request, env, ctx) {
         if (msg.stop_reason === "refusal") { if (!reply) { reply = "I'd rather not answer that one."; await send("delta", { text: reply }); } break; }
         if (msg.stop_reason !== "tool_use") break;
         const results = [];
+        if (!msg.content.some((b) => b.type === "tool_use")) break;
         for (const b of msg.content.filter((b) => b.type === "tool_use")) {
           let out; try { out = await runTool(b.name, b.input, env, actions); } catch (e) { out = "Tool failed: " + e.message; }
           results.push({ type: "tool_result", tool_use_id: b.id, content: String(out) });
@@ -1176,6 +1189,26 @@ async function rosaryAudio(env, key, segId) {
   return new Response(buf, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=86400" } });
 }
 
+/* ---------------- the observer: one unprompted remark an hour, only when something deserves it ---------------- */
+async function observe(env, request, { force = false } = {}) {
+  if (!env.ANTHROPIC_API_KEY) return null;
+  const h = localHour(env); if (!force && (h < 8 || h > 20)) return null;
+  const prev = (await kv.get(env, "observations")) || [];
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const context = await buildContext(env, request);
+  const said = prev.filter((o) => Date.now() - new Date(o.at) < 36 * 3600e3).map((o) => `${o.at.slice(5, 16)}: ${o.text}`).join("\n");
+  const r = await client.beta.messages.create({
+    model: "claude-sonnet-5-5", max_tokens: 2000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+    system: BRAIN_SYSTEM + `\nYou are keeping an eye on things between conversations. Decide whether there is ONE thing worth saying to Jesse right now that he has not been told (see ALREADY SAID). Worth saying: a lead or client email that arrived and is still unanswered; a payment that failed or came in; a site down or slow; a feed that stopped; weather turning bad before this week's wedding; a final score for one of his teams; a competitor change; a reminder of something he said he would do (NOTES, MEMORY); an app review result; a search traffic jump or drop; the Cox or any balance retry outcome. Not worth saying: routine numbers, anything in ALREADY SAID or the latest brief, generic encouragement, weather small talk. If nothing qualifies reply with exactly NOTHING. Otherwise reply with one or two spoken sentences, specific, with the number or name, no preamble.`,
+    messages: [{ role: "user", content: `ALREADY SAID (last 36 h):\n${said || "(nothing yet today)"}\n\nLIVE CONTEXT:\n${context}` }],
+  });
+  const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+  if (!text || /^nothing\b/i.test(text)) return null;
+  const o = { at: new Date().toISOString(), text: text.slice(0, 500) }; prev.unshift(o); await kv.put(env, "observations", prev.slice(0, 40));
+  await flushAlerts(env, [{ alert: { kind: "obs", text: o.text }, push: { title: "JARVIS", body: o.text, opts: { priority: "default", tags: "speech_balloon", sound: "none" } } }]);
+  return o;
+}
+
 /* ---------------- health ledger: JARVIS watching JARVIS ---------------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
 async function healthNote(env, kind, data) {
@@ -1301,6 +1334,7 @@ export default {
       await appStores(env).catch((e) => console.log("app stores", e.message));
       if (localHour(env) === 4) { await dailyReadings(env).catch((e) => console.log("readings", e.message)); await saintOfDay(env).catch((e) => console.log("saint", e.message)); const dowF = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }); if (dowF === "Sat") { const sun = new Date(Date.now() + 86400e3).toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); await dailyReadings(env, { date: sun }).catch((e) => console.log("vigil readings", e.message)); } }   // ready before the morning brief; Sunday's for the vigil
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
+      await observe(env, new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} })).catch((e) => console.log("observe", e.message));
       const dow = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }), hr = localHour(env);
       if (dow === "Sun" && hr === 20) await scanCompetitors(env).catch((e) => console.log("competitors", e.message));
       if (dow === "Mon" && hr === 6) { const hadWeekly = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === "weekly" && Date.now() - new Date(b.at) < 3 * 86400e3); if (!hadWeekly) { const fake = new Request("https://jarvis-hub.floral-credit-e4f0.workers.dev/", { cf: {} }); await makeMorning(env, fake, "weekly").catch((e) => pushAlert(env, { kind: "watch", text: "weekly review failed: " + e.message })); } }
@@ -1383,6 +1417,8 @@ export default {
     if (p === "/api/world/route") return json((await flightRoute(env, url.searchParams.get("cs"))) || { none: true });
     if (p === "/api/world/sats") return json(await satTles(env), 200, { "cache-control": "public, max-age=3600" });
     if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null, saint = null, saintErr = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } try { saint = await saintOfDay(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { saintErr = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err, saint, saintError: saintErr }); }
+    if (p === "/api/observe" && request.method === "POST") return json((await observe(env, request, { force: true })) || { nothing: true });
+    if (p === "/api/observations") return json((await kv.get(env, "observations")) || []);
     if (p === "/api/health") return json(await healthReport(env, +url.searchParams.get("days") || 7));
     if (p === "/api/social/posted" && request.method === "POST") { const b = await request.json(); const log = (await kv.get(env, "social_log")) || {}; const day = /^\d{4}-\d{2}-\d{2}$/.test(b.at || "") ? b.at : new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); (log[day] ||= {})[String(b.brand || "").toLowerCase()] = { day: b.day, media_id: b.media_id, linkedin_urn: b.linkedin_urn || null, at: new Date().toISOString() }; for (const k of Object.keys(log)) if (Date.now() - new Date(k) > 40 * 86400e3) delete log[k]; await kv.put(env, "social_log", log); await socialFromLog(env); return json({ ok: true, day, brand: b.brand }); }
     if (p === "/api/reminders" && request.method === "GET") return json(((await kv.get(env, "reminders")) || []).filter((r) => !r.done));

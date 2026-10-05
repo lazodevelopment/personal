@@ -167,6 +167,11 @@ refuse Cloudflare). The PC keeps the social check and the executor. Run with `-D
 - **Health**: `healthNote` records cron runs per day, feed stalls, bridge errors (`bridgeCall`), brief failures; `GET /api/health` summarises 7 days (cron % of expected runs, stalls, bridge errors by account, client script errors, inbox sync age). The System strip shows "health clean · 7d" or "N issues"; the brain context has a JARVIS HEALTH line and the Monday review reports on it.
 - Still on the PC: `collect_flights.py --global-only` (OpenSky refuses Google Cloud) and `jarvis_wake.py` (it has to be the machine with the speakers).
 
+## Mail alerts, web search, the observer (2026-10-05)
+- **New mail**: `ingestInbox` announces fresh threads from real people triaged as lead/client/booking/payment with priority 1-2 and under 3 h old: alert kind `mail` (spoken by any open page, shown in the chat) plus a Pushover push (high for priority 1). KV `mail_told` prevents repeats.
+- **Web search**: the chat passes Anthropic's server-side tool `web_search_20250305` (max 3 uses) alongside the brain tools; the system prompt sends anything outside the live context to it and asks for sources in words. No extra key.
+- **Observer**: `observe(env)` runs on the hourly cron between 08:00 and 20:00 home time: Sonnet reads the live context plus the last 36 h of its own remarks (KV `observations`) and either says NOTHING or one or two sentences; a remark becomes alert kind `obs` (spoken on open pages, shown in the chat) and a silent push. `POST /api/observe` forces one; `GET /api/observations` lists them.
+
 ## Using it
 - **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
 - **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.
