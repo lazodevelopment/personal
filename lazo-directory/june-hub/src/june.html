@@ -66,6 +66,7 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:14
 .card h2{font-size:22px;color:var(--goldSoft);display:flex;align-items:center;gap:10px;letter-spacing:-.005em;line-height:1.1}
 .card h2 .n{font:600 11px/1 Inter;background:rgba(217,183,124,.16);color:var(--gold);border-radius:999px;padding:5px 9px;letter-spacing:.06em;text-transform:uppercase;border:1px solid rgba(217,183,124,.22)}
 .card h2 .act{margin-left:auto;display:flex;gap:6px}
+.tabs{display:inline-flex;gap:4px;background:var(--well);border-radius:999px;padding:3px}.tab{border:0;background:transparent;color:var(--muted);font:600 12.5px Inter;letter-spacing:.01em;padding:5px 12px;border-radius:999px;transition:background .18s,color .18s;display:inline-flex;align-items:center;gap:6px}.tab.on{background:linear-gradient(180deg,#E6C98F,#D2AE6E);color:var(--plumDeep)}.tab .dot{width:7px;height:7px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 3px rgba(224,156,132,.25)}
 .sub{color:var(--muted);font-size:12.5px;margin-top:3px;line-height:1.5}
 .row{display:flex;gap:12px;align-items:flex-start;padding:11px 8px;margin:0 -8px;border-top:1px solid rgba(255,255,255,.07);border-radius:12px;transition:background .18s}
 .row:hover{background:rgba(255,255,255,.04)}
@@ -196,8 +197,7 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
   </section>
 
   <section class="card" id="briefPanel">
-    <h2>Today's brief <span class="n" id="briefDay"></span><span class="act"><button class="btn sm gold" id="briefListen">▶ Listen</button><button class="btn sm" id="briefStop" hidden>■ Stop</button><button class="btn sm" id="briefRefresh" title="Write it again with the latest numbers">↻</button><button class="btn sm" id="weeklyBtn" title="Last week against the week before, and three things to do">Monday review</button></span></h2>
-    <div id="weeklyWrap" class="hidden" style="margin:10px 0 6px;padding:12px 14px;border-radius:14px;background:var(--well)"><div class="sub" style="display:flex;align-items:center;gap:8px"><b style="color:var(--gold)">The Monday review</b><span id="weeklyDay"></span><span class="act" style="margin-left:auto;display:flex;gap:6px"><button class="btn sm gold" id="weeklyListen">▶ Listen</button><button class="btn sm" id="weeklyClose">Close</button></span></div><div class="brief" id="weeklyText"></div></div>
+    <h2><span class="tabs" id="briefTabs"><button class="tab on" data-view="daily">Today's brief</button><button class="tab" data-view="weekly" id="weeklyBtn" hidden>Monday review <span class="dot" id="weeklyDot" hidden></span></button></span><span class="n" id="briefDay"></span><span class="act"><button class="btn sm gold" id="briefListen">▶ Listen</button><button class="btn sm" id="briefRefresh" title="Write it again with the latest numbers">↻</button></span></h2>
     <div class="brief wait" id="briefText">June is reading your morning…</div>
   </section>
 
@@ -289,6 +289,8 @@ const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 const state = { cfg: {}, s: null, chat: [] };
 const WMO = { 0: ["Clear", "☀️"], 1: ["Mostly clear", "🌤️"], 2: ["Partly cloudy", "⛅"], 3: ["Overcast", "☁️"], 45: ["Fog", "🌫️"], 48: ["Fog", "🌫️"], 51: ["Drizzle", "🌦️"], 53: ["Drizzle", "🌦️"], 55: ["Drizzle", "🌦️"], 61: ["Light rain", "🌧️"], 63: ["Rain", "🌧️"], 65: ["Heavy rain", "🌧️"], 71: ["Snow", "🌨️"], 73: ["Snow", "🌨️"], 75: ["Snow", "🌨️"], 80: ["Showers", "🌦️"], 81: ["Showers", "🌧️"], 82: ["Heavy showers", "⛈️"], 95: ["Thunderstorms", "⛈️"], 96: ["Thunderstorms", "⛈️"], 99: ["Thunderstorms", "⛈️"] };
 const wmo = (c) => WMO[c] || ["", ""];
+const nice = (slug) => String(slug || "").replace(/[-_]+/g, " ").replace(/\bwedding /i, "").trim();
+const clock12 = (hhmm) => { const m = String(hhmm || "").match(/(\d{1,2}):(\d{2})/); if (!m) return hhmm || ""; const h = +m[1]; return `${h % 12 || 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`; };
 const money = (n) => "$" + Math.round(+n || 0).toLocaleString();
 const fmtDay = (iso) => { try { return new Date(iso.length === 10 ? iso + "T12:00" : iso).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }); } catch { return iso; } };
 const fmtWhen = (iso) => { try { return new Date(iso).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch { return iso; } };
@@ -333,11 +335,11 @@ async function loadState(first) {
   try {
     const r = await api("/api/state"); const s = await r.json();
     if (!r.ok) { if (r.status === 403) { addMsg("sys", s.message || s.error); $("#briefText").textContent = s.message || "No vendor listing on this login."; $("#briefText").className = "brief wait"; } else addMsg("sys", "Couldn't load your data: " + (s.error || r.status)); return; }
-    state.s = s; render(s);
+    state.s = s; render(s); paintBrief();
     if (first) {
-      if (s.brief?.text) showBrief(s.brief); else makeBrief(false);
+      if (!s.brief?.text) makeBrief(false);
       if (s.due?.length) { const line = s.due.length === 1 ? `You asked me to remind you: ${s.due[0].text}.` : `You have ${s.due.length} reminders due. ` + s.due.slice(0, 3).map((r) => r.text).join("; ") + "."; addMsg("ai", line); speak(line); }
-      if (s.isMonday && !s.weekly?.text) $("#weeklyBtn").click();
+      if (s.isMonday && !s.weekly?.text) makeWeekly(false);
     }
     runTriage();
   } catch (e) { addMsg("sys", "Couldn't load your data: " + e.message); }
@@ -361,14 +363,14 @@ function render(s) {
   $("#wxPlace").textContent = v.metro.split(",")[0];
   if (w?.current) {
     const c = w.current, d = w.daily;
-    $("#wx").innerHTML = `<div class="wxnow"><b>${Math.round(c.temperature_2m)}°</b><div class="c">${wmo(c.weather_code)[1]} ${esc(wmo(c.weather_code)[0])}<br>feels ${Math.round(c.apparent_temperature)}° · wind ${Math.round(c.wind_speed_10m)} mph · humidity ${c.relative_humidity_2m}%<br>high ${Math.round(d.temperature_2m_max[0])}° low ${Math.round(d.temperature_2m_min[0])}° · sunset ${esc(String(d.sunset[0]).slice(11))}</div></div>
+    $("#wx").innerHTML = `<div class="wxnow"><b>${Math.round(c.temperature_2m)}°</b><div class="c">${wmo(c.weather_code)[1]} ${esc(wmo(c.weather_code)[0])}<br>feels ${Math.round(c.apparent_temperature)}° · wind ${Math.round(c.wind_speed_10m)} mph · humidity ${c.relative_humidity_2m}%<br>high ${Math.round(d.temperature_2m_max[0])}° low ${Math.round(d.temperature_2m_min[0])}° · sunset ${esc(clock12(String(d.sunset[0]).slice(11)))}</div></div>
       <div class="wxdays">${d.time.slice(1, 6).map((t, i) => `<div><b>${new Date(t + "T12:00").toLocaleDateString("en-US", { weekday: "short" })}</b>${wmo(d.weather_code[i + 1])[1]}<br>${Math.round(d.temperature_2m_max[i + 1])}°/${Math.round(d.temperature_2m_min[i + 1])}°<br>${d.precipitation_probability_max[i + 1] ?? 0}%</div>`).join("")}</div>
       ${(w.nws || []).map((a) => `<div class="alert">⚠️ ${esc(a.headline || a.event)}</div>`).join("")}`;
   } else $("#wx").innerHTML = '<div class="empty">Weather unavailable right now.</div>';
   // page
   const vw = v.views, delta = vw ? vw.d7 - vw.d7Prev : null;
   $("#page").innerHTML = `<div class="stat"><div class="k"><b>${vw ? vw.d7 : "–"}</b><span>views, 7 days</span>${delta != null ? `<div class="delta ${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "+" : ""}${delta} vs prior week</div>` : ""}</div><div class="k"><b>${v.rank ? "#" + v.rank.pos : "–"}</b><span>${v.rank ? "of " + v.rank.of + " " + esc(v.rank.label) : "rank"}</span></div><div class="k"><b>${v.reviewCount ? v.reviewAverage.toFixed(1) : "–"}</b><span>${v.reviewCount ? v.reviewCount + " review" + (v.reviewCount === 1 ? "" : "s") : "no reviews yet"}</span></div></div>
-    <div class="sub" style="margin-top:10px">${v.verified ? '<span class="tag ok">verified</span>' : '<span class="tag">not yet verified</span>'}<span class="tag">${esc(v.tier)} plan</span>${v.badges.map((b) => `<span class="tag">${esc(b)}</span>`).join("")} ${esc(v.category)} · ${s.counts.threads} threads · ${s.counts.booked} booked</div>`;
+    <div class="sub" style="margin-top:10px">${v.verified ? '<span class="tag ok">verified</span>' : '<span class="tag">not yet verified</span>'}<span class="tag">${esc(v.tier)} plan</span>${v.badges.filter((b) => !/^verified$/i.test(b)).map((b) => `<span class="tag">${esc(b)}</span>`).join("")} ${esc(nice(v.category))} · ${s.counts.threads} threads · ${s.counts.booked} booked</div>`;
   // money
   const m = s.money;
   $("#money").innerHTML = m ? `<div class="stat"><div class="k"><b>${money(m.outstanding)}</b><span>outstanding</span></div><div class="k"><b style="${m.overdue ? "color:var(--red)" : ""}">${money(m.overdue)}</b><span>overdue</span></div><div class="k"><b>${money(m.collected30)}</b><span>collected, 30 days</span></div></div>` + (m.open.length ? m.open.slice(0, 6).map((i) => `<div class="row"><div class="main"><div class="t">${esc(i.couple || "—")} <span class="tag ${i.overdue ? "red" : i.dueThisWeek ? "hot" : ""}">${i.overdue ? "overdue" : i.dueThisWeek ? "due this week" : "open"}</span></div><div class="d">${esc(i.title)}${i.installment ? " · " + esc(i.installment) : ""}${i.dueDate ? " · due " + esc(fmtDay(String(i.dueDate).slice(0, 10))) : ""}</div></div><div class="side"><b>${money(i.total)}</b></div></div>`).join("") : '<div class="empty" style="margin-top:8px">No open invoices.</div>') : '<div class="empty">Money details unavailable.</div>';
@@ -432,7 +434,7 @@ function renderReviews(s) {
   $("#reviews").innerHTML = (asks || "") + (list || '<div class="empty">No reviews yet. June will ask after each wedding.</div>');
 }
 function renderPricing(s) {
-  const v = s.vendor, p = s.pricing; $("#pricingN").textContent = p ? `${p.vendors} ${v.categoryId || "vendors"} in ${v.metro.split(",")[0]}` : "";
+  const v = s.vendor, p = s.pricing; $("#pricingN").textContent = p ? `${p.vendors} ${nice(v.categoryId) || "vendors"} in ${v.metro.split(",")[0]}` : "";
   const mine = v.startingPrice ? money(v.startingPrice) : "–";
   $("#pricing").innerHTML = `<div class="stat"><div class="k"><b>${mine}</b><span>your starting price</span></div><div class="k"><b>${p?.priceFrom ? money(p.priceFrom.p50) : "–"}</b><span>metro median${p?.priceFrom ? ` · p25 ${money(p.priceFrom.p25)} · p75 ${money(p.priceFrom.p75)}` : ""}</span></div><div class="k"><b>${p?.medianReplyMin != null ? Math.round(p.medianReplyMin) + "m" : "–"}</b><span>metro median first reply</span></div></div>` + (v.packages.length ? `<div class="sub" style="margin-top:10px">${v.packages.map((x) => `<span class="tag">${esc(x.name)} ${esc(x.price)}</span>`).join("")}</div>` : '<div class="empty" style="margin-top:8px">Add packages in the app and June will quote from them.</div>');
 }
@@ -462,20 +464,6 @@ function renderAlerts(a) {
     $("#alSave").disabled = false;
   };
 }
-let weeklyAudioUrl = null;
-function renderWeekly(w) { if (!w?.text) return; $("#weeklyText").textContent = w.text; $("#weeklyDay").textContent = new Date(w.at).toLocaleDateString("en-US", { month: "short", day: "numeric" }); weeklyAudioUrl = null; if (state.s?.isMonday) $("#weeklyWrap").classList.remove("hidden"); }
-$("#weeklyBtn").onclick = async () => {
-  $("#weeklyWrap").classList.remove("hidden"); if (state.s?.weekly?.text && state.s.weekly.day === state.s.today) { renderWeekly(state.s.weekly); return; }
-  $("#weeklyText").textContent = "June is going over last week…";
-  try { const r = await api("/api/weekly", { method: "POST", body: JSON.stringify({}) }); const w = await r.json(); if (!r.ok || w.error) throw new Error(w.error || r.status); state.s.weekly = w; $("#weeklyWrap").classList.remove("hidden"); $("#weeklyText").textContent = w.text; $("#weeklyDay").textContent = new Date(w.at).toLocaleDateString("en-US", { month: "short", day: "numeric" }); weeklyAudioUrl = null; }
-  catch (e) { $("#weeklyText").textContent = "I couldn't write the review: " + e.message; }
-};
-$("#weeklyClose").onclick = () => { stopSpeaking(); $("#weeklyWrap").classList.add("hidden"); };
-$("#weeklyListen").onclick = async () => {
-  const w = state.s?.weekly; if (!w?.text) return; stopSpeaking(); unlockPlayer();
-  if (state.cfg.tts) { for (let i = 0; i < 6 && !weeklyAudioUrl; i++) { const r = await api("/api/weekly/audio"); if (r.ok) { weeklyAudioUrl = URL.createObjectURL(await r.blob()); break; } await new Promise((res) => setTimeout(res, 2500)); } if (weeklyAudioUrl) { player.src = weeklyAudioUrl; setViz("speaking", playerViz()); player.onended = player.onerror = () => setViz("idle"); player.play().catch(() => setViz("idle")); return; } }
-  speakGen++; speakQueue = []; w.text.split(/(?<=[.!?])\s+/).forEach((x) => enqueueSpeech(x));
-};
 // a custom token from the app's Talk to June button: exchange it, then drop it from the URL
 async function fbSignInWithCustomToken(t) {
   const r = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=" + state.cfg.apiKey, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token: t, returnSecureToken: true }) });
@@ -500,30 +488,46 @@ function closeDrill() { $("#drill").classList.remove("open"); }
 $("#drill").onclick = (e) => { if (e.target === $("#drill")) closeDrill(); };
 
 /* ---------- today's brief ---------- */
-let briefAudioUrl = null;
-function showBrief(b) { $("#briefText").textContent = b.text || ""; $("#briefText").className = "brief"; $("#briefDay").textContent = new Date(b.at).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" }); briefAudioUrl = null; }
+/* ---------- the brief: Today and the Monday review share one panel, one Listen/Stop button ---------- */
+let briefView = "daily", briefAudio = { daily: null, weekly: null }, briefPlaying = false;
+function briefCurrent() { return briefView === "weekly" ? state.s?.weekly : state.s?.brief; }
+function paintBrief() {
+  const b = briefCurrent(); document.querySelectorAll("#briefTabs .tab").forEach((t) => t.classList.toggle("on", t.dataset.view === briefView));
+  if (b?.text) { $("#briefText").textContent = b.text; $("#briefText").className = "brief"; $("#briefDay").textContent = new Date(b.at).toLocaleDateString("en-US", briefView === "weekly" ? { month: "short", day: "numeric" } : { weekday: "long", month: "short", day: "numeric" }); }
+  else { $("#briefText").textContent = briefView === "weekly" ? "June is going over last week…" : "June is reading your morning…"; $("#briefText").className = "brief wait"; $("#briefDay").textContent = ""; }
+  $("#weeklyBtn").hidden = !(state.s?.weekly?.text || state.s?.isMonday); $("#weeklyDot").hidden = !(state.s?.weekly?.text && briefView !== "weekly" && !state.weeklySeen);
+}
+function showBrief(b) { if (state.s) state.s.brief = b; briefAudio.daily = null; if (briefView === "daily") paintBrief(); }
+function renderWeekly(w) { if (state.s) state.s.weekly = w || state.s.weekly; briefAudio.weekly = null; paintBrief(); }
+document.querySelectorAll("#briefTabs .tab").forEach((t) => (t.onclick = () => { stopBrief(); briefView = t.dataset.view; if (briefView === "weekly") { state.weeklySeen = true; if (!state.s?.weekly?.text) makeWeekly(false); } paintBrief(); }));
 async function makeBrief(force) {
-  $("#briefText").textContent = force ? "June is writing it again with the latest numbers…" : "June is reading your morning…"; $("#briefText").className = "brief wait"; $("#briefRefresh").disabled = true;
-  try { const r = await api("/api/brief", { method: "POST", body: JSON.stringify({ force }) }); const b = await r.json(); if (!r.ok || b.error) throw new Error(b.error || r.status); showBrief(b); if (state.s) state.s.brief = b; }
+  briefView = "daily"; if (state.s) state.s.brief = null; paintBrief(); $("#briefRefresh").disabled = true;
+  try { const r = await api("/api/brief", { method: "POST", body: JSON.stringify({ force }) }); const b = await r.json(); if (!r.ok || b.error) throw new Error(b.error || r.status); showBrief(b); }
   catch (e) { $("#briefText").textContent = "I couldn't write the brief: " + e.message; }
   $("#briefRefresh").disabled = false;
 }
-$("#briefRefresh").onclick = () => makeBrief(true);
+async function makeWeekly(force) {
+  if (state.s && force) state.s.weekly = null; if (briefView === "weekly") paintBrief();
+  try { const r = await api("/api/weekly", { method: "POST", body: JSON.stringify({ force }) }); const w = await r.json(); if (!r.ok || w.error) throw new Error(w.error || r.status); renderWeekly(w); }
+  catch (e) { if (briefView === "weekly") $("#briefText").textContent = "I couldn't write the review: " + e.message; }
+}
+$("#briefRefresh").onclick = () => { stopBrief(); briefView === "weekly" ? makeWeekly(true) : makeBrief(true); };
+function stopBrief() { if (!briefPlaying) return; briefPlaying = false; stopSpeaking(); $("#briefListen").textContent = "▶ Listen"; $("#briefListen").classList.add("gold"); }
 $("#briefListen").onclick = async () => {
-  const b = state.s?.brief; if (!b?.text) return;
-  stopSpeaking(); unlockPlayer(); $("#briefListen").hidden = true; $("#briefStop").hidden = false;
-  const done = () => { $("#briefListen").hidden = false; $("#briefStop").hidden = true; setViz("idle"); };
+  if (briefPlaying) return stopBrief();
+  const b = briefCurrent(); if (!b?.text) return;
+  stopSpeaking(); unlockPlayer(); briefPlaying = true; $("#briefListen").textContent = "■ Stop"; $("#briefListen").classList.remove("gold");
+  const view = briefView, done = () => { if (briefPlaying && briefView === view) { briefPlaying = false; $("#briefListen").textContent = "▶ Listen"; $("#briefListen").classList.add("gold"); } setViz("idle"); };
   if (state.cfg.tts) {
-    for (let i = 0; i < 6 && !briefAudioUrl; i++) {
-      const r = await api("/api/brief/audio"); if (r.ok) { briefAudioUrl = URL.createObjectURL(await r.blob()); break; }
-      const bb = await (await api("/api/brief")).json(); if (!bb?.audioPending) break; await new Promise((res) => setTimeout(res, 2500));
+    for (let i = 0; i < 6 && !briefAudio[view] && briefPlaying; i++) {
+      const r = await api(view === "weekly" ? "/api/weekly/audio" : "/api/brief/audio"); if (r.ok) { briefAudio[view] = URL.createObjectURL(await r.blob()); break; }
+      const bb = await (await api(view === "weekly" ? "/api/weekly" : "/api/brief", view === "weekly" ? { method: "POST", body: JSON.stringify({}) } : {})).json(); if (!bb?.audioPending) break; await new Promise((res) => setTimeout(res, 2500));
     }
-    if (briefAudioUrl) { player.src = briefAudioUrl; setViz("speaking", playerViz()); player.onended = player.onerror = done; player.play().catch(done); return; }
+    if (!briefPlaying) return;
+    if (briefAudio[view]) { player.src = briefAudio[view]; setViz("speaking", playerViz()); player.onended = player.onerror = done; player.play().catch(done); return; }
   }
-  // no stored audio: speak it sentence by sentence
-  speakGen++; speakQueue = []; b.text.split(/(?<=[.!?])\s+/).forEach((s) => enqueueSpeech(s)); const t = setInterval(() => { if (!speaking && !speakQueue.length) { clearInterval(t); done(); } }, 500);
-};
-$("#briefStop").onclick = () => { stopSpeaking(); $("#briefListen").hidden = false; $("#briefStop").hidden = true; };
+  speakGen++; speakQueue = []; b.text.split(/(?<=[.!?])\s+/).forEach((x) => enqueueSpeech(x)); const t = setInterval(() => { if (!speaking && !speakQueue.length) { clearInterval(t); done(); } }, 500);
+}
 
 /* ---------- voice out: ElevenLabs through the worker, browser en-GB voice as fallback ---------- */
 const player = new Audio(); player.preload = "auto"; let playerUnlocked = false, actx = null, playerAnalyser = null;
