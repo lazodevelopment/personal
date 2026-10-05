@@ -1810,7 +1810,7 @@ function openShip(r) {
   $("#flightCard").innerHTML = `<div class="route"><div><b>${esc(r[1] || "Unnamed")}</b><small>${(r[8] || 0) >= 200 ? "cruise ship" : "passenger vessel"} · ${r[8] ? r[8] + " m" : "length unknown"}</small></div><span class="arrow">⚓</span><div><b>${esc(r[7] || "—")}</b><small>destination</small></div></div><div class="facts"><span>speed <b>${r[5] != null ? Math.round(r[5] * 1.15) + " mph" : "?"}</b></span><span>heading <b>${r[4] != null ? Math.round(r[4]) + "°" : "?"}</b></span><span>reported <b>${r[9] < 120 ? "just now" : Math.round(r[9] / 60) + " min ago"}</b></span><span>MMSI <b>${r[0]}</b></span></div>`;
   globe && globe.pointOfView({ lat: r[2], lng: r[3], altitude: Math.min(globe.pointOfView().altitude, 0.6) }, 900); renderWorld();
 }
-let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null, cams: [] }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true, cams: true, webcams: true };
+let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null, cams: [] }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true, cams: true, webcams: true, ships: true };
 const KT_MPH = 1.15078;
 function worldHome() { const p = state.place || state.wx || {}; return { lat: +(p.lat || 33.15), lng: +(p.lon || -96.82) }; }
 function initGlobe() {
