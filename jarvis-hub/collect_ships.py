@@ -22,7 +22,7 @@ stats = {"msgs": 0, "pos": 0, "static": 0}
 
 def post(snapshot):
     body = json.dumps(snapshot).encode()
-    req = urllib.request.Request(HUB + "/api/world/shipsfeed", data=body, headers={"content-type": "application/json", "x-hub-key": KEY}, method="POST")
+    req = urllib.request.Request(HUB + "/api/world/shipsfeed", data=body, headers={"content-type": "application/json", "x-hub-key": KEY, "User-Agent": "Mozilla/5.0 (JARVIS feeder)"}, method="POST")
     try:
         r = urllib.request.urlopen(req, timeout=60).read().decode()[:120]
     except Exception as e:

@@ -15,7 +15,7 @@ def main():
     if len(sys.argv) < 4:
         print(__doc__); sys.exit(2)
     body = {"brand": sys.argv[1], "day": sys.argv[2], "media_id": sys.argv[3], "linkedin_urn": (sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] != "null" else None), "at": datetime.now().strftime("%Y-%m-%d")}
-    req = urllib.request.Request(HUB + "/api/social/posted", data=json.dumps(body).encode(), headers={"content-type": "application/json", "x-hub-key": KEY}, method="POST")
+    req = urllib.request.Request(HUB + "/api/social/posted", data=json.dumps(body).encode(), headers={"content-type": "application/json", "x-hub-key": KEY, "User-Agent": "Mozilla/5.0 (JARVIS feeder)"}, method="POST")
     print(urllib.request.urlopen(req, timeout=30).read().decode()[:200])
 
 

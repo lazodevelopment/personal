@@ -16,7 +16,7 @@ PROFILE = os.path.expandvars(r"%LOCALAPPDATA%\JarvisKiosk")
 
 
 def main():
-    req = urllib.request.Request(HUB + "/api/alarm/due", headers={"x-hub-key": KEY})
+    req = urllib.request.Request(HUB + "/api/alarm/due", headers={"x-hub-key": KEY, "User-Agent": "Mozilla/5.0 (JARVIS feeder)"})
     d = json.load(urllib.request.urlopen(req, timeout=20))
     if not d.get("due"):
         return
