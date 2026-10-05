@@ -1244,7 +1244,7 @@ export default {
     await applyHome(env);
     const cron = event.cron || "";
     if (cron === "* * * * *") { ctx.waitUntil(tickMinute(env).catch((e) => console.log("minute", e.message))); return; }
-    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).catch((e) => console.log("5-min cron", e.message)));
+    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(() => tickMinute(env)).catch((e) => console.log("5-min cron", e.message)));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
