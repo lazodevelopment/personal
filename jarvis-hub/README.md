@@ -172,6 +172,10 @@ refuse Cloudflare). The PC keeps the social check and the executor. Run with `-D
 - **Web search**: the chat passes Anthropic's server-side tool `web_search_20250305` (max 3 uses) alongside the brain tools; the system prompt sends anything outside the live context to it and asks for sources in words. No extra key.
 - **Observer**: `observe(env)` runs on the hourly cron between 08:00 and 20:00 home time: Sonnet reads the live context plus the last 36 h of its own remarks (KV `observations`) and either says NOTHING or one or two sentences; a remark becomes alert kind `obs` (spoken on open pages, shown in the chat) and a silent push. `POST /api/observe` forces one; `GET /api/observations` lists them.
 
+## Ships on the World globe (2026-10-05)
+- `collect_ships.py` runs on the feeder (cron tries it every minute under `flock`; it exits at once unless `~/jarvis/.ais-key` holds an aisstream.io API key). It subscribes to the global AIS stream (PositionReport + ShipStaticData), keeps passenger vessels (AIS types 60-69: cruise ships and ferries) and posts `[mmsi, name, lat, lon, cog, sog, type, destination, length_m, age_s]` rows to `POST /api/world/shipsfeed` every 90 s (KV `ships_global`, served by `GET /api/world/ships`).
+- Globe: "ships" layer, green particles when zoomed out, ship icons rotated by course with name labels when zoomed in (≥200 m drawn larger); click for a card (destination, speed, heading, report age). The place box also finds a ship by name. Brain tool `find_ship` answers "where is the <ship>" and centres the globe; the context carries the vessel count.
+
 ## Using it
 - **Ctrl+K** focuses the console. Type anything; JARVIS answers from live tools (status, weather, brief, metrics, notes) and can open links.
 - **Voice**: the TALK button and the "wake word" option only appear when a microphone exists. Hold **J** to talk.
