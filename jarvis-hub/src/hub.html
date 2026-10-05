@@ -1120,7 +1120,7 @@ function renderBrief() {
     if (act === "reply") { openThread(li, true); return; }
     proposeAction({ kind: "email_" + act, params: { account: a, threadId: t }, summary: `${act === "archive" ? "Archive" : "Mark read"}: ${who} — ${subj}` }); });
 }
-let mailTab = "all"; try { mailTab = localStorage.getItem("mailTab") || mailTab; } catch {}
+let mailTab = ""; try { mailTab = localStorage.getItem("mailTab") || mailTab; } catch {}   // empty = first business tab until he picks one
 let openThreadId = null;
 async function openThread(li, focusReply) {
   const t = li.dataset.t, a = li.dataset.a;
