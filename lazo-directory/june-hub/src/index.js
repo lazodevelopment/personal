@@ -493,7 +493,7 @@ function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v
 
 /* ---------------- worker ---------------- */
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#3D1C3B"/><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg>`;
-const MANIFEST = { name: "June for Lazo vendors", short_name: "June", start_url: "/", display: "standalone", background_color: "#FAF6F0", theme_color: "#3D1C3B", icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }] };
+const MANIFEST = { name: "June for Lazo vendors", short_name: "June", start_url: "/", display: "standalone", background_color: "#2A1229", theme_color: "#3D1C3B", icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }] };
 
 export default {
   async fetch(request, env, ctx) {
