@@ -77,8 +77,7 @@ python -c "import json,sys; sys.path.insert(0,'config'); from metros import METR
 
 ## Known limits (v1)
 
-- The brief is written when the vendor opens June, not pushed at 7am (the worker holds no vendor
-  credential overnight). The functions-dashboard email covers the morning nudge.
+- The brief is written on open, or at the vendor's hour by the cron once they turn alerts on (round two).
 - `send_message` creates the message as the vendor and sets `status: responded`; the thread's
   `lastMessageAt/lastMessageRole/lastMessagePreview` patch is attempted and ignored if the rules refuse it
   (the app's own send path may rely on a function for those).
@@ -110,6 +109,29 @@ Later, to drop the per-post cost: a Lazo Meta app with `instagram_content_publis
 `pages_manage_posts` through App Review, swapping `ayr()` for the Graph API behind the same routes.
 Instagram needs JPEG media at a public URL; showcase covers are served by the site worker.
 
+## Round two (2026-10-05): triage, alerts, pricing, reviews, availability, the Monday review, reminders
+
+| Piece | How |
+|---|---|
+| Triage + first replies | `POST /api/triage`: one Sonnet call over the waiting threads (last six messages each) returns priority 1-3, a one-line why, and a first reply drafted from the vendor's packages, saved replies and FAQ. Cached in KV `triage_<vendorId>` keyed by the thread's last message. The Waiting panel sorts by priority and offers "Use June's draft", which opens the normal confirm card. Off-platform leads already arrive in `inquiries` by SMS/email (leads.js), so a reply from June reaches them by text and email through `onLeadMessage`. |
+| 7am brief by email, nudges, reminders | Alerts panel -> `POST /api/subscribe` stores the vendor's Firebase refresh token encrypted (AES-GCM under `JUNE_SECRET`) in KV `sub_<vendorId>`. The cron (`*/15 * * * *`, `runCron`) mints an ID token from it, takes a snapshot as the vendor, and at their hour writes the brief (plus the Monday review on Mondays) and emails it through Resend; nudges once per lead message after two hours; emails reminders when due. Eight vendors per pass, least recently served first. Turn off = refresh token deleted. `POST /api/cron` (owner) runs a pass by hand. |
+| Signed-in hand-off from the app | `functions-dashboard/june-token.js` (`juneToken` callable, build 022) mints a one-hour custom token; dashboard v181 (`patch_vendor_v181.py`) opens `kJuneHubUrl?t=<token>`; the page exchanges it with `signInWithCustomToken` and strips the param. Falls back to the plain URL. Deploy: `firebase deploy --only functions:dashboard` from `C:\Users\kurvh\lazo-functions`. |
+| Pricing | `metroStats/{metro}__{category}` (priceFrom p25/p50/p75, medianReplyMin) against `vendors.startingPrice` and `packages[]`; Pricing panel and "Am I priced right". June quotes only from packages. |
+| Reviews | Top-level `reviews` where vendorId plus `vendors/{id}/reviews`; Reviews panel; weddings past two days without a review get "Ask for a review" -> `request_action review_request` (message to the couple, KV `asked_<vendorId>` so she asks once). |
+| Availability | `check_date` tool (booked, held, consults, blocked); `block_date` / `unblock_date` actions patch `vendors.unavailableDates`. |
+| Monday review | `makeBrief(..., "weekly")` from `weekStats` (last 7 vs prior 7: leads by createdAt, replies by respondedAt, bookings by bookedAt, cash by paidAt, views d7 vs d7Prev); KV `weekly_<vendorId>`; auto on Mondays, button any day; audio like the brief. |
+| Saved replies + FAQ | In the context and the triage prompt; June drafts in the vendor's own wording. |
+| Reminders | KV `reminders_<vendorId>`; `set_reminder` / `complete_reminder` tools; Reminders panel with add, +1h, Done, delete (`/api/reminders`); due ones are spoken on open and emailed by the cron; daily/weekly repeat rolls forward. Times resolve in the vendor's timezone (`localToIso`). |
+
+Secrets to add for round two (Jesse):
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" | npx wrangler secret put JUNE_SECRET
+```
+```bash
+& "C:\Users\kurvh\google-cloud-sdk\bin\gcloud.cmd" secrets versions access latest --secret=RESEND_API_KEY --project=lazo-513ec | npx wrangler secret put RESEND_API_KEY
+```
+Rotating `JUNE_SECRET` invalidates every stored refresh token; vendors just turn alerts on again.
+
 ## To decide later
 
-- Vendors sign in to June once more in the browser, since the app's session cannot be handed across. If that turns out to be friction, the hub can accept a short-lived token the app mints (a callable returns a custom token; the hub exchanges it at Identity Toolkit), and the Talk to June button would open it already signed in.
+- (done 2026-10-05) The app hands the vendor to June signed in, through the juneToken callable and dashboard v181.

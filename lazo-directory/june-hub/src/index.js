@@ -29,6 +29,14 @@ const localTime = (tz, d = new Date(), opts = { dateStyle: "full", timeStyle: "s
 const fmtDay = (iso, tz) => { try { return new Date(iso.length === 10 ? iso + "T12:00:00" : iso).toLocaleDateString("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric" }); } catch { return iso; } };
 const fmtWhen = (iso, tz) => { try { return new Date(iso).toLocaleString("en-US", { timeZone: tz, weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); } catch { return iso; } };
 const hoursAgo = (iso) => iso ? Math.max(0, Math.round((Date.now() - new Date(iso)) / 3600e3)) : null;
+// "2026-10-09T09:00" in the vendor's timezone -> UTC ISO (no tz database on the edge, so read the offset off Intl)
+function localToIso(local, tz) {
+  const m = String(local || "").match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?/); if (!m) return null;
+  const [, y, mo, d, h = "9", mi = "0"] = m; const guess = Date.UTC(+y, +mo - 1, +d, +h, +mi);
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz || "America/Phoenix", hour12: false, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(guess)).map((p) => [p.type, p.value]));
+  const asLocal = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour % 24, +parts.minute);
+  return new Date(guess - (asLocal - guess)).toISOString();
+}
 
 /* ---------------- Firebase ID token (same check as the Lazo site worker) ---------------- */
 const b64u = (s) => { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return Uint8Array.from(atob(s), (c) => c.charCodeAt(0)); };
@@ -156,9 +164,20 @@ function threadRow(m, customKeys) {
     waitingOnVendor: str(m.lastMessageRole) === "couple" || (!m.lastMessageRole && (str(m.status) === "new" || !m.status)),
     contractStatus: str(m.contractStatus) || null, invoiceStatus: str(m.invoiceStatus) || null,
     openTasks: m.openTasks || 0, nextTask: str(m.nextTaskTitle) ? { title: str(m.nextTaskTitle), dueAt: m.nextTaskAt || null } : null, nextConsultAt: m.nextConsultAt || null,
-    blocked: m.blockedByCouple === true,
+    blocked: m.blockedByCouple === true, createdAt: m.createdAt || null, respondedAt: m.respondedAt || null, bookedAt: m.bookedAt || null, deliveredAt: m.deliveredAt || null, coupleUid: str(m.coupleUid) || null,
+    email: str(c.email) || null, phone: str(c.phone) || null,
   };
 }
+// last 7 days against the 7 before, from what the vendor can already read
+function weekStats(rows, invoices, views) {
+  const now = Date.now(), d7 = now - 7 * 86400e3, d14 = now - 14 * 86400e3;
+  const inWin = (iso, a, b) => iso && new Date(iso) >= a && new Date(iso) < b;
+  const cnt = (f) => [rows.filter((r) => inWin(f(r), d7, now + 1)).length, rows.filter((r) => inWin(f(r), d14, d7)).length];
+  const [leads, leadsPrev] = cnt((r) => r.createdAt), [replied, repliedPrev] = cnt((r) => r.respondedAt), [booked, bookedPrev] = cnt((r) => r.bookedAt);
+  const cash = (a, b) => Math.round(invoices.filter((i) => i.status === "paid" && inWin(i.paidAt, a, b)).reduce((s, i) => s + i.total, 0));
+  return { leads, leadsPrev, replied, repliedPrev, booked, bookedPrev, cash: cash(d7, now + 1), cashPrev: cash(d14, d7), views: views?.d7 ?? null, viewsPrev: views?.d7Prev ?? null };
+}
+const weekLine = (w) => `last 7 days vs the 7 before: new leads ${w.leads} (${w.leadsPrev}), replies sent ${w.replied} (${w.repliedPrev}), bookings ${w.booked} (${w.bookedPrev}), cash in ${money(w.cash)} (${money(w.cashPrev)})${w.views != null ? `, page views ${w.views} (${w.viewsPrev})` : ""}`;
 async function loadThreads(token, vendorId, customKeys) {
   const docs = await fsQuery(token, { collection: "inquiries", where: [["vendorId", "EQUAL", vendorId]] });
   return docs.filter((m) => str(m.status) !== "flagged" && m.demo !== true).map((m) => threadRow(m, customKeys));
@@ -200,8 +219,30 @@ function vendorCard(v) {
     // showcases are galleries the couple agreed to have featured (galleryShowcase asks for consent), so June may post from them
     showcases: (Array.isArray(v.showcases) ? v.showcases : []).map((s) => ({ slug: str(s.slug), title: str(s.title), blurb: str(s.blurb), dateIso: str(s.dateIso), cover: s.coverId ? `https://meetlazo.com/g/${str(s.slug)}/i/${str(s.coverId)}/web` : null })).filter((s) => s.cover).slice(0, 12),
     instagram: str(v.instagram || v.social?.instagram) || null, facebook: str(v.facebook || v.social?.facebook) || null,
+    categoryId: str((Array.isArray(v.categories) && v.categories[0]) || v.category), bio: clip(v.bio, 400), publicEmail: str(v.publicEmail) || null,
+    packages: (Array.isArray(v.packages) ? v.packages : []).filter((p) => p && typeof p === "object").map((p) => ({ name: str(p.name), price: str(p.price), offPeak: str(p.offPeak), hours: str(p.hours), includes: clip(p.includes || p.description, 200) })).slice(0, 8),
+    savedReplies: (Array.isArray(v.savedReplies) ? v.savedReplies : []).filter((r) => r && typeof r === "object").map((r) => ({ title: str(r.title), text: clip(r.text, 700) })).slice(0, 10),
+    faqs: (Array.isArray(v.vendorFaqs) ? v.vendorFaqs : []).filter((f) => f && typeof f === "object").map((f) => ({ q: clip(f.q, 160), a: clip(f.a, 400) })).slice(0, 12),
   };
 }
+
+/* ---------------- secrets at rest: AES-GCM under JUNE_SECRET (refresh tokens for the 7am brief) ---------------- */
+async function aesKey(env) { const raw = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(env.JUNE_SECRET))); return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]); }
+async function encrypt(env, text) { const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await aesKey(env), new TextEncoder().encode(text))); return btoa(String.fromCharCode(...iv)) + "." + btoa(String.fromCharCode(...ct)); }
+async function decrypt(env, blob) { const [i, c] = String(blob).split("."); const iv = Uint8Array.from(atob(i), (x) => x.charCodeAt(0)), ct = Uint8Array.from(atob(c), (x) => x.charCodeAt(0)); return new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv }, await aesKey(env), ct)); }
+// a fresh ID token from a stored refresh token (what the cron uses to act as the vendor)
+async function tokenFromRefresh(env, refreshToken) {
+  const r = await fetch("https://securetoken.googleapis.com/v1/token?key=" + env.FIREBASE_API_KEY, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: "grant_type=refresh_token&refresh_token=" + encodeURIComponent(refreshToken) });
+  if (!r.ok) return null; const j = await r.json(); return { uid: j.user_id, token: j.id_token, email: "" };
+}
+
+/* ---------------- email (Resend, same sender as the Lazo functions) ---------------- */
+async function sendEmail(env, to, subject, html, text) {
+  if (!env.RESEND_API_KEY || !to) return { skipped: true };
+  const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_API_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: env.EMAIL_FROM || "June at Lazo <hello@meetlazo.com>", to: [to], subject, html, text }) });
+  return { status: r.status };
+}
+const emailWrap = (title, body, link, cta) => `<div style="font-family:Inter,Helvetica,Arial,sans-serif;color:#241E2B;font-size:15px;line-height:1.6;max-width:560px"><p style="font-size:12px;letter-spacing:.12em;color:#8A6A2F;margin:0 0 12px">${title}</p>${body}${link ? `<p style="margin:18px 0 0"><a href="${link}" style="background:#D9B77C;color:#3D1C3B;text-decoration:none;font-weight:700;padding:10px 16px;border-radius:10px;display:inline-block">${cta || "Open June"}</a></p>` : ""}<p style="font-size:12px;color:#6B5F72;margin-top:22px">From June, your Lazo assistant. Turn these off any time in June → Alerts.</p></div>`;
 
 /* ---------------- social posting (June Studio): Ayrshare, one profile per vendor ---------------- */
 const AYR = "https://api.ayrshare.com/api";
@@ -276,6 +317,12 @@ async function snapshot(env, who, vend, { deep = true } = {}) {
     kv.get(env, "memory_" + vendorId), kv.get(env, "queue_" + vendorId), kv.get(env, "brief_" + vendorId),
   ]);
   const social = await within(socialStatus(env, card), 4000, { studio: card.studio, available: socialReady(env), connected: [], names: {}, posts: [] });
+  const [metroStat, reviewsTop, reviewsSub, reminders, sub, triage, asked] = await Promise.all([
+    card.metroId && card.categoryId ? within(fsGet(token, `metroStats/${encodeURIComponent(card.metroId + "__" + card.categoryId)}`), 2500) : null,
+    within(fsQuery(token, { collection: "reviews", where: [["vendorId", "EQUAL", vendorId]] }), 3000, []), within(fsQuery(token, { collection: "reviews", parent: `vendors/${vendorId}` }), 3000, []),
+    kv.get(env, "reminders_" + vendorId), kv.get(env, "sub_" + vendorId), kv.get(env, "triage_" + vendorId), kv.get(env, "asked_" + vendorId),
+  ]);
+  const reviews = [...(reviewsTop || []), ...(reviewsSub || [])].filter((r) => ["published", "verified", "approved", ""].includes(str(r.status)) || !r.status).map((r) => ({ id: r.id, rating: +r.rating || 0, text: clip(r.text, 400), who: str(r.coupleName) || "A couple", at: r.createdAt || null, inquiryId: str(r.inquiryId) || null })).sort((a, b) => str(b.at).localeCompare(str(a.at))).slice(0, 10);
   const tz = card.tz || wx?.tz || "America/Phoenix";
   const today = dayKey(tz), in14 = dayKey(tz, new Date(Date.now() + 14 * 86400e3)), in30 = dayKey(tz, new Date(Date.now() + 30 * 86400e3));
   const waiting = rows.filter((r) => r.waitingOnVendor && r.status !== "lost" && !r.blocked).sort((a, b) => str(a.lastMessageAt).localeCompare(str(b.lastMessageAt))).map((r) => ({ ...r, waitedHours: hoursAgo(r.lastMessageAt) }));
@@ -283,10 +330,20 @@ async function snapshot(env, who, vend, { deep = true } = {}) {
   const consultsOut = consults.map((c) => ({ ...c, wx: dayWeather(wx, dayKey(tz, new Date(c.startAt))) }));
   const quiet = rows.filter((r) => ["new", "talking"].includes(r.stage) && r.lastMessageFrom === "vendor" && r.lastMessageAt && Date.now() - new Date(r.lastMessageAt) > 5 * 86400e3).slice(0, 8);
   const tasksDue = rows.filter((r) => r.nextTask?.dueAt && r.nextTask.dueAt.slice(0, 10) <= today).map((r) => ({ inquiryId: r.inquiryId, couple: r.couple, ...r.nextTask }));
+  const week = weekStats(rows, invoices, card.views);
+  const reviewedInq = new Set(reviews.map((r) => r.inquiryId).filter(Boolean)); const askedMap = asked || {};
+  const reviewAsks = rows.filter((r) => r.status === "booked" && r.weddingDate && r.weddingDate < dayKey(tz, new Date(Date.now() - 2 * 86400e3)) && r.weddingDate >= dayKey(tz, new Date(Date.now() - 120 * 86400e3)) && !reviewedInq.has(r.inquiryId) && !askedMap[r.inquiryId]).slice(0, 6);
+  const remindersAll = (reminders || []).filter((r) => !r.done).sort((a, b) => str(a.at).localeCompare(str(b.at)));
+  const due = remindersAll.filter((r) => r.at <= new Date().toISOString());
+  const tri = triage || {}; const waitingT = waiting.map((r) => ({ ...r, triage: tri[r.inquiryId]?.key === (r.lastMessageAt || "") ? tri[r.inquiryId] : null }));
+  const pricing = metroStat ? { vendors: metroStat.vendors || 0, priceFrom: metroStat.priceFrom || null, medianReplyMin: metroStat.medianReplyMin ?? null, medianInquiries30d: metroStat.medianInquiries30d ?? null } : null;
+  const alerts = sub ? { enabled: !!sub.enabled, hour: sub.hour ?? 7, nudges: sub.nudges !== false, reminders: sub.reminders !== false, email: sub.email || "", configured: !!(env.JUNE_SECRET && env.RESEND_API_KEY) } : { enabled: false, hour: 7, nudges: true, reminders: true, email: who.email || card.publicEmail || "", configured: !!(env.JUNE_SECRET && env.RESEND_API_KEY) };
+  const weekly = await kv.get(env, "weekly_" + vendorId);
   return {
     at: new Date().toISOString(), tz, today, build: BUILD, vendor: card, role: vend.role, user: { uid: who.uid, email: who.email },
+    week, reviews, reviewAsks, reminders: remindersAll.slice(0, 30), due, pricing, alerts, weekly: weekly && Date.now() - new Date(weekly.at) < 8 * 86400e3 ? weekly : null, isMonday: new Date().toLocaleDateString("en-US", { timeZone: tz, weekday: "short" }) === "Mon",
     counts: { threads: rows.length, waiting: waiting.length, unread: rows.filter((r) => r.unread).length, booked: rows.filter((r) => r.status === "booked").length, next30: weddings.filter((w) => w.weddingDate <= in30).length, byStage: rows.reduce((a, r) => { a[r.stage] = (a[r.stage] || 0) + 1; return a; }, {}) },
-    waiting: waiting.slice(0, 12), weddings: weddings.slice(0, 12), consults: consultsOut.slice(0, 8), quiet, tasksDue,
+    waiting: waitingT.slice(0, 12), weddings: weddings.slice(0, 12), consults: consultsOut.slice(0, 8), quiet, tasksDue,
     money: deep ? moneyOf(invoices, rows) : null, weather: wx, news: news?.items || [], industry: ind?.items || [],
     memory: memory || [], recent: (queue || []).slice(0, 8), brief: brief && brief.day === today ? brief : null, briefStale: !!(brief && brief.day !== today), social,
     _rows: rows, _customKeys: customKeys,
@@ -310,6 +367,15 @@ function buildContext(s) {
   L.push(`LOCAL NEWS (${v.metro}): ` + (s.news.slice(0, 6).map((n) => n.title).join(" / ") || "unavailable"));
   L.push(`WEDDING INDUSTRY NEWS: ` + (s.industry.slice(0, 4).map((n) => n.title).join(" / ") || "unavailable"));
   L.push(`SOCIAL: ${socialSummary(s.social, v)}. Photos June may use in a post: ` + (v.showcases.length ? "SHOWCASES (couple consented): " + v.showcases.map((x, i) => `[S${i + 1}] "${x.title}"${x.dateIso ? " " + x.dateIso.slice(0, 10) : ""}${x.blurb ? " - " + clip(x.blurb, 80) : ""}`).join("; ") : "no showcases yet") + (v.gallery.length ? `; PORTFOLIO: ${v.gallery.length} gallery photos [G1..G${v.gallery.length}]` : "; no portfolio photos") + (s.social.posts?.length ? `. RECENT POSTS: ` + s.social.posts.slice(0, 4).map((p) => `${p.at.slice(0, 10)} ${p.platforms.join("+")}: ${clip(p.caption, 60)}`).join(" | ") : ""));
+  if (s.waiting.some((r) => r.triage)) L.push(`TRIAGE (June's read of who to answer first): ` + s.waiting.filter((r) => r.triage).map((r) => `[${r.inquiryId}] ${r.couple}: priority ${r.triage.priority} (${r.triage.why})`).join(" | "));
+  L.push(`THIS WEEK: ${weekLine(s.week)}`);
+  L.push(`PRICING: the vendor's starting price ${v.startingPrice ? "$" + v.startingPrice : "not set"}; packages: ` + (v.packages.map((p) => `${p.name} ${p.price}${p.offPeak ? " (off-peak " + p.offPeak + ")" : ""}${p.hours ? ", " + p.hours : ""}${p.includes ? ": " + p.includes : ""}`).join("; ") || "none listed") + (s.pricing ? `. METRO BENCHMARK (${v.categoryId} in ${v.metro}, ${s.pricing.vendors} vendors): ` + (s.pricing.priceFrom ? `starting prices p25 $${s.pricing.priceFrom.p25}, median $${s.pricing.priceFrom.p50}, p75 $${s.pricing.priceFrom.p75} (${s.pricing.priceFrom.sampled} sampled)` : "no price sample yet") + (s.pricing.medianReplyMin != null ? `; median first-reply time ${Math.round(s.pricing.medianReplyMin)} min` : "") + (s.pricing.medianInquiries30d != null ? `; median inquiries per vendor last 30d ${s.pricing.medianInquiries30d}` : "") : ". No metro benchmark for this category yet."));
+  L.push(`REVIEWS: ${v.reviewCount} total, average ${v.reviewAverage ? v.reviewAverage.toFixed(1) : "n/a"}. Latest: ` + (s.reviews.slice(0, 5).map((r) => `${r.rating}★ ${r.who}${r.at ? " " + str(r.at).slice(0, 10) : ""}: "${clip(r.text, 120)}"`).join(" | ") || "none yet") + (s.reviewAsks.length ? `. WEDDINGS DONE WITHOUT A REVIEW YET (ask with request_action review_request; [inquiryId]): ` + s.reviewAsks.map((r) => `[${r.inquiryId}] ${r.couple} ${r.weddingDate}`).join("; ") : ""));
+  L.push(`AVAILABILITY: blocked dates ` + (v.unavailableDates.slice(0, 40).join(", ") || "none") + `. Use check_date for a specific day; block_date / unblock_date via request_action.`);
+  L.push(`REMINDERS (June's own, [id]): ` + (s.reminders.map((r) => `[${r.id}] ${fmtWhen(r.at, tz)}: ${r.text}${r.couple ? " (" + r.couple + ")" : ""}${r.at <= new Date().toISOString() ? " DUE NOW" : ""}${r.repeat && r.repeat !== "none" ? " repeats " + r.repeat : ""}`).join(" | ") || "none"));
+  L.push(`SAVED REPLIES (the vendor's own templates; reuse their wording): ` + (v.savedReplies.map((r) => `"${r.title}": ${clip(r.text, 220)}`).join(" | ") || "none") + `. FAQ: ` + (v.faqs.map((f) => `Q ${f.q} A ${f.a}`).join(" | ") || "none") + (v.bio ? `. BIO: ${v.bio}` : ""));
+  L.push(`ALERTS: ` + (s.alerts.enabled ? `7am brief email on (${s.alerts.hour}:00 to ${s.alerts.email})` : "7am brief email off") + (s.alerts.configured ? "" : " (email delivery not configured on the worker yet)"));
+  if (s.weekly?.text) L.push(`MONDAY REVIEW (${str(s.weekly.at).slice(0, 10)}): ${s.weekly.text.slice(0, 400)}`);
   L.push(`MEMORY (what the vendor asked June to remember): ` + (s.memory.map((m) => `[${m.id}] ${m.text}`).join(" | ") || "nothing yet"));
   L.push(`RECENT ACTIONS: ` + (s.recent.map((q) => `${q.summary} → ${q.status}${q.result ? " (" + q.result + ")" : ""}`).join(" | ") || "none"));
   if (s.brief?.text) L.push(`TODAY'S BRIEF (already given): ${s.brief.text.slice(0, 500)}`);
@@ -322,7 +388,13 @@ Your replies are spoken aloud through text-to-speech: plain prose, no markdown, 
 Everything current is in the LIVE CONTEXT; answer from it and never invent figures or names. For anything deeper use the tools: lazo_thread before discussing one couple in detail, lazo_search to find a couple, lazo_pipeline for the whole list, lazo_money for invoices, lazo_upcoming for dates. If something isn't there, say so.
 Actions: request_action queues send_message, add_task, complete_task, tag or set_stage for the vendor's confirmation; a card appears on screen and nothing happens until they tap Confirm, so say it is ready to confirm. When asked to reply to a couple, write the reply yourself in the vendor's voice (warm, brief, professional, first person, signed with the business name), submit it as send_message with the full text, and read the gist aloud. Never claim an action is done until RECENT ACTIONS shows it done. Booking, marking lost, contracts and money changes happen in the Lazo app: use open_thread to take them there.
 remember / forget hold durable preferences (use remember whenever they say "remember", "note that", "from now on"). Use the ids shown in brackets for every tool call.
-Social: draft_post writes an Instagram or Facebook post for the vendor: a caption in their voice (warm, first person, specific to the wedding or the work, 2 to 4 short sentences, a line break, then 6 to 10 hashtags mixing their metro, category and the moment; no emoji walls), paired with a photo chosen from SOCIAL by its code (S1.. are showcase weddings the couple agreed to share, G1.. portfolio photos). Prefer a showcase; never invent names of couples not listed. The draft appears as a card; on June Studio with accounts connected the vendor can post or schedule it from the card, otherwise they copy it into the app themselves. Posting never happens without their tap, so say the draft is ready. If a vendor who is not on Studio asks June to post automatically, draft the post anyway and mention in one sentence that auto-posting comes with June Studio.`;
+Social: draft_post writes an Instagram or Facebook post for the vendor: a caption in their voice (warm, first person, specific to the wedding or the work, 2 to 4 short sentences, a line break, then 6 to 10 hashtags mixing their metro, category and the moment; no emoji walls), paired with a photo chosen from SOCIAL by its code (S1.. are showcase weddings the couple agreed to share, G1.. portfolio photos). Prefer a showcase; never invent names of couples not listed. The draft appears as a card; on June Studio with accounts connected the vendor can post or schedule it from the card, otherwise they copy it into the app themselves. Posting never happens without their tap, so say the draft is ready. If a vendor who is not on Studio asks June to post automatically, draft the post anyway and mention in one sentence that auto-posting comes with June Studio.
+Replies to couples: start from SAVED REPLIES and FAQ when they fit, in the vendor's wording; off-platform leads receive the message by text and email automatically, so write it as a text-length note. When a lead asks for a price, quote from PACKAGES only (never invent a number); if nothing fits, offer a call.
+Pricing: answer "am I priced right" from PRICING: their starting price against the metro p25, median and p75, in plain words, with one concrete suggestion.
+Reviews: for a wedding done without a review, draft the ask (warm, two sentences, link-free; the app carries the review link) and submit it as request_action review_request with params.inquiryId and params.text. Read new reviews aloud in a sentence each when asked, and offer a thank-you via send_message.
+Availability: check_date before answering "am I free on"; block_date / unblock_date through request_action when they say a day is off.
+Reminders: set_reminder whenever they say "remind me" (resolve the time in their timezone; default 9am if no time given; "every Monday" is repeat weekly). complete_reminder when they say it's done. Due reminders are listed in REMINDERS as DUE NOW: mention them first when they greet you.
+Weekly: on Mondays, or when asked "how was last week", use THIS WEEK and MONDAY REVIEW.`;
 
 const TOOLS = [
   { name: "lazo_pipeline", description: "List every thread (leads and couples) with stage, tags, wedding date, venue, last message and next task. Filter by stage or tag.", input_schema: { type: "object", properties: { stage: { type: "string" }, tag: { type: "string" } }, required: [], additionalProperties: false } },
@@ -333,9 +405,12 @@ const TOOLS = [
   { name: "open_thread", description: "Open a thread in the Lazo dashboard on the vendor's screen.", input_schema: { type: "object", properties: { inquiryId: { type: "string" }, label: { type: "string" } }, required: ["inquiryId", "label"], additionalProperties: false } },
   { name: "remember", description: "Store a durable fact or preference in June's memory for this vendor.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false } },
   { name: "forget", description: "Delete a memory by its id (shown in MEMORY as [id]).", input_schema: { type: "object", properties: { id: { type: "string" } }, required: ["id"], additionalProperties: false } },
+  { name: "check_date", description: "Is the vendor free on a date? Returns booked weddings, consults and whether the day is blocked.", input_schema: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" } }, required: ["date"], additionalProperties: false } },
+  { name: "set_reminder", description: "Set a reminder from June (shown in the hub, spoken when due, emailed if alerts are on). when = local date-time ISO like 2026-10-09T09:00.", input_schema: { type: "object", properties: { text: { type: "string" }, when: { type: "string" }, inquiryId: { type: "string" }, repeat: { type: "string", enum: ["none", "daily", "weekly"] } }, required: ["text", "when", "inquiryId", "repeat"], additionalProperties: false } },
+  { name: "complete_reminder", description: "Mark a reminder done (id from REMINDERS), or delete it.", input_schema: { type: "object", properties: { id: { type: "string" }, remove: { type: "boolean" } }, required: ["id", "remove"], additionalProperties: false } },
   { name: "draft_post", description: "Draft a social post (Instagram and/or Facebook) for the vendor: caption plus one photo code from SOCIAL (S1.. showcase, G1.. portfolio). Shows a card; the vendor posts, schedules or copies it.", input_schema: { type: "object", properties: { caption: { type: "string" }, photo: { type: "string", description: "S1, S2.. or G1, G2.." }, platforms: { type: "array", items: { type: "string", enum: ["instagram", "facebook"] } }, note: { type: "string", description: "one line on why this photo and angle" } }, required: ["caption", "photo", "platforms", "note"], additionalProperties: false } },
-  { name: "request_action", description: "Queue a change for the vendor's confirmation. kinds: send_message (params.inquiryId, params.text = the full message), add_task (params.inquiryId, params.title, params.dueDate YYYY-MM-DD optional, params.assignedTo 'vendor'|'couple', params.note), complete_task (params.inquiryId, params.taskId), tag (params.inquiryId, params.tag, params.remove true|false), set_stage (params.inquiryId, params.stage: new, talking or a custom stage key). summary = one plain sentence of what will happen.",
-    input_schema: { type: "object", properties: { kind: { type: "string", enum: ["send_message", "add_task", "complete_task", "tag", "set_stage"] }, params: { type: "object", properties: { inquiryId: { type: "string" }, text: { type: "string" }, title: { type: "string" }, dueDate: { type: "string" }, assignedTo: { type: "string" }, note: { type: "string" }, taskId: { type: "string" }, tag: { type: "string" }, remove: { type: "boolean" }, stage: { type: "string" } }, required: ["inquiryId"], additionalProperties: false }, summary: { type: "string" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
+  { name: "request_action", description: "Queue a change for the vendor's confirmation. kinds: send_message (params.inquiryId, params.text = the full message), add_task (params.inquiryId, params.title, params.dueDate YYYY-MM-DD optional, params.assignedTo 'vendor'|'couple', params.note), complete_task (params.inquiryId, params.taskId), tag (params.inquiryId, params.tag, params.remove true|false), set_stage (params.inquiryId, params.stage: new, talking or a custom stage key), review_request (params.inquiryId, params.text = the ask), block_date / unblock_date (params.date YYYY-MM-DD; no inquiryId). summary = one plain sentence of what will happen.",
+    input_schema: { type: "object", properties: { kind: { type: "string", enum: ["send_message", "add_task", "complete_task", "tag", "set_stage", "review_request", "block_date", "unblock_date"] }, params: { type: "object", properties: { inquiryId: { type: "string" }, text: { type: "string" }, title: { type: "string" }, dueDate: { type: "string" }, assignedTo: { type: "string" }, note: { type: "string" }, taskId: { type: "string" }, tag: { type: "string" }, remove: { type: "boolean" }, stage: { type: "string" }, date: { type: "string" } }, required: [], additionalProperties: false }, summary: { type: "string" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
 ];
 
 async function ownThread(token, vendorId, inquiryId) {
@@ -376,11 +451,33 @@ async function runTool(name, input, env, who, vend, snap, actions) {
       const draft = { id: uid(), caption: clip(input.caption, 2100), photo, title, platforms: (input.platforms || []).filter((p) => ["instagram", "facebook"].includes(p)), note: clip(input.note, 160), at: new Date().toISOString(), canPost: !!(snap.social.studio && snap.social.connected.length) };
       actions.push({ type: "post", draft }); return "Draft shown as a card" + (draft.canPost ? " with Post and Schedule buttons." : snap.social.studio ? " (no social accounts connected yet; Connect is in the Social panel)." : " (copy and share; auto-posting comes with June Studio).");
     }
+    case "check_date": {
+      const d = str(input.date).slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return "Give the date as YYYY-MM-DD.";
+      const weddings = rows.filter((r) => r.status === "booked" && r.weddingDate === d).map((r) => r.couple + (r.venue ? " at " + r.venue : ""));
+      const holds = rows.filter((r) => r.status !== "booked" && r.status !== "lost" && r.weddingDate === d).map((r) => r.couple + " (" + r.stage + ")");
+      const consults = snap.consults.filter((c) => dayKey(tz, new Date(c.startAt)) === d).map((c) => `${fmtWhen(c.startAt, tz)} ${c.type} with ${c.who}`);
+      const blocked = snap.vendor.unavailableDates.includes(d);
+      return JSON.stringify({ date: d, weekday: new Date(d + "T12:00").toLocaleDateString("en-US", { weekday: "long" }), free: !weddings.length && !blocked, booked: weddings, inquiriesForThatDay: holds, consults, blocked });
+    }
+    case "set_reminder": {
+      const list = (await kv.get(env, "reminders_" + vendorId)) || [];
+      const at = localToIso(str(input.when), tz); if (!at) return "I couldn't read that time; give it as YYYY-MM-DDTHH:MM.";
+      const row = input.inquiryId ? rows.find((r) => r.inquiryId === input.inquiryId) : null;
+      const r = { id: uid(), text: clip(input.text, 240), at, inquiryId: row ? row.inquiryId : null, couple: row ? row.couple : null, repeat: ["daily", "weekly"].includes(input.repeat) ? input.repeat : "none", done: false, notified: false, createdAt: new Date().toISOString() };
+      list.push(r); await kv.put(env, "reminders_" + vendorId, list.slice(-200)); actions.push({ type: "reminders" });
+      return `Reminder set for ${fmtWhen(at, tz)} [${r.id}].`;
+    }
+    case "complete_reminder": {
+      let list = (await kv.get(env, "reminders_" + vendorId)) || []; const r = list.find((x) => x.id === input.id); if (!r) return "No reminder with that id.";
+      if (input.remove) list = list.filter((x) => x.id !== input.id); else { r.done = true; r.doneAt = new Date().toISOString(); }
+      await kv.put(env, "reminders_" + vendorId, list); actions.push({ type: "reminders" }); return input.remove ? "Deleted." : "Marked done.";
+    }
     case "request_action": {
-      const KINDS = ["send_message", "add_task", "complete_task", "tag", "set_stage"]; if (!KINDS.includes(input.kind) || !input.params?.inquiryId || !input.summary) return "Invalid action.";
-      const row = rows.find((r) => r.inquiryId === input.params.inquiryId); if (!row) return "No thread with that id on this account; check the ids in the context.";
-      if (row.blocked) return "That couple has blocked messages from this vendor; nothing can be sent.";
-      const item = { id: uid(), kind: input.kind, params: input.params, couple: row.couple, summary: clip(input.summary, 200), status: "awaiting confirmation", at: new Date().toISOString() };
+      const KINDS = ["send_message", "add_task", "complete_task", "tag", "set_stage", "review_request", "block_date", "unblock_date"]; if (!KINDS.includes(input.kind) || !input.summary) return "Invalid action.";
+      const p = input.params || {}; let couple = null;
+      if (["block_date", "unblock_date"].includes(input.kind)) { if (!/^\d{4}-\d{2}-\d{2}$/.test(str(p.date))) return "block_date needs params.date as YYYY-MM-DD."; }
+      else { if (!p.inquiryId) return "That action needs params.inquiryId."; const row = rows.find((r) => r.inquiryId === p.inquiryId); if (!row) return "No thread with that id on this account; check the ids in the context."; if (row.blocked) return "That couple has blocked messages from this vendor; nothing can be sent."; couple = row.couple; }
+      const item = { id: uid(), kind: input.kind, params: p, couple, summary: clip(input.summary, 200), status: "awaiting confirmation", at: new Date().toISOString() };
       actions.push({ type: "confirm", item }); return "Queued for the vendor's confirmation: " + item.summary;
     }
     default: return "Unknown tool";
@@ -390,7 +487,19 @@ async function runTool(name, input, env, who, vend, snap, actions) {
 /* ---------------- the hands: run a confirmed action as the vendor ---------------- */
 async function execute(env, who, vend, item) {
   const token = who.token, vendorId = vend.vendorId, p = item.params || {};
+  if (item.kind === "block_date" || item.kind === "unblock_date") {
+    const d = str(p.date).slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error("Bad date.");
+    const v = await loadVendor(token, vendorId); const cur = (Array.isArray(v.unavailableDates) ? v.unavailableDates : []).map(String);
+    const next = item.kind === "block_date" ? [...new Set([...cur, d])].sort() : cur.filter((x) => x !== d);
+    await fsPatch(token, `vendors/${vendorId}`, { unavailableDates: next }); return `${d} is now ${item.kind === "block_date" ? "blocked" : "open"}.`;
+  }
   const m = await ownThread(token, vendorId, p.inquiryId); const path = `inquiries/${m.id}`;
+  if (item.kind === "review_request") {
+    const text = clip(p.text, 1200); if (!text) throw new Error("Nothing to send.");
+    await fsCreate(token, path, "messages", { senderRole: "vendor", text, at: new Date() });
+    const asked = (await kv.get(env, "asked_" + vendorId)) || {}; asked[m.id] = new Date().toISOString(); await kv.put(env, "asked_" + vendorId, asked);
+    return `Review request sent to ${str(m.coupleName) || "the couple"}.`;
+  }
   switch (item.kind) {
     case "send_message": {
       const text = clip(p.text, 2900); if (!text) throw new Error("Nothing to send.");
@@ -467,21 +576,82 @@ async function chat(request, env, ctx, who, vend) {
 
 /* ---------------- today's brief ---------------- */
 const BRIEF_PROMPT = `Compose today's spoken brief for the vendor: about 170 to 240 words, flowing prose, no lists, no headers, no ids or URLs. Open with a greeting that carries the day and the weather in one breath. Then who is waiting on a reply and for how long, by name, oldest first. Then this week's weddings and consults with the day's forecast where it matters. Then money in one or two sentences: outstanding, anything overdue, anything due this week. Then the page in one sentence: views this week against last, and the rank if there is one. Add one local headline only if it could touch a wedding business (roads, weather, big events), and one industry note only if it is genuinely useful. Finish with one warm, specific line about what to do first. If a section has nothing, skip it rather than saying so, except a clear inbox, which deserves a cheerful mention.`;
-async function makeBrief(env, ctx, who, vend, force) {
-  const snap = await snapshot(env, who, vend);
-  if (!force && snap.brief?.text) return snap.brief;
+const WEEKLY_PROMPT = `Compose the MONDAY REVIEW: about 260 to 340 words, flowing prose, no lists, no headers, no ids. Last week against the week before from THIS WEEK: new leads, replies sent, bookings, cash in, page views, each with the direction in plain words. Then the pipeline as it stands: how many are waiting, who went quiet, what is booked in the next thirty days. Then money: outstanding, overdue, due this week. Then the page and reviews: rank, average, anything new. Then pricing in one sentence against the metro benchmark if there is one. Finish with exactly three things to do this week, stated as instructions in one short paragraph, the most valuable first.`;
+async function makeBrief(env, ctx, who, vend, force, slot = "daily", snapIn = null) {
+  const snap = snapIn || await snapshot(env, who, vend);
+  const weekly = slot === "weekly", key = (weekly ? "weekly_" : "brief_") + vend.vendorId;
+  if (!force && !weekly && snap.brief?.text) return snap.brief;
+  if (!force && weekly && snap.weekly?.text && snap.weekly.day === snap.today) return snap.weekly;
   if (!env.ANTHROPIC_API_KEY) return { error: "no brain" };
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  const r = await client.beta.messages.create({ model: env.BRIEF_MODEL || "claude-sonnet-5-5", max_tokens: 1500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
-    system: JUNE_SYSTEM(snap.vendor) + "\n" + BRIEF_PROMPT, messages: [{ role: "user", content: `Compose today's brief.\n\nLIVE CONTEXT:\n${buildContext({ ...snap, brief: null })}` }] });
+  const r = await client.beta.messages.create({ model: env.BRIEF_MODEL || "claude-sonnet-5-5", max_tokens: 1800, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+    system: JUNE_SYSTEM(snap.vendor) + "\n" + (weekly ? WEEKLY_PROMPT : BRIEF_PROMPT), messages: [{ role: "user", content: `Compose ${weekly ? "the Monday review" : "today's brief"}.\n\nLIVE CONTEXT:\n${buildContext({ ...snap, brief: null, weekly: null })}` }] });
   const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim();
-  const brief = { id: uid(), day: snap.today, at: new Date().toISOString(), text, audio: false, audioPending: !!env.ELEVENLABS_API_KEY };
-  await kv.put(env, "brief_" + vend.vendorId, brief, { expirationTtl: 3 * 86400 });
+  const brief = { id: uid(), slot, day: snap.today, at: new Date().toISOString(), text, audio: false, audioPending: !!env.ELEVENLABS_API_KEY };
+  await kv.put(env, key, brief, { expirationTtl: (weekly ? 9 : 3) * 86400 });
   if (env.ELEVENLABS_API_KEY && text) ctx.waitUntil((async () => {
-    try { const a = await elevenlabs(env, text); if (a.ok) { await env.JUNE.put("brief_audio_" + vend.vendorId, await a.arrayBuffer(), { expirationTtl: 2 * 86400 }); brief.audio = true; } } catch {}
-    brief.audioPending = false; await kv.put(env, "brief_" + vend.vendorId, brief, { expirationTtl: 3 * 86400 });
+    try { const a = await elevenlabs(env, text); if (a.ok) { await env.JUNE.put(key.replace(/^(brief|weekly)_/, "$1_audio_"), await a.arrayBuffer(), { expirationTtl: (weekly ? 8 : 2) * 86400 }); brief.audio = true; } } catch {}
+    brief.audioPending = false; await kv.put(env, key, brief, { expirationTtl: (weekly ? 9 : 3) * 86400 });
   })());
   return brief;
+}
+
+/* ---------------- triage: who to answer first, and a first reply ready for each ---------------- */
+async function triageWaiting(env, who, vend, snap) {
+  const todo = snap.waiting.filter((r) => !r.triage).slice(0, 10); if (!todo.length || !env.ANTHROPIC_API_KEY) return snap.waiting;
+  const v = snap.vendor; const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const detail = await Promise.all(todo.map((r) => within(threadDetail(who.token, vend.vendorId, r.inquiryId, snap._customKeys), 4000, null)));
+  const list = todo.map((r, i) => { const t = detail[i]; const msgs = (t?.messages || []).slice(-6).map((m) => `${m.from}: ${clip(m.text, 300)}`).join("\n   "); return `${i + 1}. [${r.inquiryId}] ${r.couple}; wedding ${r.weddingDate || "unknown"}${r.venue ? " at " + r.venue : ""}; guests ${r.guests ?? "?"}; budget ${r.budget || "?"}; source ${r.offPlatform ? "text/email lead" : "Lazo"}; waited ${r.waitedHours}h\n   ${msgs || "(no messages yet; intent: " + clip(r.lastMessagePreview, 200) + ")"}`; }).join("\n");
+  const r = await client.beta.messages.create({ model: env.CHAT_MODEL || "claude-sonnet-5-5", max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+    system: `You triage a wedding vendor's waiting inquiries for ${v.name} (${v.category}, ${v.metro}) and draft the first reply for each. Return JSON only: an array of {"n": number, "priority": 1|2|3, "why": string (max 90 chars, plain), "draft": string}. priority 1 = a real couple with a date who asked a direct question or is close to booking, or anyone waiting over a day; 2 = worth answering today; 3 = vague or far off. The draft is the vendor's reply in first person, warm and specific, 2 to 4 short sentences, answering what was asked, quoting prices only from PACKAGES, reusing SAVED REPLIES wording when it fits, ending with one clear next step, signed with the business name. Off-platform leads get a text-length draft.\nPACKAGES: ${v.packages.map((p) => `${p.name} ${p.price}${p.includes ? " (" + p.includes + ")" : ""}`).join("; ") || "none"}\nSAVED REPLIES: ${v.savedReplies.map((x) => `"${x.title}": ${x.text}`).join(" | ") || "none"}\nFAQ: ${v.faqs.map((f) => `Q ${f.q} A ${f.a}`).join(" | ") || "none"}`,
+    messages: [{ role: "user", content: list }] });
+  const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
+  let arr = []; try { arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1)); } catch { return snap.waiting; }
+  const cache = (await kv.get(env, "triage_" + vend.vendorId)) || {};
+  for (const x of arr) { const row = todo[x.n - 1]; if (!row) continue; cache[row.inquiryId] = { key: row.lastMessageAt || "", priority: [1, 2, 3].includes(x.priority) ? x.priority : 2, why: clip(x.why, 110), draft: clip(x.draft, 1500), at: new Date().toISOString() }; }
+  for (const k of Object.keys(cache)) if (!snap.waiting.some((r) => r.inquiryId === k)) delete cache[k];
+  await kv.put(env, "triage_" + vend.vendorId, cache, { expirationTtl: 14 * 86400 });
+  return snap.waiting.map((r) => ({ ...r, triage: cache[r.inquiryId] || null }));
+}
+
+/* ---------------- the cron: 7am briefs, Monday reviews, two-hour lead nudges, due reminders ---------------- */
+async function runCron(env, ctx) {
+  if (!env.JUNE_SECRET) return { skipped: "no JUNE_SECRET" };
+  const keys = (await env.JUNE.list({ prefix: "sub_" })).keys.map((k) => k.name); const out = { checked: 0, briefs: 0, nudges: 0, reminders: 0, errors: [] };
+  const subs = (await Promise.all(keys.map(async (k) => ({ k, s: await kv.get(env, k) })))).filter((x) => x.s?.enabled && x.s.refreshEnc).sort((a, b) => (a.s.lastRun || 0) - (b.s.lastRun || 0)).slice(0, 8);
+  for (const { k, s } of subs) {
+    const vendorId = k.slice(4); out.checked++;
+    try {
+      const who = await tokenFromRefresh(env, await decrypt(env, s.refreshEnc)); if (!who) { s.enabled = false; s.error = "sign-in expired; turn the alerts on again in June"; await kv.put(env, k, s); continue; }
+      const vend = { vendorId, role: s.role || "owner" }; const snap = await snapshot(env, who, vend); const tz = snap.tz; const now = new Date();
+      const hour = +now.toLocaleString("en-US", { timeZone: tz, hour: "numeric", hour12: false }) % 24; const link = (env.PUBLIC_URL || "https://june-hub.floral-credit-e4f0.workers.dev") + "/";
+      const to = s.email || who.email || snap.vendor.publicEmail;
+      // the brief at their hour (and the Monday review), once per day
+      if (hour === (s.hour ?? 7) && snap.brief?.day !== snap.today) {
+        const b = await makeBrief(env, ctx, who, vend, true, "daily", snap); out.briefs++;
+        let wk = null; if (snap.isMonday && snap.weekly?.day !== snap.today) wk = await makeBrief(env, ctx, who, vend, true, "weekly", snap);
+        await sendEmail(env, to, `June: ${snap.counts.waiting ? snap.counts.waiting + " waiting" : "inbox clear"}, ${snap.counts.next30} wedding${snap.counts.next30 === 1 ? "" : "s"} in 30 days`, emailWrap("GOOD MORNING FROM JUNE", `<p style="margin:0 0 10px">${b.text.replace(/\n+/g, "</p><p style=\"margin:0 0 10px\">")}</p>${wk ? `<p style="font-size:12px;letter-spacing:.12em;color:#8A6A2F;margin:18px 0 8px">THE MONDAY REVIEW</p><p style="margin:0 0 10px">${wk.text.replace(/\n+/g, "</p><p style=\"margin:0 0 10px\">")}</p>` : ""}`, link, "Open June and listen"), b.text + (wk ? "\n\nMonday review:\n" + wk.text : "") + "\n\n" + link);
+      }
+      // a lead that has waited two hours, once per message
+      if (s.nudges !== false) {
+        const seen = (await kv.get(env, "nudged_" + vendorId)) || {}; let changed = false;
+        for (const r of snap.waiting) { const key = r.inquiryId + "|" + (r.lastMessageAt || ""); if (seen[key] || r.waitedHours < 2 || r.waitedHours > 72) continue; seen[key] = Date.now(); changed = true; out.nudges++;
+          await sendEmail(env, to, `${r.couple} has waited ${r.waitedHours} hours`, emailWrap("A LEAD IS WAITING", `<p style="margin:0 0 10px"><b>${r.couple}</b>${r.weddingDate ? " (" + fmtDay(r.weddingDate, tz) + ")" : ""}: "${clip(r.lastMessagePreview, 200)}"</p><p style="margin:0">June has a reply drafted for you.</p>`, link, "Reply with June"), `${r.couple} has waited ${r.waitedHours} hours: ${clip(r.lastMessagePreview, 200)}\n${link}`); }
+        for (const key of Object.keys(seen)) if (Date.now() - seen[key] > 10 * 86400e3) { delete seen[key]; changed = true; }
+        if (changed) await kv.put(env, "nudged_" + vendorId, seen);
+      }
+      // reminders that came due since the last pass
+      if (s.reminders !== false) {
+        const list = (await kv.get(env, "reminders_" + vendorId)) || []; let changed = false;
+        for (const r of list) { if (r.done || r.notified || r.at > now.toISOString()) continue; r.notified = true; changed = true; out.reminders++;
+          await sendEmail(env, to, "Reminder: " + r.text, emailWrap("JUNE REMINDS YOU", `<p style="margin:0 0 10px"><b>${r.text}</b>${r.couple ? " · " + r.couple : ""}</p><p style="margin:0;color:#6B5F72">${fmtWhen(r.at, tz)}</p>`, link, "Open June"), `${r.text}${r.couple ? " (" + r.couple + ")" : ""} — ${fmtWhen(r.at, tz)}\n${link}`);
+          if (r.repeat === "daily" || r.repeat === "weekly") { const next = new Date(new Date(r.at).getTime() + (r.repeat === "daily" ? 1 : 7) * 86400e3).toISOString(); list.push({ ...r, id: uid(), at: next, notified: false, done: false }); r.done = true; } }
+        if (changed) await kv.put(env, "reminders_" + vendorId, list.slice(-200));
+      }
+      s.lastRun = Date.now(); delete s.error; await kv.put(env, k, s);
+    } catch (e) { out.errors.push(vendorId + ": " + e.message); }
+  }
+  return out;
 }
 
 /* ---------------- ElevenLabs: June's voice ---------------- */
@@ -525,6 +695,27 @@ export default {
         await recordAction(env, vend.vendorId, rec); return json(rec);
       }
       if (p === "/api/read" && request.method === "POST") { const { inquiryId } = await request.json(); const m = await ownThread(who.token, vend.vendorId, inquiryId); await fsPatch(who.token, `inquiries/${m.id}`, { vendorLastReadAt: new Date(), seenByVendorAt: new Date() }); return json({ ok: true }); }
+      if (p === "/api/triage" && request.method === "POST") { const snap = await snapshot(env, who, vend); return json({ waiting: await triageWaiting(env, who, vend, snap) }); }
+      if (p === "/api/weekly" && request.method === "POST") { const { force } = await request.json().catch(() => ({})); return json(await makeBrief(env, ctx, who, vend, !!force, "weekly")); }
+      if (p === "/api/weekly/audio") { const a = await env.JUNE.get("weekly_audio_" + vend.vendorId, "arrayBuffer"); if (!a) return json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=3600" } }); }
+      if (p === "/api/reminders" && request.method === "GET") return json((await kv.get(env, "reminders_" + vend.vendorId)) || []);
+      if (p === "/api/reminders" && request.method === "POST") {
+        const b = await request.json(); let list = (await kv.get(env, "reminders_" + vend.vendorId)) || [];
+        if (b.text && b.when) { const at = localToIso(b.when, b.tz || "America/Phoenix"); if (!at) return json({ error: "bad time" }, 400); list.push({ id: uid(), text: clip(b.text, 240), at, inquiryId: b.inquiryId || null, couple: b.couple || null, repeat: ["daily", "weekly"].includes(b.repeat) ? b.repeat : "none", done: false, notified: false, createdAt: new Date().toISOString() }); }
+        if (b.done) { const r = list.find((x) => x.id === b.done); if (r) { r.done = true; r.doneAt = new Date().toISOString(); } }
+        if (b.remove) list = list.filter((x) => x.id !== b.remove);
+        if (b.snooze) { const r = list.find((x) => x.id === b.snooze); if (r) { r.at = new Date(Date.now() + (+b.minutes || 60) * 60e3).toISOString(); r.notified = false; } }
+        await kv.put(env, "reminders_" + vend.vendorId, list.slice(-200)); return json(list.filter((x) => !x.done).sort((a, c) => a.at.localeCompare(c.at)));
+      }
+      if (p === "/api/subscribe" && request.method === "POST") {
+        const b = await request.json(); const key = "sub_" + vend.vendorId; const cur = (await kv.get(env, key)) || {};
+        if (b.enabled === false) { await kv.put(env, key, { ...cur, enabled: false, refreshEnc: null }); return json({ enabled: false }); }
+        if (!env.JUNE_SECRET) return json({ error: "Alerts aren't configured on the worker yet (JUNE_SECRET)." }, 501);
+        if (!b.refreshToken && !cur.refreshEnc) return json({ error: "no refresh token" }, 400);
+        const s = { ...cur, enabled: true, hour: Number.isInteger(+b.hour) ? Math.min(23, Math.max(0, +b.hour)) : (cur.hour ?? 7), nudges: b.nudges !== false, reminders: b.reminders !== false, email: clip(b.email || cur.email || who.email, 120), role: vend.role, at: new Date().toISOString(), refreshEnc: b.refreshToken ? await encrypt(env, String(b.refreshToken)) : cur.refreshEnc };
+        await kv.put(env, key, s); return json({ enabled: true, hour: s.hour, nudges: s.nudges, reminders: s.reminders, email: s.email, configured: !!env.RESEND_API_KEY });
+      }
+      if (p === "/api/cron" && request.method === "POST") { if (vend.role !== "owner") return json({ error: "owners only" }, 403); return json(await runCron(env, ctx)); }
       if (p === "/api/social" && request.method === "GET") { const card = vendorCard(await loadVendor(who.token, vend.vendorId)); return json(await socialStatus(env, card)); }
       if (p === "/api/social/connect" && request.method === "POST") {
         const card = vendorCard(await loadVendor(who.token, vend.vendorId));
@@ -553,4 +744,5 @@ export default {
       return json({ error: "not found" }, 404);
     } catch (e) { return json({ error: String(e.message || e) }, 500); }
   },
+  async scheduled(event, env, ctx) { ctx.waitUntil(runCron(env, ctx).then((r) => console.log("cron", JSON.stringify(r))).catch((e) => console.log("cron failed", e.message))); },
 };

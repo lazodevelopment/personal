@@ -19,7 +19,15 @@ fallthrough = true
 binding = "JUNE"
 id = "857b7d96321a495a897c3898fdf3b75a"
 
+# Every 15 minutes: 7am briefs (and the Monday review), two-hour lead nudges, due reminders, for vendors
+# who turned alerts on. Needs secrets JUNE_SECRET (encrypts their refresh tokens at rest) and
+# RESEND_API_KEY (same key the Lazo functions use; hello@meetlazo.com is verified there).
+[triggers]
+crons = ["*/15 * * * *"]
+
 [vars]
+PUBLIC_URL = "https://june-hub.floral-credit-e4f0.workers.dev"
+EMAIL_FROM = "June at Lazo <hello@meetlazo.com>"
 FIREBASE_API_KEY = "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU"   # the public web key of lazo-513ec (same as the site worker)
 JUNE_VOICE_ID = "pFZP5JQG7iQjIQuC4Bku"                        # ElevenLabs "Lily": warm, British
 CHAT_MODEL = "claude-sonnet-5-5"

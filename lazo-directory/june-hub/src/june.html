@@ -31,7 +31,7 @@ body::after{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none;
 h1,h2,h3,.serif{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;margin:0;font-optical-sizing:auto}
 a{color:var(--gold);text-decoration-thickness:1px;text-underline-offset:2px}button{font:inherit;cursor:pointer;color:inherit}
 :focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:8px}
-.hidden{display:none!important}
+.hidden,[hidden]{display:none!important}
 .wrap{max-width:1240px;margin:0 auto;padding:0 16px 64px}
 /* ---- header: a translucent material the page scrolls under; a soft edge, not a rule ---- */
 header{position:sticky;top:0;z-index:20;background:rgba(36,16,31,.55);backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%)}
@@ -196,7 +196,8 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
   </section>
 
   <section class="card" id="briefPanel">
-    <h2>Today's brief <span class="n" id="briefDay"></span><span class="act"><button class="btn sm gold" id="briefListen">▶ Listen</button><button class="btn sm" id="briefStop" hidden>■ Stop</button><button class="btn sm" id="briefRefresh" title="Write it again with the latest numbers">↻</button></span></h2>
+    <h2>Today's brief <span class="n" id="briefDay"></span><span class="act"><button class="btn sm gold" id="briefListen">▶ Listen</button><button class="btn sm" id="briefStop" hidden>■ Stop</button><button class="btn sm" id="briefRefresh" title="Write it again with the latest numbers">↻</button><button class="btn sm" id="weeklyBtn" title="Last week against the week before, and three things to do">Monday review</button></span></h2>
+    <div id="weeklyWrap" class="hidden" style="margin:10px 0 6px;padding:12px 14px;border-radius:14px;background:var(--well)"><div class="sub" style="display:flex;align-items:center;gap:8px"><b style="color:var(--gold)">The Monday review</b><span id="weeklyDay"></span><span class="act" style="margin-left:auto;display:flex;gap:6px"><button class="btn sm gold" id="weeklyListen">▶ Listen</button><button class="btn sm" id="weeklyClose">Close</button></span></div><div class="brief" id="weeklyText"></div></div>
     <div class="brief wait" id="briefText">June is reading your morning…</div>
   </section>
 
@@ -234,6 +235,16 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     <div id="social"></div>
   </section>
 
+  <section class="card" id="reviewsPanel">
+    <h2>Reviews <span class="n" id="reviewsN"></span></h2>
+    <div id="reviews"></div>
+  </section>
+
+  <section class="card" id="pricingPanel">
+    <h2>Pricing <span class="n" id="pricingN"></span><span class="act"><button class="btn sm" onclick="ask('Am I priced right for my metro?')">Ask June</button></span></h2>
+    <div id="pricing"></div>
+  </section>
+
   <section class="card news" id="newsPanel">
     <h2>Around town <span class="n" id="newsPlace"></span></h2>
     <div id="news"></div>
@@ -248,6 +259,19 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     <h2>June remembers</h2>
     <div class="sub">Say "remember that…" and it lands here.</div>
     <div id="memory"></div>
+  </section>
+
+  <section class="card" id="remindersPanel">
+    <h2>Reminders <span class="n" id="remindersN"></span></h2>
+    <div class="sub">Say "remind me Friday to call the florist", or add one here. Due ones are spoken when you open June and emailed if alerts are on.</div>
+    <form class="ask" id="remForm" style="margin-top:10px"><input id="remText" placeholder="What should I remind you of?" autocomplete="off"><input type="datetime-local" id="remWhen" style="flex:0 0 auto;border:1px solid var(--edge);border-radius:14px;padding:10px;background:var(--field);color:var(--ivory);color-scheme:dark;font:13px Inter"><button class="btn gold" type="submit">Add</button></form>
+    <div id="reminders"></div>
+  </section>
+
+  <section class="card" id="alertsPanel">
+    <h2>Alerts</h2>
+    <div class="sub">June can email you the brief every morning, nudge you when a lead has waited two hours, and send reminders when they come due.</div>
+    <div id="alerts"></div>
   </section>
 
 </div>
@@ -310,7 +334,12 @@ async function loadState(first) {
     const r = await api("/api/state"); const s = await r.json();
     if (!r.ok) { if (r.status === 403) { addMsg("sys", s.message || s.error); $("#briefText").textContent = s.message || "No vendor listing on this login."; $("#briefText").className = "brief wait"; } else addMsg("sys", "Couldn't load your data: " + (s.error || r.status)); return; }
     state.s = s; render(s);
-    if (first) { if (s.brief?.text) showBrief(s.brief); else makeBrief(false); }
+    if (first) {
+      if (s.brief?.text) showBrief(s.brief); else makeBrief(false);
+      if (s.due?.length) { const line = s.due.length === 1 ? `You asked me to remind you: ${s.due[0].text}.` : `You have ${s.due.length} reminders due. ` + s.due.slice(0, 3).map((r) => r.text).join("; ") + "."; addMsg("ai", line); speak(line); }
+      if (s.isMonday && !s.weekly?.text) $("#weeklyBtn").click();
+    }
+    runTriage();
   } catch (e) { addMsg("sys", "Couldn't load your data: " + e.message); }
 }
 setInterval(() => { if (state.s && !document.hidden) loadState(false); }, 3 * 60e3);
@@ -322,7 +351,7 @@ function render(s) {
   $("#vendorLine").textContent = `${v.name} · ${v.metro}`; $("#acct").textContent = s.user.email; $("#dashLink").href = state.cfg.app || $("#dashLink").href; $("#pageLink").href = v.publicUrl;
   // waiting
   $("#waitingN").textContent = s.counts.waiting || "";
-  $("#waiting").innerHTML = s.waiting.length ? s.waiting.map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.couple)} ${r.unread ? '<span class="tag hot">new</span>' : ""}${r.offPlatform ? '<span class="tag">lead</span>' : ""}${r.weddingDate ? `<span class="tag">${esc(fmtDay(r.weddingDate))}</span>` : ""}</div><div class="d">${esc(r.lastMessagePreview || (r.venue ? "Venue: " + r.venue : "No message yet"))}</div></div><div class="side">waited ${ago(r.waitedHours)}<br><button class="btn sm" data-open="${esc(r.inquiryId)}">Open</button> <button class="btn sm gold" data-reply="${esc(r.inquiryId)}" data-name="${esc(r.couple)}">Reply</button></div></div>`).join("") : '<div class="empty">Nobody is waiting. Lovely.</div>';
+  renderWaiting(s.waiting);
   // upcoming
   const ups = [...s.weddings.map((w) => ({ when: w.weddingDate, kind: "Wedding", who: w.couple, where: w.venue, wx: w.wx, id: w.inquiryId })), ...s.consults.map((c) => ({ when: c.startAt, kind: c.type || "Consult", who: c.who, where: c.mode, wx: c.wx, id: c.inquiryId, time: true }))].sort((a, b) => a.when.localeCompare(b.when)).slice(0, 10);
   $("#weekN").textContent = s.counts.next30 ? s.counts.next30 + " in 30 days" : "";
@@ -348,6 +377,7 @@ function render(s) {
   $("#news").innerHTML = s.news.length ? s.news.slice(0, 6).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">No local headlines right now.</div>';
   $("#industry").innerHTML = s.industry.length ? s.industry.slice(0, 5).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">Quiet week in the trade press.</div>';
   renderSocial(s.social || {});
+  renderReviews(s); renderPricing(s); renderReminders(s.reminders || []); renderAlerts(s.alerts || {}); renderWeekly(s.weekly);
   renderMemory(s.memory);
   document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openThread(b.dataset.open)));
   document.querySelectorAll("[data-reply]").forEach((b) => (b.onclick = () => { $("#q").value = `Draft a reply to ${b.dataset.name}`; ask($("#q").value); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
@@ -380,6 +410,77 @@ function postCard(d) {
   };
 }
 function renderMemory(mem) { state.memory = mem || []; $("#memory").innerHTML = state.memory.length ? state.memory.map((m) => `<div class="mem"><span>${esc(m.text)}</span><button title="forget" data-forget="${esc(m.id)}">✕</button></div>`).join("") : '<div class="empty">Nothing remembered yet.</div>'; document.querySelectorAll("[data-forget]").forEach((b) => (b.onclick = async () => { const r = await api("/api/memory", { method: "POST", body: JSON.stringify({ id: b.dataset.forget }) }); renderMemory(await r.json()); })); }
+
+/* ---------- waiting with triage, reviews, pricing, reminders, alerts, the Monday review ---------- */
+function renderWaiting(list) {
+  const P = { 1: ["hot", "answer first"], 2: ["", "today"], 3: ["", "when you can"] };
+  const sorted = [...list].sort((a, b) => ((a.triage?.priority || 2) - (b.triage?.priority || 2)) || (b.waitedHours - a.waitedHours));
+  $("#waiting").innerHTML = sorted.length ? sorted.map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.couple)} ${r.triage ? `<span class="tag ${P[r.triage.priority][0]}">${P[r.triage.priority][1]}</span>` : r.unread ? '<span class="tag hot">new</span>' : ""}${r.offPlatform ? '<span class="tag">text/email lead</span>' : ""}${r.weddingDate ? `<span class="tag">${esc(fmtDay(r.weddingDate))}</span>` : ""}</div><div class="d">${esc(r.lastMessagePreview || (r.venue ? "Venue: " + r.venue : "No message yet"))}</div>${r.triage?.why ? `<div class="d" style="color:var(--gold);-webkit-line-clamp:1">${esc(r.triage.why)}</div>` : ""}</div><div class="side">waited ${ago(r.waitedHours)}<br><button class="btn sm" data-open="${esc(r.inquiryId)}">Open</button> ${r.triage?.draft ? `<button class="btn sm gold" data-draft="${esc(r.inquiryId)}">Use June's draft</button>` : `<button class="btn sm gold" data-reply="${esc(r.inquiryId)}" data-name="${esc(r.couple)}">Reply</button>`}</div></div>`).join("") : '<div class="empty">Nobody is waiting. Lovely.</div>';
+  document.querySelectorAll("[data-draft]").forEach((b) => (b.onclick = () => { const r = sorted.find((x) => x.inquiryId === b.dataset.draft); if (!r) return; proposeAction({ id: "d" + Math.random().toString(36).slice(2, 8), kind: "send_message", params: { inquiryId: r.inquiryId, text: r.triage.draft }, couple: r.couple, summary: `Send ${r.couple} June's draft reply.`, status: "awaiting confirmation", at: new Date().toISOString() }); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+  document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openThread(b.dataset.open)));
+  document.querySelectorAll("[data-reply]").forEach((b) => (b.onclick = () => { ask(`Draft a reply to ${b.dataset.name}`); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+}
+async function runTriage() {
+  if (!state.s?.waiting?.length || state.s.waiting.every((r) => r.triage)) return;
+  try { const r = await api("/api/triage", { method: "POST" }); const j = await r.json(); if (r.ok && j.waiting) { state.s.waiting = j.waiting; renderWaiting(j.waiting); } } catch {}
+}
+function renderReviews(s) {
+  const v = s.vendor; $("#reviewsN").textContent = v.reviewCount ? `${v.reviewAverage.toFixed(1)} · ${v.reviewCount}` : "";
+  const stars = (n) => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+  const asks = (s.reviewAsks || []).map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.couple)} <span class="tag">no review yet</span></div><div class="d">Married ${esc(fmtDay(r.weddingDate))}</div></div><div class="side"><button class="btn sm gold" onclick="ask('Draft a review request for ${esc(r.couple).replace(/'/g, "\\'")}')">Ask for a review</button></div></div>`).join("");
+  const list = (s.reviews || []).slice(0, 5).map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.who)} <span class="tag ok">${stars(r.rating)}</span></div><div class="d">${esc(r.text || "")}</div></div><div class="side">${r.at ? esc(fmtDay(String(r.at).slice(0, 10))) : ""}</div></div>`).join("");
+  $("#reviews").innerHTML = (asks || "") + (list || '<div class="empty">No reviews yet. June will ask after each wedding.</div>');
+}
+function renderPricing(s) {
+  const v = s.vendor, p = s.pricing; $("#pricingN").textContent = p ? `${p.vendors} ${v.categoryId || "vendors"} in ${v.metro.split(",")[0]}` : "";
+  const mine = v.startingPrice ? money(v.startingPrice) : "–";
+  $("#pricing").innerHTML = `<div class="stat"><div class="k"><b>${mine}</b><span>your starting price</span></div><div class="k"><b>${p?.priceFrom ? money(p.priceFrom.p50) : "–"}</b><span>metro median${p?.priceFrom ? ` · p25 ${money(p.priceFrom.p25)} · p75 ${money(p.priceFrom.p75)}` : ""}</span></div><div class="k"><b>${p?.medianReplyMin != null ? Math.round(p.medianReplyMin) + "m" : "–"}</b><span>metro median first reply</span></div></div>` + (v.packages.length ? `<div class="sub" style="margin-top:10px">${v.packages.map((x) => `<span class="tag">${esc(x.name)} ${esc(x.price)}</span>`).join("")}</div>` : '<div class="empty" style="margin-top:8px">Add packages in the app and June will quote from them.</div>');
+}
+function renderReminders(list) {
+  state.reminders = list; const now = new Date().toISOString(); $("#remindersN").textContent = list.length ? list.filter((r) => r.at <= now).length + " due" : "";
+  $("#reminders").innerHTML = list.length ? list.slice(0, 12).map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.text)} ${r.at <= now ? '<span class="tag hot">due</span>' : ""}${r.repeat && r.repeat !== "none" ? `<span class="tag">${esc(r.repeat)}</span>` : ""}</div><div class="d">${esc(fmtWhen(r.at))}${r.couple ? " · " + esc(r.couple) : ""}</div></div><div class="side"><button class="btn sm" data-snooze="${esc(r.id)}">+1h</button> <button class="btn sm gold" data-done="${esc(r.id)}">Done</button> <button class="btn sm" data-rm="${esc(r.id)}" title="delete">✕</button></div></div>`).join("") : '<div class="empty" style="margin-top:8px">No reminders set.</div>';
+  const post = async (body) => { const r = await api("/api/reminders", { method: "POST", body: JSON.stringify({ ...body, tz: Intl.DateTimeFormat().resolvedOptions().timeZone }) }); renderReminders(await r.json()); };
+  document.querySelectorAll("[data-done]").forEach((b) => (b.onclick = () => post({ done: b.dataset.done })));
+  document.querySelectorAll("[data-rm]").forEach((b) => (b.onclick = () => post({ remove: b.dataset.rm })));
+  document.querySelectorAll("[data-snooze]").forEach((b) => (b.onclick = () => post({ snooze: b.dataset.snooze, minutes: 60 })));
+  $("#remForm").onsubmit = (e) => { e.preventDefault(); const text = $("#remText").value.trim(), when = $("#remWhen").value; if (!text || !when) return addMsg("sys", "Give the reminder a text and a time."); $("#remText").value = ""; post({ text, when }); };
+}
+async function loadReminders() { try { const r = await api("/api/reminders"); const list = (await r.json()).filter((x) => !x.done).sort((a, b) => a.at.localeCompare(b.at)); renderReminders(list); } catch {} }
+function renderAlerts(a) {
+  state.alerts = a;
+  $("#alerts").innerHTML = `<div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+    <label class="pill" style="justify-content:space-between"><span>Email me the brief every morning</span><input type="checkbox" id="alEnabled" ${a.enabled ? "checked" : ""}></label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="sub">at</span><select id="alHour" style="border:1px solid var(--edge);border-radius:10px;padding:6px 8px;background:var(--field);color:var(--ivory);font:13px Inter">${[5, 6, 7, 8, 9].map((h) => `<option value="${h}" ${(a.hour ?? 7) === h ? "selected" : ""}>${h}:00</option>`).join("")}</select><span class="sub">to</span><input id="alEmail" value="${esc(a.email || "")}" placeholder="email" style="flex:1;min-width:160px;border:1px solid var(--edge);border-radius:10px;padding:6px 10px;background:var(--field);color:var(--ivory);font:13px Inter"></div>
+    <label class="pill" style="justify-content:space-between"><span>Nudge me when a lead has waited two hours</span><input type="checkbox" id="alNudges" ${a.nudges !== false ? "checked" : ""}></label>
+    <label class="pill" style="justify-content:space-between"><span>Email reminders when they come due</span><input type="checkbox" id="alRem" ${a.reminders !== false ? "checked" : ""}></label>
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn sm gold" id="alSave">Save</button><span class="sub" id="alNote">${a.configured ? "" : "Email delivery is switching on shortly."}</span></div></div>`;
+  $("#alSave").onclick = async () => {
+    const enabled = $("#alEnabled").checked; $("#alSave").disabled = true;
+    try { const r = await api("/api/subscribe", { method: "POST", body: JSON.stringify({ enabled, hour: +$("#alHour").value, email: $("#alEmail").value.trim(), nudges: $("#alNudges").checked, reminders: $("#alRem").checked, refreshToken: enabled ? auth.refreshToken : undefined }) }); const j = await r.json(); if (!r.ok) throw new Error(j.error);
+      $("#alNote").textContent = enabled ? `On. First brief tomorrow at ${j.hour}:00.` : "Off."; speak(enabled ? "Alerts are on. I'll write to you each morning." : "Alerts are off."); }
+    catch (e) { $("#alNote").textContent = e.message; }
+    $("#alSave").disabled = false;
+  };
+}
+let weeklyAudioUrl = null;
+function renderWeekly(w) { if (!w?.text) return; $("#weeklyText").textContent = w.text; $("#weeklyDay").textContent = new Date(w.at).toLocaleDateString("en-US", { month: "short", day: "numeric" }); weeklyAudioUrl = null; if (state.s?.isMonday) $("#weeklyWrap").classList.remove("hidden"); }
+$("#weeklyBtn").onclick = async () => {
+  $("#weeklyWrap").classList.remove("hidden"); if (state.s?.weekly?.text && state.s.weekly.day === state.s.today) { renderWeekly(state.s.weekly); return; }
+  $("#weeklyText").textContent = "June is going over last week…";
+  try { const r = await api("/api/weekly", { method: "POST", body: JSON.stringify({}) }); const w = await r.json(); if (!r.ok || w.error) throw new Error(w.error || r.status); state.s.weekly = w; $("#weeklyWrap").classList.remove("hidden"); $("#weeklyText").textContent = w.text; $("#weeklyDay").textContent = new Date(w.at).toLocaleDateString("en-US", { month: "short", day: "numeric" }); weeklyAudioUrl = null; }
+  catch (e) { $("#weeklyText").textContent = "I couldn't write the review: " + e.message; }
+};
+$("#weeklyClose").onclick = () => { stopSpeaking(); $("#weeklyWrap").classList.add("hidden"); };
+$("#weeklyListen").onclick = async () => {
+  const w = state.s?.weekly; if (!w?.text) return; stopSpeaking(); unlockPlayer();
+  if (state.cfg.tts) { for (let i = 0; i < 6 && !weeklyAudioUrl; i++) { const r = await api("/api/weekly/audio"); if (r.ok) { weeklyAudioUrl = URL.createObjectURL(await r.blob()); break; } await new Promise((res) => setTimeout(res, 2500)); } if (weeklyAudioUrl) { player.src = weeklyAudioUrl; setViz("speaking", playerViz()); player.onended = player.onerror = () => setViz("idle"); player.play().catch(() => setViz("idle")); return; } }
+  speakGen++; speakQueue = []; w.text.split(/(?<=[.!?])\s+/).forEach((x) => enqueueSpeech(x));
+};
+// a custom token from the app's Talk to June button: exchange it, then drop it from the URL
+async function fbSignInWithCustomToken(t) {
+  const r = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=" + state.cfg.apiKey, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token: t, returnSecureToken: true }) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error?.message || "hand-off failed"); setAuth(j.idToken, j.expiresIn, j.refreshToken);
+}
 
 /* ---------- thread drill ---------- */
 async function openThread(id) {
@@ -490,6 +591,7 @@ function handleAction(a) {
   if (a.type === "memory") renderMemory(a.value);
   if (a.type === "confirm") proposeAction(a.item);
   if (a.type === "post") postCard(a.draft);
+  if (a.type === "reminders") loadReminders();
 }
 function proposeAction(item) {
   const el = document.createElement("div"); el.className = "confirm";
@@ -642,6 +744,8 @@ document.addEventListener("visibilitychange", () => { if (!document.hidden && !v
 /* ---------- boot ---------- */
 (async () => {
   try { state.cfg = await (await fetch("/api/config")).json(); } catch { state.cfg = {}; }
+  const handoff = new URLSearchParams(location.search).get("t");
+  if (handoff) { history.replaceState(null, "", location.pathname); try { await fbSignInWithCustomToken(handoff); return enter(); } catch (e) { $("#loginErr").textContent = "The hand-off from the app expired; sign in below."; } }
   if (auth.refreshToken && (await refreshAuth().catch(() => false))) enter();
 })();
 </script>
