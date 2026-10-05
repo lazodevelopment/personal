@@ -14,7 +14,7 @@ export const SITES = [
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
 ];
 const BIZ_NAME = Object.fromEntries(SITES.map((s) => [s.id, s.name]));
-const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes", "reminders", "alarm", "social_log"];
+const STATE_KEYS = ["brief", "webcams", "notes", "place", "metrics", "alerts", "memory", "queue", "calendar", "morning", "traffic", "tickers", "wxdays", "sports", "briefs", "stale", "inbox", "decisions", "home", "flights", "watch", "followups", "trips", "apps", "playbook", "competitors", "competitor_changes", "reminders", "alarm", "social_log", "ship_watch"];
 const UA = "jarvis-hub (jesse@briskhealth.com)";
 const BUILD = (() => { let h = 0; for (let i = 0; i < html.length; i += 7) h = (h * 31 + html.charCodeAt(i)) >>> 0; return h.toString(36) + "-" + html.length.toString(36); })();   // changes with every deploy of the page
 const MODEL = "claude-opus-5-5";
@@ -627,7 +627,7 @@ Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding plan
 Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything about his businesses is in the LIVE CONTEXT; answer from it directly and do not invent figures. For anything outside it (news, facts, prices, places, people, how-to questions, "look up", "search") use the web_search tool, then answer in two to four spoken sentences and name the source in words (no URLs). If something isn't in the context and can't be searched, say so.
-Ships: find_ship for "where is the <ship name>" (cruise ships and ferries, from AIS).
+Ships: find_ship for "where is the <ship name>" (cruise ships and ferries, from AIS); watch_ship for "tell me when the <ship> shows up". Coverage is from shore receivers, so mid-ocean and some islands (Bermuda) are blind spots; say so when a ship is not found.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account = the exact Gmail address shown in the INBOX line brackets for that thread, e.g. info@ataviaweddings.com, never a business name; params.threadId; params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
 Reminders and alarm: set_reminder for "remind me…" (compute the local date-time from TIME), cancel_reminder, set_alarm for "wake me at…". Confirm the time back in words.
@@ -639,6 +639,7 @@ App stores: watch_app adds an app listing to watch (iOS numeric id or bundle id,
 const BRAIN_TOOLS = [
   { name: "track_flight", description: "Live position of a flight by flight number or callsign (e.g. 'AA 2612', 'SWA653', 'N123AB'). Returns altitude (ft), ground speed (kt), heading and coordinates. Also shows it on the World globe.", input_schema: { type: "object", properties: { flight: { type: "string" } }, required: ["flight"], additionalProperties: false }, strict: true },
   { name: "find_ship", description: "Find a cruise ship or ferry by name in the live AIS feed: position, speed, heading, destination. Also centres the World globe on it.", input_schema: { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false }, strict: true },
+  { name: "watch_ship", description: "Tell Jesse when a named vessel appears in the AIS feed (push + spoken). Use for 'tell me when the <ship> shows up'. Also lists or clears watches.", input_schema: { type: "object", properties: { name: { type: "string" }, action: { type: "string", enum: ["add", "remove", "list"] } }, required: ["name", "action"], additionalProperties: false }, strict: true },
   { name: "flights_overhead", description: "Aircraft currently within N nautical miles of Jesse's home location (default 25).", input_schema: { type: "object", properties: { nm: { type: "number" } }, required: ["nm"], additionalProperties: false }, strict: true },
   { name: "open_link", description: "Open a URL in a new tab on Jesse's screen.", input_schema: { type: "object", properties: { url: { type: "string" }, label: { type: "string" } }, required: ["url", "label"], additionalProperties: false }, strict: true },
   { name: "append_note", description: "Add a line to the notes board.", input_schema: { type: "object", properties: { text: { type: "string" } }, required: ["text"], additionalProperties: false }, strict: true },
@@ -659,6 +660,7 @@ async function runTool(name, input, env, actions) {
   switch (name) {
     case "track_flight": { const r = await trackFlight(env, input.flight); r.route = await flightRoute(env, r.callsign); actions.push({ type: "world", flight: r.callsign }); return JSON.stringify(r).slice(0, 3000); }
     case "find_ship": { const g = JSON.parse((await env.HUB.get("ships_global")) || '{"ships":[]}'); const q = String(input.name || "").toUpperCase().replace(/\s+/g, " ").trim(); const hits = g.ships.filter((r) => String(r[1]).toUpperCase().includes(q)).slice(0, 5); if (!hits.length) return "No vessel called " + input.name + " in the feed right now (it covers passenger ships: cruise ships and ferries; coverage depends on AIS receivers near the ship)."; actions.push({ type: "ship", mmsi: hits[0][0], lat: hits[0][2], lon: hits[0][3] }); return JSON.stringify(hits.map((r) => ({ name: r[1], mmsi: r[0], lat: r[2], lon: r[3], heading: r[4], speed_kt: r[5], destination: r[7], length_m: r[8], reported_s_ago: r[9] }))); }
+    case "watch_ship": { let list = (await kv.get(env, "ship_watch")) || []; const q = String(input.name || "").trim(); if (input.action === "list") return list.length ? list.map((w) => `${w.name}${w.lastSeen ? " (last seen " + w.lastSeen.slice(0, 16) + ")" : " (not seen yet)"}`).join("; ") : "No ships on watch."; if (input.action === "remove") { list = list.filter((w) => w.name.toUpperCase() !== q.toUpperCase()); await kv.put(env, "ship_watch", list); return "Removed."; } if (!list.some((w) => w.name.toUpperCase() === q.toUpperCase())) list.push({ name: q, added: new Date().toISOString() }); await kv.put(env, "ship_watch", list); await shipWatch(env); return `Watching for ${q}. I'll push and say so when any receiver hears her.`; }
     case "flights_overhead": { const place = await kv.get(env, "place"); const ac = await flightsNear(env, +(place?.lat || 33.15), +(place?.lon || -96.82), input.nm || 25); actions.push({ type: "world" }); return JSON.stringify({ near: place?.name, count: ac.length, aircraft: ac.slice(0, 25) }); }
     case "open_link": actions.push({ type: "open", url: input.url, label: input.label }); return "Opened " + input.label + ".";
     case "append_note": { const cur = (await kv.get(env, "notes")) || ""; const next = (cur ? cur.replace(/\s+$/, "") + "\n" : "") + "- " + input.text; await kv.put(env, "notes", next); actions.push({ type: "notes", value: next }); return "Added."; }
@@ -1213,6 +1215,21 @@ async function observe(env, request, { force = false } = {}) {
   return o;
 }
 
+/* ---------------- named-ship watch: push when a watched vessel appears in the AIS feed ---------------- */
+async function shipWatch(env) {
+  const watch = (await kv.get(env, "ship_watch")) || []; if (!watch.length) return;
+  const g = JSON.parse((await env.HUB.get("ships_global")) || '{"ships":[]}'); const out = []; let changed = false;
+  for (const w of watch) {
+    const q = w.name.toUpperCase(); const hit = g.ships.find((r) => String(r[1]).toUpperCase().includes(q)); if (!hit) continue;
+    if (w.lastSeen && Date.now() - new Date(w.lastSeen) < 12 * 3600e3) { w.lastSeen = new Date().toISOString(); changed = true; continue; }
+    w.lastSeen = new Date().toISOString(); w.last = { lat: hit[2], lon: hit[3], dest: hit[7] }; changed = true;
+    const text = `${hit[1]} is in the feed: ${hit[2].toFixed(2)}, ${hit[3].toFixed(2)}, ${hit[5] != null ? Math.round(hit[5] * 1.15) + " mph" : "speed unknown"}${hit[7] ? ", bound for " + hit[7] : ""}.`;
+    out.push({ alert: { kind: "obs", text }, push: { title: "Ship spotted: " + hit[1], body: text, opts: { tags: "ship", url: HUB_ORIGIN + "/" } } });
+  }
+  if (changed) await kv.put(env, "ship_watch", watch);
+  await flushAlerts(env, out);
+}
+
 /* ---------------- health ledger: JARVIS watching JARVIS ---------------- */
 const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
 async function healthNote(env, kind, data) {
@@ -1331,7 +1348,7 @@ export default {
     await applyHome(env);
     const cron = event.cron || ""; ctx.waitUntil(healthNote(env, "cron", cron));
     if (cron === "* * * * *") { ctx.waitUntil(tickMinute(env).catch((e) => console.log("minute", e.message))); return; }
-    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(() => tickMinute(env)).then(() => socialFromLog(env)).then(() => kv.get(env, "watch")).then((w) => w && watchWatch(env, { social: w.social, at: w.at })).catch((e) => console.log("5-min cron", e.message)));
+    if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(() => tickMinute(env)).then(() => shipWatch(env)).then(() => socialFromLog(env)).then(() => kv.get(env, "watch")).then((w) => w && watchWatch(env, { social: w.social, at: w.at })).catch((e) => console.log("5-min cron", e.message)));
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
@@ -1425,6 +1442,7 @@ export default {
     if (p === "/api/faith") { const m = mysteriesFor(env); const want = (url.searchParams.get("date") || "").match(/^\d{4}-\d{2}-\d{2}$/) ? url.searchParams.get("date") : null; let readings = null, err = null, saint = null, saintErr = null; try { readings = await dailyReadings(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { err = e.message; } try { saint = await saintOfDay(env, { fresh: !!url.searchParams.get("fresh"), date: want }); } catch (e) { saintErr = e.message; } return json({ mysteries: m, rosary: rosaryScript(url.searchParams.get("set") || m.key), readings, error: err, saint, saintError: saintErr }); }
     if (p === "/api/observe" && request.method === "POST") return json((await observe(env, request, { force: true })) || { nothing: true });
     if (p === "/api/observations") return json((await kv.get(env, "observations")) || []);
+    if (p === "/api/ships/watch" && request.method === "POST") { const b = await request.json(); let list = (await kv.get(env, "ship_watch")) || []; if (b.remove) list = list.filter((w) => w.name.toUpperCase() !== String(b.remove).toUpperCase()); if (b.name && !list.some((w) => w.name.toUpperCase() === String(b.name).toUpperCase())) list.push({ name: String(b.name).trim(), added: new Date().toISOString() }); await kv.put(env, "ship_watch", list); await shipWatch(env); return json(list); }
     if (p === "/api/health") return json(await healthReport(env, +url.searchParams.get("days") || 7));
     if (p === "/api/social/posted" && request.method === "POST") { const b = await request.json(); const log = (await kv.get(env, "social_log")) || {}; const day = /^\d{4}-\d{2}-\d{2}$/.test(b.at || "") ? b.at : new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); (log[day] ||= {})[String(b.brand || "").toLowerCase()] = { day: b.day, media_id: b.media_id, linkedin_urn: b.linkedin_urn || null, at: new Date().toISOString() }; for (const k of Object.keys(log)) if (Date.now() - new Date(k) > 40 * 86400e3) delete log[k]; await kv.put(env, "social_log", log); await socialFromLog(env); return json({ ok: true, day, brand: b.brand }); }
     if (p === "/api/reminders" && request.method === "GET") return json(((await kv.get(env, "reminders")) || []).filter((r) => !r.done));
