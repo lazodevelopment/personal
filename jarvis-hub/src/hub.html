@@ -86,6 +86,7 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .clock{text-align:right;font-family:var(--mono);line-height:1.15;max-width:min(560px,48vw);min-width:0;font-variant-numeric:tabular-nums}
 .clock .t,.clock .d,.clock .u{white-space:nowrap}
 .clock .t{font-size:32px;color:#fff;text-shadow:0 0 14px rgba(var(--glow),.45)}
+.clock .tmp{font-size:24px;color:var(--cyan2);margin-right:16px;letter-spacing:.02em}.clock .tmp:empty{display:none}.clock .tmp i{font-style:normal;font-size:20px;margin-right:6px}
 .clock .d{font-size:12px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase}
 .clock .home{font-family:var(--mono);font-size:inherit;letter-spacing:.1em;color:var(--cyan2);border:1px solid var(--line2);padding:0 6px}
 .clock .u{font-size:12px;color:var(--dim);letter-spacing:.1em;margin-top:4px}.clock .u a{color:var(--dim)}
@@ -96,6 +97,40 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .z span{white-space:nowrap}.z b{color:var(--cyan2);font-weight:400;margin-right:4px}.z span.here b{color:#fff}
 .mk span{white-space:nowrap;color:var(--dim)}.mk b{font-weight:400;color:#fff;margin:0 4px 0 3px}.mk i{font-style:normal}.mk i.up{color:var(--green)}.mk i.down{color:var(--red)}
 @keyframes slide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+
+/* jump bar (desktop): one shortcut per panel, grouped; the panel in view is lit; folded panels are dim */
+.jump{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin-top:2px;padding-top:8px;border-top:1px solid rgba(18,58,85,.55)}
+.jump .g{font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--dim);opacity:.7;margin:0 4px 0 8px}.jump .g:first-child{margin-left:0}
+.jump button{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px solid transparent;padding:3px 8px;display:flex;align-items:center;gap:6px;transition:color .15s,border-color .15s,background .15s}
+.jump button:hover{color:#fff;border-color:var(--line2);background:rgba(var(--glow),.06)}
+.jump button.on{color:var(--cyan2);border-color:var(--line2);background:rgba(var(--glow),.08)}
+.jump button.fold{opacity:.45;text-decoration:line-through}
+.jump button b{font-weight:600;color:var(--amber);font-size:11px;min-width:1em;text-align:center}.jump button b.crit{color:var(--red)}.jump button b:empty{display:none}
+.jump .sp{flex:1}
+.jump .all{color:var(--dim);border-color:var(--line);padding:3px 8px}
+
+/* fold: a panel collapses to its header (remembered per device) */
+.panel h2 .foldb{font-family:var(--mono);font-size:12px;line-height:1;color:var(--dim);border:1px solid var(--line);width:20px;height:20px;padding:0;display:grid;place-items:center;opacity:.55;transition:opacity .15s}
+.panel:hover h2 .foldb,.panel.folded h2 .foldb{opacity:1}.panel h2 .foldb:hover{color:#fff;border-color:var(--cyan)}
+.panel{scroll-margin-top:calc(var(--hudh,130px) + 10px)}
+/* folding only exists on desktop: below 900px the fold buttons are hidden, so a remembered fold must not leave a dead header */
+@media(min-width:900px){
+.panel.folded{padding-bottom:10px}.panel.folded:not(.band) > :not(h2){display:none!important}.panel.folded > h2{margin-bottom:0;padding-bottom:0;border-bottom:0}.panel.folded > h2::after{display:none}
+.panel.folded > h2 + h2{display:none!important}
+.band.folded{min-height:0;padding:16px 18px}.band.folded #map,.band.folded .mapctl,.band.folded #wx{display:none}.band.folded .glass{margin:0;padding:0;border:0;background:none;backdrop-filter:none;max-width:none}.band.folded .glass h2{margin-bottom:0;padding-bottom:0;border-bottom:0}.band.folded .glass h2::after{display:none}
+}
+@media(max-width:899px){.jump{display:none}.panel h2 .foldb{display:none}}
+/* condensed HUD (desktop, once scrolled): big clock, temperature and TX/AZ stay; chips go to one scrolling line; jump bar to one line */
+@media(min-width:900px){
+.hud .attn,.hud .clock .d,.hud .clock .z,.hud .clock .mk,.hud .jump{transition:opacity .2s,max-height .2s}
+.hud.condensed{padding:6px 4px 8px}
+.hud.condensed .attn{flex-wrap:nowrap;overflow-x:auto;max-height:30px;scrollbar-width:none}
+.hud.condensed .clock .d,.hud.condensed .clock .z,.hud.condensed .clock .mk{display:none}
+.hud.condensed .clock .u{margin-top:2px}
+.hud.condensed .brand small{display:none}
+.hud.condensed .jump{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-top:5px;margin-top:0}
+.hud.condensed .jump button{font-size:9px;padding:2px 6px}.hud.condensed .jump .g{margin:0 2px 0 6px}
+}
 
 /* panels */
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
@@ -289,8 +324,14 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 @media(max-width:600px){.watch{grid-template-columns:1fr}}
 .tripf{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px}.tripf input,.tripf select{background:#070d18;border:1px solid var(--line2);color:var(--fg);padding:5px 8px;font:13px var(--mono);min-width:0;flex:1 1 120px}
 .pend .fu{display:block}.pend .fu textarea{width:100%;min-height:110px;margin-top:6px;background:#070d18;border:1px solid var(--line2);color:var(--fg);font:13px/1.45 var(--display);padding:8px}
-.pend .fu .row{display:flex;gap:6px;margin-top:6px;align-items:center}
-.ralarm{display:block;margin-top:10px;font-size:12px;color:var(--dim)}.ralarm b{color:#fff;font-weight:600}.ralarm small{display:block;color:var(--amber)}
+.pend .fu .row{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.pend .fu .fst{font-family:var(--mono);font-size:11px;color:var(--dim)}.pend .fu.confirm{border-left:2px solid var(--amber);padding-left:8px}.pend .fu.confirm textarea{border-color:var(--amber)}
+.calc{display:grid;gap:8px}.calcin{width:100%;box-sizing:border-box;background:#070d18;border:1px solid var(--line);color:#fff;font:22px var(--mono);padding:10px 12px;text-align:right;letter-spacing:.04em}.calcin:focus{outline:none;border-color:rgb(var(--glow))}
+.calcout{font:30px var(--mono);color:rgb(var(--glow));text-align:right;min-height:1.2em;padding:0 6px;text-shadow:0 0 14px rgba(var(--glow),.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.calcout.err{color:var(--red);font-size:14px;text-shadow:none}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.keys button{background:#0b1626;border:1px solid var(--line);color:var(--fg);font:18px var(--mono);padding:12px 0;cursor:pointer;border-radius:2px;transition:background .1s}.keys button:hover{background:#12253a}.keys button:active{background:rgba(var(--glow),.25)}.keys button.op{color:var(--amber)}.keys button.eq{background:rgb(var(--glow));color:#04070d;font-weight:700}
+.calchist{display:grid;gap:3px;font:12px var(--mono);color:var(--dim);max-height:120px;overflow:auto}.calchist div{display:flex;justify-content:space-between;gap:10px;cursor:pointer;padding:2px 4px}.calchist div:hover{background:#0b1626}.calchist b{color:#fff;font-weight:600}
+.ralarm{display:block;margin-top:10px;font-size:12px;color:var(--dim)}.phonealarm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}.phonealarm small{flex-basis:100%;color:var(--dim);font-size:11px;line-height:1.4}.phonealarm small b{color:var(--green)}.phonealarm small i{color:var(--amber);font-style:normal}
+#ringing{position:fixed;inset:0;z-index:56;display:grid;place-items:center;background:radial-gradient(800px 600px at 50% 40%,rgba(255,77,94,.25),transparent 60%),rgba(4,7,13,.96);text-align:center}#ringing[hidden]{display:none}#ringing .t{font:64px var(--mono);color:#fff;letter-spacing:.05em}#ringing .l{font-size:14px;letter-spacing:.4em;color:var(--amber);margin:6px 0 24px}#ringing .btn{font-size:16px;padding:14px 28px;margin:6px}@keyframes ringpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}#ringing .box{animation:ringpulse 1s ease-in-out infinite}.ralarm b{color:#fff;font-weight:600}.ralarm small{display:block;color:var(--amber)}
 /* faith */
 .faith{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:22px}
 @media(max-width:899px){.faith{grid-template-columns:1fr}}
@@ -316,7 +357,8 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .eq i{width:3px;background:var(--cyan);animation:eqb 1s ease-in-out infinite;height:40%}.eq i:nth-child(2){animation-delay:.2s;height:90%}.eq i:nth-child(3){animation-delay:.4s;height:60%}.eq i:nth-child(4){animation-delay:.1s;height:75%}
 @keyframes eqb{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
 #radioPanel.on .eq{display:inline-flex}
-.rnow{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center}.rnow small{grid-column:1/-1}.rnow b{display:block;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rnow small{color:var(--dim);font-size:11px}
+.rnow{min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center}.rnow small{grid-column:1/-1}
+.rnow .song{color:var(--cyan2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.rnow .song:empty{display:none}.rnow b{display:block;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rnow small{color:var(--dim);font-size:11px}
 .rst{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .rst button{font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:5px 9px;border:1px solid var(--line);background:none;color:var(--dim);cursor:pointer;transition:color .15s,border-color .15s,background .15s}
 .rst button:hover{color:var(--cyan2);border-color:var(--line2)}
@@ -385,11 +427,15 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .thread .mb{white-space:pre-wrap;font-size:14px;line-height:1.5;margin-top:6px;max-height:340px;overflow:auto;overflow-wrap:anywhere}
 .thread .mb.q{color:var(--dim)}
 .thread .att{font-family:var(--mono);font-size:10px;color:var(--cyan2);margin-top:4px}
+.atts{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}.atts:empty{display:none}
+.achip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--fg);border:1px solid var(--line2);padding:2px 6px;max-width:260px}.achip .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.achip i{font-style:normal;color:var(--dim);white-space:nowrap}.achip button{color:var(--dim);padding:0 2px;font-size:11px}.achip button:hover{color:var(--red)}
+.rrow{flex-wrap:wrap}
 .thread .rbox{display:grid;gap:6px}
 .thread textarea{min-height:120px;font:14px var(--display);line-height:1.45}
 .thread .rrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .mail .kind{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--dim);margin-left:6px}
 .tag{font-family:var(--mono);font-size:9px;letter-spacing:.15em;padding:1px 6px;border:1px solid var(--amber);color:var(--amber);vertical-align:middle;margin-left:6px}
+.tag.auto{border-color:var(--green);color:var(--green)}
 .events{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .events li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:baseline;font-size:14px;min-width:0;padding:3px 0;border-bottom:1px solid rgba(18,58,85,.45)}
 .events li:last-child{border-bottom:0}
@@ -415,6 +461,9 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .cam{position:relative;aspect-ratio:16/9;max-width:100%;background:#000;border:1px solid var(--line)}
 .cam iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .cam .lbl{position:absolute;left:0;bottom:0;font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding:3px 8px;background:rgba(4,7,13,.75);color:var(--cyan2);pointer-events:none}
+.cam .ph{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:4px;color:var(--cyan2);font-family:var(--mono);font-size:18px;opacity:.55;pointer-events:none;background:radial-gradient(circle at 50% 45%,rgba(var(--glow),.12),transparent 60%)}
+.cam .ph small{font-size:9px;letter-spacing:.15em;color:var(--dim)}.cam.live .ph{display:none}
+.cam .ph .spin{width:18px;height:18px;border-radius:50%;border:2px solid rgba(var(--glow),.25);border-top-color:var(--cyan);animation:camspin 1s linear infinite}@keyframes camspin{to{transform:rotate(360deg)}}
 .cam .x{position:absolute;top:0;right:0;font-family:var(--mono);font-size:11px;padding:3px 8px;background:rgba(4,7,13,.75);color:var(--red);opacity:0}
 .cam:hover .x{opacity:1}
 .camlink{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:6px;color:var(--cyan2);font-family:var(--mono);letter-spacing:.15em;font-size:12px;background:radial-gradient(circle at 50% 40%,rgba(var(--glow),.18),transparent 60%),#02050a}
@@ -478,7 +527,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   .attn{flex-wrap:nowrap;overflow-x:auto;max-height:none;gap:6px;padding:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;order:0}
   .attn::-webkit-scrollbar{display:none}
   .attn .chip{padding:4px 8px;font-size:10px}.attn .chip b{font-size:13px}
-  .clock .t{font-size:20px}.clock .d,.clock .z,.clock .mk{display:none}.clock .u{margin-top:0;font-size:10px}
+  .clock .t{font-size:20px}.clock .tmp{font-size:16px;margin-right:10px}.clock .tmp i{font-size:14px;margin-right:4px}.clock .d,.clock .z,.clock .mk{display:none}.clock .u{margin-top:0;font-size:10px}
   /* panels */
   .panel{padding:14px;animation:none}.console{grid-template-columns:1fr}.corebox{justify-items:center}.core{width:120px;height:120px}.chat{max-height:240px}
   .tile .name{font-size:16px}
@@ -515,7 +564,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div><h1>JARVIS</h1><small id="greet">BOOTING</small></div>
   </div>
   <div class="attn" id="attn"><span class="quiet">scanning…</span></div>
-  <div class="clock"><div class="t" id="clock">--:--:--</div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="mk" id="ticker"></div><div class="u"><button class="home" id="homeBtn" title="Home location: tap to switch between Texas and Arizona (AUTO follows this device)">TX</button> · <span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
+  <div class="clock"><div class="t"><span class="tmp" id="hdrTemp" title="Local temperature"></span><span id="clock">--:--:--</span></div><div class="d" id="date"></div><div class="z" id="zones"></div><div class="mk" id="ticker"></div><div class="u"><button class="home" id="homeBtn" title="Home location: tap to switch between Texas and Arizona (AUTO follows this device)">TX</button> · <span id="who"></span> · <a href="#" id="wallBtn">WALL</a> · <a href="/logout">OUT</a></div></div>
+  <nav class="jump" id="jump" aria-label="Jump to a panel"></nav>
 </header>
 
 <main class="grid" id="main">
@@ -599,7 +649,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div class="mapctl"><button class="btn sm" id="radarPlay">▶ PLAY</button><input type="range" id="radarPos" min="0" max="0" value="0" aria-label="Radar frame"><span id="radarTime">radar…</span></div>
   </section>
 
-  <section class="panel c7" data-v="ops">
+  <section class="panel c8" data-v="ops" id="inboxPanel">
     <h2>Inbox <span class="sub" id="briefAt"></span><button class="btn sm" id="pbToggle" title="How JARVIS replies to new leads">PLAYBOOK</button><button class="btn sm" id="inboxConnect">CONNECT INBOX</button><a class="btn sm" href="https://mail.google.com/" target="_blank" rel="noopener">GMAIL</a></h2>
     <div class="howto" id="inboxHow" hidden>
       <b>Connect a Gmail account to JARVIS (5 minutes, once per account)</b>
@@ -622,18 +672,18 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <ul class="mail" id="mail"><li class="empty">No inbox connected yet.</li></ul>
   </section>
 
-  <section class="panel c5" data-v="ops" id="scannerPanel">
-    <h2>Scanner <span class="sub" id="scanSub"></span><button class="btn sm" id="scanSwap">SHOW TX</button></h2>
-    <div class="scan" id="scanner"></div>
-    <div class="empty" id="scanNote" style="margin-top:8px"></div>
-  </section>
-
   <section class="panel c4" data-v="ops" id="decisionsPanel">
     <h2>Decisions <span class="sub" id="decSub"></span><button class="btn sm" id="closeDay" title="Walk through everything still open, one item at a time">CLOSE THE DAY</button></h2>
     <div class="pend" id="decisions"><div class="empty">Nothing waiting on you.</div></div>
   </section>
 
-  <section class="panel c4" data-v="ops">
+  <section class="panel c4" data-v="ops" id="scannerPanel">
+    <h2>Scanner <span class="sub" id="scanSub"></span><button class="btn sm" id="scanSwap">SHOW TX</button></h2>
+    <div class="scan" id="scanner"></div>
+    <div class="empty" id="scanNote" style="margin-top:8px"></div>
+  </section>
+
+  <section class="panel c4" data-v="ops" id="upcomingPanel">
     <h2>Upcoming <span class="sub" id="evSub"></span><button class="btn sm" id="tripAdd">+ TRIP</button></h2>
     <form class="tripf" id="tripForm" hidden><input id="tripFl" placeholder="Flight, e.g. AA 2612" required><input id="tripDate" type="date" required><select id="tripHome"><option value="none">home stays</option><option value="az">→ Arizona</option><option value="tx">→ Texas</option></select><button class="btn sm">ADD</button></form>
     <ul class="events" id="events"><li class="empty">Bookings and calendar items appear here.</li></ul>
@@ -647,11 +697,29 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <h2>Radio <span class="sub" id="radioSub">Global · live from London</span></h2>
     <div class="radio">
       <button class="rplay" id="radioPlay" aria-label="Play radio">▶</button>
-      <div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName">Classic FM</b><small id="radioState">off</small></div>
+      <div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName">Classic FM</b><small id="radioState">off</small><small class="song" id="radioSong" title="What the station says is playing"></small></div>
       <input type="range" id="radioVol" min="0" max="100" value="70" aria-label="Radio volume">
     </div>
-    <div class="ralarm"><label><input type="checkbox" id="alarmOn"> Wake-up alarm at <input type="time" id="alarmTime" value="05:00" style="width:auto;padding:2px 6px;font:13px var(--mono)"> <select id="alarmDays" style="background:#070d18;border:1px solid var(--line);color:var(--fg);font:12px var(--mono);padding:3px"><option value="all">every day</option><option value="weekdays">weekdays</option><option value="weekends">weekends</option></select> <button class="btn sm" id="alarmSave">SAVE</button></label><small id="alarmNote"></small></div>
+    <div class="ralarm"><label><input type="checkbox" id="alarmOn"> Wake-up alarm at <input type="time" id="alarmTime" value="05:00" style="width:auto;padding:2px 6px;font:13px var(--mono)"> <select id="alarmDays" style="background:#070d18;border:1px solid var(--line);color:var(--fg);font:12px var(--mono);padding:3px"><option value="all">every day</option><option value="weekdays">weekdays</option><option value="weekends">weekends</option></select> <button class="btn sm" id="alarmSave">SAVE</button></label><small id="alarmNote"></small>
+      <div class="phonealarm"><button class="btn sm" id="pushEnable">RING THIS PHONE</button><button class="btn sm" id="pushTest">TEST ALARM</button><button class="btn sm" id="pushLogBtn">LOG</button><small id="pushNote">checking…</small></div></div>
     <div class="rst" id="radioStations"></div>
+  </section>
+
+  <section class="panel c4" data-v="jarvis more" id="calcPanel">
+    <h2>Calculator <span class="sub">type, tap, or say "what's 15% of 240"</span></h2>
+    <div class="calc">
+      <input id="calcIn" class="calcin" placeholder="0" autocomplete="off" inputmode="decimal" aria-label="Calculator input" spellcheck="false">
+      <div class="calcout" id="calcOut">&nbsp;</div>
+      <div class="keys" id="calcKeys">
+        <button data-k="C" class="op">C</button><button data-k="(" class="op">(</button><button data-k=")" class="op">)</button><button data-k="⌫" class="op">⌫</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="÷" class="op">÷</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="×" class="op">×</button>
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="−" class="op">−</button>
+        <button data-k="0">0</button><button data-k=".">.</button><button data-k="%" class="op">%</button><button data-k="+" class="op">+</button>
+        <button data-k="√" class="op">√</button><button data-k="^" class="op">xʸ</button><button data-k="ANS" class="op">ANS</button><button data-k="=" class="eq">=</button>
+      </div>
+      <div class="calchist" id="calcHist"></div>
+    </div>
   </section>
 
   <section class="panel" data-v="jarvis more" id="faithPanel">
@@ -701,18 +769,18 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <div class="news" id="news"><div class="empty">Loading…</div></div>
   </section>
 
-  <section class="panel c7" data-v="more">
+  <section class="panel c7" data-v="more" id="moneyPanel">
     <h2>Money <span class="sub" id="moneySub"></span></h2>
     <div id="money"><div class="empty">Cash-in by month appears once metrics are collected.</div></div>
   </section>
 
-  <section class="panel c5" data-v="more">
+  <section class="panel c5" data-v="more" id="memPanel">
     <h2>Memory <span class="sub" id="memSub"></span></h2>
     <ul class="mem" id="mem"><li class="empty">Tell JARVIS "remember that…" and it lands here.</li></ul>
     <form class="memadd" id="memadd"><input id="memText" placeholder="Add a fact JARVIS should keep"><button class="btn sm">ADD</button></form>
   </section>
 
-  <section class="panel quiet" data-v="feeds">
+  <section class="panel quiet" data-v="feeds" id="feedsPanel">
     <h2>Live Feeds <span class="sub" id="camCount"></span></h2>
     <div class="cams" id="cams"></div>
     <form class="addcam" id="addcam">
@@ -728,14 +796,14 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
     <h2 style="margin-top:12px">Markets</h2><div class="mk" id="ticker2" style="font-family:var(--mono);font-size:14px;display:flex;gap:16px;flex-wrap:wrap"></div>
   </section>
 
-  <section class="panel c6 quiet" data-v="more">
+  <section class="panel c6 quiet" data-v="more" id="launchPanel">
     <h2>Launch</h2>
     <div class="launch" id="launch"></div>
     <h2 style="margin-top:14px">System</h2>
     <div class="sys" id="sys"></div>
   </section>
 
-  <section class="panel c6 quiet" data-v="more">
+  <section class="panel c6 quiet" data-v="more" id="notesPanel">
     <h2>Notes <span class="sub" id="notesAt"></span></h2>
     <textarea id="notes" placeholder="Open items, reminders…"></textarea>
     <div class="notes-foot"><span id="notesState">saved</span><button class="btn sm" id="notesSave">SAVE</button></div>
@@ -752,6 +820,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
   <button data-view="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>MORE</button>
 </nav>
 
+<div id="ringing" hidden><div class="box"><div class="t" id="ringTime"></div><div class="l">WAKE-UP ALARM</div><button class="btn primary" id="ringUp">I'M UP</button><button class="btn" id="ringSnooze">5 MORE MINUTES</button></div></div>
 <div id="drill"><div class="dwrap"><div class="dhead"><div><h3 id="dTitle"></h3><div class="kind" id="dKind"></div></div><button class="btn sm" id="dClose">CLOSE ✕</button></div><div class="dgrid" id="dBody"></div></div></div>
 
 <div id="wallview"><div class="wallgrid" id="wallGrid"></div>
@@ -830,8 +899,11 @@ function renderAttention() {
   for (const t of (state.trips || []).filter(t => t.phase === "airborne")) chips.push({ cls: "good", n: "✈", t: t.flight + " in the air", go: "#events" });
   const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
   const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
+  const hadFocus = document.activeElement?.closest?.("#attn") ? document.activeElement.dataset.go : null;   // keyboard focus survives the rebuild
   $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
-  $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
+  if (hadFocus) $("#attn").querySelector(`.chip[data-go="${CSS.escape(hadFocus)}"]`)?.focus();
+  $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); const sec = $(g)?.closest(".panel"); if (sec?.id && folded.has(sec.id)) { folded.delete(sec.id); saveFold(); applyFold(); } $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
+  try { renderJump(); hudHeight(); } catch {}
 }
 const viewOf = (sel) => ({ "#scannerPanel": "ops", "#decisionsPanel": "ops", "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
 
@@ -937,6 +1009,23 @@ function actionButtons(p) {
 }
 function wireActionButtons(root) { root.querySelectorAll("[data-act]").forEach(btn => btn.onclick = () => proposeAction(JSON.parse(btn.dataset.act))); }
 
+/* ---------- email attachments: an ATTACH button + file chips on any button row; files go up base64 inside the action ---------- */
+const fmtSize = (n) => n < 1024 ? n + " B" : n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB";
+const ATTACH_MAX = 20 * 1048576;   // Gmail allows 25 MB per message; keep headroom for the base64 wrapper
+function attachUI(row, initial = [], onMsg) {
+  const files = initial; const note = (m) => (onMsg || ((t) => addMsg("sys", t)))(m);
+  const inp = document.createElement("input"); inp.type = "file"; inp.multiple = true; inp.hidden = true;
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn sm"; btn.textContent = "ATTACH"; btn.title = "Attach files to this email";
+  const list = document.createElement("span"); list.className = "atts";
+  row.appendChild(btn); row.appendChild(inp); row.appendChild(list);
+  const draw = () => { list.innerHTML = files.map((f, i) => `<span class="achip" title="${esc(f.name)}${f.type ? " · " + esc(f.type) : ""}">📎 <span class="fn">${esc(f.name)}</span> <i>${fmtSize(f.size)}</i><button type="button" data-rm="${i}" aria-label="Remove attachment">✕</button></span>`).join(""); list.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { files.splice(+b.dataset.rm, 1); draw(); }); };
+  btn.onclick = () => inp.click();
+  inp.onchange = () => { for (const f of inp.files) { if (files.reduce((a, x) => a + x.size, 0) + f.size > ATTACH_MAX) { note(`${f.name} would take the attachments past 20 MB; Gmail stops at 25 MB.`); continue; } files.push(f); } inp.value = ""; draw(); };
+  if (files.length) draw();
+  const read = (f) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res({ name: f.name, type: f.type || "application/octet-stream", size: f.size, data: String(r.result).split(",")[1] || "" }); r.onerror = () => rej(new Error("could not read " + f.name)); r.readAsDataURL(f); });
+  return { count: () => files.length, get: () => Promise.all(files.map(read)), clear: () => { files.length = 0; draw(); } };
+}
+
 /* ---------- actions: confirm cards ---------- */
 function proposeAction(item) {
   item.id = item.id || Math.random().toString(36).slice(2, 10);
@@ -944,7 +1033,10 @@ function proposeAction(item) {
   const el = document.createElement("div"); el.className = "card"; el.dataset.id = item.id;
   const preview = item.kind === "email_reply" || item.kind === "email_send" ? `<textarea style="min-height:120px;font:14px var(--display);line-height:1.45">${esc(item.params?.body || "")}</textarea>` : "";
   el.innerHTML = `<div class="k">${item.kind?.startsWith("email_") ? "CONFIRM EMAIL" : "CONFIRM ACTION"}</div><div>${esc(item.summary)}</div>${preview}<div class="row"><button class="btn primary" data-ok>CONFIRM</button><button class="btn sm" data-no>CANCEL</button><span class="st"></span></div>`;
-  el.querySelector("[data-ok]").onclick = async () => { const ta = el.querySelector("textarea"); if (ta) item.params.body = ta.value; el.querySelector("[data-ok]").disabled = true; el.querySelector(".st").textContent = "working…"; const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+  const att = preview ? attachUI(el.querySelector(".row")) : null;
+  el.querySelector("[data-ok]").onclick = async () => { const ta = el.querySelector("textarea"); if (ta) item.params.body = ta.value; el.querySelector("[data-ok]").disabled = true; el.querySelector(".st").textContent = "working…";
+    if (att && att.count()) { try { item.params.attachments = await att.get(); } catch (e) { el.querySelector(".st").textContent = "attachment problem: " + e.message; el.querySelector("[data-ok]").disabled = false; return; } }
+    const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
     el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove());
     if (r.executed) { el.querySelector(".st").textContent = (r.ok ? "done · " : "failed · ") + (r.result || ""); speak(r.ok ? "Done. " + (r.result || "") : "That didn't go through: " + (r.result || "")); setTimeout(loadState, 4000); }
     else { el.querySelector(".st").textContent = "queued · waiting for the hands script on your PC"; state.queue.unshift({ ...item, status: "pending" }); renderAttention(); speak("Queued. I'll confirm when it's done."); } };
@@ -978,6 +1070,7 @@ async function loadWeather() {
 function renderWeather() {
   const d = state.wx, c = d.current, [desc, icon] = wmo(c.weather_code);
   $("#wxPlace").textContent = d.place;
+  const ht = $("#hdrTemp"); ht.innerHTML = `<i>${icon}</i>${Math.round(c.temperature_2m)}°`; ht.title = `${d.place}: ${Math.round(c.temperature_2m)}°F ${desc}, feels ${Math.round(c.apparent_temperature)}°`;
   const nws = d.nws?.length ? `<div class="nws">${d.nws.map(f => `<div class="${esc(f.severity)}"><b>${esc(f.event)}${f.ends ? " · until " + new Date(f.ends).toLocaleString([], {weekday:"short",hour:"numeric"}) : ""}</b>${esc(f.headline)}</div>`).join("")}</div>` : "";
   const days = d.daily.time.map((t,i) => { const [, ic] = wmo(d.daily.weather_code[i]); const name = i === 0 ? "Today" : new Date(t + "T12:00").toLocaleDateString([], {weekday:"short"}); return `<div class="day ${i===selDay?"sel":""}" data-i="${i}">${name}<i>${ic}</i><b>${Math.round(d.daily.temperature_2m_max[i])}°</b>${Math.round(d.daily.temperature_2m_min[i])}° · ${d.daily.precipitation_probability_max[i] ?? 0}%</div>`; }).join("");
   const sr = d.daily.sunrise[0].slice(11), ss = d.daily.sunset[0].slice(11);
@@ -1023,7 +1116,9 @@ function initMap(lat, lon) {
   if (!window.L) return;
   if (!map) {
     const phone = innerWidth < 900;
-    map = L.map("map", { zoomControl: true, attributionControl: true, dragging: !phone, touchZoom: !phone, scrollWheelZoom: !phone, tap: !phone }).setView([lat, lon], 7);
+    map = L.map("map", { zoomControl: true, attributionControl: true, dragging: !phone, touchZoom: !phone, scrollWheelZoom: false, tap: !phone }).setView([lat, lon], 7);
+    // the wheel scrolls the page until the map is clicked or focused; it zooms the map only while the pointer stays on it
+    if (!phone) { const mapEl = $("#map"); mapEl.tabIndex = 0; const wheelOn = () => map.scrollWheelZoom.enable(); mapEl.addEventListener("click", wheelOn); mapEl.addEventListener("focus", wheelOn); mapEl.addEventListener("mouseleave", () => map.scrollWheelZoom.disable()); }
     if (phone) { const gate = document.createElement("div"); gate.className = "mapgate"; gate.textContent = "TAP TO USE THE MAP"; $("#map").appendChild(gate); gate.onclick = () => { gate.remove(); map.dragging.enable(); map.touchZoom.enable(); $("#map").style.touchAction = "none"; }; }
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Esri, HERE, Garmin · radar © RainViewer", maxZoom: 16 }).addTo(map);
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16, opacity: .7, zIndex: 9 }).addTo(map);
@@ -1053,21 +1148,47 @@ $("#radarPlay").onclick = () => {
 };
 
 /* ---------- decisions ---------- */
-function renderDecisions() {
+// Drafts are reviewed in place. The minute refresh used to rebuild this panel (and the Inbox) while he was editing,
+// which threw the draft away; now the panel is left alone while a draft is being edited or confirmed, edits survive
+// re-renders, and sending is a two-click confirm right here instead of a card up in the chat.
+const fuEdits = {};   // follow-up id -> text as he has changed it
+const fuFiles = {};   // follow-up id -> File[] attached to the draft; survives re-renders like fuEdits
+let decisionsDeferred = false;
+function renderDecisions(force) {
+  const dec = $("#decisions");
+  if (!force && (dec.contains(document.activeElement) || dec.querySelector(".fu.confirm, .fu.sending"))) { decisionsDeferred = true; return; }
+  decisionsDeferred = false;
   const items = state.decisions?.items || [];
   const fups = (state.followups || []).filter(f => f.status === "ready");
+  for (const id of Object.keys(fuEdits)) if (!fups.some(f => f.id === id)) delete fuEdits[id];
+  for (const id of Object.keys(fuFiles)) if (!fups.some(f => f.id === id)) delete fuFiles[id];
   $("#decSub").textContent = items.length ? `${items.length} pending · ${fmtAgo(state.decisions.at)}` : (state.decisions?.at ? "clear · " + fmtAgo(state.decisions.at) : "");
   $("#decisionsPanel").classList.toggle("alarm", items.length + fups.length > 0);
   if (fups.length) $("#decSub").textContent = `${items.length + fups.length} pending`;
-  const fuHtml = fups.map(f => `<div class="fu" data-fu="${esc(f.id)}"><span class="dl"><b>${esc(bizOf(f.business).name.toUpperCase())} · FOLLOW-UP</b>${esc(f.from)}: ${esc(f.subject)}<small>to ${esc(f.to)} · waited since ${fmtAgo(f.received)} · drafted ${fmtAgo(f.at)}</small></span><textarea>${esc(f.body)}</textarea><div class="row"><button class="btn sm primary" data-fusend>REVIEW & SEND</button><button class="btn sm" data-fuskip>SKIP</button></div></div>`).join("");
-  $("#decisions").innerHTML = fuHtml + (items.length || !fups.length ? "" : "") + (items.length ? items.map(d => `<div><span class="dl"><b>${esc(bizOf(d.business).name.toUpperCase())}</b>${esc(d.label)}<small>${esc(Object.entries(d.detail || {}).map(([k, v]) => k + ": " + v).join(" · "))} · ${fmtAgo(d.at)}</small></span><span>${actionButtons({ id: d.id, kind: d.kind, label: d.label })}</span></div>`).join("") : (fups.length ? "" : `<div class="empty">Nothing waiting on you.</div>`));
-  wireActionButtons($("#decisions"));
-  $("#decisions").querySelectorAll("[data-fu]").forEach(el => {
-    const f = fups.find(x => x.id === el.dataset.fu);
-    el.querySelector("[data-fusend]").onclick = () => proposeAction({ kind: "email_reply", params: { account: f.account, threadId: f.threadId, body: el.querySelector("textarea").value, followupId: f.id }, summary: `Send follow-up to ${f.from} (${bizOf(f.business).name}): ${f.subject}` });
-    el.querySelector("[data-fuskip]").onclick = async () => { await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: f.id }) }).catch(() => {}); state.followups = state.followups.filter(x => x.id !== f.id); renderDecisions(); renderAttention(); };
+  const fuHtml = fups.map(f => `<div class="fu" data-fu="${esc(f.id)}"><span class="dl"><b>${esc(bizOf(f.business).name.toUpperCase())} · ${f.first ? "FIRST REPLY" : "FOLLOW-UP"}</b>${esc(f.from)}: ${esc(f.subject)}<small>to ${esc(f.to)} · waited since ${fmtAgo(f.received)} · drafted ${fmtAgo(f.at)}${fuEdits[f.id] != null ? " · edited" : ""}</small></span><textarea>${esc(fuEdits[f.id] ?? f.body)}</textarea><div class="row"><button class="btn sm primary" data-fusend>REVIEW & SEND</button><button class="btn sm" data-fucancel hidden>CANCEL</button><button class="btn sm" data-fuskip>SKIP</button><a class="btn sm" data-fugmail target="_blank" rel="noopener" href="${esc(state.brief?.items?.find(m => m.threadId === f.threadId)?.url || "https://mail.google.com/")}">GMAIL</a><span class="fst"></span></div></div>`).join("");
+  dec.innerHTML = fuHtml + (items.length ? items.map(d => `<div><span class="dl"><b>${esc(bizOf(d.business).name.toUpperCase())}</b>${esc(d.label)}<small>${esc(Object.entries(d.detail || {}).map(([k, v]) => k + ": " + v).join(" · "))} · ${fmtAgo(d.at)}</small></span><span>${actionButtons({ id: d.id, kind: d.kind, label: d.label })}</span></div>`).join("") : (fups.length ? "" : `<div class="empty">Nothing waiting on you.</div>`));
+  wireActionButtons(dec);
+  dec.querySelectorAll("[data-fu]").forEach(el => {
+    const f = fups.find(x => x.id === el.dataset.fu); const ta = el.querySelector("textarea"), st = el.querySelector(".fst");
+    ta.oninput = () => { fuEdits[f.id] = ta.value; };
+    const att = attachUI(el.querySelector(".row"), fuFiles[f.id] ||= [], (m) => { st.textContent = m; });
+    const reset = () => { el.classList.remove("confirm"); el.querySelector("[data-fusend]").textContent = "REVIEW & SEND"; el.querySelector("[data-fucancel]").hidden = true; st.textContent = ""; };
+    el.querySelector("[data-fucancel]").onclick = reset;
+    el.querySelector("[data-fusend]").onclick = async () => {
+      const btn = el.querySelector("[data-fusend]"); const body = ta.value.trim(); if (!body) { st.textContent = "The reply is empty."; return; }
+      if (!el.classList.contains("confirm")) { el.classList.add("confirm"); btn.textContent = "CONFIRM SEND"; el.querySelector("[data-fucancel]").hidden = false; st.textContent = `Sends this to ${f.to} from ${f.account}${att.count() ? ` with ${att.count()} attachment${att.count() > 1 ? "s" : ""}` : ""}.`; return; }
+      el.classList.add("sending"); btn.disabled = true; st.textContent = "sending…";
+      let attachments = []; if (att.count()) { try { attachments = await att.get(); } catch (e) { st.textContent = "attachment problem: " + e.message; btn.disabled = false; el.classList.remove("sending"); return; } }
+      const item = { id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: f.account, threadId: f.threadId, body, followupId: f.id, ...(attachments.length ? { attachments } : {}) }, summary: `Send ${f.first ? "reply" : "follow-up"} to ${f.from} (${bizOf(f.business).name}): ${f.subject}${attachments.length ? ` (+${attachments.length} attachment${attachments.length > 1 ? "s" : ""})` : ""}` };
+      const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+      el.classList.remove("sending", "confirm");
+      if (r.ok) { st.textContent = "Sent."; btn.textContent = "SENT"; btn.blur(); delete fuEdits[f.id]; delete fuFiles[f.id]; state.followups = state.followups.filter(x => x.id !== f.id); setTimeout(() => { renderDecisions(true); renderAttention(); loadState(); }, 1500); }
+      else { st.textContent = "Not sent: " + (r.result || r.error || "error"); btn.disabled = false; btn.textContent = "REVIEW & SEND"; el.querySelector("[data-fucancel]").hidden = true; }
+    };
+    el.querySelector("[data-fuskip]").onclick = async (e) => { e.currentTarget.blur(); await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: f.id }) }).catch(() => {}); delete fuEdits[f.id]; delete fuFiles[f.id]; state.followups = state.followups.filter(x => x.id !== f.id); renderDecisions(true); renderAttention(); };
   });
 }
+$("#decisions").addEventListener("focusout", () => setTimeout(() => { if (decisionsDeferred && !$("#decisions").contains(document.activeElement)) renderDecisions(); }, 250));
 /* ---------- scores, markets, news, wedding-day weather ---------- */
 async function loadSports() {
   try { state.sports = await fetch("/api/sports").then(r => r.json()); } catch { return; }
@@ -1099,7 +1220,7 @@ async function loadMarkets() {
   const rows = (state.markets.rows || []).filter(r => !r.error);
   const tHtml = rows.map(r => `<span>${esc(r.name)}<b>${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)}</b><i class="${r.change >= 0 ? "up" : "down"}">${r.change >= 0 ? "▲" : "▼"}${Math.abs(r.pct).toFixed(2)}%</i></span>`).join("");
   $("#ticker").innerHTML = tHtml + `<button id="tickAdd" title="Add or remove stocks">±</button>`; const t2 = $("#ticker2"); if (t2) t2.innerHTML = tHtml;
-  $("#tickAdd").onclick = async () => { const cur = (state.tickers || []).join(", "); const v = prompt("Stocks to show, comma separated (e.g. AAPL, MSFT, NVDA). Blank for indexes only.", cur); if (v === null) return; state.tickers = v.split(/[,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean); await save({ tickers: state.tickers }); loadMarkets(); };
+  $("#tickAdd").onclick = async () => { const cur = (state.tickers || []).join(", "); const v = prompt("Stocks to show, comma separated (e.g. AAPL, MSFT, NVDA). The indexes, oil and bitcoin are always shown.", cur); if (v === null) return; state.tickers = v.split(/[,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean); await save({ tickers: state.tickers }); loadMarkets(); };
 }
 async function loadNews() {
   try { state.news = await fetch("/api/news").then(r => r.json()); } catch { return; }
@@ -1108,7 +1229,11 @@ async function loadNews() {
 }
 async function loadWxDays() { try { state.wxdays = await fetch("/api/wxdays").then(r => r.json()); renderEvents(); } catch {} }
 /* ---------- inbox, upcoming, money, memory, alerts, morning ---------- */
+let briefDeferred = false;
 function renderBrief() {
+  // an open thread or a reply being typed must survive the minute refresh: redraw once it is closed
+  if ((openThreadId && $("#mail").querySelector(".thread")) || $("#mail").contains(document.activeElement)) { briefDeferred = true; return; }
+  briefDeferred = false;
   const b = state.brief; const live = b?.source === "bridge";
   if (!b || !b.items?.length) { $("#mail").innerHTML = `<li class="empty">${esc(b?.note || "No inbox connected yet. Press CONNECT INBOX.")}</li>`; $("#briefAt").textContent = b?.at ? (live ? "live · " : "snapshot · ") + fmtAgo(b.at) : ""; return; }
   $("#briefAt").textContent = `${live ? "live" : "snapshot"} · ${b.accounts?.length || 1} inbox${(b.accounts?.length || 1) > 1 ? "es" : ""} · ${b.items.filter(m => m.needs_reply).length} need reply · ${fmtAgo(b.at)}`;
@@ -1119,7 +1244,7 @@ function renderBrief() {
   $("#mailTabs").querySelectorAll("[data-tab]").forEach(btn => btn.onclick = () => { mailTab = btn.dataset.tab; try { localStorage.setItem("mailTab", mailTab); } catch {} renderBrief(); });
   const groups = mailTab === "all" ? allGroups : { [mailTab]: allGroups[mailTab] || [] };
   const acts = (m) => live && m.threadId ? `<span class="acts">${m.needs_reply ? `<button data-mail="reply">REPLY</button>` : ""}${m.unread ? `<button data-mail="read">READ</button>` : ""}<button data-mail="archive">ARCHIVE</button></span>` : "";
-  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => (mailTab === "all" ? `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` : "") + (items.length ? "" : `<li class="empty">Nothing in the last two days.</li>`) + items.map((m, i) => `<li class="${m.needs_reply ? "needs" : ""} ${m.priority === 1 ? "p1" : ""}" data-d="${esc(m.received || "")}" data-t="${esc(m.threadId || "")}" data-a="${esc(m.account || "")}" data-from="${esc(m.from)}" data-subj="${esc(m.subject)}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}${m.kind && m.kind !== "other" ? `<span class="kind">${esc(m.kind.toUpperCase())}</span>` : ""}</span><span class="when">${esc(m.when||"")}</span>${acts(m)}<span class="subj" data-open="1" title="${live ? "Open the full email" : ""}">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</span></li>`).join("")).join("");
+  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => (mailTab === "all" ? `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` : "") + (items.length ? "" : `<li class="empty">Nothing in the last two days.</li>`) + items.map((m, i) => `<li class="${m.needs_reply ? "needs" : ""} ${m.priority === 1 ? "p1" : ""}" data-d="${esc(m.received || "")}" data-t="${esc(m.threadId || "")}" data-a="${esc(m.account || "")}" data-from="${esc(m.from)}" data-subj="${esc(m.subject)}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}${m.intake ? '<span class="tag auto" title="Answered by the Gmail intake script; JARVIS checks the reply went out">AUTO-REPLY</span>' : ""}${m.kind && m.kind !== "other" ? `<span class="kind">${esc(m.kind.toUpperCase())}</span>` : ""}</span><span class="when">${esc(m.when||"")}</span>${acts(m)}<span class="subj" data-open="1" title="${live ? "Open the full email" : ""}">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</span></li>`).join("")).join("");
   $("#mail").querySelectorAll("[data-open]").forEach(el => el.onclick = () => { const li = el.closest("li"); if (live && li.dataset.t) openThread(li); else window.open(b.items.find(m => m.threadId === li.dataset.t)?.url || "https://mail.google.com/", "_blank"); });
   $("#mail").querySelectorAll("[data-mail]").forEach(btn => btn.onclick = () => { const li = btn.closest("li"); const act = btn.dataset.mail; const who = li.dataset.from, subj = li.dataset.subj, a = li.dataset.a, t = li.dataset.t;
     if (act === "reply") { openThread(li, true); return; }
@@ -1129,18 +1254,21 @@ let mailTab = ""; try { mailTab = localStorage.getItem("mailTab") || mailTab; } 
 let openThreadId = null;
 async function openThread(li, focusReply) {
   const t = li.dataset.t, a = li.dataset.a;
-  const prev = $("#mail").querySelector(".thread"); if (prev) { const pli = prev.closest("li"); prev.remove(); pli.classList.remove("open"); if (pli === li && !focusReply) { openThreadId = null; return; } }
+  const prev = $("#mail").querySelector(".thread"); if (prev) { const pli = prev.closest("li"); if (pli === li && focusReply && prev.querySelector("textarea")) { prev.querySelector("textarea").focus(); return; } prev.remove(); pli.classList.remove("open"); if (pli === li) { openThreadId = null; if (briefDeferred) renderBrief(); return; } }
   openThreadId = t; li.classList.add("open");
   const box = document.createElement("div"); box.className = "thread"; box.innerHTML = `<div class="empty">Opening…</div>`; li.appendChild(box);
   let d; try { d = await fetch(`/api/inbox/thread?account=${encodeURIComponent(a)}&t=${encodeURIComponent(t)}&d=${encodeURIComponent(li.dataset.d || "")}`).then(r => r.json()); } catch (e) { d = { error: e.message }; }
   if (openThreadId !== t) return;
-  if (d.error) { const quota = /too many times for one day/i.test(d.error); const gm = state.brief?.items?.find(m => m.threadId === t)?.url || "https://mail.google.com/"; box.innerHTML = `<div class="empty">${quota ? "Google has cut this account's Gmail script off for the day (daily limit). It resets at midnight Pacific; the new bridge script keeps it well under the limit from now on." : esc(d.error)}</div><div class="rrow" style="margin-top:6px"><a class="btn sm" target="_blank" rel="noopener" href="${esc(gm)}">OPEN IN GMAIL</a></div>`; return; }
+  if (d.error) { const quota = /too many times for one day/i.test(d.error); const gm = state.brief?.items?.find(m => m.threadId === t)?.url || "https://mail.google.com/"; box.innerHTML = `<div class="empty">${quota ? "Google has cut this account's Gmail script off for the day (daily limit). It resets at midnight Pacific; the new bridge script keeps it well under the limit from now on." : esc(d.error)}</div><div class="rrow" style="margin-top:6px"><a class="btn sm" target="_blank" rel="noopener" href="${esc(gm)}">OPEN IN GMAIL</a><button class="btn sm" data-r="close">CLOSE</button></div>`; box.querySelector('[data-r="close"]').onclick = () => { box.remove(); li.classList.remove("open"); if (openThreadId === t) openThreadId = null; if (briefDeferred) renderBrief(); }; return; }
   const strip = (txt) => { const i = txt.search(/\n(On .{5,120}wrote:|-{2,}\s*Original Message|From: .+\nSent: )/); return i > 40 ? [txt.slice(0, i).trim(), txt.slice(i).trim()] : [txt.trim(), ""]; };
   const msgs = d.messages || []; const last = msgs[msgs.length - 1] || {};
   box.innerHTML = msgs.map((m, i) => { const [main, quoted] = strip(m.body || ""); return `<div class="m"><div class="mh"><span><b>${esc((m.from || "").replace(/<.*>/, "").trim() || m.from)}</b> → ${esc((m.to || "").slice(0, 80))}</span><span>${new Date(m.date).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div><div class="mb">${esc(main)}</div>${quoted && i === msgs.length - 1 ? `<details><summary class="empty" style="cursor:pointer">show quoted text</summary><div class="mb q">${esc(quoted)}</div></details>` : ""}${m.attachments?.length ? `<div class="att">📎 ${m.attachments.map(esc).join(" · ")}</div>` : ""}</div>`; }).join("") +
     `<div class="rbox"><textarea id="rb_${esc(t)}" placeholder="Write a reply to ${esc((last.from || "").replace(/<.*>/, "").trim())}…"></textarea>
-      <div class="rrow"><button class="btn primary" data-r="send">SEND REPLY</button><button class="btn" data-r="draft">DRAFT WITH JARVIS</button><a class="btn sm" href="${esc(d.link)}" target="_blank" rel="noopener">OPEN IN GMAIL</a><span class="empty" data-r="st"></span></div></div>`;
+      <div class="rrow"><button class="btn primary" data-r="send">SEND REPLY</button><button class="btn" data-r="draft">DRAFT WITH JARVIS</button><a class="btn sm" href="${esc(d.link)}" target="_blank" rel="noopener">OPEN IN GMAIL</a><button class="btn sm" data-r="close">CLOSE</button><span class="empty" data-r="st"></span></div></div>`;
   const ta = box.querySelector("textarea"), st = box.querySelector('[data-r="st"]');
+  const closeBox = () => { box.remove(); li.classList.remove("open"); if (openThreadId === t) openThreadId = null; if (briefDeferred) renderBrief(); };
+  box.querySelector('[data-r="close"]').onclick = closeBox;
+  const att = attachUI(box.querySelector(".rrow"), [], (m) => { st.textContent = m; });
   if (focusReply) ta.focus();
   box.querySelector('[data-r="draft"]').onclick = async () => {
     st.textContent = "JARVIS is drafting…"; ta.disabled = true;
@@ -1157,9 +1285,10 @@ async function openThread(li, focusReply) {
   box.querySelector('[data-r="send"]').onclick = async () => {
     const body = ta.value.trim(); if (!body) { st.textContent = "Write something first."; return; }
     const btn = box.querySelector('[data-r="send"]'); btn.disabled = true; st.textContent = "sending…";
-    const item = { id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: a, threadId: t, body }, summary: `Reply to ${(last.from || "").replace(/<.*>/, "").trim()} — ${d.subject}` };
+    let attachments = []; if (att.count()) { try { attachments = await att.get(); } catch (e) { st.textContent = "attachment problem: " + e.message; btn.disabled = false; return; } }
+    const item = { id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: a, threadId: t, body, ...(attachments.length ? { attachments } : {}) }, summary: `Reply to ${(last.from || "").replace(/<.*>/, "").trim()} — ${d.subject}${attachments.length ? ` (+${attachments.length} attachment${attachments.length > 1 ? "s" : ""})` : ""}` };
     const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
-    if (r.ok) { st.textContent = "Sent."; ta.value = ""; setTimeout(loadState, 4000); } else { st.textContent = "Not sent: " + (r.result || "error"); btn.disabled = false; }
+    if (r.ok) { st.textContent = "Sent."; ta.value = ""; setTimeout(() => { closeBox(); loadState(); }, 2500); } else { st.textContent = "Not sent: " + (r.result || "error"); btn.disabled = false; }
   };
 }
 $("#inboxConnect").onclick = async () => { const el = $("#inboxHow"); el.hidden = !el.hidden; if (!el.hidden) { try { const br = await fetch("/api/inbox/bridges").then(r => r.json()); $("#bridges").innerHTML = br.length ? "Connected: " + br.map(x => `<b style="color:#fff">${esc(x.account)}</b> (${esc(bizOf(x.business).name || x.business)}, ${x.items} threads, ${fmtAgo(x.at)}${x.actions ? ", actions on" : ", read-only until the web app is deployed"})`).join(" · ") : "No accounts connected yet."; } catch {} } };
@@ -1361,7 +1490,10 @@ let camsKeyR = "";
 function renderCams() {
   const cams = state.webcams || []; const k = JSON.stringify(cams); if (k === camsKeyR) return; camsKeyR = k; // redrawing restarts every stream
   $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
-  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
+  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<span class="ph" aria-hidden="true"><i class="spin"></i><small>LOADING</small></span><iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
+  // lazy tiles show a play glyph until their iframe has actually loaded (autoplay-blocked or not-yet-visible embeds were plain black boxes)
+  // YouTube reports "load" long before the first frame shows (about 10 s on a cold tile), so the LOADING mark stays a little longer
+  $("#cams").querySelectorAll("iframe").forEach(f => f.addEventListener("load", () => setTimeout(() => f.closest(".cam")?.classList.add("live"), 9000), { once: true }));
 }
 const camMsg = (t, bad) => { const el = $("#camMsg"); el.textContent = t; el.style.color = bad ? "var(--amber)" : "var(--green)"; };
 $("#addcam").onsubmit = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };
@@ -1384,7 +1516,7 @@ addEventListener("error", (e) => reportErr("error", e.message, e.filename, e.lin
 addEventListener("unhandledrejection", (e) => reportErr("promise", e.reason?.message || e.reason, "", 0));
 // a newer page was deployed: reload when nothing is in progress, so no one runs stale code for days
 let pageBuild = null;
-async function checkBuild() { try { const c = await fetch("/api/config", { cache: "no-store" }).then(r => r.json()); if (!c.build) return; if (pageBuild === null) { pageBuild = c.build; return; } if (c.build !== pageBuild && !speaking && !listening && !radioOn && !document.body.classList.contains("wall") && !/input|textarea/i.test(document.activeElement?.tagName || "")) { addMsg("sys", "JARVIS was updated. Reloading…"); setTimeout(() => location.reload(), 1200); } } catch {} }
+async function checkBuild() { try { const c = await fetch("/api/config", { cache: "no-store" }).then(r => r.json()); if (!c.build) return; if (pageBuild === null) { pageBuild = c.build; return; } if (c.build !== pageBuild && !speaking && !listening && !radioOn && !document.body.classList.contains("wall") && !/input|textarea/i.test(document.activeElement?.tagName || "") && !document.querySelector("#decisions .fu.confirm, #decisions .fu.sending") && !Array.from(document.querySelectorAll("#mail .thread textarea")).some(t => t.value.trim()) && !Object.keys(fuEdits).length) { addMsg("sys", "JARVIS was updated. Reloading…"); setTimeout(() => location.reload(), 1200); } } catch {} }
 setInterval(checkBuild, 5 * 60000); setTimeout(checkBuild, 15000);
 async function loadHealth() { try { state.health = await fetch("/api/health").then(r => r.json()); renderSys(); } catch {} }
 setTimeout(loadHealth, 6000); setInterval(loadHealth, 10 * 60000);
@@ -1425,93 +1557,112 @@ setInterval(clockTick, 1000); clockTick(); setInterval(setLighting, 60000);
    the source so the radio doesn't peg it; phones use fewer points and half the frame rate. */
 const viz = $("#viz"), vctx = viz.getContext("2d"); const VIZ_PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
 let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
+/* The core is a circular spectrum analyser: 2 x NB bars around a ring (bass at the bottom, treble at the top, mirrored
+   left/right), real analyser ballistics (instant attack, timed release, peak caps that hold then fall), a waveform ring
+   inside, and a nucleus that swells with the low end. Everything is drawn in a handful of batched paths, so it holds
+   60 fps on a phone. The analyser's own smoothing is turned down: the ballistics here are what make it read like a meter. */
 const CORE = (() => {
-  const N = VIZ_PHONE ? 650 : 1500, pts = [], GA = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = GA * i; pts.push({ x: Math.cos(t) * r, y, z: Math.sin(t) * r, t, band: Math.min(23, Math.floor(Math.abs(y) * 24)), seed: Math.random() * 6.283 }); }
-  return { pts, bands: new Float32Array(24), smooth: new Float32Array(24), wave: new Float32Array(180), rotY: 0, rotX: 0.35, swell: 0, level: 0, gain: 60, tint: [25, 211, 255], mix: 0, last: 0, fps: 60 };
+  const NB = VIZ_PHONE ? 40 : 56;
+  return { NB, lvl: new Float32Array(NB), cap: new Float32Array(NB), capT: new Float32Array(NB), raw: new Float32Array(NB), wave: new Float32Array(128), edges: null, an: null, rot: 0, swell: 0, bass: 0, level: 0, kick: 0, tint: [25, 211, 255], last: 0, glowKey: "", glow: null, nuc: null, fps: 60 };
 })();
 const STATE_TINT = { idle: [25, 211, 255], listening: [255, 179, 64], thinking: [167, 139, 250], speaking: [160, 236, 255], radio: [57, 240, 168] };
-const freqBuf = new Uint8Array(256), timeBuf = new Uint8Array(512);
+let freqBuf = new Uint8Array(1024), timeBuf = new Uint8Array(2048);
 function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
-function readAudio() {
-  const C = CORE;
+function sizeViz() { const r = viz.getBoundingClientRect(); const px = Math.round(Math.max(120, r.width || 180) * Math.min(2, devicePixelRatio || 1)); if (viz.width !== px) viz.width = viz.height = px; }
+sizeViz(); addEventListener("resize", sizeViz);
+function tuneAnalyser(an) {
+  // called once per analyser: more bins for the low end, little built-in smoothing, a dB window that suits speech and music
+  try { an.fftSize = 2048; an.smoothingTimeConstant = 0.25; an.minDecibels = -82; an.maxDecibels = -14; } catch {}
+  const sr = an.context?.sampleRate || 44100, bins = an.frequencyBinCount, hz = sr / 2 / bins;
+  freqBuf = new Uint8Array(bins); timeBuf = new Uint8Array(an.fftSize);
+  const NB = CORE.NB, lo = 55, hi = Math.min(11000, sr / 2 - 100); const edges = new Int32Array(NB + 1);
+  for (let b = 0; b <= NB; b++) edges[b] = Math.max(1, Math.round(lo * Math.pow(hi / lo, b / NB) / hz));   // log-spaced bands, 55 Hz → 11 kHz
+  for (let b = 1; b <= NB; b++) if (edges[b] <= edges[b - 1]) edges[b] = edges[b - 1] + 1;
+  CORE.edges = edges; CORE.an = an;
+}
+function readAudio(dt) {
+  const C = CORE, NB = C.NB;
   if (analyser) {
+    if (C.an !== analyser) tuneAnalyser(analyser);
     analyser.getByteFrequencyData(freqBuf); analyser.getByteTimeDomainData(timeBuf);
-    // 24 log-spaced bands from 256 bins; adaptive gain tracks the recent peak so speech and music both fill the range
-    let peak = 0;
-    for (let b = 0; b < 24; b++) { const lo = Math.floor(Math.pow(b / 24, 1.7) * 150), hi = Math.max(lo + 1, Math.floor(Math.pow((b + 1) / 24, 1.7) * 150)); let sum = 0; for (let i = lo; i < hi; i++) sum += freqBuf[i]; C.bands[b] = sum / (hi - lo); if (C.bands[b] > peak) peak = C.bands[b]; }
-    C.gain = Math.max(40, peak > C.gain ? C.gain + (peak - C.gain) * 0.3 : C.gain * 0.995);
-    for (let b = 0; b < 24; b++) { const v = Math.min(1, C.bands[b] / C.gain); C.smooth[b] += (v - C.smooth[b]) * (v > C.smooth[b] ? 0.45 : 0.12); }
-    let sq = 0; for (let i = 0; i < 512; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
-    const rms = Math.sqrt(sq / 512); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.997, 0.02);
-    const env = Math.min(1, rms / C.rmsPeak);                                   // 0..1 loudness right now vs the loudest recent moment
-    C.swell += (env - C.swell) * (env > C.swell ? 0.65 : 0.2);                  // the bounce
-    C.kick = Math.max((C.kick || 0) * 0.85, env - (C.prevEnv || 0) > 0.25 ? 1 : 0); C.prevEnv = env;   // a flash on hard onsets
-    for (let i = 0; i < 180; i++) { const v = (timeBuf[Math.floor(i * 512 / 180)] - 128) / 128; C.wave[i] += (v - C.wave[i]) * 0.5; }
-    C.level += (C.smooth.reduce((a, v) => a + v, 0) / 24 - C.level) * 0.2;
+    // band energy = peak bin in the band (what a real analyser shows), with a gentle tilt so consonants and sibilance register
+    let bassSum = 0;
+    for (let b = 0; b < NB; b++) { let m = 0; for (let i = C.edges[b]; i < C.edges[b + 1]; i++) if (freqBuf[i] > m) m = freqBuf[i]; const tilt = 0.9 + 0.35 * (b / NB); C.raw[b] = Math.min(1, Math.pow(m / 255, 1.1) * tilt * 1.25); if (b < NB / 6) bassSum += C.raw[b]; }
+    // ballistics: attack in ~2 frames, release at a fixed rate, caps hold 350 ms then fall
+    const rel = 2.6 * dt, capFall = 1.6 * dt;
+    for (let b = 0; b < NB; b++) {
+      const v = C.raw[b];
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * 0.6; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.35; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+    }
+    let sq = 0, N = timeBuf.length; for (let i = 0; i < N; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
+    const rms = Math.sqrt(sq / N); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.995, 0.04);
+    const env = Math.min(1, rms / C.rmsPeak);
+    C.swell += (env - C.swell) * (env > C.swell ? 0.7 : 0.18);
+    C.kick = Math.max(C.kick * 0.82, env - (C.prevEnv || 0) > 0.3 ? 1 : 0); C.prevEnv = env;
+    const bass = Math.min(1, bassSum / (NB / 6)); C.bass += (bass - C.bass) * (bass > C.bass ? 0.5 : 0.12);
+    const step = N / 128; for (let i = 0; i < 128; i++) { const v = (timeBuf[Math.floor(i * step)] - 128) / 128; C.wave[i] += (v - C.wave[i]) * 0.6; }
+    let sum = 0; for (let b = 0; b < NB; b++) sum += C.lvl[b]; C.level += (sum / NB - C.level) * 0.3;
   } else {
+    // no analyser (browser voice, thinking, phone listening): a synthetic but plausible spectrum
     const t = fakePhase; let target = 0;
-    if (vizMode === "thinking") target = 0.35 + 0.25 * Math.sin(t * 7); else if (vizMode === "listening") target = 0.15; else if (vizMode === "speaking") target = 0.3 + 0.3 * Math.abs(Math.sin(t * 9)); // browser voice has no analyser
-    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1; C.kick = (C.kick || 0) * 0.85;
-    for (let b = 0; b < 24; b++) { const v = vizMode === "idle" ? 0 : target * (0.5 + 0.5 * Math.sin(t * 5 + b * 0.8)); C.smooth[b] += (v - C.smooth[b]) * 0.15; }
-    for (let i = 0; i < 180; i++) C.wave[i] *= 0.9;
+    if (vizMode === "thinking") target = 0.3 + 0.2 * Math.sin(t * 6); else if (vizMode === "listening") target = 0.12 + 0.05 * Math.sin(t * 3); else if (vizMode === "speaking") { const syl = Math.max(0, Math.sin(t * 11) * 0.6 + Math.sin(t * 4.3) * 0.4 + 0.2); target = 0.25 + 0.55 * syl; }
+    const rel = 2.6 * dt, capFall = 1.6 * dt;
+    for (let b = 0; b < NB; b++) {
+      const shape = vizMode === "speaking" ? Math.exp(-Math.pow((b - NB * 0.3) / (NB * 0.28), 2)) * (0.6 + 0.4 * Math.abs(Math.sin(t * 9 + b * 0.7))) : vizMode === "thinking" ? 0.5 + 0.5 * Math.sin(t * 5 - b * 0.35) : 0.4 + 0.3 * Math.sin(t * 2 + b);
+      const v = vizMode === "idle" ? 0.03 + 0.025 * Math.sin(t * 1.3 + b * 0.5) : target * shape;
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * 0.5; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.35; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+    }
+    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1; C.kick *= 0.85; C.bass += (target * 0.5 - C.bass) * 0.1;
+    for (let i = 0; i < 128; i++) C.wave[i] *= 0.9;
   }
 }
 function drawViz(now = 0) {
   const C = CORE; vizRaf = null;
   if (document.hidden) return;
-  const want = vizMode === "idle" ? 1000 / 24 : VIZ_PHONE ? 1000 / 30 : 1000 / 60;
+  const want = vizMode === "idle" ? 1000 / 20 : 1000 / 60;
   if (now - C.last < want - 2) { vizRaf = requestAnimationFrame(drawViz); return; }
   const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt;
-  readAudio();
-  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2;
+  readAudio(dt);
+  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2, NB = C.NB;
   const tint = STATE_TINT[vizMode] || STATE_TINT.idle; for (let i = 0; i < 3; i++) C.tint[i] += (tint[i] - C.tint[i]) * 0.08;
-  const [tr, tg, tb] = C.tint.map(Math.round);
-  const spin = vizMode === "thinking" ? 1.6 : vizMode === "listening" ? 0.9 : vizMode === "idle" ? 0.18 : 0.35 + C.swell * 1.4;
-  C.rotY += dt * spin; C.rotX += ((vizMode === "thinking" ? 0.35 + 0.5 * Math.sin(fakePhase * 1.3) : 0.35 + 0.08 * Math.sin(fakePhase * 0.4)) - C.rotX) * 0.05;
-  const base = W * (vizMode === "listening" ? 0.257 : vizMode === "idle" ? 0.3 : 0.26) * (1 + C.swell * (vizMode === "radio" ? 0.18 : 0.32) + (C.kick || 0) * 0.06);
-  const sy = Math.sin(C.rotY), cyy = Math.cos(C.rotY), sx = Math.sin(C.rotX), cxx = Math.cos(C.rotX);
-  const fade = vizMode === "idle" ? 0.55 : vizMode === "thinking" ? 0.22 : 0.3;   // lower = longer trails
-  vctx.globalCompositeOperation = "destination-out"; vctx.fillStyle = `rgba(0,0,0,${fade})`; vctx.fillRect(0, 0, W, H); vctx.globalCompositeOperation = "source-over";
-  // glow behind the sphere
-  const gl = vizMode === "idle" ? 0.25 : 0.35 + C.swell * 0.6, key = tr + "," + tg + "," + tb;
-  if (C.spriteKey !== key) { C.spriteKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, "rgba(255,255,255,.12)"); g.addColorStop(0.35, `rgba(${key},.1)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(64, (g) => { g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.3, `rgba(${key},.8)`); g.addColorStop(1, `rgba(${key},0)`); }); }
-  vctx.globalAlpha = gl; const gr = base * 1.15; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
-  // points: two depth passes so near points sit on top
-  const ripple = vizMode === "idle" ? 0 : vizMode === "radio" ? 0.22 : 0.26, breathe = vizMode === "idle" ? 0.035 : 0.02;
-  const proj = (x, y, z) => { const x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy, y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx, k = 1 / (1.9 - z2 * 0.6) * 1.9; return [cx + x1 * base * k, cy + y2 * base * k, z2]; };
-  const ring = (rad, tiltA, tiltB, phase, alpha, far) => {           // a great circle, tilted, precessing with its own phase; drawn in two halves by depth
-    const ca = Math.cos(tiltA), sa = Math.sin(tiltA), cb = Math.cos(tiltB), sb = Math.sin(tiltB);
-    vctx.beginPath(); let pen = false;
-    for (let i = 0; i <= 96; i++) { const t = i / 96 * Math.PI * 2 + phase; let x = Math.cos(t) * rad, y = 0, z = Math.sin(t) * rad; let y1 = y * ca - z * sa, z1 = y * sa + z * ca; let x2 = x * cb - y1 * sb, y2 = x * sb + y1 * cb; const [px, py, pz] = proj(x2, y2, z1); const show = far ? pz < 0 : pz >= 0; if (show) { pen ? vctx.lineTo(px, py) : vctx.moveTo(px, py); pen = true; } else pen = false; }
-    vctx.strokeStyle = `rgba(${tr},${tg},${tb},${alpha * (far ? 0.35 : 1)})`; vctx.lineWidth = far ? 0.8 : 1.3; vctx.stroke();
-  };
-  const ringA = 1.12 + C.swell * 0.05, ringB = 1.24 + C.level * 0.06, ra = vizMode === "idle" ? 0.35 : 0.6 + C.level * 0.4;
-  const pA = fakePhase * (vizMode === "thinking" ? 0.9 : 0.25), pB = -fakePhase * (vizMode === "thinking" ? 1.3 : 0.4);
-  const nucleus = () => { const nr = W * 0.045 * (1 + C.swell * 1.4 + (C.kick || 0) * 0.5) * (vizMode === "idle" ? 0.8 : 1) * 2.2; vctx.globalAlpha = vizMode === "idle" ? 0.6 : Math.min(1, 0.85 + C.level * 0.15); vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1; };
-  const step = vizMode === "idle" ? 2 : 1;
-  for (let pass = 0; pass < 2; pass++) {
-    if (pass === 0) { ring(ringA, 1.15, 0.3, pA, ra, true); ring(ringB, 0.5, 1.9, pB, ra * 0.8, true); }
-    if (pass === 1) { nucleus(); }
-    for (let pi = 0; pi < C.pts.length; pi += step) { const p = C.pts[pi];
-      const d = 1 + C.smooth[p.band] * ripple * (0.6 + 0.4 * Math.sin(p.t * 2 + fakePhase * 3)) + breathe * Math.sin(fakePhase * 1.7 + p.seed) + (vizMode === "thinking" ? 0.1 * Math.sin(fakePhase * 6 - p.y * 7 + p.t) : 0);
-      let x = p.x * d, y = p.y * d, z = p.z * d;
-      let x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy;                 // around Y
-      let y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx;                // tilt X
-      if ((pass === 0) !== (z2 < 0)) continue;
-      const persp = 1 / (1.9 - z2 * 0.6), px = cx + x1 * base * persp * 1.9, py = cy + y2 * base * persp * 1.9;
-      const depth = (z2 + 1) / 2, a = (0.18 + depth * 0.82) * (vizMode === "idle" ? 0.55 : 0.55 + C.swell * 0.45), sz = (W / 280) * ((VIZ_PHONE ? 1.6 : 1.3) + depth * 1.6 + C.smooth[p.band] * 1.2);
-      vctx.fillStyle = depth > 0.82 ? `rgba(255,255,255,${a})` : `rgba(${tr},${tg},${tb},${a})`;
-      vctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
-    }
+  const [tr, tg, tb] = C.tint.map(Math.round), key = tr + "," + tg + "," + tb;
+  if (C.glowKey !== key) { C.glowKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, `rgba(${key},.28)`); g.addColorStop(0.5, `rgba(${key},.08)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(96, (g) => { g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, `rgba(${key},.9)`); g.addColorStop(0.55, `rgba(${key},.25)`); g.addColorStop(1, `rgba(${key},0)`); }); }
+  C.rot += dt * (vizMode === "thinking" ? 1.4 : vizMode === "idle" ? 0.12 : 0.25 + C.swell * 0.6);
+  vctx.clearRect(0, 0, W, H);
+  const R0 = W * 0.21 * (1 + C.bass * 0.05 + C.kick * 0.03), LEN = W * 0.25, live = vizMode !== "idle";
+  // glow behind everything, scaled by loudness
+  const gr = R0 * (1.9 + C.swell * 0.5); vctx.globalAlpha = live ? 0.55 + C.swell * 0.45 : 0.35; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
+  // the bars: band 0 at the bottom, climbing both sides to the treble at the top; one path for bars, one for caps
+  const bw = Math.max(1.5, (Math.PI * R0) / NB * 0.62);
+  vctx.lineCap = "butt"; vctx.lineWidth = bw;
+  const barsA = `rgba(${key},${live ? 0.92 : 0.5})`;
+  vctx.beginPath();
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) {
+    const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + Math.max(1, C.lvl[b] * LEN);
+    const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (R0 + 1), cy + si * (R0 + 1)); vctx.lineTo(cx + c * l, cy + si * l);
   }
-  ring(ringA, 1.15, 0.3, pA, ra, false); ring(ringB, 0.5, 1.9, pB, ra * 0.8, false);
-  // waveform halo while sound plays
-  if (analyser && C.level > 0.02) {
-    vctx.beginPath();
-    for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * W * 0.05; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
-    vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.08 + C.level * 0.15})`; vctx.lineWidth = 5; vctx.stroke(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.3 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.stroke();
+  vctx.strokeStyle = barsA; vctx.stroke();
+  // bright tips on the loud bars
+  vctx.beginPath();
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.lvl[b] < 0.55) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.lvl[b] * LEN; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (l - LEN * 0.12), cy + si * (l - LEN * 0.12)); vctx.lineTo(cx + c * l, cy + si * l); }
+  vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.swell * 0.35})`; vctx.stroke();
+  // peak caps
+  vctx.beginPath(); vctx.lineWidth = Math.max(1, bw * 0.9);
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.cap[b] < 0.06) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.cap[b] * LEN + bw * 1.2; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * l, cy + si * l); vctx.lineTo(cx + c * (l + bw * 0.9), cy + si * (l + bw * 0.9)); }
+  vctx.strokeStyle = `rgba(255,255,255,${live ? 0.85 : 0.35})`; vctx.stroke();
+  // the ring the bars grow from, with a slowly turning dashed outer orbit
+  vctx.lineWidth = 1.4; vctx.strokeStyle = `rgba(${key},${live ? 0.75 : 0.45})`; vctx.beginPath(); vctx.arc(cx, cy, R0, 0, Math.PI * 2); vctx.stroke();
+  vctx.save(); vctx.translate(cx, cy); vctx.rotate(C.rot); vctx.setLineDash([R0 * 0.5, R0 * 0.22, R0 * 0.12, R0 * 0.3]); vctx.lineWidth = 1; vctx.strokeStyle = `rgba(${key},${0.25 + C.level * 0.5})`; vctx.beginPath(); vctx.arc(0, 0, R0 + LEN + bw * 2.2, 0, Math.PI * 2); vctx.stroke(); vctx.setLineDash([]); vctx.restore();
+  // waveform ring inside: the voice itself
+  if (live && C.level > 0.015) {
+    vctx.beginPath(); const rw = R0 * 0.72, amp = R0 * 0.26;
+    for (let i = 0; i <= 128; i++) { const ang = (i / 128) * Math.PI * 2 - Math.PI / 2, r = rw + C.wave[i % 128] * amp; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
+    vctx.closePath(); vctx.lineWidth = 4; vctx.strokeStyle = `rgba(${key},${0.1 + C.level * 0.2})`; vctx.stroke(); vctx.lineWidth = 1.2; vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.level * 0.5})`; vctx.stroke();
   }
+  // nucleus swells with the low end
+  const nr = R0 * (0.34 + C.bass * 0.3 + C.kick * 0.12) * (live ? 1 : 0.85 + 0.05 * Math.sin(fakePhase * 1.6)); vctx.globalAlpha = live ? Math.min(1, 0.7 + C.level * 0.4) : 0.55; vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1;
   vizRaf = requestAnimationFrame(drawViz);
 }
 function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode === "radio" ? "♪ " + RADIO[radioIdx].n.toLowerCase() : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
@@ -1594,10 +1745,16 @@ function localAnswer(t) {
   if (/^(add|save)\s/.test(t) && /(cam|camera|feed|webcam|stream|youtu|http)/.test(t)) { const um = rawText.match(/(https?:\/\/\S+|\b[\w.-]+\.[a-z]{2,}\/\S*|\byoutu\S+)/i); if (um) { const url = um[1]; const rest = rawText.replace(url, " ").replace(/^(add|save)\s+(a\s+|this\s+|the\s+)?(cam|camera|feed|webcam|live feed|stream)?\s*/i, "").replace(/\b(called|named|as)\b/i, " ").replace(/[\s:]+/g, " ").trim(); if (PHONE) showView("feeds"); addFeed(url, rest ? rest.replace(/\b\w/g, (c) => c.toUpperCase()) : ""); return "Adding it to Live Feeds."; } }
   if (/^(what('s| is) the )?time\??$/.test(t)) return "It's " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + ".";
   if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
+  const cv = typeof calcVoice === "function" ? calcVoice(rawText) : null; if (cv) return cv;
   if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
   if (/^(play|read) (the )?(morning )?brief/.test(t)) { if (state.morning?.audio) { playUrl("/api/morning/audio?id=" + encodeURIComponent(state.morning.id || "")); return ""; } if (state.morning?.text) return state.morning.text; return "There's no morning brief yet. Press generate and I'll write one."; }
   const rm = t.replace(/^jarvis,?\s*/, "").replace(/[.!?]+$/, "");
   if (/^(stop|pause|turn off|kill|mute) (the )?(radio|music|classic fm)$|^radio off$/.test(rm)) { radioStop(); return "Radio off."; }
+  if (/^(what('s| is) playing|what('s| is) (this|that) (song|track|tune)|what('s| is) on the radio|who('s| is) (this|that|singing|playing)|what song is (this|that|on|playing)|name (this|that) (song|tune)|now playing)$/.test(rm)) {
+    if (!radioOn) return "The radio is off, sir.";
+    if (!songText) return `${RADIO[radioIdx].n} hasn't sent a title for this track yet.`;
+    const { artist, title } = songParts(songText); return artist ? `This is ${title} by ${artist}, on ${RADIO[radioIdx].n}.` : `${RADIO[radioIdx].n} says this is ${title}.`;
+  }
   const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+)?(radio|music|some music|.+?)(?:\s+radio)?$/);
   if (rp) { const want = /^(radio|music|some music)$/.test(rp[1]) ? "" : rp[1].replace(/\s+/g, ""); const i = want ? (RADIO_MATCH.find(j => RADIO[j].k.some(k => want.includes(k))) ?? -1) : radioIdx; if (i >= 0) { radioPlay(i); return ""; } }
   if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
@@ -1634,7 +1791,7 @@ function closeStep() {
   if (cm.i >= cm.items.length) { closeMode = null; const t = "That's everything. Day closed."; addMsg("ai", t); speak(t); return; }
   const it = cm.items[cm.i];
   const el = document.createElement("div"); el.className = "closecard"; el.dataset.close = "1";
-  el.innerHTML = `<div class="k">CLOSE THE DAY · ${cm.i + 1} OF ${cm.items.length}</div><div>${esc(it.say)}</div>${it.kind === "followup" ? `<textarea>${esc(it.f.body)}</textarea>` : ""}<div class="row">${it.actions.map(a => `<button class="btn sm ${a === "send" || a === "approve" || a === "draft" ? "primary" : ""}" data-ca="${a}">${a.toUpperCase()}</button>`).join("")}<button class="btn sm" data-ca="stop">STOP</button></div>`;
+  el.innerHTML = `<div class="k">CLOSE THE DAY · ${cm.i + 1} OF ${cm.items.length}</div><div>${esc(it.say)}</div>${it.kind === "followup" ? `<textarea>${esc(fuEdits[it.f.id] ?? it.f.body)}</textarea>` : ""}<div class="row">${it.actions.map(a => `<button class="btn sm ${a === "send" || a === "approve" || a === "draft" ? "primary" : ""}" data-ca="${a}">${a.toUpperCase()}</button>`).join("")}<button class="btn sm" data-ca="stop">STOP</button></div>`;
   el.querySelectorAll("[data-ca]").forEach(b => b.onclick = () => closeAct(b.dataset.ca, el));
   $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; cm.el = el; speak(it.say);
 }
@@ -1642,7 +1799,7 @@ async function closeAct(a, el) {
   const cm = closeMode; if (!cm) return; const it = cm.items[cm.i];
   el.querySelectorAll("button").forEach(b => b.disabled = true);
   if (a === "stop") { closeMode = null; const t = "Stopped. The rest keeps for later."; addMsg("ai", t); speak(t); return; }
-  if (a === "send" && it.kind === "followup") { const body = el.querySelector("textarea")?.value || it.f.body; const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: it.f.account, threadId: it.f.threadId, body, followupId: it.f.id }, summary: "Send reply to " + it.f.from }) }).then(x => x.json()).catch(() => ({})); addMsg("sys", r.ok ? "Sent." : "Send failed: " + (r.result || "")); state.followups = state.followups.filter(f => f.id !== it.f.id); }
+  if (a === "send" && it.kind === "followup") { const body = el.querySelector("textarea")?.value || (fuEdits[it.f.id] ?? it.f.body); const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: it.f.account, threadId: it.f.threadId, body, followupId: it.f.id }, summary: "Send reply to " + it.f.from }) }).then(x => x.json()).catch(() => ({})); addMsg("sys", r.ok ? "Sent." : "Send failed: " + (r.result || "")); state.followups = state.followups.filter(f => f.id !== it.f.id); }
   if (a === "skip" && it.kind === "followup") { await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: it.f.id }) }).catch(() => {}); state.followups = state.followups.filter(f => f.id !== it.f.id); }
   if ((a === "approve" || a === "reject") && it.kind === "decision") { const d = it.d; const item = d.kind === "lazo_claim" ? { kind: "lazo_claim", params: { claimId: d.id, decision: a === "approve" ? "approved" : "rejected" } } : d.kind === "roven_approve_employer" ? { kind: "roven_approve_employer", params: { employerId: d.id } } : { kind: a === "approve" ? "roven_approve_job" : "roven_reject_job", params: { jobId: d.id } }; await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), ...item, summary: (a === "approve" ? "Approve " : "Reject ") + d.label }) }).catch(() => {}); addMsg("sys", (a === "approve" ? "Approved" : "Rejected") + " · queued for the PC."); state.decisions.items = state.decisions.items.filter(x => x.id !== d.id); }
   if (a === "draft" && it.kind === "email") { addMsg("sys", "Drafting…"); const r = await fetch("/api/followups/run?dry=0&minAge=0", { method: "POST" }).then(x => x.json()).catch(() => []); const f = (Array.isArray(r) ? r : []).find(x => x.threadId === it.m.threadId && x.status === "ready"); if (f) { state.followups = [f, ...(state.followups || []).filter(x => x.id !== f.id)]; cm.items.splice(cm.i + 1, 0, { kind: "followup", f, say: `Draft ready for ${f.from}. Send, skip, or next?`, actions: ["send", "skip", "next"] }); } else addMsg("sys", "Couldn't draft that one; it stays in the inbox."); }
@@ -1656,6 +1813,7 @@ function closeVoice(t) {
   if (!hit) { speak("Say " + it.actions.join(", ") + ", or stop."); return true; }
   closeAct(hit[0], cm.el); return true;
 }
+let askCtl = null;   // the in-flight /api/chat stream; a new question aborts it so two answers never speak over each other
 async function ask(text) {
   text = text.trim(); if (!text) return;
   if (closeMode) { addMsg("me", text); if (closeVoice(text)) return; }
@@ -1664,15 +1822,17 @@ async function ask(text) {
   const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
   const myReply = {}; replyOpen = myReply;
   const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
+  askCtl?.abort(); askCtl = new AbortController(); const ctl = askCtl;
   let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
   const flushSentences = (final) => {
+    if (gen !== speakGen) return; // a newer question (or a stop) took over: nothing more from this reply is spoken
     if (!final && firstSent) return; // after the opening sentence, wait for the whole reply and send it as one segment
     const rest = full.slice(spoken); const m = final ? [rest] : rest.match(/^[\s\S]*?[.!?](?=\s|$)/);
     if (!m) return; const chunk = (final ? rest : m[0]).trim(); if (!chunk) return;
     spoken += final ? rest.length : m[0].length; firstSent = true; if ($("#speakOn").checked) enqueueSpeech(chunk);
   };
   try {
-    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, messages: state.chat }) });
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, messages: state.chat }), signal: ctl.signal });
     const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
     while (true) {
       const { value, done } = await reader.read(); if (done) break;
@@ -1686,7 +1846,8 @@ async function ask(text) {
         else if (ev === "error") { el.textContent = full + "\n[" + d.message + "]"; }
       }
     }
-  } catch (e) { el.textContent = (full || "") + " I lost the connection to my reasoning core. " + e.message; }
+  } catch (e) { if (e.name === "AbortError") { if (!full) el.remove(); return; } el.textContent = (full || "") + " I lost the connection to my reasoning core. " + e.message; }
+  if (askCtl === ctl) askCtl = null;
   if (replyOpen === myReply) replyOpen = false; else return; // a newer question took over
   $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) { pendingReply = false; setViz("idle"); onSpeechEnd(); }
 }
@@ -1786,7 +1947,70 @@ $("#wallBtn").onclick = (e) => { e.preventDefault(); enterWall(); }; $("#wallExi
 /* ---------- phone navigation ---------- */
 function showView(v) { $("#main").dataset.view = v; if (v === "world") setTimeout(() => { initGlobe(); globe && globe.width($("#globe").clientWidth).height($("#globe").clientHeight || 360); }, 60); $("#nav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.view === v)); if (v === "weather" && map) setTimeout(() => map.invalidateSize(), 50); try { localStorage.setItem("jarvisView", v); } catch {} }
 $("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.dataset.view));
-addEventListener("resize", () => { if (map) map.invalidateSize(); });
+addEventListener("resize", () => { if (map) map.invalidateSize(); if (typeof hudCondense === "function") hudCondense(); hudHeight(); });
+
+/* ---------- desktop: jump bar (one shortcut per panel) + folding panels ---------- */
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const JUMP_GROUPS = [["JARVIS", ["brainPanel", "alertPanel"]], ["OPS", ["opsPanel", "inboxPanel", "decisionsPanel", "scannerPanel", "upcomingPanel", "watchPanel", "sportsPanel", "newsPanel"]], ["WORLD", ["worldPanel", "wxPanel"]], ["MORE", ["radioPanel", "calcPanel", "faithPanel", "moneyPanel", "memPanel", "feedsPanel", "launchPanel", "notesPanel"]]];
+let folded = new Set(); try { folded = new Set(JSON.parse(localStorage.getItem("jarvisFolded") || "[]")); } catch {}
+const panelLabel = (sec) => { const h = sec.querySelector("h2"); return h ? Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join("").trim() : sec.id; };
+function hudHeight() { document.documentElement.style.setProperty("--hudh", ($(".hud")?.offsetHeight || 130) + "px"); }
+function jumpCounts() {   // small badges: what is waiting inside a panel
+  const c = {};
+  const needs = (state.brief?.items || []).filter(i => i.needs_reply).length; if (needs) c.inboxPanel = needs;
+  const decs = (state.decisions?.items || []).length + (state.followups || []).filter(f => f.status === "ready").length; if (decs) c.decisionsPanel = decs;
+  const down = state.sites.filter(s => !s.ok).length; if (down) c.opsPanel = { n: down, crit: true };
+  const al = (state.alerts || []).filter(a => Date.now() - new Date(a.at) < 3 * 3600e3).length; if (al) c.alertPanel = al;
+  const live = (state.sports?.games || []).filter(x => x.fav && x.state === "in").length; if (live) c.sportsPanel = live;
+  const failed = (Array.isArray(state.watch?.payments) ? state.watch.payments : []).filter(x => x.state === "failed").length; if (failed) c.watchPanel = { n: failed, crit: true };
+  const nws = (state.wx?.nws || []).length; if (nws) c.wxPanel = { n: nws, crit: true };
+  const rem = (state.reminders || []).length; if (rem) c.upcomingPanel = rem;
+  return c;
+}
+function renderJump() {
+  const counts = jumpCounts();
+  const hadFocus = document.activeElement?.closest?.("#jump") ? document.activeElement.dataset.jump : null;   // keyboard focus survives the rebuild
+  $("#jump").innerHTML = JUMP_GROUPS.map(([g, ids]) => `<span class="g">${g}</span>` + ids.map(id => { const sec = $("#" + id); if (!sec) return ""; const c = counts[id]; const n = c == null ? "" : (typeof c === "object" ? c.n : c); const crit = typeof c === "object" && c.crit; const f = folded.has(id); return `<button data-jump="${id}" class="${f ? "fold" : ""}" title="${f ? "Folded: click to open it" : "Jump to " + esc(panelLabel(sec))}">${esc(panelLabel(sec))}<b class="${crit ? "crit" : ""}">${esc(String(n))}</b></button>`; }).join("")).join("") + `<span class="sp"></span><button class="all" id="jumpAll" title="Open every folded panel">OPEN ALL</button>`;
+  $("#jump").querySelectorAll("[data-jump]").forEach(b => b.onclick = () => jumpTo(b.dataset.jump));
+  $("#jumpAll").onclick = () => { folded.clear(); saveFold(); applyFold(); };
+  if (hadFocus) $("#jump").querySelector(`[data-jump="${CSS.escape(hadFocus)}"]`)?.focus();
+  jumpSpot();
+}
+function jumpTo(id) { const sec = $("#" + id); if (!sec) return; if (folded.has(id)) { folded.delete(id); saveFold(); applyFold(); } sec.scrollIntoView({ behavior: "smooth", block: "start" }); sec.classList.remove("pulse"); void sec.offsetWidth; sec.classList.add("pulse"); }
+function saveFold() { try { localStorage.setItem("jarvisFolded", JSON.stringify([...folded])); } catch {} }
+function applyFold() {
+  $$("#main > .panel[id]").forEach(sec => {
+    const f = folded.has(sec.id), was = sec.classList.contains("folded"); sec.classList.toggle("folded", f);
+    const btn = sec.querySelector(".foldb"); if (btn) { btn.textContent = f ? "+" : "–"; btn.title = f ? "Open this panel" : "Fold this panel down to its header"; btn.setAttribute("aria-expanded", f ? "false" : "true"); }
+    if (was && !f) {   // the globe and the radar map need a nudge after being hidden
+      if (sec.id === "worldPanel") setTimeout(() => { initGlobe(); globe && globe.width($("#globe").clientWidth).height($("#globe").clientHeight || 360); }, 60);
+      if (sec.id === "wxPanel" && map) setTimeout(() => map.invalidateSize(), 50);
+    }
+  });
+  renderJump();
+}
+function jumpSpot() {   // light the shortcut for the panel under the header
+  if (innerWidth < 900) return;
+  const hh = ($(".hud")?.offsetHeight || 130) + 20; let best = null;
+  for (const sec of $$("#main > .panel[id]")) { const r = sec.getBoundingClientRect(); if (r.height && r.bottom > hh + 40 && r.top < innerHeight * .6) { best = sec.id; break; } }
+  $("#jump").querySelectorAll("[data-jump]").forEach(b => b.classList.toggle("on", b.dataset.jump === best));
+}
+function hudCondense() {   // desktop: once scrolled past the top the header shrinks to one line of chips + one line of shortcuts
+  const hud = $(".hud"); if (!hud) return; const on = hud.classList.contains("condensed");
+  const want = innerWidth >= 900 && (scrollY > 120 || (on && scrollY >= 40));
+  if (want !== on) { hud.classList.toggle("condensed", want); setTimeout(hudHeight, 220); hudHeight(); }
+}
+let jumpRaf = 0; addEventListener("scroll", () => { if (!jumpRaf) jumpRaf = requestAnimationFrame(() => { jumpRaf = 0; hudCondense(); jumpSpot(); }); }, { passive: true });
+function initFold() {
+  $$("#main > .panel[id]").forEach(sec => {
+    if (sec.id === "brainPanel" || sec.id === "phoneInfo") return;
+    const h = sec.querySelector("h2"); if (!h || h.querySelector(".foldb")) return;
+    const b = document.createElement("button"); b.className = "foldb"; b.type = "button"; b.setAttribute("aria-label", "Fold panel"); b.setAttribute("aria-expanded", "true");
+    b.onclick = (e) => { e.stopPropagation(); if (folded.has(sec.id)) folded.delete(sec.id); else folded.add(sec.id); saveFold(); applyFold(); };
+    h.appendChild(b);
+  });
+  applyFold(); hudHeight(); setTimeout(hudHeight, 800);
+}
 
 /* ---------- home location ---------- */
 function renderHome() { try { renderScanner(); clockTick(); } catch {} const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
@@ -2047,9 +2271,12 @@ const RADIO = [
   { n: "LBC News", s: "LBCUK", k: ["lbc", "news", "talk"] },
   { n: "Heart", s: "HeartUK", k: ["heart"] },
   { n: "Capital", s: "CapitalUK", k: ["capital"] },
+  // WAAF (Boston's rock station) lives on Audacy as the WWBX 93.7 HD2 stream; AmperWave sends CORS for the hub's origin
+  // np = Audacy station id for its song-history feed (WAAF publishes none as of 2026-10-06, so the line stays blank)
+  { n: "WAAF", u: "https://live.amperwave.net/direct/audacy-wwbxhd2aac-imc", from: "Audacy · Boston's rock station", np: "101-935", k: ["waaf", "rock", "boston"] },
 ];
 // order matters for keyword matching: "classicfmcalm" must hit Calm before Classic FM
-const RADIO_MATCH = [1, 2, 0, 4, 3, 5, 6, 7];
+const RADIO_MATCH = [1, 2, 0, 4, 3, 5, 6, 7, 8];
 const radio = new Audio(); radio.crossOrigin = "anonymous"; radio.preload = "none";
 var radioOn = false, radioIdx = 0, radioAn = null, radioRetry = 0;
 try { const i = +localStorage.getItem("radioIdx"); if (RADIO[i]) radioIdx = i; const v = localStorage.getItem("radioVol"); if (v !== null) $("#radioVol").value = v; } catch {}
@@ -2061,20 +2288,36 @@ function radioViz() {
 }
 function radioUI(msg) {
   const r = RADIO[radioIdx];
-  $("#radioName").textContent = r.n; $("#radioPanel").classList.toggle("on", radioOn && !radio.paused); $("#radioPlay").textContent = radioOn ? "❚❚" : "▶"; $("#radioPlay").classList.toggle("on", radioOn);
+  $("#radioName").textContent = r.n; $("#radioSub").textContent = r.from || "Global · live from London"; $("#radioPanel").classList.toggle("on", radioOn && !radio.paused); $("#radioPlay").textContent = radioOn ? "❚❚" : "▶"; $("#radioPlay").classList.toggle("on", radioOn);
   $("#radioState").textContent = msg || (radioOn ? "live" : "off · tap play or say \"Jarvis, play " + r.n + "\"");
   $("#radioStations").innerHTML = RADIO.map((x, i) => `<button data-ri="${i}" class="${i === radioIdx ? "sel" : ""}">${esc(x.n.toUpperCase())}</button>`).join("");
 }
 function radioPlay(i = radioIdx) {
   radioIdx = i; try { localStorage.setItem("radioIdx", i); } catch {}
   radioOn = true; unlockPlayer(); radioViz();
-  radio.src = "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
+  radio.src = RADIO[i].u || "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
   radioUI("tuning…");
+  // the lock screen shows the station straight away, before (or without) any track titles from the stream
+  if ("mediaSession" in navigator) { try { navigator.mediaSession.metadata = new MediaMetadata({ title: RADIO[i].n, artist: RADIO[i].from || "Global", album: RADIO[i].n }); } catch {} }
   if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
-  radio.play().then(() => { radioRetry = 0; radioUI(); if (!speaking && !listening) setViz("idle"); })
+  songText = ""; $("#radioSong").textContent = ""; clearInterval(songTimer); songTimer = setInterval(radioSong, 20000);
+  radio.play().then(() => { radioRetry = 0; radioUI(); if (!speaking && !listening) setViz("idle"); setTimeout(radioSong, 1500); })
     .catch(e => { if (e.name === "AbortError") return; radioOn = false; radioUI("couldn't start: " + (e.name === "NotAllowedError" ? "tap play once to allow audio" : e.message)); });
 }
-function radioStop() { radioOn = false; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); if (PHONE && $("#wakeOn")?.checked && !listening && typeof startWakeAgain === "function") setTimeout(() => startWakeAgain(), 300); }
+// what the station says is playing (worker reads the stream's ICY metadata); also feeds the lock-screen / media keys
+var songText = "", songTimer = 0;
+const songParts = (t) => { const i = t.indexOf(" - "); return i > 0 ? { artist: t.slice(0, i).trim(), title: t.slice(i + 3).trim() } : { artist: "", title: t }; };
+async function radioSong() {
+  if (!radioOn) return;
+  const r = RADIO[radioIdx]; const u = r.u || "https://media-ssl.musicradio.com/" + r.s;
+  try {
+    const d = await fetch("/api/radio/now?" + (r.np ? "audacy=" + encodeURIComponent(r.np) : "u=" + encodeURIComponent(u))).then(x => x.json()); if (!radioOn || RADIO[radioIdx] !== r) return;
+    const t = (d.title || "").trim(); if (t === songText) return; songText = t;
+    $("#radioSong").textContent = t ? "♪ " + t : "";
+    if ("mediaSession" in navigator) { const { artist, title } = songParts(t || r.n); try { navigator.mediaSession.metadata = new MediaMetadata({ title: title || r.n, artist: artist || r.n, album: r.n }); } catch {} }
+  } catch {}
+}
+function radioStop() { radioOn = false; clearInterval(songTimer); songText = ""; $("#radioSong").textContent = ""; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); if (PHONE && $("#wakeOn")?.checked && !listening && typeof startWakeAgain === "function") setTimeout(() => startWakeAgain(), 300); }
 function radioDuck(on) { if (!radioOn) return; radio.volume = on ? radioLevel() * 0.15 : radioLevel(); if (!on && radio.paused && radio.getAttribute("src")) radio.play().catch(() => {}); }
 radio.onerror = () => { if (!radioOn) return; if (radioRetry++ < 5) { radioUI("reconnecting…"); setTimeout(() => radioOn && radioPlay(radioIdx), 2000 * radioRetry); } else { radioOn = false; radioUI("stream unavailable right now"); } };
 radio.onpause = () => { if (radioOn && radio.getAttribute("src")) radioUI("paused by the device · tap ▶"); };
@@ -2085,9 +2328,69 @@ $("#radioVol").oninput = () => { try { localStorage.setItem("radioVol", $("#radi
 radioUI();
 
 /* ---------- wake-up: morning brief, then the radio fades in (this device, page open) ---------- */
+/* ---------- calculator: a small parser (no eval), keypad, history, and spoken questions ---------- */
+let calcAns = 0, calcHist = [];
+function calcEval(src) {
+  // normalise spoken and typed forms into one grammar
+  let e = String(src).toLowerCase().replace(/,/g, "")
+    .replace(/×|\bx\b|\btimes\b|multiplied by/g, "*").replace(/÷|\bdivided by\b|\bover\b/g, "/").replace(/−|–|\bminus\b|\bless\b|\btake away\b/g, "-").replace(/\bplus\b|\badd(ed)?\b/g, "+")
+    .replace(/\bto the power of\b|\bpower\b|\*\*/g, "^").replace(/\bsquared\b/g, "^2").replace(/\bcubed\b/g, "^3").replace(/\bsquare root of\b|√/g, "sqrt").replace(/\bcube root of\b/g, "cbrt")
+    .replace(/\bpercent\b/g, "%").replace(/\bpi\b|π/g, "(3.141592653589793)").replace(/\bans(wer)?\b/g, "(" + calcAns + ")").replace(/\bhalf of\b/g, "0.5*").replace(/\bdouble\b/g, "2*").replace(/\btwice\b/g, "2*")
+    .replace(/(\d+(?:\.\d+)?)%\s*off\s*(\d+(?:\.\d+)?)/g, "($2*(1-$1/100))")                          // 20% off 80 = 64
+    .replace(/(\d+(?:\.\d+)?)\s*([+-])\s*(\d+(?:\.\d+)?)%(?!\s*(?:of|on))/g, "($1*(1$2$3/100))")      // 240 + 20% = 288
+    .replace(/(\d+(?:\.\d+)?)%\s*(?:of|on)\s*/g, "($1/100)*").replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")   // 15% of 240, bare 7%
+    .replace(/\s+/g, "");
+  // tokenise
+  const toks = []; let i = 0;
+  while (i < e.length) { const c = e[i]; if (/\d|\./.test(c)) { let j = i; while (j < e.length && /[\d.]/.test(e[j])) j++; toks.push({ n: parseFloat(e.slice(i, j)) }); i = j; } else if (/[a-z]/.test(c)) { let j = i; while (j < e.length && /[a-z]/.test(e[j])) j++; toks.push({ f: e.slice(i, j) }); i = j; } else if ("+-*/^()".includes(c)) { toks.push({ o: c }); i++; } else throw new Error("unexpected " + c); }
+  // recursive descent: expr = term (('+'|'-') term)* ; term = pow (('*'|'/') pow)* ; pow = unary ('^' pow)? ; unary = '-' unary | func '(' expr ')' | '(' expr ')' | number
+  let p = 0; const peek = () => toks[p], take = () => toks[p++];
+  const FN = { sqrt: Math.sqrt, cbrt: Math.cbrt, sin: (x) => Math.sin(x * Math.PI / 180), cos: (x) => Math.cos(x * Math.PI / 180), tan: (x) => Math.tan(x * Math.PI / 180), ln: Math.log, log: Math.log10, abs: Math.abs, round: Math.round, floor: Math.floor, ceil: Math.ceil };
+  function unary() { const t = peek(); if (!t) throw new Error("incomplete"); if (t.o === "-") { take(); return -unary(); } if (t.o === "+") { take(); return unary(); } if (t.f) { take(); const fn = FN[t.f]; if (!fn) throw new Error("unknown " + t.f); const arg = peek()?.o === "(" ? group() : unary(); return fn(arg); } if (t.o === "(") return group(); if (t.n != null) { take(); if (peek()?.o === "(") return t.n * group(); return t.n; } throw new Error("unexpected " + (t.o || t.f)); }
+  function group() { take(); const v = expr(); if (peek()?.o !== ")") throw new Error("missing )"); take(); return v; }
+  function pow() { const b = unary(); if (peek()?.o === "^") { take(); return Math.pow(b, pow()); } return b; }
+  function term() { let v = pow(); while (peek() && (peek().o === "*" || peek().o === "/" || peek().o === "(" || peek().f)) { const t = peek(); if (t.o === "*" || t.o === "/") { take(); const r = pow(); v = t.o === "*" ? v * r : v / r; } else v = v * pow(); } return v; }
+  function expr() { let v = term(); while (peek() && (peek().o === "+" || peek().o === "-")) { const t = take(); const r = term(); v = t.o === "+" ? v + r : v - r; } return v; }
+  if (!toks.length) throw new Error("empty");
+  const v = expr(); if (p < toks.length) throw new Error("unexpected " + (toks[p].o || toks[p].f || toks[p].n)); if (!isFinite(v)) throw new Error("not a number");
+  return v;
+}
+const calcFmt = (v) => { const r = Math.abs(v) >= 1e15 || (Math.abs(v) < 1e-6 && v !== 0) ? v.toExponential(6) : parseFloat(v.toPrecision(12)); return typeof r === "number" ? r.toLocaleString("en-US", { maximumFractionDigits: 10 }) : r; };
+const calcSay = (v) => { const r = parseFloat(v.toPrecision(10)); return Math.abs(r) >= 1e15 ? r.toExponential(4) : r.toLocaleString("en-US", { maximumFractionDigits: 6 }); };
+function calcRun(fromVoice) {
+  const src = $("#calcIn").value.trim(); if (!src) return null;
+  try { const v = calcEval(src); calcAns = v; $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); calcHist.unshift({ q: src, a: calcFmt(v) }); calcHist = calcHist.slice(0, 12); renderCalcHist(); try { localStorage.setItem("jarvisCalc", JSON.stringify(calcHist)); } catch {} return v; }
+  catch (e) { $("#calcOut").className = "calcout err"; $("#calcOut").textContent = e.message; return null; }
+}
+function renderCalcHist() { $("#calcHist").innerHTML = calcHist.map((h, i) => `<div data-i="${i}"><span>${esc(h.q)}</span><b>${esc(h.a)}</b></div>`).join(""); }
+$("#calcHist").onclick = (e) => { const d = e.target.closest("[data-i]"); if (!d) return; const h = calcHist[+d.dataset.i]; $("#calcIn").value = h.q; $("#calcOut").textContent = h.a; $("#calcOut").className = "calcout"; };
+$("#calcKeys").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return; const k = b.dataset.k, inp = $("#calcIn");
+  if (k === "C") { inp.value = ""; $("#calcOut").innerHTML = "&nbsp;"; $("#calcOut").className = "calcout"; }
+  else if (k === "⌫") inp.value = inp.value.slice(0, -1);
+  else if (k === "=") calcRun();
+  else if (k === "ANS") inp.value += calcAns;
+  else if (k === "√") inp.value += "√(";
+  else { if ($("#calcOut").textContent.trim() && !inp.value && /[+\-×÷^%]/.test(k) && k !== "−" ) inp.value = String(calcAns); inp.value += k; }
+  if (k !== "=") { $("#calcOut").className = "calcout"; try { const v = calcEval(inp.value); $("#calcOut").textContent = calcFmt(v); } catch { if (!inp.value) $("#calcOut").innerHTML = "&nbsp;"; } }
+  if (!PHONE) inp.focus();
+};
+$("#calcIn").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); calcRun(); } if (e.key === "Escape") { $("#calcIn").value = ""; $("#calcOut").innerHTML = "&nbsp;"; } });
+$("#calcIn").addEventListener("input", () => { try { const v = calcEval($("#calcIn").value); $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); } catch { if (!$("#calcIn").value) $("#calcOut").innerHTML = "&nbsp;"; } });
+try { calcHist = JSON.parse(localStorage.getItem("jarvisCalc") || "[]"); renderCalcHist(); } catch {}
+// spoken: "what's 15% of 240", "calculate 12 times 8", "square root of 81", "20 percent tip on 86", "how much is 1200 divided by 7"
+function calcVoice(raw) {
+  let t = raw.toLowerCase().replace(/^jarvis,?\s*/, "").replace(/[?!.]+$/, "").trim();
+  const tip = t.match(/^(?:what(?:'s| is) )?(?:a )?(\d+(?:\.\d+)?)\s*(?:%|percent) tip on (?:\$)?(\d+(?:\.\d+)?)$/); if (tip) { const tv = +tip[2] * +tip[1] / 100; $("#calcIn").value = `${tip[1]}% of ${tip[2]}`; calcRun(); return `A ${tip[1]} percent tip on ${calcSay(+tip[2])} is ${calcSay(tv)}, making ${calcSay(+tip[2] + tv)} in all.`; }
+  const m = t.match(/^(?:calculate|compute|work out|what(?:'s| is| does)|how much is|how many is|tell me)\s+(.+?)(?:\s+(?:equal|equals|come to|make|is))?$/) || (/^[\d\s.,+\-×÷*\/^%()√]+$/.test(t) && /\d\s*[+\-×÷*\/^%]|√/.test(t) ? [t, t] : null);
+  if (!m) return null;
+  const expr = m[1].replace(/^(?:the )?(?:answer to|result of|value of)\s+/, "");
+  if (!/\d/.test(expr) || !/[+\-×÷*\/^%]|times|plus|minus|divided|over|percent|squared|cubed|root|power|half|double|twice|of/.test(expr)) return null;
+  try { const v = calcEval(expr); calcAns = v; $("#calcIn").value = expr; calcRun(); if (PHONE) showView("jarvis"); $("#calcPanel").scrollIntoView({ block: "nearest" }); return `That's ${calcSay(v)}.`; } catch { return null; }
+}
 /* alarm settings live on the server; the minute cron fires the phone push and flags the PC */
 let alarmCfg = null;
-async function loadAlarm() { try { alarmCfg = await fetch("/api/alarm").then(r => r.json()); } catch { return; } $("#alarmOn").checked = !!alarmCfg.enabled; $("#alarmTime").value = alarmCfg.time || "05:00"; $("#alarmDays").value = !alarmCfg.days?.length ? "all" : alarmCfg.days.includes(1) ? "weekdays" : "weekends"; alarmNote(); }
+async function loadAlarm() { try { alarmCfg = await fetch("/api/alarm").then(r => r.json()); } catch { return; } try { alarmRingCheck(); } catch {} $("#alarmOn").checked = !!alarmCfg.enabled; $("#alarmTime").value = alarmCfg.time || "05:00"; $("#alarmDays").value = !alarmCfg.days?.length ? "all" : alarmCfg.days.includes(1) ? "weekdays" : "weekends"; alarmNote(); }
 function alarmNote() { $("#alarmNote").textContent = $("#alarmOn").checked ? "Fires on the server: your phone gets an alarm that repeats until you acknowledge it, and the PC opens JARVIS and plays the brief, then this station, if the JARVIS wake task is installed." : ""; }
 $("#alarmSave").onclick = async () => { const days = $("#alarmDays").value; const body = { enabled: $("#alarmOn").checked, time: $("#alarmTime").value, days: days === "weekdays" ? [1, 2, 3, 4, 5] : days === "weekends" ? [0, 6] : [], station: radioIdx }; alarmCfg = await fetch("/api/alarm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()).catch(() => alarmCfg); alarmNote(); $("#alarmNote").textContent = (alarmCfg?.enabled ? `Saved: ${alarmCfg.time}, ${days}. ` : "Alarm off. ") + $("#alarmNote").textContent; };
 $("#alarmOn").onchange = alarmNote;
@@ -2100,12 +2403,85 @@ async function wakeSequence() {
 }
 if (location.hash === "#wake") {
   $("#wake").hidden = false; history.replaceState(null, "", "/");
-  const go = () => { $("#wake").hidden = true; unlockPlayer(); if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); };
+  const go = () => { $("#wake").hidden = true; unlockPlayer(); fetch("/api/alarm/ack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "wake" }) }).catch(() => {}); if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); };
   $("#wakeGo").onclick = go;
   // the PC kiosk allows autoplay: try at once, keep the button for phones
   setTimeout(async () => { try { await player.play(); player.pause(); go(); } catch {} }, 2500);
 }
-setTimeout(loadAlarm, 3000);
+setTimeout(loadAlarm, 3000); setInterval(loadAlarm, 60000);
+/* phone alarm through the browser itself: a service worker receives Web Push from the hub (no app needed).
+   Subscribing needs a tap (notification permission), then the hub keeps the subscription in KV push_subs. */
+let swReg = null, pushSub = null;
+async function pushInit() {
+  const note = $("#pushNote"); if (!("serviceWorker" in navigator) || !("PushManager" in window)) { note.innerHTML = "This browser can't receive pushes. Use Chrome (Android) or add JARVIS to the home screen on iPhone."; $("#pushEnable").hidden = true; return; }
+  try { swReg = await navigator.serviceWorker.register("/sw.js", { scope: "/" }); pushSub = await swReg.pushManager.getSubscription(); } catch (e) { note.textContent = "Service worker failed: " + e.message; return; }
+  pushStatus();
+}
+async function pushStatus() {
+  const note = $("#pushNote"); let v = null; try { v = await fetch("/api/push/vapid").then(r => r.json()); } catch {}
+  const here = pushSub && v?.subs?.some(s => pushSub.endpoint.startsWith(s.endpoint)) ? pushSub : null;
+  const n = v?.subs?.length || 0;
+  const perm = typeof Notification !== "undefined" ? Notification.permission : "default";
+  note.innerHTML = (here ? "<b>This device rings.</b> " : perm === "denied" ? "<i>Notifications are blocked for this site in the browser settings.</i> " : "<i>This device isn't subscribed yet.</i> ")
+    + (n ? `${n} device${n > 1 ? "s" : ""} subscribed: ${v.subs.map(s => esc(s.label || (s.ua || "").match(/Android|iPhone|iPad|Windows|Mac/)?.[0] || "device")).join(", ")}. ` : "No device subscribed. ")
+    + "Pushover (if the app is installed) rings too.";
+  $("#pushEnable").textContent = here ? "STOP RINGING THIS PHONE" : "RING THIS PHONE";
+}
+async function urlB64ToU8(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+$("#pushEnable").onclick = async () => {
+  const note = $("#pushNote"); unlockPlayer();
+  if (!swReg) { await pushInit(); if (!swReg) return; }
+  if (pushSub && $("#pushEnable").textContent.startsWith("STOP")) { try { await fetch("/api/push/unsubscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ endpoint: pushSub.endpoint }) }); await pushSub.unsubscribe(); } catch {} pushSub = null; pushStatus(); return; }
+  try {
+    const perm = await Notification.requestPermission(); if (perm !== "granted") { note.innerHTML = "<i>Permission not granted.</i> Allow notifications for this site and try again."; return; }
+    const v = await fetch("/api/push/vapid").then(r => r.json());
+    pushSub = (await swReg.pushManager.getSubscription()) || await swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: await urlB64ToU8(v.key) });
+    const label = (navigator.userAgent.match(/Android|iPhone|iPad|Windows|Mac/) || ["device"])[0] + (PHONE ? " phone" : " desktop");
+    const r = await fetch("/api/push/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ subscription: pushSub.toJSON(), label }) }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    note.innerHTML = "<b>Subscribed.</b> Press TEST ALARM to hear it."; setTimeout(pushStatus, 800);
+  } catch (e) { note.textContent = "Couldn't subscribe: " + e.message; }
+};
+$("#pushTest").onclick = async () => {
+  const note = $("#pushNote"); note.textContent = "Sending a test alarm to every channel…"; $("#pushTest").disabled = true;
+  try {
+    const r = await fetch("/api/push/test", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ alarm: true }) }).then(r => r.json());
+    const po = r.sent?.find(x => x.pushover != null), wp = r.sent?.find(x => x.webpush != null)?.webpush;
+    const dev = r.pushoverDevices?.devices;
+    const parts = [];
+    if (po) parts.push(po.pushover === 200 ? `<b>Pushover accepted</b> (devices: ${dev?.length ? esc(dev.join(", ")) : "<i>none registered: install the Pushover app and sign in</i>"})` : `<i>Pushover ${esc(String(po.pushover))}: ${esc(po.detail || "")}</i>`);
+    if (Array.isArray(wp)) parts.push(wp.length ? wp.map(x => (x.status === 201 || x.status === 200 ? "<b>browser push sent</b>" : `<i>browser push ${esc(String(x.status))} ${esc(x.detail || "")}</i>`) + " → " + esc((x.ua || "").match(/Android|iPhone|iPad|Windows|Mac/)?.[0] || "device")).join("; ") : "<i>no browser subscribed</i>");
+    note.innerHTML = parts.join(" · ") || "No channel answered.";
+  } catch (e) { note.textContent = "Test failed: " + e.message; }
+  $("#pushTest").disabled = false;
+};
+$("#pushLogBtn").onclick = async () => {
+  const log = await fetch("/api/push/log").then(r => r.json()).catch(() => []);
+  const rows = log.slice(0, 15).map(l => { const po = l.res?.find(x => x.pushover != null), wp = l.res?.find(x => x.webpush != null)?.webpush; return `<div class="row"><b>${esc(new Date(l.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</b> ${esc(l.title)} <span class="sub">${esc(l.priority)}</span> · Pushover ${po ? esc(String(po.pushover)) : "–"} · browser ${Array.isArray(wp) ? (wp.length ? wp.map(x => x.status).join("/") : "no device") : "–"}</div>`; }).join("") || "<div class='empty'>No pushes logged yet.</div>";
+  $("#dTitle").textContent = "Push log"; $("#dKind").textContent = "WHAT EACH CHANNEL ANSWERED, NEWEST FIRST"; $("#dBody").innerHTML = `<section class="panel">${rows}</section>`; $("#drill").classList.add("open"); document.body.style.overflow = "hidden";
+};
+// if the page is open when the alarm fires (phone on the nightstand, PC), it rings here too: tone, overlay, vibration
+let ringing = false, ringOsc = null, ringTimer = null;
+function ringStart(time) {
+  if (ringing) return; ringing = true; $("#ringing").hidden = false; $("#ringTime").textContent = time || "";
+  try { if (navigator.vibrate) navigator.vibrate([800, 300, 800, 300, 800]); } catch {}
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {}
+  const beep = () => { try { const o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = 880; g.gain.value = 0; o.connect(g); g.connect(actx.destination); const t = actx.currentTime; for (let i = 0; i < 4; i++) { g.gain.setValueAtTime(0.25, t + i * 0.25); g.gain.setValueAtTime(0, t + i * 0.25 + 0.12); } o.start(t); o.stop(t + 1.1); } catch {} };
+  beep(); ringTimer = setInterval(() => { beep(); try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch {} }, 2000);
+}
+function ringStop(action) {
+  if (!ringing) return; ringing = false; clearInterval(ringTimer); $("#ringing").hidden = true; try { navigator.vibrate && navigator.vibrate(0); } catch {}
+  fetch("/api/alarm/ack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) }).then(() => loadAlarm()).catch(() => {});
+  if (action === "wake") { if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); }
+}
+$("#ringUp").onclick = () => ringStop("wake"); $("#ringSnooze").onclick = () => ringStop("snooze");
+function alarmRingCheck() {
+  const al = alarmCfg; if (!al?.enabled || !al.firedAt) return;
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: state.cfg?.home?.tz || state.cfg?.tz });
+  const age = Date.now() - new Date(al.firedAt);
+  if (al.lastFired === today && al.acked !== today && age < 45 * 60e3 && (!al.snooze || Date.now() >= new Date(al.snooze))) ringStart(al.time); else if (ringing && al.acked === today) ringStop("wake");
+}
+pushInit();
 
 /* reminders: the server pushes them; an open page also says them aloud */
 let remSpoken = new Set(); try { remSpoken = new Set(JSON.parse(localStorage.getItem("remSpoken") || "[]")); } catch {}
@@ -2169,6 +2545,7 @@ renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? 
   const devTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
   if ((state.cfg.home?.mode || "auto") === "auto" && devTz !== state.cfg.home?.tz && ["America/Chicago", "America/Phoenix", "America/Denver"].includes(devTz)) await setHome({ deviceTz: devTz });
   let v = "jarvis"; try { v = localStorage.getItem("jarvisView") || v; } catch {} showView(v);
+  initFold();
   await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
   if (location.pathname === "/wall") setTimeout(enterWall, 500);
   if (location.hash === "#reminders") { showView("ops"); setTimeout(() => $("#reminders").scrollIntoView({ block: "center" }), 600); }

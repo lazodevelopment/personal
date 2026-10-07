@@ -10,6 +10,11 @@ type = "Text"
 globs = ["**/*.html", "**/*.json"]
 fallthrough = true
 
+[[rules]]
+type = "Data"
+globs = ["**/*.png"]
+fallthrough = true
+
 [[kv_namespaces]]
 binding = "HUB"
 id = "1592670000454ad4b1cfe3967d837f37"
