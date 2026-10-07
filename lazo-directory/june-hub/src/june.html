@@ -88,6 +88,10 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:14
 .core.talking{box-shadow:0 0 0 1.5px rgba(217,183,124,.9),0 0 0 9px rgba(217,183,124,.09),0 0 70px -10px rgba(217,183,124,.55),inset 0 0 50px rgba(0,0,0,.5)}
 .core.listening{box-shadow:0 0 0 1.5px var(--rose),0 0 0 9px rgba(224,156,132,.12),0 0 70px -10px rgba(224,156,132,.5),inset 0 0 50px rgba(0,0,0,.5)}
 .core canvas{position:absolute;inset:0;width:100%;height:100%}
+.calc{display:grid;gap:8px;margin-top:10px}.calcin{width:100%;box-sizing:border-box;background:var(--field);border:1px solid var(--goldLine);color:#fff;font:500 22px Inter;padding:10px 12px;text-align:right;border-radius:12px}.calcin:focus{outline:none;border-color:var(--gold)}
+.calcout{font:600 30px Inter;color:var(--goldSoft);text-align:right;min-height:1.2em;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}.calcout.err{color:var(--rose);font-size:14px;font-weight:500}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.keys button{background:var(--well);border:1px solid rgba(217,183,124,.18);color:#fff;font:500 18px Inter;padding:12px 0;border-radius:12px;transition:background .12s}.keys button:hover{background:rgba(217,183,124,.14)}.keys button:active{background:rgba(217,183,124,.28)}.keys button.op{color:var(--gold)}.keys button.eq{background:linear-gradient(180deg,#E6C98F,#D2AE6E);color:var(--plumDeep);font-weight:700;border-color:rgba(217,183,124,.9)}
+.calchist{display:grid;gap:2px;font:12.5px Inter;color:var(--muted);max-height:120px;overflow:auto}.calchist div{display:flex;justify-content:space-between;gap:10px;cursor:pointer;padding:3px 6px;border-radius:8px}.calchist div:hover{background:var(--well)}.calchist b{color:#fff;font-weight:600}
 .corestate{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);min-height:16px;text-align:center;font-weight:600}
 .chat{height:300px;overflow:auto;background:var(--well);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),inset 0 0 0 1px rgba(255,255,255,.05);overscroll-behavior:contain}
 .chat::-webkit-scrollbar{width:8px}.chat::-webkit-scrollbar-thumb{background:rgba(217,183,124,.25);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
@@ -238,6 +242,23 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     <div class="radio"><button class="rplay" id="radioPlay" aria-label="Play radio">▶</button><div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName"></b><small id="radioState"></small></div><input type="range" id="radioVol" min="0" max="100" value="60" aria-label="Radio volume"></div>
     <div class="rst" id="radioStations"></div>
     <div class="sub" id="radioCredit" style="margin-top:10px"></div>
+  </section>
+
+  <section class="card" id="calcPanel">
+    <h2>Calculator <span class="n">type, tap, or ask "what's 15% of 2,400"</span></h2>
+    <div class="calc">
+      <input id="calcIn" class="calcin" placeholder="0" autocomplete="off" inputmode="decimal" aria-label="Calculator input" spellcheck="false">
+      <div class="calcout" id="calcOut">&nbsp;</div>
+      <div class="keys" id="calcKeys">
+        <button type="button" data-k="C" class="op">C</button><button type="button" data-k="(" class="op">(</button><button type="button" data-k=")" class="op">)</button><button type="button" data-k="⌫" class="op">⌫</button>
+        <button type="button" data-k="7">7</button><button type="button" data-k="8">8</button><button type="button" data-k="9">9</button><button type="button" data-k="÷" class="op">÷</button>
+        <button type="button" data-k="4">4</button><button type="button" data-k="5">5</button><button type="button" data-k="6">6</button><button type="button" data-k="×" class="op">×</button>
+        <button type="button" data-k="1">1</button><button type="button" data-k="2">2</button><button type="button" data-k="3">3</button><button type="button" data-k="−" class="op">−</button>
+        <button type="button" data-k="0">0</button><button type="button" data-k=".">.</button><button type="button" data-k="%" class="op">%</button><button type="button" data-k="+" class="op">+</button>
+        <button type="button" data-k="√" class="op">√</button><button type="button" data-k="^" class="op">xʸ</button><button type="button" data-k="ANS" class="op">ANS</button><button type="button" data-k="=" class="eq">=</button>
+      </div>
+      <div class="calchist" id="calcHist"></div>
+    </div>
   </section>
 
   <section class="card" id="pagePanel">
@@ -582,7 +603,67 @@ async function pumpSpeech() {
 let pendingReply = false, replyOpen = null, settleMic = async () => {};
 const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter((w) => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter((w) => w.length > 3); return words.length > 0 && words.filter((w) => said.has(w)).length / words.length >= 0.5; };
 function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
-function localAnswer(t) { t = t.toLowerCase().trim();
+/* ---------- calculator: a small parser (no eval), keypad, history, and spoken questions ---------- */
+let calcAns = 0, calcHist = [];
+function calcEval(src) {
+  // normalise spoken and typed forms into one grammar
+  let e = String(src).toLowerCase().replace(/,/g, "")
+    .replace(/×|\bx\b|\btimes\b|multiplied by/g, "*").replace(/÷|\bdivided by\b|\bover\b/g, "/").replace(/−|–|\bminus\b|\bless\b|\btake away\b/g, "-").replace(/\bplus\b|\badd(ed)?\b/g, "+")
+    .replace(/\bto the power of\b|\bpower\b|\*\*/g, "^").replace(/\bsquared\b/g, "^2").replace(/\bcubed\b/g, "^3").replace(/\bsquare root of\b|√/g, "sqrt").replace(/\bcube root of\b/g, "cbrt")
+    .replace(/\bpercent\b/g, "%").replace(/\bpi\b|π/g, "(3.141592653589793)").replace(/\bans(wer)?\b/g, "(" + calcAns + ")").replace(/\bhalf of\b/g, "0.5*").replace(/\bdouble\b/g, "2*").replace(/\btwice\b/g, "2*")
+    .replace(/(\d+(?:\.\d+)?)%\s*off\s*(\d+(?:\.\d+)?)/g, "($2*(1-$1/100))")                          // 20% off 80 = 64
+    .replace(/(\d+(?:\.\d+)?)\s*([+-])\s*(\d+(?:\.\d+)?)%(?!\s*(?:of|on))/g, "($1*(1$2$3/100))")      // 240 + 20% = 288
+    .replace(/(\d+(?:\.\d+)?)%\s*(?:of|on)\s*/g, "($1/100)*").replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")   // 15% of 240, bare 7%
+    .replace(/\s+/g, "");
+  // tokenise
+  const toks = []; let i = 0;
+  while (i < e.length) { const c = e[i]; if (/\d|\./.test(c)) { let j = i; while (j < e.length && /[\d.]/.test(e[j])) j++; toks.push({ n: parseFloat(e.slice(i, j)) }); i = j; } else if (/[a-z]/.test(c)) { let j = i; while (j < e.length && /[a-z]/.test(e[j])) j++; toks.push({ f: e.slice(i, j) }); i = j; } else if ("+-*/^()".includes(c)) { toks.push({ o: c }); i++; } else throw new Error("unexpected " + c); }
+  // recursive descent: expr = term (('+'|'-') term)* ; term = pow (('*'|'/') pow)* ; pow = unary ('^' pow)? ; unary = '-' unary | func '(' expr ')' | '(' expr ')' | number
+  let p = 0; const peek = () => toks[p], take = () => toks[p++];
+  const FN = { sqrt: Math.sqrt, cbrt: Math.cbrt, sin: (x) => Math.sin(x * Math.PI / 180), cos: (x) => Math.cos(x * Math.PI / 180), tan: (x) => Math.tan(x * Math.PI / 180), ln: Math.log, log: Math.log10, abs: Math.abs, round: Math.round, floor: Math.floor, ceil: Math.ceil };
+  function unary() { const t = peek(); if (!t) throw new Error("incomplete"); if (t.o === "-") { take(); return -unary(); } if (t.o === "+") { take(); return unary(); } if (t.f) { take(); const fn = FN[t.f]; if (!fn) throw new Error("unknown " + t.f); const arg = peek()?.o === "(" ? group() : unary(); return fn(arg); } if (t.o === "(") return group(); if (t.n != null) { take(); if (peek()?.o === "(") return t.n * group(); return t.n; } throw new Error("unexpected " + (t.o || t.f)); }
+  function group() { take(); const v = expr(); if (peek()?.o !== ")") throw new Error("missing )"); take(); return v; }
+  function pow() { const b = unary(); if (peek()?.o === "^") { take(); return Math.pow(b, pow()); } return b; }
+  function term() { let v = pow(); while (peek() && (peek().o === "*" || peek().o === "/" || peek().o === "(" || peek().f)) { const t = peek(); if (t.o === "*" || t.o === "/") { take(); const r = pow(); v = t.o === "*" ? v * r : v / r; } else v = v * pow(); } return v; }
+  function expr() { let v = term(); while (peek() && (peek().o === "+" || peek().o === "-")) { const t = take(); const r = term(); v = t.o === "+" ? v + r : v - r; } return v; }
+  if (!toks.length) throw new Error("empty");
+  const v = expr(); if (p < toks.length) throw new Error("unexpected " + (toks[p].o || toks[p].f || toks[p].n)); if (!isFinite(v)) throw new Error("not a number");
+  return v;
+}
+const calcFmt = (v) => { const r = Math.abs(v) >= 1e15 || (Math.abs(v) < 1e-6 && v !== 0) ? v.toExponential(6) : parseFloat(v.toPrecision(12)); return typeof r === "number" ? r.toLocaleString("en-US", { maximumFractionDigits: 10 }) : r; };
+const calcSay = (v) => { const r = parseFloat(v.toPrecision(10)); return Math.abs(r) >= 1e15 ? r.toExponential(4) : r.toLocaleString("en-US", { maximumFractionDigits: 6 }); };
+function calcRun(fromVoice) {
+  const src = $("#calcIn").value.trim(); if (!src) return null;
+  try { const v = calcEval(src); calcAns = v; $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); calcHist.unshift({ q: src, a: calcFmt(v) }); calcHist = calcHist.slice(0, 12); renderCalcHist(); try { localStorage.setItem("juneCalc", JSON.stringify(calcHist)); } catch {} return v; }
+  catch (e) { $("#calcOut").className = "calcout err"; $("#calcOut").textContent = e.message; return null; }
+}
+function renderCalcHist() { $("#calcHist").innerHTML = calcHist.map((h, i) => `<div data-i="${i}"><span>${esc(h.q)}</span><b>${esc(h.a)}</b></div>`).join(""); }
+$("#calcHist").onclick = (e) => { const d = e.target.closest("[data-i]"); if (!d) return; const h = calcHist[+d.dataset.i]; $("#calcIn").value = h.q; $("#calcOut").textContent = h.a; $("#calcOut").className = "calcout"; };
+$("#calcKeys").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return; const k = b.dataset.k, inp = $("#calcIn");
+  if (k === "C") { inp.value = ""; $("#calcOut").innerHTML = "&nbsp;"; $("#calcOut").className = "calcout"; }
+  else if (k === "⌫") inp.value = inp.value.slice(0, -1);
+  else if (k === "=") calcRun();
+  else if (k === "ANS") inp.value += calcAns;
+  else if (k === "√") inp.value += "√(";
+  else { if ($("#calcOut").textContent.trim() && !inp.value && /[+\-×÷^%]/.test(k) && k !== "−" ) inp.value = String(calcAns); inp.value += k; }
+  if (k !== "=") { $("#calcOut").className = "calcout"; try { const v = calcEval(inp.value); $("#calcOut").textContent = calcFmt(v); } catch { if (!inp.value) $("#calcOut").innerHTML = "&nbsp;"; } }
+  if (!PHONE) inp.focus();
+};
+$("#calcIn").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); calcRun(); } if (e.key === "Escape") { $("#calcIn").value = ""; $("#calcOut").innerHTML = "&nbsp;"; } });
+$("#calcIn").addEventListener("input", () => { try { const v = calcEval($("#calcIn").value); $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); } catch { if (!$("#calcIn").value) $("#calcOut").innerHTML = "&nbsp;"; } });
+try { calcHist = JSON.parse(localStorage.getItem("juneCalc") || "[]"); renderCalcHist(); } catch {}
+// spoken: "what's 15% of 240", "calculate 12 times 8", "square root of 81", "20 percent tip on 86", "how much is 1200 divided by 7"
+function calcVoice(raw) {
+  let t = raw.toLowerCase().replace(/^june,?\s*/, "").replace(/[?!.]+$/, "").trim();
+  const tip = t.match(/^(?:what(?:'s| is) )?(?:a )?(\d+(?:\.\d+)?)\s*(?:%|percent) tip on (?:\$)?(\d+(?:\.\d+)?)$/); if (tip) { const tv = +tip[2] * +tip[1] / 100; $("#calcIn").value = `${tip[1]}% of ${tip[2]}`; calcRun(); return `A ${tip[1]} percent tip on ${calcSay(+tip[2])} is ${calcSay(tv)}, making ${calcSay(+tip[2] + tv)} in all.`; }
+  const m = t.match(/^(?:calculate|compute|work out|what(?:'s| is| does)|how much is|how many is|tell me)\s+(.+?)(?:\s+(?:equal|equals|come to|make|is))?$/) || (/^[\d\s.,+\-×÷*\/^%()√]+$/.test(t) && /\d\s*[+\-×÷*\/^%]|√/.test(t) ? [t, t] : null);
+  if (!m) return null;
+  const expr = m[1].replace(/^(?:the )?(?:answer to|result of|value of)\s+/, "");
+  if (!/\d/.test(expr) || !/[+\-×÷*\/^%]|times|plus|minus|divided|over|percent|squared|cubed|root|power|half|double|twice|of/.test(expr)) return null;
+  try { const v = calcEval(expr); calcAns = v; $("#calcIn").value = expr; calcRun(); $("#calcPanel").scrollIntoView({ block: "nearest", behavior: "smooth" }); return `That's ${calcSay(v)}.`; } catch { return null; }
+}
+function localAnswer(t) { const cv = calcVoice(t); if (cv) return cv; t = t.toLowerCase().trim();
   const rm = t.replace(/^june,?\s*/, "").replace(/[.!?]+$/, "");
   if (/^(stop|pause|turn off|kill|mute) (the )?(radio|music)$|^radio off$/.test(rm)) { radioStop(); return "Radio off."; }
   const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+|some\s+)?(radio|music|.+?)(?:\s+radio)?$/);
@@ -743,70 +824,113 @@ radioUI();
    rose; thinking churns in light plum; speaking glows ivory-gold. Phones use fewer points and half the frame rate. ---------- */
 const viz = $("#viz"), vctx = viz.getContext("2d"); const VIZ_PHONE = PHONE;
 let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
-const CORE = (() => { const N = VIZ_PHONE ? 650 : 1500, pts = [], GA = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < N; i++) { const y = 1 - (i / (N - 1)) * 2, r = Math.sqrt(1 - y * y), t = GA * i; pts.push({ x: Math.cos(t) * r, y, z: Math.sin(t) * r, t, band: Math.min(23, Math.floor(Math.abs(y) * 24)), seed: Math.random() * 6.283 }); } return { pts, bands: new Float32Array(24), smooth: new Float32Array(24), wave: new Float32Array(180), rotY: 0, rotX: 0.35, swell: 0, level: 0, gain: 60, tint: [217, 183, 124], last: 0 }; })();
+/* The core is a circular spectrum analyser: 2 x NB bars around a ring (bass at the bottom, treble at the top, mirrored
+   left/right), real analyser ballistics (instant attack, timed release, peak caps that hold then fall), a waveform ring
+   inside, and a nucleus that swells with the low end. Everything is drawn in a handful of batched paths, so it holds
+   60 fps on a phone. The analyser's own smoothing is turned down: the ballistics here are what make it read like a meter. */
+const CORE = (() => {
+  const NB = VIZ_PHONE ? 40 : 56;
+  return { NB, lvl: new Float32Array(NB), cap: new Float32Array(NB), capT: new Float32Array(NB), raw: new Float32Array(NB), wave: new Float32Array(128), edges: null, an: null, rot: 0, swell: 0, bass: 0, level: 0, kick: 0, tint: [217, 183, 124], last: 0, glowKey: "", glow: null, nuc: null, fps: 60 };
+})();
 const STATE_TINT = { idle: [217, 183, 124], listening: [226, 160, 120], thinking: [196, 150, 196], speaking: [245, 228, 180], radio: [169, 196, 163] };
-const freqBuf = new Uint8Array(256), timeBuf = new Uint8Array(512);
+let freqBuf = new Uint8Array(1024), timeBuf = new Uint8Array(2048);
 function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
-function readAudio() {
-  const C = CORE;
+function sizeViz() { const r = viz.getBoundingClientRect(); const px = Math.round(Math.max(120, r.width || 180) * Math.min(VIZ_PHONE ? 1.5 : 2, devicePixelRatio || 1)); if (viz.width !== px) viz.width = viz.height = px; }
+sizeViz(); addEventListener("resize", sizeViz);
+function tuneAnalyser(an) {
+  // called once per analyser: more bins for the low end, little built-in smoothing, a dB window that suits speech and music
+  try { an.fftSize = VIZ_PHONE ? 1024 : 2048; an.smoothingTimeConstant = 0.05; an.minDecibels = -82; an.maxDecibels = -14; } catch {}
+  const sr = an.context?.sampleRate || 44100, bins = an.frequencyBinCount, hz = sr / 2 / bins;
+  freqBuf = new Uint8Array(bins); timeBuf = new Uint8Array(an.fftSize);
+  const NB = CORE.NB, lo = 55, hi = Math.min(11000, sr / 2 - 100); const edges = new Int32Array(NB + 1);
+  for (let b = 0; b <= NB; b++) edges[b] = Math.max(1, Math.round(lo * Math.pow(hi / lo, b / NB) / hz));   // log-spaced bands, 55 Hz → 11 kHz
+  for (let b = 1; b <= NB; b++) if (edges[b] <= edges[b - 1]) edges[b] = edges[b - 1] + 1;
+  CORE.edges = edges; CORE.an = an;
+}
+function readAudio(dt) {
+  const C = CORE, NB = C.NB;
   if (analyser) {
-    analyser.getByteFrequencyData(freqBuf); analyser.getByteTimeDomainData(timeBuf); let peak = 0;
-    for (let b = 0; b < 24; b++) { const lo = Math.floor(Math.pow(b / 24, 1.7) * 150), hi = Math.max(lo + 1, Math.floor(Math.pow((b + 1) / 24, 1.7) * 150)); let sum = 0; for (let i = lo; i < hi; i++) sum += freqBuf[i]; C.bands[b] = sum / (hi - lo); if (C.bands[b] > peak) peak = C.bands[b]; }
-    C.gain = Math.max(40, peak > C.gain ? C.gain + (peak - C.gain) * 0.3 : C.gain * 0.995);
-    for (let b = 0; b < 24; b++) { const v = Math.min(1, C.bands[b] / C.gain); C.smooth[b] += (v - C.smooth[b]) * (v > C.smooth[b] ? 0.45 : 0.12); }
-    let sq = 0; for (let i = 0; i < 512; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
-    const rms = Math.sqrt(sq / 512); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.997, 0.02); const env = Math.min(1, rms / C.rmsPeak);
-    C.swell += (env - C.swell) * (env > C.swell ? 0.65 : 0.2); C.kick = Math.max((C.kick || 0) * 0.85, env - (C.prevEnv || 0) > 0.25 ? 1 : 0); C.prevEnv = env;
-    for (let i = 0; i < 180; i++) { const v = (timeBuf[Math.floor(i * 512 / 180)] - 128) / 128; C.wave[i] += (v - C.wave[i]) * 0.5; }
-    C.level += (C.smooth.reduce((a, v) => a + v, 0) / 24 - C.level) * 0.2;
+    if (C.an !== analyser) tuneAnalyser(analyser);
+    analyser.getByteFrequencyData(freqBuf); analyser.getByteTimeDomainData(timeBuf);
+    // band energy = peak bin in the band (what a real analyser shows), with a gentle tilt so consonants and sibilance register
+    let bassSum = 0;
+    for (let b = 0; b < NB; b++) { let m = 0; for (let i = C.edges[b]; i < C.edges[b + 1]; i++) if (freqBuf[i] > m) m = freqBuf[i]; const tilt = 0.9 + 0.35 * (b / NB); C.raw[b] = Math.min(1, Math.pow(m / 255, 1.1) * tilt * 1.25); if (b < NB / 6) bassSum += C.raw[b]; }
+    // ballistics: attack in ~2 frames, release at a fixed rate, caps hold 350 ms then fall
+    const atk = 1 - Math.exp(-dt * 60), rel = 4.2 * dt, capFall = 2.2 * dt;   // ~16 ms attack regardless of frame rate, full fall in ~240 ms
+    for (let b = 0; b < NB; b++) {
+      const v = C.raw[b];
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * atk; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.25; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+    }
+    let sq = 0, N = timeBuf.length; for (let i = 0; i < N; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
+    const rms = Math.sqrt(sq / N); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.995, 0.04);
+    const env = Math.min(1, rms / C.rmsPeak);
+    const up = 1 - Math.exp(-dt * 50), down = 1 - Math.exp(-dt * 9);
+    C.swell += (env - C.swell) * (env > C.swell ? up : down);
+    C.kick = Math.max(C.kick * Math.exp(-dt * 12), env - (C.prevEnv || 0) > 0.3 ? 1 : 0); C.prevEnv = env;
+    const bass = Math.min(1, bassSum / (NB / 6)); C.bass += (bass - C.bass) * (bass > C.bass ? up : down);
+    const step = N / 128; for (let i = 0; i < 128; i++) { const v = (timeBuf[Math.floor(i * step)] - 128) / 128; C.wave[i] = v; }
+    let sum = 0; for (let b = 0; b < NB; b++) sum += C.lvl[b]; C.level += (sum / NB - C.level) * up;
   } else {
+    // no analyser (browser voice, thinking, phone listening): a synthetic but plausible spectrum
     const t = fakePhase; let target = 0;
-    if (vizMode === "thinking") target = 0.35 + 0.25 * Math.sin(t * 7); else if (vizMode === "listening") target = 0.15; else if (vizMode === "speaking") target = 0.3 + 0.3 * Math.abs(Math.sin(t * 9));
-    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1; C.kick = (C.kick || 0) * 0.85;
-    for (let b = 0; b < 24; b++) { const v = vizMode === "idle" ? 0 : target * (0.5 + 0.5 * Math.sin(t * 5 + b * 0.8)); C.smooth[b] += (v - C.smooth[b]) * 0.15; }
-    for (let i = 0; i < 180; i++) C.wave[i] *= 0.9;
+    if (vizMode === "thinking") target = 0.3 + 0.2 * Math.sin(t * 6); else if (vizMode === "listening") target = 0.12 + 0.05 * Math.sin(t * 3); else if (vizMode === "speaking") { const syl = Math.max(0, Math.sin(t * 11) * 0.6 + Math.sin(t * 4.3) * 0.4 + 0.2); target = 0.25 + 0.55 * syl; }
+    const rel = 2.6 * dt, capFall = 1.6 * dt;
+    for (let b = 0; b < NB; b++) {
+      const shape = vizMode === "speaking" ? Math.exp(-Math.pow((b - NB * 0.3) / (NB * 0.28), 2)) * (0.6 + 0.4 * Math.abs(Math.sin(t * 9 + b * 0.7))) : vizMode === "thinking" ? 0.5 + 0.5 * Math.sin(t * 5 - b * 0.35) : 0.4 + 0.3 * Math.sin(t * 2 + b);
+      const v = vizMode === "idle" ? 0.03 + 0.025 * Math.sin(t * 1.3 + b * 0.5) : target * shape;
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * 0.5; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.35; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+    }
+    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1; C.kick *= 0.85; C.bass += (target * 0.5 - C.bass) * 0.1;
+    for (let i = 0; i < 128; i++) C.wave[i] *= 0.9;
   }
 }
 function drawViz(now = 0) {
-  const C = CORE; vizRaf = null; if (document.hidden) return;
-  const want = vizMode === "idle" ? 1000 / 24 : VIZ_PHONE ? 1000 / 30 : 1000 / 60;
+  const C = CORE; vizRaf = null;
+  if (document.hidden) return;
+  const want = vizMode === "idle" ? 1000 / 20 : 1000 / 60;
   if (now - C.last < want - 2) { vizRaf = requestAnimationFrame(drawViz); return; }
-  const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt; readAudio();
-  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2;
+  const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt;
+  readAudio(dt);
+  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2, NB = C.NB;
   const tint = STATE_TINT[vizMode] || STATE_TINT.idle; for (let i = 0; i < 3; i++) C.tint[i] += (tint[i] - C.tint[i]) * 0.08;
-  const [tr, tg, tb] = C.tint.map(Math.round);
-  const spin = vizMode === "thinking" ? 1.6 : vizMode === "listening" ? 0.9 : vizMode === "idle" ? 0.18 : 0.35 + C.swell * 1.4;
-  C.rotY += dt * spin; C.rotX += ((vizMode === "thinking" ? 0.35 + 0.5 * Math.sin(fakePhase * 1.3) : 0.35 + 0.08 * Math.sin(fakePhase * 0.4)) - C.rotX) * 0.05;
-  const base = W * (vizMode === "listening" ? 0.257 : vizMode === "idle" ? 0.3 : 0.26) * (1 + C.swell * 0.32 + (C.kick || 0) * 0.06);
-  const sy = Math.sin(C.rotY), cyy = Math.cos(C.rotY), sx = Math.sin(C.rotX), cxx = Math.cos(C.rotX);
-  const fade = vizMode === "idle" ? 0.55 : vizMode === "thinking" ? 0.22 : 0.3;
-  vctx.globalCompositeOperation = "destination-out"; vctx.fillStyle = `rgba(0,0,0,${fade})`; vctx.fillRect(0, 0, W, H); vctx.globalCompositeOperation = "source-over";
-  const gl = vizMode === "idle" ? 0.25 : 0.35 + C.swell * 0.6, key = tr + "," + tg + "," + tb;
-  if (C.spriteKey !== key) { C.spriteKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, "rgba(250,246,240,.14)"); g.addColorStop(0.35, `rgba(${key},.12)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(64, (g) => { g.addColorStop(0, "rgba(250,246,240,1)"); g.addColorStop(0.3, `rgba(${key},.85)`); g.addColorStop(1, `rgba(${key},0)`); }); }
-  vctx.globalAlpha = gl; const gr = base * 1.15; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
-  const ripple = vizMode === "idle" ? 0 : 0.26, breathe = vizMode === "idle" ? 0.035 : 0.02;
-  const proj = (x, y, z) => { const x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy, y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx, k = 1 / (1.9 - z2 * 0.6) * 1.9; return [cx + x1 * base * k, cy + y2 * base * k, z2]; };
-  const ring = (rad, tiltA, tiltB, phase, alpha, far) => { const ca = Math.cos(tiltA), sa = Math.sin(tiltA), cb = Math.cos(tiltB), sb = Math.sin(tiltB); vctx.beginPath(); let pen = false;
-    for (let i = 0; i <= 96; i++) { const t = i / 96 * Math.PI * 2 + phase; let x = Math.cos(t) * rad, y = 0, z = Math.sin(t) * rad; let y1 = y * ca - z * sa, z1 = y * sa + z * ca; let x2 = x * cb - y1 * sb, y2 = x * sb + y1 * cb; const [px, py, pz] = proj(x2, y2, z1); const show = far ? pz < 0 : pz >= 0; if (show) { pen ? vctx.lineTo(px, py) : vctx.moveTo(px, py); pen = true; } else pen = false; }
-    vctx.strokeStyle = `rgba(${tr},${tg},${tb},${alpha * (far ? 0.35 : 1)})`; vctx.lineWidth = far ? 0.8 : 1.3; vctx.stroke(); };
-  const ringA = 1.12 + C.swell * 0.05, ringB = 1.24 + C.level * 0.06, ra = vizMode === "idle" ? 0.35 : 0.6 + C.level * 0.4;
-  const pA = fakePhase * (vizMode === "thinking" ? 0.9 : 0.25), pB = -fakePhase * (vizMode === "thinking" ? 1.3 : 0.4);
-  const nucleus = () => { const nr = W * 0.045 * (1 + C.swell * 1.4 + (C.kick || 0) * 0.5) * (vizMode === "idle" ? 0.8 : 1) * 2.2; vctx.globalAlpha = vizMode === "idle" ? 0.6 : Math.min(1, 0.85 + C.level * 0.15); vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1; };
-  const step = vizMode === "idle" ? 2 : 1;
-  for (let pass = 0; pass < 2; pass++) {
-    if (pass === 0) { ring(ringA, 1.15, 0.3, pA, ra, true); ring(ringB, 0.5, 1.9, pB, ra * 0.8, true); }
-    if (pass === 1) nucleus();
-    for (let pi = 0; pi < C.pts.length; pi += step) { const p = C.pts[pi];
-      const d = 1 + C.smooth[p.band] * ripple * (0.6 + 0.4 * Math.sin(p.t * 2 + fakePhase * 3)) + breathe * Math.sin(fakePhase * 1.7 + p.seed) + (vizMode === "thinking" ? 0.1 * Math.sin(fakePhase * 6 - p.y * 7 + p.t) : 0);
-      let x = p.x * d, y = p.y * d, z = p.z * d; let x1 = x * cyy + z * sy, z1 = -x * sy + z * cyy; let y2 = y * cxx - z1 * sx, z2 = y * sx + z1 * cxx;
-      if ((pass === 0) !== (z2 < 0)) continue;
-      const persp = 1 / (1.9 - z2 * 0.6), px = cx + x1 * base * persp * 1.9, py = cy + y2 * base * persp * 1.9;
-      const depth = (z2 + 1) / 2, a = (0.18 + depth * 0.82) * (vizMode === "idle" ? 0.55 : 0.55 + C.swell * 0.45), sz = (W / 280) * ((VIZ_PHONE ? 1.6 : 1.3) + depth * 1.6 + C.smooth[p.band] * 1.2);
-      vctx.fillStyle = depth > 0.82 ? `rgba(250,246,240,${a})` : `rgba(${tr},${tg},${tb},${a})`; vctx.fillRect(px - sz / 2, py - sz / 2, sz, sz);
-    }
+  const [tr, tg, tb] = C.tint.map(Math.round), key = tr + "," + tg + "," + tb;
+  if (C.glowKey !== key) { C.glowKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, `rgba(${key},.28)`); g.addColorStop(0.5, `rgba(${key},.08)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(96, (g) => { g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, `rgba(${key},.9)`); g.addColorStop(0.55, `rgba(${key},.25)`); g.addColorStop(1, `rgba(${key},0)`); }); }
+  C.rot += dt * (vizMode === "thinking" ? 1.4 : vizMode === "idle" ? 0.12 : 0.25 + C.swell * 0.6);
+  vctx.clearRect(0, 0, W, H);
+  const R0 = W * 0.21 * (1 + C.bass * 0.05 + C.kick * 0.03), LEN = W * 0.25, live = vizMode !== "idle";
+  // glow behind everything, scaled by loudness
+  const gr = R0 * (1.9 + C.swell * 0.5); vctx.globalAlpha = live ? 0.55 + C.swell * 0.45 : 0.35; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
+  // the bars: band 0 at the bottom, climbing both sides to the treble at the top; one path for bars, one for caps
+  const bw = Math.max(1.5, (Math.PI * R0) / NB * 0.62);
+  vctx.lineCap = "butt"; vctx.lineWidth = bw;
+  const barsA = `rgba(${key},${live ? 0.92 : 0.5})`;
+  vctx.beginPath();
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) {
+    const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + Math.max(1, C.lvl[b] * LEN);
+    const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (R0 + 1), cy + si * (R0 + 1)); vctx.lineTo(cx + c * l, cy + si * l);
   }
-  ring(ringA, 1.15, 0.3, pA, ra, false); ring(ringB, 0.5, 1.9, pB, ra * 0.8, false);
-  if (analyser && C.level > 0.02) { vctx.beginPath(); for (let i = 0; i <= 180; i++) { const ang = (i / 180) * Math.PI * 2 - Math.PI / 2, r = base * 1.22 + C.wave[i % 180] * W * 0.05; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); } vctx.closePath(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.08 + C.level * 0.15})`; vctx.lineWidth = 5; vctx.stroke(); vctx.strokeStyle = `rgba(${tr},${tg},${tb},${0.3 + C.level * 0.5})`; vctx.lineWidth = 1.2; vctx.stroke(); }
+  vctx.strokeStyle = barsA; vctx.stroke();
+  // bright tips on the loud bars (desktop only: one path less on phones)
+  if (!VIZ_PHONE) { vctx.beginPath();
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.lvl[b] < 0.55) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.lvl[b] * LEN; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (l - LEN * 0.12), cy + si * (l - LEN * 0.12)); vctx.lineTo(cx + c * l, cy + si * l); }
+  vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.swell * 0.35})`; vctx.stroke(); }
+  // peak caps
+  vctx.beginPath(); vctx.lineWidth = Math.max(1, bw * 0.9);
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.cap[b] < 0.06) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.cap[b] * LEN + bw * 1.2; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * l, cy + si * l); vctx.lineTo(cx + c * (l + bw * 0.9), cy + si * (l + bw * 0.9)); }
+  vctx.strokeStyle = `rgba(255,255,255,${live ? 0.85 : 0.35})`; vctx.stroke();
+  // the ring the bars grow from, with a slowly turning dashed outer orbit
+  vctx.lineWidth = 1.4; vctx.strokeStyle = `rgba(${key},${live ? 0.75 : 0.45})`; vctx.beginPath(); vctx.arc(cx, cy, R0, 0, Math.PI * 2); vctx.stroke();
+  vctx.save(); vctx.translate(cx, cy); vctx.rotate(C.rot); vctx.setLineDash([R0 * 0.5, R0 * 0.22, R0 * 0.12, R0 * 0.3]); vctx.lineWidth = 1; vctx.strokeStyle = `rgba(${key},${0.25 + C.level * 0.5})`; vctx.beginPath(); vctx.arc(0, 0, R0 + LEN + bw * 2.2, 0, Math.PI * 2); vctx.stroke(); vctx.setLineDash([]); vctx.restore();
+  // waveform ring inside: the voice itself
+  if (live && C.level > 0.015) {
+    vctx.beginPath(); const rw = R0 * 0.72, amp = R0 * 0.26, WN = VIZ_PHONE ? 64 : 128, ws = 128 / WN;
+    for (let i = 0; i <= WN; i++) { const ang = (i / WN) * Math.PI * 2 - Math.PI / 2, r = rw + C.wave[Math.floor((i % WN) * ws)] * amp; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
+    vctx.closePath(); vctx.lineWidth = 4; vctx.strokeStyle = `rgba(${key},${0.1 + C.level * 0.2})`; vctx.stroke(); vctx.lineWidth = 1.2; vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.level * 0.5})`; vctx.stroke();
+  }
+  // nucleus swells with the low end
+  const nr = R0 * (0.34 + C.bass * 0.3 + C.kick * 0.12) * (live ? 1 : 0.85 + 0.05 * Math.sin(fakePhase * 1.6)); vctx.globalAlpha = live ? Math.min(1, 0.7 + C.level * 0.4) : 0.55; vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1;
   vizRaf = requestAnimationFrame(drawViz);
 }
 function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "radio" ? "♪ " + RADIO[radioIdx].n : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
