@@ -676,12 +676,33 @@ export default {
     if (p === "/" || p === "/index.html") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "frame-ancestors 'self' https://app.meetlazo.com https://meetlazo.com https://*.meetlazo.com" } });   // embeddable by the Lazo dashboards only
     if (p === "/icon.svg") return new Response(ICON, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
     if (p === "/manifest.json") return json(MANIFEST);
+    if (p.startsWith("/clip/")) { const id = p.slice(6).replace(/\.mp3$/, ""); if (!/^[a-z0-9]{20,30}$/.test(id)) return new Response("Not found", { status: 404 }); const a = await env.JUNE.get("clip_" + id, "arrayBuffer"); if (!a) return new Response("Gone", { status: 404 }); return new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=600", "accept-ranges": "bytes" } }); }
     if (p === "/api/config") return json({ brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, apiKey: env.FIREBASE_API_KEY, app: env.APP_URL || "https://app.meetlazo.com/dashboard", coupleApp: env.COUPLE_APP_URL || "https://app.meetlazo.com/", build: BUILD });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
 
     const who = await verifyIdToken(request);
     if (!who) return json({ error: "sign in" }, 401);
     if (p === "/api/tts" && request.method === "POST") { if (!env.ELEVENLABS_API_KEY) return json({ error: "tts not configured" }, 501); const { text } = await request.json(); const r = await elevenlabs(env, clip(text, 4800), "mp3_44100_128", "eleven_flash_v2_5"); if (!r.ok) return json({ error: "tts failed " + r.status }, 502); return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }); }
+    // JC-LAZO-JUNE-NATIVE-1008: the native (Dart) June plays audio through plain URLs. A clip is ElevenLabs audio
+    // (or today's brief) parked in KV for 10 minutes under an unguessable id, fetched without a header.
+    if (p === "/api/clip" && request.method === "POST") {
+      const b = await request.json().catch(() => ({}));
+      const id = uid() + uid() + uid();
+      let buf = null;
+      if (b.brief) {
+        const vendOrCoup = await resolveVendor(env, who).catch(() => null); let key = null;
+        if (vendOrCoup) key = "brief_audio_" + vendOrCoup.vendorId; else { const c = await COUPLE.resolveCouple(env, who).catch(() => null); if (c) key = "brief_audio_c_" + c.coupleId; }
+        if (key) buf = await env.JUNE.get(key, "arrayBuffer");
+        if (!buf) return json({ error: "no brief audio yet" }, 404);
+      } else {
+        if (!env.ELEVENLABS_API_KEY) return json({ error: "tts not configured" }, 501);
+        const text = clip(b.text, 4800); if (!text) return json({ error: "no text" }, 400);
+        const r = await elevenlabs(env, text, "mp3_44100_128", "eleven_flash_v2_5"); if (!r.ok) return json({ error: "tts failed " + r.status }, 502);
+        buf = await r.arrayBuffer();
+      }
+      await env.JUNE.put("clip_" + id, buf, { expirationTtl: 600 });
+      return json({ id, url: `${env.PUBLIC_URL || url.origin}/clip/${id}.mp3`, bytes: buf.byteLength });
+    }
     let vend;
     try { vend = await resolveVendor(env, who); } catch (e) { return json({ error: "Could not look up your vendor listing: " + e.message }, 500); }
     if (!vend) {
