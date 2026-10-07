@@ -34,6 +34,7 @@ JUNE_VOICE_ID = "pFZP5JQG7iQjIQuC4Bku"                        # ElevenLabs "Lily
 CHAT_MODEL = "claude-sonnet-5-5"
 BRIEF_MODEL = "claude-sonnet-5-5"
 APP_URL = "https://app.meetlazo.com/dashboard"
+COUPLE_APP_URL = "https://app.meetlazo.com/"   # where June sends a couple to open a thread / book / pay
 # June Studio social posting (Ayrshare Business plan, one profile per vendor). Leave empty until the
 # account exists; the Social panel then says "not configured". Secrets: AYRSHARE_API_KEY,
 # AYRSHARE_PRIVATE_KEY (the PEM from Ayrshare -> Profiles -> Generate JWT). Domain is the Ayrshare one.

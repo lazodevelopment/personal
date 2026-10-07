@@ -138,3 +138,26 @@ A second `<audio>` beside June's voice, in the Radio card: Radio Paradise (main,
 ## To decide later
 
 - (done 2026-10-05) The app hands the vendor to June signed in, through the juneToken callable and dashboard v181.
+
+## June for couples (2026-10-07)
+
+The same hub serves couples, free. A login that is not a vendor (no `users/{uid}.vendorId`) resolves to a
+couple: `users/{uid}.coupleUid` (a partner on a shared plan) or the uid itself, and `src/couple.js` takes over.
+Everything is read AS THE COUPLE: `couples/{cid}` (names, weddingDate, metroId, budgetTotal, guestEstimate,
+keyDates), `couples/{cid}/plan` (one doc per category: status needed/researching/booked/skipped, vendorName,
+budgetPlanned/budgetActual), `guests`, `dayof`, `shopping`, `inquiries` where coupleUid (their vendor threads),
+each thread's `tasks` assigned to the couple and `invoices`, `consults` where coupleUid, and their
+`weddingSites` doc with its `rsvps`. The page switches on `state.s.kind` (`body[data-kind="couple"]` hides the
+vendor-only cards and shows Your team, Guests and The day; Money becomes budget vs committed).
+
+Chat tools: lazo_thread, lazo_guests, lazo_find_vendors (directory search in their metro by category slug),
+lazo_prices (metroStats), lazo_timeline, lazo_shopping, open_thread, remember/forget, set_reminder /
+complete_reminder. Confirm-first actions (request_action): send_message to a vendor, complete_task, set_team
+(status / vendorName / planned / actual), add_guest, set_rsvp, add_shopping, tick_shopping, add_moment,
+set_details (weddingDate / budgetTotal / guestEstimate). Booking, signing, paying and reviews stay in the app.
+KV keys are suffixed `_c_<cid>` (memory, queue, brief, brief_audio, reminders). No cron/email alerts for
+couples yet (the brief is written when they open June). `COUPLE_APP_URL` (default https://app.meetlazo.com/)
+is where open_thread sends them.
+
+App hand-off: `app-patches/patch_couple_v145.py` adds a gold "Talk to June" button beside "Ask June" in the
+couple dashboard (juneToken callable → `?t=`; any signed-in uid works). Jesse pastes v145 into FlutterFlow.
