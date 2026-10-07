@@ -1568,11 +1568,11 @@ const CORE = (() => {
 const STATE_TINT = { idle: [25, 211, 255], listening: [255, 179, 64], thinking: [167, 139, 250], speaking: [160, 236, 255], radio: [57, 240, 168] };
 let freqBuf = new Uint8Array(1024), timeBuf = new Uint8Array(2048);
 function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
-function sizeViz() { const r = viz.getBoundingClientRect(); const px = Math.round(Math.max(120, r.width || 180) * Math.min(2, devicePixelRatio || 1)); if (viz.width !== px) viz.width = viz.height = px; }
+function sizeViz() { const r = viz.getBoundingClientRect(); const px = Math.round(Math.max(120, r.width || 180) * Math.min(VIZ_PHONE ? 1.5 : 2, devicePixelRatio || 1)); if (viz.width !== px) viz.width = viz.height = px; }
 sizeViz(); addEventListener("resize", sizeViz);
 function tuneAnalyser(an) {
   // called once per analyser: more bins for the low end, little built-in smoothing, a dB window that suits speech and music
-  try { an.fftSize = 2048; an.smoothingTimeConstant = 0.25; an.minDecibels = -82; an.maxDecibels = -14; } catch {}
+  try { an.fftSize = VIZ_PHONE ? 1024 : 2048; an.smoothingTimeConstant = 0.05; an.minDecibels = -82; an.maxDecibels = -14; } catch {}
   const sr = an.context?.sampleRate || 44100, bins = an.frequencyBinCount, hz = sr / 2 / bins;
   freqBuf = new Uint8Array(bins); timeBuf = new Uint8Array(an.fftSize);
   const NB = CORE.NB, lo = 55, hi = Math.min(11000, sr / 2 - 100); const edges = new Int32Array(NB + 1);
@@ -1589,20 +1589,21 @@ function readAudio(dt) {
     let bassSum = 0;
     for (let b = 0; b < NB; b++) { let m = 0; for (let i = C.edges[b]; i < C.edges[b + 1]; i++) if (freqBuf[i] > m) m = freqBuf[i]; const tilt = 0.9 + 0.35 * (b / NB); C.raw[b] = Math.min(1, Math.pow(m / 255, 1.1) * tilt * 1.25); if (b < NB / 6) bassSum += C.raw[b]; }
     // ballistics: attack in ~2 frames, release at a fixed rate, caps hold 350 ms then fall
-    const rel = 2.6 * dt, capFall = 1.6 * dt;
+    const atk = 1 - Math.exp(-dt * 60), rel = 4.2 * dt, capFall = 2.2 * dt;   // ~16 ms attack regardless of frame rate, full fall in ~240 ms
     for (let b = 0; b < NB; b++) {
       const v = C.raw[b];
-      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * 0.6; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
-      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.35; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * atk; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.25; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
     }
     let sq = 0, N = timeBuf.length; for (let i = 0; i < N; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
     const rms = Math.sqrt(sq / N); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.995, 0.04);
     const env = Math.min(1, rms / C.rmsPeak);
-    C.swell += (env - C.swell) * (env > C.swell ? 0.7 : 0.18);
-    C.kick = Math.max(C.kick * 0.82, env - (C.prevEnv || 0) > 0.3 ? 1 : 0); C.prevEnv = env;
-    const bass = Math.min(1, bassSum / (NB / 6)); C.bass += (bass - C.bass) * (bass > C.bass ? 0.5 : 0.12);
-    const step = N / 128; for (let i = 0; i < 128; i++) { const v = (timeBuf[Math.floor(i * step)] - 128) / 128; C.wave[i] += (v - C.wave[i]) * 0.6; }
-    let sum = 0; for (let b = 0; b < NB; b++) sum += C.lvl[b]; C.level += (sum / NB - C.level) * 0.3;
+    const up = 1 - Math.exp(-dt * 50), down = 1 - Math.exp(-dt * 9);
+    C.swell += (env - C.swell) * (env > C.swell ? up : down);
+    C.kick = Math.max(C.kick * Math.exp(-dt * 12), env - (C.prevEnv || 0) > 0.3 ? 1 : 0); C.prevEnv = env;
+    const bass = Math.min(1, bassSum / (NB / 6)); C.bass += (bass - C.bass) * (bass > C.bass ? up : down);
+    const step = N / 128; for (let i = 0; i < 128; i++) { const v = (timeBuf[Math.floor(i * step)] - 128) / 128; C.wave[i] = v; }
+    let sum = 0; for (let b = 0; b < NB; b++) sum += C.lvl[b]; C.level += (sum / NB - C.level) * up;
   } else {
     // no analyser (browser voice, thinking, phone listening): a synthetic but plausible spectrum
     const t = fakePhase; let target = 0;
@@ -1644,10 +1645,10 @@ function drawViz(now = 0) {
     const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (R0 + 1), cy + si * (R0 + 1)); vctx.lineTo(cx + c * l, cy + si * l);
   }
   vctx.strokeStyle = barsA; vctx.stroke();
-  // bright tips on the loud bars
-  vctx.beginPath();
+  // bright tips on the loud bars (desktop only: one path less on phones)
+  if (!VIZ_PHONE) { vctx.beginPath();
   for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.lvl[b] < 0.55) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.lvl[b] * LEN; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (l - LEN * 0.12), cy + si * (l - LEN * 0.12)); vctx.lineTo(cx + c * l, cy + si * l); }
-  vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.swell * 0.35})`; vctx.stroke();
+  vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.swell * 0.35})`; vctx.stroke(); }
   // peak caps
   vctx.beginPath(); vctx.lineWidth = Math.max(1, bw * 0.9);
   for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.cap[b] < 0.06) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.cap[b] * LEN + bw * 1.2; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * l, cy + si * l); vctx.lineTo(cx + c * (l + bw * 0.9), cy + si * (l + bw * 0.9)); }
@@ -1657,8 +1658,8 @@ function drawViz(now = 0) {
   vctx.save(); vctx.translate(cx, cy); vctx.rotate(C.rot); vctx.setLineDash([R0 * 0.5, R0 * 0.22, R0 * 0.12, R0 * 0.3]); vctx.lineWidth = 1; vctx.strokeStyle = `rgba(${key},${0.25 + C.level * 0.5})`; vctx.beginPath(); vctx.arc(0, 0, R0 + LEN + bw * 2.2, 0, Math.PI * 2); vctx.stroke(); vctx.setLineDash([]); vctx.restore();
   // waveform ring inside: the voice itself
   if (live && C.level > 0.015) {
-    vctx.beginPath(); const rw = R0 * 0.72, amp = R0 * 0.26;
-    for (let i = 0; i <= 128; i++) { const ang = (i / 128) * Math.PI * 2 - Math.PI / 2, r = rw + C.wave[i % 128] * amp; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
+    vctx.beginPath(); const rw = R0 * 0.72, amp = R0 * 0.26, WN = VIZ_PHONE ? 64 : 128, ws = 128 / WN;
+    for (let i = 0; i <= WN; i++) { const ang = (i / WN) * Math.PI * 2 - Math.PI / 2, r = rw + C.wave[Math.floor((i % WN) * ws)] * amp; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
     vctx.closePath(); vctx.lineWidth = 4; vctx.strokeStyle = `rgba(${key},${0.1 + C.level * 0.2})`; vctx.stroke(); vctx.lineWidth = 1.2; vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.level * 0.5})`; vctx.stroke();
   }
   // nucleus swells with the low end
@@ -1734,6 +1735,7 @@ async function pumpSpeech() {
     }
   }
   speaking = false; radioDuck(false); setViz("idle"); onSpeechEnd();
+  if (worldDirty && worldVisible) setTimeout(() => { if (!speaking) { worldDirty = false; renderWorld(); } }, 300);
 }
 function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); radioDuck(true); player.src = url; setViz("speaking", playerViz()); if (btn) btn.textContent = "❚❚ PLAYING"; player.onended = player.onerror = () => { radioDuck(false); setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; player.play().catch(() => setViz("idle")); }
 
@@ -2051,6 +2053,7 @@ function initGlobe() {
   globe.ringsData([]).ringColor(() => (t) => `rgba(255,110,90,${1 - t})`).ringMaxRadius("maxR").ringPropagationSpeed(1.2).ringRepeatPeriod(1600).ringAltitude(0.0015);
   globe.labelsData([]).labelText("text").labelSize(0.45).labelDotRadius(0.18).labelColor(() => "rgba(255,140,120,.9)").labelResolution(2).labelAltitude(0.002);
   globe.arcsData([]).arcStartLat("a").arcStartLng("b").arcEndLat("c").arcEndLng("d").arcColor(() => ["rgba(255,179,64,.9)", "rgba(25,211,255,.9)"]).arcStroke(0.6).arcDashLength(0.4).arcDashGap(0.2).arcDashAnimateTime(2500).arcAltitudeAutoScale(0.35);
+  if (!worldVisible) { try { globe.pauseAnimation(); } catch {} }
   globe.controls().autoRotate = false; globe.controls().enableZoom = true; globe.controls().minDistance = 101; globe.controls().zoomSpeed = 1.2;
   globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 0);
   const zoomBy = (f) => { const v = globe.pointOfView(); globe.pointOfView({ ...v, altitude: Math.max(0.01, Math.min(4, v.altitude * f)) }, 400); };
@@ -2158,7 +2161,7 @@ async function loadFlights() {
 function project(a, secs) { if (!a || a.gs == null || a.track == null || !a.alt) return a; const nm = a.gs * secs / 3600, br = a.track * Math.PI / 180, R = 3440.065, la = a.lat * Math.PI / 180, lo = a.lon * Math.PI / 180, d = nm / R;
   const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(br)), lo2 = lo + Math.atan2(Math.sin(br) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
   return { ...a, lat: la2 * 180 / Math.PI, lon: lo2 * 180 / Math.PI }; }
-function moveFlights() { const secs = Math.min(180, (Date.now() - flightsAt) / 1000); worldData.flights = worldLayers.flights ? flightsBase.map(a => project(a, secs)) : []; if (worldData.tracked?.base) worldData.tracked.ac = project(worldData.tracked.base, secs); renderWorld(); }
+function moveFlights() { if (!worldVisible || worldBusy()) { worldDirty = true; return; } const secs = Math.min(180, (Date.now() - flightsAt) / 1000); worldData.flights = worldLayers.flights ? flightsBase.map(a => project(a, secs)) : []; if (worldData.tracked?.base) worldData.tracked.ac = project(worldData.tracked.base, secs); renderWorld(); }
 async function loadEvents() { try { const d = await fetch("/api/world/events").then(r => r.json()); worldData.quakes = d.quakes || []; worldData.fires = d.fires || []; worldData.iss = d.iss; } catch {} renderWorld(); }
 async function loadSats() {
   if (!window.satellite) { setTimeout(loadSats, 800); return; }
@@ -2167,13 +2170,23 @@ async function loadSats() {
 }
 function tickSats() {
   if (!globe || !window.satellite || !satRecs.length) return;
+  if (!worldVisible || worldBusy()) { worldDirty = true; return; }
   const now = new Date(), gmst = satellite.gstime(now);
   worldData.sats = satRecs.map(s => { try { const pv = satellite.propagate(s.rec, now); if (!pv.position) return null; const g = satellite.eciToGeodetic(pv.position, gmst); return { name: s.name, lat: satellite.degreesLat(g.latitude), lng: satellite.degreesLong(g.longitude), altKm: g.height }; } catch { return null; } }).filter(Boolean);
   renderWorld(true);
 }
 let lastWorldRender = 0;
+/* The globe only works while it is on screen: its WebGL loop and the 2-second flight/satellite re-projection
+   (thousands of markers rebuilt each time) were stalling the whole page, which showed up as a stuttering core that
+   lagged the voice. Off screen (another phone view, scrolled past on desktop) it pauses; it also holds still while
+   JARVIS is speaking or listening so the analyser gets every frame. */
+let worldVisible = false, worldDirty = false;
+const worldIO = new IntersectionObserver((es) => { worldVisible = es.some(e => e.isIntersecting); if (!globe) return; try { worldVisible ? globe.resumeAnimation() : globe.pauseAnimation(); } catch {} if (worldVisible && worldDirty) { worldDirty = false; renderWorld(); } }, { threshold: 0.02 });
+if ($("#worldPanel")) worldIO.observe($("#worldPanel"));
+const worldBusy = () => typeof speaking !== "undefined" && (speaking || listening);
 function renderWorld(satsOnly) {
   if (!globe) return;
+  if (!worldVisible || worldBusy()) { worldDirty = true; return; }
   const html = [];
   const tHex = worldData.tracked?.ac?.hex;
   const pov = globe.pointOfView(), secsG = Math.min(900, (Date.now() - globalAt) / 1000);
