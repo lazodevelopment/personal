@@ -1,5 +1,5 @@
 // functions-dashboard/welcome.js
-// Build ID: JC-LAZO-FNDASH-1007-023
+// Build ID: JC-LAZO-FNDASH-1007-023 (023.1: photography - hero under the band, a photo tile per step, a strip of category tiles, gold flourish)
 //
 // WELCOME EMAILS. Until now nobody heard from Lazo at signup: vendors got an
 // email only when a claim was approved, couples never. Two triggers, both
@@ -37,6 +37,7 @@ module.exports = function welcome(RESEND_API_KEY) {
   const JUNE = 'https://june.meetlazo.com/';
   const SITE = 'https://meetlazo.com/';
   const LOGO = 'https://meetlazo.com/assets/foot-logo.png';
+  const PH = 'https://meetlazo.com/assets/photos/';   // the site's own photography (live, 600px wide in the email)
   const METROS = { 'phoenix': 'Phoenix', 'denver': 'Denver', 'dallas-fort-worth': 'Dallas–Fort Worth', 'houston': 'Houston', 'austin': 'Austin', 'san-antonio': 'San Antonio', 'las-vegas': 'Las Vegas', 'atlanta': 'Atlanta', 'nashville': 'Nashville', 'chicago': 'Chicago', 'los-angeles': 'Los Angeles', 'san-diego': 'San Diego', 'miami': 'Miami', 'orlando': 'Orlando', 'tampa': 'Tampa Bay', 'charlotte': 'Charlotte', 'raleigh-durham': 'Raleigh-Durham', 'seattle': 'Seattle', 'salt-lake-city': 'Salt Lake City', 'new-york-city': 'New York City', 'boston': 'Boston', 'philadelphia': 'Philadelphia', 'washington-dc': 'Washington DC', 'san-francisco-bay': 'the San Francisco Bay', 'portland': 'Portland', 'minneapolis': 'Minneapolis', 'st-louis': 'St. Louis', 'kansas-city': 'Kansas City', 'columbus': 'Columbus', 'new-orleans': 'New Orleans', 'indianapolis': 'Indianapolis', 'sacramento': 'Sacramento', 'jacksonville': 'Jacksonville', 'charleston': 'Charleston', 'savannah': 'Savannah', 'detroit': 'Detroit', 'pittsburgh': 'Pittsburgh', 'cincinnati': 'Cincinnati', 'cleveland': 'Cleveland', 'milwaukee': 'Milwaukee', 'richmond': 'Richmond', 'virginia-beach': 'Virginia Beach', 'louisville': 'Louisville', 'memphis': 'Memphis', 'tucson': 'Tucson' };
 
   async function sendEmail(to, subject, html, text) {
@@ -75,13 +76,24 @@ module.exports = function welcome(RESEND_API_KEY) {
   function quietLink(label, href) {
     return `<p style="margin:10px 0 0;text-align:center;font-family:Helvetica,Arial,sans-serif;font-size:13px"><a href="${href}" style="color:#52284F;text-decoration:underline">${esc(label)}</a></p>`;
   }
+  // each step: a photo tile with a small gold number, then the words
   function steps(items) {
-    return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:18px 0 6px">${items.map((it, i) => `
-      <tr><td valign="top" width="44" style="padding:0 0 16px">
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td align="center" width="32" height="32" bgcolor="#52284F" style="border-radius:16px;background:#52284F;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#D9B77C;font-weight:bold;line-height:32px">${i + 1}</td></tr></table></td>
-      <td valign="top" style="padding:0 0 16px 10px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#241E2B"><b style="color:#3D1C3B">${esc(it[0])}</b><br><span style="color:#5B5363">${it[1]}</span></td></tr>`).join('')}</table>`;
+    return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:22px 0 6px">${items.map((it, i) => `
+      <tr><td valign="top" width="118" style="padding:0 0 18px">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:14px;overflow:hidden;background:#EADFCB"><img src="${PH}${it[2]}" width="118" height="88" alt="" style="display:block;width:118px;height:88px;border:0;border-radius:14px;object-fit:cover"></td></tr>
+        <tr><td align="left" style="padding:0"><table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:-16px 0 0 8px"><tr><td align="center" width="28" height="28" bgcolor="#D9B77C" style="border-radius:14px;background:#D9B77C;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#3D1C3B;font-weight:bold;line-height:28px;border:2px solid #FFFFFF">${i + 1}</td></tr></table></td></tr></table></td>
+      <td valign="top" style="padding:2px 0 18px 14px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#241E2B"><b style="color:#3D1C3B;font-size:16px">${esc(it[0])}</b><br><span style="color:#5B5363">${it[1]}</span></td></tr>`).join('')}</table>`;
   }
-  function frame({ preheader, kicker, title, lede, body, cta, ctaHref, secondary, secondaryHref, signoff }) {
+  // a row of three photo tiles with captions (categories, moments)
+  function tiles(items) {
+    return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:8px 0 4px"><tr>${items.map((t, i) => `
+      <td width="33%" valign="top" style="padding:0 ${i < 2 ? '8px' : '0'} 0 0"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:14px;overflow:hidden;background:#EADFCB"><a href="${t[2] || SITE}" style="text-decoration:none"><img src="${PH}${t[0]}" width="170" alt="${esc(t[1])}" style="display:block;width:100%;height:auto;border:0;border-radius:14px"></a></td></tr>
+      <tr><td align="center" style="padding:7px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F">${esc(t[1])}</td></tr></table></td>`).join('')}</tr></table>`;
+  }
+  const gap = (px) => `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td height="${px}" style="font-size:0;line-height:0">&nbsp;</td></tr></table>`;
+  // a gold flourish between sections
+  const flourish = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:26px 0 20px"><tr><td style="border-top:1px solid #EADFCB;font-size:0;line-height:0">&nbsp;</td><td width="60" align="center" style="font-family:Georgia,'Times New Roman',serif;font-size:18px;color:#D9B77C;line-height:1">&#10087;</td><td style="border-top:1px solid #EADFCB;font-size:0;line-height:0">&nbsp;</td></tr></table>`;
+  function frame({ preheader, kicker, title, lede, body, cta, ctaHref, secondary, secondaryHref, signoff, hero, heroAlt }) {
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title></head>
 <body style="margin:0;padding:0;background:#FAF6F0">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#FAF6F0">${esc(preheader)}${'&zwnj;&nbsp;'.repeat(40)}</div>
@@ -92,13 +104,14 @@ module.exports = function welcome(RESEND_API_KEY) {
     <p style="margin:16px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:#D9B77C">${esc(kicker)}</p>
   </td></tr>
   <tr><td bgcolor="#D9B77C" height="3" style="background:#D9B77C;font-size:0;line-height:0">&nbsp;</td></tr>
+  ${hero ? `<tr><td bgcolor="#3D1C3B" style="background:#3D1C3B;font-size:0;line-height:0"><img src="${PH}${hero}" width="600" alt="${esc(heroAlt || '')}" style="display:block;width:100%;max-width:600px;height:auto;border:0"></td></tr>` : ''}
   <tr><td bgcolor="#FFFFFF" style="background:#FFFFFF;padding:34px 36px 30px;border-radius:0 0 22px 22px;border:1px solid #EADFCB;border-top:0">
     <h1 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-weight:normal;font-size:30px;line-height:1.15;color:#3D1C3B;letter-spacing:-.3px">${title}</h1>
     <p style="margin:0 0 18px;font-family:Helvetica,Arial,sans-serif;font-size:16px;line-height:1.65;color:#241E2B">${lede}</p>
     ${body}
     ${cta ? button(cta, ctaHref) : ''}
     ${secondary ? quietLink(secondary, secondaryHref) : ''}
-    <hr style="border:0;border-top:1px solid #EADFCB;margin:28px 0 18px">
+    ${flourish}
     <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#5B5363">${signoff}</p>
     <p style="margin:14px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#52284F">— The Lazo team<br><span style="font-style:italic;color:#8A6A2F">Tied together.</span></p>
   </td></tr>
@@ -126,14 +139,17 @@ module.exports = function welcome(RESEND_API_KEY) {
     const lede = metro
       ? `Your wedding plan is open${dateLine ? '' : ' and waiting for a date'}, with vendors across ${esc(metro)} already in it. Every listing on Lazo is verified, every review is from a couple who booked, and no vendor can pay to be ranked above another. Here's how most couples start.`
       : `Your wedding plan is open. Every listing on Lazo is verified, every review is from a couple who booked, and no vendor can pay to be ranked above another. Here's how most couples start.`;
+    const vendorsUrl = metro ? `${SITE}vendors/${esc(str(c.metroId))}/` : `${SITE}vendors/`;
     const body = countdown + steps([
-      ['Pick your city and date', 'They power vendor search, your budget lines and the weather on your day. Change either any time.'],
-      ['Build your team', 'Venue and planner first, then photographer, caterer, music. Message any vendor from the app; they reply in the same thread, where proposals, contracts and payments live.'],
-      ['Meet June', 'Your planning assistant. She reads your real plan, tells you what to do next, drafts messages to vendors, keeps the budget honest and reads you a daily brief, out loud if you like.'],
-    ]) + `<p style="margin:6px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.6;color:#5B5363">Planning with someone? Invite your partner from the dashboard and you'll share one plan.</p>`;
+      ['Pick your city and date', 'They power vendor search, your budget lines and the weather on your day. Change either any time.', 'atmo-rings.jpg'],
+      ['Build your team', 'Venue and planner first, then photographer, caterer, music. Message any vendor from the app; they reply in the same thread, where proposals, contracts and payments live.', 'wedding-venues.jpg'],
+      ['Meet June', 'Your planning assistant. She reads your real plan, tells you what to do next, drafts messages to vendors, keeps the budget honest and reads you a daily brief, out loud if you like.', 'atmo-candlelight.jpg'],
+    ]) + flourish + `<p style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:21px;color:#3D1C3B">${metro ? 'Verified in ' + esc(metro) : 'Verified, everywhere we are'}</p>`
+      + tiles([['wedding-photographers.jpg', 'Photographers', vendorsUrl + 'wedding-photographers/'], ['wedding-florists.jpg', 'Florists', vendorsUrl + 'wedding-florists/'], ['wedding-cakes.jpg', 'Cakes', vendorsUrl + 'wedding-cakes/']])
+      + `<p style="margin:16px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.6;color:#5B5363">Planning with someone? Invite your partner from the dashboard and you'll share one plan.</p>`;
     return {
       subject: dateLine ? `Welcome to Lazo, ${who}. ${days > 0 ? days + ' days to go.' : 'Your plan is open.'}` : `Welcome to Lazo, ${who}`,
-      html: frame({ preheader: 'Your wedding plan is open. Verified vendors, one thread per vendor, and June to keep it all straight.', kicker: 'Welcome', title: `Welcome, ${esc(who)}.`, lede, body, cta: 'Open your plan', ctaHref: APP, secondary: 'Say hello to June', secondaryHref: JUNE, signoff: 'Questions, ideas, a vendor you wish we listed? Reply to this email. It reaches a person.' }),
+      html: frame({ preheader: 'Your wedding plan is open. Verified vendors, one thread per vendor, and June to keep it all straight.', kicker: 'Welcome', title: `Welcome, ${esc(who)}.`, lede, body, cta: 'Open your plan', ctaHref: APP, secondary: 'Say hello to June', secondaryHref: JUNE, signoff: 'Questions, ideas, a vendor you wish we listed? Reply to this email. It reaches a person.', hero: 'hero-2.jpg', heroAlt: 'A couple on their wedding day' }),
       text: `Welcome to Lazo, ${who}.\n\n${dateLine ? days + ' days until ' + dateLine + '.\n\n' : ''}Your wedding plan is open${metro ? ', with vendors across ' + metro + ' already in it' : ''}. Every listing is verified, every review is from a couple who booked, and no vendor can pay to be ranked above another.\n\n1. Pick your city and date. 2. Build your team: venue and planner first, then photographer, caterer, music. 3. Meet June, your planning assistant: ${JUNE}\n\nOpen your plan: ${APP}\n\nReply to this email and it reaches a person.\n\n- The Lazo team. Tied together.`,
     };
   }
@@ -146,14 +162,15 @@ module.exports = function welcome(RESEND_API_KEY) {
       ? `Your account is attached to your listing. From here on, every inquiry from a Lazo couple lands in your dashboard, and by text the moment you add a phone number.`
       : `Your account is ready. One thing left before couples can find you: claim your listing (or create one) from the dashboard. It takes about two minutes.`;
     const body = steps([
-      [claimed ? 'Fill out the profile' : 'Claim your listing', claimed ? 'Photos and packages with prices do most of the work. Profiles with a gallery and visible pricing get several times the inquiries.' : 'Search for your business name in the app. If it is already there, claim it; if not, create it. Add photos and packages with prices: that is what gets inquiries.'],
-      ['Get verified', 'Verification is free and never for sale. It is a badge couples filter by, and verified listings rank above unverified ones at the same score.'],
-      ['Reply fast, from anywhere', 'Add your phone and new leads reach you by text. Reply in the app: proposals, contracts, invoices and payments all live in the same thread as the conversation.'],
-      ['Meet June', 'Your studio manager. Who is waiting on you, this week’s weddings with the forecast, money due, a first-reply draft for every lead, and a morning brief read aloud.'],
-    ]);
+      [claimed ? 'Fill out the profile' : 'Claim your listing', claimed ? 'Photos and packages with prices do most of the work. Profiles with a gallery and visible pricing get several times the inquiries.' : 'Search for your business name in the app. If it is already there, claim it; if not, create it. Add photos and packages with prices: that is what gets inquiries.', 'wedding-photographers.jpg'],
+      ['Get verified', 'Verification is free and never for sale. It is a badge couples filter by, and verified listings rank above unverified ones at the same score.', 'atmo-lazo-cord.jpg'],
+      ['Reply fast, from anywhere', 'Add your phone and new leads reach you by text. Reply in the app: proposals, contracts, invoices and payments all live in the same thread as the conversation.', 'wedding-planners.jpg'],
+      ['Meet June', 'Your studio manager. Who is waiting on you, this week’s weddings with the forecast, money due, a first-reply draft for every lead, and a morning brief read aloud.', 'atmo-toast.jpg'],
+    ]) + flourish + `<p style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-size:21px;color:#3D1C3B">What couples are booking on Lazo</p>`
+      + tiles([['wedding-venues.jpg', 'Venues', SITE + 'vendors/'], ['atmo-firstdance.jpg', 'Music', SITE + 'vendors/'], ['wedding-florists.jpg', 'Florals', SITE + 'vendors/']]);
     return {
       subject: claimed ? `Welcome to Lazo, ${who}. Your listing is live.` : `Welcome to Lazo, ${who}. Claim your listing.`,
-      html: frame({ preheader: 'Verified leads, no pay-to-play. Claim your listing and add your phone to get them by text.', kicker: 'Welcome, vendor', title: `Welcome, ${esc(who)}.`, lede, body, cta: claimed ? 'Open your dashboard' : 'Claim your listing', ctaHref: DASH, secondary: 'Talk to June', secondaryHref: JUNE, signoff: 'We planned our own weddings on the big directories and came away tired of paying for position. Lazo ranks on reviews from real bookings, nothing else. Reply to this email with anything at all; it reaches a person.' }),
+      html: frame({ preheader: 'Verified leads, no pay-to-play. Claim your listing and add your phone to get them by text.', kicker: 'Welcome, vendor', title: `Welcome, ${esc(who)}.`, lede, body, cta: claimed ? 'Open your dashboard' : 'Claim your listing', ctaHref: DASH, secondary: 'Talk to June', secondaryHref: JUNE, hero: 'hero-1.jpg', heroAlt: 'A wedding on Lazo', signoff: 'We planned our own weddings on the big directories and came away tired of paying for position. Lazo ranks on reviews from real bookings, nothing else. Reply to this email with anything at all; it reaches a person.' }),
       text: `Welcome to Lazo, ${who}.\n\n${claimed ? 'Your account is attached to your listing.' : 'One thing left: claim your listing (or create one) from the dashboard.'}\n\n1. ${claimed ? 'Fill out the profile: photos and packages with prices.' : 'Claim your listing and add photos and packages with prices.'} 2. Get verified: free, never for sale. 3. Add your phone: new leads reach you by text. 4. Meet June, your studio manager: ${JUNE}\n\nDashboard: ${DASH}\n\nReply to this email and it reaches a person.\n\n- The Lazo team. Tied together.`,
     };
   }
