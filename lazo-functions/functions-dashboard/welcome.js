@@ -1,5 +1,5 @@
 // functions-dashboard/welcome.js
-// Build ID: JC-LAZO-FNDASH-1007-023 (023.2: steps show app-screen tiles from assets/email/tile-*.jpg so they know what to expect; photos stay on the hero and the category strip)
+// Build ID: JC-LAZO-FNDASH-1007-023 (023.3: no number badges, they sat on the tiles) (023.2: steps show app-screen tiles from assets/email/tile-*.jpg so they know what to expect; photos stay on the hero and the category strip)
 //
 // WELCOME EMAILS. Until now nobody heard from Lazo at signup: vendors got an
 // email only when a claim was approved, couples never. Two triggers, both
@@ -82,7 +82,7 @@ module.exports = function welcome(RESEND_API_KEY) {
     return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:22px 0 6px">${items.map((it, i) => `
       <tr><td valign="top" width="124" style="padding:0 0 20px">
         <table role="presentation" cellspacing="0" cellpadding="0" border="0"><tr><td style="border-radius:16px;overflow:hidden;background:#3D1C3B;border:2px solid #3D1C3B"><img src="${TILE}tile-${it[2]}.jpg" width="120" height="160" alt="${esc(it[0])} in the Lazo app" style="display:block;width:120px;height:160px;border:0;border-radius:14px"></td></tr>
-        <tr><td align="left" style="padding:0"><table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:-16px 0 0 8px"><tr><td align="center" width="28" height="28" bgcolor="#D9B77C" style="border-radius:14px;background:#D9B77C;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#3D1C3B;font-weight:bold;line-height:28px;border:2px solid #FFFFFF">${i + 1}</td></tr></table></td></tr></table></td>
+</table></td>
       <td valign="top" style="padding:2px 0 20px 16px;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#241E2B"><b style="color:#3D1C3B;font-size:16px">${esc(it[0])}</b><br><span style="color:#5B5363">${it[1]}</span></td></tr>`).join('')}</table>`;
   }
   // a row of three photo tiles with captions (categories, moments)
