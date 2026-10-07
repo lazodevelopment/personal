@@ -4859,3 +4859,197 @@ exports.whopManageUrl = onCall(
   }
 );
 
+
+// ============================================================================
+// JC-LAZO-FN-1007-RESTORE: functions that were live from the 2026-09-21 build
+// but missing from this tree (the deploy offered to delete them). Restored so
+// source matches production and nothing is lost on the next deploy; Stripe
+// (stripeConnect*, stripeWebhook, invoiceCheckout) is NOT restored (Lazo left
+// Stripe). They now run under setGlobalOptions gcf_gen1 like everything else,
+// which is also what frees the region's CPU quota they were eating at a full
+// vCPU each.
+// ============================================================================
+
+// ---- thread state: lastMessageAt / lastMessagePreview / lastMessageRole on every message
+exports.onMessageWritten = onDocumentCreated(
+  { region: "us-central1", document: "inquiries/{inquiryId}/messages/{messageId}",
+    timeoutSeconds: 30, memory: "256MiB" },
+  async (event) => {
+    try {
+      const snap = event.data;
+      if (!snap) { return; }
+      const m = snap.data() || {};
+      const role = (m.senderRole || "").toString();
+      const text = (m.text || "").toString();
+      const preview = text.length > 90 ? text.slice(0, 90) + "\u2026" : text;
+      const patch = {
+        lastMessageAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastMessagePreview: preview,
+        lastMessageRole: role,
+      };
+      if (role === "couple") {
+        patch.coupleLastMessageAt = admin.firestore.FieldValue.serverTimestamp();
+      } else if (role === "vendor") {
+        patch.vendorLastMessageAt = admin.firestore.FieldValue.serverTimestamp();
+      }
+      await db.collection("inquiries").doc(event.params.inquiryId)
+        .set(patch, { merge: true });
+    } catch (e) {
+      console.error("onMessageWritten failed", e.message);
+    }
+  }
+);
+
+// LAZO - EMAIL HARVESTER (v61)
+// The recruitment engine only discovers an address when a couple happens to
+// inquire. This walks the whole directory on a schedule and caches what it
+// finds, so we know the real sendable universe before we ever send anything.
+//
+// Deliberately unhurried: a small batch every ten minutes, five at a time.
+// These are small businesses' websites, not a target. Nothing is emailed here
+// - discovery only.
+// ============================================================================
+
+// Leave empty to sweep every metro. Start narrow to measure the hit rate.
+const HARVEST_METROS = [
+  "phoenix", "denver", "dallas-fort-worth", "austin", "houston",
+  "san-antonio", "las-vegas", "atlanta", "nashville",
+];
+const HARVEST_BATCH = 120;      // vendors examined per run
+const HARVEST_PARALLEL = 5;     // simultaneous site fetches
+
+async function _harvestOne(vRef, v) {
+  // Never re-fetch what we already know, and never touch a claimed vendor.
+  if (v.claimedBy) { return "claimed"; }
+  const known = (v.outreachEmail || v.email || "").trim();
+  if (known) {
+    await vRef.set({
+      harvestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      harvestStatus: "already-known",
+    }, { merge: true });
+    return "already-known";
+  }
+  if (!v.website) {
+    await vRef.set({
+      harvestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      harvestStatus: "no-website",
+    }, { merge: true });
+    return "no-website";
+  }
+  let email = null;
+  try {
+    const { html, host } = await fetchSiteHtml(v.website);
+    if (html) { email = extractEmails(html, host); }
+    if (!email && html) {
+      const cm = html.match(/href=["']([^"']*contact[^"']*)["']/i);
+      if (cm) {
+        let cu = cm[1];
+        if (cu.startsWith("/")) {
+          cu = (v.website.startsWith("http") ? v.website : "https://" + v.website)
+            .replace(/\/+$/, "") + cu;
+        }
+        if (cu.startsWith("http")) {
+          const second = await fetchSiteHtml(cu);
+          if (second.html) { email = extractEmails(second.html, second.host); }
+        }
+      }
+    }
+  } catch (e) {
+    await vRef.set({
+      harvestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      harvestStatus: "fetch-failed",
+    }, { merge: true });
+    return "fetch-failed";
+  }
+  await vRef.set({
+    outreachEmail: email || admin.firestore.FieldValue.delete(),
+    harvestedAt: admin.firestore.FieldValue.serverTimestamp(),
+    harvestStatus: email ? "found" : "no-email-found",
+  }, { merge: true });
+  return email ? "found" : "no-email-found";
+}
+
+exports.harvestEmails = onSchedule(
+  { schedule: "every 10 minutes", timeZone: "America/Phoenix",
+    region: "us-central1", timeoutSeconds: 540, memory: "512MiB" },
+  async () => {
+    const ckRef = db.collection("stats").doc("harvest");
+    const ck = await ckRef.get();
+    const state = ck.exists ? (ck.data() || {}) : {};
+    const metros = HARVEST_METROS.length ? HARVEST_METROS : [""];
+    let metroIdx = Number(state.metroIdx || 0);
+    if (metroIdx >= metros.length) {
+      console.log("harvest: complete for all configured metros");
+      return;
+    }
+    const metro = metros[metroIdx];
+    const cursor = (state.cursor || "").toString();
+
+    let q = db.collection("vendors");
+    if (metro) { q = q.where("metroId", "==", metro); }
+    q = q.orderBy(admin.firestore.FieldPath.documentId()).limit(HARVEST_BATCH);
+    if (cursor) { q = q.startAfter(cursor); }
+    const snap = await q.get();
+
+    if (snap.empty) {
+      // this metro is done - move to the next one
+      await ckRef.set({
+        metroIdx: metroIdx + 1,
+        cursor: "",
+        [`finished_${metro || "all"}`]:
+          admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      console.log("harvest: finished metro", metro || "(all)");
+      return;
+    }
+
+    const tally = { found: 0, "no-email-found": 0, "no-website": 0,
+      "already-known": 0, "fetch-failed": 0, claimed: 0 };
+    const docs = snap.docs;
+    let lastId = cursor;
+
+    for (let i = 0; i < docs.length; i += HARVEST_PARALLEL) {
+      const slice = docs.slice(i, i + HARVEST_PARALLEL);
+      const results = await Promise.all(slice.map(async (d) => {
+        try {
+          return await _harvestOne(d.ref, d.data() || {});
+        } catch (e) {
+          console.error("harvest one failed", d.id, e.message);
+          return "fetch-failed";
+        }
+      }));
+      for (const r of results) {
+        if (tally[r] !== undefined) { tally[r]++; }
+      }
+      lastId = slice[slice.length - 1].id;
+    }
+
+    const totals = state.totals || {};
+    for (const k of Object.keys(tally)) {
+      totals[k] = Number(totals[k] || 0) + tally[k];
+    }
+    await ckRef.set({
+      metroIdx: metroIdx,
+      cursor: lastId,
+      totals: totals,
+      lastRunAt: admin.firestore.FieldValue.serverTimestamp(),
+      lastMetro: metro || "all",
+    }, { merge: true });
+
+    console.log("harvest", metro || "(all)", JSON.stringify(tally),
+      "| running totals", JSON.stringify(totals));
+  }
+);
+
+exports.invoicePdf = require("./invoicePdf").invoicePdf;
+exports.reviewRequestSweep = require("./reviews").reviewRequestSweep;
+exports.onReviewCreated = require("./reviews").onReviewCreated;
+exports.juneQuestionnaire = require("./juneQuestionnaire").juneQuestionnaire;
+exports.onClaimDecided = require("./claimDecided").onClaimDecided;      // denials only; approvals come from claimApprovedEmail above
+exports.onListingDecided = require("./claimDecided").onListingDecided;
+exports.onLeadEmail = require("./lifecycle").onLeadEmail;
+exports.onThreadStateEmail = require("./lifecycle").onThreadStateEmail;  // vendor branches only
+exports.messageDigestSweep = require("./lifecycle").messageDigestSweep;  // couple -> vendor digests only
+exports.activationSweep = require("./activation").activationSweep;
+exports.juneSneakPeek = require("./juneSneak").juneSneakPeek;
+exports.juneTeaser = require("./juneSneak").juneTeaser;
