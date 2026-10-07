@@ -92,6 +92,10 @@ header::after{content:"";position:absolute;left:0;right:0;bottom:-14px;height:14
 .calcout{font:600 30px Inter;color:var(--goldSoft);text-align:right;min-height:1.2em;padding:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.01em}.calcout.err{color:var(--rose);font-size:14px;font-weight:500}
 .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.keys button{background:var(--well);border:1px solid rgba(217,183,124,.18);color:#fff;font:500 18px Inter;padding:12px 0;border-radius:12px;transition:background .12s}.keys button:hover{background:rgba(217,183,124,.14)}.keys button:active{background:rgba(217,183,124,.28)}.keys button.op{color:var(--gold)}.keys button.eq{background:linear-gradient(180deg,#E6C98F,#D2AE6E);color:var(--plumDeep);font-weight:700;border-color:rgba(217,183,124,.9)}
 .calchist{display:grid;gap:2px;font:12.5px Inter;color:var(--muted);max-height:120px;overflow:auto}.calchist div{display:flex;justify-content:space-between;gap:10px;cursor:pointer;padding:3px 6px;border-radius:8px}.calchist div:hover{background:var(--well)}.calchist b{color:#fff;font-weight:600}
+body[data-kind="couple"] [data-only="vendor"]{display:none!important}body:not([data-kind="couple"]) [data-only="couple"]{display:none!important}
+.count{display:inline-flex;align-items:baseline;gap:6px;font:600 30px/1 "Cormorant Garamond",serif;color:var(--goldSoft)}.count small{font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bar{height:8px;border-radius:999px;background:var(--well);overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:linear-gradient(90deg,#E6C98F,#D2AE6E);border-radius:999px}.bar i.over{background:var(--rose)}
+.tl{display:grid;gap:4px;margin-top:8px}.tl div{display:flex;gap:10px;font-size:13px;padding:5px 0;border-top:1px solid rgba(255,255,255,.07)}.tl div:first-child{border-top:0}.tl b{color:var(--gold);font-variant-numeric:tabular-nums;min-width:72px;font-weight:600}.tl span{color:var(--ivory)}.tl small{color:var(--muted)}
 .corestate{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);min-height:16px;text-align:center;font-weight:600}
 .chat{height:300px;overflow:auto;background:var(--well);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),inset 0 0 0 1px rgba(255,255,255,.05);overscroll-behavior:contain}
 .chat::-webkit-scrollbar{width:8px}.chat::-webkit-scrollbar-thumb{background:rgba(217,183,124,.25);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
@@ -171,12 +175,12 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
   <form class="box" id="loginForm">
     <div class="mark"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg></div>
     <h1>June</h1>
-    <p>Your Lazo assistant. Sign in with the same email and password you use in the Lazo app.</p>
+    <p>Your Lazo assistant, for couples and vendors. Sign in with the same email and password you use in the Lazo app.</p>
     <input type="email" id="email" placeholder="Email" autocomplete="username" required>
     <input type="password" id="pw" placeholder="Password" autocomplete="current-password" required>
     <div class="err" id="loginErr"></div>
     <button class="btn gold" type="submit" id="loginBtn">Sign in</button>
-    <div class="foot"><a href="#" id="forgot">Forgot your password?</a> · <a href="https://meetlazo.com/for-vendors/" target="_blank" rel="noopener">Not on Lazo yet?</a></div>
+    <div class="foot"><a href="#" id="forgot">Forgot your password?</a> · <a href="https://meetlazo.com/" target="_blank" rel="noopener">Not on Lazo yet?</a></div>
   </form>
 </div>
 
@@ -198,7 +202,8 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
 
   <section class="card" id="junePanel">
     <h2>Ask June <span class="n" id="brainState"></span></h2>
-    <div class="sub">She reads your real leads, dates and money. Hold the mic or press J to talk; say "June, …" when the wake word is on.</div>
+    <div class="sub" data-only="vendor">She reads your real leads, dates and money. Hold the mic or press J to talk; say "June, …" when the wake word is on.</div>
+    <div class="sub" data-only="couple">She reads your real plan: vendors, messages, budget, guests and the day itself. Hold the mic or press J to talk; say "June, …" when the wake word is on.</div>
     <div class="console" style="margin-top:12px">
       <div class="corebox">
         <div class="core" id="core" aria-hidden="true"><canvas id="viz" width="380" height="380"></canvas></div>
@@ -225,8 +230,15 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
 
   <section class="card" id="weekPanel">
     <h2>Coming up <span class="n" id="weekN"></span></h2>
-    <div class="sub">Booked weddings and consults, with the day's forecast inside two weeks.</div>
+    <div class="sub" data-only="vendor">Booked weddings and consults, with the day's forecast inside two weeks.</div>
+    <div class="sub" data-only="couple">Consults with your vendors, key dates and tasks, in order.</div>
     <div id="upcoming"></div>
+  </section>
+
+  <section class="card" id="teamPanel" data-only="couple">
+    <h2>Your team <span class="n" id="teamN"></span><span class="act"><button class="btn sm" onclick="ask('What should we book next?')">What's next?</button></span></h2>
+    <div class="sub">Every category of your wedding, who you've booked and what it's costing.</div>
+    <div id="team"></div>
   </section>
 
 </div>
@@ -261,27 +273,38 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     </div>
   </section>
 
-  <section class="card" id="pagePanel">
+  <section class="card" id="pagePanel" data-only="vendor">
     <h2>Your page <span class="act"><a class="btn sm" id="pageLink" href="#" target="_blank" rel="noopener">View</a></span></h2>
     <div id="page"></div>
   </section>
 
   <section class="card" id="moneyPanel">
-    <h2>Money</h2>
+    <h2>Money <span class="n" id="moneyN"></span></h2>
     <div id="money"></div>
   </section>
 
-  <section class="card" id="socialPanel">
+  <section class="card" id="guestsPanel" data-only="couple">
+    <h2>Guests <span class="n" id="guestsN"></span><span class="act"><button class="btn sm" onclick="ask('Who still hasn\'t RSVP\'d?')">Who's quiet?</button></span></h2>
+    <div id="guests"></div>
+  </section>
+
+  <section class="card" id="dayofPanel" data-only="couple">
+    <h2>The day <span class="n" id="dayofN"></span></h2>
+    <div class="sub">Your timeline and what's left to buy. Say "add a moment at 4pm" or "add sparklers to the shopping list".</div>
+    <div id="dayof"></div>
+  </section>
+
+  <section class="card" id="socialPanel" data-only="vendor">
     <h2>Social <span class="n" id="socialTier"></span><span class="act"><button class="btn sm gold" id="socialConnect" hidden>Connect accounts</button></span></h2>
     <div id="social"></div>
   </section>
 
-  <section class="card" id="reviewsPanel">
+  <section class="card" id="reviewsPanel" data-only="vendor">
     <h2>Reviews <span class="n" id="reviewsN"></span></h2>
     <div id="reviews"></div>
   </section>
 
-  <section class="card" id="pricingPanel">
+  <section class="card" id="pricingPanel" data-only="vendor">
     <h2>Pricing <span class="n" id="pricingN"></span><span class="act"><button class="btn sm" onclick="ask('Am I priced right for my metro?')">Ask June</button></span></h2>
     <div id="pricing"></div>
   </section>
@@ -291,7 +314,7 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     <div id="news"></div>
   </section>
 
-  <section class="card news" id="indPanel">
+  <section class="card news" id="indPanel" data-only="vendor">
     <h2>The industry</h2>
     <div id="industry"></div>
   </section>
@@ -309,7 +332,7 @@ footer{text-align:center;color:var(--faint);font-size:12px;margin-top:34px}
     <div id="reminders"></div>
   </section>
 
-  <section class="card" id="alertsPanel">
+  <section class="card" id="alertsPanel" data-only="vendor">
     <h2>Alerts</h2>
     <div class="sub">June can email you the brief every morning, nudge you when a lead has waited two hours, and send reminders when they come due.</div>
     <div id="alerts"></div>
@@ -368,21 +391,22 @@ $("#signout").onclick = () => { stopSpeaking(); signOut(); };
 async function enter() {
   $("#signin").classList.add("hidden"); $("#app").classList.remove("hidden"); unlockPlayer();
   if (!vizRaf) vizRaf = requestAnimationFrame(drawViz);
-  addMsg("sys", "Good to see you. Ask me anything about your couples, dates or money.");
   await loadState(true);
+  addMsg("sys", state.s?.kind === "couple" ? "Good to see you both. Ask me anything about your vendors, your guests, the budget or the big day." : "Good to see you. Ask me anything about your couples, dates or money.");
   detectMic();
 }
 async function loadState(first) {
   try {
     const r = await api("/api/state"); const s = await r.json();
     if (!r.ok) { if (r.status === 403) { addMsg("sys", s.message || s.error); $("#briefText").textContent = s.message || "No vendor listing on this login."; $("#briefText").className = "brief wait"; } else addMsg("sys", "Couldn't load your data: " + (s.error || r.status)); return; }
-    state.s = s; render(s); paintBrief();
+    state.s = s; document.body.dataset.kind = s.kind === "couple" ? "couple" : "vendor"; if (first) setChips(s.kind);
+    if (s.kind === "couple") renderCouple(s); else render(s); paintBrief();
     if (first) {
       if (!s.brief?.text) makeBrief(false);
       if (s.due?.length) { const line = s.due.length === 1 ? `You asked me to remind you: ${s.due[0].text}.` : `You have ${s.due.length} reminders due. ` + s.due.slice(0, 3).map((r) => r.text).join("; ") + "."; addMsg("ai", line); speak(line); }
-      if (s.isMonday && !s.weekly?.text) makeWeekly(false);
+      if (s.kind !== "couple" && s.isMonday && !s.weekly?.text) makeWeekly(false);
     }
-    runTriage();
+    if (s.kind !== "couple") runTriage();
   } catch (e) { addMsg("sys", "Couldn't load your data: " + e.message); }
 }
 setInterval(() => { if (state.s && !document.hidden) loadState(false); }, 3 * 60e3);
@@ -424,6 +448,58 @@ function render(s) {
   renderMemory(s.memory);
   document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openThread(b.dataset.open)));
   document.querySelectorAll("[data-reply]").forEach((b) => (b.onclick = () => { $("#q").value = `Draft a reply to ${b.dataset.name}`; ask($("#q").value); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+}
+/* ---------- the couple's page ---------- */
+function renderCouple(s) {
+  const c = s.couple, m = s.money;
+  const count = s.daysToGo == null ? "Set your date in the app" : s.daysToGo === 0 ? "It's today!" : s.daysToGo > 0 ? `${s.daysToGo} day${s.daysToGo === 1 ? "" : "s"} to go` : `Married ${Math.abs(s.daysToGo)} day${Math.abs(s.daysToGo) === 1 ? "" : "s"} ago`;
+  $("#vendorLine").textContent = `${c.names} · ${c.metro}${c.weddingDate ? " · " + fmtDay(c.weddingDate) : ""}`; $("#acct").textContent = s.user.email;
+  $("#dashLink").href = state.cfg.coupleApp || "https://app.meetlazo.com/"; $("#dashLink").textContent = "Lazo app";
+  $("#q").placeholder = "What should we do next? Who's waiting on us? What's the forecast for our day?";
+  // waiting: vendors who wrote last, then tasks vendors gave you
+  $("#waitingN").textContent = (s.waiting.length + s.tasks.length) || "";
+  const w = s.waiting.map((r) => `<div class="row"><div class="main"><div class="t">${esc(r.vendor)} ${r.unread ? '<span class="tag hot">new</span>' : ""}${r.category ? `<span class="tag">${esc(nice(r.category))}</span>` : ""}</div><div class="d">${esc(r.lastMessagePreview || "No message yet")}</div></div><div class="side">${ago(r.waitedHours)}<br><button class="btn sm" data-open="${esc(r.inquiryId)}">Open</button> <button class="btn sm gold" data-reply="${esc(r.inquiryId)}" data-name="${esc(r.vendor)}">Reply with June</button></div></div>`);
+  const t = s.tasks.map((x) => `<div class="row"><div class="main"><div class="t">${esc(x.title)} <span class="tag">from ${esc(x.vendor)}</span>${x.dueAt && x.dueAt.slice(0, 10) < s.today ? '<span class="tag hot">overdue</span>' : ""}</div><div class="d">${x.dueAt ? "By " + esc(fmtDay(x.dueAt.slice(0, 10))) : "No due date"}${x.note ? " · " + esc(x.note) : ""}</div></div><div class="side"><button class="btn sm" data-taskdone="${esc(x.inquiryId)}|${esc(x.taskId)}" data-title="${esc(x.title)}">Done</button></div></div>`);
+  $("#waiting").innerHTML = [...w, ...t].join("") || '<div class="empty">Nobody is waiting on you. Lovely.</div>';
+  // coming up
+  $("#weekN").textContent = count;
+  $("#upcoming").innerHTML = s.upcoming.length ? s.upcoming.map((u) => `<div class="row"><div class="main"><div class="t">${esc(u.who)} <span class="tag ${u.kind === "Task" ? "" : "ok"}">${esc(u.kind)}</span></div><div class="d">${esc(u.time ? fmtWhen(u.when) : fmtDay(u.when))}${u.mode ? " · " + esc(u.mode) : ""}</div></div>${u.inquiryId ? `<div class="side"><button class="btn sm" data-open="${esc(u.inquiryId)}">Open</button></div>` : ""}</div>`).join("") : '<div class="empty">Nothing scheduled yet. Consults you book with vendors and the key dates from the app land here.</div>';
+  // team
+  $("#teamN").textContent = `${s.counts.booked} booked · ${s.counts.gaps} to go`;
+  const ST = { needed: ["", "needed"], researching: ["", "researching"], booked: ["ok", "booked"], skipped: ["", "skipped"] };
+  $("#team").innerHTML = s.team.length ? s.team.map((p) => { const st = ST[p.status] || ["", p.status]; return `<div class="row"><div class="main"><div class="t">${esc(p.label)} <span class="tag ${st[0]}">${esc(st[1])}</span></div><div class="d">${p.vendorName ? esc(p.vendorName) : p.status === "booked" ? "Booked" : p.status === "skipped" ? "Not needed" : "Nobody yet"}${p.planned ? " · planned " + money(p.planned) : ""}${p.actual ? " · " + money(p.actual) : ""}</div></div><div class="side">${p.status !== "booked" && p.status !== "skipped" ? `<button class="btn sm" onclick="ask('Find us a ${esc(p.label.toLowerCase())}')">Find one</button>` : ""}</div></div>`; }).join("") : '<div class="empty">Open the Lazo app once and your plan appears here.</div>';
+  // weather with the wedding day
+  const wx = s.weather; $("#wxPlace").textContent = c.metro.split(",")[0];
+  if (wx?.current) {
+    const cur = wx.current, d = wx.daily;
+    $("#wx").innerHTML = `<div class="wxnow"><b>${Math.round(cur.temperature_2m)}°</b><div class="c">${wmo(cur.weather_code)[1]} ${esc(wmo(cur.weather_code)[0])}<br>feels ${Math.round(cur.apparent_temperature)}° · wind ${Math.round(cur.wind_speed_10m)} mph</div></div>
+      ${s.weddingWx ? `<div class="sub" style="margin-top:8px"><b style="color:var(--goldSoft)">Your day:</b> ${esc(s.weddingWx.text)}, high ${esc(String(s.weddingWx.hi))}°, rain ${esc(String(s.weddingWx.rain))}%, sunset ${esc(s.weddingWx.sunset || "")}</div>` : ""}
+      <div class="wxdays">${d.time.slice(1, 6).map((tm, i) => `<div><b>${new Date(tm + "T12:00").toLocaleDateString("en-US", { weekday: "short" })}</b>${wmo(d.weather_code[i + 1])[1]}<br>${Math.round(d.temperature_2m_max[i + 1])}°/${Math.round(d.temperature_2m_min[i + 1])}°</div>`).join("")}</div>
+      ${(wx.nws || []).map((a) => `<div class="alert">⚠️ ${esc(a.headline || a.event)}</div>`).join("")}`;
+  } else $("#wx").innerHTML = '<div class="empty">Weather unavailable right now.</div>';
+  // money: budget against planned and committed, open invoices
+  const bt = m.budgetTotal || 0, pct = bt ? Math.min(100, Math.round(m.committed / bt * 100)) : 0;
+  $("#moneyN").textContent = bt ? `${pct}% of ${money(bt)}` : "";
+  $("#money").innerHTML = `<div class="stat"><div class="k"><b>${bt ? money(bt) : "–"}</b><span>budget</span></div><div class="k"><b>${money(m.committed)}</b><span>committed</span></div><div class="k"><b style="${m.overdue ? "color:var(--red)" : ""}">${money(m.invoicesOpen)}</b><span>invoices open${m.overdue ? " · " + money(m.overdue) + " overdue" : ""}</span></div></div>
+    ${bt ? `<div class="bar"><i class="${m.committed > bt ? "over" : ""}" style="width:${pct}%"></i></div><div class="sub" style="margin-top:6px">${m.committed > bt ? money(m.committed - bt) + " over budget" : money(bt - m.committed) + " left to allocate"} · planned across categories ${money(m.planned)} · paid so far ${money(m.paid)}</div>` : '<div class="sub" style="margin-top:8px">Set a budget in the app, or say "our budget is 25,000".</div>'}
+    ${m.open.length ? `<div style="margin-top:10px">${m.open.map((i) => `<div class="row"><div class="main"><div class="t">${esc(i.vendor)} · ${esc(i.title)}</div><div class="d">${i.dueDate ? "Due " + esc(fmtDay(i.dueDate)) : "No due date"}</div></div><div class="side"><b>${money(i.total)}</b><br><button class="btn sm" data-open="${esc(i.inquiryId)}">Open</button></div></div>`).join("")}</div>` : ""}`;
+  // guests
+  const g = s.guests; $("#guestsN").textContent = g.total ? `${g.yes} of ${g.total} said yes` : "";
+  $("#guests").innerHTML = g.total ? `<div class="stat"><div class="k"><b>${g.total}</b><span>invited${c.guestEstimate ? " · planned " + c.guestEstimate : ""}</span></div><div class="k"><b style="color:var(--sage)">${g.yes}</b><span>yes</span></div><div class="k"><b>${g.pending}</b><span>no answer${g.no ? " · " + g.no + " no" : ""}</span></div></div>
+    <div class="bar"><i style="width:${Math.round(g.yes / g.total * 100)}%"></i></div>
+    ${s.site ? `<div class="sub" style="margin-top:8px">Website: <a href="${esc(s.site.url)}" target="_blank" rel="noopener">${esc(s.site.url.replace("https://", ""))}</a> · ${s.site.rsvps} online RSVP${s.site.rsvps === 1 ? "" : "s"}</div>` : ""}
+    ${s.guestsSample.length ? `<div class="sub" style="margin-top:6px">Still quiet: ${esc(s.guestsSample.join(", "))}${g.pending > s.guestsSample.length ? " and " + (g.pending - s.guestsSample.length) + " more" : ""}</div>` : ""}` : '<div class="empty">No guests yet. Import your list in the app, or say "add Sam and Priya Patel, party of two".</div>';
+  // the day: timeline + shopping
+  $("#dayofN").textContent = s.dayof.length ? `${s.dayof.length} moments` : "";
+  $("#dayof").innerHTML = (s.dayof.length ? `<div class="tl">${s.dayof.map((d) => `<div><b>${esc(clock12(d.time))}</b><span>${esc(d.label)}${d.owners.length ? ` <small>· ${esc(d.owners.join(", "))}</small>` : ""}</span></div>`).join("")}</div>` : '<div class="empty">No timeline yet. The app builds a classic day around your ceremony time; June can add moments to it.</div>')
+    + (s.shopping.items ? `<div class="sub" style="margin-top:12px"><b style="color:var(--goldSoft)">Shopping:</b> ${s.shopping.left} of ${s.shopping.items} left${s.shopping.est ? " · about " + money(s.shopping.est) : ""}${s.shopping.nextUp.length ? " · next: " + esc(s.shopping.nextUp.map((x) => x.name).join(", ")) : ""}</div>` : "");
+  // news, memory, reminders
+  $("#newsPlace").textContent = c.metro.split(",")[0];
+  $("#news").innerHTML = s.news.length ? s.news.slice(0, 6).map((n) => `<div class="row"><div class="main"><a href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.title)}</a><div class="src">${esc(n.source || "")}</div></div></div>`).join("") : '<div class="empty">No local news right now.</div>';
+  renderReminders(s.reminders || []); renderMemory(s.memory);
+  document.querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openThread(b.dataset.open)));
+  document.querySelectorAll("[data-reply]").forEach((b) => (b.onclick = () => { ask(`Draft a reply to ${b.dataset.name}`); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
+  document.querySelectorAll("[data-taskdone]").forEach((b) => (b.onclick = () => { const [inquiryId, taskId] = b.dataset.taskdone.split("|"); proposeAction({ id: "t" + Math.random().toString(36).slice(2, 8), kind: "complete_task", params: { inquiryId, taskId }, summary: `Mark "${b.dataset.title}" as done`, status: "awaiting confirmation", at: new Date().toISOString() }); $("#junePanel").scrollIntoView({ behavior: "smooth", block: "start" }); }));
 }
 /* ---------- social (June Studio) ---------- */
 function renderSocial(so) {
@@ -516,12 +592,13 @@ async function openThread(id) {
   $("#drillBox").innerHTML = '<div class="empty">Opening…</div>'; $("#drill").classList.add("open");
   try {
     const r = await api("/api/thread?id=" + encodeURIComponent(id)); const t = await r.json(); if (!r.ok) throw new Error(t.error);
-    $("#drillBox").innerHTML = `<h2 style="font-size:26px;color:var(--gold)">${esc(t.couple)} <span class="tag">${esc(t.stage)}</span></h2><div class="sub">${t.weddingDate ? fmtDay(t.weddingDate) + " · " : ""}${esc(t.venue || "")}${t.intent?.guests ? " · " + esc(t.intent.guests) + " guests" : ""}${t.budget ? " · budget " + esc(t.budget) : ""}${t.contact?.email ? " · " + esc(t.contact.email) : ""}${t.contact?.phone ? " · " + esc(t.contact.phone) : ""}</div>
-      <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm plum" href="${esc((state.cfg.app || "https://app.meetlazo.com/dashboard") + "?thread=" + encodeURIComponent(id))}" target="_blank" rel="noopener">Open in the dashboard</a><button class="btn sm gold" id="drillReply">Draft a reply with June</button><button class="btn sm" id="drillClose">Close</button></div>
+    const other = t.couple || t.vendor || "Thread", appUrl = state.s?.kind === "couple" ? (state.cfg.coupleApp || "https://app.meetlazo.com/") : (state.cfg.app || "https://app.meetlazo.com/dashboard");
+    $("#drillBox").innerHTML = `<h2 style="font-size:26px;color:var(--gold)">${esc(other)} <span class="tag">${esc(t.stage || t.status || "")}</span></h2><div class="sub">${t.weddingDate ? fmtDay(t.weddingDate) + " · " : ""}${esc(t.venue || "")}${t.intent?.guests ? " · " + esc(t.intent.guests) + " guests" : ""}${t.budget ? " · budget " + esc(t.budget) : ""}${t.contact?.email ? " · " + esc(t.contact.email) : ""}${t.contact?.phone ? " · " + esc(t.contact.phone) : ""}</div>
+      <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap"><a class="btn sm plum" href="${esc(appUrl + "?thread=" + encodeURIComponent(id))}" target="_blank" rel="noopener">Open in the dashboard</a><button class="btn sm gold" id="drillReply">Draft a reply with June</button><button class="btn sm" id="drillClose">Close</button></div>
       ${t.tasks?.length ? `<div class="sub" style="margin-top:8px"><b>Tasks:</b> ${t.tasks.map((x) => `${x.done ? "✓" : "○"} ${esc(x.title)}${x.dueAt ? " (" + fmtDay(String(x.dueAt).slice(0, 10)) + ")" : ""}`).join(" · ")}</div>` : ""}
       ${t.invoices?.length ? `<div class="sub"><b>Invoices:</b> ${t.invoices.map((x) => `${esc(x.title)} ${money(x.total)} ${esc(x.status)}`).join(" · ")}</div>` : ""}
       <div style="margin-top:12px">${(t.messages || []).map((m) => `<div class="m ${esc(m.from)}">${esc(m.text)}<small>${esc(fmtWhen(m.at))}${m.via ? " · " + esc(m.via) : ""}</small></div>`).join("") || '<div class="empty">No messages yet.</div>'}</div>`;
-    $("#drillClose").onclick = closeDrill; $("#drillReply").onclick = () => { closeDrill(); ask(`Draft a reply to ${t.couple}`); };
+    $("#drillClose").onclick = closeDrill; $("#drillReply").onclick = () => { closeDrill(); ask(`Draft a reply to ${other}`); };
     api("/api/read", { method: "POST", body: JSON.stringify({ inquiryId: id }) }).catch(() => {});
   } catch (e) { $("#drillBox").innerHTML = `<div class="empty">${esc(e.message)}</div><button class="btn sm" onclick="closeDrill()">Close</button>`; }
 }
@@ -722,7 +799,9 @@ function proposeAction(item) {
 }
 $("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
 $("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
-["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "Draft an Instagram post", "Play some music", "What's in the news?", "Remember that…"].forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "Remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+const CHIPS = { vendor: ["Who is waiting on me?", "What's on this week?", "Weather for my next wedding", "How much is outstanding?", "Which leads went quiet?", "Draft an Instagram post", "Play some music", "What's in the news?", "Remember that…"], couple: ["What should we do next?", "Who's waiting on us?", "How are the RSVPs?", "Where are we on budget?", "What's the forecast for our day?", "Find us a florist", "What's left to buy?", "Play some music", "Remember that…"] };
+function setChips(kind) { $("#chips").innerHTML = ""; (CHIPS[kind === "couple" ? "couple" : "vendor"]).forEach((c) => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (/…$/.test(c)) { $("#q").value = c.replace("…", " "); $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); }); }
+setChips("vendor");
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else stopSpeaking(); } });
 
 /* ---------- voice in: hold-to-talk, "June" wake word, conversation mode ---------- */

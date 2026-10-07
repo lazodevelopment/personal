@@ -8,6 +8,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import html from "./june.html";
 import METROS from "./metros.json";
+import { makeCouple } from "./couple.js";
 
 const PROJECT = "lazo-513ec";
 const FS = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
@@ -539,7 +540,8 @@ async function recordAction(env, vendorId, item) {
 }
 
 /* ---------------- streaming chat ---------------- */
-async function chat(request, env, ctx, who, vend) {
+const VENDOR_IMPL = { snapshot: (env, who, vend) => snapshot(env, who, vend), buildContext, system: (snap) => JUNE_SYSTEM(snap.vendor), tools: TOOLS, runTool };
+async function chat(request, env, ctx, who, vend, impl = VENDOR_IMPL) {
   const { messages: history = [], text } = await request.json();
   const { readable, writable } = new TransformStream(); const writer = writable.getWriter(); const encd = new TextEncoder();
   const send = (ev, data) => writer.write(encd.encode(`event: ${ev}\ndata: ${JSON.stringify(data)}\n\n`)).catch(() => {});
@@ -547,12 +549,12 @@ async function chat(request, env, ctx, who, vend) {
     try {
       if (!env.ANTHROPIC_API_KEY) { await send("delta", { text: "My thinking isn't connected yet. Jesse needs to set the Anthropic key on the June worker." }); await send("done", { reply: "", messages: history, actions: [] }); return; }
       const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }); const T0 = Date.now();
-      const snap = await snapshot(env, who, vend); const context = buildContext(snap);
+      const snap = await impl.snapshot(env, who, vend); const context = impl.buildContext(snap);
       const messages = [...history.slice(-12), { role: "user", content: clip(text, 4000) }];
       const actions = []; let reply = "";
       for (let i = 0; i < 4; i++) {
         const stream = client.beta.messages.stream({ model: env.CHAT_MODEL || "claude-sonnet-5-5", thinking: { type: "between_tools" }, max_tokens: 3000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
-          system: [{ type: "text", text: JUNE_SYSTEM(snap.vendor), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }], tools: TOOLS, messages });
+          system: [{ type: "text", text: impl.system(snap), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }], tools: impl.tools, messages });
         let turnText = "";
         stream.on("text", (d) => { turnText += d; send("delta", { text: d }); });
         const msg = await stream.finalMessage();
@@ -561,7 +563,7 @@ async function chat(request, env, ctx, who, vend) {
         if (msg.stop_reason === "refusal") { if (!reply) { reply = "I'd rather not answer that one."; await send("delta", { text: reply }); } break; }
         if (msg.stop_reason !== "tool_use") break;
         const results = [];
-        for (const b of msg.content.filter((b) => b.type === "tool_use")) { let out; try { out = await runTool(b.name, b.input, env, who, vend, snap, actions); } catch (e) { out = "Tool failed: " + e.message; } results.push({ type: "tool_result", tool_use_id: b.id, content: String(out) }); }
+        for (const b of msg.content.filter((b) => b.type === "tool_use")) { let out; try { out = await impl.runTool(b.name, b.input, env, who, vend, snap, actions); } catch (e) { out = "Tool failed: " + e.message; } results.push({ type: "tool_result", tool_use_id: b.id, content: String(out) }); }
         messages.push({ role: "user", content: results });
         if (i < 3) await send("delta", { text: " " });
       }
@@ -661,6 +663,9 @@ function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v
     body: JSON.stringify({ text: String(text).slice(0, 4800), model_id: model, voice_settings: { stability: 0.55, similarity_boost: 0.8, style: 0.2, use_speaker_boost: true, ...settings } }) });
 }
 
+/* ---------------- June for couples (src/couple.js) ---------------- */
+const COUPLE = makeCouple({ fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, Anthropic, BUILD, json });
+
 /* ---------------- worker ---------------- */
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#3D1C3B"/><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg>`;
 const MANIFEST = { name: "June for Lazo vendors", short_name: "June", start_url: "/", display: "standalone", background_color: "#2A1229", theme_color: "#3D1C3B", icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }] };
@@ -671,14 +676,20 @@ export default {
     if (p === "/" || p === "/index.html") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     if (p === "/icon.svg") return new Response(ICON, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
     if (p === "/manifest.json") return json(MANIFEST);
-    if (p === "/api/config") return json({ brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, apiKey: env.FIREBASE_API_KEY, app: env.APP_URL || "https://app.meetlazo.com/dashboard", build: BUILD });
+    if (p === "/api/config") return json({ brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, apiKey: env.FIREBASE_API_KEY, app: env.APP_URL || "https://app.meetlazo.com/dashboard", coupleApp: env.COUPLE_APP_URL || "https://app.meetlazo.com/", build: BUILD });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
 
     const who = await verifyIdToken(request);
     if (!who) return json({ error: "sign in" }, 401);
+    if (p === "/api/tts" && request.method === "POST") { if (!env.ELEVENLABS_API_KEY) return json({ error: "tts not configured" }, 501); const { text } = await request.json(); const r = await elevenlabs(env, clip(text, 4800), "mp3_44100_128", "eleven_flash_v2_5"); if (!r.ok) return json({ error: "tts failed " + r.status }, 502); return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }); }
     let vend;
     try { vend = await resolveVendor(env, who); } catch (e) { return json({ error: "Could not look up your vendor listing: " + e.message }, 500); }
-    if (!vend) return json({ error: "no vendor", message: "This Lazo login isn't attached to a vendor listing yet. Claim your listing in the Lazo app first." }, 403);
+    if (!vend) {
+      // not a vendor: a couple planning their wedding gets June too (free)
+      let coup = null; try { coup = await COUPLE.resolveCouple(env, who); } catch (e) { return json({ error: "Could not look up your wedding: " + e.message }, 500); }
+      if (!coup) return json({ error: "no account", message: "This Lazo login isn't a couple's plan or a vendor listing yet. Open the Lazo app once to start your wedding plan, or claim your vendor listing, then come back." }, 403);
+      try { const r = await COUPLE.route(p, request, env, ctx, who, coup, chat); return r || json({ error: "not found" }, 404); } catch (e) { return json({ error: String(e.message || e) }, 500); }
+    }
 
     try {
       if (p === "/api/state" && request.method === "GET") { const s = await snapshot(env, who, vend); delete s._rows; delete s._customKeys; return json(s); }
