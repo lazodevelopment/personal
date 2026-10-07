@@ -673,7 +673,7 @@ const MANIFEST = { name: "June for Lazo vendors", short_name: "June", start_url:
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url); const p = url.pathname;
-    if (p === "/" || p === "/index.html") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+    if (p === "/" || p === "/index.html") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "frame-ancestors 'self' https://app.meetlazo.com https://meetlazo.com https://*.meetlazo.com" } });   // embeddable by the Lazo dashboards only
     if (p === "/icon.svg") return new Response(ICON, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
     if (p === "/manifest.json") return json(MANIFEST);
     if (p === "/api/config") return json({ brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, apiKey: env.FIREBASE_API_KEY, app: env.APP_URL || "https://app.meetlazo.com/dashboard", coupleApp: env.COUPLE_APP_URL || "https://app.meetlazo.com/", build: BUILD });
