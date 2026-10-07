@@ -294,8 +294,9 @@ async function computeRollup(periodLabel, startDate, endDate) {
   let couplesTotal = 0, couplesNew = 0, withDate = 0;
   const daysToWedding = [];
   couplesSnap.forEach((d) => {
-    couplesTotal++;
     const c = d.data();
+    if (c.preview === true) return;   // JC-LAZO-COUPLE-1007-V146: a vendor previewing the couple side, not a couple
+    couplesTotal++;
     const created = c.createdAt && c.createdAt.toDate ? c.createdAt.toDate() : null;
     if (created && created >= startDate && created < endDate) couplesNew++;
     if (c.weddingDate && c.weddingDate.toDate) {

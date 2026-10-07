@@ -1,5 +1,5 @@
 // functions-dashboard/couple-notify.js
-// Build ID: JC-LAZO-FNDASH-1007-024
+// Build ID: JC-LAZO-FNDASH-1007-025 (025: preview couples skipped; base 024)
 //
 // THE COUPLE HEARS ABOUT EVERYTHING THAT MATTERS. Until now a Lazo couple (one
 // with an account, not an off-platform lead) got email only for a contract to
@@ -71,7 +71,7 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
       db().collection('users').where('coupleUid', '==', cid).limit(3).get().catch(() => null),
     ]);
     const c = cs && cs.exists ? cs.data() : {};
-    if (c.emailOk === false) return null;
+    if (c.emailOk === false || c.preview === true) return null;   // muted, or a vendor previewing the couple side
     const emails = new Set();
     const u = us && us.exists ? us.data() : {};
     if (emailOk(u.email)) emails.add(str(u.email).trim());

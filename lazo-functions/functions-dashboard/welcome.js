@@ -1,5 +1,5 @@
 // functions-dashboard/welcome.js
-// Build ID: JC-LAZO-FNDASH-1007-024 (024: frame moved to email-frame.js, shared with couple-notify.js) (023.3: no number badges, they sat on the tiles) (023.2: steps show app-screen tiles from assets/email/tile-*.jpg so they know what to expect; photos stay on the hero and the category strip)
+// Build ID: JC-LAZO-FNDASH-1007-025 (025: preview couples skipped) (024: frame moved to email-frame.js, shared with couple-notify.js) (023.3: no number badges, they sat on the tiles) (023.2: steps show app-screen tiles from assets/email/tile-*.jpg so they know what to expect; photos stay on the hero and the category strip)
 //
 // WELCOME EMAILS. Until now nobody heard from Lazo at signup: vendors got an
 // email only when a claim was approved, couples never. Two triggers, both
@@ -122,7 +122,7 @@ module.exports = function welcome(RESEND_API_KEY) {
   const welcomeCouple = onDocumentCreated({ document: 'couples/{uid}', region: 'us-central1', memory: '256MiB', secrets: [RESEND_API_KEY] }, async (event) => {
     const uid = event.params.uid; const snap = event.data; if (!snap) return;
     const c = snap.data() || {};
-    if (c.demo === true || uid.startsWith('demo_')) return;
+    if (c.demo === true || c.preview === true || uid.startsWith('demo_')) return;   // practice couples and vendors previewing the couple side
     const us = await db().collection('users').doc(uid).get().catch(() => null);
     const u = us && us.exists ? us.data() : {};
     if (str(u.role) === 'vendor') return;
