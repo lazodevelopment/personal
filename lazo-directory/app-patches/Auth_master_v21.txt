@@ -1,0 +1,2093 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart' hide RepeatMode;
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+// lazo_auth_flow.dart
+// Build ID: JC-LAZO-AUTH-0919-021 (v21: MAKE IT YOURS SURVIVES THE REDIRECT - FlutterFlow moves a brand-new user to the Router page the instant the account exists, which destroyed this widget before the date/photo/city step could show. Now a signed-in couple with no couples/{uid} doc is sent to that step whenever they arrive here (from the Router, from Welcome, or after logging in), with their name read from the user doc; while that decision is being made nothing flashes underneath. Pairs with Router v4, which sends such a couple here instead of to the dashboard. base v20)
+// (v20: HARDENING PASS - every path that could throw past a catch or call setState on a torn-down widget is closed: the signed-in role lookup, password reset and photo pick handle network and unknown errors; _fail and the photo pick check mounted; the build screen checks mounted before touching context; a stored role from the gate only pre-selects signup while the visitor is still on Welcome (never yanks someone off the login form); a photo the device cannot decode (HEIC on the web) is refused with a clear message instead of being uploaded mislabelled; the date picker can no longer be opened with a stale initial date; submit drops the keyboard; and a successful signup or login tells the browser / password manager to offer to save the credentials. base v19)
+// (v19: BUILDING YOUR LAZO + KEYBOARD - Start planning now opens a build screen: the couple photo (or a heart) inside a gold ring, the pair's names, and a checklist (Saving your date / Adding your photo / Finding vendors in <city> / Building your dashboard) whose steps are ticked off as the real writes complete, each held on screen at least 700ms so a fast connection never flashes through it, then the dashboard opens; a failure drops back to the form with the reason. The keyboard no longer reappears after the date picker, the city menu or the photo sheet closes, and never on submit - focus is dropped before each of them opens. base v18)
+// (v18: PHOTO LIBRARY + HERO - the couple photo opens the phone's photo library (FileType.image) instead of the documents browser, and a HEIC or any other non-web format from the library is decoded and re-encoded before upload so the dashboard can show it; the hero photo is precached at startup, fades in on its first frame instead of popping, and a load failure is logged rather than swallowed. base v17)
+// (v17: SAVE ERRORS SAY WHY + SIGNUP WRITES THE USER DOC FIRST - "Could not save" and "Something went wrong" now carry the Firestore / Storage error code and message so a rules denial reads as permission-denied instead of a shrug; signup writes users/{uid} (role, tos, signupSource) before it touches the display name, so the doc lands before FlutterFlow's auth redirect can bounce a new user through the Router. Pairs with Router v3, which retries the role lookup for a brand-new account. base v16)
+// (v16: NAME FIELD KEYBOARD - the name fields (signup and partner) use a plain text keyboard with word capitalization instead of TextInputType.name, which some phone keyboards and mobile browsers fail to raise, and a tap on any text field explicitly requests focus. base v15)
+// (v15: THE FIELDS THE PRODUCT RUNS ON - the couple's "Make it yours" step now asks where the wedding is (the same 45 metros the dashboards use; it powers vendor search, the weather card and Say Hello, and the hub's setup card no longer has to ask) and, optionally, the partner's name (so the hero and every vendor thread read "Jordan & Sam"); both are skippable and write to couples.metroId / partnerName / names; the account screen is unchanged - phone is asked for the first time an SMS would help, not here; signup silently records where they came from (utm_source / medium / campaign / content, ref, the landing path and any vendor / claim / template / save intent) to users.signupSource, so you can see which channel produces couples who book. base v14)
+// (v14: FEEL + PASSWORD STRENGTH - a four-segment strength meter under the password on signup (Too short / Weak / Fair / Good / Strong) that fills with a ripple and says what would make it stronger - length carries most of the weight, variety the rest, and runs, keyboard walks, common words or the person's own name and email pull it down; fields validate inline the moment you leave them (name, email, and the confirm field says "Matches" or "Doesn't match yet" as you type) instead of only on submit, and a failed submit focuses the field that needs you; a wrong password shakes the form with a heavy haptic, the way the Mac login window does; screens slide in from the right and back out the same way while Welcome fades underneath, and the hero photo cross-fades instead of popping; every button answers on pointer-down with a haptic - select on the checkbox, light on links, medium on Create account, Log in and Start planning; the busy button carries a spinner; display type tightens with size; everything honours Reduce Motion. base v13)
+// (v13: ?save=<vendorId> from a public vendor page rides through signup as lazo_pending_save; v12: ?template= and ?palette= from meetlazo.com/wedding-websites ride through signup as lazo_pending_template / lazo_pending_palette; v11: ?claim=<id or name> from the vendor page on meetlazo.com rides through signup as lazo_pending_claim and pre-selects the vendor path; v10: page names back to constants (FlutterFlow requires every widget parameter be set in the tree); v9: honors the role the gate stored (no double ask), carries ?vendor= from a vendor page through signup to the couple home, Enter submits, browser/password-manager autofill, serif headings, a notice style that is not an error, created_time never rewritten, big photos downscaled before upload, base v8)
+
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class LazoAuthFlow extends StatefulWidget {
+  const LazoAuthFlow({super.key, this.width, this.height});
+  final double? width;
+  final double? height;
+
+  @override
+  State<LazoAuthFlow> createState() => _LazoAuthFlowState();
+}
+
+enum _Mode { welcome, signup, login, rolepick, date }
+
+class _LazoAuthFlowState extends State<LazoAuthFlow>
+    with SingleTickerProviderStateMixin {
+  static const Color plum = Color(0xFF52284F);
+  static const Color plumDeep = Color(0xFF3D1C3B);
+  static const Color gold = Color(0xFFD9B77C);
+  static const Color ivory = Color(0xFFFAF6F0);
+  static const Color ink = Color(0xFF241E2B);
+
+  // Page names live here, not as widget parameters - FlutterFlow insists
+  // every parameter be filled in the tree, and these never change.
+  static const String pageCoupleHome = 'CoupleHome';
+  static const String pageVendorHome = 'VendorHome';
+  static const String brandUrl = 'https://meetlazo.com/assets/foot-logo.png';
+  static const String heroUrl = 'https://meetlazo.com/assets/photos/hero-3.jpg';
+  // Shared with LazoRoleGate (pre-auth choice) and LazoCoupleDashboard
+  // (the vendor a couple was looking at when they signed up).
+  static const String kPrefRole = 'lazo_pending_role';
+  static const String kPrefVendor = 'lazo_pending_vendor';
+  static const String kPrefClaim = 'lazo_pending_claim';
+  static const String kPrefTemplate = 'lazo_pending_template';
+  static const String kPrefPalette = 'lazo_pending_palette';
+  static const String kPrefSave = 'lazo_pending_save';
+
+  _Mode _mode = _Mode.welcome;
+  // v21: a signed-in visitor sees nothing until we know where they go.
+  bool _resolving = FirebaseAuth.instance.currentUser != null;
+  String _rolePick = 'couple';
+  bool _busy = false;
+  String? _error;
+  String? _notice;
+  DateTime? _pickedDate;
+  Uint8List? _photoBytes;
+  String _photoType = 'image/jpeg';
+  bool _tosAccepted = false;
+  bool _obscure1 = true;
+  bool _obscure2 = true;
+  String _vendorChip = '14,200+ vendors';
+  String _pendingVendorName = '';
+  String _pendingClaimName = '';
+  String _pendingTemplateName = '';
+  // v19: the build screen after Start planning.
+  bool _building = false;
+  int _buildStep = 0;
+  List<String> _buildSteps = <String>[];
+  DateTime _buildStepAt = DateTime.now();
+
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _pass = TextEditingController();
+  final _pass2 = TextEditingController();
+  // v15: the two fields the product runs on, asked on the date step.
+  final _partner = TextEditingController();
+  String _metro = '';
+  // v15: where they came from, captured before the router strips the query.
+  final Map<String, String> _attrib = <String, String>{};
+  // Same ids and labels as kMetros in the couple dashboard.
+  static const List<List<String>> kMetros = <List<String>>[
+    <String>['phoenix', 'Phoenix'],
+    <String>['denver', 'Denver'],
+    <String>['dallas-fort-worth', 'Dallas–Fort Worth'],
+    <String>['houston', 'Houston'],
+    <String>['austin', 'Austin'],
+    <String>['san-antonio', 'San Antonio'],
+    <String>['las-vegas', 'Las Vegas'],
+    <String>['atlanta', 'Atlanta'],
+    <String>['nashville', 'Nashville'],
+    <String>['chicago', 'Chicago'],
+    <String>['los-angeles', 'Los Angeles'],
+    <String>['san-diego', 'San Diego'],
+    <String>['miami', 'Miami'],
+    <String>['orlando', 'Orlando'],
+    <String>['tampa', 'Tampa Bay'],
+    <String>['charlotte', 'Charlotte'],
+    <String>['raleigh-durham', 'Raleigh-Durham'],
+    <String>['seattle', 'Seattle'],
+    <String>['salt-lake-city', 'Salt Lake City'],
+    <String>['new-york-city', 'New York City'],
+    <String>['boston', 'Boston'],
+    <String>['philadelphia', 'Philadelphia'],
+    <String>['washington-dc', 'Washington DC'],
+    <String>['san-francisco-bay', 'San Francisco Bay'],
+    <String>['portland', 'Portland'],
+    <String>['minneapolis', 'Minneapolis'],
+    <String>['st-louis', 'St. Louis'],
+    <String>['kansas-city', 'Kansas City'],
+    <String>['columbus', 'Columbus'],
+    <String>['new-orleans', 'New Orleans'],
+    <String>['indianapolis', 'Indianapolis'],
+    <String>['sacramento', 'Sacramento'],
+    <String>['jacksonville', 'Jacksonville'],
+    <String>['charleston', 'Charleston'],
+    <String>['savannah', 'Savannah'],
+    <String>['detroit', 'Detroit'],
+    <String>['pittsburgh', 'Pittsburgh'],
+    <String>['cincinnati', 'Cincinnati'],
+    <String>['cleveland', 'Cleveland'],
+    <String>['milwaukee', 'Milwaukee'],
+    <String>['richmond', 'Richmond'],
+    <String>['virginia-beach', 'Virginia Beach'],
+    <String>['louisville', 'Louisville'],
+    <String>['memphis', 'Memphis'],
+    <String>['tucson', 'Tucson'],
+  ];
+  final FocusNode _nameFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passFocus = FocusNode();
+  final FocusNode _pass2Focus = FocusNode();
+
+  // v14: inline validation speaks only about fields the person has left,
+  // never about the one they are still typing in.
+  final Set<String> _touched = <String>{};
+
+  // v14: a wrong password shakes the form, the way the Mac login window does.
+  late final AnimationController _shakeC = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 420));
+
+  @override
+  void initState() {
+    super.initState();
+    // v15: attribution, read once before anything navigates. Only the keys
+    // that are present are kept, so a plain visit records just the path.
+    try {
+      final Map<String, String> q = Uri.base.queryParameters;
+      for (final String k in <String>[
+        'utm_source',
+        'utm_medium',
+        'utm_campaign',
+        'utm_content',
+        'ref',
+        'vendor',
+        'claim',
+        'template',
+        'save',
+      ]) {
+        final String v = (q[k] ?? '').trim();
+        if (v.isNotEmpty) _attrib[k] = v.length > 120 ? v.substring(0, 120) : v;
+      }
+      final String path = Uri.base.path;
+      if (path.isNotEmpty && path != '/') _attrib['landing'] = path;
+    } catch (_) {}
+    for (final MapEntry<String, FocusNode> e in <String, FocusNode>{
+      'name': _nameFocus,
+      'email': _emailFocus,
+      'pass': _passFocus,
+      'pass2': _pass2Focus,
+    }.entries) {
+      e.value.addListener(() {
+        if (!e.value.hasFocus && mounted) {
+          setState(() => _touched.add(e.key));
+        }
+      });
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // v18: start the hero download now, so Welcome and Make-it-yours
+      // never wait on it. A failure is logged - it used to vanish.
+      if (mounted) {
+        precacheImage(const NetworkImage(heroUrl), context,
+            onError: (Object e, StackTrace? st) =>
+                debugPrint('LAZO hero image: $e'));
+      }
+      _stashDeepLink();
+      _routeIfSignedIn();
+      _loadStats();
+    });
+  }
+
+  @override
+  void dispose() {
+    _shakeC.dispose();
+    _name.dispose();
+    _email.dispose();
+    _pass.dispose();
+    _pass2.dispose();
+    _partner.dispose();
+    _nameFocus.dispose();
+    _emailFocus.dispose();
+    _passFocus.dispose();
+    _pass2Focus.dispose();
+    super.dispose();
+  }
+
+  TextStyle _serif(double size,
+      {Color color = ivory, FontWeight w = FontWeight.w600}) {
+    // v14: display sizes tighten as they grow; body stays at 0.
+    final double track = size >= 26 ? -0.015 * size : 0;
+    try {
+      return GoogleFonts.cormorantGaramond(
+          fontSize: size,
+          fontWeight: w,
+          color: color,
+          height: 1.08,
+          letterSpacing: track,
+          fontFeatures: const <FontFeature>[FontFeature.liningFigures()]);
+    } catch (_) {
+      return TextStyle(
+          fontFamily: 'serif',
+          fontSize: size,
+          fontWeight: w,
+          color: color,
+          height: 1.08,
+          letterSpacing: track);
+    }
+  }
+
+  // A couple who tapped "Check your date" on a vendor page arrives with
+  // ?vendor=<id>. goNamed drops the query, so it rides in a preference and
+  // the couple home opens that vendor's inquiry the moment they land.
+  // The role gate stores the visitor's pre-auth choice the same way.
+  Future<void> _stashDeepLink() async {
+    try {
+      final SharedPreferences p = await SharedPreferences.getInstance();
+      final String? v = Uri.base.queryParameters['vendor'];
+      if (v != null && v.trim().isNotEmpty) {
+        await p.setString(kPrefVendor, v.trim());
+      }
+      final String vendorId = (p.getString(kPrefVendor) ?? '').trim();
+      if (vendorId.isNotEmpty) {
+        try {
+          final DocumentSnapshot<Map<String, dynamic>> vs =
+              await FirebaseFirestore.instance
+                  .collection('vendors')
+                  .doc(vendorId)
+                  .get();
+          final String nm = (vs.data()?['name'] ?? '').toString();
+          if (nm.isNotEmpty && mounted) setState(() => _pendingVendorName = nm);
+        } catch (_) {}
+      }
+      // A couple who tapped Save on a vendor page: ?save=<vendorId>.
+      final String? sv = Uri.base.queryParameters['save'];
+      if (sv != null && sv.trim().isNotEmpty) {
+        await p.setString(kPrefSave, sv.trim());
+        if (mounted && FirebaseAuth.instance.currentUser == null) {
+          setState(() {
+            _rolePick = 'couple';
+            _mode = _Mode.signup;
+          });
+        }
+      }
+      // A couple who picked a website design: ?template=sage[&palette=..].
+      final String? tp = Uri.base.queryParameters['template'];
+      if (tp != null && tp.trim().isNotEmpty) {
+        await p.setString(kPrefTemplate, tp.trim().toLowerCase());
+        final String? pal = Uri.base.queryParameters['palette'];
+        if (pal != null && pal.trim().isNotEmpty)
+          await p.setString(kPrefPalette, pal.trim().toLowerCase());
+        if (mounted && FirebaseAuth.instance.currentUser == null) {
+          setState(() {
+            _rolePick = 'couple';
+            _mode = _Mode.signup;
+            _pendingTemplateName = tp.trim();
+          });
+        }
+      }
+      // A vendor claiming their listing: the site sends ?claim=<id or name>.
+      final String? cl = Uri.base.queryParameters['claim'];
+      if (cl != null && cl.trim().isNotEmpty) {
+        await p.setString(kPrefClaim, cl.trim());
+      }
+      final String claim = (p.getString(kPrefClaim) ?? '').trim();
+      if (claim.isNotEmpty) {
+        String label = claim;
+        if (claim.length > 12 && !claim.contains(' ')) {
+          try {
+            final DocumentSnapshot<Map<String, dynamic>> vs =
+                await FirebaseFirestore.instance
+                    .collection('vendors')
+                    .doc(claim)
+                    .get();
+            label = (vs.data()?['name'] ?? claim).toString();
+          } catch (_) {}
+        }
+        if (mounted && FirebaseAuth.instance.currentUser == null) {
+          setState(() {
+            _pendingClaimName = label;
+            _rolePick = 'vendor';
+            _mode = _Mode.signup;
+          });
+        }
+        return;
+      }
+      final String pending = p.getString(kPrefRole) ?? '';
+      // v20: only while they are still on Welcome - never pull someone off
+      // the login form they already opened.
+      if ((pending == 'couple' || pending == 'vendor') &&
+          FirebaseAuth.instance.currentUser == null &&
+          mounted &&
+          _mode == _Mode.welcome) {
+        setState(() {
+          _rolePick = pending;
+          _mode = _Mode.signup;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _clearPendingRole() async {
+    try {
+      final SharedPreferences p = await SharedPreferences.getInstance();
+      await p.remove(kPrefRole);
+    } catch (_) {}
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> snap =
+          await FirebaseFirestore.instance.doc('stats/global').get();
+      final Map<String, dynamic>? d = snap.data();
+      final String disp =
+          d == null ? '' : (d['vendorTotalDisplay'] ?? '').toString();
+      if (disp.isNotEmpty && mounted) {
+        setState(() => _vendorChip = '$disp vendors');
+      }
+    } catch (_) {}
+  }
+
+  bool _emailLooksValid(String s) {
+    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(s.trim());
+  }
+
+  // ---------------- v14: PASSWORD STRENGTH ----------------
+  // 0 = too short, 1 weak, 2 fair, 3 good, 4 strong. Length carries most of
+  // the weight, variety the rest. Runs, keyboard walks, common words, and
+  // anything that is just their own name or email pull it down - those are
+  // the first things a guesser tries.
+  static const List<String> _kWeakWords = <String>[
+    'password',
+    'passw0rd',
+    'letmein',
+    'welcome',
+    'iloveyou',
+    'wedding',
+    'married',
+    'lazo',
+    'qwerty',
+    'asdf',
+    'zxcv',
+    '1234',
+    '0000',
+    '1111',
+    'abcd',
+  ];
+
+  static int _passScore(String p, {String name = '', String email = ''}) {
+    if (p.isEmpty) return 0;
+    final int n = p.length;
+    if (n < 6) return 0;
+    double s = 0;
+    if (n >= 6) s += 1;
+    if (n >= 8) s += 1;
+    if (n >= 12) s += 1;
+    if (n >= 16) s += .5;
+    int classes = 0;
+    if (RegExp(r'[a-z]').hasMatch(p)) classes++;
+    if (RegExp(r'[A-Z]').hasMatch(p)) classes++;
+    if (RegExp(r'\d').hasMatch(p)) classes++;
+    if (RegExp(r'[^A-Za-z0-9]').hasMatch(p)) classes++;
+    s += (classes - 1) * .6;
+    final String low = p.toLowerCase();
+    if (RegExp(r'(.)\1\1').hasMatch(low)) s -= 1;
+    for (final String w in _kWeakWords) {
+      if (low.contains(w)) {
+        s -= 1.5;
+        break;
+      }
+    }
+    final String em = email.split('@').first.toLowerCase().trim();
+    if (em.length >= 3 && low.contains(em)) s -= 1.5;
+    for (final String w in name.toLowerCase().split(RegExp(r'\s+'))) {
+      if (w.length >= 3 && low.contains(w)) {
+        s -= 1.5;
+        break;
+      }
+    }
+    if (s < 1) return 1;
+    if (s >= 4) return 4;
+    return s.floor();
+  }
+
+  // What would move the needle - one thing, the biggest one.
+  static String _passHint(String p, int score) {
+    if (score >= 4) return 'That will hold.';
+    final int n = p.length;
+    if (n < 6) return 'At least 6 characters.';
+    if (n < 8) return 'Make it 8 or more - length beats clever.';
+    int classes = 0;
+    if (RegExp(r'[a-z]').hasMatch(p)) classes++;
+    if (RegExp(r'[A-Z]').hasMatch(p)) classes++;
+    if (RegExp(r'\d').hasMatch(p)) classes++;
+    if (RegExp(r'[^A-Za-z0-9]').hasMatch(p)) classes++;
+    final String low = p.toLowerCase();
+    if (_kWeakWords.any((String w) => low.contains(w)) ||
+        RegExp(r'(.)\1\1').hasMatch(low)) {
+      return 'Skip the common words and runs.';
+    }
+    if (n < 12) return 'A few more characters would do it.';
+    if (classes < 3) return 'Mix in a number or a symbol.';
+    return 'Try a phrase nobody else would.';
+  }
+
+  // v15: written once, on the doc that creates the account. Never rewritten.
+  Map<String, dynamic> _signupSource() => <String, dynamic>{
+        ..._attrib,
+        'at': FieldValue.serverTimestamp(),
+      };
+
+  String _metroLabel() {
+    for (final List<String> m in kMetros) {
+      if (m[0] == _metro) return m[1];
+    }
+    return '';
+  }
+
+  // v19: Flutter restores focus to the last field when a dialog, menu or
+  // native sheet closes - which brings the keyboard back with it. Drop
+  // focus before anything opens on top of the form.
+  void _dropKeyboard() => FocusManager.instance.primaryFocus?.unfocus();
+
+  // v19: a build step is ticked off when its work is done, but stays on
+  // screen long enough to be read even when the work took no time.
+  Future<void> _buildAdvance() async {
+    const Duration dwell = Duration(milliseconds: 700);
+    final Duration shown = DateTime.now().difference(_buildStepAt);
+    if (shown < dwell) await Future<void>.delayed(dwell - shown);
+    if (!mounted) return;
+    setState(() {
+      _buildStep = _buildStep + 1;
+      _buildStepAt = DateTime.now();
+    });
+  }
+
+  String _firstWord(String s) {
+    final String t = s.trim();
+    if (t.isEmpty) return '';
+    return t.split(RegExp(r'\s+')).first;
+  }
+
+  DocumentReference<Map<String, dynamic>> _userRef(String uid) =>
+      FirebaseFirestore.instance.collection('users').doc(uid);
+
+  DocumentReference<Map<String, dynamic>> _coupleRef(String uid) =>
+      FirebaseFirestore.instance.collection('couples').doc(uid);
+
+  void _goCouple() {
+    if (!mounted) return;
+    context.goNamed(pageCoupleHome);
+  }
+
+  void _goVendor() {
+    if (!mounted) return;
+    context.goNamed(pageVendorHome);
+  }
+
+  Future<void> _routeIfSignedIn() async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) return;
+    String? role;
+    Map<String, dynamic>? userDoc;
+    try {
+      final snap = await _userRef(u.uid).get();
+      userDoc = snap.data();
+      role = userDoc?['role'] as String?;
+    } catch (e) {
+      // v20: offline or denied - stay on Welcome rather than throw.
+      debugPrint('LAZO role read: $e');
+      if (mounted) setState(() => _resolving = false);
+      return;
+    }
+    if (!mounted) return;
+    if (role == 'couple') {
+      await _routeCouple(u.uid, userDoc: userDoc);
+    } else if (role == 'vendor') {
+      _goVendor();
+    } else {
+      setState(() => _resolving = false);
+      _setMode(_Mode.rolepick);
+    }
+  }
+
+  // v21: a couple goes to the dashboard only once couples/{uid} exists.
+  // Until then they are owed the Make-it-yours step - whether they got
+  // here from the Router after signup, from a cold open, or after login.
+  Future<void> _routeCouple(String uid, {Map<String, dynamic>? userDoc}) async {
+    bool needsSetup = false;
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> c =
+          await _coupleRef(uid).get();
+      needsSetup = !c.exists;
+    } catch (e) {
+      debugPrint('LAZO couple read: $e');
+    }
+    if (!mounted) return;
+    if (!needsSetup) {
+      _goCouple();
+      return;
+    }
+    if (_name.text.trim().isEmpty) {
+      final String dn = (userDoc?['display_name'] ??
+              FirebaseAuth.instance.currentUser?.displayName ??
+              '')
+          .toString()
+          .trim();
+      if (dn.isNotEmpty) _name.text = dn;
+    }
+    setState(() => _resolving = false);
+    _setMode(_Mode.date);
+  }
+
+  void _setMode(_Mode m) {
+    setState(() {
+      _mode = m;
+      _error = null;
+      _notice = null;
+    });
+  }
+
+  void _shake() {
+    if (_reducedMotion(context)) return;
+    HapticFeedback.heavyImpact();
+    _shakeC.forward(from: 0);
+  }
+
+  // A failed submit puts the cursor where the problem is.
+  void _fail(String msg, {FocusNode? focus}) {
+    if (!mounted) return;
+    setState(() => _error = msg);
+    _shake();
+    focus?.requestFocus();
+  }
+
+  Future<void> _signUp() async {
+    setState(() => _touched.addAll(<String>['name', 'email', 'pass', 'pass2']));
+    if (_name.text.trim().isEmpty) {
+      _fail('Tell us your name - vendors reply to a person.',
+          focus: _nameFocus);
+      return;
+    }
+    if (!_emailLooksValid(_email.text)) {
+      _fail('That email doesn’t look right.', focus: _emailFocus);
+      return;
+    }
+    if (_pass.text.length < 6) {
+      _fail('Password needs at least 6 characters.', focus: _passFocus);
+      return;
+    }
+    if (_pass.text != _pass2.text) {
+      _fail('Passwords don’t match.', focus: _pass2Focus);
+      return;
+    }
+    if (!_tosAccepted) {
+      _fail('Please agree to the Terms of Service to continue.');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+      _notice = null;
+    });
+    try {
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _email.text.trim(), password: _pass.text);
+      final u = cred.user!;
+      // v17: the user doc goes first. FlutterFlow's auth listener can route
+      // to the Router page the instant the account exists, and the Router
+      // reads users/{uid}.role - so the role must already be there.
+      // FlutterFlow may have created users/{uid} already; merge keeps it a
+      // single doc either way. created_time only lands on a fresh doc.
+      final DocumentSnapshot<Map<String, dynamic>> existing =
+          await _userRef(u.uid).get();
+      await _userRef(u.uid).set(<String, dynamic>{
+        'uid': u.uid,
+        'email': u.email,
+        'display_name': _name.text.trim(),
+        if (!existing.exists) 'created_time': FieldValue.serverTimestamp(),
+        'role': _rolePick,
+        'tosAcceptedAt': FieldValue.serverTimestamp(),
+        if (!(existing.data()?.containsKey('signupSource') ?? false))
+          'signupSource': _signupSource(),
+      }, SetOptions(merge: true));
+      if (_name.text.trim().isNotEmpty) {
+        try {
+          await u.updateDisplayName(_name.text.trim());
+        } catch (_) {}
+      }
+      await _clearPendingRole();
+      // v20: let the browser / password manager offer to save these.
+      TextInput.finishAutofillContext();
+      if (!mounted) return;
+      if (_rolePick == 'couple') {
+        _setMode(_Mode.date);
+      } else {
+        _goVendor();
+      }
+    } on FirebaseAuthException catch (e) {
+      _fail(_authMessage(e.code),
+          focus: e.code == 'email-already-in-use' ? _emailFocus : null);
+    } catch (e) {
+      _fail('Something went wrong. Try again.${_why(e)}');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _logIn() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+      _notice = null;
+    });
+    try {
+      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _email.text.trim(), password: _pass.text);
+      final u = cred.user!;
+      final snap = await _userRef(u.uid).get();
+      final role = snap.data()?['role'] as String?;
+      TextInput.finishAutofillContext();
+      if (!mounted) return;
+      if (role == 'couple') {
+        await _routeCouple(u.uid, userDoc: snap.data());
+      } else if (role == 'vendor') {
+        _goVendor();
+      } else {
+        _setMode(_Mode.rolepick);
+      }
+    } on FirebaseAuthException catch (e) {
+      final bool wrong = e.code == 'wrong-password' ||
+          e.code == 'invalid-credential' ||
+          e.code == 'user-not-found';
+      _fail(_authMessage(e.code), focus: wrong ? _passFocus : null);
+      if (wrong) _pass.clear();
+    } catch (_) {
+      _fail('Something went wrong. Try again.');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _saveRoleAndGo(String role) async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) {
+      _setMode(_Mode.welcome);
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> existing =
+          await _userRef(u.uid).get();
+      await _userRef(u.uid).set(<String, dynamic>{
+        'uid': u.uid,
+        'email': u.email,
+        'role': role,
+        'tosAcceptedAt': FieldValue.serverTimestamp(),
+        if (!(existing.data()?.containsKey('signupSource') ?? false))
+          'signupSource': _signupSource(),
+      }, SetOptions(merge: true));
+      await _clearPendingRole();
+      if (!mounted) return;
+      if (role == 'couple') {
+        _setMode(_Mode.date);
+      } else {
+        _goVendor();
+      }
+    } catch (e) {
+      _fail('Could not save. Try again.${_why(e)}');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _pickPhoto() async {
+    _dropKeyboard();
+    try {
+      // v18: FileType.image opens the photo library on iOS and Android and
+      // an image-only chooser on the web. FileType.custom opened the
+      // documents browser, which is not where anyone keeps a photo of the
+      // two of them.
+      final FilePickerResult? res = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        withData: true,
+      );
+      if (res == null || res.files.isEmpty) return;
+      final Uint8List? b = res.files.first.bytes;
+      if (b == null) return;
+      final String ext = (res.files.first.extension ?? 'jpg').toLowerCase();
+      Uint8List out = b;
+      String type = ext == 'png'
+          ? 'image/png'
+          : (ext == 'webp' ? 'image/webp' : 'image/jpeg');
+      // Only these three can be shown everywhere the photo is used. The
+      // iPhone library often hands over HEIC, which the web dashboard
+      // cannot draw - so anything else is decoded and re-encoded.
+      final bool webFormat =
+          ext == 'jpg' || ext == 'jpeg' || ext == 'png' || ext == 'webp';
+      // A 12 MB phone photo becomes the hero on every open of the dashboard.
+      // Anything over 2.5 MB is downscaled to 1600px before it leaves the device.
+      if (b.lengthInBytes > 2500 * 1024 || !webFormat) {
+        bool ok = false;
+        try {
+          final ui.Codec codec =
+              await ui.instantiateImageCodec(b, targetWidth: 1600);
+          final ui.FrameInfo fi = await codec.getNextFrame();
+          final ByteData? bd =
+              await fi.image.toByteData(format: ui.ImageByteFormat.png);
+          if (bd != null) {
+            out = bd.buffer.asUint8List();
+            type = 'image/png';
+            ok = true;
+          }
+        } catch (_) {}
+        // v20: a format this device cannot decode (HEIC in a browser) must
+        // not be uploaded mislabelled - the dashboard could never show it.
+        if (!ok && !webFormat) {
+          if (mounted) {
+            setState(() => _error =
+                'That photo format isn’t supported here - try a JPG or PNG.');
+          }
+          return;
+        }
+      }
+      if (!mounted) return;
+      setState(() {
+        _error = null;
+        _photoBytes = out;
+        _photoType = type;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Couldn’t open your photos.');
+    }
+  }
+
+  Future<void> _pickDate() async {
+    _dropKeyboard();
+    // v20: the picker asserts first <= initial <= last; a date picked just
+    // before midnight and reopened after it would have tripped that.
+    final DateTime now = DateTime.now();
+    final DateTime first = DateTime(now.year, now.month, now.day);
+    final DateTime last = first.add(const Duration(days: 365 * 4));
+    DateTime initial = _pickedDate ?? first.add(const Duration(days: 270));
+    if (initial.isBefore(first)) initial = first;
+    if (initial.isAfter(last)) initial = last;
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(
+              primary: plum, onPrimary: ivory, onSurface: ink),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      _tick(_Tick.select);
+      setState(() => _pickedDate = picked);
+    }
+  }
+
+  Future<void> _finishOnboarding({required bool skipDate}) async {
+    final u = FirebaseAuth.instance.currentUser;
+    if (u == null) return;
+    _dropKeyboard();
+    final bool hasDate = !skipDate && _pickedDate != null;
+    final String city = _metroLabel();
+    // v19: the steps are the real work, in the order it happens.
+    final List<String> steps = <String>[
+      if (hasDate) 'Saving your date',
+      if (_photoBytes != null) 'Adding your photo',
+      city.isEmpty ? 'Setting up vendor search' : 'Finding vendors in $city',
+      'Building your dashboard',
+    ];
+    setState(() {
+      _busy = true;
+      _error = null;
+      _building = true;
+      _buildSteps = steps;
+      _buildStep = 0;
+      _buildStepAt = DateTime.now();
+    });
+    try {
+      final data = <String, dynamic>{'createdAt': FieldValue.serverTimestamp()};
+      if (hasDate) {
+        data['weddingDate'] = Timestamp.fromDate(_pickedDate!);
+        await _buildAdvance();
+      }
+      // v15: the city and the partner ride along when given. `names` is the
+      // display pair the dashboard and vendors read ("Jordan & Sam").
+      if (_metro.isNotEmpty) data['metroId'] = _metro;
+      final String partner = _partner.text.trim();
+      if (partner.isNotEmpty) {
+        data['partnerName'] = partner;
+        final String me = _firstWord(
+            _name.text.trim().isNotEmpty ? _name.text : (u.displayName ?? ''));
+        data['names'] =
+            me.isEmpty ? _firstWord(partner) : '$me & ${_firstWord(partner)}';
+      }
+      if (_photoBytes != null) {
+        final String ext = _photoType == 'image/png'
+            ? 'png'
+            : (_photoType == 'image/webp' ? 'webp' : 'jpg');
+        final ref =
+            FirebaseStorage.instance.ref('couples/${u.uid}/couple.$ext');
+        await ref.putData(
+            _photoBytes!, SettableMetadata(contentType: _photoType));
+        data['photoUrl'] = await ref.getDownloadURL();
+        await _buildAdvance();
+      }
+      // the couple doc is what vendor search and the dashboard read
+      await _coupleRef(u.uid).set(data, SetOptions(merge: true));
+      await _buildAdvance();
+      // the last tick, then a beat to see the list complete
+      await _buildAdvance();
+      if (!mounted) return;
+      await Future<void>.delayed(
+          Duration(milliseconds: _reducedMotion(context) ? 200 : 520));
+      if (!mounted) return;
+      _goCouple();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _building = false);
+      _fail('Could not save. Try again.${_why(e)}');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _resetPassword() async {
+    if (_email.text.trim().isEmpty) {
+      _fail('Enter your email above first.', focus: _emailFocus);
+      return;
+    }
+    try {
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: _email.text.trim());
+      setState(() {
+        _error = null;
+        _notice = 'Reset link sent - check your email.';
+      });
+    } on FirebaseAuthException catch (e) {
+      _fail(_authMessage(e.code));
+    } catch (e) {
+      _fail('Couldn’t send the reset link.${_why(e)}');
+    }
+  }
+
+  String _authMessage(String code) {
+    switch (code) {
+      case 'email-already-in-use':
+        return 'That email already has an account - log in instead.';
+      case 'invalid-email':
+        return 'That email doesn’t look right.';
+      case 'weak-password':
+        return 'Password needs at least 6 characters.';
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Email or password doesn’t match.';
+      case 'too-many-requests':
+        return 'Too many tries - wait a minute.';
+      case 'network-request-failed':
+        return 'No connection. Check your network and try again.';
+      default:
+        return 'Something went wrong ($code).';
+    }
+  }
+
+  // v17: the real reason, so a rules denial can be read off the screen.
+  String _why(Object e) {
+    String t;
+    if (e is FirebaseException) {
+      t = e.code + (e.message == null ? '' : ': ${e.message}');
+    } else {
+      t = e.toString();
+    }
+    t = t.replaceAll('\n', ' ').trim();
+    if (t.length > 160) t = '${t.substring(0, 160)}…';
+    return t.isEmpty ? '' : ' ($t)';
+  }
+
+  String _prettyDate(DateTime d) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+    return '${months[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  Future<void> _openSiteLink(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  void _submit(bool isSignup) {
+    if (_busy) return;
+    _dropKeyboard();
+    if (isSignup) {
+      _signUp();
+    } else if (_email.text.trim().isNotEmpty && _pass.text.isNotEmpty) {
+      _logIn();
+    }
+  }
+
+  // ---------------- UI ----------------
+
+  @override
+  Widget build(BuildContext context) {
+    final bool photoBg = _mode == _Mode.welcome || _mode == _Mode.date;
+    final bool reduced = _reducedMotion(context);
+    final Duration bg = Duration(milliseconds: reduced ? 0 : 520);
+    final bool contextRow =
+        _mode == _Mode.welcome || _mode == _Mode.signup || _mode == _Mode.login;
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      color: plumDeep,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // v14: the photo cross-fades between screens instead of popping.
+          AnimatedOpacity(
+            duration: bg,
+            curve: Curves.easeOut,
+            opacity: photoBg ? 1 : 0,
+            child: Image.network(
+              heroUrl,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              // v18: fade the photo in on its first frame instead of popping.
+              frameBuilder:
+                  (BuildContext c, Widget child, int? frame, bool sync) {
+                if (sync || reduced) return child;
+                return AnimatedOpacity(
+                  opacity: frame == null ? 0 : 1,
+                  duration: const Duration(milliseconds: 420),
+                  curve: Curves.easeOut,
+                  child: child,
+                );
+              },
+              errorBuilder: (_, Object e, __) {
+                debugPrint('LAZO hero image: $e');
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+          AnimatedContainer(
+            duration: bg,
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: photoBg
+                    ? [
+                        plumDeep.withOpacity(.55),
+                        plumDeep.withOpacity(.78),
+                        plumDeep.withOpacity(.96)
+                      ]
+                    : [plumDeep, plum],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(28),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_mode != _Mode.date) _brand(),
+                      if (_mode != _Mode.date) const SizedBox(height: 30),
+                      _grow(_pendingVendorName.isNotEmpty && contextRow
+                          ? _vendorContext()
+                          : null),
+                      _grow(_pendingClaimName.isNotEmpty && contextRow
+                          ? _claimContext()
+                          : null),
+                      _grow(_pendingTemplateName.isNotEmpty && contextRow
+                          ? _templateContext()
+                          : null),
+                      _grow(_error != null ? _errorBox() : null),
+                      _grow(_notice != null ? _noticeBox() : null),
+                      _viewSwitch(_screen()),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _screen() {
+    if (_resolving) {
+      return const KeyedSubtree(
+          key: ValueKey<String>('resolving'),
+          child: SizedBox(width: double.infinity, height: 1));
+    }
+    switch (_mode) {
+      case _Mode.welcome:
+        return KeyedSubtree(
+            key: const ValueKey<String>('welcome:root'), child: _welcome());
+      case _Mode.signup:
+        return KeyedSubtree(
+            key: const ValueKey<String>('signup'),
+            child: _shakeable(_form(isSignup: true)));
+      case _Mode.login:
+        return KeyedSubtree(
+            key: const ValueKey<String>('login'),
+            child: _shakeable(_form(isSignup: false)));
+      case _Mode.rolepick:
+        return KeyedSubtree(
+            key: const ValueKey<String>('rolepick'), child: _rolePickView());
+      case _Mode.date:
+        if (_building) {
+          return KeyedSubtree(
+              key: const ValueKey<String>('building'), child: _buildingView());
+        }
+        return KeyedSubtree(
+            key: const ValueKey<String>('date'), child: _dateView());
+    }
+  }
+
+  // v14: screens slide in from the right and leave the way they came.
+  // Welcome - the thing underneath - only fades.
+  Widget _viewSwitch(Widget child) {
+    final bool reduced = _reducedMotion(context);
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: reduced ? 140 : 280),
+      reverseDuration: Duration(milliseconds: reduced ? 140 : 200),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (Widget? current, List<Widget> previous) => Stack(
+        alignment: Alignment.topCenter,
+        children: <Widget>[...previous, if (current != null) current],
+      ),
+      transitionBuilder: (Widget c, Animation<double> a) {
+        final Key? k = c.key;
+        final bool root = k is ValueKey<String> && k.value.endsWith(':root');
+        final Widget faded = FadeTransition(opacity: a, child: c);
+        if (reduced || root) return faded;
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(.06, 0), end: Offset.zero)
+              .animate(a),
+          child: faded,
+        );
+      },
+      child: child,
+    );
+  }
+
+  // Boxes that come and go (errors, notices, the vendor you came from) grow
+  // into place rather than shoving the form down in one frame.
+  Widget _grow(Widget? child) => AnimatedSize(
+        duration: Duration(milliseconds: _reducedMotion(context) ? 0 : 260),
+        curve: Curves.easeOutCubic,
+        alignment: Alignment.topCenter,
+        child: child ?? const SizedBox(width: double.infinity, height: 0),
+      );
+
+  Widget _shakeable(Widget child) => AnimatedBuilder(
+        animation: _shakeC,
+        builder: (BuildContext c, Widget? ch) {
+          final double t = _shakeC.value;
+          final double dx = math.sin(t * math.pi * 4) * 9 * (1 - t);
+          return Transform.translate(offset: Offset(dx, 0), child: ch);
+        },
+        child: child,
+      );
+
+  Widget _brand() => Image.network(
+        brandUrl,
+        height: 118,
+        errorBuilder: (_, __, ___) => Column(children: [
+          Text('LAZO',
+              style:
+                  _serif(44, w: FontWeight.w600).copyWith(letterSpacing: 12)),
+          const SizedBox(height: 6),
+          Text('Tied together.',
+              style: _serif(18, color: gold.withOpacity(.9), w: FontWeight.w500)
+                  .copyWith(fontStyle: FontStyle.italic)),
+        ]),
+      );
+
+  // The vendor they came from, named - so signup feels like a step toward
+  // them, not a detour.
+  Widget _vendorContext() => Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: gold.withOpacity(.16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: gold.withOpacity(.6)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.favorite_rounded, color: gold, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+                'Checking your date with $_pendingVendorName - one minute and you’re talking to them.',
+                style: const TextStyle(
+                    color: ivory, fontSize: 12.5, height: 1.35)),
+          ),
+        ]),
+      );
+
+  Widget _templateContext() => Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: gold.withOpacity(.16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: gold.withOpacity(.6)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.auto_awesome_rounded, color: gold, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+                'Your ${_pendingTemplateName[0].toUpperCase()}${_pendingTemplateName.substring(1)} website is one minute away - create your account and it opens ready to edit.',
+                style: const TextStyle(
+                    color: ivory, fontSize: 12.5, height: 1.35)),
+          ),
+        ]),
+      );
+
+  Widget _claimContext() => Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: gold.withOpacity(.16),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: gold.withOpacity(.6)),
+        ),
+        child: Row(children: [
+          const Icon(Icons.storefront_rounded, color: gold, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+                'Claiming $_pendingClaimName - create your account and the claim form opens next.',
+                style: const TextStyle(
+                    color: ivory, fontSize: 12.5, height: 1.35)),
+          ),
+        ]),
+      );
+
+  Widget _errorBox() => Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFB04343).withOpacity(.22),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE08A8A).withOpacity(.7)),
+        ),
+        child: Text(_error!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: ivory, fontSize: 13.5)),
+      );
+
+  Widget _noticeBox() => Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: ivory.withOpacity(.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: gold.withOpacity(.5)),
+        ),
+        child: Text(_notice!,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: ivory, fontSize: 13.5)),
+      );
+
+  Widget _welcome() => Column(children: [
+        Text('The verified wedding marketplace.',
+            textAlign: TextAlign.center, style: _serif(26, w: FontWeight.w500)),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            _chip(_vendorChip),
+            _chip('Every review verified'),
+            _chip('Rankings can’t be bought')
+          ],
+        ),
+        const SizedBox(height: 30),
+        _bigButton('I’m planning a wedding', gold, plum, () {
+          setState(() {
+            _rolePick = 'couple';
+            _mode = _Mode.signup;
+            _error = null;
+          });
+        }),
+        const SizedBox(height: 12),
+        _bigButton('I’m a wedding vendor', Colors.transparent, ivory, () {
+          setState(() {
+            _rolePick = 'vendor';
+            _mode = _Mode.signup;
+            _error = null;
+          });
+        }, outlined: true),
+        const SizedBox(height: 22),
+        TextButton(
+          onPressed: _h(() => _setMode(_Mode.login)),
+          child: Text('Already have an account? Log in',
+              style: TextStyle(color: gold.withOpacity(.95), fontSize: 14)),
+        ),
+      ]);
+
+  Widget _chip(String t) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: plumDeep.withOpacity(.45),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: gold.withOpacity(.5)),
+        ),
+        child: Text(t,
+            style: TextStyle(
+                color: ivory.withOpacity(.92),
+                fontSize: 11.5,
+                letterSpacing: .3)),
+      );
+
+  Widget _dateView() => Column(children: [
+        Text('Almost there',
+            style: TextStyle(color: ivory.withOpacity(.85), fontSize: 15)),
+        const SizedBox(height: 4),
+        Text('Make it yours', style: _serif(34)),
+        const SizedBox(height: 24),
+        _Press(
+          scale: .94,
+          enabled: !_busy,
+          onTap: _busy ? null : _pickPhoto,
+          child: Container(
+            width: 128,
+            height: 128,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ivory.withOpacity(.12),
+              border: Border.all(color: gold.withOpacity(.7), width: 1.6),
+              image: _photoBytes != null
+                  ? DecorationImage(
+                      image: MemoryImage(_photoBytes!), fit: BoxFit.cover)
+                  : null,
+            ),
+            child: _photoBytes == null
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_a_photo_rounded,
+                          color: gold.withOpacity(.9), size: 26),
+                      const SizedBox(height: 6),
+                      Text('Photo of\nyou two',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: ivory.withOpacity(.85), fontSize: 11.5)),
+                    ],
+                  )
+                : null,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Text(
+              _photoBytes != null
+                  ? 'Photo added - tap to change'
+                  : 'It becomes the picture behind your countdown.',
+              style: TextStyle(color: ivory.withOpacity(.8), fontSize: 12)),
+        ),
+        const SizedBox(height: 24),
+        // v15: the two fields the product runs on. Both skippable.
+        // v16: plain text keyboard, capitalized per word.
+        _field(
+            _partner, 'Your partner’s name (optional)', TextInputType.text,
+            hints: const [AutofillHints.name],
+            next: true,
+            cap: TextCapitalization.words),
+        Padding(
+          padding: const EdgeInsets.only(top: 6, left: 6),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+                'So vendors see “${_firstWord(_name.text.isNotEmpty ? _name.text : (FirebaseAuth.instance.currentUser?.displayName ?? 'you'))} & ${_partner.text.trim().isEmpty ? '…' : _firstWord(_partner.text)}”, not just you.',
+                style:
+                    TextStyle(color: ivory.withOpacity(.65), fontSize: 11.5)),
+          ),
+        ),
+        const SizedBox(height: 12),
+        // v19: a pointer on the menu drops the keyboard first, so it does
+        // not come back when the menu closes.
+        Listener(
+          onPointerDown: (_) => _dropKeyboard(),
+          child: DropdownButtonFormField<String>(
+            value: _metro.isEmpty ? null : _metro,
+            isExpanded: true,
+            dropdownColor: ivory,
+            menuMaxHeight: 380,
+            icon:
+                const Icon(Icons.expand_more_rounded, color: Color(0xFF8A7D90)),
+            style: const TextStyle(
+                color: ink, fontSize: 15, fontWeight: FontWeight.w500),
+            decoration: _deco('Where’s the wedding?'),
+            items: <DropdownMenuItem<String>>[
+              for (final List<String> m in kMetros)
+                DropdownMenuItem<String>(value: m[0], child: Text(m[1])),
+            ],
+            onChanged: _busy
+                ? null
+                : (String? v) {
+                    _tick(_Tick.select);
+                    setState(() => _metro = v ?? '');
+                  },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 6, left: 6),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+                'Powers vendor search and the weather on your day. Not here? Pick the nearest.',
+                style:
+                    TextStyle(color: ivory.withOpacity(.65), fontSize: 11.5)),
+          ),
+        ),
+        const SizedBox(height: 16),
+        _Press(
+          scale: .985,
+          dim: .92,
+          enabled: !_busy,
+          onTap: _busy ? null : _pickDate,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            decoration: BoxDecoration(
+              color: ivory.withOpacity(.12),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: gold.withOpacity(.6), width: 1.2),
+            ),
+            child: Column(children: [
+              Icon(Icons.favorite_rounded,
+                  color: gold.withOpacity(.9), size: 20),
+              const SizedBox(height: 6),
+              Text(
+                  _pickedDate == null
+                      ? 'Tap to choose your date'
+                      : _prettyDate(_pickedDate!),
+                  style: _serif(24, w: FontWeight.w500)),
+              if (_pickedDate != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                      '${_pickedDate!.difference(DateTime.now()).inDays} days from today',
+                      style: TextStyle(
+                          color: gold.withOpacity(.95), fontSize: 12.5)),
+                ),
+              if (_pickedDate == null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text('A month is enough. You can change it any time.',
+                      style: TextStyle(
+                          color: ivory.withOpacity(.7), fontSize: 12)),
+                ),
+            ]),
+          ),
+        ),
+        const SizedBox(height: 22),
+        _bigButton(
+            'Start planning',
+            gold,
+            plum,
+            _busy
+                ? null
+                : () => _finishOnboarding(skipDate: _pickedDate == null),
+            busy: _busy,
+            tick: _Tick.medium),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _h(_busy ? null : () => _finishOnboarding(skipDate: true)),
+          child: Text('Skip for now',
+              style: TextStyle(color: ivory.withOpacity(.75), fontSize: 13.5)),
+        ),
+      ]);
+
+  // v19: what the person sees between Start planning and the dashboard.
+  Widget _buildingView() {
+    final bool reduced = _reducedMotion(context);
+    final String me = _firstWord(_name.text.isNotEmpty
+        ? _name.text
+        : (FirebaseAuth.instance.currentUser?.displayName ?? ''));
+    final String partner = _firstWord(_partner.text);
+    final String names =
+        partner.isEmpty ? me : (me.isEmpty ? partner : '$me & $partner');
+    final bool done = _buildStep >= _buildSteps.length;
+    return Column(children: <Widget>[
+      SizedBox(
+        width: 150,
+        height: 150,
+        child: Stack(alignment: Alignment.center, children: <Widget>[
+          SizedBox(
+            width: 150,
+            height: 150,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.6,
+              value: done || reduced ? 1 : null,
+              color: gold.withOpacity(.95),
+              backgroundColor: gold.withOpacity(.18),
+            ),
+          ),
+          Container(
+            width: 124,
+            height: 124,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ivory.withOpacity(.12),
+              border: Border.all(color: gold.withOpacity(.7), width: 1.6),
+              image: _photoBytes != null
+                  ? DecorationImage(
+                      image: MemoryImage(_photoBytes!), fit: BoxFit.cover)
+                  : null,
+            ),
+            child: _photoBytes == null
+                ? Icon(Icons.favorite_rounded,
+                    color: gold.withOpacity(.9), size: 36)
+                : null,
+          ),
+        ]),
+      ),
+      const SizedBox(height: 22),
+      if (names.isNotEmpty) Text(names, style: _serif(30)),
+      if (names.isNotEmpty) const SizedBox(height: 6),
+      AnimatedSwitcher(
+        duration: Duration(milliseconds: reduced ? 0 : 240),
+        child: Text(done ? 'Ready.' : 'Setting up your Lazo',
+            key: ValueKey<bool>(done),
+            style: TextStyle(color: ivory.withOpacity(.8), fontSize: 14.5)),
+      ),
+      const SizedBox(height: 26),
+      ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 300),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            for (int i = 0; i < _buildSteps.length; i++) _buildRow(i),
+          ],
+        ),
+      ),
+    ]);
+  }
+
+  Widget _buildRow(int i) {
+    final bool reduced = _reducedMotion(context);
+    final bool done = i < _buildStep;
+    final bool now = i == _buildStep;
+    const Color green = Color(0xFF7FD3A9);
+    final Widget mark;
+    if (done) {
+      mark = const Icon(Icons.check_circle_rounded,
+          key: ValueKey<String>('done'), color: green, size: 18);
+    } else if (now) {
+      mark = Padding(
+        key: const ValueKey<String>('now'),
+        padding: const EdgeInsets.all(2),
+        child: CircularProgressIndicator(strokeWidth: 2, color: gold),
+      );
+    } else {
+      mark = Icon(Icons.circle_outlined,
+          key: const ValueKey<String>('wait'),
+          color: ivory.withOpacity(.35),
+          size: 16);
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 7),
+      child: Row(children: <Widget>[
+        SizedBox(
+          width: 18,
+          height: 18,
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: reduced ? 0 : 220),
+            switchInCurve: Curves.easeOutCubic,
+            transitionBuilder: (Widget c, Animation<double> a) =>
+                ScaleTransition(
+                    scale: Tween<double>(begin: .6, end: 1).animate(a),
+                    child: FadeTransition(opacity: a, child: c)),
+            child: mark,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: AnimatedDefaultTextStyle(
+            duration: Duration(milliseconds: reduced ? 0 : 220),
+            style: TextStyle(
+                color: done
+                    ? ivory.withOpacity(.85)
+                    : (now ? ivory : ivory.withOpacity(.45)),
+                fontSize: 14.5,
+                fontWeight: now ? FontWeight.w600 : FontWeight.w500),
+            child: Text(_buildSteps[i]),
+          ),
+        ),
+      ]),
+    );
+  }
+
+  Widget _form({required bool isSignup}) {
+    final bool canSubmit = isSignup
+        ? (_name.text.trim().isNotEmpty &&
+            _emailLooksValid(_email.text) &&
+            _pass.text.length >= 6 &&
+            _pass.text == _pass2.text &&
+            _tosAccepted)
+        : (_email.text.trim().isNotEmpty && _pass.text.isNotEmpty);
+    // v14: inline notes speak only about fields they've left.
+    final String? nameNote =
+        isSignup && _touched.contains('name') && _name.text.trim().isEmpty
+            ? 'Vendors reply to a person - add your name.'
+            : null;
+    final String? emailNote = _touched.contains('email') &&
+            _email.text.trim().isNotEmpty &&
+            !_emailLooksValid(_email.text)
+        ? 'That email doesn’t look right.'
+        : null;
+    final bool pass2Live = isSignup && _pass2.text.isNotEmpty;
+    final bool pass2Ok = pass2Live && _pass2.text == _pass.text;
+    final String? pass2Note =
+        !pass2Live ? null : (pass2Ok ? 'Matches.' : 'Doesn’t match yet.');
+    return AutofillGroup(
+      child: Column(children: [
+        Text(
+          isSignup
+              ? (_rolePick == 'vendor'
+                  ? 'Create your vendor account'
+                  : 'Create your account')
+              : 'Welcome back',
+          style: _serif(30),
+        ),
+        if (isSignup)
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+                _rolePick == 'vendor'
+                    ? 'Claim your profile, get verified leads. Free, forever.'
+                    : 'Free. No ads, no vendors paying to reach you.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: ivory.withOpacity(.8), fontSize: 13)),
+          ),
+        const SizedBox(height: 22),
+        if (isSignup) ...[
+          // v16: TextInputType.text - the .name type failed to raise the
+          // keyboard on some phones. Words are capitalized instead.
+          _field(_name, 'Your name', TextInputType.text,
+              focus: _nameFocus,
+              hints: const [AutofillHints.name],
+              next: true,
+              error: nameNote != null,
+              cap: TextCapitalization.words),
+          _note(nameNote),
+          const SizedBox(height: 12),
+        ],
+        _field(_email, 'Email', TextInputType.emailAddress,
+            focus: _emailFocus,
+            hints: const [AutofillHints.email],
+            next: true,
+            error: emailNote != null),
+        _note(emailNote),
+        const SizedBox(height: 12),
+        _passField(_pass, 'Password', _obscure1,
+            () => setState(() => _obscure1 = !_obscure1),
+            focus: _passFocus,
+            hints: isSignup
+                ? const [AutofillHints.newPassword]
+                : const [AutofillHints.password],
+            onSubmit: isSignup
+                ? () => _pass2Focus.requestFocus()
+                : () => _submit(false)),
+        if (isSignup) ...[
+          _strengthMeter(),
+          const SizedBox(height: 12),
+          _passField(_pass2, 'Confirm password', _obscure2,
+              () => setState(() => _obscure2 = !_obscure2),
+              focus: _pass2Focus,
+              hints: const [AutofillHints.newPassword],
+              onSubmit: () => _submit(true),
+              ok: pass2Ok),
+          _note(pass2Note, ok: pass2Ok),
+        ],
+        const SizedBox(height: 22),
+        if (isSignup) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: _tosAccepted,
+                    onChanged: (v) {
+                      _tick(_Tick.select);
+                      setState(() => _tosAccepted = v ?? false);
+                    },
+                    activeColor: gold,
+                    checkColor: plum,
+                    side: BorderSide(color: gold.withOpacity(.8), width: 1.5),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Wrap(
+                    children: [
+                      Text('I’ve read and agree to the ',
+                          style: TextStyle(
+                              color: ivory.withOpacity(.85), fontSize: 12.5)),
+                      _Press(
+                        onTap: () =>
+                            _openSiteLink('https://meetlazo.com/terms/'),
+                        child: const Text('Terms of Service',
+                            style: TextStyle(
+                                color: gold,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                decorationColor: gold)),
+                      ),
+                      Text(' and ',
+                          style: TextStyle(
+                              color: ivory.withOpacity(.85), fontSize: 12.5)),
+                      _Press(
+                        onTap: () =>
+                            _openSiteLink('https://meetlazo.com/privacy/'),
+                        child: const Text('Privacy Policy',
+                            style: TextStyle(
+                                color: gold,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                                decorationColor: gold)),
+                      ),
+                      Text('.',
+                          style: TextStyle(
+                              color: ivory.withOpacity(.85), fontSize: 12.5)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        _bigButton(
+          isSignup ? 'Create account' : 'Log in',
+          gold,
+          plum,
+          (_busy || !canSubmit) ? null : () => _submit(isSignup),
+          busy: _busy,
+          tick: _Tick.medium,
+        ),
+        const SizedBox(height: 14),
+        if (!isSignup)
+          TextButton(
+            onPressed: _h(_busy ? null : _resetPassword),
+            child: Text('Forgot password?',
+                style: TextStyle(color: ivory.withOpacity(.8), fontSize: 13)),
+          ),
+        TextButton(
+          onPressed: _h(_busy
+              ? null
+              : () => _setMode(isSignup ? _Mode.login : _Mode.welcome)),
+          child: Text(isSignup ? 'Have an account? Log in' : '← Back',
+              style: TextStyle(color: gold.withOpacity(.95), fontSize: 14)),
+        ),
+        if (!isSignup)
+          TextButton(
+            onPressed: _h(_busy ? null : () => _setMode(_Mode.signup)),
+            child: Text('New here? Create an account',
+                style: TextStyle(color: ivory.withOpacity(.75), fontSize: 13)),
+          ),
+      ]),
+    );
+  }
+
+  // v14: four segments that fill with a ripple, a word for where it stands,
+  // and the one thing that would move it. Shown only while there is a
+  // password to talk about.
+  Widget _strengthMeter() {
+    final String p = _pass.text;
+    final int score =
+        p.isEmpty ? 0 : _passScore(p, name: _name.text, email: _email.text);
+    const List<String> labels = <String>[
+      'Too short',
+      'Weak',
+      'Fair',
+      'Good',
+      'Strong'
+    ];
+    const List<Color> colors = <Color>[
+      Color(0xFFE08A8A),
+      Color(0xFFE09A6A),
+      Color(0xFFE6C270),
+      gold,
+      Color(0xFF7FD3A9),
+    ];
+    final Color c = colors[score];
+    final bool reduced = _reducedMotion(context);
+    return _grow(p.isEmpty
+        ? null
+        : Padding(
+            padding: const EdgeInsets.only(top: 10, left: 4, right: 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(children: <Widget>[
+                  for (int i = 0; i < 4; i++)
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: i < 3 ? 4 : 0),
+                        child: AnimatedContainer(
+                          // each segment lands a beat after the last
+                          duration: Duration(
+                              milliseconds: reduced ? 0 : 220 + i * 70),
+                          curve: Curves.easeOutCubic,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: i < score ? c : ivory.withOpacity(.18),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                    ),
+                ]),
+                const SizedBox(height: 6),
+                Row(children: <Widget>[
+                  AnimatedDefaultTextStyle(
+                    duration: Duration(milliseconds: reduced ? 0 : 220),
+                    curve: Curves.easeOut,
+                    style: TextStyle(
+                        color: c, fontSize: 12, fontWeight: FontWeight.w700),
+                    child: Text(labels[score]),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(_passHint(p, score),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            color: ivory.withOpacity(.65), fontSize: 11.5)),
+                  ),
+                ]),
+              ],
+            ),
+          ));
+  }
+
+  // A one-line note under a field. Grows in, never shoves.
+  Widget _note(String? msg, {bool ok = false}) => _grow(msg == null
+      ? null
+      : Padding(
+          padding: const EdgeInsets.only(top: 6, left: 6),
+          child: Row(children: <Widget>[
+            Icon(ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+                size: 13,
+                color: ok ? const Color(0xFF7FD3A9) : const Color(0xFFE08A8A)),
+            const SizedBox(width: 5),
+            Expanded(
+              child: Text(msg,
+                  style: TextStyle(
+                      color: ok
+                          ? const Color(0xFF7FD3A9)
+                          : const Color(0xFFE08A8A),
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600)),
+            ),
+          ]),
+        ));
+
+  Widget _rolePickView() => Column(children: [
+        Text('One quick question',
+            style: TextStyle(color: ivory.withOpacity(.85), fontSize: 15)),
+        const SizedBox(height: 4),
+        Text('Which are you?', style: _serif(32)),
+        const SizedBox(height: 24),
+        _bigButton('I’m planning a wedding', gold, plum,
+            _busy ? null : () => _saveRoleAndGo('couple'),
+            busy: _busy),
+        const SizedBox(height: 12),
+        _bigButton('I’m a wedding vendor', Colors.transparent, ivory,
+            _busy ? null : () => _saveRoleAndGo('vendor'),
+            outlined: true),
+      ]);
+
+  InputDecoration _deco(String hint, {Widget? suffix, bool error = false}) =>
+      InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+            color: Color(0xFF8A7D90),
+            fontSize: 15,
+            fontWeight: FontWeight.w400),
+        filled: true,
+        fillColor: ivory.withOpacity(.97),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: error
+                ? const BorderSide(color: Color(0xFFE08A8A), width: 1.4)
+                : BorderSide.none),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(color: gold, width: 1.6)),
+        suffixIcon: suffix,
+      );
+
+  Widget _field(TextEditingController c, String hint, TextInputType t,
+      {FocusNode? focus,
+      List<String>? hints,
+      bool next = false,
+      bool error = false,
+      TextCapitalization cap = TextCapitalization.none}) {
+    return TextField(
+      controller: c,
+      focusNode: focus,
+      keyboardType: t,
+      textCapitalization: cap,
+      autofillHints: hints,
+      textInputAction: next ? TextInputAction.next : TextInputAction.done,
+      // v16: ask for focus on the tap itself, so the keyboard comes up even
+      // when the gesture arrives through a transform or an in-flight animation.
+      onTap: () => focus?.requestFocus(),
+      cursorColor: plum,
+      onChanged: (s) => setState(() {}),
+      style: const TextStyle(
+          color: ink, fontSize: 15, fontWeight: FontWeight.w500),
+      decoration: _deco(hint, error: error),
+    );
+  }
+
+  Widget _passField(
+      TextEditingController c, String hint, bool obscure, VoidCallback toggle,
+      {FocusNode? focus,
+      List<String>? hints,
+      VoidCallback? onSubmit,
+      bool ok = false}) {
+    return TextField(
+      controller: c,
+      focusNode: focus,
+      obscureText: obscure,
+      autofillHints: hints,
+      textInputAction:
+          onSubmit == null ? TextInputAction.done : TextInputAction.go,
+      onSubmitted: (_) => onSubmit?.call(),
+      cursorColor: plum,
+      onChanged: (s) => setState(() {}),
+      style: const TextStyle(
+          color: ink, fontSize: 15, fontWeight: FontWeight.w500),
+      decoration: _deco(hint,
+          suffix: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+            if (ok)
+              const Icon(Icons.check_circle_rounded,
+                  size: 18, color: Color(0xFF3AA37E)),
+            IconButton(
+              tooltip: obscure ? 'Show password' : 'Hide password',
+              icon: Icon(
+                  obscure
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
+                  size: 20,
+                  color: const Color(0xFF8A7D90)),
+              onPressed: _h(toggle, _Tick.select),
+            ),
+          ])),
+    );
+  }
+
+  Widget _bigButton(String label, Color bg, Color fg, VoidCallback? onTap,
+      {bool outlined = false, bool busy = false, _Tick tick = _Tick.light}) {
+    final Widget child = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        if (busy) ...<Widget>[
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: outlined ? fg : plum),
+          ),
+          const SizedBox(width: 10),
+        ],
+        Text(busy ? 'One moment…' : label,
+            style: TextStyle(
+                fontSize: 15.5,
+                fontWeight: outlined ? FontWeight.w600 : FontWeight.w700)),
+      ],
+    );
+    return SizedBox(
+      width: double.infinity,
+      child: outlined
+          ? OutlinedButton(
+              onPressed: _h(onTap, tick),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: fg,
+                side: BorderSide(color: gold.withOpacity(.7), width: 1.2),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999)),
+              ),
+              child: child,
+            )
+          : FilledButton(
+              onPressed: _h(onTap, tick),
+              style: FilledButton.styleFrom(
+                backgroundColor: bg,
+                foregroundColor: fg,
+                disabledBackgroundColor: gold.withOpacity(.35),
+                disabledForegroundColor: plum.withOpacity(.55),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999)),
+              ),
+              child: child,
+            ),
+    );
+  }
+}
+
+// ---------------- v14: MOTION ----------------
+// Three rules, from the WWDC "Designing Fluid Interfaces" talk:
+//  1. Answer the finger on pointer-DOWN, never only on release.
+//  2. Critically damped by default. Overshoot only when something arrives
+//     with momentum.
+//  3. Reduced-motion users get a cross-fade - never a slide, never a shake.
+
+bool _reducedMotion(BuildContext c) =>
+    MediaQuery.maybeOf(c)?.disableAnimations ?? false;
+
+// Haptics, in tiers, fired on the commit so the pulse and the visual change
+// hit on the same frame. No-ops on web; no permission needed on phones.
+enum _Tick { none, select, light, medium }
+
+void _tick(_Tick t) {
+  switch (t) {
+    case _Tick.none:
+      return;
+    case _Tick.select:
+      HapticFeedback.selectionClick();
+      return;
+    case _Tick.light:
+      HapticFeedback.lightImpact();
+      return;
+    case _Tick.medium:
+      HapticFeedback.mediumImpact();
+      return;
+  }
+}
+
+/// Wrap a button's onPressed. Null stays null, so disabled stays disabled.
+VoidCallback? _h(VoidCallback? f, [_Tick t = _Tick.light]) => f == null
+    ? null
+    : () {
+        _tick(t);
+        f();
+      };
+
+/// A tappable that answers the instant the finger lands - 97% in 90ms on the
+/// way down, a slower settle on the way up. Use it where the child paints its
+/// own background; InkWell's ripple would land underneath and never show.
+class _Press extends StatefulWidget {
+  const _Press({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.scale = .97,
+    this.dim = .88,
+    this.enabled = true,
+    this.tick = _Tick.light,
+  });
+  final Widget child;
+  final VoidCallback? onTap;
+  final double scale;
+  final double dim;
+  final bool enabled;
+  final _Tick tick;
+  @override
+  State<_Press> createState() => _PressState();
+}
+
+class _PressState extends State<_Press> {
+  bool _down = false;
+  void _set(bool v) {
+    if (_down != v && mounted) setState(() => _down = v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool on = _down && widget.enabled && !_reducedMotion(context);
+    final VoidCallback? tap = widget.enabled ? widget.onTap : null;
+    return MouseRegion(
+      cursor: widget.enabled && widget.onTap != null
+          ? SystemMouseCursors.click
+          : MouseCursor.defer,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapDown: widget.enabled ? (_) => _set(true) : null,
+        onTapUp: (_) => _set(false),
+        onTapCancel: () => _set(false),
+        onTap: tap == null
+            ? null
+            : () {
+                _tick(widget.tick);
+                tap();
+              },
+        child: AnimatedScale(
+          scale: on ? widget.scale : 1,
+          duration: Duration(milliseconds: on ? 90 : 240),
+          curve: on ? Curves.easeOut : Curves.easeOutCubic,
+          child: AnimatedOpacity(
+            opacity: on ? widget.dim : 1,
+            duration: Duration(milliseconds: on ? 60 : 200),
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+// END OF FILE - JC-LAZO-AUTH-0919-021
