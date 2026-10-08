@@ -330,6 +330,9 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .calcout{font:30px var(--mono);color:rgb(var(--glow));text-align:right;min-height:1.2em;padding:0 6px;text-shadow:0 0 14px rgba(var(--glow),.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.calcout.err{color:var(--red);font-size:14px;text-shadow:none}
 .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.keys button{background:#0b1626;border:1px solid var(--line);color:var(--fg);font:18px var(--mono);padding:12px 0;cursor:pointer;border-radius:2px;transition:background .1s}.keys button:hover{background:#12253a}.keys button:active{background:rgba(var(--glow),.25)}.keys button.op{color:var(--amber)}.keys button.eq{background:rgb(var(--glow));color:#04070d;font-weight:700}
 .calchist{display:grid;gap:3px;font:12px var(--mono);color:var(--dim);max-height:120px;overflow:auto}.calchist div{display:flex;justify-content:space-between;gap:10px;cursor:pointer;padding:2px 4px}.calchist div:hover{background:#0b1626}.calchist b{color:#fff;font-weight:600}
+.tipcalc{display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}.tiplbl{font:11px var(--mono);color:var(--dim);letter-spacing:.12em}
+.tipbtns{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.tipbtns button{background:#0b1626;border:1px solid var(--line);color:var(--amber);font:18px var(--mono);padding:12px 0;cursor:pointer;border-radius:2px}.tipbtns button:hover{background:#12253a}.tipbtns button.on{background:rgb(var(--glow));color:#04070d;font-weight:700;border-color:rgb(var(--glow))}
+.tipout{font:13px var(--mono);color:var(--dim);text-align:right;padding:0 6px}.tipout b{display:block;font-size:30px;color:rgb(var(--glow));text-shadow:0 0 14px rgba(var(--glow),.45)}
 .ralarm{display:block;margin-top:10px;font-size:12px;color:var(--dim)}.phonealarm{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}.phonealarm small{flex-basis:100%;color:var(--dim);font-size:11px;line-height:1.4}.phonealarm small b{color:var(--green)}.phonealarm small i{color:var(--amber);font-style:normal}
 #ringing{position:fixed;inset:0;z-index:56;display:grid;place-items:center;background:radial-gradient(800px 600px at 50% 40%,rgba(255,77,94,.25),transparent 60%),rgba(4,7,13,.96);text-align:center}#ringing[hidden]{display:none}#ringing .t{font:64px var(--mono);color:#fff;letter-spacing:.05em}#ringing .l{font-size:14px;letter-spacing:.4em;color:var(--amber);margin:6px 0 24px}#ringing .btn{font-size:16px;padding:14px 28px;margin:6px}@keyframes ringpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}#ringing .box{animation:ringpulse 1s ease-in-out infinite}.ralarm b{color:#fff;font-weight:600}.ralarm small{display:block;color:var(--amber)}
 /* faith */
@@ -719,6 +722,12 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
         <button data-k="√" class="op">√</button><button data-k="^" class="op">xʸ</button><button data-k="ANS" class="op">ANS</button><button data-k="=" class="eq">=</button>
       </div>
       <div class="calchist" id="calcHist"></div>
+      <div class="tipcalc">
+        <div class="tiplbl">CHECK + TIP</div>
+        <input id="tipIn" class="calcin" placeholder="check $" autocomplete="off" inputmode="decimal" aria-label="Check amount">
+        <div class="tipbtns" id="tipBtns"><button data-p="10">10%</button><button data-p="15">15%</button><button data-p="20">20%</button></div>
+        <div class="tipout" id="tipOut">&nbsp;</div>
+      </div>
     </div>
   </section>
 
@@ -2391,6 +2400,18 @@ $("#calcKeys").onclick = (e) => {
 $("#calcIn").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); calcRun(); } if (e.key === "Escape") { $("#calcIn").value = ""; $("#calcOut").innerHTML = "&nbsp;"; } });
 $("#calcIn").addEventListener("input", () => { try { const v = calcEval($("#calcIn").value); $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); } catch { if (!$("#calcIn").value) $("#calcOut").innerHTML = "&nbsp;"; } });
 try { calcHist = JSON.parse(localStorage.getItem("jarvisCalc") || "[]"); renderCalcHist(); } catch {}
+// check + tip: type the check, tap 10/15/20% for the total
+let tipPct = 0;
+const tipMoney = (v) => "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function renderTip() {
+  const amt = parseFloat($("#tipIn").value.replace(/[$,\s]/g, "")), out = $("#tipOut");
+  document.querySelectorAll("#tipBtns button").forEach((b) => b.classList.toggle("on", +b.dataset.p === tipPct));
+  if (!tipPct || !(amt > 0)) { out.innerHTML = "&nbsp;"; return; }
+  const tip = Math.round(amt * tipPct) / 100;
+  out.innerHTML = `<b>${tipMoney(amt + tip)}</b>${tipPct}% tip ${tipMoney(tip)} on ${tipMoney(amt)}`;
+}
+$("#tipBtns").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; tipPct = +b.dataset.p; renderTip(); };
+$("#tipIn").addEventListener("input", renderTip);
 // spoken: "what's 15% of 240", "calculate 12 times 8", "square root of 81", "20 percent tip on 86", "how much is 1200 divided by 7"
 function calcVoice(raw) {
   let t = raw.toLowerCase().replace(/^jarvis,?\s*/, "").replace(/[?!.]+$/, "").trim();
