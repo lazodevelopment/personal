@@ -256,15 +256,16 @@ async function watchDecisions(env, dec) {
 }
 
 /* ---------------- notifications ---------------- */
+const PUSHOVER_BUILTIN = ["pushover","bike","bugle","cashregister","classical","cosmic","falling","gamelan","incoming","intermission","magic","mechanical","pianobar","siren","spacealarm","tugboat","alien","climb","persistent","echo","updown","vibrate","none"];
 async function notify(env, title, body, { priority = "default", tags = "", url = "", sound = "" } = {}) {
   const out = [];
   if (env.PUSHOVER_TOKEN && env.PUSHOVER_USER) {
     const pr = priority === "alarm" ? "2" : priority === "urgent" || priority === "reminder" ? "1" : priority === "high" ? "0" : "-1";
-    // the alarm plays the custom "baroque" sound (Vivaldi clip, jarvis-hub/sounds/baroque.mp3) once it's uploaded to Pushover; spacealarm until then
+    // the alarm plays a custom Pushover sound ("baroque" first, else any uploaded one; his is named "Alarm") (Vivaldi clip, jarvis-hub/sounds/baroque.mp3) once it's uploaded to Pushover; spacealarm until then
     let alarmSound = "spacealarm";
-    if (priority === "alarm" && !sound) { try { const s = await (await fetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); if (s?.sounds?.baroque) alarmSound = "baroque"; } catch {} }
+    if (priority === "alarm" && !sound) { try { const s = await (await fetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); alarmSound = s?.sounds?.baroque ? "baroque" : Object.keys(s?.sounds || {}).find((k) => !PUSHOVER_BUILTIN.includes(k)) || alarmSound; } catch {} }
     const form = new URLSearchParams({ token: env.PUSHOVER_TOKEN, user: env.PUSHOVER_USER, title: "JARVIS: " + title, message: body, priority: pr, sound: sound || (priority === "alarm" ? alarmSound :priority === "reminder" ? "incoming" : priority === "urgent" ? "siren" : "pushover"), ...(priority === "alarm" ? { retry: "60", expire: "1800" } : {}), ...(url ? { url, url_title: "Open JARVIS" } : {}) });
-    out.push(fetch("https://api.pushover.net/1/messages.json", { method: "POST", body: form }).then(async (r) => { const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {} return { pushover: r.status, receipt: j?.receipt, detail: r.ok ? undefined : t.slice(0, 200) }; }).catch((e) => ({ pushover: "error", detail: String(e.message || e) })));
+    out.push(fetch("https://api.pushover.net/1/messages.json", { method: "POST", body: form }).then(async (r) => { const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {} return { pushover: r.status, receipt: j?.receipt, sound: form.get("sound"), detail: r.ok ? undefined : t.slice(0, 200) }; }).catch((e) => ({ pushover: "error", detail: String(e.message || e) })));
   }
   if (env.NTFY_TOPIC) {
     out.push(fetch("https://ntfy.sh/" + env.NTFY_TOPIC, { method: "POST", body, headers: { "user-agent": UA, Title: title, Priority: priority, ...(tags ? { Tags: tags } : {}), ...(url ? { Click: url } : {}) } }).then((r) => ({ ntfy: r.status })).catch((e) => ({ ntfy: "error", detail: String(e.message || e) })));
@@ -1656,6 +1657,7 @@ export default {
     if (p === "/api/push/subscribe" && request.method === "POST") { const b = await request.json(); try { const n = await saveSub(env, b.subscription, { ua: request.headers.get("user-agent"), label: b.label }); return json({ ok: true, subs: n }); } catch (e) { return json({ error: e.message }, 400); } }
     if (p === "/api/push/unsubscribe" && request.method === "POST") { const b = await request.json(); return json({ ok: true, subs: await dropSub(env, b.endpoint) }); }
     if (p === "/api/push/log") return json((await kv.get(env, "push_log")) || []);
+    if (p === "/api/push/sounds") { try { const s = await (await fetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); return json({ baroque: !!s?.sounds?.baroque, custom: Object.keys(s?.sounds || {}).filter((k) => !PUSHOVER_BUILTIN.includes(k)) }); } catch (e) { return json({ error: String(e.message || e) }, 502); } }
     if (p === "/api/push/test" && request.method === "POST") {
       // what each channel says right now: Pushover's registered devices, and a real test push to every channel
       const b = await request.json().catch(() => ({})); const out = {};
