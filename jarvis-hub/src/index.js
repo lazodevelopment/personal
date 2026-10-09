@@ -142,6 +142,32 @@ async function verifyIntake(env, account, business, items) {
         push: { title: `${biz}: lead not auto-replied`, body: `${who}\n${m.subject}\n${detail}\nCheck the intake script's executions in ${account}.`, opts: { priority: "high", tags: "warning", url: m.link || "" } } });
     }
   }
+  // A notice first seen under 12 min old is parked as "pending" for a later sync to settle, but the sync only carries
+  // in:inbox threads keyed by their newest message: once the thread is archived or Zola threads another notice onto it,
+  // that key never comes back. Settle those here from the thread itself plus the Sent check, a few per run.
+  const orphans = Object.entries(log).filter(([k, e]) => e.state === "pending" && !e.script && e.business === business && e.account === account && !touched.has(k)
+    && Date.now() - new Date(e.date) > 12 * 60e3 && Date.now() - new Date(e.date) < 3 * 86400e3).slice(0, 4);
+  for (const [key, e] of orphans) {
+    const t = await threadCached(env, account, e.threadId, null, true).catch(() => null);
+    if (!t?.messages) continue;   // bridge down: try again next sync
+    const msg = t.messages.find((x) => x.date === e.date); const couple = coupleEmail(msg?.body);
+    let state, detail;
+    if (!msg) { state = "gone"; detail = "the notice is no longer in the thread (deleted), so there is nothing to check"; }
+    else if (!couple) { state = "review"; detail = "no couple email in the notice"; }
+    else {
+      const r = await bridgeCall(env, account, { action: "find_sent", to: couple, newerThanDays: 4 });
+      if (!r.ok) continue;
+      if (r.found && new Date(r.date) >= new Date(e.date)) { state = "replied"; detail = `reply to ${couple} is in Sent (${String(r.date).slice(0, 16)})`; }
+      else { state = "missing"; detail = `nothing to ${couple} is in Sent after the notice; the auto-reply failed`; }
+    }
+    const who = couple || e.who;
+    log[key] = { ...e, state, detail: detail + " (inferred; the script did not report)", who, link: e.link || t.link, at: new Date().toISOString() }; dirty = true; touched.add(key);
+    if (state === "missing" || state === "review") {
+      const biz = BIZ_NAME[business] || business;
+      out.push({ alert: { kind: "failed", text: `${biz} intake: ${state === "review" ? "needs review" : "no automatic reply"} for ${who} (${e.subject}). ${detail}. Check Apps Script executions in ${account}.`, url: log[key].link },
+        push: { title: `${biz}: lead not auto-replied`, body: `${who}\n${e.subject}\n${detail}\nCheck the intake script's executions in ${account}.`, opts: { priority: "high", tags: "warning", url: log[key].link || "" } } });
+    }
+  }
   if (dirty) {
     // the intake script may have reported (POST /api/intake) while we were guessing: re-read and never overwrite an entry it settled
     const latest = (await kv.get(env, "intake_log")) || {};
