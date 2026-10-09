@@ -2319,19 +2319,21 @@ function radioUI(msg) {
 }
 // nearest NOAA Weather Radio stream; loaded up front so a tap on WEATHER RADIO plays straight away (phones need the tap's gesture)
 var wxNear = [];
-async function wxLoad() {
+// ask = he tapped the station: may show the browser's location prompt once (travel: the nearest station to where he is, not home)
+async function wxLoad(ask) {
   const r = RADIO.find((x) => x.wx); let q = "";
-  try { if ((await navigator.permissions?.query({ name: "geolocation" }))?.state === "granted") { const pos = await new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no, { maximumAge: 15 * 60e3, timeout: 8000 })); q = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`; } } catch {}
+  try { const st = (await navigator.permissions?.query({ name: "geolocation" }))?.state; if (st === "granted" || (ask && st !== "denied" && navigator.geolocation)) { const pos = await new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no, { maximumAge: 15 * 60e3, timeout: 8000 })); q = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`; } } catch {}
   try {
     const d = await fetch("/api/radio/wx" + q).then((x) => x.json()); wxNear = d.stations || [];
     const s = wxNear[0];
-    if (s) { const changed = r.u && r.u !== s.url; r.u = s.url; r.from = `NOAA ${s.call} · ${s.freq} MHz · ${s.city}, ${s.st} · ${s.miles} mi`; if (changed && radioOn && RADIO[radioIdx] === r) radioPlay(radioIdx); }
+    if (s) { const changed = r.u && r.u !== s.url; r.u = s.url; r.from = `NOAA ${s.call} · ${s.freq} MHz · ${s.city}, ${s.st} · ${s.miles} mi` + (q ? "" : " from home · allow location for where you are") + (s.miles > 80 ? " · nearest online stream" : ""); if (changed && radioOn && RADIO[radioIdx] === r) radioPlay(radioIdx); }
     else r.from = "NOAA Weather Radio · no live stream near you right now";
   } catch { r.from = "NOAA Weather Radio · station list unavailable"; }
   if (RADIO[radioIdx] === r) radioUI();
 }
 function radioPlay(i = radioIdx) {
-  if (RADIO[i].wx && !RADIO[i].u) { radioIdx = i; radioUI("finding the nearest station…"); wxLoad().then(() => { if (RADIO[i].u) radioPlay(i); else radioUI("no weather radio stream nearby"); }); return; }
+  if (RADIO[i].wx && RADIO[i].u && !radioOn) wxLoad(true);   // play now; switch if he's somewhere else
+  if (RADIO[i].wx && !RADIO[i].u) { radioIdx = i; radioUI("finding the nearest station…"); wxLoad(true).then(() => { if (RADIO[i].u) radioPlay(i); else radioUI("no weather radio stream nearby"); }); return; }
   radioIdx = i; try { localStorage.setItem("radioIdx", i); } catch {}
   radioOn = true; unlockPlayer(); radioViz();
   radio.src = RADIO[i].u || "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
