@@ -1,27 +1,37 @@
 /**
  * Elizabeth Scott Weddings — Zola inquiry intake + automatic first reply  (JC-ESW-INTAKE-0928)
- * Ported from the Atavia intake (atavia-functions-live/gmail-intake). Zola only: that is the
- * one marketplace this brand advertises on.
+ * Zola only: that is the one marketplace this brand advertises on.
  *
  * Runs inside Gmail (Google Apps Script) every 5 minutes. Finds new Zola inquiry
  * notifications, pulls out the couple's details, posts them to the site's
  * inquiry_webhook so they appear in the admin Leads page credited to Zola, then
- * replies on the thread. If the webhook returns an inquiry code, the reply carries it
- * with a booking link that applies it; otherwise the reply goes without one.
- * Synced threads get the label esw-synced. If a thread cannot be parsed or sent it
- * gets esw-needs-review instead; remove that label and it is retried on the next run.
+ * replies. Zola sends every inquiry notice with the same subject, so Gmail threads
+ * them together: the script walks every message in every thread and remembers each
+ * one it has handled by id. Threads touched get the label esw-synced; a message that
+ * cannot be parsed gets esw-needs-review on its thread. Newsletters, invitations and
+ * account notices from Zola are ignored.
  *
- * Install in the Gmail account that receives Zola's notifications: script.google.com
- * -> New project -> paste this file -> Run `setup` once (approve Gmail access) -> done.
- * `testParse` shows what the parser makes of the latest inquiry and `previewReply` the
- * reply it would send. Neither sends anything.
+ * Run `setup` once (approve Gmail access). `listInquiries` shows every inquiry from
+ * the last week and what the script did or will do with it; `previewReply` shows the
+ * reply it would send; `checkDrive` confirms the price sheet. None of them send anything.
  */
 var WEBHOOK = 'https://us-central1-elizabeth-scott-738e5.cloudfunctions.net/inquiry_webhook';
 var LABEL = 'esw-synced';
 var BACKFILL_HOURS = 24;          // on first run, inquiries older than this are marked handled without a reply
-var ALREADY_ANSWERED = [];        // lowercase couple emails you answered by hand, so the script never doubles up
-var REVIEW = 'esw-needs-review';   // parse or send failed: fix, remove this label, and it is retried
-var QUERY = 'newer_than:7d from:zola.com';
+var ALREADY_ANSWERED = ['chloemasonradford@gmail.com', 'samsontutu174@gmail.com', 'esnamine@yahoo.com'];   // lowercase couple emails you answered by hand
+var REVIEW = 'esw-needs-review';   // parse failed: fix, and it is retried on the next run
+// Only Zola's first-contact notice ('New Zola inquiry for Elizabeth Scott Weddings', which carries the couple's own
+// email) is answered. A couple's later reply arrives as 'New message from…' from a per-couple relay address, which
+// the script cannot match to the first one, so watching those would send the first-inquiry template a second time.
+var QUERY = 'newer_than:7d from:zola.com subject:"New Zola inquiry"';
+
+// JARVIS: after every inquiry the script tells the hub what it did (replied, duplicate, failed…), so JARVIS can
+// confirm each lead got its first reply, and shout when one did not, instead of guessing from labels.
+// HUB_KEY is the access key in C:\Users\kurvh\jarvis-hub\.hub-key (same value the Gmail bridge scripts use).
+// Leave it blank to skip reporting; a hub outage never blocks a reply.
+var HUB = 'https://jarvis-hub.floral-credit-e4f0.workers.dev';
+var HUB_KEY = '';
+var HUB_BUSINESS = 'es';
 
 var SITE = 'https://elizabethscottweddings.com';
 var BRAND = 'Elizabeth Scott Weddings';
@@ -49,9 +59,9 @@ function sync() {
       if (msg.getDate() < cutoff) { seen.setProperty(key, 'old'); return; }          // predates this script: never auto-answer
       var inq = parseInquiry(msg.getSubject(), msg.getPlainBody(), msg.getFrom(), msg.getReplyTo());
       if (!inq) { seen.setProperty(key, 'skip'); return; }                          // newsletter, notice, or our own reply
-      if (!inq.email) { thread.addLabel(review); seen.setProperty(key, 'noemail'); Logger.log('needs review (no email found): ' + msg.getSubject()); return; }
+      if (!inq.email) { thread.addLabel(review); seen.setProperty(key, 'noemail'); Logger.log('needs review (no email found): ' + msg.getSubject()); tellHub(thread, msg, inq, 'no_email', 'could not find the couple\'s email in the notice'); return; }
       if (seen.getProperty('sent:' + inq.email) || ALREADY_ANSWERED.indexOf(inq.email) > -1) {
-        seen.setProperty(key, 'dup'); Logger.log('skipped (already answered): ' + inq.email); return; }
+        seen.setProperty(key, 'dup'); Logger.log('skipped (already answered): ' + inq.email); tellHub(thread, msg, inq, 'duplicate', 'already answered ' + inq.email); return; }
       var auto = (typeof AUTO_REPLY !== 'undefined' && AUTO_REPLY);
       var payload = auto ? Object.assign({ auto_code: true, auto_replied: true }, inq) : inq;
       var res = UrlFetchApp.fetch(WEBHOOK, { method: 'post', contentType: 'application/json',
@@ -62,11 +72,38 @@ function sync() {
         Logger.log('sent: ' + inq.email + ' (' + inq.found_us + ')');
         if (auto) {
           var code = null; try { code = JSON.parse(res.getContentText()).code || null; } catch (e) {}
-          try { sendAutoReply(msg, inq, code); } catch (e) { Logger.log('auto-reply failed: ' + e); }
-        }
-      } else { thread.addLabel(review); Logger.log('needs review, webhook ' + res.getResponseCode() + ': ' + res.getContentText()); }
+          try {
+            var how = sendAutoReply(msg, inq, code);
+            tellHub(thread, msg, inq, 'replied', how);
+          } catch (e) {
+            // the lead is on the site but the couple heard nothing: flag the thread and tell JARVIS right away
+            Logger.log('auto-reply failed: ' + e); thread.addLabel(review); tellHub(thread, msg, inq, 'reply_failed', String(e));
+          }
+        } else tellHub(thread, msg, inq, 'manual', 'AUTO_REPLY is off');
+      } else { thread.addLabel(review); Logger.log('needs review, webhook ' + res.getResponseCode() + ': ' + res.getContentText()); tellHub(thread, msg, inq, 'webhook_failed', 'webhook ' + res.getResponseCode() + ': ' + res.getContentText().slice(0, 160)); }
     });
   });
+}
+
+/** Tells the JARVIS hub what happened to one inquiry. Never throws; does nothing without HUB_KEY. */
+function tellHub(thread, msg, inq, state, detail) {
+  if (!HUB_KEY) return;
+  try {
+    var payload = { business: HUB_BUSINESS, account: Session.getEffectiveUser().getEmail(), threadId: thread.getId(), messageId: msg.getId(),
+      date: msg.getDate().toISOString(), subject: msg.getSubject(), state: state, detail: String(detail || '').slice(0, 300),
+      source: inq ? inq.found_us : '', couple: inq ? inq.email : '', name: inq ? (inq.first_name + ' ' + inq.last_name).trim() : '', wedding_date: inq ? inq.wedding_date : '' };
+    var r = UrlFetchApp.fetch(HUB + '/api/intake', { method: 'post', contentType: 'application/json', headers: { 'x-hub-key': HUB_KEY },
+      payload: JSON.stringify(payload), muteHttpExceptions: true });
+    if (r.getResponseCode() >= 300) Logger.log('hub not told (' + r.getResponseCode() + '): ' + r.getContentText().slice(0, 120));
+  } catch (e) { Logger.log('hub not told: ' + e); }
+}
+
+/** Sends a test report to the hub so you can see it land (JARVIS Inbox → ask "did the intake script reply?"). */
+function testHub() {
+  if (!HUB_KEY) { Logger.log('fill HUB_KEY first'); return; }
+  var m = latestInquiry(); if (!m) { Logger.log('no inquiry in the last 7 days to report'); return; }
+  var inq = parseInquiry(m.getSubject(), m.getPlainBody(), m.getFrom(), m.getReplyTo());
+  tellHub(m.getThread(), m, inq, 'replied', 'test from testHub()'); Logger.log('reported ' + (inq && inq.email) + ' to the hub as replied');
 }
 
 function testParse() {
@@ -96,10 +133,9 @@ function listInquiries() {
   }); });
 }
 
-
 function dumpBody() {
-  var m = GmailApp.search(QUERY, 0, 1)[0].getMessages()[0];
-  Logger.log('Reply-To: ' + m.getReplyTo() + '\n' + m.getPlainBody().slice(0, 3000));
+  var m = latestInquiry() || GmailApp.search(QUERY, 0, 1)[0].getMessages()[0];
+  Logger.log('Subject: ' + m.getSubject() + '\nReply-To: ' + m.getReplyTo() + '\n' + m.getPlainBody().slice(0, 3000));
 }
 
 // ---------------------------------------------------------------- parsing --
@@ -112,7 +148,7 @@ function parseInquiry(subject, body, from, replyTo) {
   if (!isInquiry) return null;
   var out = { found_us: 'Zola', referrer: 'https://www.zola.com/', landing_page: 'zola inquiry' };
 
-  // name: "New message from Taylor S & Forrest P for Elizabeth Scott" / "Respond to Taylor S & Forrest P"
+  // name: "New message from Taylor S & Forrest P for Elizabeth Scott" / "Respond to Taylor S & Forrest P" / "Claire Olson & Ryan Osterberg sent you an inquiry!"
   var name = (subject.match(/(?:inquiry|message|lead)\s+from\s+(.+?)(?:\s*[-–|]|$)/i) || [])[1]
           || (subject.match(/^(?:\S+\s)?(.+?)\s+(?:sent you|wants to|is interested|would like)/i) || [])[1]
           || (body.match(/^Respond to\s+(.+?)\s*$/m) || [])[1]
@@ -121,7 +157,7 @@ function parseInquiry(subject, body, from, replyTo) {
              .replace(/\s+for\s+(?:Elizabeth|Atavia).*$/i, '').replace(/^[^A-Za-z]+/, '').trim();
   var parts = name.split(/\s+/); out.first_name = parts.shift() || ''; out.last_name = parts.join(' ');
 
-  // email: Zola never includes the couple's address; the notification's reply-to relay is the channel that reaches them.
+  // email: Zola's inquiry notice gives "Couple email:"; message threads only give the reply-to relay that reaches them.
   var any = (body.match(/[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}/gi) || []).filter(function (e) {
     return !/zola\.com|elizabethscottweddings\.com|gmail\.com|google\.com/i.test(e); });
   var couple = (body.match(/Couple email:\s*\n?\s*([^\s@]+@[^\s@]+\.[a-z]{2,})/i) || [])[1];
@@ -132,7 +168,7 @@ function parseInquiry(subject, body, from, replyTo) {
 
   out.phone = (body.match(/(?:phone|tel)[^\d\n(]*(\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4})/i) || [])[1] || '';
 
-  // date: "Getting married on October 1, 2027" -> YYYY-MM-DD
+  // date: "Getting married on October 1, 2027" / "Desired day: August 21, 2027" -> YYYY-MM-DD
   var dateLine = (body.match(/(?:wedding\s*date|event\s*date|desired\s*day)[^\n]*\n?\s*([^\n]+)/i) || [])[1] || body;
   out.wedding_date = isoDate(dateLine) || isoDate(body) || '';
 
@@ -140,8 +176,8 @@ function parseInquiry(subject, body, from, replyTo) {
   var guests = (body.match(/guest count[^\n]*:\s*\n?\s*([^\n]+)/i) || [])[1];
   var budget = (body.match(/wedding budget of[ \t]*([^\s][^\n]*?)[ \t]*$/im) || [])[1];
 
-  // message: Zola quotes the note under "<name>'s message".
-  var note = (body.match(/Their note to you\s*\n+\s*[\u201c"]?\s*([\s\S]*?)\s*[\u201d"]?\s*\n\s*(?:\n|Connect with)/i) || [])[1]
+  // message: Zola puts the note under "Their note to you" (inquiry notice) or "<name>'s message" (thread).
+  var note = (body.match(/Their note to you\s*\n+\s*[“"]?\s*([\s\S]*?)\s*[”"]?\s*\n\s*(?:\n|Connect with)/i) || [])[1]
           || (body.match(/'s message\s*\n+\s*"?\s*([\s\S]*?)\s*"?\s*\n\s*(?:\n|-{5,})/i) || [])[1]
           || (body.match(/(?:says|wrote|message):\s*\n?([\s\S]{0,1500}?)(?:\n\s*\n|$)/i) || [])[1] || '';
   note = note.replace(/^\s*(?:\[[^\]]*\]|<?https?:\/\/\S+>?)\s*/g, '');
@@ -166,12 +202,12 @@ function isoDate(s) {
 function pad(n) { n = String(n); return n.length < 2 ? '0' + n : n; }
 
 // ---------------------------------------------------- automatic first reply --
-// Sent from this Gmail account within five minutes of the inquiry, on the same
-// thread, so Zola's relay delivers it to the couple. The webhook
-// mints a fresh $200 / 72-hour code for them; if that fails the paragraph is left
-// out and the reply still goes. Links read clean in the email; tracking tags sit
-// only behind the words in the HTML version. If a file named PRICE_SHEET is in
-// this Google account's Drive it is attached. Edit the wording in replyLines() freely.
+// Sent from this Gmail account within five minutes of the inquiry. A Zola message
+// thread is answered on the thread so Zola delivers it; a real couple address (Zola's
+// inquiry notice) is answered directly. The webhook mints a fresh $200 / 72-hour code;
+// if that fails the paragraph is left out and the reply still goes. Links read clean;
+// tracking tags sit only behind the words in the HTML version. If a file named
+// PRICE_SHEET is in this account's Drive it is attached.
 var AUTO_REPLY = true;
 var REPLY_FROM_NAME = BRAND;
 var REPLY_SIGNATURE = BRAND + '\nhello@elizabethscottweddings.com · elizabethscottweddings.com';
@@ -190,11 +226,13 @@ function sendAutoReply(msg, inq, code) {
   // A Zola relay address (message threads) must be answered on the thread; a real couple address is answered directly.
   if (/zola\.com/i.test(inq.email)) msg.reply(text, opts);
   else GmailApp.sendEmail(inq.email, replySubject(inq), text, opts);
-  Logger.log('auto-replied to ' + inq.email + (code ? ' with ' + code.code : ' (no code)') + (opts.attachments ? ' + price sheet' : ''));
+  var how = 'to ' + inq.email + (code ? ' with ' + code.code : ' (no code)') + (opts.attachments ? ' + price sheet' : '');
+  Logger.log('auto-replied ' + how);
+  return how;
 }
 
 function replySubject(inq) {
-  return (inq.wedding_date ? 'Your wedding on ' + prettyDate(inq.wedding_date) : 'Your wedding') + ' \u2014 ' + BRAND;
+  return (inq.wedding_date ? 'Your wedding on ' + prettyDate(inq.wedding_date) : 'Your wedding') + ' — ' + BRAND;
 }
 
 // Each paragraph is a string, or an array of strings and {t: visible text, u: url} links.
@@ -209,8 +247,7 @@ function replyLines(inq, code) {
   var out = [
     'Hi ' + first + ',',
     'Congratulations, and thank you for reaching out about your wedding on ' + when + where + '.',
-    'We would love to be there. We keep a local team in your area, so there are no travel fees. Reserve with the pay-in-full price, or our standard plan: 50% down at booking and the balance two weeks before your wedding.',
-    ['Every collection, with pricing, is here: ', packages, '. Our price sheet is attached as well.']
+    ['We would love to be there! Every collection, with pricing, is here: ', packages, '. Our price sheet is attached as well for your review.']
   ];
   if (code) out.push(['If it feels right, you can reserve the date in about two minutes. Inquiry code ' + code.code + ' takes $' + (code.amount || CODE_AMOUNT) + ' off any collection through ' + prettyDate(code.expires_at) + ', and it is already applied here: ', book]);
   else out.push(['If it feels right, you can reserve the date in about two minutes here: ', book]);
@@ -248,7 +285,7 @@ function previewReply() {
   if (!m) { Logger.log('no inquiries in the last 7 days (newsletters and notices are ignored)'); return; }
   var inq = parseInquiry(m.getSubject(), m.getPlainBody(), m.getFrom(), m.getReplyTo());
   var sheet = false; try { sheet = DriveApp.getFilesByName(PRICE_SHEET).hasNext(); } catch (e) {}
-  Logger.log(replyText(inq, { code: 'ESW-XXXX-200', amount: 200, expires_at: new Date(Date.now() + 72 * 3600e3).toISOString() })
+  Logger.log('To: ' + inq.email + '\nSubject: ' + replySubject(inq) + '\n\n' + replyText(inq, { code: 'ESW-XXXX-200', amount: 200, expires_at: new Date(Date.now() + 72 * 3600e3).toISOString() })
     + '\n\n[price sheet ' + (sheet ? 'found in Drive, will be attached' : 'NOT in Drive, will not be attached') + ']');
 }
 

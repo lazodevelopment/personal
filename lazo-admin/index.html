@@ -705,7 +705,12 @@ svg#vMap.dragging{cursor:grabbing}
         <table><thead><tr><th>Business</th><th>Contact</th><th>Metro</th><th>Submitted</th><th></th></tr></thead>
         <tbody id="listingBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
       </div>
-      <div class="section-title">Recently decided</div>
+      <div class="section-title">Listing requests decided</div>
+      <div class="panel">
+        <table><thead><tr><th>Business</th><th>Contact</th><th>Metro</th><th>Status</th><th>Decided</th></tr></thead>
+        <tbody id="listingDoneBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody></table>
+      </div>
+      <div class="section-title">Claims decided</div>
       <div class="panel">
         <table><thead><tr><th>Business</th><th>Status</th><th>Decided</th></tr></thead>
         <tbody id="claimsDoneBody"><tr><td colspan="3" class="empty">Loading…</td></tr></tbody></table>
@@ -1493,12 +1498,47 @@ async function loadListings() {
       tb.appendChild(tr);
     });
   });
+  loadListingsDone();
+}
+function loadListingsDone() {
+  safe("decided listing requests", async () => {
+    const snap = await getDocs(query(collection(db, "listingRequests"), where("status", "in", ["approved", "rejected"]),
+      orderBy("createdAt", "desc"), limit(25)));
+    const tb = $("listingDoneBody");
+    tb.innerHTML = snap.size ? "" : `<tr><td colspan="5" class="empty">None yet</td></tr>`;
+    snap.forEach(d => {
+      const x = d.data();
+      tb.insertAdjacentHTML("beforeend", `<tr>
+        <td class="strong">${esc(x.businessName || d.id)}
+          ${x.categories?.length ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.categories.slice(0, 3).join(", "))}</div>` : ""}</td>
+        <td>${esc(x.email || "—")}
+          ${x.website ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.website)}</div>` : ""}</td>
+        <td class="mono">${esc(x.metroId || "—")}</td>
+        <td><span class="pill ${x.status === "approved" ? "ok" : "bad"}">${esc(x.status)}</span>
+          ${x.reviewedBy ? `<div style="font-size:12px;color:var(--ivory-faint)">${esc(x.reviewedBy)}</div>` : ""}</td>
+        <td class="mono">${fmtD(x.reviewedAt || x.createdAt)}</td></tr>`);
+    });
+  });
 }
 async function decideListing(id, status, tr) {
+  const cell = tr.lastElementChild;
+  tr.querySelectorAll("button").forEach(b => b.disabled = true);
   tr.style.opacity = .4;
   const ok = await safe(`listing ${status}: ${id}`, () =>
     updateDoc(doc(db, "listingRequests", id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() }));
-  if (ok === null) tr.style.opacity = 1;
+  if (ok === null) { tr.style.opacity = 1; tr.querySelectorAll("button").forEach(b => b.disabled = false); return; }
+  cell.innerHTML = `<span class="pill ${status === "approved" ? "ok" : "bad"}">${status}</span>`;
+  tr.style.transition = "opacity .6s ease";
+  tr.style.opacity = 1;
+  setTimeout(() => {
+    tr.style.opacity = 0;
+    setTimeout(() => {
+      tr.remove();
+      const tb = $("listingBody");
+      if (!tb.children.length) tb.innerHTML = `<tr><td colspan="5" class="empty">No listing requests awaiting review</td></tr>`;
+      loadListingsDone();
+    }, 650);
+  }, 1200);
 }
 
 async function loadWire() {

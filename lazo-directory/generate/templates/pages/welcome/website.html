@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WELCOME-1003 / 1005-PHOTO: /welcome/website/ - the "Come for the free website" ad
+    lands here. A real couple's site (Mindy & John on Summit) is the proof shot, six designs
+    show live in phone frames (the hub's ?frame=1 previews), and the card is the first step
+    of the builder: names, date, design, carried into the app (couple dashboard v144). -#}
+{% set wl_page = "website" %}
+{% set wl_cta = "Build mine, free" %}
+{% set wl_designs = [("aquarelle","Aquarelle","Watercolour florals"),("atelier","Atelier","Editorial, type-led"),("black-tie","Black Tie","Formal, candlelit"),("celestial","Celestial","Night sky, stars"),("gilded","Gilded","Gold leaf, ivory"),("noir","Noir","Dark, modern")] %}
+{% set wl_more = [("boho","Boho"),("garden","Garden"),("minimalist","Minimalist"),("desert","Desert"),("shore","Shore"),("rustic","Rustic")] %}
+{% block title %}Free Wedding Website with RSVPs, No Ads, No Upsells | Lazo{% endblock %}
+{% block desc %}Come for the free wedding website. Forty designs, RSVPs that land in your guest list, schedule, travel, registry links and a passcode. Stay for June, your free AI planner, and verified vendors.{% endblock %}
+{% block canonical %}{{ base }}/welcome/website/{% endblock %}
+{% block ogimage %}{{ base }}/assets/photos/ww-demo-summit.jpg{% endblock %}
+{% block nav_key %}sites{% endblock %}
+{% block nav_cta %}<a class="nav-cta" data-wl-app="nav" href="https://app.meetlazo.com">Build mine</a>{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Free wedding website","item":"{{ base }}/welcome/website/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is the Lazo wedding website free?","acceptedAnswer":{"@type":"Answer","text":"Yes, completely. Every design, RSVPs, the schedule, travel details, registry links and passcode privacy are free, with no ads and no premium tier."}},{"@type":"Question","name":"Can guests RSVP on the site?","acceptedAnswer":{"@type":"Answer","text":"Yes. Guests reply with attendance, meal choice and notes, and every reply lands in your guest list and on the seating chart."}},{"@type":"Question","name":"Can I keep my registry on Zola or Amazon?","acceptedAnswer":{"@type":"Answer","text":"Yes. Link any registry from anywhere. Lazo never hosts or marks up a registry."}},{"@type":"Question","name":"Can I make the site private?","acceptedAnswer":{"@type":"Answer","text":"Yes. Add a passcode and only guests with it can open the site. Public sites can be found by name at meetlazo.com/couples."}}]}]}</script>{% endblock %}
+{% block main %}
+{% include "pages/welcome/_shared.html" %}
+<section class="wl-hero" style="--img:url('/assets/photos/hero-2.jpg');--pos:30%;--posx:100%;--flip:-1"><div class="bg"></div><div class="wl-in">
+  <div>
+    <p class="eyebrow">Free wedding website</p>
+    <h1>Come for the <em>free website.</em> Stay for everything else.</h1>
+    <p class="lede">Forty designs by real designers, live in minutes. Guests RSVP, find their table, see the schedule and add their photos. No ads, no upsells, no guest cap, and your registry stays wherever it is.</p>
+    {% include "pages/welcome/_cta.html" %}
+    <div class="wl-proof"><span><b>40</b>designs</span><span><b>$0</b>forever</span><span><b>0</b>ads on your site</span></div>
+  </div>
+  <form class="wl-card" id="wl-site" onsubmit="return false" aria-label="Start your wedding website">
+    <div class="ch"><i>&#10022;</i><div><b>Start your site</b><small>About 60 seconds to live.</small></div></div>
+    <label for="s-names">Your names, as they will appear</label>
+    <input id="s-names" type="text" placeholder="Maya &amp; Jordan" autocomplete="off">
+    <label for="s-date">Wedding date</label>
+    <input id="s-date" type="date">
+    <label for="s-design">Design</label>
+    <select id="s-design">
+      {% for slug, name, note in wl_designs %}<option value="{{ slug }}">{{ name }}</option>{% endfor %}
+      {% for slug, name in wl_more %}<option value="{{ slug }}">{{ name }}</option>{% endfor %}
+      <option value="">Let me browse all forty</option>
+    </select>
+    <button class="go" type="submit">Build mine, free</button>
+    <p class="fine">Opens your site in the app with these filled in.</p>
+  </form>
+</div></section>
+
+<section class="wl-band" style="padding-bottom:0">
+  <p class="eyebrow" style="text-align:center">A real one</p>
+  <h2 style="text-align:center;max-width:22ch;margin-left:auto;margin-right:auto">Mindy &amp; John, above the treeline, 278 days out.</h2>
+  <p class="sub" style="text-align:center;margin-left:auto;margin-right:auto">Their engagement photo, their names, their countdown. Guests RSVP, find the hotel block and add their own photos on the day.</p>
+</section>
+<figure class="wl-demo" style="margin-top:0">
+  <a href="/wedding-websites/summit/"><img src="/assets/photos/ww-demo-summit.jpg" width="2560" height="1650" loading="lazy" decoding="async" alt="Mindy and John's wedding website on the Summit design: their engagement photo in the mountains with their names, date and countdown"></a>
+  <figcaption>The Summit design. <a href="/wedding-websites/summit/">Open the demo &rarr;</a></figcaption>
+</figure>
+
+<section class="wl-band">
+  <h2>Pick a design. Change it any time.</h2>
+  <p class="sub">These are live. Every design has the same pages behind it: story, schedule, travel, registry, RSVP, guest photos.</p>
+  <div class="wl-phones">
+    {% for slug, name, note in wl_designs %}
+    <a class="wl-tpl" href="/wedding-websites/{{ slug }}/" data-design="{{ slug }}">
+      <div class="phone"><span class="notch"></span><div class="screen"><iframe loading="lazy" title="{{ name }} design preview" src="/wedding-websites/{{ slug }}/?frame=1" tabindex="-1"></iframe></div></div>
+      <b>{{ name }}</b><small>{{ note }}</small>
+    </a>
+    {% endfor %}
+  </div>
+  <p style="margin:30px 0 0;text-align:center"><a href="/wedding-websites/">See all forty designs &rarr;</a></p>
+</section>
+
+<section class="wl-band" style="padding-top:0">
+  <h2>What your guests get</h2>
+  <div class="wl-grid">
+    <div class="wl-f"><div class="im"><img src="/assets/ww-rsvp.webp" alt="RSVP form on a Lazo wedding website" loading="lazy" decoding="async"></div><div class="tx"><div class="k">RSVP</div><h3>Replies land in your guest list</h3><p>Attendance, meal choice and notes, straight into the list and onto the seating chart. No spreadsheet.</p></div></div>
+    <div class="wl-f"><div class="im"><img src="/assets/ww-seat.webp" alt="Find your table on a Lazo wedding website" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Find your table</div><h3>Guests find their seat on their phone</h3><p>Open the site on the day, type a name, see the table. The caterer gets the same live link.</p></div></div>
+    <div class="wl-f"><div class="im"><img src="/assets/ww-wall.webp" alt="Guest photo wall on a Lazo wedding website" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Guest photos</div><h3>Every phone becomes a camera</h3><p>Guests add their photos from the site. You get the candids without an app to install.</p></div></div>
+    <div class="wl-f"><div class="im"><img src="/assets/ww-weekend.webp" alt="Weekend schedule on a Lazo wedding website" loading="lazy" decoding="async"></div><div class="tx"><div class="k">The weekend</div><h3>Welcome dinner to farewell brunch</h3><p>Every event with its own time, place, dress code and RSVP, plus hotel blocks and the shuttle.</p></div></div>
+  </div>
+</section>
+
+<section class="wl-band" style="padding-top:0">
+  <h2>Questions</h2>
+  <details class="faq" open><summary>Is it really free?</summary><p>Yes, completely. Every design, RSVPs, the schedule, travel details, registry links and passcode privacy are free, with no ads and no premium tier. Lazo's business is an optional Pro plan for vendors.</p></details>
+  <details class="faq"><summary>Can I keep my registry on Zola or Amazon?</summary><p>Yes. Link any registry from anywhere. Lazo never hosts or marks up a registry.</p></details>
+  <details class="faq"><summary>Can I make the site private?</summary><p>Yes. Add a passcode and only guests with it can open the site. Public sites can be found by name at <a href="/couples/">meetlazo.com/couples</a>.</p></details>
+  <details class="faq"><summary>Can I bring my guest list from The Knot or Zola?</summary><p>Yes. <a href="/welcome/switch/">Export it as a CSV and import it in one step.</a></p></details>
+</section>
+
+<section class="wl-end"><div class="claim-strip" style="--img:url('/assets/photos/atmo-candlelight.jpg');--pos:60%">
+  <h2>Your site, live in about a minute.</h2>
+  <p>Then June, the guest list, the budget and verified vendors are already there waiting.</p>
+  <a class="btn-gold" data-wl-app="end" href="https://app.meetlazo.com/">Build mine, free</a>
+</div></section>
+
+<script>
+(function(){
+  var f=document.getElementById('wl-site'),sel=document.getElementById('s-design');
+  f.addEventListener('submit',function(){
+    var extra={intent:'website'};
+    var n=document.getElementById('s-names').value.trim(),d=document.getElementById('s-date').value,t=sel.value;
+    if(n)extra.names=n;if(d)extra.date=d;if(t)extra.design=t;
+    try{window.lzWelcome.track('WelcomeCTA',{cta:'card',design:t||''});if(window.fbq)fbq('track','Lead',{content_name:'welcome-website'});}catch(e){}
+    location.href=window.lzWelcome.appHref(extra);
+  });
+  // tapping a phone picks that design in the card and scrolls back up, instead of leaving the page
+  [].slice.call(document.querySelectorAll('.wl-tpl')).forEach(function(a){
+    a.addEventListener('click',function(ev){
+      if(ev.metaKey||ev.ctrlKey)return;
+      ev.preventDefault();sel.value=a.getAttribute('data-design');
+      try{window.lzWelcome.track('DesignPick',{design:sel.value});}catch(e){}
+      f.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(function(){document.getElementById('s-names').focus();},500);
+    });
+  });
+})();
+</script>
+{% endblock %}

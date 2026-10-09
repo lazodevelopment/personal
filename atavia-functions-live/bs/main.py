@@ -22,6 +22,19 @@
 #     -> standard-plan bookings past balance_due_at -> charge card on file
 #   gratuity (HTTPS) -> tokenized post-event gratuity charge to card on file
 #
+# Processor flag (v11 · 2026-10-03 — Whop path behind a flag):
+#   PAYMENT_PROCESSOR env var: "zoho" (default) | "whop". Decides which
+#   processor NEW bookings use. Every booking records its own `processor`,
+#   and every later charge / link / refund / cancel reads that field, so
+#   flipping the flag never moves an existing booking off the processor that
+#   holds its card. Whop mechanics (lib/whop.py):
+#     /book page mounts Whop CardElement (mode=setup) -> whop_setup turns the
+#       confirmation token into a setup intent -> payment_method + member ids
+#     signwell_webhook -> Whop off-session charge; fallback -> Whop hosted
+#       checkout link, emailed by US (Whop sends nothing)
+#     whop_webhook (payment.succeeded / payment.failed) -> confirms link
+#       payments and reconciles charges that were still pending
+#
 # Secrets (set before deploy):
 #   firebase functions:secrets:set SIGNWELL_API_KEY
 #   firebase functions:secrets:set ZOHO_CLIENT_ID        (api-console.zoho.com, client type ORG)
@@ -30,9 +43,13 @@
 #   firebase functions:secrets:set RESEND_API_KEY
 #   firebase functions:secrets:set PROMO_ADMIN_KEY   (any long random string; used to issue codes)
 #   firebase functions:secrets:set GRATUITY_SECRET     (any long random string)
+#   firebase functions:secrets:set WHOP_API_KEY        (whop.com/dashboard/developer, account API key)
+#   firebase functions:secrets:set WHOP_WEBHOOK_SECRET (same page, webhook "Secret" column, ws_...)
 # =============================================================================
 
 import hashlib
+import time
+import traceback
 import hmac
 import json
 import re
@@ -52,6 +69,7 @@ from atavia_contract_generator import (generate_contract, compute_pricing,
                                        PACKAGES, RULES)
 from lib.signwell import SignWell
 from lib.zoho import Zoho
+from lib.whop import Whop
 from lib import emails
 from lib.questionnaire_schema import ALL_FIELD_IDS, SUMMARY_LAYOUT
 
@@ -63,12 +81,30 @@ ZOHO_CLIENT_ID     = SecretParam("ZOHO_CLIENT_ID")
 ZOHO_CLIENT_SECRET = SecretParam("ZOHO_CLIENT_SECRET")
 ZOHO_REFRESH_TOKEN = SecretParam("ZOHO_REFRESH_TOKEN")
 ZOHO_SECRETS = [ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_REFRESH_TOKEN]
+WHOP_API_KEY        = SecretParam("WHOP_API_KEY")
+WHOP_WEBHOOK_SECRET = SecretParam("WHOP_WEBHOOK_SECRET")
+WHOP_SECRETS = [WHOP_API_KEY, WHOP_WEBHOOK_SECRET]
+# Every payment-touching function mounts both sets: a booking made under one
+# processor is still charged / refunded under it after the flag flips.
+PAY_SECRETS = [*ZOHO_SECRETS, *WHOP_SECRETS]
 RESEND_API_KEY   = SecretParam("RESEND_API_KEY")
 GRATUITY_SECRET  = SecretParam("GRATUITY_SECRET")
 PROMO_ADMIN_KEY  = SecretParam("PROMO_ADMIN_KEY")
 
 TEST_MODE       = False  # PRODUCTION
 ZOHO_ACCOUNT_ID  = "937366965"                 # Danbren Media LLC (Zoho Payments)
+WHOP_ACCOUNT_ID  = os.environ.get("WHOP_ACCOUNT_ID", "")   # biz_... (Danbren Media on Whop); also in /book page JS
+# Which processor NEW bookings use. Existing bookings keep their own
+# `processor` field forever. Set with: gcloud functions deploy ... --update-env-vars PAYMENT_PROCESSOR=whop
+PAYMENT_PROCESSOR = (os.environ.get("PAYMENT_PROCESSOR") or "zoho").strip().lower()
+if PAYMENT_PROCESSOR not in ("zoho", "whop"):
+    PAYMENT_PROCESSOR = "zoho"
+SITE_HOST = "ataviaweddings.com"
+# Whop refuses no-charge card saves from guest buyers on this company (risk
+# engine, 2026-10-06), so the Whop flow collects the retainer / PIF total at
+# reservation through a paid checkout, which also stores the card for the
+# balance. Set False to return to the save-only setup checkout.
+WHOP_CHARGE_AT_RESERVATION = True
 STATEMENT_DESCRIPTOR = "ATAVIA WEDDINGS"       # <=22 chars; what the couple sees on their statement
 OWNER_EMAIL     = "info@ataviaweddings.com"   # JC notification target
 ALLOWED_ORIGINS = ["https://ataviaweddings.com", "https://www.ataviaweddings.com"]
@@ -91,16 +127,11 @@ OPTIONAL_FIELDS = ["guest_count", "reception_venue", "start_time", "end_time"]
 
 
 def _compute_balance_due(event_dt, now):
-    """Balance is due 14 business days (Mon-Fri) after booking/signing. If the
-    Event is sooner than that, the balance falls due the day before the Event
-    (never after it), and never earlier than now."""
+    """Balance is due 14 calendar days after booking/signing (changed from
+    business days 2026-10-01). If the Event is sooner than that, the balance
+    falls due the day before the Event (never after it), and never earlier than now."""
     from datetime import timezone as _tz
-    due = now
-    added = 0
-    while added < RULES["balance_due_days_from_booking"]:
-        due = due + timedelta(days=1)
-        if due.weekday() < 5:
-            added += 1
+    due = now + timedelta(days=RULES["balance_due_days_from_booking"])
     event_utc = event_dt.replace(tzinfo=_tz.utc)
     return due if due < event_utc else max(now, event_utc - timedelta(days=1))
 
@@ -207,11 +238,241 @@ def _zoho():
                 ZOHO_CLIENT_SECRET.value, ZOHO_REFRESH_TOKEN.value)
 
 
-def _pm_display(pm):
-    """(brand, last4) from a Zoho payment_method dict, for owner emails."""
+def _whop():
+    # Read the env directly: SecretParam.value logs a warning when the secret
+    # is not mounted, and a Zoho-only deploy legitimately never mounts it.
+    key = os.environ.get("WHOP_API_KEY") or ""
+    if not (key and WHOP_ACCOUNT_ID):
+        raise RuntimeError("Whop is not configured (WHOP_API_KEY / WHOP_ACCOUNT_ID)")
+    return Whop(WHOP_ACCOUNT_ID, key)
+
+
+# ---------------------------------------------------------------------------
+# Processor indirection. A booking's `processor` field ("zoho" | "whop") is
+# fixed at creation and decides which client handles every later call. The
+# two clients share method names and return shapes (see lib/whop.py), so the
+# callers only need to pick the client and the right Firestore field names:
+#   {proc}_payment_method_id / {proc}_customer_id   card on file
+#   {proc}_payment_id                               retainer / PIF payment
+#   {proc}_payment_link_id / {proc}_payment_link_url retainer / PIF link
+# Balance links / payments keep their processor-neutral names
+# (balance_payment_link_id, balance_payment_id) as before.
+# ---------------------------------------------------------------------------
+def _proc(b):
+    p = str((b or {}).get("processor") or "zoho").lower()
+    return p if p in ("zoho", "whop") else "zoho"
+
+
+def _pay(proc_or_booking):
+    proc = proc_or_booking if isinstance(proc_or_booking, str) \
+        else _proc(proc_or_booking)
+    return _whop() if proc == "whop" else _zoho()
+
+
+def _card_ids(b):
+    """(payment_method_id, customer_id) for the booking's own processor, or
+    ("", "") when there is no card on file."""
+    p = _proc(b)
+    return (b.get(f"{p}_payment_method_id") or "",
+            b.get(f"{p}_customer_id") or "")
+
+
+def _k(b, suffix):
+    """Processor-prefixed Firestore key, e.g. _k(b, 'payment_link_url')."""
+    return f"{_proc(b)}_{suffix}"
+
+
+def _pm_display(pm, proc="zoho"):
+    """(brand, last4) from a payment_method dict, for owner emails."""
+    if proc == "whop":
+        return Whop.pm_display(pm)
     card = (pm or {}).get("card") or {}
     return (str(card.get("brand") or "card")[:20],
             str(card.get("last_four_digits") or "")[:4])
+
+
+def _record_lead(req, data, name, email, phone, extra):
+    """The only trace of a couple who closes the card step. Shared by
+    zoho_session and whop_setup; _chase_leads() nudges, book_submit converts."""
+    try:
+        pkg_id = str(data.get("package_id") or "")
+        pkg = PACKAGES.get(pkg_id) or {}
+        ev_raw = str(data.get("event_date") or "")
+        try:
+            ev_disp = datetime.strptime(ev_raw, "%Y-%m-%d").strftime("%B %d, %Y")
+        except ValueError:
+            ev_disp = ""
+        firestore.client().collection("leads").add({
+            "status": "card_pending",
+            "created_at": firestore.SERVER_TIMESTAMP,
+            "client_names": name, "email": email, "phone": phone,
+            "package_id": pkg_id, "package_name": pkg.get("name", ""),
+            "payment_option": str(data.get("payment_option") or "")[:10],
+            "event_date_raw": ev_raw[:10], "event_date_display": ev_disp,
+            **extra,
+            "attr_venue": str(data.get("attr_venue") or "")[:200],
+            # JC-ATV-ATTR-0927: same attribution the booking carries, so the
+            # leads dashboard can say where each booking start came from.
+            "attr_venue_url": str(data.get("attr_venue_url") or "")[:300],
+            "attr_landing": str(data.get("attr_landing") or "")[:300],
+            "attr_referrer": str(data.get("attr_referrer") or "")[:300],
+            "client_ip": req.headers.get("X-Forwarded-For", req.remote_addr),
+            "sid": str(data.get("sid") or "")[:32],
+        })
+    except Exception as e:
+        print(f"lead record failed (non-fatal): {e}")
+    _link_session(firestore.client(), data.get("sid"), name, email)
+
+
+def _reservation_due(data):
+    """Amount the couple pays at reservation under the Whop flow, priced with
+    compute_pricing from the same fields book_submit validates. Raises
+    ValueError with a user-facing message on bad input."""
+    pkg_id = str(data.get("package_id") or "")
+    if pkg_id not in PACKAGES:
+        raise ValueError("please choose a collection")
+    pkg = PACKAGES[pkg_id]
+    option = str(data.get("payment_option") or "pif")
+    if option not in ("standard", "pif"):
+        raise ValueError("invalid payment option")
+    if pkg.get("pif_only"):
+        option = "pif"
+    try:
+        event_dt = datetime.strptime(str(data.get("event_date") or ""), "%Y-%m-%d")
+    except ValueError:
+        raise ValueError("please enter your wedding date")
+    days_to_event = (event_dt.date() - datetime.now(timezone.utc).date()).days
+    if days_to_event <= 0:
+        raise ValueError("event date must be in the future")
+    second_shooter = bool(data.get("second_shooter"))
+    try:
+        extra_hours = int(data.get("extra_hours") or 0)
+    except (TypeError, ValueError):
+        raise ValueError("extra_hours must be a whole number")
+    discount = 0
+    raw_code = str(data.get("discount_code") or "").strip().upper()
+    if raw_code:
+        snap = firestore.client().collection("discount_codes").document(raw_code).get()
+        if snap.exists:
+            c = snap.to_dict() or {}
+            exp = c.get("expires_at")
+            if (c.get("active", False) and not c.get("redeemed_by")
+                    and not (exp and exp.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc))):
+                discount = int(c.get("amount", 0))
+    pricing = compute_pricing(pkg_id, second_shooter, extra_hours, discount,
+                              days_to_event=days_to_event)
+    total = pricing["total"]
+    ev_disp = event_dt.strftime("%B %d, %Y")
+    if option == "pif":
+        amount = total - RULES["pif_discount"]
+        kind, title = "pif", f"Paid in full \u2014 {pkg['name']} \u2014 {ev_disp}"
+    else:
+        amount = RULES["retainer"]
+        kind, title = "retainer", f"Retainer \u2014 {pkg['name']} \u2014 {ev_disp}"
+    return {"amount": int(amount), "kind": kind, "title": title,
+            "package_id": pkg_id, "payment_option": option, "total": total}
+
+
+# ============================================================= whop_setup ===
+@https_fn.on_request(region=REGION, secrets=WHOP_SECRETS)
+def whop_setup(req: https_fn.Request) -> https_fn.Response:
+    """Whop twin of zoho_session, but the order is reversed: the page has
+    ALREADY collected the card in the Whop CardElement (mode=setup) and holds
+    a confirmation token. We turn it into a setup intent here, which is what
+    saves the method for off-session use. Nothing is charged.
+
+    Returns the setup intent's settled state. status "requires_action" means
+    3-D Secure: the page runs handleNextAction(client_secret) and then posts
+    the booking; book_submit re-fetches the intent, so a page that lies about
+    the outcome gains nothing."""
+    if req.method == "OPTIONS":
+        return https_fn.Response("", status=204, headers=_cors(req))
+    if req.method != "POST":
+        return _json(req, {"error": "POST only"}, 405)
+    data = req.get_json(silent=True) or {}
+    name = str(data.get("client_names") or "").strip()[:100]
+    email = str(data.get("email") or "").strip()
+    phone = re.sub(r"[^\d+]", "", str(data.get("phone") or ""))[:20]
+    token = str(data.get("confirmation_token") or "").strip()
+    if not name or not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email):
+        return _json(req, {"error": "name and a valid email are required"}, 400)
+    if not token:
+        # -- Checkout-configuration path. With WHOP_CHARGE_AT_RESERVATION the
+        #    page mounts a PAID checkout for the amount due now (retainer or
+        #    PIF total, priced server-side from the same inputs book_submit
+        #    will use); Whop charges it and stores the card. Otherwise a
+        #    setup-mode (no charge) checkout. Either way book_submit verifies
+        #    the resulting payment / setup intent by id.
+        due = None
+        if WHOP_CHARGE_AT_RESERVATION:
+            try:
+                due = _reservation_due(data)
+            except ValueError as e:
+                return _json(req, {"error": str(e)}, 400)
+        try:
+            w = _whop()
+            if due:
+                chk = w.create_payment_checkout(
+                    due["amount"], due["title"],
+                    meta={"source": "reservation", "kind": due["kind"],
+                          "client_names": name, "email": email,
+                          "package_id": due["package_id"],
+                          "payment_option": due["payment_option"]},
+                    descriptor=STATEMENT_DESCRIPTOR)
+            else:
+                chk = w.create_setup_checkout(
+                    email=email,
+                    meta={"source": SITE_HOST, "client_names": name,
+                          "phone": phone, "kind": "booking_card"})
+        except Exception as e:
+            print(f"whop_setup checkout failed: {e}")
+            return _json(req, {"error": "payment setup unavailable"}, 502)
+        _record_lead(req, data, name, email, phone,
+                     {"processor": "whop",
+                      "whop_checkout_id": chk["checkout_id"],
+                      "whop_due_now": due["amount"] if due else None,
+                      "whop_due_kind": due["kind"] if due else "setup",
+                      # the full form, so whop_webhook can finish the booking
+                      # if the browser never submits it
+                      "reservation_payload": _clean_booking_payload(
+                          data.get("booking") if isinstance(data.get("booking"), dict) else {})})
+        print(f"whop_setup checkout {chk['checkout_id']} for {email} "
+              f"due={due['amount'] if due else 'setup'}")
+        return _json(req, {"checkout_id": chk["checkout_id"],
+                           "url": chk["url"],
+                           "mode": "payment" if due else "setup",
+                           "amount": due["amount"] if due else None,
+                           "kind": due["kind"] if due else "setup"})
+    if not token.startswith("ctok_"):
+        return _json(req, {"error": "confirmation_token required"}, 400)
+    try:
+        si = _whop().create_setup_intent(
+            token, email=email,
+            meta={"source": "ataviaweddings.com", "client_names": name,
+                  "phone": phone},
+            return_url="https://ataviaweddings.com/book")
+    except Exception as e:
+        print(f"whop_setup failed: {e}")
+        return _json(req, {"error": "payment setup unavailable"}, 502)
+
+    member_id, pm_id = Whop.setup_ids(si)
+    # Always log the outcome: a canceled / failed intent is a normal 200 with
+    # no exception, and the page can only show a generic message without this.
+    print(f"whop_setup {si.get('id')} status={si.get('status')} "
+          f"member={member_id} pm={pm_id} err={Whop.setup_error(si)} "
+          f":: {json.dumps(si)[:700]}")
+    _record_lead(req, data, name, email, phone,
+                 {"processor": "whop",
+                  "whop_setup_intent_id": si.get("id"),
+                  "whop_customer_id": member_id})
+    brand, last4 = Whop.pm_display(si.get("payment_method"))
+    return _json(req, {"setup_intent_id": si.get("id"),
+                       "status": si.get("status"),
+                       "client_secret": si.get("client_secret"),
+                       "customer_id": member_id,
+                       "payment_method_id": pm_id,
+                       "card_brand": brand, "card_last4": last4,
+                       "error_message": Whop.setup_error(si) or None})
 
 
 # =========================================================== zoho_session ===
@@ -244,34 +505,8 @@ def zoho_session(req: https_fn.Request) -> https_fn.Response:
     # -- record the lead. If the couple closes the card window, this is the
     #    only trace of them; _chase_leads() emails a "finish your booking"
     #    nudge and book_submit marks it converted on success. ---------------
-    try:
-        pkg_id = str(data.get("package_id") or "")
-        pkg = PACKAGES.get(pkg_id) or {}
-        ev_raw = str(data.get("event_date") or "")
-        try:
-            ev_disp = datetime.strptime(ev_raw, "%Y-%m-%d").strftime("%B %d, %Y")
-        except ValueError:
-            ev_disp = ""
-        firestore.client().collection("leads").add({
-            "status": "card_pending",
-            "created_at": firestore.SERVER_TIMESTAMP,
-            "client_names": name, "email": email, "phone": phone,
-            "package_id": pkg_id, "package_name": pkg.get("name", ""),
-            "payment_option": str(data.get("payment_option") or "")[:10],
-            "event_date_raw": ev_raw[:10], "event_date_display": ev_disp,
-            "zoho_customer_id": cust["customer_id"],
-            "attr_venue": str(data.get("attr_venue") or "")[:200],
-            # JC-ATV-ATTR-0927: same attribution the booking carries, so the
-            # leads dashboard can say where each booking start came from.
-            "attr_venue_url": str(data.get("attr_venue_url") or "")[:300],
-            "attr_landing": str(data.get("attr_landing") or "")[:300],
-            "attr_referrer": str(data.get("attr_referrer") or "")[:300],
-            "client_ip": req.headers.get("X-Forwarded-For", req.remote_addr),
-            "sid": str(data.get("sid") or "")[:32],
-        })
-    except Exception as e:
-        print(f"lead record failed (non-fatal): {e}")
-    _link_session(firestore.client(), data.get("sid"), name, email)
+    _record_lead(req, data, name, email, phone,
+                 {"processor": "zoho", "zoho_customer_id": cust["customer_id"]})
 
     return _json(req, {"customer_id": cust["customer_id"],
                        "payment_method_session_id":
@@ -279,46 +514,143 @@ def zoho_session(req: https_fn.Request) -> https_fn.Response:
 
 
 # ============================================================ book_submit ===
-@https_fn.on_request(region=REGION, secrets=[SIGNWELL_API_KEY, *ZOHO_SECRETS],
+BOOKING_FIELDS = (REQUIRED_FIELDS + OPTIONAL_FIELDS
+                  + ["partner1_name", "partner2_name", "second_shooter",
+                     "extra_hours", "discount_code", "attr_venue",
+                     "attr_venue_url", "attr_landing", "attr_referrer", "sid"])
+
+
+def _clean_booking_payload(raw):
+    """The booking form as the page submits it, minus anything unexpected.
+    Stored on the lead at whop_setup so the webhook can finish the booking."""
+    out = {}
+    for k in BOOKING_FIELDS:
+        if k not in (raw or {}):
+            continue
+        v = raw[k]
+        if k == "second_shooter":
+            out[k] = bool(v)
+        elif k == "extra_hours":
+            try:
+                out[k] = int(v or 0)
+            except (TypeError, ValueError):
+                out[k] = 0
+        elif k == "agree_terms":
+            out[k] = v is True
+        else:
+            out[k] = str(v if v is not None else "")[:300]
+    return out
+
+
+def _res(obj, code=200):
+    return obj, code
+
+
+def _book_safely(data, client_ip, source):
+    """Run _create_booking; on any failure undo the discount redemption and
+    release the reservation lock so a retry (page, webhook, finish link) can
+    complete it. Returns (obj, status)."""
+    state = {}
+    try:
+        obj, code = _create_booking(data, client_ip, source, state)
+    except Exception as e:
+        print(f"BOOKING CRASHED ({source}): {e}\n{traceback.format_exc()[-1500:]}")
+        obj, code = ({"error": "We couldn't finish your booking just now. Please "
+                               "try again in a minute. If you've already paid, "
+                               "you won't be charged again."}, 500)
+    if code >= 400:
+        db = firestore.client()
+        if state.get("code_redeemed") and state.get("booking_id"):
+            try:
+                cref = db.collection("discount_codes").document(state["code_redeemed"])
+                c = (cref.get().to_dict() or {})
+                if c.get("redeemed_by") == state["booking_id"]:
+                    cref.update({"redeemed_by": None, "redeemed_at": None})
+                    print(f"rolled back code {state['code_redeemed']}")
+            except Exception as e2:
+                print(f"code rollback failed: {e2}")
+        if state.get("lock_ref") is not None:
+            try:
+                state["lock_ref"].delete()
+            except Exception as e3:
+                print(f"lock release failed: {e3}")
+    return obj, code
+
+
+def _existing_booking_response(b0, whop_pay_id):
+    signing_url = None
+    try:
+        doc0 = SignWell(SIGNWELL_API_KEY.value, test_mode=TEST_MODE).get_document(
+            b0.get("signwell_document_id"))
+        signing_url = (doc0.get("recipients") or [{}])[0].get("signing_url")
+    except Exception as e0:
+        print(f"existing booking: signing url fetch failed: {e0}")
+    print(f"existing booking for payment {whop_pay_id} -> {b0.get('booking_id')}")
+    return _res({"ok": True, "booking_id": b0.get("booking_id"),
+                 "signing_url": signing_url, "duplicate": True,
+                 "next": "sign_now_or_check_email"})
+
+
+def _find_booking_by_payment(whop_pay_id):
+    from google.cloud.firestore_v1.base_query import FieldFilter as _FFb
+    q = (firestore.client().collection("bookings")
+         .where(filter=_FFb("whop_payment_id", "==", whop_pay_id)).limit(1).get())
+    return q[0].to_dict() if q else None
+
+
+@https_fn.on_request(region=REGION, secrets=[SIGNWELL_API_KEY, *PAY_SECRETS, RESEND_API_KEY],
                      memory=options.MemoryOption.MB_512)
 def book_submit(req: https_fn.Request) -> https_fn.Response:
     if req.method == "OPTIONS":
         return https_fn.Response("", status=204, headers=_cors(req))
     if req.method != "POST":
         return _json(req, {"error": "POST only"}, 405)
-
     try:
         data = req.get_json(silent=True) or {}
     except Exception:
         return _json(req, {"error": "invalid JSON"}, 400)
+    if not isinstance(data, dict):
+        return _json(req, {"error": "invalid JSON"}, 400)
+    obj, code = _book_safely(data, req.headers.get("X-Forwarded-For", req.remote_addr),
+                             "page")
+    return _json(req, obj, code)
+
+
+def _create_booking(data, client_ip, source="page", state=None):
+    """Validate, price, create the booking + contract. Shared by book_submit
+    (the page) and whop_webhook (server-side completion of a paid
+    reservation). Returns (obj, status); never touches the request object."""
+    state = state if state is not None else {}
 
     # -- validate -------------------------------------------------------------
     missing = [f for f in REQUIRED_FIELDS if not data.get(f)]
     if missing:
-        return _json(req, {"error": "missing fields", "fields": missing}, 400)
+        return _res({"error": "missing fields", "fields": missing}, 400)
     if data["package_id"] not in PACKAGES:
-        return _json(req, {"error": "unknown package"}, 400)
+        return _res({"error": "unknown package"}, 400)
     if data["payment_option"] not in ("standard", "pif"):
-        return _json(req, {"error": "invalid payment option"}, 400)
+        return _res({"error": "invalid payment option"}, 400)
+    if PACKAGES[data["package_id"]].get("pif_only"):
+        data["payment_option"] = "pif"        # The Ceremony: paid in full, no plan
     if data.get("agree_terms") is not True:
-        return _json(req, {"error": "terms must be accepted"}, 400)
+        return _res({"error": "terms must be accepted"}, 400)
     try:
         event_dt = datetime.strptime(data["event_date"], "%Y-%m-%d")
         if event_dt.date() <= datetime.now().date():
-            return _json(req, {"error": "event date must be in the future"}, 400)
+            return _res({"error": "event date must be in the future"}, 400)
     except ValueError:
-        return _json(req, {"error": "event_date must be YYYY-MM-DD"}, 400)
+        return _res({"error": "event_date must be YYYY-MM-DD"}, 400)
 
     # -- add-ons (server-side pricing; the client-side total is never trusted) --
     second_shooter = data.get("second_shooter", False)
     if not isinstance(second_shooter, bool):
-        return _json(req, {"error": "second_shooter must be true/false"}, 400)
+        return _res({"error": "second_shooter must be true/false"}, 400)
     try:
         extra_hours = int(data.get("extra_hours") or 0)
     except (TypeError, ValueError):
-        return _json(req, {"error": "extra_hours must be a whole number"}, 400)
+        return _res({"error": "extra_hours must be a whole number"}, 400)
     if not (0 <= extra_hours <= RULES["max_extra_hours"]):
-        return _json(req, {"error": f"extra_hours must be 0-"
+        return _res({"error": f"extra_hours must be 0-"
                                     f"{RULES['max_extra_hours']}"}, 400)
 
     # -- card on file (tokenized client-side by the Zoho widget; the PAN never
@@ -326,42 +658,161 @@ def book_submit(req: https_fn.Request) -> https_fn.Response:
     #    be present and the session must really hold that method for that
     #    customer, or we drop it and fall back to the payment-link flow at
     #    signature. ---------------------------------------------------------
-    pm_id = str(data.get("zoho_payment_method_id") or "").strip()
-    cust_id = str(data.get("zoho_customer_id") or "").strip()
-    sess_id = str(data.get("zoho_pm_session_id") or "").strip()
     card_brand = str(data.get("card_brand") or "")[:20]
     card_last4 = re.sub(r"\D", "", str(data.get("card_last4") or ""))[:4]
-    if pm_id and cust_id and sess_id:
+    whop_si_id = str(data.get("whop_setup_intent_id") or "").strip()
+    whop_chk_id = str(data.get("whop_checkout_id") or "").strip()
+    whop_pay_id = str(data.get("whop_payment_id") or "").strip()
+    prepaid = None                      # set when a Whop reservation payment verifies
+    if whop_pay_id:
+        # -- One booking per payment. The page (onComplete + after the
+        #    redirect), the ?finish= link and whop_webhook can all try to
+        #    create it; the first to take the lock does, the rest wait for it.
+        b0 = _find_booking_by_payment(whop_pay_id)
+        if b0:
+            return _existing_booking_response(b0, whop_pay_id)
+        lock_ref = firestore.client().collection("reservation_locks").document(whop_pay_id)
+        got_lock = False
         try:
-            z = _zoho()
-            sess = z.get_pm_session(sess_id)
-            saved = (sess.get("payment_method") or {}).get("payment_method_id")
-            if (str(sess.get("customer_id")) != cust_id or saved != pm_id):
-                print(f"REJECTED payment method {pm_id}: session {sess_id} "
-                      f"holds {saved} for customer {sess.get('customer_id')}")
-                pm_id = cust_id = ""
-            elif not (card_brand and card_last4):
-                card_brand, card_last4 = _pm_display(
-                    z.get_payment_method(pm_id))
+            lock_ref.create({"at": datetime.now(timezone.utc), "source": source})
+            got_lock = True
+        except Exception:
+            lk = (lock_ref.get().to_dict() or {})
+            at = lk.get("at")
+            if at and (datetime.now(timezone.utc) - at).total_seconds() > 120:
+                lock_ref.set({"at": datetime.now(timezone.utc), "source": source,
+                              "took_over_from": lk.get("source")})
+                got_lock = True
+                print(f"stale reservation lock taken over for {whop_pay_id}")
+        if not got_lock:
+            for _ in range(10):
+                time.sleep(2)
+                b0 = _find_booking_by_payment(whop_pay_id)
+                if b0:
+                    return _existing_booking_response(b0, whop_pay_id)
+            print(f"booking for {whop_pay_id} still in progress elsewhere ({source})")
+            return _res({"ok": True, "pending": True, "next": "check_email"}, 202)
+        state["lock_ref"] = lock_ref
+        try:
+            live = _whop().get_payment(whop_pay_id)
         except Exception as e:
-            # Verification unavailable is not fatal: a bad token simply fails
-            # at charge time and degrades to the payment-link path.
-            print(f"payment method verification unavailable: {e}")
-    else:
+            print(f"whop payment verification failed: {e}")
+            return _res({"error": "We couldn't confirm your payment yet. Please try again in a moment."}, 502)
+        if str(live.get("status", "")).lower() != "paid":
+            return _res({"error": f"Payment is {live.get('status')}, not paid yet. Please try again in a moment."}, 402)
+        live_chk = str(live.get("checkout_configuration_id") or "")
+        if whop_chk_id and live_chk and live_chk != whop_chk_id:
+            print(f"REJECTED payment {whop_pay_id}: checkout {live_chk} != {whop_chk_id}")
+            return _res({"error": "payment does not match this reservation"}, 400)
+        pmeta = live.get("metadata") or {}
+        if str(pmeta.get("source") or "") == "reservation":
+            pm_email = str(pmeta.get("email") or "").strip().lower()
+            if pm_email and pm_email != str(data.get("email") or "").strip().lower():
+                print(f"REJECTED payment {whop_pay_id}: email {data.get('email')} != {pm_email}")
+                return _res({"error": "Please use the same email address you paid with.",
+                             "field": "email"}, 400)
+            if pmeta.get("package_id") in PACKAGES:
+                data["package_id"] = pmeta["package_id"]
+            if pmeta.get("payment_option") in ("standard", "pif"):
+                data["payment_option"] = pmeta["payment_option"]
+        member_id, pm_live = Whop.payment_ids(live)
+        prepaid = {"payment_id": whop_pay_id, "amount": Whop.payment_amount(live),
+                   "member_id": member_id, "payment_method_id": pm_live,
+                   "checkout_id": live_chk or whop_chk_id,
+                   "card_brand": str(live.get("card_brand") or "")[:20],
+                   "card_last4": str(live.get("card_last4") or "")[:4]}
+    if whop_si_id:
+        # -- Idempotency: the Whop checkout fires onComplete AND redirects the
+        #    page to returnUrl, and both paths submit the booking. A second
+        #    submit for the same setup intent returns the existing booking
+        #    instead of sending the couple two contracts. -------------------
+        try:
+            from google.cloud.firestore_v1.base_query import FieldFilter as _FF0
+            dup = (firestore.client().collection("bookings")
+                   .where(filter=_FF0("whop_setup_intent_id", "==", whop_si_id))
+                   .limit(1).get())
+            if dup:
+                b0 = dup[0].to_dict()
+                signing_url = None
+                try:
+                    doc0 = SignWell(SIGNWELL_API_KEY.value, test_mode=TEST_MODE).get_document(b0.get("signwell_document_id"))
+                    signing_url = (doc0.get("recipients") or [{}])[0].get("signing_url")
+                except Exception as e0:
+                    print(f"duplicate submit: signing url fetch failed: {e0}")
+                print(f"duplicate submit for setup intent {whop_si_id} -> {b0.get('booking_id')}")
+                return _res({"ok": True, "booking_id": b0.get("booking_id"),
+                                   "signing_url": signing_url, "duplicate": True,
+                                   "next": "sign_now_or_check_email"})
+        except Exception as e:
+            print(f"duplicate check failed (continuing): {e}")
+        # -- Whop: the page posts the setup intent id; the intent itself is
+        #    the source of truth for which method and member it saved. A
+        #    whop booking is recorded as such even if verification fails, so
+        #    it is never charged through Zoho by mistake. -----------------
+        proc = "whop"
         pm_id = cust_id = ""
+        try:
+            si = _whop().get_setup_intent(whop_si_id)
+            member_id, saved = Whop.setup_ids(si)
+            if si.get("status") != "succeeded" or not (member_id and saved):
+                print(f"REJECTED whop setup {whop_si_id}: status="
+                      f"{si.get('status')} member={member_id} pm={saved}")
+            else:
+                pm_id, cust_id = saved, member_id
+                if not (card_brand and card_last4):
+                    card_brand, card_last4 = Whop.pm_display(
+                        si.get("payment_method"))
+        except Exception as e:
+            print(f"whop setup verification unavailable: {e}")
+    elif prepaid:
+        proc = "whop"
+        pm_id, cust_id = prepaid["payment_method_id"] or "", prepaid["member_id"] or ""
+        card_brand = card_brand or prepaid["card_brand"]
+        card_last4 = card_last4 or prepaid["card_last4"]
+        whop_chk_id = whop_chk_id or prepaid["checkout_id"]
+    else:
+        proc = "zoho"
+        pm_id = str(data.get("zoho_payment_method_id") or "").strip()
+        cust_id = str(data.get("zoho_customer_id") or "").strip()
+        sess_id = str(data.get("zoho_pm_session_id") or "").strip()
+        if pm_id and cust_id and sess_id:
+            try:
+                z = _zoho()
+                sess = z.get_pm_session(sess_id)
+                saved = (sess.get("payment_method") or {}).get("payment_method_id")
+                if (str(sess.get("customer_id")) != cust_id or saved != pm_id):
+                    print(f"REJECTED payment method {pm_id}: session {sess_id} "
+                          f"holds {saved} for customer {sess.get('customer_id')}")
+                    pm_id = cust_id = ""
+                elif not (card_brand and card_last4):
+                    card_brand, card_last4 = _pm_display(
+                        z.get_payment_method(pm_id))
+            except Exception as e:
+                # Verification unavailable is not fatal: a bad token simply fails
+                # at charge time and degrades to the payment-link path.
+                print(f"payment method verification unavailable: {e}")
+        else:
+            pm_id = cust_id = ""
+            # No card at all: the booking still belongs to whichever
+            # processor is live, so its fallback link goes through it.
+            proc = PAYMENT_PROCESSOR
 
     pkg = PACKAGES[data["package_id"]]
     now = datetime.now(timezone.utc)
     db = firestore.client()
     booking_ref = db.collection("bookings").document()
     booking_id = booking_ref.id
+    state["booking_id"] = booking_id
 
-    # -- a card was saved: the zoho_session lead is now a booking -------------
-    if cust_id:
+    # -- a card was saved: the zoho_session / whop_setup lead is now a booking --
+    lead_key, lead_val = (("whop_checkout_id", whop_chk_id) if whop_chk_id
+                          else ("whop_setup_intent_id", whop_si_id) if whop_si_id
+                          else ("zoho_customer_id", cust_id))
+    if lead_val:
         try:
             from google.cloud.firestore_v1.base_query import FieldFilter as _FF
             for lead in (db.collection("leads")
-                           .where(filter=_FF("zoho_customer_id", "==", cust_id))
+                           .where(filter=_FF(lead_key, "==", lead_val))
                            .limit(1).get()):
                 lead.reference.update({"status": "converted",
                                        "booking_id": booking_id,
@@ -397,18 +848,33 @@ def book_submit(req: https_fn.Request) -> https_fn.Response:
         except Exception as e:
             print(f"code redemption error: {e}")
             amt, code_err = None, "Code could not be verified. Try again."
+        if code_err and prepaid:
+            # The payment was priced with this code at the card step; honour
+            # it rather than refuse a booking that is already paid for.
+            try:
+                csnap = code_ref.get()
+                amt = int((csnap.to_dict() or {}).get("amount", 0)) if csnap.exists else 0
+            except Exception:
+                amt = 0
+            print(f"prepaid booking keeps code {raw_code} (${amt}) despite: {code_err}")
+            code_err = None
+        elif not code_err:
+            state["code_redeemed"] = raw_code
         if code_err:
-            return _json(req, {"error": code_err,
+            return _res({"error": code_err,
                                "field": "discount_code"}, 400)
         discount, discount_code = amt, raw_code
 
     p1 = (data.get("partner1_name") or "").strip()
     p2 = (data.get("partner2_name") or "").strip()
     if p2 and p1.lower() == p2.lower():
-        return _json(req, {"error": "Partner 1 and Partner 2 names must be different. If you are booking solo, leave Partner 2 blank."}, 400)
+        return _res({"error": "Partner 1 and Partner 2 names must be different. If you are booking solo, leave Partner 2 blank."}, 400)
     days_to_event = (event_dt.date() - datetime.now(timezone.utc).date()).days
-    pricing = compute_pricing(pkg["id"], second_shooter, extra_hours,
-                              discount, days_to_event=days_to_event)
+    try:
+        pricing = compute_pricing(pkg["id"], second_shooter, extra_hours,
+                                  discount, days_to_event=days_to_event)
+    except ValueError as e:        # e.g. add-ons on The Ceremony
+        return _res({"error": str(e)}, 400)
     total = pricing["total"]
 
     client_merge = {k: str(data.get(k, "")).strip()
@@ -443,26 +909,57 @@ def book_submit(req: https_fn.Request) -> https_fn.Response:
         "event_date_raw": data["event_date"],
         **client_merge,
         "agree_terms_at": now,
-        "processor": "zoho",
-        "zoho_payment_method_id": pm_id or None,
-        "zoho_customer_id": cust_id or None,
+        "processor": proc,
+        f"{proc}_payment_method_id": pm_id or None,
+        f"{proc}_customer_id": cust_id or None,
+        "whop_setup_intent_id": whop_si_id or None,
+        "whop_checkout_id": whop_chk_id or None,
+        **({"whop_payment_id": prepaid["payment_id"],
+            "deposit_paid_at": now,
+            "invoice_amount": int(round(prepaid["amount"])),
+            "charged_on_file": True,
+            "paid_at_reservation": True,
+            **({"paid_in_full": True, "balance_paid_at": now}
+               if data["payment_option"] == "pif" else {})}
+           if prepaid else {}),
         "card_brand": card_brand,
         "card_last4": card_last4,
-        "client_ip": req.headers.get("X-Forwarded-For", req.remote_addr),
+        "client_ip": client_ip,
         # -- lead attribution: which venue page produced this booking ----------
         "attr_venue": str(data.get("attr_venue") or "")[:200],
         "attr_venue_url": str(data.get("attr_venue_url") or "")[:300],
         "attr_landing": str(data.get("attr_landing") or "")[:300],
         "attr_referrer": str(data.get("attr_referrer") or "")[:300],
         "test_mode": TEST_MODE,
+        "created_via": source,
     }
 
     # -- generate contract + send to SignWell ----------------------------------
+    if prepaid:
+        expected = (booking["pif_total"] if data["payment_option"] == "pif"
+                    else booking["retainer"])
+        if abs(prepaid["amount"] - expected) > 0.5:
+            booking["paid_amount_mismatch"] = {"paid": prepaid["amount"],
+                                               "expected": expected}
+            print(f"PAID AMOUNT MISMATCH {booking_id}: paid {prepaid['amount']} "
+                  f"expected {expected}")
+            try:
+                emails.notify_owner(
+                    RESEND_API_KEY.value, OWNER_EMAIL,
+                    f"CHECK THIS BOOKING \u2014 paid {prepaid['amount']:.2f}, "
+                    f"expected {expected} \u2014 {client_merge['client_names']}",
+                    [f"Booking {booking_id}: the Whop reservation payment does not "
+                     f"match the price computed at booking (code or add-on changed "
+                     f"between the card step and submit?). Review in the admin."])
+            except Exception as e:
+                print(f"mismatch alert failed: {e}")
     pdf = generate_contract(pkg["id"], data["payment_option"],
                             client=client_merge, signwell=True,
                             second_shooter=second_shooter,
                             extra_hours=extra_hours,
-                            discount=discount, discount_code=discount_code)
+                            discount=discount, discount_code=discount_code,
+                            days_to_event=days_to_event,
+                            prepaid=bool(prepaid))
     sw = SignWell(SIGNWELL_API_KEY.value, test_mode=TEST_MODE)
     doc = sw.send_contract(
         pdf, booking_id, client_merge["client_names"], client_merge["email"],
@@ -474,7 +971,7 @@ def book_submit(req: https_fn.Request) -> https_fn.Response:
     booking_ref.set(booking)
     _link_session(db, data.get("sid"), client_merge["client_names"],
                   client_merge["email"], booking_id)
-    return _json(req, {"ok": True, "booking_id": booking_id,
+    return _res({"ok": True, "booking_id": booking_id,
                        "signing_url": signing_url,
                        "next": "sign_now_or_check_email"})
 
@@ -633,9 +1130,9 @@ def _confirm_paid(ref, booking, payment_method_id, tx_id, amount,
     """
     plan = booking["payment_option"]
     update = {"status": "confirmed",
-              "deposit_paid_at": firestore.SERVER_TIMESTAMP,
-              "zoho_payment_method_id": payment_method_id,
-              "zoho_payment_id": tx_id,
+              "deposit_paid_at": booking.get("deposit_paid_at") or firestore.SERVER_TIMESTAMP,
+              _k(booking, "payment_method_id"): payment_method_id,
+              _k(booking, "payment_id"): tx_id,
               "invoice_amount": amount,
               "charged_on_file": True}
     if plan == "pif":
@@ -687,7 +1184,7 @@ def _confirm_paid(ref, booking, payment_method_id, tx_id, amount,
 
 # ======================================================== signwell_webhook ==
 @https_fn.on_request(region=REGION,
-                     secrets=[SIGNWELL_API_KEY, *ZOHO_SECRETS, RESEND_API_KEY,
+                     secrets=[SIGNWELL_API_KEY, *PAY_SECRETS, RESEND_API_KEY,
                               GRATUITY_SECRET],
                      memory=options.MemoryOption.MB_512)
 def signwell_webhook(req: https_fn.Request) -> https_fn.Response:
@@ -751,13 +1248,23 @@ def signwell_webhook(req: https_fn.Request) -> https_fn.Response:
                     "signed_contract_path": signed_path})
         booking["status"] = "signed"
 
+    # -- Paid at reservation (Whop flow): nothing to charge, just confirm -------
+    if booking.get("paid_at_reservation") and booking.get("deposit_paid_at") \
+            and booking.get("status") != "confirmed":
+        pm0, _c0 = _card_ids(booking)
+        _confirm_paid(ref, booking, pm0, booking.get("whop_payment_id"),
+                      booking.get("invoice_amount") or 0,
+                      RESEND_API_KEY.value, GRATUITY_SECRET.value)
+        print(f"prepaid booking confirmed on signature: {booking['booking_id']}")
+        return https_fn.Response("confirmed (prepaid)", status=200)
+
     # -- Preferred path: charge the card captured at booking ---------------------
     # Closes the window between signature and payment. If anything about the
     # card fails we fall through to the payment link below, which is exactly
     # the old behaviour — a decline degrades, it does not dead-end.
-    zoho = _zoho()
-    pm_id = booking.get("zoho_payment_method_id")
-    cust_id = booking.get("zoho_customer_id")
+    proc = _proc(booking)
+    zoho = _pay(proc)          # Zoho or Whop client; same method names
+    pm_id, cust_id = _card_ids(booking)
     if pm_id and cust_id and booking.get("status") != "confirmed":
         amount, memo, line_items = _payment_terms(booking)
         db_client = firestore.client()
@@ -784,13 +1291,21 @@ def signwell_webhook(req: https_fn.Request) -> https_fn.Response:
                     [f"Booking {booking['booking_id']} is SIGNED but the card "
                      f"on file did not go through.",
                      f"Error: {e}",
-                     "A Zoho payment link is being sent instead — the couple "
-                     "can pay with a different card. No action needed unless "
-                     "that also fails."])
+                     f"A {proc.title()} payment link is being sent instead — "
+                     "the couple can pay with a different card. No action "
+                     "needed unless that also fails."])
             except Exception as e2:
                 print(f"owner notify failed: {e2}")
         else:
             tx_id = (tx or {}).get("payment_id")
+            if (tx or {}).get("status") == "pending" and proc == "whop":
+                # Whop is still deciding. Keep the claim so a SignWell retry
+                # cannot charge twice; whop_webhook (payment.succeeded)
+                # confirms the booking when the charge settles.
+                ref.update({"whop_pending_payment_id": tx_id,
+                            "charge_pending_at": firestore.SERVER_TIMESTAMP})
+                print(f"whop charge pending payment={tx_id}; awaiting webhook")
+                return https_fn.Response("charge pending", status=200)
             if (tx or {}).get("status") != "succeeded":
                 ref.update({"charge_claimed_at": None,
                             "charge_failed_at": firestore.SERVER_TIMESTAMP,
@@ -806,7 +1321,8 @@ def signwell_webhook(req: https_fn.Request) -> https_fn.Response:
                       f"${amount} tx={tx_id}")
                 return https_fn.Response("charged", status=200)
 
-    # -- Fallback: Zoho payment link, emailed by Zoho (hosted-page path) --------
+    # -- Fallback: hosted payment link. Zoho emails its own; Whop sends
+    #    nothing, so for Whop our payment_nudge email carries the link. -------
     try:
         amount, memo, line_items = _payment_terms(booking)
         link = zoho.create_payment_link(
@@ -818,15 +1334,22 @@ def signwell_webhook(req: https_fn.Request) -> https_fn.Response:
             return_url="https://ataviaweddings.com/book/thank-you",
             meta={"booking_id": booking["booking_id"], "kind": "retainer"})
         ref.update({"status": "awaiting_payment",
-                    "zoho_payment_link_id": link["payment_link_id"],
-                    "zoho_payment_link_url": link.get("url"),
+                    _k(booking, "payment_link_id"): link["payment_link_id"],
+                    _k(booking, "payment_link_url"): link.get("url"),
                     "invoice_amount": amount})
+        if proc == "whop":
+            booking["invoice_amount"] = amount
+            try:
+                emails.payment_nudge(RESEND_API_KEY.value, booking,
+                                     pay_url=link.get("url"))
+            except Exception as e2:
+                print(f"whop link email failed: {e2}")
         return https_fn.Response("ok", status=200)
     except Exception as e:
-        attempts = booking.get("zoho_setup_attempts", 0) + 1
-        ref.update({"zoho_setup_attempts": attempts,
-                    "zoho_setup_last_error": str(e)[:500]})
-        print(f"zoho setup failed (attempt {attempts}): {e}")
+        attempts = booking.get(f"{proc}_setup_attempts", 0) + 1
+        ref.update({f"{proc}_setup_attempts": attempts,
+                    f"{proc}_setup_last_error": str(e)[:500]})
+        print(f"{proc} setup failed (attempt {attempts}): {e}")
         if attempts == 1:                      # alert once, not per retry
             try:
                 emails.notify_owner(
@@ -834,19 +1357,19 @@ def signwell_webhook(req: https_fn.Request) -> https_fn.Response:
                     f"ACTION NEEDED: payment setup failed — "
                     f"{booking['client_names']}",
                     [f"Booking {booking['booking_id']} is SIGNED but the "
-                     f"Zoho payment link could not be created.",
+                     f"{proc.title()} payment link could not be created.",
                      f"Error: {e}",
                      "SignWell will retry automatically; if this persists, "
-                     "investigate the Zoho OAuth secrets/account."])
+                     f"investigate the {proc.title()} secrets/account."])
             except Exception as e2:
                 print(f"owner notify failed: {e2}")
-        # 500 -> SignWell retries the event, re-attempting Zoho setup
-        return https_fn.Response("zoho setup failed", status=500)
+        # 500 -> SignWell retries the event, re-attempting setup
+        return https_fn.Response(f"{proc} setup failed", status=500)
 
 
 # ============================================================ zoho_webhook ==
 @https_fn.on_request(region=REGION,
-                     secrets=[*ZOHO_SECRETS, RESEND_API_KEY, GRATUITY_SECRET],
+                     secrets=[*PAY_SECRETS, RESEND_API_KEY, GRATUITY_SECRET],
                      memory=options.MemoryOption.MB_512)
 def zoho_webhook(req: https_fn.Request) -> https_fn.Response:
     """Zoho Payments webhook. Register (once, Settings > Developer Space or the
@@ -887,6 +1410,16 @@ def zoho_webhook(req: https_fn.Request) -> https_fn.Response:
     meta = {m.get("key"): m.get("value") for m in (live.get("meta_data") or [])}
     kind = meta.get("kind") or "retainer"
 
+    return _settle_link_payment("zoho", link_id, kind, payment_id)
+
+
+def _settle_link_payment(proc, link_id, kind, payment_id, via="link"):
+    """Shared tail of zoho_webhook / whop_webhook / the poller: a hosted
+    link for `proc` with id `link_id` is verified paid. Mark the booking.
+
+    kind == "balance": balance_paid_at on an already-confirmed booking.
+    otherwise         : awaiting_payment -> confirmed, welcome + owner mail.
+    """
     db = firestore.client()
     from google.cloud.firestore_v1.base_query import FieldFilter
 
@@ -902,33 +1435,39 @@ def zoho_webhook(req: https_fn.Request) -> https_fn.Response:
             return https_fn.Response("already processed", status=200)
         q[0].reference.update({"balance_paid_at": firestore.SERVER_TIMESTAMP,
                                "balance_payment_id": payment_id,
-                               "balance_paid_via": "link"})
+                               "balance_paid_via": via})
         try:
             emails.notify_owner(
                 RESEND_API_KEY.value, OWNER_EMAIL,
                 f"BALANCE PAID (link) — {b['client_names']} — ${b['balance']:,}",
-                [f"Booking {b['booking_id']} balance paid via Zoho link."])
+                [f"Booking {b['booking_id']} balance paid via {proc.title()} link."])
         except Exception as e:
             print(f"owner notify failed: {e}")
         return https_fn.Response("ok", status=200)
 
     # --- retainer / PIF link (signed booking awaiting payment) ---------------
     q = db.collection("bookings").where(
-        filter=FieldFilter("zoho_payment_link_id", "==", link_id)).limit(1).get()
+        filter=FieldFilter(f"{proc}_payment_link_id", "==", link_id)).limit(1).get()
     if not q:
         return https_fn.Response("no booking", status=200)
     ref = q[0].reference
     booking = q[0].to_dict()
     if booking["status"] != "awaiting_payment":     # idempotency guard
         return https_fn.Response("already processed", status=200)
+    _confirm_link_paid(ref, booking, payment_id, via)
+    return https_fn.Response("ok", status=200)
 
+
+def _confirm_link_paid(ref, booking, payment_id, via="link"):
+    """awaiting_payment -> confirmed for a link-paid booking (no card on
+    file), then the welcome email and the owner notification."""
     plan = booking["payment_option"]
     update = {
         "status": "confirmed",
         "deposit_paid_at": firestore.SERVER_TIMESTAMP,
-        "zoho_payment_id": payment_id,
+        _k(booking, "payment_id"): payment_id,
         "charged_on_file": False,        # link payments store no card
-        "confirmed_via": "link",
+        "confirmed_via": via,
     }
     if plan == "pif":
         update["paid_in_full"] = True
@@ -951,7 +1490,8 @@ def zoho_webhook(req: https_fn.Request) -> https_fn.Response:
         emails.notify_owner(
             RESEND_API_KEY.value, OWNER_EMAIL,
             f"NEW BOOKING CONFIRMED — {booking['package_name']} — "
-            f"{booking['event_date']}",
+            f"{booking['event_date']}"
+            + (" (via poller)" if via == "poller" else ""),
             [f"Booking: {booking['booking_id']}",
              f"Client: {booking['client_names']} ({booking['email']}, "
              f"{booking.get('phone','')})",
@@ -960,13 +1500,13 @@ def zoho_webhook(req: https_fn.Request) -> https_fn.Response:
              + (", ".join(a['label'] for a in booking.get('addons') or [])
                 or "none")
              + (f" | Discount: {booking.get('discount_code')} "
-                f"\u2212${booking.get('discount')}"
+                f"−${booking.get('discount')}"
                 if booking.get('discount') else "")
              + (f" — {booking.get('coverage_hours', '?')} hrs total coverage"
                 if booking.get('extra_hours') else ""),
              f"Event: {booking['event_date']} — "
              f"{booking.get('ceremony_venue','')}",
-             f"Paid now: ${booking['invoice_amount']:,}",
+             f"Paid now: ${booking.get('invoice_amount') or 0:,}",
              f"Balance: ${0 if plan=='pif' else booking['balance']:,}"
              + ("" if plan == "pif" else
                 (f" auto-charges {booking['balance_due_date']}"
@@ -982,7 +1522,230 @@ def zoho_webhook(req: https_fn.Request) -> https_fn.Response:
              f"?b={booking['booking_id']}&t={g_token}"])
     except Exception as e:
         print(f"owner notify failed: {e}")
-    return https_fn.Response("ok", status=200)
+
+
+# ============================================================ whop_webhook ==
+@https_fn.on_request(region=REGION,
+                     secrets=[*WHOP_SECRETS, RESEND_API_KEY, GRATUITY_SECRET,
+                              SIGNWELL_API_KEY, *ZOHO_SECRETS],
+                     memory=options.MemoryOption.MB_512)
+def whop_webhook(req: https_fn.Request) -> https_fn.Response:
+    """Whop webhook. Register (once, whop.com/dashboard/developer > Webhooks)
+    for: payment.succeeded, payment.failed. Everything else is ignored.
+
+    Verification: Whop signs every delivery (Standard Webhooks), and the
+    signature is checked first. The payment is then re-fetched with the API
+    key and must read paid, so the body is never trusted on its own.
+
+    Three payment kinds reach here, told apart by metadata.kind, which we set
+    on every charge and every checkout link:
+      retainer/pif   link paid          -> awaiting_payment -> confirmed
+                     off-session charge that was still pending at signature
+                                        -> signed -> confirmed
+      balance        link paid          -> balance_paid_at
+                     pending charge     -> balance_paid_at
+      gratuity       pending charge     -> gratuities subcollection
+    """
+    raw = req.get_data() or b""
+    secret = os.environ.get("WHOP_WEBHOOK_SECRET") or ""
+    if not Whop.verify_webhook(req.headers, raw, secret):
+        print("whop webhook REJECTED: bad signature")
+        return https_fn.Response("bad signature", status=403)
+    payload = req.get_json(silent=True) or {}
+    event_type = str(payload.get("type") or "")
+    data = payload.get("data") or {}
+    print(f"whop_webhook: {event_type} {json.dumps(data)[:600]}")
+    acct = str(payload.get("account_id") or data.get("account_id")
+               or (data.get("company") or {}).get("id") or "")
+    if acct and acct != WHOP_ACCOUNT_ID:
+        print("whop webhook REJECTED: wrong account")
+        return https_fn.Response("wrong account", status=403)
+    payment_id = str(data.get("id") or "")
+    if event_type == "setup_intent.succeeded":
+        # Backstop for the booking card: if the page never posted the
+        # setup intent id (tab closed before the redirect), attach the saved
+        # method to the booking that owns this checkout configuration.
+        member_id, pm_id = Whop.setup_ids(data)
+        chk_id = str(data.get("checkout_configuration_id") or "")
+        if not (chk_id and member_id and pm_id):
+            return https_fn.Response("ignored", status=200)
+        from google.cloud.firestore_v1.base_query import FieldFilter as _FF
+        db = firestore.client()
+        q = db.collection("bookings").where(
+            filter=_FF("whop_checkout_id", "==", chk_id)).limit(1).get()
+        if not q:
+            return https_fn.Response("no booking yet", status=200)
+        b = q[0].to_dict()
+        if b.get("whop_payment_method_id"):
+            return https_fn.Response("already attached", status=200)
+        q[0].reference.update({"whop_payment_method_id": pm_id,
+                               "whop_customer_id": member_id,
+                               "whop_setup_intent_id": data.get("id"),
+                               "card_attached_via": "webhook"})
+        print(f"setup_intent.succeeded attached {pm_id} to {b['booking_id']}")
+        return https_fn.Response("attached", status=200)
+    if event_type not in ("payment.succeeded", "payment.failed") \
+            or not payment_id.startswith("pay_"):
+        return https_fn.Response("ignored", status=200)
+
+    meta = data.get("metadata") or {}
+    kind = str(meta.get("kind") or "")
+    booking_id = str(meta.get("booking_id") or "")
+    db = firestore.client()
+    from google.cloud.firestore_v1.base_query import FieldFilter
+
+    if event_type == "payment.failed":
+        # Only a charge we left pending needs a hand here; link attempts that
+        # fail are simply retried by the couple on the hosted page.
+        if booking_id and kind in ("retainer", "pif"):
+            ref = db.collection("bookings").document(booking_id)
+            b = ref.get().to_dict() or {}
+            if b.get("whop_pending_payment_id") == payment_id and \
+                    b.get("status") != "confirmed":
+                ref.update({"charge_claimed_at": None,
+                            "whop_pending_payment_id": None,
+                            "charge_failed_at": firestore.SERVER_TIMESTAMP,
+                            "charge_last_error":
+                                str(data.get("failure_message") or "failed")[:500]})
+                try:
+                    emails.notify_owner(
+                        RESEND_API_KEY.value, OWNER_EMAIL,
+                        f"Card declined after signature — {b.get('client_names','')}",
+                        [f"Booking {booking_id} is SIGNED but the Whop charge "
+                         f"settled as failed: {data.get('failure_message')}",
+                         "Send a payment link from the admin dashboard."])
+                except Exception as e:
+                    print(f"owner notify failed: {e}")
+        return https_fn.Response("ok", status=200)
+
+    # --- payment.succeeded: authoritative re-fetch -------------------------
+    try:
+        live = _whop().get_payment(payment_id)
+    except Exception as e:
+        print(f"whop verification fetch failed: {e}")
+        return https_fn.Response("verification unavailable", status=500)
+    if str(live.get("status", "")).lower() != "paid":
+        print(f"whop webhook REJECTED: payment {payment_id} status={live.get('status')}")
+        return https_fn.Response("verification failed", status=403)
+    meta = live.get("metadata") or meta
+    kind = str(meta.get("kind") or kind)
+    booking_id = str(meta.get("booking_id") or booking_id)
+    cfg_id = str(live.get("checkout_configuration_id") or
+                 (live.get("checkout_configuration") or {}).get("id") or "")
+
+    # --- reservation payment (paid checkout on the book page) -------------
+    if str(meta.get("source") or "") == "reservation":
+        q = db.collection("bookings").where(
+            filter=FieldFilter("whop_payment_id", "==", payment_id)).limit(1).get()
+        if q:
+            return https_fn.Response("booking exists", status=200)
+        # Finish the booking here from the form stored at whop_setup, so the
+        # contract goes out even if the browser never submits. The page may
+        # be doing the same thing right now; the payment lock lets one win.
+        lead_q = db.collection("leads").where(
+            filter=FieldFilter("whop_checkout_id", "==", cfg_id)).limit(1).get() if cfg_id else []
+        for ls in lead_q:
+            ld = ls.to_dict() or {}
+            payload = ld.get("reservation_payload") or {}
+            if payload.get("email") and payload.get("event_date"):
+                bdata = {**payload, "package_id": payload.get("package_id") or ld.get("package_id"),
+                         "payment_option": payload.get("payment_option") or ld.get("payment_option") or "pif",
+                         "agree_terms": True, "whop_payment_id": payment_id,
+                         "whop_checkout_id": cfg_id}
+                obj, code = _book_safely(bdata, ld.get("client_ip") or "", "webhook")
+                print(f"webhook booking for {payment_id}: {code} {json.dumps(obj)[:300]}")
+                if code < 300:
+                    return https_fn.Response("booked", status=200)
+                if code >= 500:
+                    return https_fn.Response("booking failed, retry", status=500)
+                try:
+                    emails.notify_owner(
+                        RESEND_API_KEY.value, OWNER_EMAIL,
+                        f"PAID, BOOKING NEEDS A HAND \u2014 {ld.get('client_names','')}",
+                        [f"{ld.get('client_names','')} ({ld.get('email','')}) paid "
+                         f"(payment {payment_id}) but the booking was refused: "
+                         f"{obj.get('error')}",
+                         "Send them the finish link: https://ataviaweddings.com/"
+                         f"book/?finish={payment_id}"])
+                except Exception as e:
+                    print(f"booking-refused alert failed: {e}")
+            if ld.get("whop_payment_id") == payment_id:
+                return https_fn.Response("already noted", status=200)
+            ls.reference.update({"whop_payment_id": payment_id,
+                                 "paid_unbooked_at": firestore.SERVER_TIMESTAMP,
+                                 "status": "paid_unbooked"})
+            try:
+                emails.notify_owner(
+                    RESEND_API_KEY.value, OWNER_EMAIL,
+                    f"PAID BUT NO BOOKING YET \u2014 {ld.get('client_names','')} "
+                    f"\u2014 ${Whop.payment_amount(live):,.2f}",
+                    [f"{ld.get('client_names','')} ({ld.get('email','')}) paid "
+                     f"{meta.get('kind','')} on the book page but the booking "
+                     f"did not complete (payment {payment_id}).",
+                     "If a booking for them appears in the next few minutes this "
+                     "resolves itself; otherwise send them the finish link: "
+                     f"https://ataviaweddings.com/book/?finish={payment_id}"])
+            except Exception as e:
+                print(f"paid-unbooked alert failed: {e}")
+        return https_fn.Response("noted", status=200)
+
+    # --- hosted link paid (we know the checkout configuration id) ----------
+    if cfg_id:
+        return _settle_link_payment("whop", cfg_id, kind, payment_id)
+
+    # --- off-session charge that was pending when we created it -------------
+    if not booking_id:
+        return https_fn.Response("no booking ref", status=200)
+    ref = db.collection("bookings").document(booking_id)
+    snap = ref.get()
+    if not snap.exists:
+        return https_fn.Response("no booking", status=200)
+    b = snap.to_dict()
+    if kind in ("retainer", "pif"):
+        if b.get("status") == "confirmed":
+            return https_fn.Response("already processed", status=200)
+        amount, memo, _ = _payment_terms(b)
+        _confirm_paid(ref, b, b.get("whop_payment_method_id"), payment_id,
+                      amount, RESEND_API_KEY.value, GRATUITY_SECRET.value)
+        ref.update({"whop_pending_payment_id": None})
+        return https_fn.Response("confirmed", status=200)
+    if kind == "balance":
+        if b.get("balance_paid_at"):
+            return https_fn.Response("already processed", status=200)
+        ref.update({"balance_paid_at": firestore.SERVER_TIMESTAMP,
+                    "balance_payment_id": payment_id,
+                    "balance_paid_via": "card"})
+        try:
+            emails.notify_owner(
+                RESEND_API_KEY.value, OWNER_EMAIL,
+                f"BALANCE CHARGED — {b['client_names']} — ${b['balance']:,}",
+                [f"Booking {booking_id} balance charge settled (Whop webhook)."])
+            emails.balance_receipt(RESEND_API_KEY.value, b, b["balance"])
+        except Exception as e:
+            print(f"balance emails failed: {e}")
+        return https_fn.Response("ok", status=200)
+    if kind == "gratuity":
+        existing = list(ref.collection("gratuities")
+                        .where(filter=FieldFilter("payment_id", "==", payment_id))
+                        .limit(1).get())
+        if existing:
+            return https_fn.Response("already processed", status=200)
+        amount = float(live.get("total") or live.get("amount") or 0)
+        ref.collection("gratuities").add({
+            "amount": amount, "at": firestore.SERVER_TIMESTAMP,
+            "payment_id": payment_id, "via": "webhook"})
+        try:
+            emails.gratuity_receipt(RESEND_API_KEY.value, b, amount)
+            emails.notify_owner(
+                RESEND_API_KEY.value, OWNER_EMAIL,
+                f"GRATUITY RECEIVED — ${amount:,.2f} — {b['client_names']}",
+                [f"Booking {booking_id} — distribute 100% to event team.",
+                 f"Event: {b['event_date']} — {b['package_name']}"])
+        except Exception as e:
+            print(f"gratuity emails failed: {e}")
+        return https_fn.Response("ok", status=200)
+    return https_fn.Response("ignored", status=200)
+
 
 
 def _poll_paid_invoices():
@@ -996,14 +1759,17 @@ def _poll_paid_invoices():
                .get())
     if not stuck:
         return
-    zoho = _zoho()
+    clients = {}
     for snap in stuck:
         b = snap.to_dict()
-        link_id = b.get("zoho_payment_link_id")
+        link_id = b.get(_k(b, "payment_link_id"))
         if not link_id:
             continue
+        proc = _proc(b)
         try:
-            link = zoho.get_payment_link(link_id)
+            if proc not in clients:
+                clients[proc] = _pay(proc)
+            link = clients[proc].get_payment_link(link_id)
         except Exception as e:
             print(f"poller: link fetch failed for {b['booking_id']}: {e}")
             continue
@@ -1011,32 +1777,9 @@ def _poll_paid_invoices():
             continue
         paid = [p for p in (link.get("payments") or [])
                 if p.get("status") == "succeeded"]
-        update = {"status": "confirmed",
-                  "deposit_paid_at": firestore.SERVER_TIMESTAMP,
-                  "zoho_payment_id": paid[0].get("payment_id") if paid else None,
-                  "charged_on_file": False,
-                  "confirmed_via": "poller"}
-        if b["payment_option"] == "pif":
-            update["paid_in_full"] = True
-            update["balance_paid_at"] = firestore.SERVER_TIMESTAMP
-        snap.reference.update(update)
-        b.update(update)
-        bd = b.get("balance_due_at")
-        b["balance_due_date"] = (bd.strftime("%B %d, %Y")
-                                 if hasattr(bd, "strftime") else str(bd or ""))
-        try:
-            emails.welcome_email(RESEND_API_KEY.value, b,
-                                 q_link=_q_link(b["booking_id"],
-                                                GRATUITY_SECRET.value))
-            emails.notify_owner(
-                RESEND_API_KEY.value, OWNER_EMAIL,
-                f"BOOKING CONFIRMED (via poller) — {b['package_name']} — "
-                f"{b['event_date']}",
-                [f"Booking {b['booking_id']} — the payment webhook was missed "
-                 f"but the payment link is paid. Confirmed automatically.",
-                 f"Client: {b['client_names']} ({b['email']})"])
-        except Exception as e:
-            print(f"poller emails failed: {e}")
+        _confirm_link_paid(snap.reference, b,
+                           paid[0].get("payment_id") if paid else None,
+                           via="poller")
         print(f"poller: confirmed {b['booking_id']}")
 
 
@@ -1180,9 +1923,9 @@ def _chase_abandoned():
                 snap.reference.update({"pay_owner_alerted": True})
             elif (age >= 4 and not b.get("pay_nudge2_sent")) or \
                  (age >= 1 and not b.get("pay_nudge1_sent")):
-                # Zoho has no "resend" call; our nudge carries the link.
+                # Neither processor has a "resend" call; our nudge carries the link.
                 emails.payment_nudge(RESEND_API_KEY.value, b,
-                                     pay_url=b.get("zoho_payment_link_url"))
+                                     pay_url=b.get(_k(b, "payment_link_url")))
                 snap.reference.update(
                     {"pay_nudge2_sent" if age >= 4 else "pay_nudge1_sent": True})
         except Exception as e:
@@ -1280,7 +2023,7 @@ def _send_balance_heads_up(db, now):
         b = snap.to_dict()
         if (b.get("balance_paid_at") or b.get("balance_heads_up_sent_at")
                 or b.get("test_mode")
-                or not (b.get("zoho_payment_method_id") and b.get("zoho_customer_id"))):
+                or not all(_card_ids(b))):
             continue
         try:
             emails.balance_heads_up(RESEND_API_KEY.value, b, b["balance"])
@@ -1339,7 +2082,7 @@ def _send_lazo_invites(db, now):
 @scheduler_fn.on_schedule(schedule="every day 07:00",
                           timezone=scheduler_fn.Timezone("America/Phoenix"),
                           region=REGION,
-                          secrets=[*ZOHO_SECRETS, RESEND_API_KEY,
+                          secrets=[*PAY_SECRETS, RESEND_API_KEY,
                                    GRATUITY_SECRET, SIGNWELL_API_KEY])
 def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
     _poll_paid_invoices()      # safety net: catch payments whose webhook dropped
@@ -1360,17 +2103,28 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
              .where(filter=FieldFilter("payment_option", "==", "standard"))
              .where(filter=FieldFilter("balance_due_at", "<=", now))
              .get())
-    zoho = _zoho()
+    clients = {}
     for snap in due:
         b = snap.to_dict()
         if b.get("balance_paid_at") or b.get("balance_attempts", 0) >= 3:
             continue
+        if b.get("balance_pending_payment_id"):
+            continue      # Whop charge already in flight; webhook settles it
         memo = (f"Remaining balance — {b['package_name']} — "
                 f"{b['event_date']}")
-        pm_id, cust_id = b.get("zoho_payment_method_id"), b.get("zoho_customer_id")
+        proc = _proc(b)
+        try:
+            if proc not in clients:
+                clients[proc] = _pay(proc)
+            zoho = clients[proc]          # this booking's processor client
+        except Exception as e:
+            print(f"balance: {proc} client unavailable for {b['booking_id']}: {e}")
+            continue
+        pm_id, cust_id = _card_ids(b)
         if not (pm_id and cust_id):
             # No card on file (link-paid or pre-Zoho booking): send a balance
-            # payment link once; zoho_webhook marks it paid.
+            # payment link once; the processor webhook marks it paid. Zoho
+            # emails its own link; for Whop our balance_link email carries it.
             if b.get("balance_payment_link_id"):
                 continue
             try:
@@ -1384,10 +2138,16 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
                     "balance_payment_link_id": link["payment_link_id"],
                     "balance_payment_link_url": link.get("url"),
                     "balance_link_sent_at": firestore.SERVER_TIMESTAMP})
+                if proc == "whop":
+                    try:
+                        emails.balance_link(RESEND_API_KEY.value, b,
+                                            b["balance"], link.get("url"))
+                    except Exception as e2:
+                        print(f"balance link email failed {b['booking_id']}: {e2}")
                 emails.notify_owner(
                     RESEND_API_KEY.value, OWNER_EMAIL,
                     f"BALANCE LINK SENT — {b['client_names']} — ${b['balance']:,}",
-                    [f"Booking {b['booking_id']} has no card on file; a Zoho "
+                    [f"Booking {b['booking_id']} has no card on file; a {proc.title()} "
                      f"payment link for the balance was emailed to {b['email']}.",
                      f"Link: {link.get('url')}"])
             except Exception as e:
@@ -1403,9 +2163,9 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
                         RESEND_API_KEY.value, OWNER_EMAIL,
                         f"BALANCE LINK FAILED (attempt {attempts}/3) \u2014 "
                         f"{b['client_names']} \u2014 ${b['balance']:,}",
-                        [f"Booking {b['booking_id']} has no card on file and Zoho "
+                        [f"Booking {b['booking_id']} has no card on file and {proc.title()} "
                          f"refused to create a payment link: {str(e)[:300]}",
-                         "Bill them from the Zoho dashboard by hand." if attempts >= 3
+                         f"Bill them from the {proc.title()} dashboard by hand." if attempts >= 3
                          else "Will retry tomorrow."])
                 except Exception as e2:
                     print(f"balance link owner alert failed: {e2}")
@@ -1415,6 +2175,14 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
                 cust_id, pm_id, b["balance"], memo,
                 meta={"booking_id": b["booking_id"], "kind": "balance"},
                 descriptor=STATEMENT_DESCRIPTOR)
+            if tx.get("status") == "pending" and proc == "whop":
+                # Whop hasn't settled yet. Not a failure: park it and let
+                # whop_webhook (payment.succeeded / failed) finish the job.
+                snap.reference.update({
+                    "balance_pending_payment_id": tx.get("payment_id"),
+                    "balance_pending_at": firestore.SERVER_TIMESTAMP})
+                print(f"balance charge pending {b['booking_id']} payment={tx.get('payment_id')}")
+                continue
             if tx.get("status") != "succeeded":
                 raise RuntimeError(f"status={tx.get('status')} "
                                    f"{tx.get('failure_code','')} "
@@ -1553,7 +2321,7 @@ def questionnaire_submit(req: https_fn.Request) -> https_fn.Response:
 
 # ================================================================ gratuity ==
 @https_fn.on_request(region=REGION,
-                     secrets=[*ZOHO_SECRETS, RESEND_API_KEY, GRATUITY_SECRET])
+                     secrets=[*PAY_SECRETS, RESEND_API_KEY, GRATUITY_SECRET])
 def gratuity(req: https_fn.Request) -> https_fn.Response:
     if req.method == "OPTIONS":
         return https_fn.Response("", status=204, headers=_cors(req))
@@ -1576,14 +2344,19 @@ def gratuity(req: https_fn.Request) -> https_fn.Response:
     if not snap.exists:
         return _json(req, {"error": "booking not found"}, 404)
     b = snap.to_dict()
-    if not (b.get("zoho_payment_method_id") and b.get("zoho_customer_id")):
+    pm_id, cust_id = _card_ids(b)
+    if not (pm_id and cust_id):
         return _json(req, {"error": "no payment method on file"}, 409)
 
-    tx = _zoho().charge_saved_method(
-        b["zoho_customer_id"], b["zoho_payment_method_id"], amount,
+    tx = _pay(b).charge_saved_method(
+        cust_id, pm_id, amount,
         f"Team gratuity — {b['package_name']} — {b['event_date']}",
         meta={"booking_id": booking_id, "kind": "gratuity"},
         descriptor=STATEMENT_DESCRIPTOR)
+    if tx.get("status") == "pending" and _proc(b) == "whop":
+        # Settles in the background; whop_webhook records it and sends the
+        # receipt. The couple sees a thank-you either way.
+        return _json(req, {"ok": True, "amount": amount, "pending": True})
     if tx.get("status") != "succeeded":
         return _json(req, {"error": "card declined"}, 402)
     snap.reference.collection("gratuities").add({
@@ -1648,7 +2421,7 @@ def _mint_code(db, amount, hours, note):
 
 
 @https_fn.on_request(region=REGION,
-                     secrets=[*ZOHO_SECRETS, SIGNWELL_API_KEY, RESEND_API_KEY,
+                     secrets=[*PAY_SECRETS, SIGNWELL_API_KEY, RESEND_API_KEY,
                               GRATUITY_SECRET])
 def admin_action(req: https_fn.Request) -> https_fn.Response:
     """One endpoint for every button on the admin dashboard.
@@ -1664,6 +2437,7 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
       refund              refund {amount} of the retainer/PIF payment
       issue_code          mint a discount code {amount, hours, note}
       ical_url            return the private calendar-subscription URL
+      delete_lead         {email}: delete that couple's lead docs (not bookings/inquiries)
     """
     if req.method == "OPTIONS":
         return https_fn.Response("", status=204, headers=_cors(req))
@@ -1718,6 +2492,28 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
                      "status": "contacted", "status_at": now})
         return _json(req, {"ok": True, "sent_to": to})
 
+    if action == "delete_lead":   # Leads page: remove a couple's card-step attempts
+        # The leads table shows one row per email (all attempts merged), so a
+        # delete removes every lead doc for that email. Bookings and inquiries
+        # are never touched here; a lead that already converted is skipped.
+        from google.cloud.firestore_v1.base_query import FieldFilter as _FF2
+        email = str(data.get("email") or "").strip().lower()
+        if not email or "@" not in email:
+            return _json(req, {"error": "email required"}, 400)
+        snaps = list(db.collection("leads").where(filter=_FF2("email", "==", email)).get())
+        if not snaps:
+            # emails are stored as typed; retry case-insensitively over recent rows
+            snaps = [s for s in db.collection("leads").limit(2000).get()
+                     if str((s.to_dict() or {}).get("email") or "").strip().lower() == email]
+        deleted, kept = 0, 0
+        for s in snaps:
+            d = s.to_dict() or {}
+            if d.get("status") == "converted" or d.get("booking_id"):
+                kept += 1; continue
+            s.reference.delete(); deleted += 1
+        print(f"delete_lead {email} by {who}: deleted={deleted} kept={kept}")
+        return _json(req, {"ok": True, "deleted": deleted, "kept": kept})
+
     booking_id = str(data.get("booking_id") or "")
     ref = db.collection("bookings").document(booking_id)
     snap = ref.get()
@@ -1728,7 +2524,7 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
 
     try:
         if action == "payment_link":
-            zoho = _zoho()
+            zoho = _pay(b)                      # this booking's processor
             if b.get("status") in ("awaiting_payment", "signed"):
                 amount = b.get("invoice_amount") or (b.get("pif_total") if b.get("payment_option") == "pif" else b.get("retainer"))
                 link = zoho.create_payment_link(
@@ -1736,8 +2532,8 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
                     email=b["email"], reference_id=f"{booking_id}-retainer-{int(now.timestamp())}",
                     phone=b.get("phone", ""), return_url="https://ataviaweddings.com/book/thank-you",
                     meta={"booking_id": booking_id, "kind": "retainer"})
-                ref.update({"zoho_payment_link_id": link["payment_link_id"],
-                            "zoho_payment_link_url": link.get("url"),
+                ref.update({_k(b, "payment_link_id"): link["payment_link_id"],
+                            _k(b, "payment_link_url"): link.get("url"),
                             "status": "awaiting_payment",
                             "admin_last_action": log})
                 emails.payment_nudge(RESEND_API_KEY.value, b, pay_url=link.get("url"))
@@ -1752,20 +2548,27 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
                             "balance_payment_link_url": link.get("url"),
                             "balance_link_sent_at": firestore.SERVER_TIMESTAMP,
                             "admin_last_action": log})
+                if _proc(b) == "whop":          # Whop never emails its links
+                    emails.balance_link(RESEND_API_KEY.value, b, b["balance"], link.get("url"))
                 return _json(req, {"ok": True, "url": link.get("url"), "kind": "balance", "amount": b["balance"]})
             return _json(req, {"error": "nothing is owed on this booking"}, 400)
 
         if action == "retry_balance":
             if b.get("status") != "confirmed" or b.get("balance_paid_at") or b.get("payment_option") != "standard":
                 return _json(req, {"error": "no unpaid balance to charge"}, 400)
-            pm_id, cust_id = b.get("zoho_payment_method_id"), b.get("zoho_customer_id")
+            pm_id, cust_id = _card_ids(b)
             if not (pm_id and cust_id):
                 return _json(req, {"error": "no card on file — send a payment link instead"}, 400)
-            zoho = _zoho()
+            zoho = _pay(b)
             tx = zoho.charge_saved_method(
                 cust_id, pm_id, b["balance"],
                 f"Remaining balance — {b['package_name']} — {b['event_date']}",
                 meta={"booking_id": booking_id, "kind": "balance"}, descriptor=STATEMENT_DESCRIPTOR)
+            if tx.get("status") == "pending" and _proc(b) == "whop":
+                ref.update({"balance_pending_payment_id": tx.get("payment_id"),
+                            "balance_pending_at": firestore.SERVER_TIMESTAMP, "admin_last_action": log})
+                return _json(req, {"ok": True, "pending": True, "payment_id": tx.get("payment_id"),
+                                   "note": "Whop is still settling this charge; the webhook will mark it paid."})
             if tx.get("status") != "succeeded":
                 attempts = b.get("balance_attempts", 0) + 1
                 err = f"status={tx.get('status')} {tx.get('failure_code', '')}"
@@ -1808,8 +2611,8 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
 
         if action == "cancel":
             reason = str(data.get("reason") or "")[:300]
-            zoho = _zoho()
-            for key in ("zoho_payment_link_id", "balance_payment_link_id"):
+            zoho = _pay(b)
+            for key in (_k(b, "payment_link_id"), "balance_payment_link_id"):
                 if b.get(key):
                     try:
                         zoho.cancel_payment_link(b[key])
@@ -1826,12 +2629,12 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
             except ValueError:
                 return _json(req, {"error": "bad amount"}, 400)
             which = str(data.get("payment") or "retainer")
-            pid = b.get("balance_payment_id") if which == "balance" else b.get("zoho_payment_id")
-            if not pid:
-                return _json(req, {"error": f"no Zoho payment id on file for the {which}"}, 400)
+            pid = b.get("balance_payment_id") if which == "balance" else b.get(_k(b, "payment_id"))
+            if not pid or pid == "manual":
+                return _json(req, {"error": f"no {_proc(b).title()} payment id on file for the {which}"}, 400)
             if not (1 <= amount <= 10000):
                 return _json(req, {"error": "amount out of range"}, 400)
-            zoho = _zoho()
+            zoho = _pay(b)
             rf = zoho.refund(pid, amount, description=str(data.get("reason") or f"Refund — {b['client_names']}")[:200])
             entry = {"at": now, "amount": amount, "payment": which, "refund_id": rf.get("refund_id"),
                      "status": rf.get("status"), "by": who, "reason": str(data.get("reason") or "")[:300]}
@@ -1839,12 +2642,12 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
             return _json(req, {"ok": True, "refund_id": rf.get("refund_id"), "status": rf.get("status")})
 
         if action == "mark_paid":
-            # Card was run by hand (Zoho dashboard, phone, etc.). Record it and
-            # void any open link so the couple can't pay twice.
+            # Card was run by hand (processor dashboard, phone, etc.). Record it
+            # and void any open link so the couple can't pay twice.
             which = str(data.get("payment") or "balance")
             pid = str(data.get("payment_id") or "").strip()[:80]
             note = str(data.get("note") or "")[:300]
-            zoho = _zoho()
+            zoho = _pay(b)
             upd = {"admin_last_action": log}
             if which == "balance":
                 if b.get("balance_paid_at"):
@@ -1862,7 +2665,7 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
                     return _json(req, {"error": "contract isn't signed yet"}, 400)
                 amount = b.get("invoice_amount") or (b.get("pif_total") if b.get("payment_option") == "pif" else b.get("retainer"))
                 upd.update({"status": "confirmed", "deposit_paid_at": firestore.SERVER_TIMESTAMP,
-                            "zoho_payment_id": pid or "manual", "invoice_amount": amount,
+                            _k(b, "payment_id"): pid or "manual", "invoice_amount": amount,
                             "charged_on_file": False, "deposit_paid_manually": True, "deposit_manual_note": note})
                 if b.get("payment_option") == "pif":
                     upd["balance_paid_at"] = firestore.SERVER_TIMESTAMP
@@ -1872,7 +2675,7 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
                             datetime.strptime(b["event_date_raw"], "%Y-%m-%d").replace(tzinfo=timezone.utc), now)
                     except Exception:
                         pass
-                link_key = "zoho_payment_link_id"
+                link_key = _k(b, "payment_link_id")
             voided = False
             if b.get(link_key):
                 try:
@@ -1885,7 +2688,7 @@ def admin_action(req: https_fn.Request) -> https_fn.Response:
             emails.notify_owner(RESEND_API_KEY.value, OWNER_EMAIL,
                                 f"MARKED PAID MANUALLY — {b['client_names']} — {which}",
                                 [f"Booking {booking_id} {which} marked paid by {who}.",
-                                 f"Zoho payment: {pid or '(none given)'}", f"Note: {note or '—'}",
+                                 f"{_proc(b).title()} payment: {pid or '(none given)'}", f"Note: {note or '—'}",
                                  "Open payment link voided." if voided else "No open payment link."])
             return _json(req, {"ok": True, "voided_link": voided})
 

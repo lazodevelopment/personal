@@ -142,7 +142,7 @@ HERO = '''<header class="hero" style="min-height:44vh">
   <div class="hero-bg"><img data-img="%(hk)s" alt=""></div>
   <div class="wrap">
     <span class="hero-badge fade-up d1">%(city)s, %(st)s &middot; Travel Included</span>
-    <h1 class="fade-up d2" style="font-family:var(--serif);font-size:clamp(30px,4.4vw,50px)">%(name)s <em>Wedding Photographer &amp; Filmmaker</em></h1>
+    <h1 class="fade-up d2" style="font-family:var(--serif);font-size:clamp(30px,4.4vw,50px)">%(name)s <em>Wedding Photographer &amp; Videographer</em></h1>
     <p class="fade-up d3" style="color:var(--mist);max-width:660px;margin:14px auto 0">%(sub)s</p>
   </div>
 </header>'''
@@ -307,7 +307,7 @@ def main():
                 {"@type": "ListItem", "position": 3, "name": "%s, %s" % (city, st), "item": "%s/venues/%s/" % (BASE, cslug)},
                 {"@type": "ListItem", "position": 4, "name": name, "item": canon}]}
             schema = "".join('<script type="application/ld+json">%s</script>' % json.dumps(x) for x in (place, crumbs, faq_schema))
-            title = "%s Wedding Photographer &amp; Videographer | Elizabeth Scott" % h(name)
+            title = "%s Weddings &middot; %s, %s &middot; Photo &amp; Film | Elizabeth Scott" % (h(name), h(city), st)
             desc = ("Wedding photography and film at %s in %s, %s. Senior team, travel included, published pricing. %s"
                     % (name, city, st, ("%.1f stars from %s Google reviews." % (rating, "{:,}".format(reviews))) if rating and reviews else ""))[:158]
             html = B.render_page(title, h(desc), canon, body, schema, "index, follow" if is_indexed else "noindex, follow", nav_key="locations")

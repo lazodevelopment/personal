@@ -423,6 +423,13 @@ class _AccountMenuWidgetState extends State<AccountMenuWidget>
         color: joviGold,
       ),
       MenuItem(
+        icon: Icons.receipt_long_outlined,
+        title: 'Invoices & receipts',
+        subtitle: 'Membership payments, Jovi Pass, and pet add-ons',
+        route: 'invoices',
+        color: Color(0xFF34D399), // emerald
+      ),
+      MenuItem(
         icon: Icons.ios_share_rounded,
         title: 'Export My Records',
         subtitle: 'Download a PDF of your health and pet records',

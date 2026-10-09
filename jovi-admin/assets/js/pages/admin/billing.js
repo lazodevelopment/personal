@@ -1,6 +1,8 @@
-import { h, pageHeader, card, cardHead, stat, table, badge, money, fmtDate, fmtDateTime, sum, groupBy, select, searchBox, downloadCsv, btn, avatar } from '../../ui.js';
+import { h, pageHeader, card, cardHead, stat, table, badge, money, fmtDate, fmtDateTime, sum, groupBy, select, searchBox, downloadCsv, btn, avatar, toast, errorToast, confirm } from '../../ui.js';
 import { cachedMembers, paymentLogs, kurvPassCancellations, nextBilling, monthKey, lastMonths, JOVI_PASS_PRICE, allRequests } from '../../data.js';
 import { navigate } from '../../router.js';
+import { functions, httpsCallable } from '../../firebase.js';
+import { can } from '../../auth.js';
 
 export async function render() {
   const wrap = h('div');
@@ -23,7 +25,8 @@ export async function render() {
     { label: 'Type', key: 'type', csv: 'type' }, { label: 'Amount', render: p => money(p.amount), csv: 'amount', align: 'right' }, { label: 'Status', render: p => badge(ok(p) ? 'success' : 'failed', p.status), csv: 'status' }, { label: 'Attempt', key: 'attemptNumber', csv: 'attemptNumber' }, { label: 'Reason', render: p => h('span', { class: 'small muted' }, p.reason || ''), csv: 'reason' },
   ];
   const drawLogs = () => { const f = logs.filter(p => (!st || (st === 'ok' ? ok(p) : !ok(p))) && (!q || JSON.stringify(p).toLowerCase().includes(q.toLowerCase()))); logBody.replaceChildren(table(cols, f.slice(0, 300), { empty: 'No payment events' })); };
-  wrap.append(pageHeader('Billing & revenue', 'Recurring revenue from plan data plus processor webhook events. Card numbers are never stored here.', [btn('Export payments CSV', () => downloadCsv('jovi-payments.csv', cols, logs))]),
+  const billPanel = h('div', { class: 'callout mint mb' }, h('div', { class: 'grow' }, h('b', null, 'BILL (ACH) processor'), h('div', { class: 'small', id: 'billStatusLine' }, 'Not checked yet.')), can('writeBusiness') ? btn('Test connection', async () => { const line = billPanel.querySelector('#billStatusLine'); line.textContent = 'Checking…'; try { const r = (await httpsCallable(functions, 'billStatus')({})).data; line.textContent = `${r.ok ? '✓' : '✕'} ${r.message} · env ${r.env}${r.orgName ? ' · ' + r.orgName : ''}${r.customersReachable === false ? ' · customers: ' + r.customersError : r.customersReachable ? ' · customers API reachable' : ''}${r.orgLookup ? ' · org lookup: ' + r.orgLookup : ''}`; toast(r.ok ? 'BILL connection OK' : 'BILL connection failed', r.ok ? 'success' : 'error', 6000); } catch (e) { line.textContent = 'Error: ' + (e.message || e); errorToast(e); } }, { size: 'btn-sm', variant: 'btn-primary' }) : null);
+  wrap.append(pageHeader('Billing & revenue', 'Recurring revenue from plan data plus processor events. Bank and card numbers are never stored here.', [btn('Export payments CSV', () => downloadCsv('jovi-payments.csv', cols, logs))]), billPanel,
     h('div', { class: 'grid grid-4 mb' }, stat('MRR', money(mrr, { cents: false }), `${active.length} paying memberships`, 'brand'), stat('Health premiums', money(health, { cents: false }), `${money(health / Math.max(1, active.length))} avg per membership`), stat('Pet premiums', money(petRev, { cents: false }), `${active.filter(m => m.hasPetInsurance).length} households`), stat('Add-ons', `${dental} / ${vision}`, 'dental / vision memberships')),
     h('div', { class: 'grid grid-4 mb' }, stat('Collected, last 30 days', money(sum(logs.filter(p => ok(p) && (p.timestamp?.toMillis?.() || 0) > Date.now() - 30 * 86400000), 'amount'), { cents: false }), 'from webhook events', 'good'), stat('Failed, last 30 days', logs.filter(p => !ok(p) && (p.timestamp?.toMillis?.() || 0) > Date.now() - 30 * 86400000).length, 'attempts', 'bad'), stat('Jovi Pass sales', passSales, `${money(passSales * JOVI_PASS_PRICE, { cents: false })} · ${passCancels.length} non-refundable cancels`), stat('Due in 7 days', dueSoon.length, money(sum(dueSoon, 'monthly'), { cents: false }))),
     h('div', { class: 'grid grid-2 mb' },

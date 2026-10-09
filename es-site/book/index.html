@@ -114,7 +114,8 @@ input[type=checkbox]{width:auto;accent-color:var(--champagne)}
     <div class="bk-field"><label for="pkg">Collection</label>
       <select id="pkg"></select></div>
     <ul class="bk-bullets" id="pkgBullets"></ul>
-    <div class="bk-row" style="margin-top:16px">
+    <p class="bk-note" id="flatNote" style="display:none">The Ceremony is a flat $500, paid in full when you reserve. Enhancements and the payment plan apply to the full collections.</p>
+    <div class="bk-row" style="margin-top:16px" id="addonRow">
       <div class="bk-field"><label for="ss">Second Shooter (+$500)</label>
         <select id="ss"><option value="no">No, thank you</option><option value="yes">Yes &mdash; add a second shooter</option></select></div>
       <div class="bk-field"><label for="xh">Additional Hours ($175/hr)</label>
@@ -169,7 +170,7 @@ input[type=checkbox]{width:auto;accent-color:var(--champagne)}
 
   <div class="glass bk-card">
     <h2>4 &middot; Payment</h2>
-    <p class="bk-sub">Nothing is charged until your agreement is signed.</p>
+    <p class="bk-sub">Your retainer is charged when you reserve. Your agreement arrives for signature right after.</p>
     <div class="bk-choice" id="planChoice">
       <div class="chip on" data-plan="pif"><b>Pay in Full</b><small>Listed price &mdash; $500 off</small></div>
       <div class="chip" data-plan="standard" id="chipStandard"><b>Payment Plan</b><small>50% now &middot; balance 14 days before</small></div>
@@ -181,15 +182,17 @@ input[type=checkbox]{width:auto;accent-color:var(--champagne)}
       <p class="bk-note" id="codeOk"></p></div>
     <div class="bk-field" style="margin-top:6px"><label>Card on File</label>
       <div class="bk-cardwrap" id="cardwrap">
-        <p>Your card is the last step: once the form is complete, tap <b>Reserve This Date</b> and a secure card window from our payment processor opens on this page. Your card is saved for the retainer and your balance &mdash; nothing is charged until you sign.</p>
+        <p id="cardintro">Your card is the last step: once the form is complete, tap <b>Reserve This Date</b> and a secure card form from our payment processor appears right here. Today's retainer is charged to reserve your date, and your card stays on file for the balance.</p>
+        <!-- Whop path only (PROCESSOR==="whop"): card fields mount inline here instead of a modal. -->
+        <div id="whop-card" style="display:none;margin-top:10px"><div id="whop-card-fields"></div><div id="whop-branding"></div></div>
         <div class="bk-cardstatus" id="cardstatus"></div>
       </div></div>
     <div class="bk-err" id="err_card"></div>
-    <p class="bk-fine">Your card details are entered directly into our payment processor&rsquo;s secure window and never touch our servers. Nothing is charged until you sign. Charges appear as <b>Elizabeth Scott Wed</b>.</p>
+    <p class="bk-fine">Your card details are entered directly into our payment processor&rsquo;s secure window and never touch our servers. Your retainer is charged when you reserve; the balance is charged to the same card as scheduled. Charges appear as <b>Elizabeth Scott Wed</b>.</p>
     <div class="bk-field" style="margin-top:12px">
       <label style="display:flex;gap:10px;align-items:flex-start;text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--mist)">
         <input type="checkbox" id="agree_terms" style="margin-top:2px">
-        <span>I agree to the <a href="/terms" target="_blank" style="color:var(--champagne)">Terms of Service</a> and understand my date is reserved when my service agreement is signed and my retainer is paid.</span>
+        <span>I agree to the <a href="/terms" target="_blank" style="color:var(--champagne)">Terms of Service</a> and understand my retainer is charged today to reserve my date and that my date is confirmed when my service agreement is signed.</span>
       </label>
       <div class="bk-err" id="err_agree_terms"></div></div>
   </div>
@@ -203,7 +206,7 @@ input[type=checkbox]{width:auto;accent-color:var(--champagne)}
   <p class="bk-fine" id="gateMsg" style="text-align:center;margin-top:10px" aria-live="polite"></p>
   <div class="bk-spin" id="spin">Preparing your agreement&hellip;</div>
   <div class="bk-err" id="err_top" style="text-align:center"></div>
-  <p class="bk-fine">You'll sign electronically in the next step. Standard plan: 50% due at signing, balance auto-charged 14 days before your wedding. Pay in full: listed price, nothing further due.</p>
+  <p class="bk-fine">You'll sign electronically right after paying. Standard plan: 50% today, balance auto-charged 14 days before your wedding. Pay in full: listed price today, nothing further due.</p>
 </aside>
 
 </div></section>
@@ -276,9 +279,15 @@ const FN = "https://us-central1-elizabeth-scott-738e5.cloudfunctions.net";
    publishable one: it can open the card widget but cannot charge anything. */
 const ZOHO_ACCOUNT_ID = "937366965";
 const ZOHO_API_KEY = "1003.83e6499fc9de1c8789e32c8b2b691765.a643597f26c52ee5feda0e5343b4e570";
+/* ---- processor flag: "zoho" (live) | "whop". Must match PAYMENT_PROCESSOR on the ES Cloud
+   Functions, or book_submit will record bookings under the other processor. Whop company is the
+   shared Danbren Media one (same as Atavia); the Elements script is loaded on demand. ---- */
+const PROCESSOR = "whop";
+const WHOP_ACCOUNT_ID = "biz_FeVrtPXroSleTG";   // public id, cannot charge
 const eswSid = function(){ try{ return window.atvSid || sessionStorage.getItem("atv_sid") || ""; }catch(e){ return ""; } };
 
 const PKGS = [
+ {id:"ceremony",n:"The Ceremony",st:"video",t:500,h:0,pifOnly:1,pif:0,noAddons:1,hrs:"Ceremony only",b:["Up to 45 Minutes of Ceremony Coverage","Two Camera Angles","One Videographer","Professional Audio","Fully Edited Ceremony Film","Digital Download","Nationwide Travel Included"]},
  {id:"vignette",n:"The Vignette",st:"video",t:1700,h:4,b:["4 Hours of Coverage","One Videographer","HD Resolution","Professional Audio","Highlight Film","Raw Footage","Digital Delivery"]},
  {id:"story",n:"The Story",st:"video",t:1900,h:6,pop:1,b:["6 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Raw Footage","Digital Delivery"]},
  {id:"feature",n:"The Feature",st:"video",t:2000,h:8,b:["8 Hours of Coverage","One Videographer","4K Resolution","Professional Audio","Highlight Film","Extended Edit","Drone Footage","Raw Footage","Digital Delivery"]},
@@ -304,7 +313,8 @@ const money = n => "$" + n.toLocaleString("en-US");
     PKGS.filter(p=>p.st===st).forEach(p=>{
       const o = document.createElement("option");
       o.value = p.id;
-      o.textContent = `${p.n} — ${p.h} hr · ${money(p.t-R.pif)} (plan ${money(p.t)})` + (p.pop?" · Most Popular":"");
+      o.textContent = p.pifOnly ? `${p.n} — ${p.hrs||"ceremony only"} · ${money(p.t)} (paid in full)`
+        : `${p.n} — ${p.h} hr · ${money(p.t-R.pif)} (plan ${money(p.t)})` + (p.pop?" · Most Popular":"");
       og.appendChild(o);
     });
     sel.appendChild(og);
@@ -334,10 +344,17 @@ function recalc(){
   const rush = isRush();
   $("rushNote").style.display = rush ? "block":"none";
   const chip = $("chipStandard");
-  if(rush){ plan="pif"; chip.classList.add("off"); chip.classList.remove("on");
+  /* The Ceremony: flat $500, paid in full, no plan and no enhancements */
+  const flat = !!p.pifOnly;
+  if(flat){ plan="pif"; $("ss").value="no"; $("xh").value="0"; }
+  $("addonRow").style.display = flat ? "none" : "";
+  $("planChoice").style.display = flat ? "none" : "";
+  const flatNote = $("flatNote"); if(flatNote) flatNote.style.display = flat ? "block" : "none";
+  if(rush || flat){ plan="pif"; chip.classList.add("off"); chip.classList.remove("on");
     document.querySelector('[data-plan="pif"]').classList.add("on");
   } else chip.classList.remove("off");
   const ss = $("ss").value==="yes", xh = parseInt($("xh").value)||0;
+  const pifOff = (p.pif===0) ? 0 : R.pif;
   const addons = (ss?R.ss:0) + xh*R.xh + (rush?R.rushFee:0);
   const gross = p.t + addons;
   if(disc.amount >= gross) disc = {code:"",amount:0};
@@ -349,13 +366,13 @@ function recalc(){
   if(disc.amount) lines.push([`Inquiry Code ${disc.code}`, "\u2212"+money(disc.amount)]);
   let html = lines.map(l=>`<div class="bk-line"><span>${l[0]}</span><b>${l[1]}</b></div>`).join("");
   if(plan==="pif"){
-    const due = total - R.pif;
-    html += `<div class="bk-line"><span>Pay-in-Full Discount</span><b>\u2212${money(R.pif)}</b></div>`;
-    html += `<div class="bk-line total due"><span>Due at signing</span><b>${money(due)}</b></div>`;
+    const due = total - pifOff;
+    if(pifOff) html += `<div class="bk-line"><span>Pay-in-Full Discount</span><b>\u2212${money(pifOff)}</b></div>`;
+    html += `<div class="bk-line total due"><span>Due today</span><b>${money(due)}</b></div>`;
   } else {
     const due = Math.ceil(total/2), bal = total-due;   /* mirrors server (total+1)//2 */
     html += `<div class="bk-line total"><span>Total Investment</span><b>${money(total)}</b></div>`;
-    html += `<div class="bk-line due"><span>50% due at signing</span><b>${money(due)}</b></div>`;
+    html += `<div class="bk-line due"><span>50% due today</span><b>${money(due)}</b></div>`;
     let when = "14 days before your wedding";
     const v = $("event_date").value;
     if(v){ const bd = new Date(v+"T00:00:00"); bd.setDate(bd.getDate()-14);
@@ -363,7 +380,7 @@ function recalc(){
     html += `<div class="bk-line"><span>Balance — auto-charged ${when}</span><b>${money(bal)}</b></div>`;
   }
   $("sumLines").innerHTML = html;
-  window.__eswDue = (plan==="pif") ? (total - R.pif) : Math.ceil(total/2);   /* for the Meta Pixel Lead/Purchase value */
+  window.__eswDue = (plan==="pif") ? (total - pifOff) : Math.ceil(total/2);   /* for the Meta Pixel Lead/Purchase value */
   window.__eswPkg = p.n;
 }
 document.querySelectorAll("#planChoice .chip").forEach(ch=>ch.addEventListener("click",()=>{
@@ -422,7 +439,127 @@ async function captureCard(names,email,phone,addr){
     throw new Error((err&&err.message)||"We couldn't save that card.");
   }finally{ try{ await inst.close(); }catch(e){} }
 }
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",zohoReadyCheck); else zohoReadyCheck();
+/* ---- Whop Elements (PROCESSOR==="whop"): CardElement mounted inline in mode="setup". Same PCI
+   posture as the Zoho widget: the PAN lives in Whop's iframe, we only ever see a confirmation
+   token. Nothing is charged by this page. Whop's BrandingElement is REQUIRED next to the card
+   fields or the card never reveals; handleNextAction lives on the namespace, not the instance. ---- */
+let _whopNs=null, _whopPayments=null, _whopCard=null, _whopCardComplete=false, _whopLoading=null;
+function whopLoad(){
+  if(_whopLoading) return _whopLoading;
+  _whopLoading=new Promise((resolve,reject)=>{
+    if(typeof window.WhopElements==="function") return resolve();
+    const s=document.createElement("script"); s.src="https://cdn.whop.com/elements/amber/elements.js";
+    s.setAttribute("data-whop-elements",""); s.async=true;
+    s.onload=()=>resolve(); s.onerror=()=>reject(new Error("Whop Elements failed to load"));
+    document.head.appendChild(s); });
+  return _whopLoading; }
+/* Whop flow (2026-10-06): Whop refuses raw setup intents on this account but accepts its own
+   setup-mode CHECKOUT ("No charge today"), so on Reserve we mint a checkout configuration server-
+   side and mount Whop's CheckoutElement right here. The couple saves the card inside it, Whop
+   fires onComplete with a setup intent id AND redirects back to /book/?whop=return, and both paths
+   submit the booking (book_submit is idempotent per setup intent). */
+let _whopLoaded=false;
+async function whopInit(){
+  try{ await whopLoad(); _whopLoaded=true;
+    const intro=$("cardintro"); if(intro) intro.innerHTML="Your card is the last step: once the form is complete, tap <b>Reserve This Date</b> and a secure card form from our payment processor appears right here. <b>Today\u2019s retainer is charged to reserve your date</b>, and your card stays on file for the balance.";
+    zohoReady=true; try{gate();}catch(e){} return true;
+  }catch(e){ console.error("whop init failed",e); zohoReady=false; setCardStatus("The secure card form didn’t load. Please refresh the page.", true); try{gate();}catch(e2){} return false; } }
+function whopReadyCheck(){ if(!_whopLoaded){ zohoReady=false; try{gate();}catch(e){} return false; } zohoReady=true; return true; }
+function procReadyCheck(){ if(FINISH_PAY){ zohoReady=true; return true; } return PROCESSOR==="whop" ? whopReadyCheck() : zohoReadyCheck(); }
+const WHOP_PENDING_KEY="esw_whop_pending";
+function whopPending(){ try{ return JSON.parse(sessionStorage.getItem(WHOP_PENDING_KEY)||"null"); }catch(e){ return null; } }
+/* Step 1 (Reserve tapped, form valid): mint the setup checkout, remember the form, mount the element. */
+async function startWhopCheckout(payload){
+  /* The server prices the amount due now (retainer or paid-in-full total, same math as
+     book_submit) and mints a PAID checkout for it; Whop charges it and keeps the card on
+     file for the balance. (Whop refuses no-charge card saves from guest buyers.) */
+  const r=await fetch(FN+"/whop_setup",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({client_names:payload.client_names, email:payload.email, phone:payload.phone.replace(/[^\d+]/g,""),
+      package_id:payload.package_id, payment_option:payload.payment_option, event_date:payload.event_date,
+      second_shooter:payload.second_shooter, extra_hours:payload.extra_hours, discount_code:payload.discount_code||"",
+      attr_venue:(new URLSearchParams(location.search).get("venue")||""), sid:eswSid(),
+      /* the full form, kept server-side so the booking + contract are created from Whop's
+         payment webhook even if this page never gets to submit it */
+      booking:Object.assign({}, payload, {sid:eswSid()})})});
+  const chk=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(chk.error||"Payment setup is unavailable right now.");
+  if(!chk.checkout_id) throw new Error("Payment setup is unavailable right now.");
+  try{ sessionStorage.setItem(WHOP_PENDING_KEY, JSON.stringify({payload:payload, checkout_id:chk.checkout_id, mode:chk.mode||"payment", amount:chk.amount||null, kind:chk.kind||"", at:Date.now()})); }catch(e){}
+  const host=$("whop-card"); host.innerHTML='<div id="whop-chk"></div>'; host.style.display="block";
+  const c=window.WhopElements().checkout.create({checkoutConfiguration:chk.checkout_id, buyerEmail:payload.email,
+    returnUrl:location.origin+"/book/?whop=return",
+    appearance:{theme:{appearance:"dark", accentColor:"gold", grayColor:"slate"}}});   /* dark so the "No charge today" header reads on navy */
+  /* prefill what the couple already typed: email, cardholder name, billing address, phone */
+  const _csz=String(payload.city_state_zip||""), _parts=_csz.split(",").map(x=>x.trim());
+  const _st=(((_parts[1]||"").match(/[A-Za-z]{2}/)||[payload.governing_state||""])[0]||"").toUpperCase().slice(0,2);
+  const _digits=String(payload.phone||"").replace(/\D/g,""), _e164=_digits.length===10?"+1"+_digits:(_digits.length===11&&_digits[0]==="1")?"+"+_digits:undefined;
+  c.create("checkout",{
+    buyerEmail:payload.email,
+    defaultValues:{ phone:_e164, billingDetails:{ name:String(payload.client_names||"").split("&")[0].trim()||undefined,
+      address:{ line1:payload.mailing_address||undefined, city:_parts[0]||undefined, state:_st||undefined,
+        postal_code:((_csz.match(/\b\d{5}(?:-\d{4})?\b/)||[""])[0])||undefined, country:"US" } } },
+    onComplete:e=>{ if(!e) return;
+      if(e.result==="payment" && e.paymentId) finishWhopBooking({payment_id:String(e.paymentId)});
+      else if(e.result==="setup" && e.setupIntentId) finishWhopBooking({setup_intent_id:String(e.setupIntentId)}); },
+    onError:err=>{ console.error("whop checkout error",err); cardTrouble("The secure card form didn’t load. Please refresh and try again, or email hello@elizabethscottweddings.com."); }
+  }).mount("#whop-chk");
+  setCardStatus(chk.mode==="payment" && chk.amount
+    ? `Enter your card below to pay today’s ${chk.kind==="pif"?"total":"retainer"} of ${money(chk.amount)} and reserve your date. Your agreement follows right after.`
+    : "Enter your card below — nothing is charged until you sign.");
+  const intro=$("cardintro"); if(intro) intro.style.display="none";
+  try{ host.scrollIntoView({behavior:"smooth",block:"center"}); }catch(e){}
+}
+/* Step 2 (card saved): submit the booking with the setup intent id. Runs from onComplete (keepalive,
+   so the redirect can't kill it) and again after the redirect; the server dedupes. */
+async function finishWhopBooking(ids){
+  if(typeof ids==="string") ids={setup_intent_id:ids};
+  const pend=whopPending(); if(!pend||!pend.payload) return false;
+  const key=ids.payment_id||ids.setup_intent_id||"";
+  const payload=Object.assign({}, pend.payload, {whop_checkout_id:pend.checkout_id, sid:eswSid()},
+    ids.payment_id ? {whop_payment_id:ids.payment_id} : {whop_setup_intent_id:ids.setup_intent_id});
+  try{ const _due=Number(pend.amount)||Number(window.__eswDue)||0, _pk=window.__eswPkg||payload.package_id;
+    sessionStorage.setItem("esw_fb_value", String(_due)); sessionStorage.setItem("esw_fb_pkg", _pk); sessionStorage.removeItem("esw_fb_purchased");
+    if(window.eswPixel && !sessionStorage.getItem("esw_lead_fired_"+key)){ sessionStorage.setItem("esw_lead_fired_"+key,"1"); window.eswPixel("Lead",{content_name:_pk, value:_due, currency:"USD"}); } }catch(e){}
+  try{
+    const r=await fetch(FN+"/book_submit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(!r.ok || j.error){ done(); if(j.field && $("err_"+j.field)) return fail(j.field, j.error); return fail("top", j.error || "Something went wrong — please try again."); }
+    try{ sessionStorage.removeItem(WHOP_PENDING_KEY); }catch(e){}
+    /* pending: the server is already creating this booking from Whop's payment notice;
+       SignWell emails the agreement in a moment */
+    location.href = (!j.pending && j.signing_url) || "/booked?via=email";
+    return true;
+  }catch(e){ console.error("book_submit after whop setup:", e); return false; }
+}
+/* Step 3 (back from Whop): /book/?whop=return&status=succeeded&setup_intent_id=sint_... */
+function whopResume(){
+  const q=new URLSearchParams(location.search); if(q.get("whop")!=="return") return;
+  const pend=whopPending(); const status=(q.get("status")||"").toLowerCase();
+  const payId=q.get("payment")||q.get("payment_id")||"";
+  const sint=q.get("setup_intent_id")||q.get("setup_intent")||q.get("setup")||"";
+  if(pend && pend.payload){ /* put the form back so a retry or a fix is one tap away */
+    const P=pend.payload; const set=(id,v)=>{ const el=$(id); if(el && v!==undefined && v!==null && v!=="") el.value=v; };
+    set("p1",P.partner1_name); set("p2",P.partner2_name); set("email",P.email); set("phone",P.phone); set("mailing_address",P.mailing_address);
+    set("city_state_zip",P.city_state_zip); set("governing_state",P.governing_state); set("event_date",P.event_date); set("ceremony_venue",P.ceremony_venue);
+    set("reception_venue",P.reception_venue); set("guest_count",P.guest_count); set("start_time",P.start_time); set("end_time",P.end_time);
+    try{ if($("agree_terms")) $("agree_terms").checked=true; }catch(e){}
+  }
+  if((payId||sint) && status!=="failed" && status!=="canceled" && pend){
+    $("spin").style.display="block"; setCardStatus(payId ? "Payment received ✓ — preparing your agreement…" : "Card saved ✓ — preparing your agreement…");
+    finishWhopBooking(payId ? {payment_id:String(payId)} : {setup_intent_id:String(sint)}).then(ok=>{ if(!ok){ done(); cardTrouble(payId ? "Your payment went through but we couldn’t finish the booking. Tap Reserve This Date again — you won’t be charged twice." : "Your card was saved but we couldn’t finish the booking. Tap Reserve This Date again — you won’t be asked for the card twice."); } });
+  }else if(status==="failed" || status==="canceled"){
+    cardTrouble(payId ? "That payment didn’t go through. Please tap Reserve This Date and try again, or use a different card." : "That card wasn’t saved. Please tap Reserve This Date and try again, or use a different card.");
+  }
+}
+/* ?finish=pay_... — recovery link for a couple who paid but whose booking didn't complete */
+const FINISH_PAY=(function(){ const v=(new URLSearchParams(location.search).get("finish")||"").trim(); return /^pay_[A-Za-z0-9]+$/.test(v)?v:""; })();
+function finishBoot(){
+  zohoReady=true; try{gate();}catch(e){}
+  const intro=$("cardintro"); if(intro) intro.innerHTML="<b>Your payment has been received.</b> Confirm your details above exactly as you entered them, then tap <b>Reserve This Date</b> to receive your agreement. You won’t be charged again.";
+  const wc=$("whop-card"); if(wc) wc.style.display="none";
+}
+const procBoot=()=>{ if(FINISH_PAY){ finishBoot(); return; } if(PROCESSOR==="whop"){ whopInit().then(()=>{ try{ whopResume(); }catch(e){ console.error("whop resume",e); } }); } else zohoReadyCheck(); };
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",procBoot); else procBoot();
 
 /* ---- attribution ---- */
 try{ if(!sessionStorage.getItem("es_landing")) sessionStorage.setItem("es_landing", location.href);
@@ -491,14 +628,34 @@ async function submitBooking(){
   $("submitBtn").style.pointerEvents="none"; $("spin").style.display="block";
 
   /* a saved card is required to book — the Zoho widget tokenizes it; nothing is charged until signature */
-  if(!zohoReadyCheck()){ done(); return fail("card","The secure card window hasn't loaded — please refresh the page and try again."); }
+  if(!procReadyCheck()){ done(); return fail("card","The secure card window hasn't loaded — please refresh the page and try again."); }
+  if(FINISH_PAY){
+    /* ?finish=pay_... : already paid at reservation, the booking just needs the details.
+       No card step; the server checks the payment and that the email matches it. */
+    try{
+      const r=await fetch(FN+"/book_submit",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(Object.assign({}, payload, {whop_payment_id:FINISH_PAY, sid:eswSid()}))});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok || j.error){ done(); if(j.field && $("err_"+j.field)) return fail(j.field, j.error); return fail("top", j.error || "Something went wrong — please try again."); }
+      location.href = (!j.pending && j.signing_url) || "/booked?via=email";
+    }catch(e){ done(); fail("top","Connection problem — please try again."); }
+    return;
+  }
+  if(PROCESSOR==="whop"){
+    /* A card already saved on a previous pass (e.g. the booking call failed after the redirect)? Finish with it. */
+    const q=new URLSearchParams(location.search), sintPrev=q.get("setup_intent_id")||"", payPrev=q.get("payment")||"";
+    if((payPrev||sintPrev) && whopPending()){ if(await finishWhopBooking(payPrev ? {payment_id:payPrev} : {setup_intent_id:sintPrev})) return; }
+    try{ setCardStatus(""); await startWhopCheckout(payload); }
+    catch(e){ console.error("whop checkout start:", e); cardTrouble((e&&e.message)||"Payment setup is unavailable right now."); }
+    done(); return;   /* the booking is submitted when Whop reports the card saved */
+  }
   try{
     setCardStatus(""); $("cardwrap").classList.add("busy");
     const csz=payload.city_state_zip, parts=csz.split(",").map(x=>x.trim());
     const addr={address_line1:payload.mailing_address||undefined, city:parts[0]||undefined,
       state:(((parts[1]||"").match(/[A-Za-z]{2}/)||[$("governing_state").value])[0])||undefined,
       postal_code:((csz.match(/\b\d{5}(?:-\d{4})?\b/)||[""])[0])||undefined, country:"US"};
-    const card=await captureCard(payload.client_names, payload.email, payload.phone.replace(/[^\d+]/g,""), addr);
+    const card = await captureCard(payload.client_names, payload.email, payload.phone.replace(/[^\d+]/g,""), addr);
     $("cardwrap").classList.remove("busy");
     if(!card){ done(); setCardStatus("Add a card to reserve your date \u2014 nothing is charged until you sign.", true); return fail("card","Please add a card to reserve your date."); }
     setCardStatus("Card saved \u2713");
@@ -537,7 +694,7 @@ function gate(){
   const miss = missingFields(), ok = zohoReady && miss.length===0, msg=$("gateMsg");
   $("submitBtn").classList.toggle("dim", !ok);
   msg.classList.toggle("ready", ok);
-  if(ok) msg.innerHTML = "Everything\u2019s here. Tap <b>Reserve This Date</b> to add your card and sign \u2014 nothing is charged until you sign.";
+  if(ok) msg.innerHTML = "Everything\u2019s here. Tap <b>Reserve This Date</b> to pay your retainer and reserve your date \u2014 your agreement follows by email.";
   else if(!zohoReady) msg.textContent = "The secure card window hasn\u2019t loaded yet \u2014 please refresh the page.";
   else msg.innerHTML = "Still needed: " + miss.map(id=>"<b>"+LABEL[id]+"</b>").join(", ") + ". Your card is added after you tap Reserve.";
   msg.style.display = "block";

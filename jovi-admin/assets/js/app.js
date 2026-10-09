@@ -39,6 +39,7 @@ const NAV = {
     ['Business', [
       ['/admin/members', 'Members', I.people],
       ['/admin/billing', 'Billing & revenue', I.card],
+      ['/admin/invoices', 'Invoices & receipts', I.receipt],
       ['/admin/claims', 'Claims (financial)', I.receipt],
       ['/admin/appointments', 'Appointment volume', I.cal],
       ['/admin/support', 'Support inbox', I.chat],

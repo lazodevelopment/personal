@@ -1,7 +1,9 @@
 import { h, pageHeader, card, cardHead, kv, badge, money, fmtDate, fmtDateTime, ago, btn, avatar, tabs, table, prompt, confirm, toast, errorToast, textarea, field, input, select, phone, age } from '../../ui.js';
-import { getMember, memberName, memberPhoto, memberDob, parseDob, monthlyTotal, deductibleOf, subStatus, nextBilling, dependentsOf, spouseOf, petsFor, requestsForUser, paymentLogsFor, transactionsFor, billingHistoryFor, memberNotes, addMemberNote, notifyMember, cancelMembershipViaBackend, reactivateMembership, updateMember, ticketsFor, securityLogsFor, parseJsonArr, humanClaimsFor, refillsFor } from '../../data.js';
+import { getMember, memberName, memberPhoto, memberDob, parseDob, monthlyTotal, deductibleOf, subStatus, nextBilling, dependentsOf, spouseOf, petsFor, requestsForUser, paymentLogsFor, transactionsFor, billingHistoryFor, memberNotes, addMemberNote, notifyMember, cancelMembershipViaBackend, reactivateMembership, updateMember, ticketsFor, securityLogsFor, parseJsonArr, humanClaimsFor, refillsFor, invoicesFor } from '../../data.js';
+import { openInvoice, KIND } from './invoices.js';
 import { can, canSide, session } from '../../auth.js';
 import { navigate } from '../../router.js';
+import { functions, httpsCallable } from '../../firebase.js';
 
 export async function render({ param: uid }) {
   const u = await getMember(uid);
@@ -12,6 +14,7 @@ export async function render({ param: uid }) {
   if (canSide('ehr') && can('viewPhi')) actions.push(btn('Open chart', () => navigate(`/ehr/chart/${uid}`), { variant: 'btn-primary' }));
   if (can('writeBusiness')) {
     actions.push(btn('Send notification', () => sendNote(uid), { variant: 'btn-secondary' }));
+    actions.push(btn(u.billBankAccountId ? 'Charge now (ACH)' : 'No bank on file', async () => { if (!(await confirm('Debit this member now?', `Creates a BILL invoice for ${money(monthlyTotal(u))} and charges the bank account ending in ${u.billBankLast4 || '????'}.`))) return; try { const r = (await httpsCallable(functions, 'billChargeNow')({ userId: uid, reason: 'manual' })).data; toast(r.ok ? `Charged · BILL payment ${r.paymentId} (${r.status})` : (r.pendingVerification ? 'Bank account still verifying' : 'Charge failed: ' + (r.error || '')), r.ok ? 'success' : 'error', 7000); } catch (e) { errorToast(e); } }, { variant: 'btn-secondary', disabled: !u.billBankAccountId }));
     if (['active', 'past_due'].includes(status)) actions.push(btn('Cancel membership', async () => { const r = await prompt('Cancel membership', 'Reason (shown in the audit log)', { okLabel: 'Schedule cancellation' }); if (r == null) return; try { await cancelMembershipViaBackend(r, uid); toast('Cancellation scheduled for the end of the billing period', 'success'); location.reload(); } catch (e) { errorToast(e); } }, { variant: 'btn-danger' }));
     if (['canceling', 'canceled', 'suspended', 'inactive'].includes(status)) actions.push(btn('Reactivate', async () => { if (!(await confirm('Reactivate membership?', 'Sets the subscription back to active. Billing resumes on the next anniversary.'))) return; try { await reactivateMembership(uid); toast('Reactivated', 'success'); location.reload(); } catch (e) { errorToast(e); } }, { variant: 'btn-success' }));
   }
@@ -50,8 +53,9 @@ async function household(u, uid) {
   );
 }
 async function billing(u, uid) {
-  const [logs, tx, hist] = await Promise.all([paymentLogsFor(uid).catch(() => []), transactionsFor(uid).catch(() => []), billingHistoryFor(uid).catch(() => [])]);
+  const [logs, tx, hist, invs] = await Promise.all([paymentLogsFor(uid).catch(() => []), transactionsFor(uid).catch(() => []), billingHistoryFor(uid).catch(() => []), invoicesFor(uid).catch(() => [])]);
   return h('div', { class: 'col' },
+    card(cardHead('Invoices & receipts'), table([{ label: 'Number', render: r => h('span', { class: 'mono' }, r.number) }, { label: 'For', render: r => KIND[r.kind] || r.kind }, { label: 'Issued', render: r => fmtDate(r.issuedAt) }, { label: 'Total', render: r => money(r.total), align: 'right' }, { label: 'Status', render: r => badge(r.status === 'paid' ? 'paid' : r.status === 'pending' ? 'pending' : 'failed', r.status) }, { label: '', render: r => btn('Open', () => openInvoice({ ...r, uid }, memberName(u)), { size: 'btn-sm' }) }], invs, { empty: 'No invoices yet' })),
     card(cardHead('Payment attempts (processor webhook)'), table([{ label: 'When', render: p => fmtDateTime(p.timestamp) }, { label: 'Type', key: 'type' }, { label: 'Amount', render: p => money(p.amount) }, { label: 'Status', render: p => badge(p.status) }, { label: 'Attempt', key: 'attemptNumber' }, { label: 'Reason', key: 'reason' }], logs.sort((a, b) => (b.timestamp?.toMillis?.() || 0) - (a.timestamp?.toMillis?.() || 0)), { empty: 'No payment events recorded' })),
     card(cardHead('Transactions'), table([{ label: 'When', render: t => fmtDateTime(t.createdAt) }, { label: 'Type', key: 'type' }, { label: 'Description', key: 'description' }, { label: 'Amount', render: t => money(t.amount) }, { label: 'Status', render: t => badge(t.status) }], tx, { empty: 'No transactions' })),
     hist.length ? card(cardHead('Pet add-on charges'), table([{ label: 'When', render: t => fmtDateTime(t.createdAt) }, { label: 'Pet', key: 'petName' }, { label: 'Monthly', render: t => money(t.monthlyPremium) }, { label: 'Charged', render: t => money(t.chargedAmount) }, { label: 'Proration', render: t => `${t.prorationDays}/${t.cycleDays} days` }], hist)) : null,

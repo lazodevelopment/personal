@@ -284,7 +284,7 @@ def faq_parts(city, region):
          "and brings backup gear. It is a $500 add-on on any collection."),
         ("How does booking work?",
          "Choose your collection on our <a href=\"/book/\" style=\"color:var(--copper)\">booking page</a>, sign the agreement online, and a $500 retainer "
-         "is charged the moment you sign. Your remaining balance is charged automatically 14 business days after signing, or you can pay in full up front."),
+         "is charged the moment you sign. Your remaining balance is charged automatically 14 days after signing, or you can pay in full up front."),
         ("Are you insured?",
          "Fully insured, for your peace of mind and your venue&rsquo;s, and we carry backup cameras and audio on every wedding."),
     ]

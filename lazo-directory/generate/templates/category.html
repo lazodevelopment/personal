@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Best {{ cat.label }} in {{ metro.display }} &mdash; Verified | Lazo{% endblock %}
-{% block desc %}{{ vendors|length }} {{ cat.label|lower }} in {{ metro.display }}, ranked by verified reputation. Rankings are never for sale on Lazo.{% endblock %}
+{% block desc %}{% if guide %}Compare {{ vendors|length }} {{ cat.label|lower }} in {{ metro.name }}: wedding season, {% if guide.sunsets %}sunset times, {% endif %}when to book, typical cost and {{ guide.license.state if guide.license else "" }} license rules. No paid rankings.{% else %}{{ vendors|length }} {{ cat.label|lower }} in {{ metro.display }}, ranked by verified reputation. Rankings are never for sale on Lazo.{% endif %}{% endblock %}
 {% block canonical %}{{ base }}/{{ metro.id }}/{{ cat.slug }}/{% endblock %}
 {% block jsonld %}
 <script type="application/ld+json">
@@ -10,6 +10,7 @@
 {%- endfor -%}
 ]}
 </script>
+{% if guide %}<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{% for q, a in guide.faqs %}{"@type":"Question","name":{{ q|tojson }},"acceptedAnswer":{"@type":"Answer","text":{{ a|tojson }}}}{{ "," if not loop.last }}{% endfor %}]}</script>{% endif %}
 {% endblock %}
 {#- JC-LAZO-CAT-0915-007: the Lazo Score moves onto the card (it was only on the
     vendor page), and the list says plainly that nothing on it is sponsored. -#}
@@ -24,6 +25,7 @@
     {%- endif %}
   </div>
 </section>
+{% if guide %}{% include "_city_guide.html" %}{% endif %}
 <section class="band">
   <style>
     .cat-tools{background:#fff;border:1px solid rgba(217,183,124,.65);border-radius:20px;padding:22px 24px;margin:0 0 26px;box-shadow:0 10px 28px rgba(82,40,79,.06)}
@@ -223,6 +225,18 @@
 })();
 </script>
 <!-- lz-near -->
+{% if guide %}
+<section class="band cg">
+  <div class="cg-wrap">
+    <h2>{{ cat.label }} in {{ metro.name }}: questions couples ask</h2>
+    <div class="cg-faq">{% for q, a in guide.faqs %}<details{% if loop.first %} open{% endif %}><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}</div>
+    <h3 style="margin-top:26px">More {{ metro.name }} wedding vendors</h3>
+    <div class="cg-links">{% for c in guide.other_cats %}<a href="/{{ metro.id }}/{{ c }}/">{{ cat_labels[c] }} in {{ metro.name }}</a>{% endfor %}</div>
+    <h3 style="margin-top:22px">{{ cat.label }} in other cities</h3>
+    <div class="cg-links">{% for m in guide.other_cities if m in live_metros %}<a href="/{{ m }}/{{ cat.slug }}/">{{ metro_names[m] }}</a>{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
 {% if near %}
 <section class="band" style="padding-top:0">
   <h2 class="band-title" style="font-size:28px">{{ cat.label }} in nearby cities</h2>

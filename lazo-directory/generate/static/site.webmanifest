@@ -1,11 +1,36 @@
 {
-  "name": "Lazo",
+  "name": "Lazo: Wedding Planner",
   "short_name": "Lazo",
   "icons": [
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ],
   "theme_color": "#3D1C3B",
   "background_color": "#FAF6F0",
-  "display": "standalone"
+  "display": "standalone",
+  "description": "Free wedding planner app with verified vendors, real reviews from couples who booked, and June, an AI planner. Guest list, budget, seating and a wedding website.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.meetlazo.app",
+      "url": "https://play.google.com/store/apps/details?id=com.meetlazo.app"
+    },
+    {
+      "platform": "itunes",
+      "id": "6812863675",
+      "url": "https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675"
+    }
+  ],
+  "prefer_related_applications": true
 }

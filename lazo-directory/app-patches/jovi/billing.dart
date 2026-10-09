@@ -402,6 +402,7 @@ String _txStatusSerialize(TxStatus s) {
 // =======================================================================
 
 enum CardBrand {
+  ach,
   visa,
   mastercard,
   amex,
@@ -428,6 +429,8 @@ String _cardBrandLabel(CardBrand b) {
       return 'JCB';
     case CardBrand.unionpay:
       return 'UnionPay';
+    case CardBrand.ach:
+      return 'Bank account';
     case CardBrand.unknown:
       return 'Card';
   }
@@ -436,6 +439,10 @@ String _cardBrandLabel(CardBrand b) {
 CardBrand _cardBrandParse(String? raw) {
   if (raw == null) return CardBrand.unknown;
   switch (raw.toLowerCase().trim()) {
+    case 'ach':
+    case 'bank':
+    case 'bank_account':
+      return CardBrand.ach;
     case 'visa':
       return CardBrand.visa;
     case 'mastercard':
@@ -464,6 +471,8 @@ CardBrand _cardBrandParse(String? raw) {
 
 String _cardBrandSerialize(CardBrand b) {
   switch (b) {
+    case CardBrand.ach:
+      return 'ach';
     case CardBrand.visa:
       return 'visa';
     case CardBrand.mastercard:
@@ -547,12 +556,13 @@ class _CardOnFile {
   bool get hasCard => payarcCustomerId != null && payarcCustomerId!.isNotEmpty;
 
   /// True when we have last4 + brand + expiry to show on the tile.
-  bool get hasMetadata =>
-      last4 != null &&
-      last4!.isNotEmpty &&
-      brand != CardBrand.unknown &&
-      expMonth != null &&
-      expYear != null;
+  bool get hasMetadata => brand == CardBrand.ach
+      ? (last4 != null && last4!.isNotEmpty)
+      : (last4 != null &&
+          last4!.isNotEmpty &&
+          brand != CardBrand.unknown &&
+          expMonth != null &&
+          expYear != null);
 
   /// True when the saved card is past its expiry date (today).
   bool get isExpired {
@@ -573,6 +583,7 @@ class _CardOnFile {
   String get displayLast4 => last4 == null || last4!.isEmpty ? '••••' : last4!;
 
   String get displayExpiry {
+    if (brand == CardBrand.ach) return 'ACH';
     if (expMonth == null || expYear == null) return '--/--';
     final mm = expMonth!.toString().padLeft(2, '0');
     final yy = expYear! % 100;
@@ -580,9 +591,11 @@ class _CardOnFile {
   }
 
   factory _CardOnFile.fromUserDoc(Map<String, dynamic> data) {
-    final payarc = data[_fieldPayarcCustomerId] as String?;
-    final last4Raw = data[_fieldCardLast4];
-    final brandRaw = data[_fieldCardBrand];
+    // ACH (BILL): the bank account id is the saved method; it wins over any legacy card.
+    final bank = data['billBankAccountId'] as String?;
+    final payarc = (bank != null && bank.isNotEmpty) ? bank : data[_fieldPayarcCustomerId] as String?;
+    final last4Raw = (bank != null && bank.isNotEmpty) ? (data['billBankLast4'] ?? data[_fieldCardLast4]) : data[_fieldCardLast4];
+    final brandRaw = (bank != null && bank.isNotEmpty) ? 'ach' : data[_fieldCardBrand];
     final expMonthRaw = data[_fieldCardExpMonth];
     final expYearRaw = data[_fieldCardExpYear];
     final updatedRaw = data[_fieldCardUpdatedAt];
@@ -1154,52 +1167,36 @@ class _RetryChargeResult {
 /// }
 Future<_UpdateCardResult> _callUpdatePaymentMethod({
   required String userId,
-  required String cardNumber,
-  required int expMonth,
-  required int expYear,
-  required String cvc,
-  required String nameOnCard,
-  required String billingZip,
-  String? existingPayarcCustomerId,
+  required String routingNumber,
+  required String accountNumber,
+  required String accountType,
+  required String nameOnAccount,
 }) async {
   try {
     final callable =
         FirebaseFunctions.instance.httpsCallable(_cfUpdatePaymentMethod);
     final result = await callable.call(<String, dynamic>{
       'userId': userId,
-      'cardNumber': cardNumber,
-      'expMonth': expMonth,
-      'expYear': expYear,
-      'cvc': cvc,
-      'nameOnCard': nameOnCard,
-      'billingZip': billingZip,
-      if (existingPayarcCustomerId != null)
-        'existingPayarcCustomerId': existingPayarcCustomerId,
+      'routingNumber': routingNumber,
+      'accountNumber': accountNumber,
+      'accountType': accountType,
+      'nameOnAccount': nameOnAccount,
     });
-
     final data = result.data;
     if (data is! Map) {
       return _UpdateCardResult.failure(
-        errorMessage:
-            'We got an unexpected response from the payment system. Please try again.',
+        errorMessage: 'Unexpected response from the payment system.',
         errorCode: 'MALFORMED_RESPONSE',
       );
     }
     final m = Map<String, dynamic>.from(data);
     if (m['success'] == true) {
-      int? asInt(dynamic v) {
-        if (v is int) return v;
-        if (v is num) return v.toInt();
-        if (v is String) return int.tryParse(v);
-        return null;
-      }
-
       return _UpdateCardResult.success(
-        payarcCustomerId: m['payarcCustomerId'] as String?,
+        payarcCustomerId: m['bankAccountId'] as String?,
         cardLast4: m['cardLast4'] as String?,
-        cardBrand: _cardBrandParse(m['cardBrand'] as String?),
-        cardExpMonth: asInt(m['cardExpMonth']),
-        cardExpYear: asInt(m['cardExpYear']),
+        cardBrand: CardBrand.ach,
+        cardExpMonth: null,
+        cardExpYear: null,
       );
     }
     final errorCode = m['errorCode'] as String?;
@@ -1211,33 +1208,20 @@ Future<_UpdateCardResult> _callUpdatePaymentMethod({
     );
   } on FirebaseFunctionsException catch (e) {
     _logError('updatePaymentMethod CF failed: ${e.code}', e.message);
-    if (e.code == 'not-found' || e.code == 'unavailable') {
-      return _UpdateCardResult.failure(
-        errorMessage:
-            'Updating your card is temporarily unavailable while we upgrade our payment system. Please check back soon, or contact support.',
-        errorCode: 'PROCESSOR_UNAVAILABLE',
-      );
-    }
-    if (e.code == 'unauthenticated') {
-      return _UpdateCardResult.failure(
-        errorMessage:
-            'Your session has expired. Please sign in again to update your card.',
-        errorCode: 'UNAUTHENTICATED',
-      );
-    }
     return _UpdateCardResult.failure(
       errorMessage:
-          e.message ?? 'We couldn\'t update your card. Please try again.',
+          e.message ?? 'We couldn\'t save your bank account. Please try again.',
       errorCode: e.code.toUpperCase(),
     );
   } catch (e) {
     _logError('updatePaymentMethod unexpected error', e);
     return _UpdateCardResult.failure(
       errorMessage:
-          'Something went wrong while updating your card. Please try again.',
+          'Something went wrong while saving your bank account. Please try again.',
       errorCode: 'UNKNOWN',
     );
   }
+
 }
 
 /// Delete the saved payment method. Member will be marked
@@ -1885,126 +1869,53 @@ class _BillingWidgetState extends State<BillingWidget>
     return null;
   }
 
-  /// Called by the editor sheet when the user hits "Save card".
+  /// Called by the editor sheet when the user hits "Save bank account".
   /// Returns true on success (sheet closes), false on failure.
   Future<bool> _updateCard({
-    required String cardNumber,
-    required int expMonth,
-    required int expYear,
-    required String cvc,
-    required String nameOnCard,
-    required String billingZip,
+    required String routingNumber,
+    required String accountNumber,
+    required String accountType,
+    required String nameOnAccount,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      _showSnackBar('Sign in to update your card.', isError: true);
+      _showSnackBar('Sign in to update your bank account.', isError: true);
       return false;
     }
-
-    // Normalize 2-digit year input to 4-digit for storage.
-    final normalizedExpYear = expYear < 100 ? 2000 + expYear : expYear;
-
-    // Local validation — don't waste a CF call on a bad card.
-    final digitsOnly = cardNumber.replaceAll(RegExp(r'[^\d]'), '');
-    if (!validateCardLuhn(digitsOnly)) {
-      _showSnackBar(
-        'That card number doesn\'t look valid. Please double-check it.',
-        isError: true,
-      );
+    if (!RegExp(r'^\d{9}$').hasMatch(routingNumber)) {
+      _showSnackBar('Routing number should be 9 digits.', isError: true);
       return false;
     }
-    final expiryError = _validateExpiry(expMonth, normalizedExpYear);
-    if (expiryError != null) {
-      _showSnackBar(expiryError, isError: true);
+    if (!RegExp(r'^\d{4,17}$').hasMatch(accountNumber)) {
+      _showSnackBar('Please check the account number.', isError: true);
       return false;
     }
-    if (cvc.length < 3 || cvc.length > 4) {
-      _showSnackBar('CVC should be 3 or 4 digits.', isError: true);
-      return false;
-    }
-
-    _analytics('billing_update_card_submitted');
-    _showBlockingProgress('Updating your card…');
-
+    _analytics('billing_update_bank_submitted');
+    _showBlockingProgress('Saving your bank account…');
     final result = await _callUpdatePaymentMethod(
       userId: user.uid,
-      cardNumber: digitsOnly,
-      expMonth: expMonth,
-      expYear: normalizedExpYear,
-      cvc: cvc,
-      nameOnCard: nameOnCard,
-      billingZip: billingZip,
-      existingPayarcCustomerId: _cardOnFile.payarcCustomerId,
+      routingNumber: routingNumber,
+      accountNumber: accountNumber,
+      accountType: accountType,
+      nameOnAccount: nameOnAccount,
     );
-
     if (!mounted) return false;
-
     if (!result.success) {
-      Navigator.of(context).pop(); // dismiss progress
-      _analytics('billing_update_card_failed', {'errorCode': result.errorCode});
+      Navigator.of(context).pop();
+      _analytics('billing_update_bank_failed', {'errorCode': result.errorCode});
       _showSnackBar(
         result.errorMessage ??
-            'We couldn\'t update your card. Please try again.',
+            'We couldn\'t save your bank account. Please try again.',
         isError: true,
       );
       return false;
     }
-
-    // Persist the new metadata to the user doc so it shows up
-    // everywhere immediately. The backend SHOULD also write these
-    // fields, but we write client-side too for instant UI feedback
-    // and in case the CF forgets.
-    try {
-      final updates = <String, dynamic>{
-        _fieldCardUpdatedAt: FieldValue.serverTimestamp(),
-      };
-      if (result.payarcCustomerId != null) {
-        updates[_fieldPayarcCustomerId] = result.payarcCustomerId;
-      }
-      if (result.cardLast4 != null) {
-        updates[_fieldCardLast4] = result.cardLast4;
-      }
-      if (result.cardBrand != CardBrand.unknown) {
-        updates[_fieldCardBrand] = _cardBrandSerialize(result.cardBrand);
-      }
-      if (result.cardExpMonth != null) {
-        updates[_fieldCardExpMonth] = result.cardExpMonth;
-      }
-      if (result.cardExpYear != null) {
-        updates[_fieldCardExpYear] = result.cardExpYear;
-      }
-
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .update(updates);
-    } catch (e) {
-      _logError('card metadata write failed', e);
-      // Non-fatal — the CF should have written them too, and the
-      // user-doc stream will refresh whenever it does.
-    }
-
+    // The Cloud Function writes billBankAccountId / billBankLast4 / cardLast4 /
+    // cardBrand='ach'; the user-doc stream refreshes the tile.
     if (!mounted) return false;
-    Navigator.of(context).pop(); // dismiss progress
-    _analytics('billing_update_card_succeeded');
-    _showSnackBar('Card updated.', isSuccess: true);
-
-    // If the member had a failed payment on file, offer to retry.
-    if (_summary.hasFailedPayment) {
-      // Give the UI a beat to settle before showing the retry prompt.
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-      if (!mounted) return true;
-      final shouldRetry = await _showConfirmDialog(
-        title: 'Retry the failed charge?',
-        body:
-            'Your previous payment failed. Would you like to try charging your new card now for \$${(_summary.lastChargeAmount ?? _summary.monthlyTotal).toStringAsFixed(2)}?',
-        confirmLabel: 'Retry charge',
-      );
-      if (shouldRetry == true) {
-        await _retryFailedCharge();
-      }
-    }
-
+    Navigator.of(context).pop();
+    _analytics('billing_update_bank_succeeded');
+    _showSnackBar('Bank account updated. Verification can take up to two business days.', isSuccess: true);
     return true;
   }
 
@@ -2067,7 +1978,7 @@ class _BillingWidgetState extends State<BillingWidget>
       title: 'Remove your card?',
       body:
           'Your next monthly charge will fail until you add a new card. Your membership will go past-due after that.\n\nAre you sure?',
-      confirmLabel: 'Remove card',
+      confirmLabel: 'Remove bank account',
       destructive: true,
     );
     if (confirmed != true || !mounted) return;
@@ -2578,7 +2489,7 @@ class _BillingWidgetState extends State<BillingWidget>
   String _pdfCardDescription(CardBrand brand, String? last4) {
     if (last4 == null || last4.isEmpty) {
       return brand == CardBrand.unknown
-          ? 'Card on file'
+          ? 'Bank account on file'
           : '${_cardBrandLabel(brand)} on file';
     }
     final brandLabel =
@@ -3257,7 +3168,7 @@ class _BillingWidgetState extends State<BillingWidget>
                               color: Colors.white, size: 15),
                           SizedBox(width: 6),
                           Text(
-                            'Update card',
+                            'Update bank account',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 13,
@@ -3739,7 +3650,7 @@ class _BillingWidgetState extends State<BillingWidget>
                   color: _textTertiary,
                 ),
                 label: const Text(
-                  'Remove card',
+                  'Remove bank account',
                   style: TextStyle(
                     color: _textTertiary,
                     fontSize: 11.5,
@@ -3826,7 +3737,7 @@ class _BillingWidgetState extends State<BillingWidget>
                                 color: Colors.white, size: 15),
                             SizedBox(width: 5),
                             Text(
-                              'Add card',
+                              'Add bank account',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 13,
@@ -3955,6 +3866,8 @@ class _BillingWidgetState extends State<BillingWidget>
         return 'JCB';
       case CardBrand.unionpay:
         return 'UPI';
+      case CardBrand.ach:
+        return 'ACH';
       case CardBrand.unknown:
         return 'CARD';
     }
@@ -3978,6 +3891,8 @@ class _BillingWidgetState extends State<BillingWidget>
         return const Color(0xFF0E4C96);
       case CardBrand.unionpay:
         return const Color(0xFFE21836);
+      case CardBrand.ach:
+        return _joviMint;
       case CardBrand.unknown:
         return _joviNavy;
     }
@@ -4960,7 +4875,7 @@ class _BillingWidgetState extends State<BillingWidget>
     if (_cardOnFile.hasMetadata) {
       return '${_cardBrandLabel(_cardOnFile.brand)} ending in ${_cardOnFile.displayLast4}';
     }
-    return 'Card on file';
+    return 'Bank account on file';
   }
 
   // (state class continues in subsequent parts)
@@ -4973,7 +4888,7 @@ class _BillingWidgetState extends State<BillingWidget>
   // =======================================================================
 
   Future<void> _openUpdateCardSheet() async {
-    _analytics('billing_update_card_sheet_opened');
+    _analytics('billing_update_bank_sheet_opened');
     await showModalBottomSheet<void>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -4987,25 +4902,17 @@ class _BillingWidgetState extends State<BillingWidget>
           child: _UpdateCardSheet(
             existingCard: _cardOnFile,
             onSave: ({
-              required String cardNumber,
-              required int expMonth,
-              required int expYear,
-              required String cvc,
-              required String nameOnCard,
-              required String billingZip,
+              required String routingNumber,
+              required String accountNumber,
+              required String accountType,
+              required String nameOnAccount,
             }) async {
-              // The sheet stays open while the CF runs. On success we
-              // close the sheet; on failure we leave it open so the
-              // user can correct and retry.
-              final success = await _updateCard(
-                cardNumber: cardNumber,
-                expMonth: expMonth,
-                expYear: expYear,
-                cvc: cvc,
-                nameOnCard: nameOnCard,
-                billingZip: billingZip,
+              return _updateCard(
+                routingNumber: routingNumber,
+                accountNumber: accountNumber,
+                accountType: accountType,
+                nameOnAccount: nameOnAccount,
               );
-              return success;
             },
           ),
         );
@@ -5105,14 +5012,14 @@ class _ExpirationDateFormatter extends TextInputFormatter {
 // =======================================================================
 
 typedef _OnSaveCard = Future<bool> Function({
-  required String cardNumber,
-  required int expMonth,
-  required int expYear,
-  required String cvc,
-  required String nameOnCard,
-  required String billingZip,
+  required String routingNumber,
+  required String accountNumber,
+  required String accountType,
+  required String nameOnAccount,
 });
 
+/// Bank-account editor (ACH via BILL). Collects routing + account number,
+/// hands them to the parent, and never persists them locally.
 class _UpdateCardSheet extends StatefulWidget {
   const _UpdateCardSheet({
     required this.existingCard,
@@ -5129,448 +5036,176 @@ class _UpdateCardSheet extends StatefulWidget {
 class _UpdateCardSheetState extends State<_UpdateCardSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
-  final _numberCtrl = TextEditingController();
-  final _expCtrl = TextEditingController();
-  final _cvcCtrl = TextEditingController();
-  final _zipCtrl = TextEditingController();
-
-  final FocusNode _numberFocus = FocusNode();
-  final FocusNode _expFocus = FocusNode();
-  final FocusNode _cvcFocus = FocusNode();
-  final FocusNode _zipFocus = FocusNode();
-
-  CardBrand _detectedBrand = CardBrand.unknown;
+  final _routingCtrl = TextEditingController();
+  final _accountCtrl = TextEditingController();
+  String _type = 'CHECKING';
   bool _submitting = false;
 
   @override
   void dispose() {
     _nameCtrl.dispose();
-    _numberCtrl.dispose();
-    _expCtrl.dispose();
-    _cvcCtrl.dispose();
-    _zipCtrl.dispose();
-    _numberFocus.dispose();
-    _expFocus.dispose();
-    _cvcFocus.dispose();
-    _zipFocus.dispose();
+    _routingCtrl.dispose();
+    _accountCtrl.dispose();
     super.dispose();
   }
 
-  void _onNumberChanged(String v) {
-    final digits = v.replaceAll(RegExp(r'[^\d]'), '');
-    final brand = detectCardBrand(digits);
-    if (brand != _detectedBrand) {
-      setState(() => _detectedBrand = brand);
-    }
-  }
+  InputDecoration _deco(String label, String hint, IconData icon) =>
+      InputDecoration(
+        labelText: label,
+        hintText: hint,
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        hintStyle: TextStyle(color: Colors.white.withOpacity(0.35)),
+        prefixIcon: Icon(icon, color: _joviCoral),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.06),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.15))),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.white.withOpacity(0.15))),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: _joviCoral, width: 2)),
+      );
 
   Future<void> _submit() async {
-    if (_submitting) return;
     if (!(_formKey.currentState?.validate() ?? false)) {
       HapticFeedback.mediumImpact();
       return;
     }
-    final digits = _numberCtrl.text.replaceAll(RegExp(r'[^\d]'), '');
-    final expParts = _expCtrl.text.split('/');
-    if (expParts.length != 2) return;
-    final expMonth = int.tryParse(expParts[0]);
-    final expYearRaw = int.tryParse(expParts[1]);
-    if (expMonth == null || expYearRaw == null) return;
-
     setState(() => _submitting = true);
     final success = await widget.onSave(
-      cardNumber: digits,
-      expMonth: expMonth,
-      expYear: expYearRaw,
-      cvc: _cvcCtrl.text.trim(),
-      nameOnCard: _nameCtrl.text.trim(),
-      billingZip: _zipCtrl.text.trim(),
+      routingNumber: _routingCtrl.text.trim(),
+      accountNumber: _accountCtrl.text.trim(),
+      accountType: _type,
+      nameOnAccount: _nameCtrl.text.trim(),
     );
     if (!mounted) return;
     setState(() => _submitting = false);
-    if (success) {
-      // Parent already popped progress dialog. Close the sheet too.
-      Navigator.of(context).pop();
-    }
+    if (success) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasExistingCard = widget.existingCard.hasCard;
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
-      child: BackdropFilter(
-        filter: ui_dart.ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          decoration: BoxDecoration(
-            color: _joviNavy.withOpacity(0.97),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
+    final hasExisting = widget.existingCard.hasCard;
+    return Container(
+      decoration: const BoxDecoration(
+        color: _joviNavy,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+      child: SafeArea(
+        top: false,
+        child: Form(
+          key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        hasExistingCard ? 'Update Your Card' : 'Add a Card',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 19,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.4,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        hasExistingCard
-                            ? 'Your next monthly charge will use this card.'
-                            : 'We\'ll use this card for your monthly membership.',
-                        style: const TextStyle(
-                          color: _textTertiary,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w500,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildSheetField(
-                          controller: _nameCtrl,
-                          label: 'Name on card',
-                          hint: 'Full name',
-                          keyboardType: TextInputType.name,
-                          textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.creditCardName],
-                          onSubmitted: (_) => _numberFocus.requestFocus(),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) {
-                              return 'Please enter the name on the card.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSheetField(
-                          controller: _numberCtrl,
-                          focusNode: _numberFocus,
-                          label: 'Card number',
-                          hint: '1234 5678 9012 3456',
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.creditCardNumber],
-                          suffix: _detectedBrand == CardBrand.unknown
-                              ? null
-                              : Padding(
-                                  padding: const EdgeInsets.only(right: 10),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 7, vertical: 3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(5),
-                                    ),
-                                    child: Text(
-                                      _shortBrandLabel(_detectedBrand),
-                                      style: TextStyle(
-                                        color:
-                                            _detectBrandColor(_detectedBrand),
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w700,
-                                        letterSpacing: 0.3,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                          formatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(19),
-                            _CardNumberFormatter(),
-                          ],
-                          onChanged: _onNumberChanged,
-                          onSubmitted: (_) => _expFocus.requestFocus(),
-                          validator: (v) {
-                            final digits =
-                                (v ?? '').replaceAll(RegExp(r'[^\d]'), '');
-                            if (digits.isEmpty) return 'Card number required.';
-                            if (digits.length < 13) {
-                              return 'Card number looks too short.';
-                            }
-                            if (!validateCardLuhn(digits)) {
-                              return 'Card number doesn\'t look valid.';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildSheetField(
-                                controller: _expCtrl,
-                                focusNode: _expFocus,
-                                label: 'Expiration',
-                                hint: 'MM/YY',
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.next,
-                                autofillHints: const [
-                                  AutofillHints.creditCardExpirationDate,
-                                ],
-                                formatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(4),
-                                  _ExpirationDateFormatter(),
-                                ],
-                                onSubmitted: (_) => _cvcFocus.requestFocus(),
-                                validator: (v) {
-                                  final text = (v ?? '').replaceAll('/', '');
-                                  if (text.length < 4) {
-                                    return 'MM/YY';
-                                  }
-                                  final month =
-                                      int.tryParse(text.substring(0, 2));
-                                  final yearTwo =
-                                      int.tryParse(text.substring(2, 4));
-                                  if (month == null ||
-                                      month < 1 ||
-                                      month > 12) {
-                                    return 'Invalid month.';
-                                  }
-                                  if (yearTwo == null) {
-                                    return 'Invalid year.';
-                                  }
-                                  final fullYear = 2000 + yearTwo;
-                                  final now = DateTime.now();
-                                  final endOfExpiry =
-                                      DateTime(fullYear, month + 1, 0);
-                                  if (endOfExpiry.isBefore(
-                                      DateTime(now.year, now.month, now.day))) {
-                                    return 'Card has expired.';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _buildSheetField(
-                                controller: _cvcCtrl,
-                                focusNode: _cvcFocus,
-                                label: 'CVC',
-                                hint: _detectedBrand == CardBrand.amex
-                                    ? '4 digits'
-                                    : '3 digits',
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.next,
-                                obscure: true,
-                                autofillHints: const [
-                                  AutofillHints.creditCardSecurityCode
-                                ],
-                                formatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                  LengthLimitingTextInputFormatter(4),
-                                ],
-                                onSubmitted: (_) => _zipFocus.requestFocus(),
-                                validator: (v) {
-                                  if (v == null || v.length < 3) {
-                                    return 'CVC required.';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSheetField(
-                          controller: _zipCtrl,
-                          focusNode: _zipFocus,
-                          label: 'Billing ZIP',
-                          hint: '12345',
-                          keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
-                          autofillHints: const [AutofillHints.postalCode],
-                          formatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(10),
-                          ],
-                          onSubmitted: (_) => _submit(),
-                          validator: (v) {
-                            if (v == null || v.length < 5) {
-                              return 'Enter a valid ZIP.';
-                            }
-                            return null;
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 14),
-
-                // Security badge
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                Center(
                   child: Container(
-                    padding: const EdgeInsets.all(10),
+                    width: 38,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
-                      color: _joviMint.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: _joviMint.withOpacity(0.3),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.lock_outline_rounded,
-                            color: _joviMint, size: 14),
-                        SizedBox(width: 7),
-                        Expanded(
-                          child: Text(
-                            'Your payment info is encrypted and never stored on your device.',
-                            style: TextStyle(
-                              color: _joviMint,
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
-                              height: 1.4,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(2)),
                   ),
                 ),
-
+                Text(
+                  hasExisting ? 'Replace bank account' : 'Add bank account',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.4),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Your membership is debited from this account each month. Jovi never stores the account number.',
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.6), fontSize: 13),
+                ),
                 const SizedBox(height: 18),
-
-                // Actions
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Row(
-                    children: [
-                      _PressableMaterial(
-                        child: InkWell(
-                          onTap: _submitting
-                              ? null
-                              : () => Navigator.of(context).pop(),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.white.withOpacity(0.18),
-                                width: 1,
-                              ),
-                            ),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13.5,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ),
+                TextFormField(
+                  controller: _nameCtrl,
+                  style: const TextStyle(color: Colors.white),
+                  textCapitalization: TextCapitalization.words,
+                  decoration:
+                      _deco('Name on account', 'As it appears at your bank', Icons.person_outline),
+                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _routingCtrl,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _deco('Routing number', '9 digits', Icons.account_balance),
+                  validator: (v) => RegExp(r'^\d{9}$').hasMatch(v ?? '')
+                      ? null
+                      : 'Routing number is 9 digits',
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _accountCtrl,
+                  keyboardType: TextInputType.number,
+                  obscureText: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _deco('Account number', '4 to 17 digits', Icons.numbers),
+                  validator: (v) => RegExp(r'^\d{4,17}$').hasMatch(v ?? '')
+                      ? null
+                      : 'Check the account number',
+                ),
+                const SizedBox(height: 12),
+                Row(children: [
+                  for (final type in const ['CHECKING', 'SAVINGS'])
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: ChoiceChip(
+                        label: Text(type == 'CHECKING' ? 'Checking' : 'Savings'),
+                        selected: _type == type,
+                        selectedColor: _joviCoral,
+                        backgroundColor: Colors.white.withOpacity(0.08),
+                        labelStyle: TextStyle(
+                            color: _type == type
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.7),
+                            fontWeight: FontWeight.w600),
+                        onSelected: (_) => setState(() => _type = type),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _PressableMaterial(
-                          child: InkWell(
-                            onTap: _submitting ? null : _submit,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              decoration: BoxDecoration(
-                                gradient: _submitting
-                                    ? null
-                                    : const LinearGradient(
-                                        colors: [_joviCoral, _joviCoralLight],
-                                      ),
-                                color: _submitting
-                                    ? Colors.white.withOpacity(0.1)
-                                    : null,
-                                borderRadius: BorderRadius.circular(12),
-                                boxShadow: _submitting
-                                    ? null
-                                    : [
-                                        BoxShadow(
-                                          color: _joviCoral.withOpacity(0.4),
-                                          blurRadius: 12,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (_submitting) ...[
-                                    const SizedBox(
-                                      width: 14,
-                                      height: 14,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                                Colors.white),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                  ],
-                                  Text(
-                                    _submitting
-                                        ? 'Saving…'
-                                        : (hasExistingCard
-                                            ? 'Save Card'
-                                            : 'Add Card'),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: 0.1,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
+                ]),
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _submitting ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _joviCoral,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                      elevation: 0,
+                    ),
+                    child: _submitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
+                        : const Text('Save bank account',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Verification can take up to two business days. Your membership stays active while we verify.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Colors.white.withOpacity(0.5), fontSize: 12),
                 ),
               ],
             ),
@@ -5578,141 +5213,5 @@ class _UpdateCardSheetState extends State<_UpdateCardSheet> {
         ),
       ),
     );
-  }
-
-  Widget _buildSheetField({
-    required TextEditingController controller,
-    required String label,
-    String? hint,
-    FocusNode? focusNode,
-    TextInputType? keyboardType,
-    TextInputAction? textInputAction,
-    List<TextInputFormatter>? formatters,
-    List<String>? autofillHints,
-    Widget? suffix,
-    bool obscure = false,
-    ValueChanged<String>? onChanged,
-    ValueChanged<String>? onSubmitted,
-    String? Function(String?)? validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      inputFormatters: formatters,
-      autofillHints: autofillHints,
-      obscureText: obscure,
-      cursorColor: _joviCoral,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-      ),
-      onChanged: onChanged,
-      onFieldSubmitted: onSubmitted,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        labelStyle: const TextStyle(
-          color: _textSecondary,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
-        floatingLabelStyle: const TextStyle(
-          color: _joviCoralLight,
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-        ),
-        hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.3),
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-        ),
-        suffixIcon: suffix,
-        suffixIconConstraints: const BoxConstraints(
-          minWidth: 0,
-          minHeight: 0,
-        ),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.06),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.14),
-            width: 1,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: BorderSide(
-            color: Colors.white.withOpacity(0.14),
-            width: 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: _joviCoral, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: _joviErrorRed, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(11),
-          borderSide: const BorderSide(color: _joviErrorRed, width: 2),
-        ),
-        errorStyle: const TextStyle(
-          color: _joviErrorRed,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  String _shortBrandLabel(CardBrand brand) {
-    switch (brand) {
-      case CardBrand.visa:
-        return 'VISA';
-      case CardBrand.mastercard:
-        return 'MC';
-      case CardBrand.amex:
-        return 'AMEX';
-      case CardBrand.discover:
-        return 'DISC';
-      case CardBrand.diners:
-        return 'DINERS';
-      case CardBrand.jcb:
-        return 'JCB';
-      case CardBrand.unionpay:
-        return 'UPI';
-      case CardBrand.unknown:
-        return '';
-    }
-  }
-
-  Color _detectBrandColor(CardBrand brand) {
-    switch (brand) {
-      case CardBrand.visa:
-        return const Color(0xFF1A1F71);
-      case CardBrand.mastercard:
-        return const Color(0xFFEB001B);
-      case CardBrand.amex:
-        return const Color(0xFF006FCF);
-      case CardBrand.discover:
-        return const Color(0xFFFF6000);
-      case CardBrand.diners:
-        return const Color(0xFF0079BE);
-      case CardBrand.jcb:
-        return const Color(0xFF0E4C96);
-      case CardBrand.unionpay:
-        return const Color(0xFFE21836);
-      case CardBrand.unknown:
-        return _joviNavy;
-    }
   }
 }

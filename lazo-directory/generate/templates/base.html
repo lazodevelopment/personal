@@ -6,7 +6,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="apple-itunes-app" content="app-id=6812863675">
+<meta name="apple-itunes-app" content="app-id=6812863675, app-argument={{ self.canonical() }}">
 <title>{% block title %}Lazo &mdash; Tied Together{% endblock %}</title>
 <meta name="description" content="{% block desc %}Lazo is the verified wedding marketplace. Rankings can't be bought, every review is verified, every lead is a real couple.{% endblock %}">
 <link rel="canonical" href="{% block canonical %}{{ base }}/{% endblock %}">
@@ -27,7 +27,8 @@
 <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png">
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-{% if noindex %}<meta name="robots" content="noindex,follow">{% endif %}
+<link rel="manifest" href="/assets/manifest.json">
+{% if noindex %}<meta name="robots" content="noindex,follow">{% else %}<meta name="robots" content="index,follow,max-image-preview:large">{% endif %}
 <style>
 /* JC-LAZO-BASE-0907-002: current-page marker in the nav; pages set nav_key */
 .site-nav a.on{color:#52284F;font-weight:600;border-bottom:1.5px solid #D9B77C;padding-bottom:2px}

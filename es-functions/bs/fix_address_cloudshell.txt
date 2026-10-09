@@ -1,0 +1,60 @@
+cat > ~/fix_address.py <<'PYEOF'
+"""Correct an ES couple's mailing address and reissue their unsigned contract.
+python fix_address.py EMAIL "STREET" "CITY, ST ZIP" [--go]
+Dry run prints the booking and the change; --go updates the booking, renders a new
+contract with the same pricing, sends it via SignWell, and deletes the old unsigned one."""
+import os, sys, subprocess, json, requests
+from datetime import timezone
+P = "elizabeth-scott-738e5"
+for k in ("SIGNWELL_API_KEY", "RESEND_API_KEY", "WHOP_API_KEY", "WHOP_WEBHOOK_SECRET", "GRATUITY_SECRET",
+          "ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REFRESH_TOKEN"):
+    os.environ[k] = subprocess.check_output(["gcloud", "secrets", "versions", "access", "latest",
+                                             "--secret", k, "--project", P], text=True, shell=os.name == "nt").strip()
+os.environ.update(GOOGLE_CLOUD_PROJECT=P, GCLOUD_PROJECT=P, PAYMENT_PROCESSOR="whop",
+                  WHOP_ACCOUNT_ID="biz_FeVrtPXroSleTG")
+sys.path.insert(0, os.path.expanduser("~/es-deploy/functions"))
+os.chdir(os.path.expanduser("~/es-deploy/functions"))
+import main as M
+from google.cloud.firestore_v1.base_query import FieldFilter as F
+email, street, csz = sys.argv[1].strip().lower(), sys.argv[2].strip(), sys.argv[3].strip()
+state = csz.replace(",", " ").split()[-2].upper()
+db = M.firestore.client()
+snaps = db.collection("bookings").where(filter=F("email", "==", email)).get()
+if len(snaps) != 1:
+    sys.exit(f"expected 1 booking for {email}, found {len(snaps)}")
+ref, b = snaps[0].reference, snaps[0].to_dict()
+print("BOOKING", b["booking_id"], b.get("status"), b.get("client_names"), b.get("event_date_raw"),
+      "signed_at", b.get("signed_at"), "doc", b.get("signwell_document_id"))
+print("OLD", b.get("mailing_address"), "|", b.get("city_state_zip"), "| governing", b.get("governing_state"))
+print("NEW", street, "|", csz, "| governing", state)
+if b.get("signed_at") or b.get("status") != "pending_signature":
+    sys.exit("contract already signed (or booking not pending) - not reissuing")
+if "--go" not in sys.argv:
+    sys.exit("dry run - add --go to apply")
+
+b.update(mailing_address=street, city_state_zip=csz, governing_state=state)
+client = {k: str(b.get(k, "")).strip() for k in M.REQUIRED_FIELDS + M.OPTIONAL_FIELDS
+          if k not in ("package_id", "payment_option", "agree_terms")}
+ev = M.datetime.strptime(b["event_date_raw"], "%Y-%m-%d")
+client["event_date"] = ev.strftime("%B %d, %Y").replace(" 0", " ")
+created = b["created_at"].astimezone(timezone.utc).date()
+pdf = M.generate_contract(b["package_id"], b["payment_option"], client=client, signwell=True,
+                          second_shooter=b.get("second_shooter", False),
+                          extra_hours=b.get("extra_hours", 0),
+                          discount=b.get("discount", 0), discount_code=b.get("discount_code", ""),
+                          days_to_event=(ev.date() - created).days,
+                          prepaid=bool(b.get("paid_at_reservation")))
+sw = M.SignWell(os.environ["SIGNWELL_API_KEY"], test_mode=M.TEST_MODE)
+doc = sw.send_contract(pdf, b["booking_id"], b["client_names"], b["email"],
+                       redirect_url="https://elizabethscottweddings.com/booked")
+old = b.get("signwell_document_id")
+ref.update({"mailing_address": street, "city_state_zip": csz, "governing_state": state,
+            "signwell_document_id": doc.get("id"), "signwell_replaced": old,
+            "admin_last_action": {"action": "fix_address", "at": M.firestore.SERVER_TIMESTAMP}})
+print("NEW DOC", doc.get("id"), (doc.get("recipients") or [{}])[0].get("signing_url"))
+if old:
+    r = requests.delete(f"https://www.signwell.com/api/v1/documents/{old}",
+                        headers={"X-Api-Key": os.environ["SIGNWELL_API_KEY"]}, timeout=30)
+    print("OLD DOC DELETED" if r.ok else f"old doc delete failed {r.status_code} {r.text[:200]}")
+PYEOF
+python3 ~/fix_address.py knmedlen96@gmail.com "1700 E 4th Street Apt 2262" "Austin, TX 78702"

@@ -282,6 +282,25 @@ def balance_receipt(api_key, booking, amount):
                  f"Payment received — {booking.get('event_date','')}", html)
 
 
+def balance_link(api_key, booking, amount, pay_url):
+    """Balance due, no card on file, processor does not email its own link
+    (Whop). Zoho bookings never use this: Zoho sends the link itself."""
+    first = booking["client_names"].split("&")[0].strip().split()[0]
+    html = f"""
+    <div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">
+      <h1 style="font-weight:normal;letter-spacing:2px">ATAVIA WEDDINGS</h1>
+      <p>Hi {first},</p>
+      <p>Your remaining balance of <b>${amount:,}</b> for <b>{booking['event_date']}</b>
+      is now due. We don't have a card on file for you, so here is a secure link:</p>
+      <p><a href="{pay_url}" style="color:#B0713F"><b>Pay your balance securely here</b></a>
+      (the charge appears as <b>Atavia Weddings</b>).</p>
+      <p>Any trouble with the link, reply here and we'll sort it personally.</p>
+      <p style="color:#B0713F">— The Atavia Weddings Team</p>
+    </div>"""
+    return _send(api_key, booking["email"],
+                 f"Your balance for {booking['event_date']} is due", html)
+
+
 def balance_heads_up(api_key, booking, amount, when="tomorrow morning"):
     """Sent by charge_balances the run before a card-on-file balance falls
     due. The welcome email named the date weeks ago; this is the reminder so

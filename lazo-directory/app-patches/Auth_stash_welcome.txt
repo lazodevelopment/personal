@@ -1,0 +1,57 @@
+// Auth_stash_welcome.txt - JC-LAZO-COUPLE-1004-V144
+// FlutterFlow custom ACTION: stashWelcomeParams
+// Where: the login / create-account page, On Page Load, before any goNamed -
+// beside the existing stash of ?vendor / ?template / ?save (goNamed drops the
+// query string, so the dashboard reads SharedPreferences 'lazo_pending_welcome'
+// when the URL has nothing). The couple dashboard v144 removes the key once read.
+// No arguments, no return value. Dependencies: shared_preferences (already used).
+
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/actions/index.dart'; // Imports other custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom action code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
+Future stashWelcomeParams() async {
+  try {
+    final Map<String, String> q = Uri.base.queryParameters;
+    final bool ours = (q['from'] ?? '').startsWith('welcome') ||
+        (q['intent'] ?? '').isNotEmpty ||
+        (q['names'] ?? '').isNotEmpty ||
+        (q['date'] ?? '').isNotEmpty;
+    if (!ours) return;
+    const List<String> keep = <String>[
+      'from',
+      'intent',
+      'names',
+      'date',
+      'metro',
+      'design',
+      'template',
+      'source',
+      'guests',
+      'month',
+      'utm_source',
+      'utm_medium',
+      'utm_campaign',
+      'utm_content',
+      'utm_term',
+      'fbclid'
+    ];
+    final Map<String, String> out = <String, String>{};
+    for (final String k in keep) {
+      final String v = (q[k] ?? '').trim();
+      if (v.isNotEmpty) out[k] = v.length > 200 ? v.substring(0, 200) : v;
+    }
+    if (out.isEmpty) return;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lazo_pending_welcome', jsonEncode(out));
+  } catch (_) {}
+}

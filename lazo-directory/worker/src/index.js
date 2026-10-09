@@ -72,7 +72,7 @@ const json = (obj, status = 200) =>
 
 const TYPES = { html:"text/html;charset=utf-8", css:"text/css", js:"text/javascript",
   svg:"image/svg+xml", xml:"application/xml", txt:"text/plain", png:"image/png",
-  jpg:"image/jpeg", webp:"image/webp", ico:"image/x-icon", json:"application/json" };
+  jpg:"image/jpeg", webp:"image/webp", ico:"image/x-icon", json:"application/json", webmanifest:"application/manifest+json" };
 
 // JC-LAZO-WWSEO-0919-010: harvest, aquarelle, prism, meadow, gilded, marigold, papel
 const TEMPLATES = ["sage","noir","dune","fete","tide","flora","atelier","verona","shore","summit","ranch","starlit","frost",

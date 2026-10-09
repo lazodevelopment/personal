@@ -1,4 +1,4 @@
-"""Renders 30 Instagram/Facebook feed posts (1080x1080) for the Jovi launch runway, plus captions.
+"""Renders 30 Instagram/Facebook feed posts (1080x1350, 4:5 portrait; Instagram shows 4:5 uncropped in feed and trims only ~34px per side in the 3:4 profile grid) for the Jovi launch runway, plus captions.
 Run: python make_posts.py   → out/NN-slug.png, captions.md, captions.csv, contact-sheet.png
 Brand: navy #0B1426/#1A2744, coral #FF6B4A, mint #00D4AA, gold #FFD166, ivory #FBF7F3. Sora display, DM Sans body.
 """
@@ -8,7 +8,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ROOT = pathlib.Path(__file__).resolve().parent
 OUT = ROOT / "out"; OUT.mkdir(exist_ok=True)
 IMG = pathlib.Path("C:/Users/kurvh/jovi-site/assets/img")
-W = H = 1080
+W, H = 1080, 1350
+M = 96            # side margin: survives the 3:4 grid crop (~34px/side) with room to spare
+CW = W - 2 * M    # 888 content width
 NAVY, NAVY2, CORAL, MINT, GOLD, IVORY, WHITE = (11, 20, 38), (26, 39, 68), (255, 107, 74), (0, 212, 170), (255, 209, 102), (251, 247, 243), (255, 255, 255)
 INK = (19, 27, 46)
 
@@ -20,7 +22,7 @@ def font(kind, size, weight):
 LOGO_W = Image.open(IMG / "jovi-logo-white.png").convert("RGBA")
 LOGO_N = Image.open(IMG / "jovi-logo-navy.png").convert("RGBA")
 
-def logo(canvas, white=True, x=64, y=56, h=54):
+def logo(canvas, white=True, x=M, y=72, h=54):
     src = LOGO_W if white else LOGO_N
     w = int(src.width * h / src.height)
     canvas.alpha_composite(src.resize((w, h), Image.LANCZOS), (x, y))
@@ -72,74 +74,77 @@ def pill(draw, xy, text, f, fg, bg, padx=22, pady=12):
 
 def footer(draw, canvas, dark=True):
     f = font("dm", 26, "Medium"); col = (255, 255, 255, 160) if dark else (19, 27, 46, 140)
-    draw.text((64, H - 84), "jovihealth.com  ·  AZ · FL · TX", font=f, fill=col)
-    f2 = font("dm", 22, "Regular"); draw.text((64, H - 50), "A healthcare membership, not insurance.", font=f2, fill=(255, 255, 255, 110) if dark else (19, 27, 46, 110))
+    draw.text((M, H - 96), "jovihealth.com  ·  AZ · FL · TX", font=f, fill=col)
+    f2 = font("dm", 22, "Regular"); draw.text((M, H - 60), "A healthcare membership, not insurance.", font=f2, fill=(255, 255, 255, 110) if dark else (19, 27, 46, 110))
 
 # ── Templates ──────────────────────────────────────────────────────────────
 def photo_card(bg, eyebrow, headline, sub=None, accent=CORAL, darken=0.55):
     c = cover(bg, darken=0.15); c.alpha_composite(gradient((W, H), NAVY, NAVY, 0, int(255 * 0.95)))
-    c.alpha_composite(gradient((W, H), NAVY, NAVY, int(255 * darken), 0).transpose(Image.FLIP_TOP_BOTTOM).crop((0, 0, W, 420)), (0, 0))
+    c.alpha_composite(gradient((W, H), NAVY, NAVY, int(255 * darken), 0).transpose(Image.FLIP_TOP_BOTTOM).crop((0, 0, W, 520)), (0, 0))
     d = ImageDraw.Draw(c); logo(c)
-    y = 560
-    if eyebrow: pill(d, (64, y - 70), eyebrow.upper(), font("sora", 22, "SemiBold"), NAVY, accent)
-    y = text_block(d, (64, y), headline, font("sora", 78, "ExtraBold"), WHITE, 952, 1.05)
-    if sub: text_block(d, (64, y + 18), sub, font("dm", 34, "Medium"), (255, 255, 255, 215), 900, 1.3)
+    hf = font("sora", 74, "ExtraBold"); sf = font("dm", 34, "Medium")
+    hl = len(wrap(d, headline, hf, CW)); sl = len(wrap(d, sub, sf, CW)) if sub else 0
+    block = hl * int(74 * 1.05) + (18 + sl * int(34 * 1.3) if sub else 0)
+    y = H - 150 - block            # bottom-anchor the copy above the footer
+    if eyebrow: pill(d, (M, y - 72), eyebrow.upper(), font("sora", 22, "SemiBold"), NAVY, accent)
+    y = text_block(d, (M, y), headline, hf, WHITE, CW, 1.05)
+    if sub: text_block(d, (M, y + 18), sub, sf, (255, 255, 255, 215), CW, 1.3)
     footer(d, c); return c
 
 def stat_card(number, line, sub=None, bg=NAVY, num_color=CORAL, photo=None):
     c = Image.new("RGBA", (W, H), bg)
-    if photo: p = cover(photo, (W, 420), darken=0.35); c.alpha_composite(p, (0, H - 420)); c.alpha_composite(gradient((W, 200), bg, bg, 255, 0), (0, H - 420))
+    if photo: p = cover(photo, (W, 520), darken=0.35); c.alpha_composite(p, (0, H - 520)); c.alpha_composite(gradient((W, 220), bg, bg, 255, 0), (0, H - 520))
     d = ImageDraw.Draw(c); logo(c)
-    f = font("sora", 210 if len(number) <= 4 else 150, "ExtraBold"); d.text((64, 200), number, font=f, fill=num_color)
-    y = 200 + f.size + 30
-    y = text_block(d, (64, y), line, font("sora", 56, "Bold"), WHITE, 952, 1.1)
-    if sub: text_block(d, (64, y + 14), sub, font("dm", 32, "Medium"), (255, 255, 255, 200), 900, 1.3)
+    f = font("sora", 210 if len(number) <= 4 else 150, "ExtraBold"); d.text((M, 240), number, font=f, fill=num_color)
+    y = 240 + f.size + 30
+    y = text_block(d, (M, y), line, font("sora", 54, "Bold"), WHITE, CW, 1.1)
+    if sub: text_block(d, (M, y + 14), sub, font("dm", 32, "Medium"), (255, 255, 255, 200), CW, 1.3)
     footer(d, c); return c
 
 def list_card(title, items, bg_photo=None, accent=MINT):
     c = Image.new("RGBA", (W, H), IVORY); d = ImageDraw.Draw(c)
-    top = 400; d.rectangle((0, 0, W, top), fill=NAVY)
+    top = 480; d.rectangle((0, 0, W, top), fill=NAVY)
     if bg_photo: p = cover(bg_photo, (W, top), darken=0.55); c.alpha_composite(p, (0, 0))
     d = ImageDraw.Draw(c); logo(c)
-    text_block(d, (64, 150), title, font("sora", 62, "ExtraBold"), WHITE, 952, 1.06)
-    y = top + 56
+    text_block(d, (M, 180), title, font("sora", 60, "ExtraBold"), WHITE, CW, 1.06)
+    y = top + 72
     for it in items:
-        d.ellipse((64, y + 10, 64 + 34, y + 44), fill=accent); check(d, 72, y + 17, s=18, col=NAVY, w=4)
-        y = text_block(d, (124, y), it, font("dm", 36, "Medium"), INK, 880, 1.25) + 22
+        d.ellipse((M, y + 10, M + 34, y + 44), fill=accent); check(d, M + 8, y + 17, s=18, col=NAVY, w=4)
+        y = text_block(d, (M + 60, y), it, font("dm", 36, "Medium"), INK, CW - 60, 1.25) + 24
     footer(d, c, dark=False); return c
 
 def quote_card(quote, who, where, bg=CORAL):
     c = Image.new("RGBA", (W, H), bg); d = ImageDraw.Draw(c); logo(c)
-    d.text((64, 190), "\u201c", font=font("sora", 200, "ExtraBold"), fill=(255, 255, 255, 120))
-    y = text_block(d, (64, 330), quote, font("sora", 46, "SemiBold"), WHITE, 952, 1.25)
-    d.text((64, y + 40), who, font=font("sora", 34, "Bold"), fill=WHITE); d.text((64, y + 86), where, font=font("dm", 30, "Medium"), fill=(255, 255, 255, 200))
+    d.text((M, 250), "\u201c", font=font("sora", 200, "ExtraBold"), fill=(255, 255, 255, 120))
+    y = text_block(d, (M, 390), quote, font("sora", 46, "SemiBold"), WHITE, CW, 1.25)
+    d.text((M, y + 40), who, font=font("sora", 34, "Bold"), fill=WHITE); d.text((M, y + 86), where, font=font("dm", 30, "Medium"), fill=(255, 255, 255, 200))
     footer(d, c); return c
 
 def compare_card(title, rows):
     c = Image.new("RGBA", (W, H), NAVY); d = ImageDraw.Draw(c); logo(c)
-    text_block(d, (64, 150), title, font("sora", 58, "ExtraBold"), WHITE, 952, 1.06)
-    y = 330; colx = [64, 560, 800]
+    text_block(d, (M, 180), title, font("sora", 58, "ExtraBold"), WHITE, CW, 1.06)
+    y = 400; colx = [M, 600, 820]
     d.text((colx[1], y), "Jovi", font=font("sora", 30, "Bold"), fill=MINT); d.text((colx[2], y), "Insurance", font=font("sora", 30, "Bold"), fill=(255, 255, 255, 160)); y += 64
     for label, a, b in rows:
-        d.line((64, y - 14, W - 64, y - 14), fill=(255, 255, 255, 30), width=2)
+        d.line((M, y - 14, W - M, y - 14), fill=(255, 255, 255, 30), width=2)
         d.text((colx[0], y), label, font=font("dm", 32, "Medium"), fill=WHITE)
         for cx, v in ((colx[1], a), (colx[2], b)):
             if v == "✓": check(d, cx + 4, y + 4, s=26, col=MINT, w=6)
             elif v == "✕": cross(d, cx + 6, y + 6, s=24, col=CORAL, w=6)
             else: d.text((cx + 2, y - 8), "~", font=font("sora", 40, "Bold"), fill=GOLD)
-        y += 74
+        y += 80
     footer(d, c); return c
 
 def price_card(title, rows, total):
     c = Image.new("RGBA", (W, H), IVORY); d = ImageDraw.Draw(c); logo(c, white=False)
-    text_block(d, (64, 150), title, font("sora", 58, "ExtraBold"), INK, 952, 1.06)
-    y = 330
+    text_block(d, (M, 180), title, font("sora", 58, "ExtraBold"), INK, CW, 1.06)
+    y = 400
     for label, val in rows:
-        d.text((64, y), label, font=font("dm", 36, "Medium"), fill=INK); tw = d.textlength(val, font=font("sora", 36, "Bold")); d.text((W - 64 - tw, y), val, font=font("sora", 36, "Bold"), fill=INK)
-        d.line((64, y + 60, W - 64, y + 60), fill=(19, 27, 46, 30), width=2); y += 84
-    d.rounded_rectangle((64, y + 20, W - 64, y + 170), radius=26, fill=NAVY)
-    d.text((96, y + 58), "Your monthly membership", font=font("dm", 32, "Medium"), fill=(255, 255, 255, 200))
-    tw = d.textlength(total, font=font("sora", 70, "ExtraBold")); d.text((W - 96 - tw, y + 44), total, font=font("sora", 70, "ExtraBold"), fill=CORAL)
+        d.text((M, y), label, font=font("dm", 36, "Medium"), fill=INK); tw = d.textlength(val, font=font("sora", 36, "Bold")); d.text((W - M - tw, y), val, font=font("sora", 36, "Bold"), fill=INK)
+        d.line((M, y + 60, W - M, y + 60), fill=(19, 27, 46, 30), width=2); y += 84
+    d.rounded_rectangle((M, y + 24, W - M, y + 174), radius=26, fill=NAVY)
+    d.text((M + 32, y + 62), "Your monthly membership", font=font("dm", 32, "Medium"), fill=(255, 255, 255, 200))
+    tw = d.textlength(total, font=font("sora", 66, "ExtraBold")); d.text((W - M - 32 - tw, y + 50), total, font=font("sora", 66, "ExtraBold"), fill=CORAL)
     footer(d, c, dark=False); return c
 
 # ── Content calendar ───────────────────────────────────────────────────────
@@ -208,10 +213,10 @@ POSTS = [
 ]
 
 rows = []
-sheet = Image.new("RGB", (6 * 360, 5 * 360), (245, 246, 249))
+sheet = Image.new("RGB", (6 * 300, 5 * 370), (245, 246, 249))
 for i, (n, slug, make, caption) in enumerate(POSTS):
     im = make().convert("RGB"); name = f"{n:02d}-{slug}.png"; im.save(OUT / name, optimize=True)
-    sheet.paste(im.resize((350, 350), Image.LANCZOS), ((i % 6) * 360 + 5, (i // 6) * 360 + 5))
+    sheet.paste(im.resize((288, 360), Image.LANCZOS), ((i % 6) * 300 + 6, (i // 6) * 370 + 5))
     rows.append((n, name, caption)); print("rendered", name)
 sheet.save(ROOT / "contact-sheet.png", optimize=True)
 

@@ -610,6 +610,12 @@ class QuotePaymentWidgetState extends State<QuotePaymentWidget>
 
   // Payment Controllers
   final _card = TextEditingController();
+  // ACH (BILL): bank account instead of a card. Numbers go straight to the
+  // billSetupBankAccount Cloud Function; only BILL's ids and last4 are stored.
+  final _routing = TextEditingController();
+  final _account = TextEditingController();
+  final _acctName = TextEditingController();
+  String _acctType = 'CHECKING';
   final _expM = TextEditingController();
   final _expY = TextEditingController();
   final _cvc = TextEditingController();
@@ -2146,38 +2152,17 @@ class QuotePaymentWidgetState extends State<QuotePaymentWidget>
           .doc(user.uid)
           .get();
       final bool isRenewal = userDoc.exists && userDoc.data()?['renew'] != null;
-      final expiry = '${_expM.text.padLeft(2, '0')}/${_expY.text}';
-      final subscriptionType =
-          (_spouse || _numDeps > 0) ? 'family' : 'individual';
       final functions = FirebaseFunctions.instance;
-      final callable = functions.httpsCallable('processMembershipPayment');
-      final totalAmount = _totalPremium + _petTotalPremium;
+      final callable = functions.httpsCallable('billSetupBankAccount');
       final result = await callable.call({
-        'amount': totalAmount,
-        'cardNumber': _card.text.replaceAll(' ', ''),
-        'expiry': expiry,
-        'cvv': _cvc.text,
-        'firstName': _firstName.text.trim(),
-        'lastName': _lastName.text.trim(),
-        'email': _email.text.trim(),
-        'phone': _phone.text.trim(),
-        'birthdate': _birthdate.text.trim(),
-        'subscriptionType': subscriptionType,
-        'userId': user.uid,
-        'billing_address': _billingAddress.text.trim(),
-        'city': _city.text.trim(),
-        'state': _state.text.trim(),
-        'zip': _zip.text.trim(),
-        'country': _country.text.trim(),
-        'isUpdate': false,
-        'payarcCustomerId': _payarcCustomerId,
-        'isRenewal': isRenewal,
-        'hasPetInsurance': _numPets > 0,
-        'petPremium': _petTotalPremium,
+        'routingNumber': _routing.text.trim(),
+        'accountNumber': _account.text.trim(),
+        'accountType': _acctType,
+        'nameOnAccount': _acctName.text.trim(),
+        'activate': true,
       });
-      if (result.data['success'] == true) {
-        if (result.data['payarcCustomerId'] != null)
-          _payarcCustomerId = result.data['payarcCustomerId'];
+      final data = result.data is Map ? Map<String, dynamic>.from(result.data) : <String, dynamic>{};
+      if (data['success'] == true || data['ok'] == true) {
         if (isRenewal) {
           final currentRenewTimestamp = userDoc.data()?['renew'] as Timestamp?;
           if (currentRenewTimestamp != null) {
@@ -2228,25 +2213,16 @@ class QuotePaymentWidgetState extends State<QuotePaymentWidget>
 
   Future<void> _processPayment() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_validateCardNumber(_card.text)) {
-      _showSnackBar('Invalid card number. Please check and try again.',
-          isError: true);
+    if (!RegExp(r'^\d{9}$').hasMatch(_routing.text.trim())) {
+      _showSnackBar('Routing number should be 9 digits.', isError: true);
       return;
     }
-    final month = int.tryParse(_expM.text) ?? 0;
-    final year = int.tryParse(_expY.text) ?? 0;
-    final currentYear = DateTime.now().year % 100;
-    final currentMonth = DateTime.now().month;
-    if (month < 1 || month > 12) {
-      _showSnackBar('Invalid expiry month.', isError: true);
+    if (!RegExp(r'^\d{4,17}$').hasMatch(_account.text.trim())) {
+      _showSnackBar('Please check the account number.', isError: true);
       return;
     }
-    if (year < currentYear || (year == currentYear && month < currentMonth)) {
-      _showSnackBar('Card has expired.', isError: true);
-      return;
-    }
-    if (_cvc.text.length < 3 || _cvc.text.length > 4) {
-      _showSnackBar('Invalid CVC.', isError: true);
+    if (_acctName.text.trim().isEmpty) {
+      _showSnackBar('Enter the name on the account.', isError: true);
       return;
     }
     setState(() => _isLoading = true);
@@ -2270,7 +2246,7 @@ class QuotePaymentWidgetState extends State<QuotePaymentWidget>
           _isLoading = false;
         });
         HapticFeedback.heavyImpact();
-        _showSnackBar('Payment processed successfully!', isSuccess: true);
+        _showSnackBar('Bank account added. Your membership is active.', isSuccess: true);
         await Future.delayed(const Duration(milliseconds: 350));
         if (!mounted) return;
         _nextStep();
@@ -5043,17 +5019,34 @@ class QuotePaymentWidgetState extends State<QuotePaymentWidget>
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white.withOpacity(0.12), width: 1)),
       child: Column(children: [
+        Row(children: [
+          Icon(Icons.account_balance, color: joviCoral, size: 20),
+          SizedBox(width: 8),
+          Expanded(
+              child: Text('Pay by bank account (ACH)',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600))),
+        ]),
+        SizedBox(height: 6),
+        Text(
+            'Your monthly membership is debited from this account. Verification can take up to two business days.',
+            style: TextStyle(
+                color: Colors.white.withOpacity(0.6), fontSize: 12.5)),
+        SizedBox(height: 16),
+        _buildTextField(_acctName, 'Name on Account', Icons.person_outline),
+        SizedBox(height: 16),
         TextFormField(
-            controller: _card,
+            controller: _routing,
             keyboardType: TextInputType.number,
-            autofillHints: const [AutofillHints.creditCardNumber],
             style: TextStyle(color: Colors.white),
             decoration: InputDecoration(
-                labelText: 'Card Number',
-                hintText: '1234 5678 9012 3456',
+                labelText: 'Routing Number',
+                hintText: '9 digits',
                 labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                 hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                prefixIcon: Icon(Icons.credit_card, color: joviCoral),
+                prefixIcon: Icon(Icons.account_balance, color: joviCoral),
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide:
@@ -5067,234 +5060,56 @@ class QuotePaymentWidgetState extends State<QuotePaymentWidget>
                     borderSide: BorderSide(color: joviCoral, width: 2)),
                 filled: true,
                 fillColor: Colors.white.withOpacity(0.06)),
-            validator: (v) => v!.replaceAll(' ', '').length < 13
-                ? 'Invalid card number'
-                : null,
-            onChanged: (value) {
-              final text = value.replaceAll(' ', '');
-              final buffer = StringBuffer();
-              for (int i = 0; i < text.length; i++) {
-                buffer.write(text[i]);
-                if ((i + 1) % 4 == 0 && i + 1 != text.length) buffer.write(' ');
-              }
-              if (buffer.toString() != value)
-                _card.value = TextEditingValue(
-                    text: buffer.toString(),
-                    selection: TextSelection.collapsed(offset: buffer.length));
-            }),
+            validator: (v) => RegExp(r'^\d{9}$').hasMatch(v ?? '')
+                ? null
+                : 'Routing number is 9 digits'),
         SizedBox(height: 16),
-        if (layoutSettings.useTwoColumnLayout)
-          Row(children: [
-            Expanded(
-                child: TextFormField(
-                    controller: _expM,
-                    autofillHints: const [
-                      AutofillHints.creditCardExpirationMonth
-                    ],
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                        labelText: 'MM',
-                        hintText: '12',
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.4)),
-                        prefixIcon:
-                            Icon(Icons.calendar_month, color: joviCoral),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.15))),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.15))),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: joviCoral, width: 2)),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06)),
-                    validator: (v) {
-                      final month = int.tryParse(v ?? '');
-                      return (month == null || month < 1 || month > 12)
-                          ? 'Invalid'
-                          : null;
-                    })),
-            SizedBox(width: 12),
-            Expanded(
-                child: TextFormField(
-                    controller: _expY,
-                    autofillHints: const [
-                      AutofillHints.creditCardExpirationYear
-                    ],
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                        labelText: 'YY',
-                        hintText: '28',
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.4)),
-                        prefixIcon:
-                            Icon(Icons.calendar_today, color: joviCoral),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.15))),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.15))),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: joviCoral, width: 2)),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06)),
-                    validator: (v) {
-                      final year = int.tryParse(v ?? '');
-                      return (year == null || year < DateTime.now().year % 100)
-                          ? 'Invalid'
-                          : null;
-                    })),
-            SizedBox(width: 12),
-            Expanded(
-                child: TextFormField(
-                    controller: _cvc,
-                    autofillHints: const [AutofillHints.creditCardSecurityCode],
-                    keyboardType: TextInputType.number,
-                    obscureText: true,
-                    style: TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                        labelText: 'CVC',
-                        hintText: '123',
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.4)),
-                        prefixIcon: Icon(Icons.security, color: joviCoral),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.15))),
-                        enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                                color: Colors.white.withOpacity(0.15))),
-                        focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(color: joviCoral, width: 2)),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.06)),
-                    validator: (v) =>
-                        (v!.length < 3 || v.length > 4) ? 'Invalid' : null)),
-          ])
-        else
-          Column(children: [
-            Row(children: [
-              Expanded(
-                  child: TextFormField(
-                      controller: _expM,
-                    autofillHints: const [
-                      AutofillHints.creditCardExpirationMonth
-                    ],
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                          labelText: 'MM',
-                          hintText: '12',
-                          labelStyle:
-                              TextStyle(color: Colors.white.withOpacity(0.7)),
-                          hintStyle:
-                              TextStyle(color: Colors.white.withOpacity(0.4)),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.15))),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.15))),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: joviCoral, width: 2)),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.06)),
-                      validator: (v) {
-                        final month = int.tryParse(v ?? '');
-                        return (month == null || month < 1 || month > 12)
-                            ? 'Invalid'
-                            : null;
-                      })),
-              SizedBox(width: 12),
-              Expanded(
-                  child: TextFormField(
-                      controller: _expY,
-                    autofillHints: const [
-                      AutofillHints.creditCardExpirationYear
-                    ],
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                          labelText: 'YY',
-                          hintText: '28',
-                          labelStyle:
-                              TextStyle(color: Colors.white.withOpacity(0.7)),
-                          hintStyle:
-                              TextStyle(color: Colors.white.withOpacity(0.4)),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.15))),
-                          enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.15))),
-                          focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide:
-                                  BorderSide(color: joviCoral, width: 2)),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.06)),
-                      validator: (v) {
-                        final year = int.tryParse(v ?? '');
-                        return (year == null ||
-                                year < DateTime.now().year % 100)
-                            ? 'Invalid'
-                            : null;
-                      })),
-            ]),
-            SizedBox(height: 16),
-            TextFormField(
-                controller: _cvc,
-                    autofillHints: const [AutofillHints.creditCardSecurityCode],
-                keyboardType: TextInputType.number,
-                obscureText: true,
-                style: TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                    labelText: 'CVC',
-                    hintText: '123',
-                    labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                    prefixIcon: Icon(Icons.security, color: joviCoral),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: Colors.white.withOpacity(0.15))),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: Colors.white.withOpacity(0.15))),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: joviCoral, width: 2)),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.06)),
-                validator: (v) =>
-                    (v!.length < 3 || v.length > 4) ? 'Invalid' : null),
-          ]),
+        TextFormField(
+            controller: _account,
+            keyboardType: TextInputType.number,
+            obscureText: true,
+            style: TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+                labelText: 'Account Number',
+                hintText: '4 to 17 digits',
+                labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
+                prefixIcon: Icon(Icons.numbers, color: joviCoral),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        BorderSide(color: Colors.white.withOpacity(0.15))),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        BorderSide(color: Colors.white.withOpacity(0.15))),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: joviCoral, width: 2)),
+                filled: true,
+                fillColor: Colors.white.withOpacity(0.06)),
+            validator: (v) => RegExp(r'^\d{4,17}$').hasMatch(v ?? '')
+                ? null
+                : 'Enter your account number'),
+        SizedBox(height: 12),
+        Row(children: [
+          for (final type in const ['CHECKING', 'SAVINGS'])
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: ChoiceChip(
+                label: Text(type == 'CHECKING' ? 'Checking' : 'Savings'),
+                selected: _acctType == type,
+                selectedColor: joviCoral,
+                backgroundColor: Colors.white.withOpacity(0.08),
+                labelStyle: TextStyle(
+                    color: _acctType == type
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.7),
+                    fontWeight: FontWeight.w600),
+                onSelected: (_) => setState(() => _acctType = type),
+              ),
+            ),
+        ]),
         SizedBox(height: 16),
         Text('Billing Information',
             style: TextStyle(

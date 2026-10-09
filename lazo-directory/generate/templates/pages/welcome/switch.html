@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WELCOME-1003 / 1005-PHOTO: /welcome/switch/ - the "Already started on The Knot or
+    Zola? Keep it. Bring the list." ad lands here. The ceremony kiss under the arch is the hero; the card shows the export steps for the platform picked, the app CTA
+    opens the guest-list importer first (intent=import, couple dashboard v144). -#}
+{% set wl_page = "switch" %}
+{% set wl_cta = "Import in one step" %}
+{% block title %}Switch to Lazo from The Knot or Zola: Import Your Guest List in One Step{% endblock %}
+{% block desc %}Already started on The Knot or Zola? Keep it. Export your guest list as a CSV, import it into Lazo in one step, and keep your registry exactly where it is. June reads a pasted budget or vendor list too.{% endblock %}
+{% block canonical %}{{ base }}/welcome/switch/{% endblock %}
+{% block ogimage %}{{ base }}/assets/photos/hero-3.jpg{% endblock %}
+{% block nav_cta %}<a class="nav-cta" data-wl-app="nav" href="https://app.meetlazo.com">Import my list</a>{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Switch to Lazo","item":"{{ base }}/welcome/switch/"}]},{"@type":"HowTo","name":"Move your guest list from The Knot or Zola to Lazo","step":[{"@type":"HowToStep","name":"Export","text":"In The Knot or Zola, open your guest list and choose Export or Download as CSV."},{"@type":"HowToStep","name":"Import","text":"In Lazo, open Guests, tap Import, and pick the file. Names, parties, addresses and RSVP status come across."},{"@type":"HowToStep","name":"Keep your registry","text":"Paste your registry link into your Lazo website. Lazo never hosts or marks up a registry."}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Do I lose my registry if I switch?","acceptedAnswer":{"@type":"Answer","text":"No. Your registry stays on Zola, Amazon or wherever it is. Lazo links to it from your website and never marks it up."}},{"@type":"Question","name":"What comes across in the import?","acceptedAnswer":{"@type":"Answer","text":"Names, parties and households, mailing addresses, emails, phone numbers and RSVP status, from any CSV. June can also read a pasted budget or vendor list."}},{"@type":"Question","name":"Can I keep both for a while?","acceptedAnswer":{"@type":"Answer","text":"Yes. Nothing is deleted on the other side. Most couples move the guest list and website first and let the old account expire."}}]}]}</script>{% endblock %}
+{% block main %}
+{% include "pages/welcome/_shared.html" %}
+<section class="wl-hero" style="--img:url('/assets/photos/hero-3.jpg');--pos:45%"><div class="bg"></div><div class="wl-in">
+  <div>
+    <p class="eyebrow">Switching</p>
+    <h1>Already started somewhere else? <em>Keep it. Bring the list.</em></h1>
+    <p class="lede">Export your guest list from The Knot or Zola, import it into Lazo in one step, and your registry stays exactly where it is. Then June reads the budget and vendor list you paste in and picks up from there.</p>
+    {% include "pages/welcome/_cta.html" %}
+    <div class="wl-proof"><span><b>1</b>step to import</span><span><b>0%</b>registry markup</span><span><b>$0</b>for couples</span></div>
+  </div>
+  <div class="wl-card" aria-label="How the import works">
+    <div class="ch"><i>&#8674;</i><div><b>Three steps, ten minutes</b><small>Pick where you are coming from.</small></div></div>
+    <label for="w-from">Coming from</label>
+    <select id="w-from"><option value="theknot">The Knot</option><option value="zola">Zola</option><option value="weddingwire">WeddingWire</option><option value="other">A spreadsheet or anywhere else</option></select>
+    <ol class="wl-steps" style="margin:16px 0 0;padding:0" id="w-steps"></ol>
+    <a class="go" data-wl-app="card" href="https://app.meetlazo.com/" style="display:block;text-align:center;text-decoration:none">Import in one step</a>
+    <p class="fine">Opens the guest-list importer first.</p>
+  </div>
+</div></section>
+
+<section class="wl-band">
+  <h2>What moves, what stays</h2>
+  <div class="wl-grid three">
+    <div class="wl-f"><div class="im"><img src="/assets/photos/app/guests.webp" alt="The Lazo guest list" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Moves</div><h3>Guest list</h3><p>Names, parties, addresses, emails, phones and RSVP status, from any CSV. Households stay grouped.</p></div></div>
+    <div class="wl-f"><div class="im"><img src="/assets/photos/app/june.webp" alt="June reading a pasted budget" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Moves</div><h3>Budget and vendor list</h3><p>Paste either into June. She builds the lines, marks what is booked and tells you what is still open in your city.</p></div></div>
+    <div class="wl-f"><div class="im"><img src="/assets/photos/app/registry.webp" alt="Registry links on a Lazo website" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Stays</div><h3>Your registry</h3><p>Zola, Amazon, Crate &amp; Barrel, a honeymoon fund: link it from your Lazo website. Lazo never hosts or marks up a registry.</p></div></div>
+  </div>
+</section>
+
+<section class="wl-photo" style="--img:url('/assets/photos/hero-4.jpg');--pos:50%"><div class="bg"></div><div class="q">
+  <p class="eyebrow">Why couples move</p>
+  <h2>Message one vendor. <em>Hear from one vendor.</em></h2>
+  <p>On the big marketplaces an inquiry is sold as a lead, so a question to one florist becomes a week of follow-ups from strangers, and rankings go to whoever pays for placement. On Lazo your message reaches the vendor you chose and no one else, and no vendor can buy a better spot at any price.</p>
+</div></section>
+
+<section class="wl-band">
+  <h2>Questions</h2>
+  <details class="faq" open><summary>Do I lose my registry if I switch?</summary><p>No. Your registry stays on Zola, Amazon or wherever it is. Lazo links to it from your website and never marks it up.</p></details>
+  <details class="faq"><summary>What comes across in the import?</summary><p>Names, parties and households, mailing addresses, emails, phone numbers and RSVP status, from any CSV. June can also read a pasted budget or vendor list.</p></details>
+  <details class="faq"><summary>Can I keep both for a while?</summary><p>Yes. Nothing is deleted on the other side. Most couples move the guest list and website first and let the old account expire.</p></details>
+  <details class="faq"><summary>Where is the full comparison?</summary><p><a href="/the-knot-alternative/">Lazo vs The Knot</a>, <a href="/zola-alternative/">Lazo vs Zola</a> and <a href="/weddingwire-alternative/">Lazo vs WeddingWire</a>.</p></details>
+</section>
+
+<section class="wl-end"><div class="claim-strip" style="--img:url('/assets/photos/atmo-firstdance.jpg');--pos:50%">
+  <h2>Bring the list. Leave the lead-selling.</h2>
+  <p>Guest list, website, budget and June, free. Your registry stays where it is.</p>
+  <a class="btn-gold" data-wl-app="end" href="https://app.meetlazo.com/">Import in one step</a>
+</div></section>
+
+<script>
+(function(){
+  var STEPS={
+    theknot:[['Open your guest list on The Knot','Guest List, then the three-dot menu or Manage, then Export. You get a CSV.'],['Import it into Lazo','Guests, then Import, then pick the file. Names, parties, addresses and RSVPs come across.'],['Link your registry','Paste The Knot Registry link into your Lazo website. It stays where it is.']],
+    zola:[['Open your guest list on Zola','Guest List, then Manage, then Export guest list. You get a CSV.'],['Import it into Lazo','Guests, then Import, then pick the file. Names, parties, addresses and RSVPs come across.'],['Keep your Zola registry','Paste the registry link into your Lazo website. Lazo never hosts or marks up a registry.']],
+    weddingwire:[['Open your guest list on WeddingWire','Guests, then Export, then CSV.'],['Import it into Lazo','Guests, then Import, then pick the file.'],['Link your registry','Paste any registry link into your Lazo website.']],
+    other:[['Save it as a CSV','Google Sheets, Excel or Numbers: File, then Download or Export, then CSV. One guest per row is enough.'],['Import it into Lazo','Guests, then Import, then pick the file. Lazo matches the columns.'],['Paste the rest to June','Budget lines, booked vendors, open questions. She sorts them.']]
+  };
+  var sel=document.getElementById('w-from'),ol=document.getElementById('w-steps');
+  function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  function draw(){
+    var k=sel.value;ol.innerHTML=STEPS[k].map(function(s){return '<li><div><b>'+esc(s[0])+'</b><p>'+esc(s[1])+'</p></div></li>'}).join('');
+    [].slice.call(document.querySelectorAll('a[data-wl-app]')).forEach(function(a){a.href=window.lzWelcome.appHref({intent:'import',source:k});});
+  }
+  sel.addEventListener('change',function(){draw();try{window.lzWelcome.track('SwitchSource',{source:sel.value});}catch(e){}});
+  document.addEventListener('DOMContentLoaded',draw);
+})();
+</script>
+{% endblock %}

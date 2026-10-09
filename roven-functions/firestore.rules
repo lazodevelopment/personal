@@ -1,0 +1,325 @@
+rules_version = '2';
+
+// ============================================================================
+// ROVEN — Firestore Security Rules v1
+// Forked from the LeaseReputation rules architecture.
+//
+// Core invariants (same philosophy as LeaseReputation):
+//   1. Reputation is never for sale: ALL score/stats fields are Admin SDK only.
+//   2. Identity lives in Auth custom claims, never in client-writable docs.
+//   3. One review per verified relationship (shape here, cross-doc in function).
+//   4. Employers touch only their own jobs and their own applicant pipeline.
+//   5. Anything privileged (verification, scoring, hire confirmation) goes
+//      through Cloud Functions — the admin site and scripts never get a
+//      client-side write path to protected fields.
+//
+// Custom claims used (set via verify_candidate.py / verify_employer.py forks
+// of the LeaseReputation verify_user.py pattern):
+//   identityVerified : bool   — candidate has passed identity verification
+//   employerId       : string — user is a member of this employer account
+//   employerRole     : string — "owner" | "recruiter"
+//   admin            : bool   — Roven staff (read-only via rules; writes via
+//                               callable functions using Admin SDK)
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function isVerifiedCandidate() {
+      return signedIn() && request.auth.token.identityVerified == true;
+    }
+
+    function isEmployerMember(employerId) {
+      return signedIn() && request.auth.token.employerId == employerId;
+    }
+
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    // Fields only Cloud Functions (Admin SDK) may ever write.
+    function touchesProtectedEmployerFields() {
+      return request.resource.data.diff(resource == null ? {} : resource.data)
+        .affectedKeys().hasAny([
+          'reputationScore', 'reviewScore', 'accountabilityScore',
+          'reviewCount', 'scoredAt', 'scoreVersion',
+          'stats', 'middeskVerification', 'verified'
+        ]);
+    }
+
+    // ---------- users/{uid} ----------
+    // Candidate profile. Verification state is NEVER stored here — it lives
+    // in custom claims. Do not add identityVerified/role mirror fields.
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) || isAdmin();
+
+      allow create: if isSelf(uid)
+        && !request.resource.data.keys().hasAny(
+             ['identityVerified', 'admin', 'employerId', 'employerRole']);
+
+      allow update: if isSelf(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(
+             ['identityVerified', 'admin', 'employerId', 'employerRole']);
+
+      allow delete: if false; // account deletion via callable function
+    }
+
+
+    // ---------- users/{uid}/profileHistory — UNVERIFIED, user-owned ----------
+    // The candidate's own claims (parsed or manually entered). Clearly separate
+    // from verified workHistory; never merged.
+
+    match /users/{uid}/profileHistory/{entryId} {
+      allow read, write: if isSelf(uid);
+    }
+
+    match /users/{uid}/education/{entryId} {
+      allow read, write: if isSelf(uid);
+    }
+
+    // ---------- users/{uid}/workHistory — VERIFIED receipts ----------
+    // Written ONLY by the hire-confirmation Cloud Function. The fact is
+    // immutable; the visibility is candidate-controlled via the doc's
+    // visibility field (set at creation, changed via callable function).
+
+    match /users/{uid}/workHistory/{entryId} {
+      allow read: if isSelf(uid)
+        || resource.data.visibility == 'public'
+        || (resource.data.visibility == 'verified_employers'
+            && signedIn() && request.auth.token.employerId != null)
+        || isAdmin();
+      allow write: if false;   // Admin SDK only — entries are receipts, not claims
+    }
+
+    // ---------- placements/{placementId} — the fee ledger ----------
+    // One record per confirmed hire, written by the hire-confirmation function
+    // from hire #1 (feeStatus "waived_founding" until pricing activates).
+    // Built-to-charge: flipping fees on is a config change, not a migration.
+
+    match /placements/{placementId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.candidateUid == request.auth.uid)
+        || isEmployerMember(resource.data.employerId);
+      allow write: if false;   // Admin SDK only
+    }
+
+    // ---------- employers/{employerId} ----------
+    // Public profiles. Employer members may edit presentation fields only.
+    // Scores, stats, and Middesk verification are Admin SDK exclusive.
+
+    match /employers/{employerId} {
+      allow read: if true;
+
+      // Employer accounts are CREATED by the onboarding Cloud Function
+      // (post-Middesk), never from the client.
+      allow create: if false;
+
+      allow update: if isEmployerMember(employerId)
+        && request.auth.token.employerRole == 'owner'
+        && !touchesProtectedEmployerFields();
+
+      allow delete: if false;
+
+      // ---------- employers/{employerId}/reviews/{reviewId} ----------
+      // Phase 2 feature, but rules ship correct on day one.
+      // Rules enforce identity + shape; the scoring Cloud Function
+      // revalidates cross-document invariants (relationship exists,
+      // one-review-per-relationship) and quarantines violations by
+      // setting status = "flagged".
+
+      match /reviews/{reviewId} {
+        allow read: if resource.data.status == 'published' || isAdmin();
+
+        allow create: if isVerifiedCandidate()
+          && request.resource.data.candidateUid == request.auth.uid
+          && request.resource.data.keys().hasAll(
+               ['candidateUid', 'relationshipId', 'stars', 'body',
+                'createdAt', 'status'])
+          && request.resource.data.stars is int
+          && request.resource.data.stars >= 1
+          && request.resource.data.stars <= 5
+          && request.resource.data.status == 'published'
+          && request.resource.data.createdAt > request.time - duration.value(5, 'm')
+          && request.resource.data.createdAt < request.time + duration.value(5, 'm')
+          // tier is assigned by the Cloud Function from the application
+          // record — never self-declared:
+          && !request.resource.data.keys().hasAny(
+               ['relationshipTier', 'verifiedBadge']);
+
+        // Reviews are immutable. Edits/removal are Admin SDK only.
+        allow update, delete: if false;
+      }
+    }
+
+    // ---------- jobs/{jobId} ----------
+    // Every job belongs to a verified employer. Public can read active jobs.
+
+    match /jobs/{jobId} {
+      allow read: if resource.data.status == 'active'
+        || isEmployerMember(resource.data.employerId)
+        || isAdmin();
+
+      allow create: if isEmployerMember(request.resource.data.employerId)
+        && request.resource.data.keys().hasAll(
+             ['employerId', 'title', 'status', 'createdAt'])
+        && request.resource.data.status == 'pending_review'  // goes live via function
+        && request.resource.data.createdAt > request.time - duration.value(5, 'm')
+        && request.resource.data.createdAt < request.time + duration.value(5, 'm');
+
+      allow update: if isEmployerMember(resource.data.employerId)
+        // employer may edit content and close their own job,
+        // but cannot self-activate — activation is function-gated
+        // (job-is-confirmed-open is a brand promise, not a checkbox):
+        && request.resource.data.employerId == resource.data.employerId
+        && (request.resource.data.status == resource.data.status
+            || request.resource.data.status == 'closed');
+
+      allow delete: if false; // close, never delete — audit trail
+    }
+
+    // ---------- applications/{appId} ----------
+    // The relationship record. This collection is the proof layer for
+    // reviews AND the raw input for the accountability score, so writes
+    // are tightly scoped.
+
+    match /applications/{appId} {
+      allow read: if isSelf(resource.data.candidateUid)
+        || isEmployerMember(resource.data.employerId)
+        || isAdmin();
+
+      // Candidates create their own applications; one-per-job is
+      // enforced in the Cloud Function (cross-doc check).
+      // V1 VERIFICATION: a verified email address. email_verified ships in
+      // the auth token natively — no claims machinery needed. When ID-document
+      // verification launches (v3), tighten to isVerifiedCandidate().
+      allow create: if signedIn()
+        && request.auth.token.email_verified == true
+        && request.resource.data.candidateUid == request.auth.uid
+        && request.resource.data.keys().hasAll(
+             ['candidateUid', 'employerId', 'jobId', 'status', 'appliedAt'])
+        && request.resource.data.status == 'applied'
+        && request.resource.data.appliedAt > request.time - duration.value(5, 'm')
+        && request.resource.data.appliedAt < request.time + duration.value(5, 'm');
+
+      // Employers may ONLY move status forward on applications addressed
+      // to them (dispositioning). Timestamps that feed the accountability
+      // score (firstResponseAt, dispositionedAt) are written by the
+      // onApplicationWrite Cloud Function, not the client.
+      allow update: if
+        (
+          isEmployerMember(resource.data.employerId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status'])
+          && request.resource.data.status in
+               ['reviewed', 'interviewing', 'offer', 'hired', 'rejected']
+        )
+        ||
+        (
+          // Candidate may withdraw their own application.
+          isSelf(resource.data.candidateUid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status'])
+          && request.resource.data.status == 'withdrawn'
+        );
+        // NOTE: 'ghosted' is never client-writable — it is assigned by the
+        // scheduled SLA function. 'hiredConfirmedByCandidate' is set only
+        // by the hire check-in callable function.
+
+      allow delete: if false;
+    }
+
+    // ---------- messages (on-platform hiring conversations) ----------
+    // Thread per application. Keeping this on-platform is the pay-on-hire
+    // leakage defense, so both parties get access, nobody else.
+
+    match /applications/{appId}/messages/{messageId} {
+      allow read: if isSelf(get(/databases/$(database)/documents/applications/$(appId)).data.candidateUid)
+        || isEmployerMember(get(/databases/$(database)/documents/applications/$(appId)).data.employerId)
+        || isAdmin();
+
+      allow create: if signedIn()
+        && request.resource.data.senderUid == request.auth.uid
+        && request.resource.data.createdAt > request.time - duration.value(5, 'm')
+        && request.resource.data.createdAt < request.time + duration.value(5, 'm')
+        && (
+             isSelf(get(/databases/$(database)/documents/applications/$(appId)).data.candidateUid)
+             || isEmployerMember(get(/databases/$(database)/documents/applications/$(appId)).data.employerId)
+           );
+
+      allow update, delete: if false; // immutable — audit trail
+    }
+
+    // ---------- Default deny ----------
+    // ---- employerApplications: self-serve employer intake ----
+    // Anyone signed in may apply once on their own behalf; only admins (and
+    // the applicant) may read. Conversion to a real employer happens only
+    // via Admin SDK (approve_employer.py) — the employers collection stays
+    // structurally un-writable from clients.
+    match /employerApplications/{appId} {
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.createdAt > request.time - duration.value(5, 'm')
+        && request.resource.data.createdAt < request.time + duration.value(5, 'm');
+      allow read: if signedIn()
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow update, delete: if false;
+    }
+
+    // ====================== VISITOR TRACKING (JARVIS) =======================
+    // The site's first-party tracker (assets/rvn-track.js) writes a doc per visit and a
+    // row per page view over REST, anonymously. Shape and lengths are pinned
+    // so the public write path cannot be used to store anything else; reads
+    // stay admin-only. Same schema as meetlazo.com and the wedding sites, so
+    // jarvis-hub/collect_traffic.py reads every site the same way.
+    function trackCapped(d, k, n) {
+      return !(k in d) || !(d[k] is string) || d[k].size() <= n;
+    }
+    function trackShapeOK(d, sid) {
+      return d.keys().hasOnly([
+          'sid','page','title','device','ua','screen','lang','landing','referrer',
+          'city','region','country','lat','lng','asn','org',
+          'bot','bot_why','engaged','utm_source','utm_campaign',
+          'first_seen','last_seen','page_count'])
+        && (!('sid' in d) || d.sid == sid)
+        && (!('page_count' in d) || (d.page_count is int && d.page_count > 0 && d.page_count <= 500))
+        && trackCapped(d, 'ua', 500) && trackCapped(d, 'title', 500) && trackCapped(d, 'page', 500)
+        && trackCapped(d, 'landing', 500) && trackCapped(d, 'referrer', 500) && trackCapped(d, 'org', 500)
+        && trackCapped(d, 'city', 120) && trackCapped(d, 'region', 120) && trackCapped(d, 'country', 8)
+        && trackCapped(d, 'engaged', 24) && trackCapped(d, 'bot_why', 120)
+        && trackCapped(d, 'utm_source', 200) && trackCapped(d, 'utm_campaign', 200);
+    }
+    match /sessions/{sid} {
+      allow read: if isAdmin();
+      allow create, update: if sid.size() >= 8 && sid.size() <= 64
+        && trackShapeOK(request.resource.data, sid);
+      allow delete: if false;
+
+      // One row per page view. Append-only.
+      match /hits/{hit} {
+        allow read: if isAdmin();
+        allow create: if request.resource.data.keys().hasOnly(['path','title','t'])
+          && request.resource.data.t is timestamp
+          && trackCapped(request.resource.data, 'path', 500)
+          && trackCapped(request.resource.data, 'title', 500);
+        allow update, delete: if false;
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

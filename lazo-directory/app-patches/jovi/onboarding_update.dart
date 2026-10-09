@@ -30,6 +30,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -723,6 +724,10 @@ class _OnboardingUpdateWidgetState extends State<OnboardingUpdateWidget>
   final _cardCvcCtrl = TextEditingController();
   final _cardNameCtrl = TextEditingController();
   final _cardZipCtrl = TextEditingController();
+  // ACH (BILL): optional new bank account; leave blank to keep the one on file.
+  final _bankRoutingCtrl = TextEditingController();
+  final _bankAccountCtrl = TextEditingController();
+  String _bankType = 'CHECKING';
   bool _isProcessingPayment = false;
   bool _paymentSuccess = false;
 
@@ -2042,10 +2047,28 @@ class _OnboardingUpdateWidgetState extends State<OnboardingUpdateWidget>
     setState(() => _isProcessingPayment = true);
 
     try {
-      // NOTE: no charge is made here. This is a placeholder delay until the
-      // Zoho Payments integration lands; the card fields above are not sent
-      // anywhere. Do not ship this step live without wiring the processor.
-      await Future.delayed(const Duration(seconds: 2));
+      // ACH (BILL): if the member entered a new bank account, put it on file.
+      // Otherwise the account already on the membership keeps being debited.
+      if (_bankRoutingCtrl.text.isNotEmpty || _bankAccountCtrl.text.isNotEmpty) {
+        final callable =
+            FirebaseFunctions.instance.httpsCallable('updatePaymentMethod');
+        final res = await callable.call({
+          'routingNumber': _bankRoutingCtrl.text.trim(),
+          'accountNumber': _bankAccountCtrl.text.trim(),
+          'accountType': _bankType,
+          'nameOnAccount': _cardNameCtrl.text.trim(),
+        });
+        final m = res.data is Map ? Map<String, dynamic>.from(res.data) : <String, dynamic>{};
+        if (m['success'] != true) {
+          throw Exception((m['error'] as String?) ?? 'Could not save the bank account.');
+        }
+      } else {
+        final snap = await FirebaseFirestore.instance.collection('users').doc(_userId).get();
+        final bank = snap.data()?['billBankAccountId'];
+        if (bank == null || (bank is String && bank.isEmpty)) {
+          throw Exception('Add a bank account to continue.');
+        }
+      }
       if (!mounted) return;
 
       // Save the final data
@@ -5123,122 +5146,61 @@ class _OnboardingUpdateWidgetState extends State<OnboardingUpdateWidget>
           ),
           const SizedBox(height: 4),
           const Text(
-            'Your payment is processed securely',
+            'Monthly membership is debited by bank transfer (ACH)',
             style: TextStyle(color: kTextMedium, fontSize: 12),
           ),
           const SizedBox(height: 16),
 
-          // Card name
+          // Bank account (ACH). Blank = keep the account already on file.
           _buildFormField(
             controller: _cardNameCtrl,
-            label: 'Name on Card',
-            validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
+            label: 'Name on Account',
+            validator: (v) => (_bankRoutingCtrl.text.isNotEmpty && (v?.isEmpty ?? true)) ? 'Required' : null,
           ),
-
-          // Card number
           _buildFormField(
-            controller: _cardNumberCtrl,
-            label: 'Card Number',
-            hint: '•••• •••• •••• ••••',
+            controller: _bankRoutingCtrl,
+            label: 'Routing Number',
+            hint: '9 digits (leave blank to keep your current account)',
             keyboardType: TextInputType.number,
             formatters: [
               FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(19),
-              _CardNumberFormatter(),
+              LengthLimitingTextInputFormatter(9),
             ],
+            validator: (v) => (v == null || v.isEmpty || v.length == 9) ? null : 'Routing number is 9 digits',
+          ),
+          _buildFormField(
+            controller: _bankAccountCtrl,
+            label: 'Account Number',
+            hint: '4 to 17 digits',
+            keyboardType: TextInputType.number,
+            formatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(17),
+            ],
+            obscure: true,
             validator: (v) {
-              final digits = v?.replaceAll(' ', '') ?? '';
-              if (digits.length < 15 || !_luhnValid(digits)) {
-                return 'Check the card number';
-              }
-              return null;
+              final routing = _bankRoutingCtrl.text;
+              if (routing.isEmpty && (v == null || v.isEmpty)) return null;
+              return (v != null && v.length >= 4) ? null : 'Check the account number';
             },
-            suffix: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Icon(Icons.credit_card, color: kTextLight, size: 20),
-            ),
           ),
-
-          // Exp & CVC
-          if (config.columnsPerRow >= 2)
-            Row(
-              children: [
-                Expanded(
-                  child: _buildFormField(
-                    controller: _cardExpCtrl,
-                    label: 'Expiration',
-                    hint: 'MM/YY',
-                    keyboardType: TextInputType.number,
-                    formatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(4),
-                      _ExpirationDateFormatter(),
-                    ],
-                    validator: (v) {
-                      final text = v?.replaceAll('/', '') ?? '';
-                      if (text.length < 4) return 'Invalid';
-                      return null;
-                    },
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(children: [
+              for (final type in const ['CHECKING', 'SAVINGS'])
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: ChoiceChip(
+                    label: Text(type == 'CHECKING' ? 'Checking' : 'Savings'),
+                    selected: _bankType == type,
+                    selectedColor: joviCoral,
+                    labelStyle: TextStyle(
+                        color: _bankType == type ? Colors.white : kTextDark,
+                        fontWeight: FontWeight.w600),
+                    onSelected: (_) => setState(() => _bankType = type),
                   ),
                 ),
-                SizedBox(width: config.fieldSpacing),
-                Expanded(
-                  child: _buildFormField(
-                    controller: _cardCvcCtrl,
-                    label: 'CVC',
-                    hint: '•••',
-                    keyboardType: TextInputType.number,
-                    formatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(4),
-                    ],
-                    obscure: true,
-                    validator: (v) => (v?.length ?? 0) < 3 ? 'Invalid' : null,
-                  ),
-                ),
-              ],
-            )
-          else ...[
-            _buildFormField(
-              controller: _cardExpCtrl,
-              label: 'Expiration',
-              hint: 'MM/YY',
-              keyboardType: TextInputType.number,
-              formatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(4),
-                _ExpirationDateFormatter(),
-              ],
-              validator: (v) {
-                final text = v?.replaceAll('/', '') ?? '';
-                if (text.length < 4) return 'Invalid';
-                return null;
-              },
-            ),
-            _buildFormField(
-              controller: _cardCvcCtrl,
-              label: 'CVC',
-              hint: '•••',
-              keyboardType: TextInputType.number,
-              formatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(4),
-              ],
-              obscure: true,
-              validator: (v) => (v?.length ?? 0) < 3 ? 'Invalid' : null,
-            ),
-          ],
-
-          // Billing ZIP
-          _buildFormField(
-            controller: _cardZipCtrl,
-            label: 'Billing ZIP Code',
-            keyboardType: TextInputType.number,
-            formatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(5),
-            ],
-            validator: (v) => (v?.length ?? 0) < 5 ? 'Invalid ZIP' : null,
+            ]),
           ),
 
           // Secure badge (mint)
@@ -5256,7 +5218,7 @@ class _OnboardingUpdateWidgetState extends State<OnboardingUpdateWidget>
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Your payment information is encrypted and secure. We never store your full card number.',
+                    'Your bank details go directly to our payment processor. Jovi never stores your account number.',
                     style: TextStyle(color: joviMintDark, fontSize: 12),
                   ),
                 ),
@@ -5268,7 +5230,7 @@ class _OnboardingUpdateWidgetState extends State<OnboardingUpdateWidget>
             backLabel: 'Back to Quote',
             nextLabel: _isProcessingPayment
                 ? 'Processing…'
-                : 'Pay \$${_grandTotal.toStringAsFixed(2)}',
+                : 'Confirm \$${_grandTotal.toStringAsFixed(2)}/mo',
             onBack: _goBack,
             onNext: _processPayment,
             isNextLoading: _isProcessingPayment,

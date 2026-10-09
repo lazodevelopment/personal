@@ -23,7 +23,7 @@ BINDING_NS = os.environ.get("LR_KV_NAMESPACE_ID", "")   # set in wrangler.toml t
 # Never ship these. Generator sources, caches, backups, editor droppings.
 SKIP_DIRS = {"__pycache__", ".git", ".wrangler", "_src", "node_modules", ".vscode"}
 SKIP_EXT = {".py", ".pyc", ".pyo", ".bak", ".log", ".tmp", ".swp"}
-SKIP_NAMES = {"kv_manifest.json", "wrangler.toml", "worker.js", ".DS_Store",
+SKIP_NAMES = {"kv_manifest.json", "wrangler.toml", "worker.js", "track.js", ".DS_Store",
               "kv_sync.py", ".gitignore"}
 TEXT_EXT = {".html", ".htm", ".css", ".js", ".json", ".xml", ".txt", ".svg", ".webmanifest"}
 

@@ -50,6 +50,7 @@ from config.cost_guides import GUIDES as _COST_GUIDES
 _COST_TYPICAL = {k: v['typical'] for k, v in _COST_GUIDES.items()}
 import math, hashlib
 from config.metros import METROS, BY_ID, metros_for_tranche
+import city_guide  # JC-LAZO-GUIDE-1008 (generate/ is on sys.path when build.py runs)
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
@@ -92,6 +93,7 @@ def _vendor_is_rich(v) -> bool:
 
 _rich_count = [0]
 _RICH_URLS = set()  # JC-LAZO-SEO-0922-001: rich vendor pages get their own sitemap
+_NONCANON = set()   # JC-LAZO-SEO-1008: vendor copies canonicalised to another URL
 _DB = None  # JC-LAZO-SEO-0921-001: the Firestore client, kept for the slug write-back
 _GONE = []  # JC-LAZO-GONE-0903: delisted vendors -> dist/_gone.json -> worker 410
 # JC-LAZO-MOVED-0916-011: a vendor page's URL is metro/category/slug, and all three
@@ -394,6 +396,35 @@ def compose_intro(v, cat, metro, near_venues):
         parts.append(mids[n % len(mids)])
     parts.append(closers[n % len(closers)])
     return " ".join(parts)
+
+
+def _budget_lines_json():
+    """JC-LAZO-WELCOME-1003: the /welcome/budget/ estimator's line items, from the
+    cost guides' `typical` ranges so the page and /cost/ never disagree. Per-guest
+    (catering) and per-slice (cake) lines scale in the browser; the rest are flat."""
+    import json, re
+    from config.cost_guides import GUIDES
+    PER = {"wedding-caterers": "guest", "wedding-cakes": "slice"}
+    LABEL = {"wedding-photographers": "Photographer", "wedding-videographers": "Videographer",
+             "wedding-venues": "Venue", "wedding-planners": "Planner", "wedding-djs": "DJ",
+             "wedding-bands": "Live band", "wedding-caterers": "Catering", "wedding-cakes": "Cake",
+             "wedding-florists": "Flowers", "hair-and-makeup": "Hair and makeup",
+             "wedding-officiants": "Officiant", "wedding-transportation": "Transportation",
+             "wedding-rentals": "Rentals", "wedding-invitations": "Invitations",
+             "day-of-coordination": "Day-of coordination"}
+    # a wedding has a DJ or a band, a planner or a coordinator: keep the commoner one
+    SKIP = {"wedding-bands", "wedding-planners"}
+    out = []
+    for key, g in GUIDES.items():
+        if key in SKIP:
+            continue
+        nums = [int(n.replace(",", "")) for n in re.findall(r"\$([\d,]+)", g["typical"])]
+        if len(nums) < 2:
+            continue
+        out.append({"key": key, "label": LABEL.get(key, g["short"].title()),
+                    "lo": nums[0], "hi": nums[1], "per": PER.get(key, "flat")})
+    return json.dumps(out)
+
 
 def build_content(by_metro):
     """Attach intro, near_venues, faqs, related to every vendor. Mutates in place."""
@@ -734,10 +765,18 @@ def build(vendors: list[dict]):
                          + ". Verified couple reviews decide the order \u2014 never ad spend. "
                          + "Until reviews arrive, vendors who have claimed and verified their profile come first, then everyone else by name.")
 
+            # JC-LAZO-GUIDE-1008: Zola-style city guide on the top metro x category hubs
+            guide = (city_guide.build_guide(metro, cat, cvs, lambda v, _m=metro: _locality(v, _m),
+                                            _COST_TYPICAL.get(cat["slug"]))
+                     if city_guide.is_guide(mid, cat["slug"]) and mid in by_metro else None)
+
             cdir = mdir / cat["slug"]
             cdir.mkdir(exist_ok=True)
             (cdir / "index.html").write_text(
                 t_cat.render(metro=metro, cat=cat, vendors=cvs, base=BASE_URL, cat_intro=cat_intro,
+                             guide=guide, metro_names={k: BY_ID[k]["name"] for k in BY_ID},
+                             cat_labels={c["slug"]: c["label"] for c in CATEGORIES},
+                             live_metros=set(by_metro),
                              cost_typical=_COST_TYPICAL.get(cat["slug"]),
                              near=[m for m in _near_metros(metro) if cat["slug"] in _cats_of.get(m["id"], ())]), encoding="utf-8")
             urls.append(f"{BASE_URL}/{mid}/{cat['slug']}/")
@@ -769,10 +808,17 @@ def build(vendors: list[dict]):
                 # JC-LAZO-SITEMAP-0903: all built vendor pages are indexable and belong
                 # in the sitemap. The Aug-2026 richness gate dropped ~84k business-name
                 # landing pages and GSC impressions fell from ~3.4k/day to zero.
-                # Richness is a stat now, not a sitemap filter.
-                urls.append(f"{BASE_URL}/{mid}/{cat['slug']}/{v['slug']}/")
+                # Superseded 2026-10-08 (JC-LAZO-SEO-1008): impressions never recovered, so
+                # richness gates the SITEMAP again; the pages themselves stay indexable.
+                _vurl = f"{BASE_URL}/{mid}/{cat['slug']}/{v['slug']}/"
+                urls.append(_vurl)
                 if _rich:
-                    _RICH_URLS.add(f"{BASE_URL}/{mid}/{cat['slug']}/{v['slug']}/")
+                    _RICH_URLS.add(_vurl)
+                # JC-LAZO-SEO-1008: a copy whose canonical points at another page
+                # (traveling copies -> the vendor's home listing) must not be submitted.
+                _hc = (v.get("homeCanonical") or "").strip()
+                if _hc and _hc.rstrip("/") != _vurl.rstrip("/"):
+                    _NONCANON.add(_vurl)
                 # JC-LAZO-MOVED-0917-012: every page actually written, including the
                 # traveling copies. _PATHS below is keyed placeId|category and therefore
                 # keeps only ONE path per vendor per category - a vendor listed in five
@@ -797,14 +843,20 @@ def build(vendors: list[dict]):
     # hand-rolled standalone file carrying an August footer and no site nav;
     # it now extends base.html like every other page here.
     STATIC_PAGES = ["app", "why-lazo", "for-vendors", "about", "contact", "couples", "delete-account", "terms", "privacy", "the-knot-alternative", "zola-alternative", "weddingwire-alternative", "the-knot-alternative-for-vendors", "weddingwire-alternative-for-vendors", "honeybook-alternative", "folia-alternative"]
+    # JC-LAZO-WELCOME-1003: the five /welcome/<hook>/ ad landing pages (one hook, one
+    # promise, one page each - the Zola/Knot pattern). Nested slug, so parents=True.
+    # budget_json feeds /welcome/budget/ the same national ranges as /cost/.
+    STATIC_PAGES += ["welcome/yes", "welcome/website", "welcome/budget", "welcome/switch", "welcome/verified"]
+    budget_json = _budget_lines_json()
     for slug in STATIC_PAGES:
         t = env.get_template(f"pages/{slug}.html")
         pdir = DIST / slug
-        pdir.mkdir(exist_ok=True)
+        pdir.mkdir(parents=True, exist_ok=True)
         (pdir / "index.html").write_text(t.render(base=BASE_URL, metros=live_metros,
                                                   categories=CATEGORIES,
                                                   vendor_total_display=vendor_total_display,
-                                                  metro_count=len(live_metros)), encoding="utf-8")
+                                                  metro_count=len(live_metros),
+                                                  budget_json=budget_json), encoding="utf-8")
         urls.append(f"{BASE_URL}/{slug}/")
 
     # standalone pages (entity/content)
@@ -1164,7 +1216,24 @@ def build(vendors: list[dict]):
         return "hubs"
     _tiers = {"hubs": [], "rich": [], "venues": [], "vendors": []}
     for u in urls:
+        if u in _NONCANON:
+            continue
         _tiers[_tier(u)].append(u)
+    # JC-LAZO-SEO-1008: stub vendor/venue pages stay live and indexable (a vendor can
+    # still find its own page) but are no longer SUBMITTED. Google had seen ~3.7K of
+    # ~157K submitted URLs and rejected 2.8K as crawled-not-indexed; the sitemap now
+    # asks only for hubs, guides and rich vendor pages. The Sep-3 restore of all stubs
+    # did not bring impressions back (GSC, Oct 8). Give this 6-8 weeks before changing.
+    _unsubmitted = len(_tiers["venues"]) + len(_tiers["vendors"])
+    _tiers["venues"], _tiers["vendors"] = [], []
+    # upload_r2 never deletes, so retired shards are overwritten with an empty urlset
+    # (Google already knows their URLs) instead of being left serving 157K stubs.
+    _empty = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n</urlset>')
+    for _old in list(DIST.glob("sitemap-vendors*.xml")) + list(DIST.glob("sitemap-venues*.xml")):
+        _old.write_text(_empty, encoding="utf-8")
+    print(f"[build] sitemap: {_unsubmitted:,} stub vendor/venue pages live but not submitted; "
+          f"{len(_NONCANON):,} canonicalised copies skipped")
     for _old in DIST.glob("sitemap-[0-9]*.xml"):
         _old.unlink()
     sm_files = []  # (filename, newest lastmod)
@@ -1318,7 +1387,7 @@ verified reputation with locality, contact, and pricing-context data. Citation
 of specific vendors should reference their Lazo profile URL.
 """, encoding="utf-8")
     total_pages = sum(1 for _ in DIST.rglob("index.html"))
-    print(f"Built {total_pages} pages ({len(urls)} in sitemap) -> {DIST}")
+    print(f"Built {total_pages} pages ({len(urls)} indexable URLs; see [build] sitemaps for what is submitted) -> {DIST}")
     _tot = _rich_count[0] + _thin_count[0]
     if _tot:
         _pct = round(_rich_count[0] / _tot * 100, 1)

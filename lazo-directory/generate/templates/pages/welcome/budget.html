@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WELCOME-1003 / 1005-PHOTO: /welcome/budget/ - the "Let June do the math" ad lands
+    here. A candlelit tablescape is the hero; the card prices a wedding from city, guest count
+    and month using the same national ranges as /cost/ (config/cost_guides.py via
+    budget_json). Per-guest lines scale with the count; a peak month nudges the venue line.
+    The three biggest lines get their own photo cards with the range on them. -#}
+{% set wl_page = "budget" %}
+{% set wl_cta = "Price my wedding" %}
+{% block title %}What Will Your Wedding Really Cost? Free Wedding Budget Planner | Lazo{% endblock %}
+{% block desc %}Budgeting shouldn't feel like a second job. Tell June your city, guest count and month and get a line-item wedding budget in 30 seconds, then track it free in the Lazo app.{% endblock %}
+{% block canonical %}{{ base }}/welcome/budget/{% endblock %}
+{% block ogimage %}{{ base }}/assets/photos/atmo-candlelight.jpg{% endblock %}
+{% block nav_cta %}<a class="nav-cta" data-wl-app="nav" href="https://app.meetlazo.com">Price my wedding</a>{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Wedding budget planner","item":"{{ base }}/welcome/budget/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How much does a wedding cost?","acceptedAnswer":{"@type":"Answer","text":"The Knot's 2026 Real Weddings Study puts the US average at $34,000 for about 13 vendors. Your number depends mostly on guest count and venue, which is why June asks for those first."}},{"@type":"Question","name":"Where do these ranges come from?","acceptedAnswer":{"@type":"Answer","text":"They are the same ranges Lazo publishes in its cost guides, phrased as what couples actually pay. They are national, not quotes from any vendor."}},{"@type":"Question","name":"Is the budget tracker free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The budget, the guest list, the seating chart, the website and June are all free for couples."}}]}]}</script>{% endblock %}
+{% block main %}
+{% include "pages/welcome/_shared.html" %}
+<style>
+.bt{width:100%;border-collapse:collapse;margin:10px 0 0;font-size:14px}
+.bt td{padding:7px 0;border-bottom:1px solid rgba(250,246,240,.14);color:rgba(250,246,240,.9)}
+.bt td:last-child{text-align:right;white-space:nowrap;font-feature-settings:"lnum" 1}
+.bt tr.total td{border-bottom:0;font-weight:700;color:var(--ivory);font-size:15.5px;padding-top:10px}
+.bt tr.total td:last-child{font-family:var(--serif);font-size:22px}
+.rng{display:flex;align-items:center;gap:12px}
+.rng input[type=range]{flex:1;accent-color:var(--plum)}
+.rng output{min-width:3ch;font-weight:700;color:var(--plum-deep);font-feature-settings:"lnum" 1}
+</style>
+<section class="wl-hero" style="--img:url('/assets/photos/atmo-candlelight.jpg');--pos:45%"><div class="bg"></div><div class="wl-in">
+  <div>
+    <p class="eyebrow">Free wedding budget planner</p>
+    <h1>Budgeting shouldn&rsquo;t feel like a <em>second job.</em></h1>
+    <p class="lede">Tell June your city, your guest count and your month. She prices every line of your wedding in 30 seconds, then keeps the math current as you book, free.</p>
+    {% include "pages/welcome/_cta.html" %}
+    <div class="wl-proof"><span><b>13</b>budget lines</span><span><b>$0</b>to use</span><span><b>{{ metro_count }}</b>cities</span></div>
+  </div>
+  <form class="wl-card" id="wl-bud" onsubmit="return false" aria-label="Price your wedding">
+    <div class="ch"><i>J</i><div><b>Price it with June</b><small>Line by line, in 30 seconds.</small></div></div>
+    <label for="b-city">Where</label>
+    <select id="b-city">
+      <option value="">Anywhere in the US</option>
+      {% for m in metros %}<option value="{{ m.id }}">{{ m.display }}</option>{% endfor %}
+    </select>
+    <label for="b-guests">Guests</label>
+    <div class="rng"><input id="b-guests" type="range" min="20" max="300" step="5" value="120"><output for="b-guests" id="b-gout">120</output></div>
+    <label for="b-month">Month</label>
+    <select id="b-month">
+      {% for mo in ["January","February","March","April","May","June","July","August","September","October","November","December"] %}<option value="{{ loop.index }}">{{ mo }}</option>{% endfor %}
+    </select>
+    <button class="go" type="submit">Price my wedding</button>
+    <p class="fine">National ranges from Lazo's cost guides. Not a quote.</p>
+    <div class="wl-june" id="b-june" aria-live="polite"></div>
+  </form>
+</div></section>
+
+<section class="wl-band">
+  <h2>Three lines decide most of it.</h2>
+  <p class="sub">What couples actually pay, from the same ranges on every Lazo cost guide and vendor page. One number set, everywhere.</p>
+  <div class="wl-grid three">
+    <a class="wl-f" href="/cost/wedding-venues/" style="text-decoration:none;color:inherit"><div class="im ph"><img src="/assets/photos/wedding-venues.jpg" alt="An outdoor desert ceremony set up under string lights" loading="lazy" decoding="async"></div><div class="tx"><div class="k">The biggest swing</div><div class="rng">$3,000 to $15,000+</div><h3>Venue</h3><p>Sets the date, the headcount and half the budget. Ask what is included before you compare the price.</p></div></a>
+    <a class="wl-f" href="/cost/wedding-caterers/" style="text-decoration:none;color:inherit"><div class="im ph"><img src="/assets/photos/wedding-caterers.jpg" alt="A plated wedding dinner" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Scales with the headcount</div><div class="rng">$40 to $120 a guest</div><h3>Catering</h3><p>Buffet and stations at the low end, plated service higher. Every guest you cut is a real number back.</p></div></a>
+    <a class="wl-f" href="/cost/wedding-photographers/" style="text-decoration:none;color:inherit"><div class="im ph"><img src="/assets/photos/wedding-photographers.jpg" alt="A wedding photographer at work" loading="lazy" decoding="async"></div><div class="tx"><div class="k">Books first</div><div class="rng">$1,500 to $3,500</div><h3>Photographer</h3><p>Hours of coverage move the price more than the package name. The good ones go 9 to 14 months out.</p></div></a>
+  </div>
+</section>
+
+<section class="wl-photo" style="--img:url('/assets/photos/wedding-venues.jpg');--pos:50%"><div class="bg"></div><div class="q">
+  <p class="eyebrow">Then the budget keeps itself</p>
+  <h2>Sign a proposal, and the line moves from <em>estimate</em> to <em>committed.</em></h2>
+  <p>Most budget spreadsheets die the week the first deposit goes out. In Lazo the budget reads your bookings, and June answers "what can we cut to get under $28,000?" with your actual lines.</p>
+</div></section>
+
+<section class="wl-band">
+  <h2>Questions</h2>
+  <details class="faq" open><summary>How much does a wedding cost?</summary><p>The Knot's 2026 Real Weddings Study puts the US average at $34,000 for about 13 vendors. Your number depends mostly on guest count and venue, which is why June asks for those first.</p></details>
+  <details class="faq"><summary>Where do these ranges come from?</summary><p>They are the ranges Lazo publishes in its <a href="/cost/">cost guides</a>, phrased as what couples actually pay. They are national, not quotes from any vendor.</p></details>
+  <details class="faq"><summary>Is the budget tracker free?</summary><p>Yes. The budget, the guest list, the seating chart, the website and June are all free for couples. Lazo takes 0% of what you pay your vendors.</p></details>
+</section>
+
+<section class="wl-end"><div class="claim-strip" style="--img:url('/assets/photos/atmo-toast.jpg');--pos:40%">
+  <h2>Let June do the math.</h2>
+  <p>Your budget, your bookings and your vendor threads in one free plan.</p>
+  <a class="btn-gold" data-wl-app="end" href="https://app.meetlazo.com/">Price my wedding</a>
+</div></section>
+
+<script>
+(function(){
+  var LINES={{ budget_json|safe }};
+  var g=document.getElementById('b-guests'),go=document.getElementById('b-gout');
+  g.addEventListener('input',function(){go.textContent=g.value});
+  function usd(n){return '$'+Math.round(n).toLocaleString('en-US')}
+  function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  document.getElementById('wl-bud').addEventListener('submit',function(){
+    var sel=document.getElementById('b-city'),city=sel.value,cityName=city?sel.options[sel.selectedIndex].text:'';
+    var n=+g.value,mo=+document.getElementById('b-month').value;
+    var peak=(mo>=5&&mo<=6)||(mo>=9&&mo<=10);
+    var lo=0,hi=0,rows=[];
+    LINES.forEach(function(L){
+      var a=L.lo,b=L.hi;
+      if(L.per==='guest'){a*=n;b*=n}
+      else if(L.per==='slice'){a=Math.max(a,4*n);b=Math.max(b,9*n)}
+      if(L.key==='wedding-venues'&&peak){a*=1.1;b*=1.1}
+      lo+=a;hi+=b;rows.push([L.label,usd(a)+' to '+usd(b)]);
+    });
+    var out=document.getElementById('b-june');
+    out.innerHTML='<div class="who"><i>J</i>June</div><p>'+(city?'For '+esc(cityName)+', ':'For ')+n+' guests'+(peak?' in a peak month':'')+', most couples land between <b>'+usd(lo)+'</b> and <b>'+usd(hi)+'</b>. Line by line:</p><table class="bt">'+rows.map(function(r){return '<tr><td>'+esc(r[0])+'</td><td>'+r[1]+'</td></tr>'}).join('')+'<tr class="total"><td>Everything</td><td>'+usd(lo)+' to '+usd(hi)+'</td></tr></table><p style="margin-top:10px;font-size:13px;color:rgba(250,246,240,.7)">Catering, cake and rentals scale with the headcount; the venue is the biggest swing. Want me to track it as you book?</p><a class="next" data-wl-app="june" href="https://app.meetlazo.com/">Track this budget free &rarr;</a>';
+    out.classList.add('on');
+    var extra={intent:'budget',guests:String(n),month:String(mo)};if(city)extra.metro=city;
+    [].slice.call(document.querySelectorAll('a[data-wl-app]')).forEach(function(a){a.href=window.lzWelcome.appHref(extra);});
+    var j=out.querySelector('a[data-wl-app]');j.addEventListener('click',function(){try{window.lzWelcome.track('WelcomeCTA',{cta:'june'});if(window.fbq)fbq('track','Lead',{content_name:'welcome-budget'});}catch(e){}});
+    try{window.lzWelcome.track('JuneAnswer',{city:city||'',guests:String(n),lo:String(Math.round(lo)),hi:String(Math.round(hi))});}catch(e){}
+  });
+})();
+</script>
+{% endblock %}

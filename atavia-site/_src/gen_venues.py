@@ -332,9 +332,11 @@ for st, cities in tree.items():
             # JC-ATV-SEO-0924: people reach these pages by searching the venue's own name
             # ("meadow mint farm", "coleman barn burlington nc", "... photos"), so the title
             # leads with the name + town and the snippet leads with the address.
+            # JC-ATV-SEO-1008: GSC showed venue-name searches at pos 6-10 with 0 clicks on the
+            # "Wedding Photographer & Videographer" title, so lead with "<Venue> Weddings" (the venue intent).
             has_photos = bool(PHOTOS.get(vslug))
             title = ("%s Wedding Photos &amp; Video &middot; %s, %s | Atavia Weddings" if has_photos else
-                     "%s Wedding Photographer &amp; Videographer &middot; %s, %s | Atavia Weddings") % (h(name), h(city), st)
+                     "%s Weddings &middot; %s, %s &middot; Photo &amp; Film | Atavia Weddings") % (h(name), h(city), st)
             addr = (v.get("address") or "").replace(", USA", "")
             desc = ((h(addr) + ". ") if addr else "%s, %s. " % (h(city), sname))
             if v.get("filmed_here"):

@@ -417,7 +417,7 @@ function render(){
     <td>${(a=>`${esc(a.src)}<div class="sub">${esc(l.attr_venue||a.page)}</div>`)(attrRow(l))}</td>
     <td>${ago(ts(l.created_at))}<div class="sub">${fmtD(ts(l.created_at))}${l._attempts>1?` · ${l._attempts} attempts`:""}${l.nudge1_sent||l.nudge_1_sent?" · nudged":""}${l.nudge2_sent||l.nudge_2_sent?" ×2":""}</div></td>
     <td>${pill(lPill(l._st))}</td>
-    <td><div class="mini">${l._b?`<a class="btn ghost" href="/?open=${l._b.id}">Open booking</a>`:`<button class="btn ghost" data-code="${esc(l.email)}">Issue code</button>`}${l.sid?`<a class="btn ghost" href="/visitors.html?sid=${encodeURIComponent(l.sid)}">Trail</a>`:""}</div></td>
+    <td><div class="mini">${l._b?`<a class="btn ghost" href="/?open=${l._b.id}">Open booking</a>`:`<button class="btn ghost" data-code="${esc(l.email)}">Issue code</button>`}${l.sid?`<a class="btn ghost" href="/visitors.html?sid=${encodeURIComponent(l.sid)}">Trail</a>`:""}${!l._b?`<button class="btn ghost" data-dellead="${esc(l.email)}" title="Remove this couple's card-step attempts (bookings and inquiries are kept)">Delete</button>`:""}</div></td>
   </tr>`).join("") : `<tr><td colspan="7" class="state">No booking starts in range.</td></tr>`;
 
   // codes
@@ -438,6 +438,14 @@ document.addEventListener("click", async e => {
   const st = e.target.closest("[data-inqst]"); if (st) {
     if (DEMO) { const i = INQ.find(x=>x.id===st.dataset.id); i.status = st.dataset.inqst; render(); return; }
     try { await updateDoc(doc(db,"inquiries",st.dataset.id), { status: st.dataset.inqst, status_at: new Date() }); toast("Updated"); } catch (err) { toast("Couldn't update: "+(err.code||err.message)); } return; }
+  const dl = e.target.closest("[data-dellead]"); if (dl) {
+    const email = dl.dataset.dellead;
+    if (!confirm(`Delete the lead for ${email}?\n\nThis removes their card-step attempts from this list. Any booking or inquiry for them is kept.`)) return;
+    if (DEMO) { LEADS = LEADS.filter(x=>norm(x.email)!==norm(email)); render(); toast("Deleted"); return; }
+    dl.disabled = true; dl.textContent = "Deleting…";
+    try { const j = await callAdmin({ action:"delete_lead", email }); toast(j.deleted ? `Deleted ${j.deleted} lead${j.deleted===1?"":"s"}` : "Nothing to delete"); }
+    catch (err) { toast("Couldn't delete: "+err.message); dl.disabled = false; dl.textContent = "Delete"; }
+    return; }
   const wb = e.target.closest("[data-reply]"); if (wb) { REPLY_OPEN = REPLY_OPEN===wb.dataset.reply ? null : wb.dataset.reply; render(); if (REPLY_OPEN) { const ta=$("#rBody"); if (ta) ta.focus(); } return; }
   const sd = e.target.closest("[data-send]"); if (sd) { await sendReply(sd.dataset.send, sd); return; }
   const c = e.target.closest("[data-code]"); if (c) { $("#cNote").value = c.dataset.code; $("#codeSec").scrollIntoView({behavior:"smooth",block:"start"}); $("#cAmt").focus(); return; }

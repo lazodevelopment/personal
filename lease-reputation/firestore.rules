@@ -205,6 +205,46 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // ====================== VISITOR TRACKING (JARVIS) =======================
+    // The site's first-party tracker (worker.js + track.js) writes a doc per visit and a
+    // row per page view over REST, anonymously. Shape and lengths are pinned
+    // so the public write path cannot be used to store anything else; reads
+    // stay admin-only. Same schema as meetlazo.com and the wedding sites, so
+    // jarvis-hub/collect_traffic.py reads every site the same way.
+    function trackCapped(d, k, n) {
+      return !(k in d) || !(d[k] is string) || d[k].size() <= n;
+    }
+    function trackShapeOK(d, sid) {
+      return d.keys().hasOnly([
+          'sid','page','title','device','ua','screen','lang','landing','referrer',
+          'city','region','country','lat','lng','asn','org',
+          'bot','bot_why','engaged','utm_source','utm_campaign',
+          'first_seen','last_seen','page_count'])
+        && (!('sid' in d) || d.sid == sid)
+        && (!('page_count' in d) || (d.page_count is int && d.page_count > 0 && d.page_count <= 500))
+        && trackCapped(d, 'ua', 500) && trackCapped(d, 'title', 500) && trackCapped(d, 'page', 500)
+        && trackCapped(d, 'landing', 500) && trackCapped(d, 'referrer', 500) && trackCapped(d, 'org', 500)
+        && trackCapped(d, 'city', 120) && trackCapped(d, 'region', 120) && trackCapped(d, 'country', 8)
+        && trackCapped(d, 'engaged', 24) && trackCapped(d, 'bot_why', 120)
+        && trackCapped(d, 'utm_source', 200) && trackCapped(d, 'utm_campaign', 200);
+    }
+    match /sessions/{sid} {
+      allow read: if isAdmin();
+      allow create, update: if sid.size() >= 8 && sid.size() <= 64
+        && trackShapeOK(request.resource.data, sid);
+      allow delete: if false;
+
+      // One row per page view. Append-only.
+      match /hits/{hit} {
+        allow read: if isAdmin();
+        allow create: if request.resource.data.keys().hasOnly(['path','title','t'])
+          && request.resource.data.t is timestamp
+          && trackCapped(request.resource.data, 'path', 500)
+          && trackCapped(request.resource.data, 'title', 500);
+        allow update, delete: if false;
+      }
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

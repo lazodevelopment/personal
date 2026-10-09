@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WELCOME-1003 / 1005-PHOTO: /welcome/verified/ - the "How do you know that 5-star
+    review is real?" ad lands here. A real first dance with guests around it is the hero; the
+    two listing cards (sponsored vs verified) each carry a photo; the city and category picker
+    sends the visitor to verified venues (82% book the venue first) and remembers the metro
+    the worker injected as window.LAZO_GEO. -#}
+{% set wl_page = "verified" %}
+{% set wl_cta = "See verified vendors" %}
+{% block title %}Wedding Vendor Reviews You Can Actually Trust: Verified by a Real Wedding | Lazo{% endblock %}
+{% block desc %}How do you know that 5-star review is real? On Lazo every review comes from a couple who proved the wedding happened, and no vendor can buy a better ranking at any price. Find verified vendors in {{ metro_count }} cities.{% endblock %}
+{% block canonical %}{{ base }}/welcome/verified/{% endblock %}
+{% block ogimage %}{{ base }}/assets/photos/hero-4.jpg{% endblock %}
+{% block nav_key %}find{% endblock %}
+{% block nav_cta %}<a class="nav-cta" href="#pick">See verified vendors</a>{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"Verified vendors","item":"{{ base }}/welcome/verified/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What does a verified review mean on Lazo?","acceptedAnswer":{"@type":"Answer","text":"Before a review counts, the couple proves the wedding happened: a signed booking in Lazo, or a date and venue the vendor confirms. Anonymous and drive-by reviews never enter the score."}},{"@type":"Question","name":"Can a vendor pay to rank higher on Lazo?","acceptedAnswer":{"@type":"Answer","text":"No. Search order is the Lazo Score, built only from verified reviews and weighted for recency. The optional Pro plan buys vendors tools, never position."}},{"@type":"Question","name":"Does Lazo sell my inquiry to other vendors?","acceptedAnswer":{"@type":"Answer","text":"No. A message on Lazo goes to the one vendor you chose, with your real date and venue, and nobody else hears about it."}}]}]}</script>{% endblock %}
+{% block main %}
+{% include "pages/welcome/_shared.html" %}
+<section class="wl-hero" style="--img:url('/assets/photos/hero-4.jpg');--pos:60%"><div class="bg"></div><div class="wl-in">
+  <div>
+    <p class="eyebrow">Verified vendors</p>
+    <h1>How do you know that <em>5-star review</em> is real?</h1>
+    <p class="lede">On Lazo you do. Every review comes from a couple who proved the wedding happened. Rankings are the Lazo Score and nothing else, so no vendor can buy the top spot at any price, and your message goes to one vendor, not a lead list.</p>
+    <div class="wl-cta"><a class="btn-gold" href="#pick">See verified vendors in my city</a><span class="alt">{{ vendor_total_display }} vendors, {{ metro_count }} cities, free for couples.</span></div>
+    <div class="wl-proof"><span><b>100%</b>of reviews verified</span><span><b>$0</b>buys a ranking</span><span><b>1</b>vendor hears each message</span></div>
+  </div>
+  <div class="wl-vs" style="max-width:none;gap:14px">
+    <div class="ls them"><div class="pic dim" style="--img:url('/assets/photos/wedding-venues.jpg')"></div><div class="body"><span class="tag">Sponsored listing</span><h3>Sunset Ridge Events</h3><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733; 4.9 (312)</div><p>Top result because the venue pays for placement. Reviews are unverified. Your inquiry is shared with "similar vendors".</p></div></div>
+    <div class="ls us"><div class="pic" style="--img:url('/assets/photos/wedding-venues.jpg')"></div><div class="body"><span class="tag">Verified on Lazo</span><h3>Sunset Ridge Events</h3><div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733; Lazo Score 94</div><p>Top result because 41 couples who married here, most recently on 09.19.26, said so. Nobody paid for this spot. Your message reaches this venue alone.</p></div></div>
+  </div>
+</div></section>
+
+<section class="wl-band" id="pick">
+  <div class="wl-split">
+    <div>
+      <p class="eyebrow">Start with the venue</p>
+      <h2>It sets everything else.</h2>
+      <p class="sub">82% of couples book the venue first. Pick your city and see verified venues ranked by couples who married there, then every other category.</p>
+      <ol class="wl-why">
+        <li><b>01</b><span><strong>The wedding happens.</strong> A couple books through a Lazo thread, or a vendor confirms the date and venue after the day.</span></li>
+        <li><b>02</b><span><strong>The couple reviews.</strong> Only that couple can review that vendor for that wedding. One review per wedding, with the date on it.</span></li>
+        <li><b>03</b><span><strong>The score updates.</strong> The Lazo Score is built from verified reviews only, weighted for recency. Search order is the score. There is no other input.</span></li>
+      </ol>
+    </div>
+    <form class="wl-card" onsubmit="return false" id="wl-ver" style="box-shadow:0 30px 60px -30px rgba(61,28,59,.35)">
+      <div class="ch"><i>&#10003;</i><div><b>Verified vendors near you</b><small>No account needed to browse.</small></div></div>
+      <label for="v-city">Your city</label>
+      <select id="v-city">
+        {% for m in metros %}<option value="{{ m.id }}">{{ m.display }}</option>{% endfor %}
+      </select>
+      <label for="v-cat">Looking for</label>
+      <select id="v-cat">
+        {% for c in categories %}<option value="{{ c.slug }}"{% if c.slug == 'wedding-venues' %} selected{% endif %}>{{ c.label }}</option>{% endfor %}
+      </select>
+      <button class="go" type="submit">See verified vendors</button>
+    </form>
+  </div>
+</section>
+
+<section class="wl-photo" style="--img:url('/assets/photos/atmo-firstdance.jpg');--pos:50%"><div class="bg"></div><div class="q">
+  <p class="eyebrow">Where the reviews come from</p>
+  <h2>From this night. <em>Not from a bot, not from a lead-seller.</em></h2>
+  <p>A review on Lazo carries the date of the wedding it came from. If the wedding did not happen, the review does not exist.</p>
+</div></section>
+
+<section class="wl-band">
+  <h2>Questions</h2>
+  <details class="faq" open><summary>Can a vendor pay to rank higher?</summary><p>No. The optional Pro plan buys vendors tools (calendar, proposals, payments), never position. Rankings stay the Lazo Score.</p></details>
+  <details class="faq"><summary>Does Lazo sell my inquiry to other vendors?</summary><p>No. A message on Lazo goes to the one vendor you chose, with your real date and venue, and nobody else hears about it.</p></details>
+  <details class="faq"><summary>Who built this?</summary><p>A working wedding photographer and videographer who spent years on the other side of the lead-selling marketplaces. <a href="/about/">The story.</a></p></details>
+</section>
+
+<section class="wl-end"><div class="claim-strip" style="--img:url('/assets/photos/atmo-rings.jpg');--pos:55%">
+  <h2>Reviews from real weddings. Rankings nobody can buy.</h2>
+  <p>Browse free, save vendors to a shortlist, and let June tell you what to book next.</p>
+  <a class="btn-gold" data-wl-app="end" href="https://app.meetlazo.com/">Start planning free</a>
+</div></section>
+
+<script>
+(function(){
+  var city=document.getElementById('v-city'),cat=document.getElementById('v-cat');
+  try{var g=window.LAZO_GEO&&window.LAZO_GEO.id;if(g&&city.querySelector('option[value="'+g+'"]'))city.value=g;}catch(e){}
+  try{var r=localStorage.getItem('lz_metro');if(r&&city.querySelector('option[value="'+r+'"]'))city.value=r;}catch(e){}
+  document.getElementById('wl-ver').addEventListener('submit',function(){
+    try{localStorage.setItem('lz_metro',city.value);localStorage.setItem('lz_metro_at',String(Date.now()));}catch(e){}
+    try{window.lzWelcome.track('VerifiedBrowse',{city:city.value,category:cat.value});}catch(e){}
+    location.href='/'+city.value+'/'+cat.value+'/';
+  });
+})();
+</script>
+{% endblock %}

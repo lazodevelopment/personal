@@ -1,0 +1,1 @@
+CreateObject("WScript.Shell").Run """C:\Users\kurvh\jarvis-hub\jarvis_hands.bat""", 0, False

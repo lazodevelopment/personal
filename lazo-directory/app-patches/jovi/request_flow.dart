@@ -2459,125 +2459,86 @@ class _RequestsFlowWidgetState extends State<RequestsFlowWidget>
   Future<bool> _processKurvPassPayment() async {
     try {
       setState(() => _isLoading = true);
-
-      // Never create an anonymous account just to take a payment — a care
-      // request needs the real, signed-in member behind it.
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         throw Exception('Please sign in to add Jovi Pass.');
       }
-
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(currentUser.uid)
           .get();
-
-      String? payarcCustomerId;
-      String? cardLast4;
-
-      if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>;
-        payarcCustomerId = userData['payarcCustomerId'] as String?;
-        cardLast4 = userData['cardLast4'] as String?;
-      }
-
-      bool useExistingCard = false;
-
-      if (payarcCustomerId != null && cardLast4 != null) {
-        useExistingCard = await showDialog<bool>(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => CupertinoAlertDialog(
-                title: const Text('Payment Method'),
-                content: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                      'Charge \$49.00 to your saved card ending in $cardLast4?'),
-                ),
-                actions: [
-                  CupertinoDialogAction(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('Use New Card'),
-                  ),
-                  CupertinoDialogAction(
-                    isDefaultAction: true,
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text('Use Saved Card'),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
-      }
-
-      Map<String, dynamic> paymentData;
-
-      if (!useExistingCard) {
-        final result = await showDialog<Map<String, String>>(
+      final data = userDoc.data() ?? <String, dynamic>{};
+      final bankId = data['billBankAccountId'] as String?;
+      final last4 = (data['billBankLast4'] ?? data['cardLast4']) as String?;
+      if (bankId == null || bankId.isEmpty) {
+        if (mounted) setState(() => _isLoading = false);
+        await showDialog<void>(
           context: context,
-          barrierDismissible: false,
-          builder: (context) => _CardInputDialog(),
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('Add a bank account'),
+            content: const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                  'Jovi Pass is debited from the bank account on your membership. Add one under Billing, then try again.'),
+            ),
+            actions: [
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
         );
-
-        if (result == null) {
-          if (mounted) setState(() => _isLoading = false);
-          return false;
-        }
-
-        final expiry =
-            '${result['expMonth']!.padLeft(2, '0')}/${result['expYear']}';
-
-        paymentData = {
-          'amount': 49.00,
-          'cardNumber': result['cardNumber']!,
-          'expiry': expiry,
-          'cvv': result['cvv']!,
-          'firstName': _selectedPatient?.split(' ').first ?? 'Guest',
-          'lastName': _selectedPatient?.split(' ').last ?? 'User',
-          'email': currentUser.email ?? 'support@jovihealth.com',
-          'phone': '',
-          'subscriptionType': 'kurvpass',
-          'userId': currentUser.uid,
-          'isUpdate': false,
-        };
-      } else {
-        paymentData = {
-          'amount': 49.00,
-          'payarcCustomerId': payarcCustomerId,
-          'userId': currentUser.uid,
-          'subscriptionType': 'kurvpass',
-          'isUpdate': false,
-        };
-      }
-
-      final functions = FirebaseFunctions.instance;
-      final callable = functions.httpsCallable('processMembershipPayment');
-
-      final result = await callable.call(paymentData);
-
-      if (result.data['success'] == true) {
-        if (result.data['payarcCustomerId'] != null) {
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(currentUser.uid)
-              .update({
-            'payarcCustomerId': result.data['payarcCustomerId'],
-            'lastKurvPassPurchase': FieldValue.serverTimestamp(),
-          });
-        }
-
-        if (mounted) setState(() => _isLoading = false);
-        return true;
-      } else {
-        if (mounted) setState(() => _isLoading = false);
-        _toastError((result.data['error'] as String?) ??
-            'Payment failed. Please try again.');
         return false;
       }
+      final confirmed = await showDialog<bool>(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => CupertinoAlertDialog(
+              title: const Text('Jovi Pass'),
+              content: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                    'Debit \$49.00 from your bank account ending in ${last4 ?? '••••'}? This fee is non-refundable once your priority slot is booked.'),
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                CupertinoDialogAction(
+                  isDefaultAction: true,
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Pay \$49.00'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (!confirmed) {
+        if (mounted) setState(() => _isLoading = false);
+        return false;
+      }
+      final callable =
+          FirebaseFunctions.instance.httpsCallable('billChargeOneTime');
+      final result = await callable.call({
+        'amount': 49.00,
+        'kind': 'kurvpass',
+        'description': 'Jovi Pass priority visit',
+      });
+      final res = result.data is Map
+          ? Map<String, dynamic>.from(result.data)
+          : <String, dynamic>{};
+      if (mounted) setState(() => _isLoading = false);
+      if (res['success'] == true) {
+        return true;
+      }
+      _toastError((res['error'] as String?) ?? 'Payment failed. Please try again.');
+      return false;
     } catch (e) {
       debugPrint('Error processing payment: $e');
       if (mounted) setState(() => _isLoading = false);
-
       String errorMessage = 'Payment failed: ';
       if (e.toString().contains('firebase_functions/unauthenticated')) {
         errorMessage = 'Authentication failed. Please refresh and try again.';
@@ -2586,7 +2547,6 @@ class _RequestsFlowWidgetState extends State<RequestsFlowWidget>
       } else {
         errorMessage += e.toString();
       }
-
       _toastError(errorMessage);
       return false;
     }
@@ -2914,7 +2874,7 @@ class _RequestsFlowWidgetState extends State<RequestsFlowWidget>
                       border: Border.all(color: joviMint.withOpacity(0.4)),
                     ),
                     child: Text(
-                      'Jovi Pass · \$49 one-time',
+                      'Jovi Pass · \$49 one-time (bank debit)',
                       style: TextStyle(
                         fontSize: layoutSettings.actionTextSize + 5,
                         fontWeight: FontWeight.bold,

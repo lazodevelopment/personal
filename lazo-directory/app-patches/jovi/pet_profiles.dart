@@ -1498,7 +1498,8 @@ class _PetProfilesState extends State<PetProfiles>
       if (renew is Timestamp) {
         _renewAnniversaryDay = renew.toDate().day;
       }
-      final payarc = data['payarcCustomerId'];
+      // ACH (BILL): the bank account on file is the saved payment method.
+      final payarc = data['billBankAccountId'] ?? data['payarcCustomerId'];
       if (payarc is String && payarc.isNotEmpty) {
         _payarcCustomerId = payarc;
       }
@@ -1990,7 +1991,7 @@ class _PetProfilesState extends State<PetProfiles>
     final payarc = _payarcCustomerId;
     if (payarc == null || payarc.isEmpty) {
       _showSnackBar(
-        'We couldn\'t find a saved payment method on your account. Update your payment method in your profile and try again.',
+        'Add a bank account under Billing first, then add your pet. The prorated amount is debited from that account.',
         isError: true,
       );
       return false;

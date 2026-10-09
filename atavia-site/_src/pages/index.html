@@ -197,16 +197,33 @@
   .lazo-ad-wrap{ background:#52284F; }
   .lazo-ad{
     --lz-plum:#52284F; --lz-plum-deep:#3A1838; --lz-ivory:#FAF6F0; --lz-gold:#D9B77C; --lz-muted:#DCCFD8; --lz-line:rgba(217,183,124,.28);
-    display:block; position:relative; isolation:isolate; overflow:hidden;
-    background:var(--lz-plum); color:var(--lz-ivory); text-decoration:none;
+    position:relative; isolation:isolate; overflow:hidden;
+    background:var(--lz-plum); color:var(--lz-ivory);
     padding:64px 24px 72px; text-align:center;
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   }
   .lazo-ad::before{
     content:""; position:absolute; inset:0; z-index:-1;
     background:radial-gradient(80% 70% at 50% 0%, #63336A 0%, var(--lz-plum) 55%, var(--lz-plum-deep) 100%);
   }
+  .lazo-ad::after{
+    content:""; position:absolute; z-index:-1; left:50%; top:-220px; width:900px; height:900px; transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(217,183,124,.14) 0%, rgba(217,183,124,0) 60%); pointer-events:none;
+  }
+  .lazo-ad a{ color:inherit; text-decoration:none; }
+  .lazo-ad a:focus-visible{ outline:3px solid var(--lz-gold); outline-offset:4px; border-radius:8px; }
   .lazo-ad__inner{ max-width:1040px; margin:0 auto; }
-  .lazo-ad__logo{ display:block; width:124px; height:auto; margin:0 auto 28px; }
+
+  /* eyebrow pill */
+  .lazo-ad__eyebrow{
+    display:inline-flex; align-items:center; gap:10px; margin:0 0 26px;
+    padding:9px 16px 9px 12px; border:1px solid var(--lz-line); border-radius:999px;
+    background:rgba(58,24,56,.55); backdrop-filter:blur(6px);
+    font-weight:500; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--lz-gold); white-space:nowrap;
+  }
+  .lazo-ad__eyebrow i{ width:8px; height:8px; border-radius:50%; background:var(--lz-gold); box-shadow:0 0 0 4px rgba(217,183,124,.18); }
+
+  .lazo-ad__logo{ display:block; width:124px; height:auto; margin:0 auto 24px; }
   .lazo-ad__title{
     font-family:'Cormorant Garamond','Garamond',Georgia,serif; font-weight:300; font-style:italic;
     font-size:36px; line-height:1.15; margin:0 0 18px; color:var(--lz-ivory);
@@ -214,88 +231,154 @@
   .lazo-ad__t1,.lazo-ad__t2{ display:block; }
   .lazo-ad__t1{ font-weight:600; font-style:normal; color:var(--lz-ivory); letter-spacing:-.01em; }
   .lazo-ad__t2{ font-weight:300; font-style:italic; color:var(--lz-muted); font-size:.78em; line-height:1.25; margin-top:10px; }
-  .lazo-ad__lead{
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    font-weight:300; font-size:18px; line-height:1.6; color:var(--lz-muted);
-    margin:0 auto; max-width:32em;
-  }
+  .lazo-ad__lead{ font-weight:300; font-size:18px; line-height:1.6; color:var(--lz-muted); margin:0 auto 28px; max-width:32em; }
+
+  /* store badges */
+  .lazo-ad__stores{ display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:12px; margin:0; padding:0; list-style:none; }
+  .lazo-ad__stores a{ display:block; line-height:0; border-radius:8px; transition:transform .18s ease,opacity .18s ease; }
+  .lazo-ad__stores a:hover{ transform:translateY(-2px); }
+  .lazo-ad__stores img{ display:block; height:52px; width:auto; }
+  .lazo-ad__stores-note{ display:block; width:100%; margin:12px 0 0; font-weight:300; font-size:13.5px; color:var(--lz-muted); opacity:.85; }
+  .lazo-ad__stores-note b{ font-weight:500; color:var(--lz-ivory); }
+
   .lazo-ad__hero{ display:grid; grid-template-columns:1fr; gap:40px; align-items:center; margin-bottom:44px; }
-  .lazo-ad__phone img{ display:block; width:min(440px,94vw); height:auto; margin:0 auto; }
+  .lazo-ad__phone{ display:block; }
+  .lazo-ad__phone img{ display:block; width:min(440px,94vw); height:auto; margin:0 auto; filter:drop-shadow(0 30px 50px rgba(0,0,0,.45)); transition:transform .3s ease; }
+  .lazo-ad__phone:hover img{ transform:translateY(-4px); }
+
   .lazo-ad__why{
-    font-family:'Cormorant Garamond',Georgia,serif; font-weight:400; font-style:italic; font-size:26px;
-    color:var(--lz-gold); margin:0 0 22px;
+    font-family:'Cormorant Garamond',Georgia,serif; font-weight:500; font-size:30px; line-height:1.15;
+    color:var(--lz-ivory); margin:0 auto 10px; max-width:20em;
   }
-  .lazo-ad__list{
-    list-style:none; margin:0 0 40px; padding:0; text-align:left;
-    display:grid; grid-template-columns:1fr; gap:0;
-    border-top:1px solid var(--lz-line);
+  .lazo-ad__why em{ font-style:italic; font-weight:300; color:var(--lz-gold); }
+  .lazo-ad__why-sub{ font-weight:300; font-size:16px; line-height:1.55; color:var(--lz-muted); margin:0 auto 32px; max-width:36em; }
+
+  /* comparison */
+  .lazo-ad__cmp{ margin:0 0 44px; text-align:left; border:1px solid var(--lz-line); border-radius:18px; overflow:hidden; background:rgba(58,24,56,.35); }
+  .lazo-ad__cmp-head{ display:none; }
+  .lazo-ad__cmp-row{ display:grid; grid-template-columns:1fr; gap:10px; padding:18px 18px 20px; border-top:1px solid var(--lz-line); }
+  .lazo-ad__cmp-row:first-of-type{ border-top:0; }
+  .lazo-ad__cmp-k{ font-weight:500; font-size:12.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--lz-gold); }
+  .lazo-ad__cmp-them,.lazo-ad__cmp-us{ font-weight:300; font-size:15.5px; line-height:1.5; color:var(--lz-muted); display:grid; grid-template-columns:22px 1fr; gap:10px; align-items:start; }
+  .lazo-ad__cmp-them::before,.lazo-ad__cmp-us::before{ font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; grid-column:1 / -1; margin-bottom:-4px; }
+  .lazo-ad__cmp-them::before{ content:"The Knot & Zola"; color:rgba(220,207,216,.6); }
+  .lazo-ad__cmp-us::before{ content:"Lazo"; color:var(--lz-gold); }
+  .lazo-ad__cmp-us{ color:var(--lz-ivory); font-weight:400; }
+  .lazo-ad__cmp svg{ width:20px; height:20px; margin-top:2px; flex:none; }
+  .lazo-ad__cmp-src{ font-weight:300; font-size:13px; color:var(--lz-muted); opacity:.75; margin:-30px 0 44px; }
+
+  /* closing download card */
+  .lazo-ad__get{
+    display:grid; grid-template-columns:1fr; gap:28px; align-items:center; text-align:center;
+    padding:32px 24px; border:1px solid var(--lz-line); border-radius:22px;
+    background:linear-gradient(180deg, rgba(58,24,56,.55), rgba(58,24,56,.25));
   }
-  .lazo-ad__list li{
-    display:grid; grid-template-columns:28px 1fr; gap:14px; align-items:start;
-    padding:18px 4px; border-bottom:1px solid var(--lz-line);
-  }
-  .lazo-ad__list svg{ width:22px; height:22px; margin-top:3px; flex:none; }
-  .lazo-ad__list b{
-    display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:18px; line-height:1.3; color:var(--lz-ivory); margin-bottom:5px;
-  }
-  .lazo-ad__list span{
-    font-family:'Inter',sans-serif; font-weight:300; font-size:16.5px; line-height:1.55; color:var(--lz-muted);
-  }
+  .lazo-ad__get-title{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:500; font-size:28px; line-height:1.15; margin:0 0 8px; color:var(--lz-ivory); }
+  .lazo-ad__get-title em{ font-style:italic; font-weight:300; color:var(--lz-gold); }
+  .lazo-ad__get-sub{ font-weight:300; font-size:15.5px; line-height:1.55; color:var(--lz-muted); margin:0 0 20px; }
+  .lazo-ad__get .lazo-ad__stores{ justify-content:center; }
   .lazo-ad__cta{
-    display:block; font-family:'Inter',sans-serif; font-weight:500; font-size:15px; letter-spacing:.08em; text-transform:uppercase;
-    background:var(--lz-gold); color:var(--lz-plum-deep); padding:19px 30px; border-radius:999px; line-height:1;
-    transition:background .18s ease,transform .18s ease;
+    display:inline-block; font-weight:500; font-size:14px; letter-spacing:.08em; text-transform:uppercase;
+    background:var(--lz-gold); color:var(--lz-plum-deep); padding:18px 30px; border-radius:999px; line-height:1;
+    transition:background .18s ease,transform .18s ease; margin-top:18px;
   }
-  .lazo-ad__sub{
-    font-family:'Inter',sans-serif; font-weight:300; font-size:14.5px; color:var(--lz-muted); opacity:.85; margin:20px 0 0;
-  }
-  .lazo-ad:hover .lazo-ad__cta{ background:var(--lz-ivory); transform:translateY(-1px); }
-  .lazo-ad:focus-visible{ outline:3px solid var(--lz-gold); outline-offset:-6px; }
+  .lazo-ad__cta:hover{ background:var(--lz-ivory); transform:translateY(-1px); }
+  .lazo-ad__qr{ display:none; }
+  .lazo-ad__qr-box{ display:inline-block; padding:12px; background:var(--lz-ivory); border-radius:16px; line-height:0; box-shadow:0 18px 40px rgba(0,0,0,.35); }
+  .lazo-ad__qr-box img{ width:124px; height:124px; display:block; }
+  .lazo-ad__qr-cap{ display:block; margin:12px 0 0; font-weight:400; font-size:12.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--lz-gold); }
+
+  .lazo-ad__sub{ font-weight:300; font-size:14.5px; color:var(--lz-muted); opacity:.85; margin:28px 0 0; }
+  .lazo-ad__sub a{ text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--lz-line); }
+  .lazo-ad__sub a:hover{ color:var(--lz-ivory); }
+
   @media (min-width:720px){
     .lazo-ad{ padding:96px 24px 104px; }
-    .lazo-ad__logo{ width:156px; margin-bottom:34px; }
+    .lazo-ad__logo{ width:156px; margin-bottom:30px; }
+    .lazo-ad__eyebrow{ font-size:12.5px; letter-spacing:.14em; padding:9px 18px 9px 14px; }
     .lazo-ad__title{ font-size:54px; }
     .lazo-ad__lead{ font-size:20px; }
-    .lazo-ad__hero{ grid-template-columns:minmax(0,1fr) 600px; gap:32px; text-align:left; margin-bottom:56px; }
+    .lazo-ad__hero{ margin-bottom:64px; }
+    .lazo-ad__phone img{ width:min(600px,90vw); }
+    .lazo-ad__why{ font-size:40px; }
+    .lazo-ad__why-sub{ font-size:17.5px; }
+    .lazo-ad__cmp-head{ display:grid; grid-template-columns:200px 1fr 1fr; gap:24px; padding:16px 28px; background:rgba(58,24,56,.6); font-weight:500; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:rgba(220,207,216,.6); }
+    .lazo-ad__cmp-head span:last-child{ color:var(--lz-gold); }
+    .lazo-ad__cmp-row{ grid-template-columns:200px 1fr 1fr; gap:24px; padding:22px 28px; }
+    .lazo-ad__cmp-k{ font-family:'Cormorant Garamond',Georgia,serif; font-weight:500; font-size:21px; letter-spacing:0; text-transform:none; color:var(--lz-ivory); line-height:1.2; }
+    .lazo-ad__cmp-them::before,.lazo-ad__cmp-us::before{ display:none; }
+    .lazo-ad__cmp-them,.lazo-ad__cmp-us{ font-size:16px; }
+    .lazo-ad__get{ grid-template-columns:minmax(0,1fr) auto; text-align:left; padding:40px 48px; gap:40px; }
+    .lazo-ad__get .lazo-ad__stores{ justify-content:flex-start; }
+    .lazo-ad__get-title{ font-size:34px; }
+    .lazo-ad__qr{ display:block; text-align:center; }
+  }
+  @media (min-width:1000px){
+    .lazo-ad__hero{ grid-template-columns:minmax(0,1fr) 600px; gap:32px; text-align:left; }
+    .lazo-ad__hero .lazo-ad__eyebrow{ margin-left:0; }
     .lazo-ad__hero .lazo-ad__logo{ margin-left:0; }
     .lazo-ad__hero .lazo-ad__lead{ margin-left:0; }
+    .lazo-ad__hero .lazo-ad__stores{ justify-content:flex-start; }
+    .lazo-ad__hero .lazo-ad__stores-note{ text-align:left; }
     .lazo-ad__phone img{ width:660px; max-width:none; margin-right:-60px; }
-    .lazo-ad__why{ font-size:30px; }
-    .lazo-ad__list{ grid-template-columns:1fr 1fr; column-gap:48px; border-top:0; }
-    .lazo-ad__list li{ padding:20px 0; }
-    .lazo-ad__list li:nth-child(-n+2){ border-top:1px solid var(--lz-line); }
-    .lazo-ad__cta{ display:inline-block; padding:20px 46px; font-size:14px; }
   }
-  @media (prefers-reduced-motion:reduce){ .lazo-ad__cta{ transition:none; } .lazo-ad:hover .lazo-ad__cta{ transform:none; } }
+  @media (prefers-reduced-motion:reduce){
+    .lazo-ad__cta,.lazo-ad__stores a,.lazo-ad__phone img{ transition:none; }
+    .lazo-ad__cta:hover,.lazo-ad__stores a:hover,.lazo-ad__phone:hover img{ transform:none; }
+  }
 </style>
 
-  <a class="lazo-ad" href="https://meetlazo.com/?utm_source=ataviaweddings&utm_medium=site&utm_campaign=lazo-ad" rel="noopener" data-lazo-link>
+  <div class="lazo-ad">
     <div class="lazo-ad__inner">
       <div class="lazo-ad__hero">
         <div class="lazo-ad__copy">
-          <img class="lazo-ad__logo" src="/assets/img/lazo-logo.png" alt="Lazo" width="520" height="322">
+          <p class="lazo-ad__eyebrow"><i aria-hidden="true"></i>Now on the App Store &amp; Google Play</p>
+          <a href="https://meetlazo.com/?utm_source=ataviaweddings&utm_medium=site&utm_campaign=lazo-ad" rel="noopener" data-lazo-link aria-label="Lazo"><img class="lazo-ad__logo" src="/assets/img/lazo-logo.png" alt="Lazo" width="520" height="322"></a>
           <h2 class="lazo-ad__title"><span class="lazo-ad__t1">The big sites give you a search box.</span><span class="lazo-ad__t2">Lazo gives you June — an assistant who plans your wedding.</span></h2>
-          <p class="lazo-ad__lead">Lazo is free for couples, and it does the planning the big sites leave to you.</p>
+          <p class="lazo-ad__lead">Lazo is free for couples, and it does the planning the big sites leave to you. Now in your pocket on iPhone and Android.</p>
+          <ul class="lazo-ad__stores">
+            <li><a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675" target="_blank" rel="noopener" aria-label="Download Lazo on the App Store"><img src="/assets/img/lazo-appstore-badge.svg" alt="Download on the App Store" width="156" height="52"></a></li>
+            <li><a href="https://play.google.com/store/apps/details?id=com.meetlazo.app" target="_blank" rel="noopener" aria-label="Get Lazo on Google Play"><img src="/assets/img/lazo-googleplay-badge.png" alt="Get it on Google Play" width="175" height="52"></a></li>
+            <li class="lazo-ad__stores-note"><b>Free for couples.</b> No ads, no paid rankings.</li>
+          </ul>
         </div>
-        <div class="lazo-ad__phone">
+        <a class="lazo-ad__phone" href="https://meetlazo.com/app/?utm_source=ataviaweddings&utm_medium=site&utm_campaign=lazo-ad" rel="noopener" data-lazo-link aria-label="Get the Lazo app">
           <img src="/assets/img/lazo-app-trio.png" alt="The Lazo app: your wedding home with the countdown and budget, a conversation with June, and a vendor thread with the signed contract and paid retainer" width="1653" height="1247" loading="lazy">
+        </a>
+      </div>
+
+      <h3 class="lazo-ad__why">We're listed on The Knot, Zola <em>and</em> Lazo. Here's the difference.</h3>
+      <p class="lazo-ad__why-sub">We see all three from the vendor side. The big sites are free for you because vendors pay to be seen there. Lazo is free for you and takes 0% of what you pay your vendors, so nothing is for sale but the truth.</p>
+      <div class="lazo-ad__cmp" role="table" aria-label="The Knot and Zola compared with Lazo">
+        <div class="lazo-ad__cmp-head" aria-hidden="true"><span>What matters</span><span>The Knot &amp; Zola</span><span>Lazo</span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">Who shows up first</span><span class="lazo-ad__cmp-them"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(220,207,216,.55)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span>Vendors pay for placement, from $50 to $1,200+ a month. The biggest budget gets the top spot.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>Rankings come from verified reviews, reply speed and real bookings. No vendor can pay to rank.</span></span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">The reviews</span><span class="lazo-ad__cmp-them"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(220,207,216,.55)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span>Anyone can post one. There's no check that the wedding happened or that they booked.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>Only couples who booked and proved the wedding happened can review. Every review is tied to a real booking.</span></span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">What it costs</span><span class="lazo-ad__cmp-them"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(220,207,216,.55)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span>Most profiles hide pricing behind a “request pricing” form. You message first, then find out.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>Starting prices and packages sit on every profile, so you compare real costs in your city before you reach out.</span></span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">Your message</span><span class="lazo-ad__cmp-them"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(220,207,216,.55)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span>Goes through a lead form into a queue the vendor pays to receive.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>Goes straight to the vendor in one thread. The proposal, contract and payment live in that same conversation.</span></span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">The planning</span><span class="lazo-ad__cmp-them"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(220,207,216,.55)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span>A checklist of two hundred items, the same one for every couple.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>June reads your date, budget and city and tells you the three things to do this week.</span></span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">Your wedding website</span><span class="lazo-ad__cmp-them"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(220,207,216,.55)" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9 9l6 6M15 9l-6 6"/></svg><span>Free, with their ads and upsells on it.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>Free, no ads. Guests add photos from their phones, find their table and see what's happening now.</span></span></div>
+        <div class="lazo-ad__cmp-row"><span class="lazo-ad__cmp-k">Switching</span><span class="lazo-ad__cmp-them"><span aria-hidden="true"></span><span>Start over.</span></span><span class="lazo-ad__cmp-us"><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><span>Bring your guest list from The Knot or Zola as a CSV. June reads a pasted budget or vendor list.</span></span></div>
+      </div>
+
+      <div class="lazo-ad__get">
+        <div>
+          <h3 class="lazo-ad__get-title">Get Lazo on your phone. <em>Plan from anywhere.</em></h3>
+          <p class="lazo-ad__get-sub">Download the app, tell June your date and city, and she'll have your first to-do list ready before you finish your coffee.</p>
+          <ul class="lazo-ad__stores">
+            <li><a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675" target="_blank" rel="noopener" aria-label="Download Lazo on the App Store"><img src="/assets/img/lazo-appstore-badge.svg" alt="Download on the App Store" width="156" height="52" loading="lazy"></a></li>
+            <li><a href="https://play.google.com/store/apps/details?id=com.meetlazo.app" target="_blank" rel="noopener" aria-label="Get Lazo on Google Play"><img src="/assets/img/lazo-googleplay-badge.png" alt="Get it on Google Play" width="175" height="52" loading="lazy"></a></li>
+          </ul>
+          <a class="lazo-ad__cta" href="https://meetlazo.com/app/?utm_source=ataviaweddings&utm_medium=site&utm_campaign=lazo-ad" rel="noopener" data-lazo-link>Or plan on the web</a>
+        </div>
+        <div class="lazo-ad__qr" aria-hidden="true">
+          <span class="lazo-ad__qr-box"><img src="/assets/img/lazo-app-qr.svg" alt="" width="124" height="124" loading="lazy"></span>
+          <span class="lazo-ad__qr-cap">Scan to get the app</span>
         </div>
       </div>
 
-      <p class="lazo-ad__why">Why we'd send you to Lazo</p>
-      <ul class="lazo-ad__list">
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Reviews you can trust</b><span>Every review is from a couple who actually booked. No vendor can pay for a higher spot in your results.</span></div></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Real prices before you message</b><span>Packages and starting prices sit right on the profile, so you compare what things cost in your city first.</span></div></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>June AI plans it with you</b><span>Tell her your date, city and budget once. She tells you what to book next, what’s overdue, and answers anything.</span></div></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Message, sign and pay in one thread</b><span>Your note reaches the actual vendor. The proposal, contract and payment stay in that same conversation.</span></div></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>Share with your vendors</b><span>Build your timeline, guest list and photo groups once, then send them to the right vendors. Nobody asks twice.</span></div></li>
-        <li><svg viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg><div><b>A free wedding website</b><span>Eight designs, RSVPs that land in your guest list, song requests and directions for guests. No ads.</span></div></li>
-      </ul>
-
-      <span class="lazo-ad__cta">Plan your wedding on Lazo — free</span>
-      <p class="lazo-ad__sub">Atavia Weddings is a verified vendor on Lazo — built by working wedding pros. Find our profile, packages and reviews there.</p>
+      <p class="lazo-ad__sub">Atavia Weddings is a verified vendor on Lazo — built by working wedding pros. <a href="https://meetlazo.com/phoenix/wedding-videographers/atavia-weddings/?utm_source=ataviaweddings&utm_medium=site&utm_campaign=lazo-ad" rel="noopener" data-lazo-link>Find our profile, packages and reviews there.</a></p>
     </div>
-  </a>
+  </div>
 
   <script>
     (function(){

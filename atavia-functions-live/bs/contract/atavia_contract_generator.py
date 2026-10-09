@@ -154,17 +154,24 @@ def _money(n):
 def _c_retainer(ctx):
     if ctx["payment_option"] == "standard":
         return (
-            "A non-refundable retainer deposit of five hundred dollars ($500) is due upon "
-            "execution of this Agreement to reserve the Event date and is applied toward the "
-            "Total Investment. The remaining balance of {bal} is due fourteen (14) business days "
+            ("A non-refundable retainer deposit of five hundred dollars ($500) was paid at "
+             "the time of reservation, reserves the Event date, and is applied toward the "
+             "Total Investment. The remaining balance" if ctx.get("prepaid") else
+             "A non-refundable retainer deposit of five hundred dollars ($500) is due upon "
+             "execution of this Agreement to reserve the Event date and is applied toward the "
+             "Total Investment. The remaining balance")
+            + " of {bal} is due fourteen (14) calendar days "
             "from the date this Agreement is executed \u2014 or, if the Event date falls sooner, no later than the day before the Event \u2014 and will be automatically "
             "charged to the Client's payment method on file as set forth in the Payment "
             "Authorization & Card on File clause below. Dates are reserved on a first-come, "
             "first-served basis."
         ).format(bal=_money(ctx["balance"]))
     return (
-        "The Client has elected to pay the Total Investment in full upon execution of this "
-        "Agreement and receives a one hundred dollar ($100) paid-in-full discount, for a "
+        ("The Client has elected to pay the Total Investment in full, paid it at the time "
+         "of reservation, and receives" if ctx.get("prepaid") else
+         "The Client has elected to pay the Total Investment in full upon execution of this "
+         "Agreement and receives")
+        + " a one hundred dollar ($100) paid-in-full discount, for a "
         "discounted Total Investment of {pif}. Of this amount, five hundred dollars ($500) "
         "constitutes a non-refundable retainer that reserves the Event date. Dates are "
         "reserved on a first-come, first-served basis."
@@ -310,7 +317,8 @@ def _c_cancellation(ctx):
         )
     return (
         "All amounts paid under this Agreement, including the discounted Total Investment "
-        "paid at signing, are non-refundable upon cancellation by the Client for any "
+        + ("paid at reservation" if ctx.get("prepaid") else "paid at signing")
+        + ", are non-refundable upon cancellation by the Client for any "
         "reason. The parties agree that, in consideration of the Company's reservation of "
         "the Event date, declination of other bookings for that date, and allocation of "
         "personnel and resources, the Company's retention of all amounts paid constitutes "
@@ -669,22 +677,30 @@ def _build_story(ctx):
     if ctx["payment_option"] == "standard":
         inv_rows = addon_rows + [
             ["Total Investment",                 _money(ctx["total"])],
-            ["Retainer Deposit (due at signing)", _money(RULES["retainer"])],
+            ["Retainer Deposit (paid at reservation)" if ctx.get("prepaid")
+             else "Retainer Deposit (due at signing)", _money(RULES["retainer"])],
             ["Remaining Balance",                _money(ctx["balance"])],
         ]
         fine = (
-            "The $500 retainer is non-refundable and applied toward the Total "
+            ("The $500 retainer was paid at reservation, is non-refundable and applied "
+             "toward the Total " if ctx.get("prepaid") else
+             "The $500 retainer is non-refundable and applied toward the Total ")
+            + 
             "Investment. The remaining balance is automatically charged to the payment "
-            "method on file fourteen (14) business days after this Agreement is signed (or no later than the day before the Event, if sooner)."
+            "method on file fourteen (14) calendar days after this Agreement is signed (or no later than the day before the Event, if sooner)."
         )
     else:
         inv_rows = addon_rows + [
             ["Total Investment",                          _money(ctx["total"])],
             ["Paid-in-Full Discount",                     f"\u2212{_money(RULES['pif_discount'])}"],
-            ["Discounted Total Investment (due at signing)", _money(ctx["pif_total"])],
+            ["Discounted Total Investment (paid at reservation)" if ctx.get("prepaid")
+             else "Discounted Total Investment (due at signing)", _money(ctx["pif_total"])],
         ]
         fine = (
-            "The discounted Total Investment is due in full at signing and is "
+            ("The discounted Total Investment was paid in full at reservation and is "
+             if ctx.get("prepaid") else
+             "The discounted Total Investment is due in full at signing and is ")
+            + 
             "non-refundable as set forth in the Terms & Conditions."
         )
     itab = Table([[Paragraph(f"<b>{a}</b>", S["label"]),
@@ -705,14 +721,17 @@ def _build_story(ctx):
     story.append(Paragraph(_sp("SELECTED PAYMENT OPTION"), S["section"]))
     if ctx["payment_option"] == "standard":
         story.append(Paragraph(
-            f"<b>Standard Plan.</b> A $500 non-refundable retainer is due at signing; "
+            "<b>Standard Plan.</b> A $500 non-refundable retainer "
+            + ("was paid at reservation; " if ctx.get("prepaid") else "is due at signing; ")
+            + 
             f"the remaining balance of {_money(ctx['balance'])} is automatically charged "
-            f"to the payment method on file fourteen (14) business days after signing (or no later than the day before the Event, if sooner). "
+            f"to the payment method on file fourteen (14) calendar days after signing (or no later than the day before the Event, if sooner). "
             f"Total Investment: {_money(ctx['total'])}.", S["clause"]))
     else:
         story.append(Paragraph(
-            f"<b>Paid in Full.</b> The Client elects to pay the Total Investment in full "
-            f"at signing and receives a $100 paid-in-full discount. Discounted Total "
+            "<b>Paid in Full.</b> The Client elects to pay the Total Investment in full "
+            + ("and paid it at reservation" if ctx.get("prepaid") else "at signing")
+            + f" and receives a $100 paid-in-full discount. Discounted Total "
             f"Investment: {_money(ctx['pif_total'])}. All amounts paid are non-refundable "
             f"as set forth in the Terms & Conditions.", S["clause"]))
 
@@ -799,7 +818,8 @@ def _build_story(ctx):
 def generate_contract(package_id, payment_option, client=None,
                       out_path=None, company_signer="Lauren McKinnon, Manager",
                       signwell=False, second_shooter=False, extra_hours=0,
-                      discount=0, discount_code=""):
+                      discount=0, discount_code="", days_to_event=None,
+                      prepaid=False):
     """Render a contract PDF. Returns bytes; also writes to out_path if given.
 
     package_id     : one of the ids in atavia_packages.json
@@ -823,7 +843,7 @@ def generate_contract(package_id, payment_option, client=None,
 
     pkg = PACKAGES[package_id]
     pricing = compute_pricing(package_id, second_shooter, extra_hours,
-                              discount)
+                              discount, days_to_event=days_to_event)
     total = pricing["total"]
     family = {"photo": "Photography Collection",
               "video": "Videography Collection",
@@ -848,6 +868,7 @@ def generate_contract(package_id, payment_option, client=None,
         "collection_family": family,
         "company_signer": company_signer,
         "signwell": signwell,
+        "prepaid": bool(prepaid),
     }
 
     import io

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{#- JC-LAZO-WELCOME-1003 / 1005-PHOTO: /welcome/yes/ - the "You said YES" ad lands here. The
+    rings on the plum ribbon are the hero; the card asks for names, date and city and answers
+    in June's voice without an account: months to go, what to book first, and a live link to
+    the city's verified vendors. The app CTA carries the names and date across so the plan
+    opens already started (couple dashboard v144). -#}
+{% set wl_page = "yes" %}
+{% set wl_cta = "Start free with June" %}
+{% block title %}You Said Yes. Now What? Your Free Wedding Checklist and Website | Lazo{% endblock %}
+{% block desc %}Just engaged? Tell June your date and city and she makes your checklist and your free wedding website in the time it takes to answer one "when's the wedding?!" text. Free for couples.{% endblock %}
+{% block canonical %}{{ base }}/welcome/yes/{% endblock %}
+{% block ogimage %}{{ base }}/assets/photos/atmo-rings.jpg{% endblock %}
+{% block nav_cta %}<a class="nav-cta" data-wl-app="nav" href="https://app.meetlazo.com">Start free</a>{% endblock %}
+{% block jsonld %}<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Lazo","item":"{{ base }}/"},{"@type":"ListItem","position":2,"name":"You said yes","item":"{{ base }}/welcome/yes/"}]},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What should we do first after getting engaged?","acceptedAnswer":{"@type":"Answer","text":"Pick a season and a rough guest count, then book the venue and the photographer. Those two sell out first, usually 9 to 14 months ahead. June builds the rest of the checklist backwards from your date."}},{"@type":"Question","name":"Is the wedding website really free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Forty designs, RSVPs, schedule, travel, registry links and a passcode if you want one. No ads, no upsells, no guest cap."}},{"@type":"Question","name":"Do we both need accounts?","acceptedAnswer":{"@type":"Answer","text":"One wedding, two phones. Your partner signs in to the same plan and sees the same checklist, guest list and website."}}]}]}</script>{% endblock %}
+{% block main %}
+{% include "pages/welcome/_shared.html" %}
+<section class="wl-hero" style="--img:url('/assets/photos/atmo-rings.jpg');--pos:55%"><div class="bg"></div><div class="wl-in">
+  <div>
+    <p class="eyebrow">You said yes</p>
+    <h1>Still answering <em>&ldquo;when&rsquo;s the wedding?!&rdquo;</em> texts?</h1>
+    <p class="lede">Give June your date and your city. In the time it takes to reply to one more text she makes your checklist, prices your wedding and opens a free website your family can follow along on.</p>
+    {% include "pages/welcome/_cta.html" %}
+    <div class="wl-proof"><span><b>{{ vendor_total_display }}</b>verified vendors</span><span><b>{{ metro_count }}</b>cities</span><span><b>$0</b>for couples, ever</span></div>
+  </div>
+  <form class="wl-card" id="wl-yes" onsubmit="return false" aria-label="Ask June what to do first">
+    <div class="ch"><i>J</i><div><b>Ask June</b><small>Your free planner. No account yet.</small></div></div>
+    <label for="y-names">Your first names</label>
+    <input id="y-names" type="text" placeholder="Maya and Jordan" autocomplete="off">
+    <label for="y-date">Wedding date, or your best guess</label>
+    <input id="y-date" type="date">
+    <label for="y-city">Where</label>
+    <select id="y-city">
+      <option value="">Not sure yet</option>
+      {% for m in metros %}<option value="{{ m.id }}">{{ m.display }}</option>{% endfor %}
+    </select>
+    <button class="go" type="submit">Ask June what to do first</button>
+    <p class="fine">June answers right here, then opens your plan if you want it.</p>
+    <div class="wl-june" id="y-june" aria-live="polite"></div>
+  </form>
+</div></section>
+
+<section class="wl-band">
+  <div class="wl-split">
+    <div class="wl-shots" aria-hidden="true">
+      <img src="/assets/app-1.webp" alt="" width="600" height="1300" loading="lazy" decoding="async">
+      <img src="/assets/app-3.webp" alt="" width="600" height="1300" loading="lazy" decoding="async">
+      <img src="/assets/app-8.webp" alt="" width="600" height="1300" loading="lazy" decoding="async">
+    </div>
+    <div>
+      <p class="eyebrow">The first five minutes</p>
+      <h2>Three things, then you can go back to the champagne.</h2>
+      <ol class="wl-why">
+        <li><b>01</b><span><strong>June builds the checklist backwards from your date.</strong> She knows what sells out first in your city and tells you what to book this month, not a 200-item list to scroll past.</span></li>
+        <li><b>02</b><span><strong>Your website goes live before the ring photos post.</strong> Forty designs, your story, the engagement photos, and one link instead of the same answer forty times.</span></li>
+        <li><b>03</b><span><strong>Every vendor review is from a couple who actually got married.</strong> Rankings cannot be bought, so the first result is the best one, not the biggest ad budget.</span></li>
+      </ol>
+      <p style="margin-top:26px"><a class="btn-gold" data-wl-app="mid" href="https://app.meetlazo.com/">Start free with June</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="wl-photo" style="--img:url('/assets/photos/hero-1.jpg');--pos:62%"><div class="bg"></div><div class="q">
+  <p class="eyebrow">What to book first</p>
+  <h2>The venue, then the photographer. <em>June does the rest.</em></h2>
+  <p>Those two go 9 to 14 months out, peak Saturdays first. Everything else has time. June orders the list so you never find out you were late.</p>
+</div></section>
+
+<section class="wl-band">
+  <h2>Asked in the first week</h2>
+  <details class="faq" open><summary>What should we do first?</summary><p>Pick a season and a rough guest count, then book the venue and the photographer. Those two sell out first, usually 9 to 14 months ahead. June builds the rest backwards from your date.</p></details>
+  <details class="faq"><summary>Is the wedding website really free?</summary><p>Yes. Forty designs, RSVPs, schedule, travel, registry links and a passcode if you want one. No ads, no upsells, no guest cap. <a href="/wedding-websites/">See the designs.</a></p></details>
+  <details class="faq"><summary>Do we both need accounts?</summary><p>One wedding, two phones. Your partner signs in to the same plan and sees the same checklist, guest list and website.</p></details>
+  <details class="faq"><summary>We already started somewhere else.</summary><p>Bring it over. <a href="/welcome/switch/">Import your guest list from The Knot or Zola in one step</a> and keep your registry wherever it is.</p></details>
+</section>
+
+<section class="wl-end"><div class="claim-strip" style="--img:url('/assets/photos/atmo-toast.jpg');--pos:40%">
+  <h2>Engaged this week? Start the plan tonight.</h2>
+  <p>Free checklist, free website, verified vendors. Lazo takes 0% of what you pay your vendors.</p>
+  <a class="btn-gold" data-wl-app="end" href="https://app.meetlazo.com/">Start free with June</a>
+</div><p class="wl-fine">Lazo is built by a working wedding vendor. The business is an optional Pro plan for vendors, which never touches the rankings.</p></section>
+
+<script>
+(function(){
+  var f=document.getElementById('wl-yes'),out=document.getElementById('y-june');
+  function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+  f.addEventListener('submit',function(){
+    var names=document.getElementById('y-names').value.trim();
+    var date=document.getElementById('y-date').value;
+    var sel=document.getElementById('y-city');var city=sel.value,cityName=city?sel.options[sel.selectedIndex].text:'';
+    var months=null;
+    if(date){var d=new Date(date+'T12:00:00'),n=new Date();months=Math.max(0,Math.round((d-n)/2629800000));}
+    var hi=names?('Hi '+esc(names)+'. '):'';
+    var when=months===null?'Once you pick a season I can build the whole checklist backwards from it. ':(months<=0?'Your date is here, so this week is about the day-of timeline and the final headcount. ':(months<6?'With about '+months+' months to go we skip the long list and go straight to what is still open. ':'You have about '+months+' months, which is a good amount of room. '));
+    var list=[];
+    if(months===null||months>=6){list.push('<b>Book the venue first.</b> It sets the date, the headcount and half the budget. '+(city?'Verified venues in '+esc(cityName)+' are one tap away below.':''));list.push('<b>Then the photographer.</b> The good ones go 9 to 14 months out, peak Saturdays first.');list.push('<b>Open your free website</b> so the "when and where" texts answer themselves.');}
+    else{list.push('<b>Lock anything still unbooked today:</b> caterer, florist, DJ. Ask about waitlists; openings appear.');list.push('<b>Send the website link now</b> so RSVPs land in your guest list, not your texts.');list.push('<b>I will draft the vendor messages</b> once you are in the app.');}
+    var link=city?'/'+city+'/wedding-venues/':'/#find';
+    out.innerHTML='<div class="who"><i>J</i>June</div><p>'+hi+when+'Here is what I would do first:</p><ul>'+list.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul><a class="next" href="'+link+'">'+(city?'See verified venues in '+esc(cityName):'Find your city')+' &rarr;</a>';
+    out.classList.add('on');
+    try{if(window.lzWelcome)window.lzWelcome.track('JuneAnswer',{city:city||'',months:months===null?'':String(months)});}catch(e){}
+    var extra={};if(names)extra.names=names;if(date)extra.date=date;if(city)extra.metro=city;
+    [].slice.call(document.querySelectorAll('a[data-wl-app]')).forEach(function(a){a.href=window.lzWelcome.appHref(extra)});
+  });
+})();
+</script>
+{% endblock %}

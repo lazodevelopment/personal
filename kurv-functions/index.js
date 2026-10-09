@@ -1661,3 +1661,6 @@ exports.scribe = require('./scribe').scribe;
 Object.assign(exports, require('./orders'));   // transmitOrder, labResultsWebhook
 Object.assign(exports, require('./fax'));      // sendFax, faxInboundWebhook
 exports.fhir = require('./fhir').fhir;
+
+// BILL (bill.com) membership billing: billSetupBankAccount, billChargeNow, billDailyCharges, billReconcile, billWebhook
+Object.assign(exports, require('./billing'));

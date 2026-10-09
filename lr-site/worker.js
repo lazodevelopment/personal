@@ -7,7 +7,13 @@
  *
  * Keys mirror the on-disk paths written by kv_sync.py, so a URL resolves to a
  * key by the same rules a static file server would use.
+ *
+ * JC-LR-TRACK-1005-001: every HTML page leaves with the first-party visitor
+ * tracker appended to <head> (track.js), and the worker answers /api/geo and
+ * /assets/lr-track.js itself. JARVIS reads the resulting Firestore sessions.
  */
+
+import { geoResponse, trackerResponse, withTracker } from "./track.js";
 
 const TYPES = {
   html: "text/html; charset=utf-8",
@@ -84,6 +90,10 @@ export default {
 
     const url = new URL(request.url);
 
+    // Visitor tracking endpoints (not in KV).
+    if (url.pathname === "/api/geo") return geoResponse(request);
+    if (url.pathname === "/assets/lr-track.js") return trackerResponse();
+
     // One origin: https + apex. www.leasereputation.com and plain http were
     // both serving 200 copies of every page (duplicate hosts in GSC).
     if (url.protocol !== "https:" || url.hostname.startsWith("www.")) {
@@ -122,7 +132,7 @@ export default {
         continue;
       }
       const res = await serve(env, key, request);
-      if (res) return res;
+      if (res) return withTracker(request, res);
     }
 
     const notFound = await env.SITE.get("404.html", { type: "text" });

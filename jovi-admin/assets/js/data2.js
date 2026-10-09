@@ -152,3 +152,7 @@ export async function draftFromTranscript({ transcript, patientName, visitType, 
   const fn = httpsCallable(functions, 'scribe', { timeout: 120000 }); const res = await fn({ transcript, patientName, visitType, reason });
   await audit('scribe.run', 'scribe', { chars: transcript.length, model: res.data?.model || null }); return res.data;
 }
+
+// ── Invoices / receipts (written by functions/billing.js) ───────────────
+export async function invoicesAll(max = 1000) { const s = await getDocs(query(collectionGroup(db, 'invoices'), orderBy('issuedAt', 'desc'), limit(max))); return snapRows(s).map(r => ({ ...r, uid: r.path.split('/')[1] })); }
+export const invoicesFor = uid => sub(uid, 'invoices', orderBy('issuedAt', 'desc'));

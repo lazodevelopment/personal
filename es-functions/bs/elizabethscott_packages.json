@@ -1,0 +1,280 @@
+{
+  "_build": "JC-ES-PACKAGES-0818-009",
+  "brand": {
+    "name": "Elizabeth Scott Weddings",
+    "phone": "",
+    "email": "hello@elizabethscottweddings.com",
+    "website": "elizabethscottweddings.com",
+    "parent_company": "Danbren Media LLC",
+    "accent": "#1F1F1F"
+  },
+  "pricing_rules": {
+    "pif_discount": 500,
+    "max_extra_hours": 6,
+    "addon_second_shooter": 500,
+    "addon_extra_hour": 175,
+    "rush_days": 14,
+    "rush_fee": 149,
+    "balance_due_days_before_event": 14
+  },
+  "packages": [
+    {
+      "id": "ceremony",
+      "name": "The Ceremony",
+      "service_type": "video",
+      "collection_label": "Videography Collection",
+      "hours": 1,
+      "coverage_label": "Up to 45 minutes of ceremony coverage",
+      "total": 500,
+      "pif_only": true,
+      "pif_discount": 0,
+      "addons_allowed": false,
+      "bullets": [
+        "Up to 45 Minutes of Ceremony Coverage",
+        "Two Camera Angles",
+        "One Videographer",
+        "Professional Audio",
+        "Fully Edited Ceremony Film",
+        "Digital Download",
+        "Nationwide Travel Included"
+      ]
+    },
+    {
+      "id": "vignette",
+      "name": "The Vignette",
+      "service_type": "video",
+      "total": 1700,
+      "hours": 4,
+      "collection_label": "Videography Collection",
+      "bullets": [
+        "4 Hours of Coverage",
+        "One Videographer",
+        "HD Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Raw Footage",
+        "Digital Delivery",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "story",
+      "name": "The Story",
+      "service_type": "video",
+      "total": 1900,
+      "hours": 6,
+      "collection_label": "Videography Collection",
+      "bullets": [
+        "6 Hours of Coverage",
+        "One Videographer",
+        "4K Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Raw Footage",
+        "Digital Delivery",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "feature",
+      "name": "The Feature",
+      "service_type": "video",
+      "total": 2000,
+      "hours": 8,
+      "collection_label": "Videography Collection",
+      "bullets": [
+        "8 Hours of Coverage",
+        "One Videographer",
+        "4K Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Drone Footage",
+        "Raw Footage",
+        "Digital Delivery",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "cinema",
+      "name": "The Cinema",
+      "service_type": "video",
+      "total": 2500,
+      "hours": 10,
+      "collection_label": "Videography Collection",
+      "bullets": [
+        "10 Hours of Coverage",
+        "One Videographer",
+        "4K Resolution",
+        "Professional Audio",
+        "Highlight Film",
+        "Extended Edit",
+        "Drone Footage",
+        "Raw Footage",
+        "Digital Delivery",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "portrait",
+      "name": "The Portrait",
+      "service_type": "photo",
+      "total": 2000,
+      "hours": 4,
+      "collection_label": "Photography Collection",
+      "bullets": [
+        "4 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "signature",
+      "name": "The Signature",
+      "service_type": "photo",
+      "total": 2200,
+      "hours": 6,
+      "collection_label": "Photography Collection",
+      "bullets": [
+        "6 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "gallery",
+      "name": "The Gallery",
+      "service_type": "photo",
+      "total": 2500,
+      "hours": 8,
+      "collection_label": "Photography Collection",
+      "bullets": [
+        "8 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Sneak-Peek Gallery",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "archive",
+      "name": "The Archive",
+      "service_type": "photo",
+      "total": 3100,
+      "hours": 10,
+      "collection_label": "Photography Collection",
+      "bullets": [
+        "10 Hours of Coverage",
+        "One Photographer",
+        "All Images Edited",
+        "Unlimited Locations",
+        "Sneak-Peek Gallery",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "ensemble",
+      "name": "The Ensemble",
+      "service_type": "combined",
+      "total": 3500,
+      "hours": 6,
+      "collection_label": "Combined Collection",
+      "bullets": [
+        "6 Hours of Coverage",
+        "One Photographer",
+        "One Videographer",
+        "All Images Edited",
+        "4K Video + Pro Audio",
+        "Highlight Film",
+        "Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Raw Footage",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "keepsake",
+      "name": "The Keepsake",
+      "service_type": "combined",
+      "total": 4000,
+      "hours": 8,
+      "collection_label": "Combined Collection",
+      "bullets": [
+        "8 Hours of Coverage",
+        "One Photographer",
+        "One Videographer",
+        "All Images Edited",
+        "4K Video + Pro Audio",
+        "Highlight Film + Extended Edit",
+        "Drone Footage",
+        "Sneak-Peek + Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Raw Footage",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    },
+    {
+      "id": "opus",
+      "name": "The Opus",
+      "service_type": "combined",
+      "total": 4500,
+      "hours": 10,
+      "collection_label": "Combined Collection",
+      "bullets": [
+        "10 Hours of Coverage",
+        "One Photographer",
+        "One Videographer",
+        "All Images Edited",
+        "4K Video + Pro Audio",
+        "Highlight Film + Extended Edit",
+        "Drone Footage",
+        "Sneak-Peek + Online Gallery",
+        "Full Ownership Rights",
+        "Engagement Session",
+        "Raw Footage",
+        "Nationwide Travel Included",
+        "Pre-Wedding Planning Call",
+        "Venue Scouting"
+      ]
+    }
+  ]
+}

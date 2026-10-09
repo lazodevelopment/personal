@@ -53,6 +53,7 @@ service cloud.firestore {
       allow update: if businessWrite() || chartWrite();
 
       match /notifications/{id} { allow read, write: if isOwner(uid) || isStaff(); }
+      match /invoices/{id} { allow read: if isOwner(uid) || isStaff(); allow write: if false; }
       match /fcm_tokens/{id} { allow read, write: if isOwner(uid); allow read: if isStaff(); }
       match /dependents/{id} { allow read: if isOwner(uid) || isStaff(); allow write: if isOwner(uid) || businessWrite() || chartWrite(); }
       match /claims/{id} { allow read: if isOwner(uid) || isStaff(); allow write: if isOwner(uid); allow update: if hasRole(['superadmin', 'admin', 'clinician']); }
@@ -92,5 +93,6 @@ service cloud.firestore {
     match /{path=**}/pets/{id} { allow read: if isStaff(); }
     match /{path=**}/visit_records/{id} { allow read: if clinical(); }
     match /{path=**}/lab_results/{id} { allow read: if clinical(); }
+    match /{path=**}/invoices/{id} { allow read: if isStaff(); }
   }
 }

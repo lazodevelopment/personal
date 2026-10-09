@@ -1,0 +1,82 @@
+{#- JC-LAZO-GUIDE-1008: city guide on top metro x category hubs. Data comes from
+    generate/city_guide.py; rules for what may appear are in config/city_guides.py. -#}
+<section class="band cg">
+  <style>
+    .cg{padding-bottom:8px}
+    .cg-wrap{max-width:1080px;margin:0 auto}
+    .cg h2{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(26px,3.4vw,34px);color:#3D1C3B;margin:0 0 10px;line-height:1.15}
+    .cg h3{font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;color:#52284F;margin:0 0 8px}
+    .cg-lead{font-size:16px;line-height:1.75;color:#3E3644;margin:0 0 10px;max-width:780px}
+    .cg-sub{font-size:14.5px;line-height:1.7;color:#7A6E80;margin:0 0 6px;max-width:780px}
+    .cg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:22px 0 6px}
+    .cg-card{background:#fff;border:1px solid rgba(217,183,124,.6);border-radius:18px;padding:18px 20px}
+    .cg-card p{margin:0;font-size:14px;line-height:1.65;color:#3E3644}
+    .cg-card .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F;font-weight:700;margin-bottom:6px;display:block}
+    .cg-card a{color:#52284F}
+    .cg-tbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px}
+    .cg-tbl th,.cg-tbl td{text-align:left;padding:8px 10px;border-bottom:1px solid #EFE6DA}
+    .cg-tbl td{white-space:nowrap}
+    .cg-tbl th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8A6A2F}
+    .cg-scroll{overflow-x:auto}
+    .cg-picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-top:14px;padding:0;list-style:none}
+    .cg-pick{position:relative;display:flex;gap:12px;align-items:center;background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:16px;padding:12px}
+    .cg-pick:hover{border-color:#D9B77C;box-shadow:0 10px 26px rgba(82,40,79,.1)}
+    .cg-th{flex:0 0 52px;height:52px;border-radius:12px;background:#3D1C3B center/cover;border:1px solid rgba(217,183,124,.4)}
+    .cg-pick a{font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:600;color:#52284F;text-decoration:none;line-height:1.2}
+    .cg-pick a::after{content:"";position:absolute;inset:0}
+    .cg-pick small{display:block;font-size:12px;color:#7A6E80;margin-top:2px}
+    .cg-pick em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.4px;color:#8A6A2F}
+    .cg-how{margin-top:16px;padding:14px 18px;border-radius:14px;background:#FFFDF9;border:1px solid rgba(217,183,124,.55);border-left:3px solid #D9B77C;font-size:13.5px;line-height:1.65;color:#3E3644}
+    .cg-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .cg-links a{font-size:13px;padding:7px 13px;border-radius:999px;border:1px solid rgba(217,183,124,.6);background:#FAF6F0;color:#52284F;text-decoration:none}
+    .cg-links a:hover{background:#52284F;color:#FAF6F0}
+    .cg-faq details{background:#fff;border:1px solid rgba(217,183,124,.55);border-radius:14px;padding:14px 18px;margin-bottom:10px}
+    .cg-faq summary{cursor:pointer;font-weight:600;color:#3D1C3B;font-size:15px}
+    .cg-faq p{margin:10px 0 0;font-size:14px;line-height:1.7;color:#3E3644}
+  </style>
+  <div class="cg-wrap">
+    <h2>Planning a wedding in {{ metro.name }}</h2>
+    <p class="cg-lead">{{ guide.intro|safe }}</p>
+    <p class="cg-sub">{{ guide.cat_line }}</p>
+
+    <div class="cg-grid">
+      <div class="cg-card"><span class="k">Wedding season</span>
+        <p><strong>{{ guide.season }}.</strong> {{ guide.weather|safe }}</p></div>
+      {% if guide.lead %}<div class="cg-card"><span class="k">When to book</span>
+        <p>Book a {{ cat.singular|lower }} <strong>{{ guide.lead }}</strong> for a peak-season Saturday. <a href="/when-to-book/">Booking order for every vendor &rarr;</a></p></div>{% endif %}
+      {% if cost_typical %}<div class="cg-card"><span class="k">Typical cost</span>
+        <p><strong>{{ cost_typical }}</strong> nationally. Lazo doesn&rsquo;t hold verified {{ metro.name }} prices yet, so ask each vendor for packages. <a href="/cost/{{ cat.slug }}/">Cost guide &rarr;</a></p></div>{% endif %}
+      {% if guide.license %}<div class="cg-card"><span class="k">{{ guide.license.state }} marriage license</span>
+        <p>From the {{ guide.license.issuer }}: {{ guide.license.fee|safe }}, {{ guide.license.wait }}{% if guide.license.valid %}, {{ guide.license.valid }}{% endif %}; {{ guide.license.witnesses }}. <a href="/marriage-license/{{ guide.license.slug }}/">Details &rarr;</a></p></div>{% endif %}
+    </div>
+
+    {% if guide.towns %}
+    <div class="cg-card" style="margin-top:14px"><span class="k">Where {{ cat.label|lower }} are based</span>
+      <p>{% for t, n in guide.towns %}{{ t }} ({{ n }}){{ ", " if not loop.last else "." }}{% endfor %}</p></div>
+    {% endif %}
+
+    {% if guide.sunsets %}
+    <div class="cg-card" style="margin-top:14px"><span class="k">Sunset and golden hour in {{ metro.name }}, peak months</span>
+      <div class="cg-scroll"><table class="cg-tbl">
+        <thead><tr><th>Month (15th)</th><th>Golden hour from</th><th>Sunset</th><th>Dark by</th><th>Ceremony for sunset portraits</th></tr></thead>
+        <tbody>{% for r in guide.sunsets %}<tr><td>{{ r.month }}</td><td>{{ r.golden }}</td><td>{{ r.sunset }}</td><td>{{ r.dusk }}</td><td>~{{ r.ceremony }}</td></tr>{% endfor %}</tbody>
+      </table></div>
+      <p style="margin-top:8px;font-size:12.5px;color:#7A6E80">Computed for central {{ metro.name }} with the NOAA solar equations. Golden hour starts when the sun is 6&deg; above the horizon; the ceremony time leaves about 2&frac34; hours for the ceremony, family photos and cocktail hour before sunset.</p>
+    </div>
+    {% endif %}
+
+    {% if guide.picks %}
+    <h3 style="margin-top:30px">A starting shortlist</h3>
+    <ul class="cg-picks">
+      {% for p in guide.picks %}
+      <li class="cg-pick">
+        <span class="cg-th" style="background-image:{% if p.thumb %}url('{{ p.thumb }}'){% else %}linear-gradient(135deg,rgba(61,28,59,.66),rgba(82,40,79,.45)),url('/assets/photos/{{ cat.slug }}.jpg'){% endif %}" aria-hidden="true"></span>
+        <span><a href="/{{ metro.id }}/{{ cat.slug }}/{{ p.slug }}/">{{ p.name }}</a>
+          <small>{{ p.town }}{% if p.verified %} &middot; <em>LAZO VERIFIED</em>{% elif p.claimed %} &middot; <em>CLAIMED PROFILE</em>{% elif p.website %} &middot; has a website{% endif %}</small></span>
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="cg-how"><b>How we chose these.</b> This is not a ranking. Lazo ranks only on reviews from couples who booked, and most {{ metro.name }} {{ cat.label|lower }} don&rsquo;t have one yet. So the list starts with vendors who have verified or claimed their Lazo profile, then adds vendors with their own website, no more than {{ 2 }} per town so it covers the whole area. Nobody paid to be here. The full list of {{ vendors|length }} is below.</p>
+    {% endif %}
+  </div>
+</section>
