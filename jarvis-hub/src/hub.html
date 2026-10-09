@@ -2296,12 +2296,15 @@ const RADIO = [
   // WAAF (Boston's rock station) lives on Audacy as the WWBX 93.7 HD2 stream; AmperWave sends CORS for the hub's origin
   // np = Audacy station id for its song-history feed (WAAF publishes none as of 2026-10-06, so the line stays blank)
   { n: "WAAF", u: "https://live.amperwave.net/direct/audacy-wwbxhd2aac-imc", from: "Audacy · Boston's rock station", np: "101-935", k: ["waaf", "rock", "boston"] },
+  // NOAA Weather Radio: the nearest live wxradio.org stream to where he is (device location if allowed, else the TX/AZ home); u is filled by wxLoad()
+  { n: "Weather Radio", u: "", wx: true, from: "NOAA Weather Radio · finding the nearest station…", k: ["weather", "noaa", "nws"] },
 ];
 // order matters for keyword matching: "classicfmcalm" must hit Calm before Classic FM
-const RADIO_MATCH = [1, 2, 0, 4, 3, 5, 6, 7, 8];
+const RADIO_MATCH = [9, 1, 2, 0, 4, 3, 5, 6, 7, 8];
 const radio = new Audio(); radio.crossOrigin = "anonymous"; radio.preload = "none";
 var radioOn = false, radioIdx = 0, radioAn = null, radioRetry = 0;
 try { const i = +localStorage.getItem("radioIdx"); if (RADIO[i]) radioIdx = i; const v = localStorage.getItem("radioVol"); if (v !== null) $("#radioVol").value = v; } catch {}
+wxLoad(); setInterval(wxLoad, 30 * 60e3);
 const radioLevel = () => +$("#radioVol").value / 100;
 function radioViz() {
   if (radioAn) return radioAn;
@@ -2314,7 +2317,21 @@ function radioUI(msg) {
   $("#radioState").textContent = msg || (radioOn ? "live" : "off · tap play or say \"Jarvis, play " + r.n + "\"");
   $("#radioStations").innerHTML = RADIO.map((x, i) => `<button data-ri="${i}" class="${i === radioIdx ? "sel" : ""}">${esc(x.n.toUpperCase())}</button>`).join("");
 }
+// nearest NOAA Weather Radio stream; loaded up front so a tap on WEATHER RADIO plays straight away (phones need the tap's gesture)
+var wxNear = [];
+async function wxLoad() {
+  const r = RADIO.find((x) => x.wx); let q = "";
+  try { if ((await navigator.permissions?.query({ name: "geolocation" }))?.state === "granted") { const pos = await new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no, { maximumAge: 15 * 60e3, timeout: 8000 })); q = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`; } } catch {}
+  try {
+    const d = await fetch("/api/radio/wx" + q).then((x) => x.json()); wxNear = d.stations || [];
+    const s = wxNear[0];
+    if (s) { const changed = r.u && r.u !== s.url; r.u = s.url; r.from = `NOAA ${s.call} · ${s.freq} MHz · ${s.city}, ${s.st} · ${s.miles} mi`; if (changed && radioOn && RADIO[radioIdx] === r) radioPlay(radioIdx); }
+    else r.from = "NOAA Weather Radio · no live stream near you right now";
+  } catch { r.from = "NOAA Weather Radio · station list unavailable"; }
+  if (RADIO[radioIdx] === r) radioUI();
+}
 function radioPlay(i = radioIdx) {
+  if (RADIO[i].wx && !RADIO[i].u) { radioIdx = i; radioUI("finding the nearest station…"); wxLoad().then(() => { if (RADIO[i].u) radioPlay(i); else radioUI("no weather radio stream nearby"); }); return; }
   radioIdx = i; try { localStorage.setItem("radioIdx", i); } catch {}
   radioOn = true; unlockPlayer(); radioViz();
   radio.src = RADIO[i].u || "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
@@ -2332,6 +2349,7 @@ const songParts = (t) => { const i = t.indexOf(" - "); return i > 0 ? { artist: 
 async function radioSong() {
   if (!radioOn) return;
   const r = RADIO[radioIdx]; const u = r.u || "https://media-ssl.musicradio.com/" + r.s;
+  if (r.wx) return;   // weather radio streams carry no titles
   try {
     const d = await fetch("/api/radio/now?" + (r.np ? "audacy=" + encodeURIComponent(r.np) : "u=" + encodeURIComponent(u))).then(x => x.json()); if (!radioOn || RADIO[radioIdx] !== r) return;
     const t = (d.title || "").trim(); if (t === songText) return; songText = t;

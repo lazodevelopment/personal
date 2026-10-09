@@ -423,6 +423,27 @@ async function radioNow(u) {
 }
 // Audacy stations publish their song history separately (the AmperWave stream has no ICY titles, and AmperWave
 // refuses Cloudflare anyway): experience/v2/stations/<id>/nowplaying -> { performances: [{ artist, title, ... }] }
+/* NOAA Weather Radio: volunteer SSL streams on wxradio.org (Icecast, CORS *); station sites + coordinates from noaaweatherradio.org's map data */
+async function nwrSites(env) {
+  const hit = await env.HUB.get("nwr_sites", "json"); if (hit) return hit;
+  const js = await (await fetch("https://noaaweatherradio.org/java/NWR-player-radios.js", { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" } })).text();
+  const sites = {};
+  for (const m of js.matchAll(/"lat":'(-?[\d.]+)',\s*"lng":'(-?[\d.]+)',\s*"description":'Station (?:&starf;)?([A-Z0-9]+) on ([\d.]+)MHz from ([^,]+), ([A-Z]{2})/g)) sites[m[3]] = { lat: +m[1], lon: +m[2], call: m[3], freq: m[4], city: m[5].trim(), st: m[6] };
+  if (Object.keys(sites).length) await env.HUB.put("nwr_sites", JSON.stringify(sites), { expirationTtl: 86400 });
+  return sites;
+}
+async function wxRadio(request, env, lat, lon) {
+  if (!(lat && lon)) { const place = await kv.get(env, "place"); lat = place?.lat || request.cf?.latitude; lon = place?.lon || request.cf?.longitude; }
+  const [sites, stats] = await Promise.all([nwrSites(env), fetch("https://wxradio.org/status-json.xsl", { headers: { "user-agent": "Mozilla/5.0 (JARVIS hub)" } }).then((r) => r.json()).catch(() => null)]);
+  const src = [].concat(stats?.icestats?.source || []);
+  const live = {};
+  for (const s of src) { const mount = String(s.listenurl || "").split("/").pop(); const call = mount.split("-").find((x) => sites[x]); if (call && (!live[call] || !/-alt\d*$/.test(mount) && /-alt\d*$/.test(live[call]))) live[call] = mount; }
+  const R = 3958.8, rad = (d) => d * Math.PI / 180;
+  const miles = (a) => Math.round(2 * R * Math.asin(Math.sqrt(Math.sin(rad(a.lat - lat) / 2) ** 2 + Math.cos(rad(lat)) * Math.cos(rad(a.lat)) * Math.sin(rad(a.lon - lon) / 2) ** 2)));
+  const near = Object.entries(live).map(([call, mount]) => ({ ...sites[call], url: "https://wxradio.org/" + mount, miles: miles(sites[call]) })).sort((a, b) => a.miles - b.miles).slice(0, 6);
+  return { lat: +lat, lon: +lon, stations: near, live: Object.keys(live).length };
+}
+
 async function audacyNow(id) {
   if (!/^[\w-]{1,20}$/.test(id)) return { error: "bad station id" };
   try {
@@ -1594,6 +1615,7 @@ export default {
     if (p === "/api/weather") { const place = url.searchParams.get("lat") ? { lat: url.searchParams.get("lat"), lon: url.searchParams.get("lon"), name: url.searchParams.get("place") } : await kv.get(env, "place"); const w = await weatherData(request, env, place); return json(w, w.error ? 400 : 200, { "cache-control": "public, max-age=300" }); }
     if (p === "/api/sports") return json(await sports(env));
     if (p === "/api/markets") return json(await markets(env));
+    if (p === "/api/radio/wx") return json(await wxRadio(request, env, +url.searchParams.get("lat") || 0, +url.searchParams.get("lon") || 0), 200, { "cache-control": "private, max-age=120" });
     if (p === "/api/radio/now") return json(url.searchParams.get("audacy") ? await audacyNow(url.searchParams.get("audacy")) : await radioNow(url.searchParams.get("u") || ""), 200, { "cache-control": "no-store" });
     if (p === "/api/news") return json(await news(env));
     if (p === "/api/wxdays") return json(url.searchParams.get("fresh") ? { days: await weddingWeather(env) } : ((await kv.get(env, "wxdays")) || { days: {} }));
