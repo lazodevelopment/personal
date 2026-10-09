@@ -84,6 +84,11 @@ function marketLead(m, business) {
   // The Knot / WeddingPro: the first message in the thread (or one we already answered on the thread)
   return /sent you a new message|sent you an inquiry|wants to learn more|new (?:message|inquiry|lead) from|new lead/i.test(s) && (m.count || 1) === 1;
 }
+// a plain summary for an inquiry notice, from the "<names> sent you an inquiry!" line, so triage can't call it a reminder
+function leadSummary(m) {
+  const who = (String(m.snippet || "").match(/([^.!?]{3,80}?) sent you an inquiry/i) || [])[1]?.trim();
+  return who ? { summary: `New ${/zola\.com/i.test(m.fromEmail) ? "Zola" : "The Knot"} inquiry from ${who}; the intake script sends the first reply` } : {};
+}
 const coupleEmail = (body) => (String(body || "").match(/(?:Personal email|Couple email):\s*\n?\s*([^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,})/i) || [])[1]?.toLowerCase() || null;
 
 // The intake scripts (Combined-zola.gs, Combined-info.gs, es Code.gs) report every inquiry they handle straight to
@@ -534,7 +539,7 @@ async function triage(env, items) {
   const list = items.map((m, i) => `${i + 1}. from: ${m.from} | subject: ${m.subject} | last message from us: ${m.lastFromMe} | messages: ${m.count} | text: ${(m.snippet || "").slice(0, 300)}`).join("\n");
   const r = await client.beta.messages.create({
     model: MODEL, max_tokens: 3000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
-    system: "You triage a small business owner's inbox (wedding films, a wedding-planner app, a hiring platform, apartment reviews). For each numbered thread return JSON only: an array of objects {\"n\": number, \"needs_reply\": boolean, \"summary\": string (max 110 chars, plain, what it is or asks), \"priority\": 1|2|3, \"kind\": \"lead\"|\"client\"|\"booking\"|\"payment\"|\"vendor\"|\"notification\"|\"newsletter\"|\"other\"}. needs_reply is true only when a real person is asking the business something and the last message is not from us. priority 1 = money or a client waiting, 2 = worth reading today, 3 = noise.",
+    system: "You triage a small business owner's inbox (wedding films, a wedding-planner app, a hiring platform, apartment reviews). For each numbered thread return JSON only: an array of objects {\"n\": number, \"needs_reply\": boolean, \"summary\": string (max 110 chars, plain, what it is or asks), \"priority\": 1|2|3, \"kind\": \"lead\"|\"client\"|\"booking\"|\"payment\"|\"vendor\"|\"notification\"|\"newsletter\"|\"other\"}. needs_reply is true only when a real person is asking the business something and the last message is not from us. priority 1 = money or a client waiting, 2 = worth reading today, 3 = noise. A Zola email titled 'New Zola inquiry' is a NEW couple inquiry even though it opens with 'The clock is ticking!'; never call it a reminder: summarize it as 'New Zola inquiry from <couple names>'.",
     messages: [{ role: "user", content: list }],
   });
   const text = r.content.filter((b) => b.type === "text").map((b) => b.text).join("");
@@ -551,7 +556,7 @@ async function ingestInbox(env, body, ctx) {
   for (const m of fresh) { const c = classes[m.threadId]; if (c) cache[m.threadId] = { date: m.date, needs_reply: !!c.needs_reply, summary: c.summary, priority: c.priority, kind: c.kind }; }
   const keep = Object.fromEntries(Object.entries(cache).filter(([, v]) => Date.now() - new Date(v.date) < 14 * 86400e3)); await kv.put(env, "inbox_class", keep);
   // marketplace inquiry notices (Zola, The Knot) are answered by the intake script: never NEEDS REPLY, flagged `intake` instead
-  inbox.accounts[account] = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}), ...(marketLead(m, body.business) ? { needs_reply: false, kind: "lead", intake: true } : {}) })) };
+  inbox.accounts[account] = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}), ...(marketLead(m, body.business) ? { needs_reply: false, kind: "lead", intake: true, ...leadSummary(m) } : {}) })) };
   await kv.put(env, "inbox", inbox);
   const once = await onceStore(env);
   for (const m of fresh) {
@@ -797,7 +802,7 @@ async function buildContext(env, request) {
   } else lines.push("METRICS: none collected yet");
   lines.push(`INBOX (${brief?.source === "bridge" ? "live Gmail bridges" : "hourly snapshot"}, ${brief?.at || "none"}): ${brief?.note || ""} ` + (brief?.items || []).slice(0, 20).map((m) => `[${BIZ_LABEL[m.business] || m.business || ""} | ${m.account || ""} | ${m.threadId || "no-id"}] ${m.from}: ${m.subject}${m.needs_reply ? " (NEEDS REPLY)" : ""}${m.intake ? " (AUTO-REPLIED BY THE INTAKE SCRIPT, see INTAKE)" : ""}${m.unread ? " (unread)" : ""} — ${m.snippet || ""}`).join(" | "));
   const il = Object.values(intakeLog || {}).filter((x) => Date.now() - new Date(x.date) < 3 * 86400e3).sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 12);
-  lines.push(`INTAKE (Zola and The Knot inquiries for Atavia and Elizabeth Scott get their first reply from the Gmail intake script within minutes, never from JARVIS; this is the check that each reply went out, last 3 days): ` + (il.length ? il.map((x) => `${BIZ_NAME[x.business] || x.business} ${String(x.date).slice(0, 16)} ${x.who || x.subject}: ${x.state === "replied" ? "replied (" + x.detail + ")" : x.state === "pending" ? "waiting for the script (notice under 12 min old)" : x.state.toUpperCase() + " — " + x.detail}`).join(" | ") : "no marketplace inquiries in the last 3 days"));
+  lines.push(`INTAKE (Zola and The Knot inquiries for Atavia and Elizabeth Scott get their first reply from the Gmail intake script within minutes, never from JARVIS; this is the check that each reply went out, last 3 days): ` + (il.length ? il.map((x) => `${BIZ_NAME[x.business] || x.business} ${String(x.date).slice(0, 16)} ${x.who || x.subject}: ${x.state === "replied" ? "replied (" + x.detail + ")" : x.state === "pending" ? "not confirmed yet (waiting for the script's report or the Sent check)" : x.state.toUpperCase() + " — " + x.detail}`).join(" | ") : "no marketplace inquiries in the last 3 days"));
   lines.push(`ALERTS (latest): ` + (alerts || []).slice(0, 6).map((a) => `${a.at.slice(0, 16)} ${a.text}`).join(" | "));
   if (cal?.events?.length) lines.push(`CALENDAR (next 60d): ` + cal.events.slice(0, 20).map((e) => `${e.start.slice(0, 16)} ${e.title}${e.location ? " @ " + e.location : ""}`).join("; "));
   else lines.push("CALENDAR: not connected");
