@@ -271,7 +271,8 @@ async function notify(env, title, body, { priority = "default", tags = "", url =
     out.push(fetch("https://ntfy.sh/" + env.NTFY_TOPIC, { method: "POST", body, headers: { "user-agent": UA, Title: title, Priority: priority, ...(tags ? { Tags: tags } : {}), ...(url ? { Click: url } : {}) } }).then((r) => ({ ntfy: r.status })).catch((e) => ({ ntfy: "error", detail: String(e.message || e) })));
   }
   // the phone's own browser (Chrome on Android, etc.) once it has subscribed on the Radio panel: alarms, reminders and anything urgent/high
-  if (["alarm", "reminder", "urgent", "high"].includes(priority)) {
+  // alarms go through Pushover alone when it's configured: the Chrome notification's beep competed with the Vivaldi alarm sound (2026-10-09)
+  if (["reminder", "urgent", "high"].includes(priority) || (priority === "alarm" && !(env.PUSHOVER_TOKEN && env.PUSHOVER_USER))) {
     out.push(webPush(env, { title: "JARVIS: " + title, body, url, priority, kind: priority === "alarm" ? "alarm" : "", tag: priority === "alarm" ? "alarm" : "", at: new Date().toISOString() }, { ttl: priority === "alarm" ? 1800 : 3600, urgency: "high", topic: priority === "alarm" ? "alarm" : "" }).then((r) => ({ webpush: r })).catch((e) => ({ webpush: "error", detail: String(e.message || e) })));
   }
   if (env.RESEND_API_KEY && env.ALERT_EMAIL) {
@@ -1502,14 +1503,18 @@ async function tickMinute(env, fromMinuteCron = false) {
   // Cloudflare's minute cron skips or runs late now and then (2026-10-06 the 05:00 tick never came and the alarm
   // stayed silent), so never require an exact minute: fire at the first tick at or after the set time, within an hour.
   const al = (await kv.get(env, "alarm")) || {};
-  const a = toMin(al.time), b = toMin(lp.hm); const late = (a == null || b == null) ? null : b - a;
+  const a = toMin(al.time), b = toMin(lp.hm); let late = (a == null || b == null) ? null : b - a;
+  // the minute before: wait inside this run until hh:mm:00 and fire then, so a skipped or late tick at the set minute can't make it late
+  if (fromMinuteCron && late === -1 && al.enabled && al.lastFired !== lp.date && (!al.days?.length || al.days.includes(lp.dow))) { await new Promise((ok) => setTimeout(ok, Math.max(0, 60e3 - (Date.now() % 60e3)) + 300)); late = 0; }
+  // the set minute's own tick leaves it to the pre-armed run (KV reads can lag a minute, so both firing would double the alarm); backup from +2 min
+  else if (fromMinuteCron && late !== null && late >= 0 && late < 2) late = null;
   if (al.enabled && late !== null && late >= 0 && late < 60 && al.lastFired !== lp.date && al.missed !== lp.date && (!al.days?.length || al.days.includes(lp.dow))) {
     const m = await kv.get(env, "morning"); const fresh = m?.slot === "morning" && now - new Date(m.at) < 3 * 3600e3;
     const headline = fresh ? m.text.split(/(?<=[.!?])\s/).slice(0, 2).join(" ") : "Your morning brief is on its way. Tap to open JARVIS.";
     out.push({ alert: { kind: "watch", text: "Wake-up alarm fired (" + al.time + (late > 1 ? ", " + late + " min late: the minute cron skipped" : "") + ")" }, push: { title: "Good morning, sir", body: headline.slice(0, 500), opts: { priority: "alarm", tags: "sunrise", url: HUB_ORIGIN + "/#wake" } } });
     al.lastFired = lp.date; al.firedAt = new Date().toISOString(); al.pcDue = lp.date; await kv.put(env, "alarm", al);
     if (late > 1) await healthNote(env, "alarm", { late, time: al.time }).catch(() => null);
-  } else if (al.enabled && al.lastFired === lp.date && al.firedAt && al.acked !== lp.date && now - new Date(al.firedAt) < 45 * 60e3 && (!al.snooze || now >= new Date(al.snooze))) {
+  } else if (!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER) && al.enabled && al.lastFired === lp.date && al.firedAt && al.acked !== lp.date && now - new Date(al.firedAt) < 45 * 60e3 && (!al.snooze || now >= new Date(al.snooze))) {
     // fired, not yet acknowledged from a phone: ring the browser again (Chrome's notification sound plays once per push)
     const mins = Math.round((now - new Date(al.firedAt)) / 60e3);
     await webPush(env, { title: "JARVIS: wake up", body: `It's ${lp.hm}. Alarm was ${al.time}${mins ? ", " + mins + " min ago" : ""}. Tap I'm up.`, url: HUB_ORIGIN + "/#wake", priority: "alarm", kind: "alarm", tag: "alarm", at: new Date().toISOString() }, { ttl: 120, urgency: "high", topic: "alarm" }).catch(() => null);
