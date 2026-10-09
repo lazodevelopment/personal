@@ -1,6 +1,13 @@
 rules_version = '2';
 // ============================================================
 // LAZO CANONICAL RULES
+// Build ID: JC-LAZO-RULES-1009-017
+// Changes from the 2026-09-29..10-01 deploys:
+//   + Restores users.signupSource (JC-LAZO-RULES-0919-016). The Sep 19 fix was
+//     never copied into this file, so the Sep 29 deploy dropped it and every
+//     signup since failed the users/{uid} create allowlist: Auth account and
+//     couples doc made, no users doc, so no email in the admin dashboard.
+//     Owner may set it on update only while the doc has none.
 // Build ID: JC-LAZO-RULES-0913-015
 // Changes from JC-LAZO-RULES-0913-014:
 //   + The vendor team graph: vendors.referralsSent / referralsBooked /
@@ -199,7 +206,7 @@ service cloud.firestore {
       allow create: if isOwner(uid)
         && request.resource.data.keys().hasOnly(
              ['email','display_name','photo_url','uid','created_time',
-              'phone_number','role','vendorId','tosAcceptedAt'])
+              'phone_number','role','vendorId','tosAcceptedAt','signupSource'])
         && (!('role' in request.resource.data)
             || request.resource.data.role in ['couple','vendor'])
         && (!('vendorId' in request.resource.data)
@@ -210,6 +217,10 @@ service cloud.firestore {
         || (isOwner(uid)
         && !request.resource.data.diff(resource.data).affectedKeys()
              .hasAny(['vendorId','vendorRole','coupleUid'])
+        // v016: signupSource is written once, never rewritten
+        && (!request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['signupSource'])
+            || !('signupSource' in resource.data))
         && (!request.resource.data.diff(resource.data).affectedKeys()
               .hasAny(['role'])
             || ((!('role' in resource.data) || resource.data.role == null)
