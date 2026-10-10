@@ -99,6 +99,8 @@ function fuCouples() {
     var at = new Date(props[k]);
     if (isNaN(at) || at.getTime() < oldest) return;
     var email = k.slice(5), st = {};
+    // A Zola message relay is a conversation the old info@ copy answered by mistake, never a first inquiry.
+    if (/@vmkt-message\.zola\.com$/i.test(email)) return;
     try { st = JSON.parse(props['fu:' + email] || '{}'); } catch (e) {}
     if (st.stop || (st.done && st.done.d10)) return;
     out.push({ email: email, at: at });

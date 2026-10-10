@@ -6,7 +6,7 @@
 // Free for every couple on Lazo. Built 2026-10-07 beside the vendor side in index.js; the worker picks
 // the side by who the login is (users/{uid}.vendorId → vendor, else users/{uid}.coupleUid or the uid → couple).
 export function makeCouple(D) {
-  const { fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, Anthropic, BUILD } = D;
+  const { fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, speakWithTrack, audioType, Anthropic, BUILD } = D;
   const K = (cid, k) => `${k}_c_${cid}`;   // KV keys for memory, queue, brief, reminders; "_c_" keeps them apart from vendor ids
   const CATS = { "wedding-photographers": "Photographer", "wedding-videographers": "Videographer", "wedding-venues": "Venue", "wedding-planners": "Planner", "wedding-djs": "DJ", "wedding-florists": "Florist", "wedding-caterers": "Caterer", "wedding-cakes": "Cake & desserts", "hair-and-makeup": "Hair & makeup", "wedding-officiants": "Officiant", "wedding-transportation": "Transportation", "wedding-rentals": "Rentals", "wedding-bands": "Live band", "wedding-invitations": "Invitations", "day-of-coordination": "Day-of coordinator" };
   const label = (slug) => CATS[slug] || str(slug).replace(/^wedding-/, "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -300,7 +300,7 @@ Planning advice: when asked what to do next, look at STILL TO BOOK, days to go, 
     const brief = { id: uid(), slot: "daily", day: snap.today, at: new Date().toISOString(), text, audio: false, audioPending: !!env.ELEVENLABS_API_KEY };
     await kv.put(env, key, brief, { expirationTtl: 3 * 86400 });
     if (env.ELEVENLABS_API_KEY && text) ctx.waitUntil((async () => {
-      try { const a = await elevenlabs(env, text); if (a.ok) { await env.JUNE.put(K(coup.coupleId, "brief_audio"), await a.arrayBuffer(), { expirationTtl: 2 * 86400 }); brief.audio = true; } } catch {}
+      try { const sp = await speakWithTrack(env, text); if (sp) { await env.JUNE.put(K(coup.coupleId, "brief_audio"), sp.wav, { expirationTtl: 2 * 86400 }); await env.JUNE.put(K(coup.coupleId, "brief_env"), JSON.stringify(sp.env), { expirationTtl: 2 * 86400 }); brief.audio = true; } } catch {}
       brief.audioPending = false; await kv.put(env, key, brief, { expirationTtl: 3 * 86400 });
     })());
     return brief;
@@ -315,7 +315,7 @@ Planning advice: when asked what to do next, look at STILL TO BOOK, days to go, 
     if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx, who, coup, { snapshot, buildContext, system: (s) => SYSTEM(s.couple), tools: TOOLS, runTool });
     if (p === "/api/brief" && request.method === "POST") { const { force } = await request.json().catch(() => ({})); return D.json(await makeBrief(env, ctx, who, coup, !!force)); }
     if (p === "/api/brief" && request.method === "GET") return D.json((await kv.get(env, K(cid, "brief"))) || null);
-    if (p === "/api/brief/audio") { const a = await env.JUNE.get(K(cid, "brief_audio"), "arrayBuffer"); if (!a) return D.json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=600" } }); }
+    if (p === "/api/brief/audio") { const a = await env.JUNE.get(K(cid, "brief_audio"), "arrayBuffer"); if (!a) return D.json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": audioType(a), "cache-control": "private, max-age=600" } }); }
     if (p === "/api/thread" && request.method === "GET") return D.json(await threadDetail(who.token, cid, new URL(request.url).searchParams.get("id") || ""));
     if (p === "/api/read" && request.method === "POST") { const { inquiryId } = await request.json(); const m = await ownThread(who.token, cid, inquiryId); await fsPatch(who.token, `inquiries/${m.id}`, { coupleLastReadAt: new Date() }).catch(() => {}); return D.json({ ok: true }); }
     if (p === "/api/act" && request.method === "POST") {

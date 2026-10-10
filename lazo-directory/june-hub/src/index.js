@@ -592,7 +592,7 @@ async function makeBrief(env, ctx, who, vend, force, slot = "daily", snapIn = nu
   const brief = { id: uid(), slot, day: snap.today, at: new Date().toISOString(), text, audio: false, audioPending: !!env.ELEVENLABS_API_KEY };
   await kv.put(env, key, brief, { expirationTtl: (weekly ? 9 : 3) * 86400 });
   if (env.ELEVENLABS_API_KEY && text) ctx.waitUntil((async () => {
-    try { const a = await elevenlabs(env, text); if (a.ok) { await env.JUNE.put(key.replace(/^(brief|weekly)_/, "$1_audio_"), await a.arrayBuffer(), { expirationTtl: (weekly ? 8 : 2) * 86400 }); brief.audio = true; } } catch {}
+    try { const sp = await speakWithTrack(env, text); if (sp) { const ak = key.replace(/^(brief|weekly)_/, "$1_audio_"); await env.JUNE.put(ak, sp.wav, { expirationTtl: (weekly ? 8 : 2) * 86400 }); await env.JUNE.put(ak.replace("_audio_", "_env_"), JSON.stringify(sp.env), { expirationTtl: (weekly ? 8 : 2) * 86400 }); brief.audio = true; } } catch {}
     brief.audioPending = false; await kv.put(env, key, brief, { expirationTtl: (weekly ? 9 : 3) * 86400 });
   })());
   return brief;
@@ -657,6 +657,46 @@ async function runCron(env, ctx) {
 }
 
 /* ---------------- ElevenLabs: June's voice ---------------- */
+/* ---------------- voice clips with a level track (JC-LAZO-JUNE-ENV-1010-001) ----------------
+   ElevenLabs gives us 16 kHz 16-bit PCM; we keep it as WAV (every player takes WAV, no decoder
+   needed) and run a small Goertzel bank over it: 24 bands, 55 Hz .. 6 kHz, one frame per 50 ms,
+   each level mapped through the -82..-14 dB window the web hub's analyser uses. The track is a
+   base64 string of bytes (frames x bands), ~1 KB per second of speech. */
+const ENV_NB = 24, ENV_SR = 8000, ENV_HOP = 400, ENV_WIN = 256, ENV_FPS = ENV_SR / ENV_HOP;
+function wavFromPcm16(pcm, sr) {
+  const n = pcm.byteLength, out = new ArrayBuffer(44 + n), v = new DataView(out), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+  w(0, "RIFF"); v.setUint32(4, 36 + n, true); w(8, "WAVE"); w(12, "fmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, "data"); v.setUint32(40, n, true);
+  new Uint8Array(out, 44).set(new Uint8Array(pcm)); return out;
+}
+function levelTrack(pcm16k) {
+  const src = new Int16Array(pcm16k, 0, Math.floor(pcm16k.byteLength / 2));
+  const n = src.length >> 1, x = new Float32Array(n);                       // 16 kHz -> 8 kHz, pairs averaged
+  for (let i = 0; i < n; i++) x[i] = (src[2 * i] + src[2 * i + 1]) / 65536;
+  const hann = new Float32Array(ENV_WIN); for (let i = 0; i < ENV_WIN; i++) hann[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (ENV_WIN - 1));
+  const coef = new Float32Array(ENV_NB), lo = 55, hi = 6000;
+  for (let b = 0; b < ENV_NB; b++) { const f = lo * Math.pow(hi / lo, (b + 0.5) / ENV_NB); coef[b] = 2 * Math.cos(2 * Math.PI * f / ENV_SR); }
+  const frames = Math.max(1, Math.ceil(n / ENV_HOP)), out = new Uint8Array(frames * ENV_NB), win = new Float32Array(ENV_WIN);
+  for (let fr = 0; fr < frames; fr++) {
+    const s0 = fr * ENV_HOP; for (let i = 0; i < ENV_WIN; i++) { const j = s0 + i; win[i] = j < n ? x[j] * hann[i] : 0; }
+    for (let b = 0; b < ENV_NB; b++) {
+      const c = coef[b]; let s1 = 0, s2 = 0;
+      for (let i = 0; i < ENV_WIN; i++) { const t = win[i] + c * s1 - s2; s2 = s1; s1 = t; }
+      const mag = Math.sqrt(Math.max(0, s1 * s1 + s2 * s2 - c * s1 * s2)) * 4 / ENV_WIN;   // ~1.0 for a full-scale tone under Hann
+      const db = 20 * Math.log10(mag + 1e-7), lvl = Math.max(0, Math.min(1, (db + 82) / 68));
+      out[fr * ENV_NB + b] = Math.round(lvl * 255);
+    }
+  }
+  let bin = ""; for (let i = 0; i < out.length; i += 0x8000) bin += String.fromCharCode.apply(null, out.subarray(i, i + 0x8000));
+  return { fps: ENV_FPS, nb: ENV_NB, frames, b64: btoa(bin) };
+}
+async function speakWithTrack(env, text, model = "eleven_turbo_v2_5") {
+  const r = await elevenlabs(env, text, "pcm_16000", model); if (!r.ok) return null;
+  const pcm = await r.arrayBuffer(); return { wav: wavFromPcm16(pcm, 16000), env: levelTrack(pcm) };
+}
+const isWav = (buf) => buf && buf.byteLength > 12 && new Uint8Array(buf, 0, 4).join(",") === "82,73,70,70";
+const audioType = (buf) => isWav(buf) ? "audio/wav" : "audio/mpeg";
+
 function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v2_5", settings = {}) {
   const voice = env.JUNE_VOICE_ID || "pFZP5JQG7iQjIQuC4Bku";
   return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/stream?output_format=${format}`, { method: "POST", headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json" },
@@ -664,19 +704,18 @@ function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v
 }
 
 /* ---------------- June for couples (src/couple.js) ---------------- */
-const COUPLE = makeCouple({ fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, Anthropic, BUILD, json });
+const COUPLE = makeCouple({ fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, speakWithTrack, audioType, Anthropic, BUILD, json });
 
 /* ---------------- worker ---------------- */
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#3D1C3B"/><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg>`;
 const MANIFEST = { name: "June for Lazo vendors", short_name: "June", start_url: "/", display: "standalone", background_color: "#2A1229", theme_color: "#3D1C3B", icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }] };
 
-export default {
-  async fetch(request, env, ctx) {
+async function handle(request, env, ctx) {
     const url = new URL(request.url); const p = url.pathname;
     if (p === "/" || p === "/index.html") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "frame-ancestors 'self' https://app.meetlazo.com https://meetlazo.com https://*.meetlazo.com" } });   // embeddable by the Lazo dashboards only
     if (p === "/icon.svg") return new Response(ICON, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
     if (p === "/manifest.json") return json(MANIFEST);
-    if (p.startsWith("/clip/")) { const id = p.slice(6).replace(/\.mp3$/, ""); if (!/^[a-z0-9]{20,30}$/.test(id)) return new Response("Not found", { status: 404 }); const a = await env.JUNE.get("clip_" + id, "arrayBuffer"); if (!a) return new Response("Gone", { status: 404 }); return new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=600", "accept-ranges": "bytes" } }); }
+    if (p.startsWith("/clip/")) { const id = p.slice(6).replace(/\.(mp3|wav)$/, ""); if (!/^[a-z0-9]{20,30}$/.test(id)) return new Response("Not found", { status: 404 }); const a = await env.JUNE.get("clip_" + id, "arrayBuffer"); if (!a) return new Response("Gone", { status: 404 }); return new Response(a, { headers: { "content-type": audioType(a), "cache-control": "private, max-age=600", "accept-ranges": "bytes" } }); }
     if (p === "/api/config") return json({ brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, apiKey: env.FIREBASE_API_KEY, app: env.APP_URL || "https://app.meetlazo.com/dashboard", coupleApp: env.COUPLE_APP_URL || "https://app.meetlazo.com/", build: BUILD });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
 
@@ -688,20 +727,22 @@ export default {
     if (p === "/api/clip" && request.method === "POST") {
       const b = await request.json().catch(() => ({}));
       const id = uid() + uid() + uid();
-      let buf = null;
+      let buf = null, track = null;
       if (b.brief) {
         const vendOrCoup = await resolveVendor(env, who).catch(() => null); let key = null;
         if (vendOrCoup) key = "brief_audio_" + vendOrCoup.vendorId; else { const c = await COUPLE.resolveCouple(env, who).catch(() => null); if (c) key = "brief_audio_c_" + c.coupleId; }
         if (key) buf = await env.JUNE.get(key, "arrayBuffer");
         if (!buf) return json({ error: "no brief audio yet" }, 404);
+        if (key) track = await env.JUNE.get(key.replace("brief_audio_", "brief_env_"), "json").catch(() => null);
       } else {
         if (!env.ELEVENLABS_API_KEY) return json({ error: "tts not configured" }, 501);
         const text = clip(b.text, 4800); if (!text) return json({ error: "no text" }, 400);
-        const r = await elevenlabs(env, text, "mp3_44100_128", "eleven_flash_v2_5"); if (!r.ok) return json({ error: "tts failed " + r.status }, 502);
-        buf = await r.arrayBuffer();
+        const sp = await speakWithTrack(env, text, "eleven_flash_v2_5"); if (!sp) return json({ error: "tts failed" }, 502);
+        buf = sp.wav; track = sp.env;
       }
       await env.JUNE.put("clip_" + id, buf, { expirationTtl: 600 });
-      return json({ id, url: `${env.PUBLIC_URL || url.origin}/clip/${id}.mp3`, bytes: buf.byteLength });
+      const ext = isWav(buf) ? "wav" : "mp3";
+      return json({ id, url: `${env.PUBLIC_URL || url.origin}/clip/${id}.${ext}`, bytes: buf.byteLength, env: track || null });
     }
     let vend;
     try { vend = await resolveVendor(env, who); } catch (e) { return json({ error: "Could not look up your vendor listing: " + e.message }, 500); }
@@ -717,7 +758,7 @@ export default {
       if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx, who, vend);
       if (p === "/api/brief" && request.method === "POST") { const { force } = await request.json().catch(() => ({})); return json(await makeBrief(env, ctx, who, vend, !!force)); }
       if (p === "/api/brief" && request.method === "GET") return json((await kv.get(env, "brief_" + vend.vendorId)) || null);
-      if (p === "/api/brief/audio") { const a = await env.JUNE.get("brief_audio_" + vend.vendorId, "arrayBuffer"); if (!a) return json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=3600" } }); }
+      if (p === "/api/brief/audio") { const a = await env.JUNE.get("brief_audio_" + vend.vendorId, "arrayBuffer"); if (!a) return json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": audioType(a), "cache-control": "private, max-age=3600" } }); }
       if (p === "/api/tts" && request.method === "POST") { if (!env.ELEVENLABS_API_KEY) return json({ error: "tts not configured" }, 501); const { text } = await request.json(); const r = await elevenlabs(env, clip(text, 4800), "mp3_44100_128", "eleven_flash_v2_5"); if (!r.ok) return json({ error: "tts failed", status: r.status }, 502); return new Response(r.body, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }); }
       if (p === "/api/thread" && request.method === "GET") { const v = await loadVendor(who.token, vend.vendorId); const keys = (Array.isArray(v.pipeline) ? v.pipeline : []).map((x) => str(x && x.key)).filter(Boolean); return json(await threadDetail(who.token, vend.vendorId, url.searchParams.get("id") || "", keys)); }
       if (p === "/api/act" && request.method === "POST") {
@@ -729,7 +770,7 @@ export default {
       if (p === "/api/read" && request.method === "POST") { const { inquiryId } = await request.json(); const m = await ownThread(who.token, vend.vendorId, inquiryId); await fsPatch(who.token, `inquiries/${m.id}`, { vendorLastReadAt: new Date(), seenByVendorAt: new Date() }); return json({ ok: true }); }
       if (p === "/api/triage" && request.method === "POST") { const snap = await snapshot(env, who, vend); return json({ waiting: await triageWaiting(env, who, vend, snap) }); }
       if (p === "/api/weekly" && request.method === "POST") { const { force } = await request.json().catch(() => ({})); return json(await makeBrief(env, ctx, who, vend, !!force, "weekly")); }
-      if (p === "/api/weekly/audio") { const a = await env.JUNE.get("weekly_audio_" + vend.vendorId, "arrayBuffer"); if (!a) return json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=3600" } }); }
+      if (p === "/api/weekly/audio") { const a = await env.JUNE.get("weekly_audio_" + vend.vendorId, "arrayBuffer"); if (!a) return json({ error: "no audio yet" }, 404); return new Response(a, { headers: { "content-type": audioType(a), "cache-control": "private, max-age=3600" } }); }
       if (p === "/api/reminders" && request.method === "GET") return json((await kv.get(env, "reminders_" + vend.vendorId)) || []);
       if (p === "/api/reminders" && request.method === "POST") {
         const b = await request.json(); let list = (await kv.get(env, "reminders_" + vend.vendorId)) || [];
@@ -775,6 +816,47 @@ export default {
       if (p === "/api/memory" && request.method === "POST") { const { id, text } = await request.json(); let mem = (await kv.get(env, "memory_" + vend.vendorId)) || []; if (id) mem = mem.filter((m) => m.id !== id); if (text) mem.unshift({ id: uid(), text: clip(text, 400), at: new Date().toISOString() }); await kv.put(env, "memory_" + vend.vendorId, mem.slice(0, 100)); return json(mem); }
       return json({ error: "not found" }, 404);
     } catch (e) { return json({ error: String(e.message || e) }, 500); }
+}
+
+// ---------------------------------------------------------------- CORS (JC-LAZO-JUNE-CORS-1010-001)
+// JuneNative in the Lazo web app (app.meetlazo.com) and in FlutterFlow's preview calls /api/* from
+// another origin, so the browser needs these headers. Auth is a Bearer ID token, never a cookie, so
+// no ambient credential rides along; the list just keeps it to the places June is actually embedded.
+const CORS_EXACT = new Set(["https://meetlazo.com", "https://app.meetlazo.com", "https://june.meetlazo.com", "https://app.flutterflow.io"]);
+function corsOrigin(origin) {
+  if (!origin) return null;
+  if (CORS_EXACT.has(origin)) return origin;
+  try {
+    const u = new URL(origin);
+    const h = u.hostname;
+    if (u.protocol === "https:" && (h.endsWith(".meetlazo.com") || h.endsWith(".flutterflow.app") || h.endsWith(".flutterflow.io"))) return origin;
+    if (h === "localhost" || h === "127.0.0.1") return origin;
+  } catch (_) {}
+  return null;
+}
+function corsHeaders(origin) {
+  return {
+    "access-control-allow-origin": origin,
+    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-headers": "authorization, content-type",
+    "access-control-max-age": "86400",
+    "vary": "Origin",
+  };
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    const p = new URL(request.url).pathname;
+    const api = p.startsWith("/api/") || p.startsWith("/clip/");
+    const origin = api ? corsOrigin(request.headers.get("origin")) : null;
+    if (api && request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: origin ? corsHeaders(origin) : { "vary": "Origin" } });
+    }
+    const res = await handle(request, env, ctx);
+    if (!origin) return res;
+    const out = new Response(res.body, res);
+    for (const [k, v] of Object.entries(corsHeaders(origin))) out.headers.set(k, v);
+    return out;
   },
   async scheduled(event, env, ctx) { ctx.waitUntil(runCron(env, ctx).then((r) => console.log("cron", JSON.stringify(r))).catch((e) => console.log("cron failed", e.message))); },
 };

@@ -1,0 +1,1568 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+// june_native.dart
+// Build ID: JC-LAZO-JUNE-NATIVE-1010-002 (002: the core follows her real voice - clips carry a level track; layout 'deck' for the dashboards; base 001)
+//
+// JUNE, NATIVE. The same June that lives at june.meetlazo.com, rebuilt as a
+// Flutter widget for the couple and vendor dashboards and the store apps: the
+// living core, a streaming chat with confirm-first actions, voice in (the
+// device's speech recognition) and voice out (ElevenLabs, through the hub),
+// today's brief read aloud, who is waiting, what is coming up, weather for
+// the day, money, the team or the page, reminders, memory, and the radio.
+//
+// Her brain stays in the June worker: this widget is a client of the same
+// /api/* the web hub uses, signed with the Firebase ID token, so couples and
+// vendors get the same June here and there and there is one June to maintain.
+//
+// Parameters: role 'couple' | 'vendor' (which panels and chips to show).
+//             layout 'full' (the hub) | 'deck' (across the top of a dashboard; the host draws the surface).
+// Dependencies (FlutterFlow -> Settings -> Custom Code -> Dependencies):
+//   audioplayers (already in the project, used by the Music widget)
+//   speech_to_text ^7.0.0  (NEW - voice input; without it, remove the mic
+//                          button and the _Ears class below)
+// Permissions (FlutterFlow -> Settings -> Permissions): Microphone and Speech
+// Recognition, with a line like "June listens when you tap the microphone."
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'dart:math' as math;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart' show Ticker;
+import 'package:http/http.dart' as httpc;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:universal_html/html.dart' as html;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class JuneNative extends StatefulWidget {
+  const JuneNative({
+    super.key,
+    this.width,
+    this.height,
+    this.role = 'couple',
+    this.layout = 'full',
+  });
+  final double? width;
+  final double? height;
+  final String role;
+  final String layout;
+
+  @override
+  State<JuneNative> createState() => _JuneNativeState();
+}
+
+// ---------------------------------------------------------------- palette
+const Color _plumDeep = Color(0xFF3D1C3B);
+const Color _gold = Color(0xFFD9B77C);
+const Color _goldSoft = Color(0xFFE8CD9A);
+const Color _ivory = Color(0xFFFAF6F0);
+const Color _muted = Color(0xFFB9A7B5);
+const Color _rose = Color(0xFFE09C84);
+const Color _sage = Color(0xFFA9C4A3);
+const Color _red = Color(0xFFE8847A);
+const String _kHub = 'https://june.meetlazo.com';
+
+String _s(dynamic v) => v == null ? '' : v.toString();
+num _n(dynamic v) => v is num ? v : (num.tryParse(_s(v)) ?? 0);
+String _money(dynamic v) => '\$' + _n(v).round().toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (Match m) => '${m[1]},');
+List<Map<String, dynamic>> _list(dynamic v) => v is List ? v.whereType<Map>().map((Map e) => Map<String, dynamic>.from(e)).toList() : <Map<String, dynamic>>[];
+Map<String, dynamic> _map(dynamic v) => v is Map ? Map<String, dynamic>.from(v) : <String, dynamic>{};
+String _day(String iso) {
+  try {
+    final DateTime d = DateTime.parse(iso.length == 10 ? iso + 'T12:00:00' : iso).toLocal();
+    const List<String> w = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const List<String> m = <String>['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${w[d.weekday - 1]}, ${m[d.month - 1]} ${d.day}';
+  } catch (_) {
+    return iso;
+  }
+}
+String _when(String iso) {
+  try {
+    final DateTime d = DateTime.parse(iso).toLocal();
+    final int h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+    return '${_day(iso)} · $h:${d.minute.toString().padLeft(2, '0')} ${d.hour < 12 ? 'AM' : 'PM'}';
+  } catch (_) {
+    return iso;
+  }
+}
+String _ago(dynamic hours) {
+  final num h = _n(hours);
+  if (h < 1) return 'just now';
+  if (h < 48) return '${h.round()}h';
+  return '${(h / 24).round()}d';
+}
+String _wmo(dynamic code) {
+  const Map<int, String> t = <int, String>{0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Fog', 51: 'Drizzle', 53: 'Drizzle', 55: 'Drizzle', 61: 'Rain', 63: 'Rain', 65: 'Heavy rain', 71: 'Snow', 73: 'Snow', 75: 'Snow', 80: 'Showers', 81: 'Showers', 82: 'Heavy showers', 95: 'Thunderstorms', 96: 'Thunderstorms', 99: 'Thunderstorms'};
+  return t[_n(code).toInt()] ?? '';
+}
+IconData _wmoIcon(dynamic code) {
+  final int c = _n(code).toInt();
+  if (c == 0 || c == 1) return Icons.wb_sunny_rounded;
+  if (c == 2) return Icons.wb_cloudy_rounded;
+  if (c == 3 || c == 45 || c == 48) return Icons.cloud_rounded;
+  if (c >= 95) return Icons.thunderstorm_rounded;
+  if (c >= 71 && c <= 75) return Icons.ac_unit_rounded;
+  return Icons.water_drop_rounded;
+}
+
+// ---------------------------------------------------------------- the API: the June worker, signed in as this user
+class _Api {
+  Future<Map<String, String>> _headers() async {
+    final User? u = FirebaseAuth.instance.currentUser;
+    final String t = u == null ? '' : (await u.getIdToken() ?? '');
+    return <String, String>{'authorization': 'Bearer $t', 'content-type': 'application/json'};
+  }
+
+  Future<Map<String, dynamic>> get(String path) async {
+    final httpc.Response r = await httpc.get(Uri.parse(_kHub + path), headers: await _headers()).timeout(const Duration(seconds: 30));
+    final dynamic j = jsonDecode(r.body.isEmpty ? '{}' : r.body);
+    if (r.statusCode >= 400) throw Exception(_s(j is Map ? (j['message'] ?? j['error']) : r.statusCode));
+    return j is Map ? Map<String, dynamic>.from(j) : <String, dynamic>{'data': j};
+  }
+
+  Future<dynamic> post(String path, Map<String, dynamic> body) async {
+    final httpc.Response r = await httpc.post(Uri.parse(_kHub + path), headers: await _headers(), body: jsonEncode(body)).timeout(const Duration(seconds: 60));
+    final dynamic j = jsonDecode(r.body.isEmpty ? '{}' : r.body);
+    if (r.statusCode >= 400) throw Exception(_s(j is Map ? (j['message'] ?? j['error']) : r.statusCode));
+    return j;
+  }
+
+  // the chat streams server-sent events: delta {text}, done {reply, actions, messages}, error {message}
+  Future<void> chat(String text, List<Map<String, dynamic>> history, {required void Function(String) onDelta, required void Function(Map<String, dynamic>) onDone, required void Function(String) onError}) async {
+    final httpc.Client client = httpc.Client();
+    try {
+      final httpc.Request req = httpc.Request('POST', Uri.parse('$_kHub/api/chat'));
+      req.headers.addAll(await _headers());
+      req.body = jsonEncode(<String, dynamic>{'text': text, 'messages': history});
+      final httpc.StreamedResponse resp = await client.send(req).timeout(const Duration(seconds: 90));
+      if (resp.statusCode >= 400) {
+        onError('June is unavailable (${resp.statusCode}).');
+        return;
+      }
+      String buf = '';
+      bool done = false;
+      await for (final String chunk in resp.stream.transform(utf8.decoder)) {
+        buf += chunk;
+        int idx;
+        while ((idx = buf.indexOf('\n\n')) >= 0) {
+          final String frame = buf.substring(0, idx);
+          buf = buf.substring(idx + 2);
+          final RegExpMatch? ev = RegExp(r'^event: (.*)$', multiLine: true).firstMatch(frame);
+          final RegExpMatch? da = RegExp(r'^data: (.*)$', multiLine: true).firstMatch(frame);
+          if (ev == null || da == null) continue;
+          dynamic d;
+          try {
+            d = jsonDecode(da.group(1)!);
+          } catch (_) {
+            continue;
+          }
+          final String kind = ev.group(1)!.trim();
+          if (kind == 'delta') {
+            onDelta(_s(_map(d)['text']));
+          } else if (kind == 'done') {
+            done = true;
+            onDone(_map(d));
+          } else if (kind == 'error') {
+            onError(_s(_map(d)['message']));
+          }
+        }
+      }
+      if (!done) onDone(<String, dynamic>{});
+    } catch (e) {
+      onError(e.toString());
+    } finally {
+      client.close();
+    }
+  }
+}
+
+// ---------------------------------------------------------------- the voice out: ElevenLabs through the hub, one clip per sentence
+class _Voice {
+  _Voice(this.api, this.onState);
+  final _Api api;
+  final void Function(bool speaking) onState;
+  final List<String> _queue = <String>[];
+  bool speaking = false;
+  bool enabled = true;
+  int _gen = 0;
+  AudioPlayer? _player;
+  html.AudioElement? _el;
+
+  // JC-LAZO-JUNE-ENV-1010-001: the level track that came with the clip - frames x bands, bytes 0..255
+  Uint8List? _trk;
+  int _trkNb = 24;
+  double _trkFps = 20;
+  int _trkFrames = 0;
+  DateTime? _t0;
+  double _posKnown = 0;
+  DateTime? _posAt;
+  bool get hasTrack => _trk != null;
+
+  void _setTrack(dynamic env) {
+    _trk = null;
+    _t0 = null;
+    _posAt = null;
+    _posKnown = 0;
+    final Map<String, dynamic> e = _map(env);
+    final String b64 = _s(e['b64']);
+    if (b64.isEmpty) return;
+    try {
+      _trk = base64Decode(b64);
+    } catch (_) {
+      _trk = null;
+      return;
+    }
+    _trkNb = _n(e['nb']) > 0 ? _n(e['nb']).toInt() : 24;
+    _trkFps = _n(e['fps']) > 0 ? _n(e['fps']).toDouble() : 20;
+    _trkFrames = _trk!.length ~/ _trkNb;
+  }
+
+  double _pos() {
+    if (kIsWeb) {
+      try {
+        final html.AudioElement? a = _el;
+        if (a != null) return a.currentTime.toDouble();
+      } catch (_) {}
+    }
+    final DateTime? at = _posAt;
+    if (at != null) return _posKnown + DateTime.now().difference(at).inMicroseconds / 1e6;
+    final DateTime? t0 = _t0;
+    return t0 == null ? 0 : DateTime.now().difference(t0).inMicroseconds / 1e6;
+  }
+
+  /// levels 0..1 for [nb] bars at the current playback position; null without a track
+  List<double>? frame(int nb) {
+    final Uint8List? t = _trk;
+    if (t == null || _trkFrames == 0) return null;
+    final double f = _pos() * _trkFps;
+    final int i0 = f.floor().clamp(0, _trkFrames - 1);
+    final int i1 = (i0 + 1).clamp(0, _trkFrames - 1);
+    final double k = (f - f.floor()).clamp(0.0, 1.0);
+    double at(int i, int j) => t[i * _trkNb + j] / 255.0;
+    final List<double> out = List<double>.filled(nb, 0);
+    for (int b = 0; b < nb; b++) {
+      final double x = b * (_trkNb - 1) / math.max(1, nb - 1);
+      final int j0 = x.floor();
+      final int j1 = math.min(_trkNb - 1, j0 + 1);
+      final double kk = x - j0;
+      final double a = at(i0, j0) * (1 - kk) + at(i0, j1) * kk;
+      final double c = at(i1, j0) * (1 - kk) + at(i1, j1) * kk;
+      out[b] = a * (1 - k) + c * k;
+    }
+    return out;
+  }
+
+  AudioPlayer _ensure() {
+    if (_player != null) return _player!;
+    final AudioPlayer p = AudioPlayer();
+    try {
+      p.setAudioContext(AudioContext(
+        iOS: AudioContextIOS(category: AVAudioSessionCategory.playback),
+        android: AudioContextAndroid(),
+      ));
+    } catch (_) {}
+    p.setReleaseMode(ReleaseMode.stop);
+    _player = p;
+    return p;
+  }
+
+  void say(String text) {
+    final String t = text.trim();
+    if (!enabled || t.isEmpty) return;
+    _queue.add(t);
+    if (!speaking) _pump();
+  }
+
+  Future<void> _pump() async {
+    speaking = true;
+    onState(true);
+    final int gen = _gen;
+    while (_queue.isNotEmpty && gen == _gen) {
+      final String t = _queue.removeAt(0);
+      String url = '';
+      dynamic env;
+      try {
+        final dynamic j = await api.post('/api/clip', <String, dynamic>{'text': t});
+        url = _s(_map(j)['url']);
+        env = _map(j)['env'];
+      } catch (e) {
+        debugPrint('LAZO june clip: ' + e.toString());
+      }
+      if (url.isEmpty || gen != _gen) continue;
+      await playUrl(url, gen, env);
+    }
+    if (gen == _gen) {
+      speaking = false;
+      onState(false);
+    }
+  }
+
+  // plays one URL to the end (web: an <audio> element; phones: audioplayers)
+  Future<void> playUrl(String url, [int? gen, dynamic env]) async {
+    final int g = gen ?? _gen;
+    _setTrack(env);
+    try {
+      if (kIsWeb) {
+        final html.AudioElement a = html.AudioElement();
+        _el = a;
+        a.src = url;
+        a.preload = 'auto';
+        final Completer<void> c = Completer<void>();
+        a.onEnded.listen((_) {
+          if (!c.isCompleted) c.complete();
+        });
+        a.onError.listen((_) {
+          if (!c.isCompleted) c.complete();
+        });
+        _t0 = DateTime.now();
+        await a.play().catchError((Object _) {});
+        await c.future.timeout(const Duration(minutes: 6), onTimeout: () {});
+        if (identical(_el, a)) _el = null;
+      } else {
+        final AudioPlayer p = _ensure();
+        await p.stop();
+        final Completer<void> c = Completer<void>();
+        final StreamSubscription<void> sub = p.onPlayerComplete.listen((_) {
+          if (!c.isCompleted) c.complete();
+        });
+        final StreamSubscription<Duration> psub = p.onPositionChanged.listen((Duration d) {
+          _posKnown = d.inMicroseconds / 1e6;
+          _posAt = DateTime.now();
+        });
+        _t0 = DateTime.now();
+        await p.play(UrlSource(url));
+        await c.future.timeout(const Duration(minutes: 6), onTimeout: () {});
+        await sub.cancel();
+        await psub.cancel();
+      }
+    } catch (e) {
+      debugPrint('LAZO june play: ' + e.toString());
+    }
+    _trk = null;
+    if (g != _gen) return;
+  }
+
+  void stop() {
+    _gen++;
+    _queue.clear();
+    try {
+      _el?.pause();
+      _el = null;
+    } catch (_) {}
+    try {
+      _player?.stop();
+    } catch (_) {}
+    _trk = null;
+    if (speaking) {
+      speaking = false;
+      onState(false);
+    }
+  }
+
+  void dispose() {
+    stop();
+    try {
+      _player?.dispose();
+    } catch (_) {}
+  }
+}
+
+// ---------------------------------------------------------------- the voice in: the device's speech recognition
+class _Ears {
+  _Ears({required this.onText, required this.onState});
+  final void Function(String text, bool isFinal) onText;
+  final void Function(bool listening) onState;
+  final stt.SpeechToText _stt = stt.SpeechToText();
+  bool ready = false;
+  bool listening = false;
+
+  Future<bool> init() async {
+    try {
+      ready = await _stt.initialize(
+        onStatus: (String s) {
+          if (s == 'done' || s == 'notListening') {
+            if (listening) {
+              listening = false;
+              onState(false);
+            }
+          }
+        },
+        onError: (dynamic e) {
+          if (listening) {
+            listening = false;
+            onState(false);
+          }
+        },
+      );
+    } catch (e) {
+      ready = false;
+    }
+    return ready;
+  }
+
+  Future<void> start() async {
+    if (!ready && !(await init())) return;
+    listening = true;
+    onState(true);
+    try {
+      await _stt.listen(
+        onResult: (dynamic r) {
+          try {
+            onText(_s(r.recognizedWords), r.finalResult == true);
+          } catch (_) {}
+        },
+        listenFor: const Duration(seconds: 20),
+        pauseFor: const Duration(seconds: 3),
+        localeId: 'en_US',
+      );
+    } catch (e) {
+      listening = false;
+      onState(false);
+    }
+  }
+
+  Future<void> stop() async {
+    try {
+      await _stt.stop();
+    } catch (_) {}
+    if (listening) {
+      listening = false;
+      onState(false);
+    }
+  }
+}
+
+// ---------------------------------------------------------------- the core: a circular spectrum analyser
+class _CorePainter extends CustomPainter {
+  _CorePainter({required this.levels, required this.caps, required this.swell, required this.bass, required this.rot, required this.tint, required this.live});
+  final List<double> levels;
+  final List<double> caps;
+  final double swell;
+  final double bass;
+  final double rot;
+  final Color tint;
+  final bool live;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final Offset c = Offset(w / 2, size.height / 2);
+    final int nb = levels.length;
+    final double r0 = w * 0.21 * (1 + bass * 0.05);
+    final double len = w * 0.25;
+    // glow
+    final double gr = r0 * (1.9 + swell * 0.5);
+    canvas.drawCircle(c, gr, Paint()..shader = RadialGradient(colors: <Color>[tint.withOpacity(live ? 0.28 : 0.16), tint.withOpacity(0.06), tint.withOpacity(0)], stops: const <double>[0, .5, 1]).createShader(Rect.fromCircle(center: c, radius: gr)));
+    // bars, bass at the bottom climbing both sides
+    final double bw = math.max(1.5, (math.pi * r0) / nb * 0.62);
+    final Paint bar = Paint()
+      ..color = tint.withOpacity(live ? 0.92 : 0.5)
+      ..strokeWidth = bw
+      ..strokeCap = StrokeCap.butt;
+    final Paint cap = Paint()
+      ..color = Colors.white.withOpacity(live ? 0.85 : 0.35)
+      ..strokeWidth = math.max(1, bw * 0.9);
+    for (int s = -1; s <= 1; s += 2) {
+      for (int b = 0; b < nb; b++) {
+        final double a = math.pi / 2 + s * ((b + 0.5) / nb) * math.pi;
+        final double l = r0 + math.max(1, levels[b] * len);
+        final double cs = math.cos(a), sn = math.sin(a);
+        canvas.drawLine(Offset(c.dx + cs * (r0 + 1), c.dy + sn * (r0 + 1)), Offset(c.dx + cs * l, c.dy + sn * l), bar);
+        if (caps[b] > 0.06) {
+          final double cl = r0 + caps[b] * len + bw * 1.2;
+          canvas.drawLine(Offset(c.dx + cs * cl, c.dy + sn * cl), Offset(c.dx + cs * (cl + bw * 0.9), c.dy + sn * (cl + bw * 0.9)), cap);
+        }
+      }
+    }
+    // the ring the bars grow from, and a turning dashed orbit
+    canvas.drawCircle(c, r0, Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..color = tint.withOpacity(live ? 0.75 : 0.45));
+    final double orbit = r0 + len + bw * 2.2;
+    final Paint op = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = tint.withOpacity(0.25 + swell * 0.5);
+    const List<double> dash = <double>[0.5, 0.22, 0.12, 0.3];
+    double ang = rot;
+    for (int i = 0; i < 4; i++) {
+      final double sweep = dash[i] * r0 / orbit;
+      if (i % 2 == 0) canvas.drawArc(Rect.fromCircle(center: c, radius: orbit), ang, sweep, false, op);
+      ang += sweep;
+    }
+    for (int i = 0; i < 4; i++) {
+      final double sweep = dash[i] * r0 / orbit;
+      if (i % 2 == 0) canvas.drawArc(Rect.fromCircle(center: c, radius: orbit), ang, sweep, false, op);
+      ang += sweep;
+    }
+    // nucleus
+    final double nr = r0 * (0.34 + bass * 0.3) * (live ? 1 : 0.85);
+    canvas.drawCircle(c, nr, Paint()..shader = RadialGradient(colors: <Color>[Colors.white, tint.withOpacity(0.9), tint.withOpacity(0.25), tint.withOpacity(0)], stops: const <double>[0, .25, .55, 1]).createShader(Rect.fromCircle(center: c, radius: nr)));
+  }
+
+  @override
+  bool shouldRepaint(covariant _CorePainter old) => true;
+}
+
+// ---------------------------------------------------------------- the widget
+class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateMixin {
+  final _Api _api = _Api();
+  late final _Voice _voice = _Voice(_api, (bool s) {
+    if (!mounted) return;
+    setState(() => _mode = s ? 'speaking' : (_thinking ? 'thinking' : 'idle'));
+  });
+  late final _Ears _ears = _Ears(
+    onText: _onHeard,
+    onState: (bool l) {
+      if (!mounted) return;
+      setState(() {
+        _listening = l;
+        _mode = l ? 'listening' : (_voice.speaking ? 'speaking' : 'idle');
+      });
+    },
+  );
+  late final Ticker _ticker;
+
+  Map<String, dynamic> _snap = <String, dynamic>{};
+  String _err = '';
+  bool _loading = true;
+  bool _thinking = false;
+  bool _listening = false;
+  bool _micAvailable = false;
+  String _mode = 'idle';
+  String _heard = '';
+  final List<Map<String, dynamic>> _chat = <Map<String, dynamic>>[]; // {role, text, item?, url?}
+  List<Map<String, dynamic>> _hist = <Map<String, dynamic>>[];
+  final TextEditingController _q = TextEditingController();
+  final ScrollController _chatScroll = ScrollController();
+  final TextEditingController _remText = TextEditingController();
+  DateTime? _remWhen;
+  bool _briefBusy = false;
+  bool _briefPlaying = false;
+  Timer? _refresh;
+  String _radioName = '';
+  // the core's state
+  static const int _nb = 40;
+  final List<double> _lvl = List<double>.filled(_nb, 0);
+  final List<double> _cap = List<double>.filled(_nb, 0);
+  final List<double> _capT = List<double>.filled(_nb, 0);
+  double _swell = 0, _bass = 0, _rot = 0, _phase = 0;
+  Duration _last = Duration.zero;
+  Color _tint = _gold;
+
+  bool get _couple => widget.role == 'couple';
+
+  @override
+  void initState() {
+    super.initState();
+    _ticker = createTicker(_tick)..start();
+    _load(first: true);
+    _refresh = Timer.periodic(const Duration(minutes: 3), (_) => _load());
+    _ears.init().then((bool ok) {
+      if (mounted) setState(() => _micAvailable = ok);
+    });
+    SharedPreferences.getInstance().then((SharedPreferences p) {
+      final bool? v = p.getBool('juneSpeak');
+      if (v != null && mounted) setState(() => _voice.enabled = v);
+    });
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    _refresh?.cancel();
+    _voice.dispose();
+    _ears.stop();
+    _q.dispose();
+    _chatScroll.dispose();
+    _remText.dispose();
+    super.dispose();
+  }
+
+  // ---- the core animation: synthetic spectrum with real meter ballistics
+  void _tick(Duration now) {
+    final double dt = _last == Duration.zero ? 0.016 : math.min(0.1, (now - _last).inMicroseconds / 1e6);
+    _last = now;
+    _phase += dt;
+    final String m = _mode;
+    double target = 0;
+    if (m == 'thinking') target = 0.3 + 0.2 * math.sin(_phase * 6);
+    else if (m == 'listening') target = 0.12 + 0.05 * math.sin(_phase * 3);
+    else if (m == 'speaking') target = 0.25 + 0.55 * math.max(0, math.sin(_phase * 11) * 0.6 + math.sin(_phase * 4.3) * 0.4 + 0.2);
+    // JC-LAZO-JUNE-ENV-1010-001: while a clip plays, the bars are the clip
+    final List<double>? live = m == 'speaking' ? _voice.frame(_nb) : null;
+    if (live != null) {
+      double sum = 0;
+      for (final double v in live) sum += v;
+      target = math.min(1, (sum / _nb) * 1.7 + 0.06);
+    }
+    final double atk = 1 - math.exp(-dt * 60), rel = (live != null ? 7.5 : 4.2) * dt, capFall = 2.2 * dt;
+    for (int b = 0; b < _nb; b++) {
+      double shape;
+      if (m == 'speaking') shape = math.exp(-math.pow((b - _nb * 0.3) / (_nb * 0.28), 2)) * (0.6 + 0.4 * math.sin(_phase * 9 + b * 0.7).abs());
+      else if (m == 'thinking') shape = 0.5 + 0.5 * math.sin(_phase * 5 - b * 0.35);
+      else shape = 0.4 + 0.3 * math.sin(_phase * 2 + b);
+      final double v = live != null ? live[b] : (m == 'idle' ? 0.05 + 0.04 * math.sin(_phase * 1.1 + b * 0.45) * math.sin(_phase * 0.7 + b * 0.2) : target * shape);
+      if (v > _lvl[b]) _lvl[b] += (v - _lvl[b]) * atk; else _lvl[b] = math.max(v, _lvl[b] - rel);
+      if (_lvl[b] >= _cap[b]) {
+        _cap[b] = _lvl[b];
+        _capT[b] = 0.25;
+      } else {
+        _capT[b] -= dt;
+        if (_capT[b] <= 0) _cap[b] = math.max(_lvl[b], _cap[b] - capFall);
+      }
+    }
+    _swell += (target - _swell) * 0.15;
+    _bass += ((live != null ? (live[0] + live[1] + live[2] + live[3]) / 4 : target * 0.5) - _bass) * (live != null ? 0.3 : 0.1);
+    _rot += dt * (m == 'thinking' ? 1.4 : m == 'idle' ? 0.12 : 0.25 + _swell * 0.6);
+    final Color want = m == 'listening' ? _rose : m == 'thinking' ? const Color(0xFFC496C4) : m == 'speaking' ? const Color(0xFFF5E4B4) : (_radioName.isNotEmpty ? _sage : _gold);
+    _tint = Color.lerp(_tint, want, 0.08) ?? want;
+    if (mounted) setState(() {});
+  }
+
+  // ---- data
+  Future<void> _load({bool first = false}) async {
+    try {
+      final Map<String, dynamic> s = await _api.get('/api/state');
+      if (!mounted) return;
+      setState(() {
+        _snap = s;
+        _loading = false;
+        _err = '';
+      });
+      if (first) {
+        if (_map(s['brief'])['text'] == null) _makeBrief(false);
+        final List<Map<String, dynamic>> due = _list(s['due']);
+        if (due.isNotEmpty) {
+          final String line = due.length == 1 ? 'You asked me to remind you: ${_s(due[0]['text'])}.' : 'You have ${due.length} reminders due. ' + due.take(3).map((Map<String, dynamic> r) => _s(r['text'])).join('; ') + '.';
+          _addMsg('ai', line);
+          _voice.say(line);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _err = e.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _makeBrief(bool force) async {
+    setState(() => _briefBusy = true);
+    try {
+      final dynamic b = await _api.post('/api/brief', <String, dynamic>{'force': force});
+      if (!mounted) return;
+      setState(() => _snap['brief'] = _map(b));
+    } catch (e) {
+      debugPrint('LAZO june brief: ' + e.toString());
+    }
+    if (mounted) setState(() => _briefBusy = false);
+  }
+
+  Future<void> _listenBrief() async {
+    if (_briefPlaying) {
+      _voice.stop();
+      setState(() => _briefPlaying = false);
+      return;
+    }
+    final String text = _s(_map(_snap['brief'])['text']);
+    if (text.isEmpty) return;
+    setState(() => _briefPlaying = true);
+    try {
+      // the hub keeps the brief's ElevenLabs audio; ask for it as a clip first, else read the text
+      final dynamic j = await _api.post('/api/clip', <String, dynamic>{'brief': true}).catchError((Object _) => <String, dynamic>{});
+      final String url = _s(_map(j)['url']);
+      if (url.isNotEmpty) {
+        setState(() => _mode = 'speaking');
+        await _voice.playUrl(url, null, _map(j)['env']);
+        if (mounted) setState(() => _mode = 'idle');
+      } else {
+        for (final String sent in text.split(RegExp(r'(?<=[.!?])\s+'))) {
+          _voice.say(sent);
+        }
+        while (_voice.speaking && mounted) {
+          await Future<void>.delayed(const Duration(milliseconds: 300));
+        }
+      }
+    } catch (_) {}
+    if (mounted) setState(() => _briefPlaying = false);
+  }
+
+  // ---- chat
+  void _addMsg(String role, String text, {Map<String, dynamic>? item, String? url}) {
+    _chat.add(<String, dynamic>{'role': role, 'text': text, if (item != null) 'item': item, if (url != null) 'url': url});
+    if (mounted) setState(() {});
+    Future<void>.delayed(const Duration(milliseconds: 60), () {
+      if (_chatScroll.hasClients) _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+    });
+  }
+
+  Future<void> _ask(String raw) async {
+    final String text = raw.trim();
+    if (text.isEmpty || _thinking) return;
+    _voice.stop();
+    _q.clear();
+    _addMsg('me', text);
+    final String quick = _local(text);
+    if (quick.isNotEmpty) {
+      _addMsg('ai', quick);
+      _voice.say(quick);
+      return;
+    }
+    setState(() {
+      _thinking = true;
+      _mode = 'thinking';
+    });
+    final Map<String, dynamic> msg = <String, dynamic>{'role': 'ai', 'text': ''};
+    _chat.add(msg);
+    String full = '';
+    int spoken = 0;
+    void flush(bool fin) {
+      final String rest = full.substring(spoken);
+      if (fin) {
+        if (rest.trim().isNotEmpty) _voice.say(rest);
+        spoken = full.length;
+        return;
+      }
+      final RegExpMatch? m = RegExp(r'^[\s\S]*?[.!?](?=\s|$)').firstMatch(rest);
+      if (m == null) return;
+      _voice.say(m.group(0)!);
+      spoken += m.group(0)!.length;
+    }
+
+    await _api.chat(text, _hist, onDelta: (String d) {
+      full += d;
+      msg['text'] = full;
+      if (mounted) setState(() => _mode = _voice.speaking ? 'speaking' : 'thinking');
+      flush(false);
+      if (_chatScroll.hasClients) _chatScroll.jumpTo(_chatScroll.position.maxScrollExtent);
+    }, onDone: (Map<String, dynamic> d) {
+      full = full.trim();
+      msg['text'] = full.isEmpty ? '…' : full;
+      flush(true);
+      final List<Map<String, dynamic>> hist = _list(d['messages']);
+      if (hist.isNotEmpty) _hist = hist;
+      for (final Map<String, dynamic> a in _list(d['actions'])) {
+        _handleAction(a);
+      }
+    }, onError: (String e) {
+      msg['text'] = (full + '\n[' + e + ']').trim();
+    });
+    if (!mounted) return;
+    setState(() {
+      _thinking = false;
+      _mode = _voice.speaking ? 'speaking' : 'idle';
+    });
+    _load();
+  }
+
+  void _handleAction(Map<String, dynamic> a) {
+    final String t = _s(a['type']);
+    if (t == 'open') {
+      final String u = _s(a['url']);
+      _addMsg('sys', 'Opening ${_s(a['label'])}.', url: u);
+      launchUrl(Uri.parse(u), mode: LaunchMode.externalApplication).catchError((Object _) => false);
+    } else if (t == 'memory') {
+      setState(() => _snap['memory'] = a['value']);
+    } else if (t == 'reminders') {
+      _loadReminders();
+    } else if (t == 'confirm') {
+      _addMsg('confirm', _s(_map(a['item'])['summary']), item: _map(a['item']));
+    }
+  }
+
+  Future<void> _decide(Map<String, dynamic> msg, String decision) async {
+    final Map<String, dynamic> item = _map(msg['item']);
+    setState(() => msg['busy'] = true);
+    try {
+      final dynamic rec = await _api.post('/api/act', <String, dynamic>{'item': item, 'decision': decision});
+      final Map<String, dynamic> r = _map(rec);
+      msg['status'] = _s(r['status']);
+      msg['result'] = _s(r['result']);
+      if (msg['status'] == 'done') {
+        _voice.say(_s(r['result']).isEmpty ? 'Done.' : _s(r['result']));
+        _load();
+      } else if (msg['status'] == 'failed') {
+        _voice.say('That didn\'t go through. ' + _s(r['result']));
+      }
+    } catch (e) {
+      msg['status'] = 'failed';
+      msg['result'] = e.toString();
+    }
+    if (mounted) setState(() => msg['busy'] = false);
+  }
+
+  // a few answers that never need the brain
+  String _local(String raw) {
+    final String t = raw.toLowerCase().replaceAll(RegExp(r'^june,?\s*'), '').replaceAll(RegExp(r'[.!?]+$'), '').trim();
+    if (RegExp(r'^(what time is it|time)$').hasMatch(t)) {
+      final DateTime d = DateTime.now();
+      final int h = d.hour % 12 == 0 ? 12 : d.hour % 12;
+      return 'It\'s $h:${d.minute.toString().padLeft(2, '0')} ${d.hour < 12 ? 'AM' : 'PM'}.';
+    }
+    if (RegExp(r'^(stop|quiet|shush|never ?mind|cancel)$').hasMatch(t)) {
+      _voice.stop();
+      return ' ';
+    }
+    if (RegExp(r'^(stop|pause|turn off|kill|mute) (the )?(radio|music)$|^radio off$').hasMatch(t)) {
+      _radioStop();
+      return 'Radio off.';
+    }
+    final RegExpMatch? rp = RegExp(r'^(?:play|put on|turn on|start)\s+(?:the\s+|some\s+)?(radio|music|.+?)(?:\s+radio)?$').firstMatch(t);
+    if (rp != null) {
+      final String want = rp.group(1)!.replaceAll(' ', '');
+      int i = want == 'radio' || want == 'music' ? 0 : _radio.indexWhere((List<String> r) => r[2].split(',').any((String k) => want.contains(k)));
+      if (i >= 0) {
+        _radioPlay(i);
+        return ' ';
+      }
+    }
+    return '';
+  }
+
+  void _onHeard(String text, bool fin) {
+    setState(() => _heard = text);
+    if (fin && text.trim().isNotEmpty) {
+      _heard = '';
+      _ask(text);
+    }
+  }
+
+  Future<void> _toggleMic() async {
+    if (_listening) {
+      await _ears.stop();
+      return;
+    }
+    _voice.stop();
+    HapticFeedback.lightImpact();
+    await _ears.start();
+  }
+
+  // ---- reminders + memory
+  Future<void> _loadReminders() async {
+    try {
+      final Map<String, dynamic> r = await _api.get('/api/reminders');
+      final List<Map<String, dynamic>> list = _list(r['data']).where((Map<String, dynamic> x) => x['done'] != true).toList();
+      if (mounted) setState(() => _snap['reminders'] = list);
+    } catch (_) {}
+  }
+
+  Future<void> _remPost(Map<String, dynamic> body) async {
+    try {
+      final dynamic r = await _api.post('/api/reminders', <String, dynamic>{...body, 'tz': DateTime.now().timeZoneName});
+      if (mounted) setState(() => _snap['reminders'] = _list(r));
+    } catch (e) {
+      _addMsg('sys', 'Couldn\'t save that reminder: ' + e.toString());
+    }
+  }
+
+  Future<void> _forget(String id) async {
+    try {
+      final dynamic r = await _api.post('/api/memory', <String, dynamic>{'id': id});
+      if (mounted) setState(() => _snap['memory'] = _list(r));
+    } catch (_) {}
+  }
+
+  // ---- radio
+  static const List<List<String>> _radio = <List<String>>[
+    <String>['Radio Paradise', 'https://stream.radioparadise.com/aac-128', 'paradise,radioparadise'],
+    <String>['Paradise Mellow', 'https://stream.radioparadise.com/mellow-128', 'mellow'],
+    <String>['Classic FM', 'https://media-ssl.musicradio.com/ClassicFM', 'classic,classicfm'],
+    <String>['Smooth Chill', 'https://media-ssl.musicradio.com/SmoothChill', 'smooth,chill'],
+  ];
+  AudioPlayer? _radioPlayer;
+  html.AudioElement? _radioEl;
+
+  Future<void> _radioPlay(int i) async {
+    _radioStop();
+    final List<String> st = _radio[i];
+    setState(() => _radioName = st[0]);
+    try {
+      if (kIsWeb) {
+        final html.AudioElement a = html.AudioElement();
+        a.src = st[1];
+        a.volume = 0.7;
+        _radioEl = a;
+        await a.play().catchError((Object _) {});
+      } else {
+        final AudioPlayer p = AudioPlayer();
+        try {
+          p.setAudioContext(AudioContext(iOS: AudioContextIOS(category: AVAudioSessionCategory.playback), android: AudioContextAndroid()));
+        } catch (_) {}
+        p.setVolume(0.7);
+        _radioPlayer = p;
+        await p.play(UrlSource(st[1]));
+      }
+    } catch (e) {
+      _addMsg('sys', 'That station wouldn\'t start: ' + e.toString());
+      setState(() => _radioName = '');
+    }
+  }
+
+  void _radioStop() {
+    try {
+      _radioEl?.pause();
+      _radioEl = null;
+    } catch (_) {}
+    try {
+      _radioPlayer?.stop();
+      _radioPlayer?.dispose();
+      _radioPlayer = null;
+    } catch (_) {}
+    if (_radioName.isNotEmpty && mounted) setState(() => _radioName = '');
+  }
+
+  // ---------------------------------------------------------------- UI
+  TextStyle _serif(double size, {Color color = _goldSoft, FontWeight w = FontWeight.w500}) {
+    try {
+      return GoogleFonts.cormorantGaramond(fontSize: size, fontWeight: w, color: color, height: 1.1);
+    } catch (_) {
+      return TextStyle(fontFamily: 'serif', fontSize: size, fontWeight: w, color: color, height: 1.1);
+    }
+  }
+
+  Widget _card({required String title, Widget? trailing, String? sub, required Widget child}) => Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: <Color>[Colors.white.withOpacity(.09), Colors.white.withOpacity(.04)]),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withOpacity(.12)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Row(children: <Widget>[
+            Expanded(child: Text(title, style: _serif(21))),
+            if (trailing != null) trailing,
+          ]),
+          if (sub != null) Padding(padding: const EdgeInsets.only(top: 2), child: Text(sub, style: const TextStyle(color: _muted, fontSize: 12.5, height: 1.4))),
+          const SizedBox(height: 10),
+          child,
+        ]),
+      );
+
+  Widget _tag(String t, {Color? bg, Color? fg}) => Container(
+        margin: const EdgeInsets.only(left: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(color: bg ?? _gold.withOpacity(.14), borderRadius: BorderRadius.circular(7), border: Border.all(color: (bg ?? _gold).withOpacity(.3))),
+        child: Text(t.toUpperCase(), style: TextStyle(color: fg ?? _gold, fontSize: 9.5, letterSpacing: .8, fontWeight: FontWeight.w700)),
+      );
+
+  Widget _row({required String title, String? d, Widget? tag, Widget? side}) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0x12FFFFFF)))),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Row(children: <Widget>[Flexible(child: Text(title, style: const TextStyle(color: _ivory, fontWeight: FontWeight.w600, fontSize: 14))), if (tag != null) tag]),
+              if (d != null && d.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 2), child: Text(d, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _muted, fontSize: 12.5))),
+            ]),
+          ),
+          if (side != null) Padding(padding: const EdgeInsets.only(left: 10), child: side),
+        ]),
+      );
+
+  Widget _btn(String label, VoidCallback? onTap, {bool gold = false, IconData? icon, bool small = true}) {
+    final Widget child = Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+      if (icon != null) Icon(icon, size: 15, color: gold ? _plumDeep : _ivory),
+      if (icon != null) const SizedBox(width: 6),
+      Text(label, style: TextStyle(fontSize: small ? 12 : 13.5, fontWeight: FontWeight.w700, color: gold ? _plumDeep : _ivory)),
+    ]);
+    return gold
+        ? FilledButton(onPressed: onTap, style: FilledButton.styleFrom(backgroundColor: _gold, foregroundColor: _plumDeep, padding: EdgeInsets.symmetric(horizontal: small ? 12 : 18, vertical: small ? 6 : 12), minimumSize: const Size(0, 30), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))), child: child)
+        : OutlinedButton(onPressed: onTap, style: OutlinedButton.styleFrom(side: BorderSide(color: _gold.withOpacity(.45)), padding: EdgeInsets.symmetric(horizontal: small ? 12 : 18, vertical: small ? 6 : 12), minimumSize: const Size(0, 30), tapTargetSize: MaterialTapTargetSize.shrinkWrap, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999))), child: child);
+  }
+
+  Widget _stat(String v, String k, {Color? color}) => Expanded(
+        child: Container(
+          margin: const EdgeInsets.only(right: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(color: Colors.black.withOpacity(.22), borderRadius: BorderRadius.circular(14)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+            Text(v, style: _serif(24, color: color ?? _goldSoft, w: FontWeight.w600)),
+            const SizedBox(height: 2),
+            Text(k, style: const TextStyle(color: _muted, fontSize: 11)),
+          ]),
+        ),
+      );
+
+  // ---- the console: core + chat (in parts, so the deck can lay them out its own way)
+  List<String> get _chips => _couple
+      ? <String>['What should we do next?', 'Who\'s waiting on us?', 'How are the RSVPs?', 'Where are we on budget?', 'What\'s the forecast for our day?', 'Find us a florist', 'Play some music']
+      : <String>['Who is waiting on me?', 'What\'s on this week?', 'Weather for my next wedding', 'How much is outstanding?', 'Which leads went quiet?', 'Play some music'];
+
+  Widget _core(double size) => GestureDetector(
+        onTap: () {
+          if (_voice.speaking) _voice.stop();
+        },
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: CustomPaint(painter: _CorePainter(levels: _lvl, caps: _cap, swell: _swell, bass: _bass, rot: _rot, tint: _tint, live: _mode != 'idle' || _radioName.isNotEmpty)),
+        ),
+      );
+
+  Widget _stateLabel() => Text(_mode == 'idle' && _radioName.isNotEmpty ? '♪ $_radioName' : _mode, style: const TextStyle(color: _muted, fontSize: 10.5, letterSpacing: 2));
+
+  void _toggleVoice() {
+    setState(() => _voice.enabled = !_voice.enabled);
+    if (!_voice.enabled) _voice.stop();
+    SharedPreferences.getInstance().then((SharedPreferences p) => p.setBool('juneSpeak', _voice.enabled));
+  }
+
+  Widget _chatBox(double height) => Container(
+        height: height,
+        decoration: BoxDecoration(color: Colors.black.withOpacity(.25), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(.08))),
+        child: _chat.isEmpty
+            ? Center(child: Padding(padding: const EdgeInsets.all(20), child: Text(_couple ? 'Good to see you both. Ask me anything about your vendors, your guests, the budget or the big day.' : 'Good to see you. Ask me anything about your couples, dates or money.', textAlign: TextAlign.center, style: const TextStyle(color: _muted, fontSize: 13, height: 1.5))))
+            : ListView.builder(
+                controller: _chatScroll,
+                padding: const EdgeInsets.all(12),
+                itemCount: _chat.length,
+                itemBuilder: (BuildContext c, int i) => _bubble(_chat[i]),
+              ),
+      );
+
+  Widget _inputRow() => Row(children: <Widget>[
+        Expanded(
+          child: TextField(
+            controller: _q,
+            textInputAction: TextInputAction.send,
+            onSubmitted: _ask,
+            style: const TextStyle(color: _ivory, fontSize: 14),
+            cursorColor: _gold,
+            decoration: InputDecoration(
+              hintText: _couple ? 'What should we do next? Who\'s waiting on us?' : 'Who is waiting on me? What\'s the weather Saturday?',
+              hintStyle: const TextStyle(color: _muted, fontSize: 13),
+              isDense: true,
+              filled: true,
+              fillColor: Colors.black.withOpacity(.3),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: _gold.withOpacity(.35))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: BorderSide(color: _gold.withOpacity(.35))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(999), borderSide: const BorderSide(color: _gold)),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        if (_micAvailable)
+          GestureDetector(
+            onTap: _toggleMic,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(shape: BoxShape.circle, color: _listening ? _rose : Colors.black.withOpacity(.3), border: Border.all(color: _listening ? _rose : _gold.withOpacity(.5))),
+              child: Icon(_listening ? Icons.stop_rounded : Icons.mic_rounded, color: _listening ? _plumDeep : _gold, size: 20),
+            ),
+          ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () => _ask(_q.text),
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(shape: BoxShape.circle, color: _gold),
+            child: const Icon(Icons.arrow_upward_rounded, color: _plumDeep, size: 22),
+          ),
+        ),
+      ]);
+
+  Widget _chipsWrap() => Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: _chips
+            .map((String c) => GestureDetector(
+                  onTap: () => _ask(c),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(.07), borderRadius: BorderRadius.circular(999), border: Border.all(color: Colors.white.withOpacity(.14))),
+                    child: Text(c, style: const TextStyle(color: _ivory, fontSize: 12)),
+                  ),
+                ))
+            .toList(),
+      );
+
+  Widget _console() {
+    return _card(
+      title: 'June',
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        _stateLabel(),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: _toggleVoice,
+          child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+            Icon(_voice.enabled ? Icons.volume_up_rounded : Icons.volume_off_rounded, size: 16, color: _voice.enabled ? _gold : _muted),
+            const SizedBox(width: 4),
+            Text('voice', style: TextStyle(color: _voice.enabled ? _gold : _muted, fontSize: 12)),
+          ]),
+        ),
+      ]),
+      child: Column(children: <Widget>[
+        _core(196),
+        const SizedBox(height: 10),
+        _chatBox(220),
+        if (_heard.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_heard, style: const TextStyle(color: _rose, fontSize: 12.5, fontStyle: FontStyle.italic))),
+        const SizedBox(height: 10),
+        _inputRow(),
+        const SizedBox(height: 10),
+        _chipsWrap(),
+      ]),
+    );
+  }
+
+  // ---- the deck (JC-LAZO-JUNE-DECK-1010-001): June across the top of a dashboard. The host
+  // draws the surface and the numbers; this is her core, her words, and the way to talk to her.
+  String _greeting() {
+    final int h = DateTime.now().hour;
+    final String tod = h < 4 ? 'Still up' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+    final String who = _couple ? _s(_map(_snap['couple'])['names']) : '';
+    return who.isEmpty ? '$tod.' : '$tod, $who.';
+  }
+
+  String _headline() {
+    if (_loading && _snap.isEmpty) return 'Reading your day…';
+    final String brief = _s(_map(_snap['brief'])['text']).trim();
+    if (brief.isNotEmpty) {
+      final List<String> sents = brief.split(RegExp(r'(?<=[.!?])\s+'));
+      return sents.take(2).join(' ');
+    }
+    final int w = _list(_snap['waiting']).length;
+    final Map<String, dynamic> m = _map(_snap['money']);
+    final double due = _n(m[_couple ? 'open' : 'outstanding']).toDouble();
+    final List<String> parts = <String>[
+      w == 0 ? 'Nobody is waiting on you.' : '$w ${_couple ? (w == 1 ? 'vendor is' : 'vendors are') : (w == 1 ? 'couple is' : 'couples are')} waiting on you.',
+      if (due > 0) '\$${due.round()} ${_couple ? 'due soon' : 'outstanding'}.',
+      'Ask me anything.',
+    ];
+    return parts.join(' ');
+  }
+
+  Widget _deck(BuildContext context) {
+    if (_err.isNotEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(children: <Widget>[
+          _core(96),
+          const SizedBox(width: 14),
+          Expanded(child: Text('June couldn\'t load your data. $_err', style: const TextStyle(color: _muted, fontSize: 13, height: 1.4))),
+          const SizedBox(width: 10),
+          _btn('Try again', () => _load(first: true), gold: true),
+        ]),
+      );
+    }
+    return LayoutBuilder(builder: (BuildContext c, BoxConstraints box) {
+      final bool wide = box.maxWidth >= 760;
+      final double coreSize = wide ? 236 : 168;
+      final bool hasBrief = _s(_map(_snap['brief'])['text']).isNotEmpty;
+      final Widget controls = Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        alignment: WrapAlignment.center,
+        children: <Widget>[
+          if (hasBrief) _btn(_briefPlaying ? 'Stop' : 'Listen to today\'s brief', _listenBrief, gold: true, icon: _briefPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded),
+          _btn(_voice.enabled ? 'Voice on' : 'Voice off', _toggleVoice, icon: _voice.enabled ? Icons.volume_up_rounded : Icons.volume_off_rounded),
+        ],
+      );
+      final Widget left = Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        _core(coreSize),
+        const SizedBox(height: 2),
+        _stateLabel(),
+        const SizedBox(height: 12),
+        controls,
+      ]);
+      final Widget right = Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: <Widget>[
+        Text(_greeting(), maxLines: 1, overflow: TextOverflow.ellipsis, style: _serif(wide ? 30 : 24, color: _ivory, w: FontWeight.w500)),
+        const SizedBox(height: 6),
+        Text(_headline(), maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: _goldSoft, fontSize: 14, height: 1.5)),
+        const SizedBox(height: 14),
+        if (_chat.isNotEmpty) _chatBox(wide ? 240 : 200),
+        if (_heard.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(_heard, style: const TextStyle(color: _rose, fontSize: 12.5, fontStyle: FontStyle.italic))),
+        const SizedBox(height: 10),
+        _inputRow(),
+        const SizedBox(height: 10),
+        _chipsWrap(),
+      ]);
+      if (!wide) return Column(children: <Widget>[left, const SizedBox(height: 16), right]);
+      return Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+        SizedBox(width: coreSize + 44, child: left),
+        const SizedBox(width: 20),
+        Expanded(child: right),
+      ]);
+    });
+  }
+
+  Widget _bubble(Map<String, dynamic> m) {
+    final String role = _s(m['role']);
+    if (role == 'confirm') {
+      final String st = _s(m['status']);
+      final Map<String, dynamic> item = _map(m['item']);
+      final Map<String, dynamic> p = _map(item['params']);
+      final String body = _s(item['kind']) == 'send_message' ? _s(p['text']) : _s(p['title']);
+      return Container(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: _gold.withOpacity(.1), borderRadius: BorderRadius.circular(14), border: Border.all(color: _gold.withOpacity(st == 'done' ? .9 : .45))),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Text(_s(m['text']), style: const TextStyle(color: _goldSoft, fontWeight: FontWeight.w700, fontSize: 13)),
+          if (body.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text(body, style: const TextStyle(color: _ivory, fontSize: 13, height: 1.4))),
+          const SizedBox(height: 8),
+          if (st.isEmpty && m['busy'] != true)
+            Row(children: <Widget>[_btn('Cancel', () => _decide(m, 'cancel')), const SizedBox(width: 8), _btn('Confirm', () => _decide(m, 'confirm'), gold: true)])
+          else if (m['busy'] == true)
+            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: _gold))
+          else
+            Text(st == 'done' ? 'Done. ' + _s(m['result']) : st == 'failed' ? 'Couldn\'t do it: ' + _s(m['result']) : 'Cancelled.', style: TextStyle(color: st == 'failed' ? _red : _muted, fontSize: 12.5)),
+        ]),
+      );
+    }
+    final bool me = role == 'me';
+    final bool sys = role == 'sys';
+    return Align(
+      alignment: me ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: const BoxConstraints(maxWidth: 420),
+        decoration: BoxDecoration(
+          color: me ? _gold : sys ? Colors.transparent : Colors.white.withOpacity(.08),
+          borderRadius: BorderRadius.circular(14),
+          border: sys ? null : Border.all(color: me ? _gold : Colors.white.withOpacity(.12)),
+        ),
+        child: Text(_s(m['text']), style: TextStyle(color: me ? _plumDeep : sys ? _muted : _ivory, fontSize: sys ? 12 : 13.5, height: 1.45, fontStyle: sys ? FontStyle.italic : FontStyle.normal)),
+      ),
+    );
+  }
+
+  // ---- panels
+  Widget _briefCard() {
+    final Map<String, dynamic> b = _map(_snap['brief']);
+    final String text = _s(b['text']);
+    return _card(
+      title: 'Today\'s brief',
+      trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        if (text.isNotEmpty) _btn(_briefPlaying ? 'Stop' : 'Listen', _listenBrief, gold: true, icon: _briefPlaying ? Icons.stop_rounded : Icons.play_arrow_rounded),
+        const SizedBox(width: 6),
+        _btn('', _briefBusy ? null : () => _makeBrief(true), icon: Icons.refresh_rounded),
+      ]),
+      child: _briefBusy || (text.isEmpty && _loading)
+          ? const Padding(padding: EdgeInsets.symmetric(vertical: 10), child: Text('June is reading your morning…', style: TextStyle(color: _muted, fontStyle: FontStyle.italic)))
+          : Text(text.isEmpty ? 'No brief yet. Tap refresh and June will write one.' : text, style: _serif(17, color: _ivory, w: FontWeight.w400).copyWith(height: 1.5)),
+    );
+  }
+
+  Widget _waitingCard() {
+    final List<Map<String, dynamic>> w = _list(_snap['waiting']);
+    final List<Map<String, dynamic>> tasks = _couple ? _list(_snap['tasks']) : <Map<String, dynamic>>[];
+    return _card(
+      title: 'Waiting on you',
+      trailing: (w.length + tasks.length) > 0 ? _tag('${w.length + tasks.length}') : null,
+      child: w.isEmpty && tasks.isEmpty
+          ? const Text('Nobody is waiting. Lovely.', style: TextStyle(color: _muted, fontSize: 13.5))
+          : Column(children: <Widget>[
+              for (final Map<String, dynamic> r in w)
+                _row(
+                  title: _s(_couple ? r['vendor'] : r['couple']),
+                  d: _s(r['lastMessagePreview']).isEmpty ? 'No message yet' : _s(r['lastMessagePreview']),
+                  tag: r['unread'] == true ? _tag('new', bg: _rose, fg: _plumDeep) : null,
+                  side: Column(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
+                    Text('waited ${_ago(r['waitedHours'])}', style: const TextStyle(color: _muted, fontSize: 11.5)),
+                    const SizedBox(height: 4),
+                    _btn('Reply with June', () => _ask('Draft a reply to ${_s(_couple ? r['vendor'] : r['couple'])}'), gold: true),
+                  ]),
+                ),
+              for (final Map<String, dynamic> t in tasks)
+                _row(
+                  title: _s(t['title']),
+                  d: 'From ${_s(t['vendor'])}${_s(t['dueAt']).isNotEmpty ? ' · by ' + _day(_s(t['dueAt'])) : ''}',
+                  side: _btn('Done', () => _addMsg('confirm', 'Mark "${_s(t['title'])}" as done', item: <String, dynamic>{'id': 't${DateTime.now().millisecondsSinceEpoch}', 'kind': 'complete_task', 'params': <String, dynamic>{'inquiryId': _s(t['inquiryId']), 'taskId': _s(t['taskId'])}, 'summary': 'Mark "${_s(t['title'])}" as done', 'status': 'awaiting confirmation'})),
+                ),
+            ]),
+    );
+  }
+
+  Widget _upcomingCard() {
+    List<Map<String, dynamic>> ups;
+    if (_couple) {
+      ups = _list(_snap['upcoming']);
+    } else {
+      ups = <Map<String, dynamic>>[
+        for (final Map<String, dynamic> w in _list(_snap['weddings'])) <String, dynamic>{'when': _s(w['weddingDate']), 'kind': 'Wedding', 'who': _s(w['couple']), 'mode': _s(w['venue'])},
+        for (final Map<String, dynamic> c in _list(_snap['consults'])) <String, dynamic>{'when': _s(c['startAt']), 'kind': _s(c['type']).isEmpty ? 'Consult' : _s(c['type']), 'who': _s(c['who']), 'mode': _s(c['mode']), 'time': true},
+      ]..sort((Map<String, dynamic> a, Map<String, dynamic> b) => _s(a['when']).compareTo(_s(b['when'])));
+    }
+    return _card(
+      title: 'Coming up',
+      trailing: _couple && _snap['daysToGo'] != null ? _tag(_n(_snap['daysToGo']) > 0 ? '${_n(_snap['daysToGo']).toInt()} days to go' : 'today') : null,
+      child: ups.isEmpty
+          ? Text(_couple ? 'Nothing scheduled yet. Consults with vendors and the key dates from the app land here.' : 'Nothing booked ahead yet.', style: const TextStyle(color: _muted, fontSize: 13.5))
+          : Column(children: ups.take(10).map((Map<String, dynamic> u) => _row(title: _s(u['who']), d: (u['time'] == true ? _when(_s(u['when'])) : _day(_s(u['when']))) + (_s(u['mode']).isNotEmpty ? ' · ' + _s(u['mode']) : ''), tag: _tag(_s(u['kind']), bg: _s(u['kind']) == 'Task' ? null : _sage, fg: _s(u['kind']) == 'Task' ? null : _plumDeep))).toList()),
+    );
+  }
+
+  Widget _weatherCard() {
+    final Map<String, dynamic> w = _map(_snap['weather']);
+    final Map<String, dynamic> cur = _map(w['current']);
+    final Map<String, dynamic> d = _map(w['daily']);
+    final String place = _s(_map(_snap[_couple ? 'couple' : 'vendor'])['metro']).split(',').first;
+    final Map<String, dynamic> wx = _map(_snap['weddingWx']);
+    final List<dynamic> days = d['time'] is List ? d['time'] as List<dynamic> : <dynamic>[];
+    return _card(
+      title: 'Weather',
+      trailing: _tag(place),
+      child: cur.isEmpty
+          ? const Text('Weather unavailable right now.', style: TextStyle(color: _muted))
+          : Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Row(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
+                Text('${_n(cur['temperature_2m']).round()}°', style: _serif(44, w: FontWeight.w600)),
+                const SizedBox(width: 12),
+                Expanded(child: Text('${_wmo(cur['weather_code'])}\nfeels ${_n(cur['apparent_temperature']).round()}° · wind ${_n(cur['wind_speed_10m']).round()} mph', style: const TextStyle(color: _muted, fontSize: 12.5, height: 1.4))),
+              ]),
+              if (wx.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text('Your day: ${_s(wx['text'])}, high ${_s(wx['hi'])}°, rain ${_s(wx['rain'])}%, sunset ${_s(wx['sunset'])}', style: const TextStyle(color: _goldSoft, fontSize: 13))),
+              const SizedBox(height: 10),
+              Row(children: <Widget>[
+                for (int i = 1; i < math.min(6, days.length); i++)
+                  Expanded(
+                    child: Column(children: <Widget>[
+                      Text(_day(_s(days[i])).split(',').first, style: const TextStyle(color: _ivory, fontSize: 11.5, fontWeight: FontWeight.w700)),
+                      Icon(_wmoIcon((d['weather_code'] as List<dynamic>)[i]), size: 18, color: _gold),
+                      Text('${_n((d['temperature_2m_max'] as List<dynamic>)[i]).round()}°/${_n((d['temperature_2m_min'] as List<dynamic>)[i]).round()}°', style: const TextStyle(color: _muted, fontSize: 11)),
+                    ]),
+                  ),
+              ]),
+              for (final Map<String, dynamic> a in _list(w['nws'])) Padding(padding: const EdgeInsets.only(top: 8), child: Text('⚠ ${_s(a['headline']).isEmpty ? _s(a['event']) : _s(a['headline'])}', style: const TextStyle(color: _rose, fontSize: 12))),
+            ]),
+    );
+  }
+
+  Widget _moneyCard() {
+    final Map<String, dynamic> m = _map(_snap['money']);
+    if (_couple) {
+      final num bt = _n(m['budgetTotal']);
+      final num committed = _n(m['committed']);
+      final double pct = bt > 0 ? math.min(1, committed / bt) : 0;
+      return _card(
+        title: 'Money',
+        trailing: bt > 0 ? _tag('${(pct * 100).round()}% of ${_money(bt)}') : null,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Row(children: <Widget>[_stat(bt > 0 ? _money(bt) : '–', 'budget'), _stat(_money(committed), 'committed'), _stat(_money(m['invoicesOpen']), 'invoices open', color: _n(m['overdue']) > 0 ? _red : null)]),
+          if (bt > 0) ...<Widget>[
+            const SizedBox(height: 10),
+            ClipRRect(borderRadius: BorderRadius.circular(999), child: LinearProgressIndicator(value: pct, minHeight: 8, backgroundColor: Colors.black.withOpacity(.25), color: committed > bt ? _rose : _gold)),
+            const SizedBox(height: 6),
+            Text(committed > bt ? '${_money(committed - bt)} over budget' : '${_money(bt - committed)} left to allocate · paid so far ${_money(m['paid'])}', style: const TextStyle(color: _muted, fontSize: 12.5)),
+          ] else
+            const Padding(padding: EdgeInsets.only(top: 8), child: Text('Set a budget in the app, or say "our budget is 25,000".', style: TextStyle(color: _muted, fontSize: 12.5))),
+          for (final Map<String, dynamic> i in _list(m['open'])) _row(title: '${_s(i['vendor'])} · ${_s(i['title'])}', d: _s(i['dueDate']).isEmpty ? 'No due date' : 'Due ' + _day(_s(i['dueDate'])), side: Text(_money(i['total']), style: const TextStyle(color: _goldSoft, fontWeight: FontWeight.w700))),
+        ]),
+      );
+    }
+    return _card(
+      title: 'Money',
+      child: m.isEmpty
+          ? const Text('No invoices yet.', style: TextStyle(color: _muted))
+          : Column(children: <Widget>[
+              Row(children: <Widget>[_stat(_money(m['outstanding']), 'outstanding'), _stat(_money(m['overdue']), 'overdue', color: _n(m['overdue']) > 0 ? _red : null), _stat(_money(m['collected30']), 'collected, 30 days')]),
+              for (final Map<String, dynamic> i in _list(m['open'])) _row(title: '${_s(i['couple'])} · ${_s(i['title'])}', d: _s(i['dueDate']).isEmpty ? 'No due date' : 'Due ' + _day(_s(i['dueDate'])), tag: i['overdue'] == true ? _tag('overdue', bg: _red, fg: Colors.white) : null, side: Text(_money(i['total']), style: const TextStyle(color: _goldSoft, fontWeight: FontWeight.w700))),
+            ]),
+    );
+  }
+
+  Widget _teamCard() {
+    final List<Map<String, dynamic>> team = _list(_snap['team']);
+    final Map<String, dynamic> counts = _map(_snap['counts']);
+    return _card(
+      title: 'Your team',
+      trailing: _tag('${_n(counts['booked']).toInt()} booked · ${_n(counts['gaps']).toInt()} to go'),
+      child: team.isEmpty
+          ? const Text('Open the Lazo app once and your plan appears here.', style: TextStyle(color: _muted))
+          : Column(
+              children: team
+                  .map((Map<String, dynamic> p) {
+                    final String st = _s(p['status']);
+                    return _row(
+                      title: _s(p['label']),
+                      d: _s(p['vendorName']).isNotEmpty ? _s(p['vendorName']) : st == 'booked' ? 'Booked' : st == 'skipped' ? 'Not needed' : 'Nobody yet',
+                      tag: _tag(st, bg: st == 'booked' ? _sage : null, fg: st == 'booked' ? _plumDeep : null),
+                      side: st != 'booked' && st != 'skipped' ? _btn('Find one', () => _ask('Find us a ${_s(p['label']).toLowerCase()}')) : null,
+                    );
+                  })
+                  .toList(),
+            ),
+    );
+  }
+
+  Widget _guestsCard() {
+    final Map<String, dynamic> g = _map(_snap['guests']);
+    final num total = _n(g['total']);
+    return _card(
+      title: 'Guests',
+      trailing: total > 0 ? _tag('${_n(g['yes']).toInt()} of ${total.toInt()} said yes') : null,
+      child: total == 0
+          ? const Text('No guests yet. Import your list in the app, or say "add Sam and Priya Patel, party of two".', style: TextStyle(color: _muted, fontSize: 13))
+          : Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Row(children: <Widget>[_stat('${total.toInt()}', 'invited'), _stat('${_n(g['yes']).toInt()}', 'yes', color: _sage), _stat('${_n(g['pending']).toInt()}', 'no answer')]),
+              const SizedBox(height: 10),
+              ClipRRect(borderRadius: BorderRadius.circular(999), child: LinearProgressIndicator(value: total > 0 ? _n(g['yes']) / total : 0, minHeight: 8, backgroundColor: Colors.black.withOpacity(.25), color: _gold)),
+              if (_list(_snap['guestsSample']).isNotEmpty || (_snap['guestsSample'] is List && (_snap['guestsSample'] as List).isNotEmpty))
+                Padding(padding: const EdgeInsets.only(top: 8), child: Text('Still quiet: ' + (_snap['guestsSample'] as List).map((dynamic x) => _s(x)).join(', '), style: const TextStyle(color: _muted, fontSize: 12.5))),
+            ]),
+    );
+  }
+
+  Widget _pageCard() {
+    final Map<String, dynamic> v = _map(_snap['vendor']);
+    final Map<String, dynamic> views = _map(v['views']);
+    final Map<String, dynamic> rank = _map(v['rank']);
+    return _card(
+      title: 'Your page',
+      trailing: _btn('View', () => launchUrl(Uri.parse(_s(v['publicUrl'])), mode: LaunchMode.externalApplication)),
+      child: Row(children: <Widget>[
+        _stat(views.isEmpty ? '–' : '${_n(views['d7']).toInt()}', 'views, 7 days'),
+        _stat(rank.isEmpty ? '–' : '#${_n(rank['pos']).toInt()}', rank.isEmpty ? 'rank' : 'of ${_n(rank['of']).toInt()} ${_s(rank['label'])}'),
+        _stat(_n(v['reviewCount']) > 0 ? _n(v['reviewAverage']).toStringAsFixed(1) : '–', _n(v['reviewCount']) > 0 ? '${_n(v['reviewCount']).toInt()} reviews' : 'no reviews yet'),
+      ]),
+    );
+  }
+
+  Widget _remindersCard() {
+    final List<Map<String, dynamic>> list = _list(_snap['reminders']);
+    final String now = DateTime.now().toUtc().toIso8601String();
+    return _card(
+      title: 'Reminders',
+      sub: 'Say "remind me Friday to call the florist", or add one here.',
+      child: Column(children: <Widget>[
+        Row(children: <Widget>[
+          Expanded(
+            child: TextField(
+              controller: _remText,
+              style: const TextStyle(color: _ivory, fontSize: 13.5),
+              decoration: InputDecoration(hintText: 'What should I remind you of?', hintStyle: const TextStyle(color: _muted, fontSize: 13), isDense: true, filled: true, fillColor: Colors.black.withOpacity(.3), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: _gold.withOpacity(.35)))),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _btn(_remWhen == null ? 'When' : _when(_remWhen!.toIso8601String()), () async {
+            final DateTime now = DateTime.now();
+            final DateTime? d = await showDatePicker(context: context, initialDate: now, firstDate: now, lastDate: now.add(const Duration(days: 730)));
+            if (d == null || !mounted) return;
+            final TimeOfDay? t = await showTimePicker(context: context, initialTime: const TimeOfDay(hour: 9, minute: 0));
+            if (t == null) return;
+            setState(() => _remWhen = DateTime(d.year, d.month, d.day, t.hour, t.minute));
+          }),
+          const SizedBox(width: 6),
+          _btn('Add', () {
+            if (_remText.text.trim().isEmpty || _remWhen == null) {
+              _addMsg('sys', 'Give the reminder a text and a time.');
+              return;
+            }
+            final DateTime w = _remWhen!;
+            final String local = '${w.year}-${w.month.toString().padLeft(2, '0')}-${w.day.toString().padLeft(2, '0')}T${w.hour.toString().padLeft(2, '0')}:${w.minute.toString().padLeft(2, '0')}';
+            _remPost(<String, dynamic>{'text': _remText.text.trim(), 'when': local});
+            _remText.clear();
+            setState(() => _remWhen = null);
+          }, gold: true),
+        ]),
+        if (list.isEmpty) const Padding(padding: EdgeInsets.only(top: 10), child: Text('No reminders set.', style: TextStyle(color: _muted, fontSize: 13))),
+        for (final Map<String, dynamic> r in list.take(12))
+          _row(
+            title: _s(r['text']),
+            d: _when(_s(r['at'])),
+            tag: _s(r['at']).compareTo(now) <= 0 ? _tag('due', bg: _rose, fg: _plumDeep) : null,
+            side: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[_btn('Done', () => _remPost(<String, dynamic>{'done': _s(r['id'])})), const SizedBox(width: 6), _btn('✕', () => _remPost(<String, dynamic>{'remove': _s(r['id'])}))]),
+          ),
+      ]),
+    );
+  }
+
+  Widget _memoryCard() {
+    final List<Map<String, dynamic>> mem = _list(_snap['memory']);
+    return _card(
+      title: 'June remembers',
+      sub: 'Say "remember that…" and it lands here.',
+      child: mem.isEmpty
+          ? const Text('Nothing remembered yet.', style: TextStyle(color: _muted, fontSize: 13))
+          : Column(children: mem.map((Map<String, dynamic> m) => _row(title: _s(m['text']), side: _btn('✕', () => _forget(_s(m['id']))))).toList()),
+    );
+  }
+
+  Widget _radioCard() => _card(
+        title: 'Radio',
+        trailing: _radioName.isNotEmpty ? _btn('Stop', _radioStop, icon: Icons.stop_rounded) : null,
+        child: Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: <Widget>[
+            for (int i = 0; i < _radio.length; i++)
+              GestureDetector(
+                onTap: () => _radioName == _radio[i][0] ? _radioStop() : _radioPlay(i),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+                  decoration: BoxDecoration(color: _radioName == _radio[i][0] ? _gold : Colors.white.withOpacity(.07), borderRadius: BorderRadius.circular(999), border: Border.all(color: _gold.withOpacity(.4))),
+                  child: Text(_radio[i][0], style: TextStyle(color: _radioName == _radio[i][0] ? _plumDeep : _ivory, fontSize: 12, fontWeight: FontWeight.w600)),
+                ),
+              ),
+          ],
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.layout == 'deck') return _deck(context);
+    final List<Widget> left = <Widget>[_console(), _briefCard(), _waitingCard(), _upcomingCard()];
+    final List<Widget> right = <Widget>[
+      _weatherCard(),
+      if (_couple) _teamCard(),
+      _moneyCard(),
+      if (_couple) _guestsCard() else _pageCard(),
+      _remindersCard(),
+      _memoryCard(),
+      _radioCard(),
+    ];
+    Widget body;
+    if (_err.isNotEmpty) {
+      body = Padding(padding: const EdgeInsets.all(24), child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[Text('June couldn\'t load your data.', style: _serif(22)), const SizedBox(height: 8), Text(_err, style: const TextStyle(color: _muted, fontSize: 13)), const SizedBox(height: 14), _btn('Try again', () => _load(first: true), gold: true)]));
+    } else {
+      body = LayoutBuilder(builder: (BuildContext c, BoxConstraints box) {
+        final bool wide = box.maxWidth >= 900;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+          child: wide
+              ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                  Expanded(flex: 8, child: Column(children: left)),
+                  const SizedBox(width: 14),
+                  Expanded(flex: 5, child: Column(children: right)),
+                ])
+              : Column(children: <Widget>[...left, ...right]),
+        );
+      });
+    }
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: <Color>[Color(0xFF241022), Color(0xFF2E1530), Color(0xFF3D1C3B)]),
+        borderRadius: BorderRadius.all(Radius.circular(22)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: _loading && _snap.isEmpty && _err.isEmpty
+          ? const Center(child: SizedBox(width: 26, height: 26, child: CircularProgressIndicator(strokeWidth: 2, color: _gold)))
+          : body,
+    );
+  }
+}
+// END OF FILE - JC-LAZO-JUNE-NATIVE-1010-002
