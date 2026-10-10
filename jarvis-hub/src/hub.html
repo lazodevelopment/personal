@@ -298,6 +298,10 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .fire{width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff3c4 0,#ffb340 35%,rgba(255,90,40,.55) 60%,rgba(255,90,40,0) 72%);pointer-events:auto;cursor:pointer}
 .plabel{transform:translate(-50%,-50%);font-family:var(--display);font-weight:600;letter-spacing:.06em;color:rgba(215,236,249,.78);text-shadow:0 0 3px #000,0 0 6px #000;white-space:nowrap;pointer-events:none;font-size:11px}
 .plabel.big{font-size:13px;color:#e8f6ff}.plabel.huge{font-size:15px;color:#fff;letter-spacing:.1em;text-transform:uppercase}
+.astat{display:block;margin-top:4px;font-family:var(--mono);font-size:11px;color:#ffb340}.astat:empty{display:none}
+.fleet{margin-top:8px;border:1px solid var(--line);padding:6px 8px}.fleet .fhead{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:#ffb340;margin-bottom:4px}.fleet .fhead .sub{color:var(--dim);margin-left:6px;letter-spacing:0}
+.frows{display:grid;gap:2px;max-height:230px;overflow:auto}.frows button{text-align:left;font-size:12px;display:grid;grid-template-columns:1fr auto;gap:6px;padding:2px 6px;border-left:2px solid #ffb340;color:var(--fg);background:none}.frows button:hover{color:#ffd58a}.frows button.off{border-color:var(--line2);color:var(--dim)}.frows button small{color:var(--dim);font-family:var(--mono);font-size:10px;white-space:nowrap}
+.ship.fleet{filter:drop-shadow(0 0 5px rgba(255,179,64,.95))}.ship.fleet svg path{fill:#ffb340}
 .phits{display:grid;gap:3px}.phits button{text-align:left;font-size:13px;border-left:2px solid var(--line2);padding:3px 8px;color:var(--fg)}.phits button:hover{border-color:var(--cyan);color:var(--cyan2)}
 .phits button small{color:var(--dim);font-family:var(--mono);font-size:10px;margin-left:6px}
 .homepin{transform:translate(-50%,-100%);font-family:var(--mono);font-size:11px;letter-spacing:.15em;color:#fff;text-shadow:0 0 6px rgba(25,211,255,1);pointer-events:none;white-space:nowrap}
@@ -634,6 +638,7 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div class="wside">
         <form id="placeForm" class="ask" style="margin:0"><input id="placeQ" placeholder="Go to a place or ship: Frisco, Scottsdale, Icon of the Seas…" autocomplete="off" aria-label="Find a place"><button class="btn">GO</button></form>
         <div id="placeHits" class="phits"></div>
+        <div class="fleet" id="fleetBox"><div class="fhead">NORWEGIAN FLEET<span class="sub" id="fleetSub">loading…</span></div><div id="fleetRows" class="frows"></div></div>
         <form id="trackForm" class="ask" style="margin:0"><input id="trackQ" placeholder="Track a flight: AA 2612, SWA653, N123AB" autocomplete="off" aria-label="Flight number"><button class="btn primary">TRACK</button></form>
         <div id="trackOut" class="empty" style="margin-top:6px"></div>
         <div id="flightCard" class="fcard" hidden></div>
@@ -703,8 +708,8 @@ body.wall{padding:0;overflow:hidden}body.wall .hud,body.wall main,body.wall .nav
       <div class="rnow"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><b id="radioName">Classic FM</b><small id="radioState">off</small><small class="song" id="radioSong" title="What the station says is playing"></small></div>
       <input type="range" id="radioVol" min="0" max="100" value="70" aria-label="Radio volume">
     </div>
-    <div class="ralarm"><label><input type="checkbox" id="alarmOn"> Wake-up alarm at <input type="time" id="alarmTime" value="05:00" style="width:auto;padding:2px 6px;font:13px var(--mono)"> <select id="alarmDays" style="background:#070d18;border:1px solid var(--line);color:var(--fg);font:12px var(--mono);padding:3px"><option value="all">every day</option><option value="weekdays">weekdays</option><option value="weekends">weekends</option></select> <button class="btn sm" id="alarmSave">SAVE</button></label><small id="alarmNote"></small>
-      <div class="phonealarm"><button class="btn sm" id="pushEnable">RING THIS PHONE</button><button class="btn sm" id="pushTest">TEST ALARM</button><button class="btn sm" id="pushLogBtn">LOG</button><small id="pushNote">checking…</small></div></div>
+    <div class="ralarm"><label><input type="checkbox" id="alarmOn"> Wake-up alarm at <input type="time" id="alarmTime" value="05:00" style="width:auto;padding:2px 6px;font:13px var(--mono)"> <select id="alarmDays" style="background:#070d18;border:1px solid var(--line);color:var(--fg);font:12px var(--mono);padding:3px"><option value="all">every day</option><option value="weekdays">weekdays</option><option value="weekends">weekends</option></select> <button class="btn sm" id="alarmSave">SAVE</button></label><small id="alarmNote"></small><small id="alarmStatus" class="astat"></small>
+      <div class="phonealarm"><button class="btn sm" id="pushEnable">RING THIS PHONE</button><button class="btn sm" id="pushTest">TEST ALARM</button><button class="btn sm" id="pushLogBtn">LOG</button><button class="btn sm" id="callTest" hidden>TEST CALL</button><button class="btn sm" id="clockBackup" hidden>PHONE CLOCK BACKUP</button><small id="pushNote">checking…</small></div></div>
     <div class="rst" id="radioStations"></div>
   </section>
 
@@ -2032,11 +2037,29 @@ $("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = h
 let globalAc = [], globalAt = 0, routeCache = {};
 let ships = [], shipsAt = 0, shipEls = new Map(), shipSel = null;
 const SHIP_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2 L17 10 L17 19 L12 22 L7 19 L7 10 Z" fill="#39f0a8" stroke="#04070d" stroke-width="1"/><circle cx="12" cy="12" r="2" fill="#04070d"/></svg>`;
+/* Norwegian Cruise Line fleet: every ship live or last known (/api/world/fleet), listed beside the globe and lit amber on it */
+let fleet = null, fleetSet = new Set();
+const fleetTitle = (s) => String(s).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+async function loadFleet() { try { fleet = await fetch("/api/world/fleet").then(r => r.json()); fleetSet = new Set((fleet.ships || []).map(s => s.name)); } catch { return; } renderFleet(); }
+function renderFleet() {
+  if (!fleet?.ships) return; const live = fleet.ships.filter(s => s.live).length; $("#fleetSub").textContent = `${live} of ${fleet.ships.length} live`;
+  const age = (m) => m == null ? "never heard" : m < 3 ? "now" : m < 90 ? m + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " d";
+  const order = fleet.ships.map((s, i) => i).sort((a, b) => (fleet.ships[a].ageMin ?? 1e9) - (fleet.ships[b].ageMin ?? 1e9));
+  $("#fleetRows").innerHTML = order.map(i => { const s = fleet.ships[i]; return `<button class="${s.live ? "" : "off"}" data-i="${i}"><span>${esc(fleetTitle(s.name))}${s.destination ? ` <small>→ ${esc(s.destination)}</small>` : ""}</span><small>${s.live && s.speed_kt != null ? Math.round(s.speed_kt * 1.15) + " mph · " : ""}${age(s.ageMin)}</small></button>`; }).join("");
+  $("#fleetRows").querySelectorAll("button").forEach(b => b.onclick = () => openFleetShip(fleet.ships[+b.dataset.i]));
+}
+function openFleetShip(s) {
+  if (s.lat == null) { $("#placeHits").innerHTML = `<div class="empty">${esc(fleetTitle(s.name))} has not been heard by any receiver since tracking began.</div>`; return; }
+  initGlobe(); const live = ships.find(r => r[0] === s.mmsi); if (live) return openShip(live);
+  openShip([s.mmsi, s.name, s.lat, s.lon, s.heading, s.speed_kt, 60, s.destination, s.length_m, (s.ageMin || 0) * 60]);
+  $("#flightCard").insertAdjacentHTML("beforeend", `<div class="empty">Not in the live feed: last heard ${esc(new Date(s.seen).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}. Mid-ocean legs have no shore receivers.</div>`);
+}
+setTimeout(loadFleet, 2500);
 async function loadShips() { try { const d = await fetch("/api/world/ships").then(r => r.json()); ships = d.ships || []; shipsAt = d.at ? new Date(d.at).getTime() : 0; } catch {} renderWorld(); }
 function shipMarker(r) {
   const key = r[0]; let el = shipEls.get(key);
   if (!el) { el = document.createElement("div"); el.className = "ship"; el.innerHTML = SHIP_SVG + `<span class="cs"></span>`; el.onclick = (e) => { e.stopPropagation(); openShip(r); }; shipEls.set(key, el); }
-  el.querySelector("svg").style.transform = `rotate(${r[4] || 0}deg)`; el.querySelector(".cs").textContent = r[1] || ""; el.classList.toggle("sel", shipSel === key); el.classList.toggle("big", (r[8] || 0) >= 200); el.title = `${r[1] || r[0]} · ${r[5] ?? "?"} kt · to ${r[7] || "?"}`;
+  el.querySelector("svg").style.transform = `rotate(${r[4] || 0}deg)`; el.querySelector(".cs").textContent = r[1] || ""; el.classList.toggle("sel", shipSel === key); el.classList.toggle("fleet", fleetSet.has(String(r[1] || "").toUpperCase().trim())); el.classList.toggle("big", (r[8] || 0) >= 200); el.title = `${r[1] || r[0]} · ${r[5] ?? "?"} kt · to ${r[7] || "?"}`;
   return el;
 }
 function openShip(r) {
@@ -2070,7 +2093,7 @@ function initGlobe() {
   if (PHONE && matchMedia("(pointer: coarse)").matches) { const g = $("#globeGate"); g.hidden = false; globe.controls().enabled = false; g.onclick = () => { g.hidden = true; globe.controls().enabled = true; }; }
   let viewT = null; const onView = () => { clearTimeout(viewT); viewT = setTimeout(() => { loadCamsInView(); loadPlacesInView(); loadWebcamsInView(); renderWorld(false); }, 350); };
   globe.controls().addEventListener("change", onView); if (globe.onZoom) globe.onZoom(onView);
-  loadGlobal(); worldTimers.push(setInterval(loadGlobal, 2 * 60000)); loadShips(); worldTimers.push(setInterval(loadShips, 90000));
+  loadGlobal(); worldTimers.push(setInterval(loadGlobal, 2 * 60000)); loadShips(); worldTimers.push(setInterval(loadShips, 90000)); loadFleet(); worldTimers.push(setInterval(loadFleet, 90000));
   new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
   if (PHONE) el.style.touchAction = "pan-y";
   loadWorld(); loadSats(); loadCams(); loadPlacesInView(); loadWebcamsInView();
@@ -2205,8 +2228,8 @@ function renderWorld(satsOnly) {
   if (worldLayers.flights && pov.altitude < 0.5) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0;
     for (const a of gProj) { if (localHex.has(a.hex) || Math.abs(a.lat - pov.lat) > r || Math.abs(a.lon - pov.lng) * kx > r * 1.6) continue; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) }); if (++n > 350) break; } }
   if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === tHex)) { const a = worldData.tracked.ac; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, true) }); }
-  if (worldLayers.ships && pov.altitude < 0.7) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0;
-    for (const sh of ships) { if (sh[0] !== shipSel && (Math.abs(sh[2] - pov.lat) > r || Math.abs(sh[3] - pov.lng) * kx > r * 1.6)) continue; html.push({ lat: sh[2], lng: sh[3], alt: 0.0008, el: shipMarker(sh) }); if (++n > 400) break; } }
+  if (worldLayers.ships) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0; const near = pov.altitude < 0.7;
+    for (const sh of ships) { const fl = fleetSet.has(String(sh[1] || "").toUpperCase().trim()); if (!fl && (!near || (sh[0] !== shipSel && (Math.abs(sh[2] - pov.lat) > r || Math.abs(sh[3] - pov.lng) * kx > r * 1.6)))) continue; html.push({ lat: sh[2], lng: sh[3], alt: 0.0008, el: shipMarker(sh) }); if (++n > 400) break; } }
   if (worldLayers.fires) for (const f of worldData.fires) html.push({ lat: f.lat, lng: f.lon, alt: 0, el: fireMarker(f) });
   for (const c of visibleCams()) html.push({ lat: c.lat, lng: c.lon, alt: 0, el: camMarker(c) });
   places.forEach((p, i) => html.push({ lat: p[1], lng: p[2], alt: 0.0005, el: placeMarker(p, i) }));
@@ -2444,7 +2467,27 @@ function calcVoice(raw) {
 }
 /* alarm settings live on the server; the minute cron fires the phone push and flags the PC */
 let alarmCfg = null;
-async function loadAlarm() { try { alarmCfg = await fetch("/api/alarm").then(r => r.json()); } catch { return; } try { alarmRingCheck(); } catch {} $("#alarmOn").checked = !!alarmCfg.enabled; $("#alarmTime").value = alarmCfg.time || "05:00"; $("#alarmDays").value = !alarmCfg.days?.length ? "all" : alarmCfg.days.includes(1) ? "weekdays" : "weekends"; alarmNote(); }
+async function loadAlarm() { try { alarmCfg = await fetch("/api/alarm").then(r => r.json()); } catch { return; } try { alarmRingCheck(); } catch {} $("#alarmOn").checked = !!alarmCfg.enabled; $("#alarmTime").value = alarmCfg.time || "05:00"; $("#alarmDays").value = !alarmCfg.days?.length ? "all" : alarmCfg.days.includes(1) ? "weekdays" : "weekends"; alarmNote(); alarmStatusLine(); }
+// what happened to today's alarm, from the server record and Pushover's receipt (fired / reached the phone / acknowledged / fallback)
+function alarmStatusLine() {
+  const al = alarmCfg, el = $("#alarmStatus"); if (!al?.enabled || !al.firedAt) { el.textContent = ""; return; }
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: state.cfg?.home?.tz || state.cfg?.tz }); if (al.lastFired !== today) { el.textContent = ""; return; }
+  const t = (s) => s ? new Date(s).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "?"; const d = al.delivery; const parts = [`fired ${t(al.firedAt)}`];
+  if (d) parts.push(d.delivered ? `reached the phone ${t(d.deliveredAt)}` : "Pushover has NOT reached the phone");
+  if (al.acked === today) parts.push(`acknowledged ${t(al.ackedAt)}${al.ackedBy === "pushover" ? " in Pushover" : " on the page"}`); else if (d?.expired) parts.push("never acknowledged (expired after 30 min)");
+  if (al.fallbackAt) parts.push(`fallback rang ${t(al.fallbackAt)}`);
+  if (al.called) parts.push(`phone call ${t(al.called)}${al.callRes?.call === 201 ? "" : " (" + (al.callRes?.call ?? "?") + ")"}`);
+  el.textContent = "Today: " + parts.join(" · ");
+}
+// the phone call needs Twilio secrets on the worker (config.call); the Clock backup sets Android's own alarm for the same time
+// through the SET_ALARM intent, which rings with the phone offline and asleep
+function alarmExtras() {
+  $("#callTest").hidden = !state.cfg?.call;
+  $("#clockBackup").hidden = !/Android/i.test(navigator.userAgent);
+}
+$("#callTest").onclick = async () => { $("#pushNote").textContent = "Calling…"; try { const r = await fetch("/api/alarm/call", { method: "POST" }).then(r => r.json()); $("#pushNote").textContent = r.call === 201 ? "Twilio accepted the call: the phone should ring in a few seconds." : "Call failed: " + (r.detail || r.call); } catch (e) { $("#pushNote").textContent = "Call failed: " + e.message; } };
+$("#clockBackup").onclick = () => { const [h, m] = ($("#alarmTime").value || alarmCfg?.time || "05:00").split(":").map(Number); location.href = `intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${h};i.android.intent.extra.alarm.MINUTES=${m};S.android.intent.extra.alarm.MESSAGE=JARVIS%20backup;B.android.intent.extra.alarm.SKIP_UI=false;end`; };
+setTimeout(alarmExtras, 3500);
 function alarmNote() { $("#alarmNote").textContent = $("#alarmOn").checked ? "Fires on the server: your phone gets an alarm that repeats until you acknowledge it, and the PC opens JARVIS and plays the brief, then this station, if the JARVIS wake task is installed." : ""; }
 $("#alarmSave").onclick = async () => { const days = $("#alarmDays").value; const body = { enabled: $("#alarmOn").checked, time: $("#alarmTime").value, days: days === "weekdays" ? [1, 2, 3, 4, 5] : days === "weekends" ? [0, 6] : [], station: radioIdx }; alarmCfg = await fetch("/api/alarm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()).catch(() => alarmCfg); alarmNote(); $("#alarmNote").textContent = (alarmCfg?.enabled ? `Saved: ${alarmCfg.time}, ${days}. ` : "Alarm off. ") + $("#alarmNote").textContent; };
 $("#alarmOn").onchange = alarmNote;

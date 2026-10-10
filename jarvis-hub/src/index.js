@@ -31,6 +31,29 @@ const localTime = (env, d = new Date(), opts = { dateStyle: "full", timeStyle: "
 const localHour = (env) => +new Date().toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", hour: "numeric", hourCycle: "h23" });
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+/* ---------------- cruise fleets tracked by name (AIS ship names are upper case, 20 chars max) ---------------- */
+const FLEETS = { ncl: { name: "Norwegian Cruise Line", ships: ["NORWEGIAN AQUA", "NORWEGIAN VIVA", "NORWEGIAN PRIMA", "NORWEGIAN LUNA", "NORWEGIAN ENCORE", "NORWEGIAN BLISS", "NORWEGIAN JOY", "NORWEGIAN ESCAPE", "NORWEGIAN GETAWAY", "NORWEGIAN BREAKAWAY", "NORWEGIAN EPIC", "NORWEGIAN GEM", "NORWEGIAN JADE", "NORWEGIAN PEARL", "NORWEGIAN JEWEL", "NORWEGIAN DAWN", "NORWEGIAN STAR", "NORWEGIAN SUN", "NORWEGIAN SKY", "NORWEGIAN SPIRIT", "PRIDE OF AMERICA"] } };
+const shipKey = (n) => String(n || "").toUpperCase().replace(/[^A-Z0-9 ]/g, "").replace(/\s+/g, " ").trim();
+function fleetOf(name) { const k = shipKey(name); for (const [id, f] of Object.entries(FLEETS)) if (f.ships.includes(k)) return id; return null; }
+// every feed snapshot refreshes KV fleet_last, so a fleet ship keeps her last known position after the feeder drops her (3 h without a shore receiver: mid-ocean legs)
+async function fleetRemember(env, snap) {
+  const last = (await kv.get(env, "fleet_last")) || {}; let changed = false; const at = snap.at ? new Date(snap.at).getTime() : Date.now();
+  for (const r of snap.ships || []) { const id = fleetOf(r[1]); if (!id) continue; const k = shipKey(r[1]); const seen = new Date(at - (r[9] || 0) * 1000).toISOString(); if (last[k]?.seen === seen) continue; last[k] = { fleet: id, row: r.slice(0, 9), seen }; changed = true; }
+  if (changed) await kv.put(env, "fleet_last", last);
+  return last;
+}
+async function fleetStatus(env, id = "ncl") {
+  const f = FLEETS[id]; if (!f) return null;
+  const [g, last] = await Promise.all([env.HUB.get("ships_global", "json"), kv.get(env, "fleet_last")]);
+  const live = new Map(); for (const r of g?.ships || []) { const k = shipKey(r[1]); if (f.ships.includes(k)) live.set(k, r); }
+  const now = Date.now(); const feedAt = g?.at ? new Date(g.at).getTime() : now;
+  const ships = f.ships.map((k) => {
+    const r = live.get(k) || last?.[k]?.row; const seen = live.has(k) ? new Date(feedAt - (live.get(k)[9] || 0) * 1000).toISOString() : last?.[k]?.seen || null;
+    return { name: k, live: live.has(k), mmsi: r?.[0] ?? null, lat: r?.[2] ?? null, lon: r?.[3] ?? null, heading: r?.[4] ?? null, speed_kt: r?.[5] ?? null, destination: r?.[7] || "", length_m: r?.[8] || null, seen, ageMin: seen ? Math.round((now - new Date(seen)) / 60e3) : null };
+  });
+  return { id, name: f.name, at: g?.at || null, ships };
+}
+
 async function hmac(secret, msg) {
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg));
@@ -819,6 +842,7 @@ async function buildContext(env, request) {
   try { const todayKey = new Date().toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); const rd = await kv.get(env, "readings_" + todayKey); const st = await kv.get(env, "saint_" + todayKey); const my = mysteriesFor(env);
     lines.push(`FAITH: today's rosary is the ${my.name} (${my.why}; ${my.season}). ` + (st ? `Saint of the day: ${st.name}${st.plain?.title ? ", " + st.plain.title : ""}. ${st.plain?.why || st.blurb || ""} ${st.plain?.today || ""} ` : "") + (rd ?`Mass readings: ${rd.title}: ${rd.parts.map((x) => x.kind + " " + x.ref).join("; ")}. Theme: ${rd.reflection?.theme || ""}. Plain-words conclusion: ${(rd.reflection?.conclusion || "").slice(0, 500)}` : "Mass readings not loaded yet (the Faith panel loads them).")); } catch {}
   try { const sg = await env.HUB.get("ships_global"); if (sg) { const g = JSON.parse(sg); lines.push(`SHIPS: ${g.ships.length} passenger vessels (cruise ships and ferries) tracked worldwide as of ${g.at}; ${g.ships.filter((r) => r[8] >= 200).length} are 200 m or longer (cruise-size).`); } } catch {}
+  try { const fs = await fleetStatus(env, "ncl"); if (fs) { const heard = fs.ships.filter((s) => s.seen), never = fs.ships.filter((s) => !s.seen); lines.push(`NORWEGIAN FLEET (${fs.ships.filter((s) => s.live).length} of ${fs.ships.length} in the live feed; the rest are last-known): ` + heard.map((s) => `${s.name}${s.live ? "" : " (" + s.ageMin + " min ago)"} ${s.lat?.toFixed(1)},${s.lon?.toFixed(1)}${s.speed_kt != null ? " " + Math.round(s.speed_kt) + " kt" : ""}${s.destination ? " -> " + s.destination : ""}`).join("; ") + (never.length ? "; never heard: " + never.map((s) => s.name).join(", ") : "")); } } catch {}
   if (apps) lines.push(`APP STORES: ` + Object.values(apps).map((a) => `${a.name} ${a.listed ? "live" + (a.version ? " v" + a.version : "") + (a.released ? " released " + String(a.released).slice(0, 10) : "") : "not listed yet"}`).join("; "));
   const readyF = (fups || []).filter((f) => f.status === "ready");
   if (readyF.length) lines.push(`FOLLOW-UPS DRAFTED, waiting for Jesse to send (Decisions panel): ` + readyF.map((f) => `${BIZ_LABEL[f.business]} ${f.from}: ${f.subject}`).join("; "));
@@ -847,7 +871,7 @@ Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding plan
 Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything about his businesses is in the LIVE CONTEXT; answer from it directly and do not invent figures. For anything outside it (news, facts, prices, places, people, how-to questions, "look up", "search") use the web_search tool, then answer in two to four spoken sentences and name the source in words (no URLs). If something isn't in the context and can't be searched, say so.
-Ships: find_ship for "where is the <ship name>" (cruise ships and ferries, from AIS); watch_ship for "tell me when the <ship> shows up". Coverage is from shore receivers, so mid-ocean and some islands (Bermuda) are blind spots; say so when a ship is not found.
+Ships: find_ship for "where is the <ship name>" (cruise ships and ferries, from AIS); watch_ship for "tell me when the <ship> shows up"; fleet_status for "where are the Norwegian ships" (the whole Norwegian Cruise Line fleet, live or last known; the World panel lists it too). Coverage is from shore receivers, so mid-ocean and some islands (Bermuda) are blind spots; say so when a ship is not found.
 Flights: use track_flight for any question about where a flight is (convert "American 2612" to "AA 2612"), and flights_overhead for "what's flying over me". Say where it is flying from and to (route.from / route.to cities) when known. Report altitude in feet, speed in mph (knots x 1.15) and roughly where it is relative to cities; if not found yet, say you've started tracking it and it will appear on the World globe within a minute if it's airborne.
 Actions: open_link opens pages; append_note for the notes board; remember/forget for durable facts about Jesse, his clients or preferences (use remember whenever he says "remember", "note that", "from now on"); draft_reply writes an email reply (shown with an Open-in-Gmail button, nothing is sent); request_action for anything that changes business data (approve a Roven job or employer, approve or reject a Lazo vendor claim, add a booking note, mark a Lazo inquiry responded) AND for email: email_reply (params.account = the exact Gmail address shown in the INBOX line brackets for that thread, e.g. info@ataviaweddings.com, never a business name; params.threadId; params.body: the full reply text you wrote, signed appropriately for that business), email_archive, email_read, email_send (params.account, params.to, params.subject, params.body). When he asks you to reply to an email, write the reply yourself in his voice (warm, brief, professional) and submit it as email_reply; he confirms before anything is sent. request_action only queues it for his confirmation; say it is ready for his confirmation. Never claim an action is done until RECENT ACTIONS shows it done. Use the ids shown in brackets in the context.
 Marketplace inquiries: Zola and The Knot inquiry notices for Atavia and Elizabeth Scott are answered automatically by the Gmail intake script in that account within five minutes. Never draft, offer or queue a reply to one of those notices. Your job there is verification: the INTAKE line says whether each notice got its automatic reply. If one says MISSING or REVIEW, tell him plainly that the script did not reply and that he should check that account's Apps Script executions; if it says replied, say the script handled it. A couple's later "New message from" email on Zola is a real conversation and is handled like any other reply.
@@ -859,6 +883,7 @@ App stores: watch_app adds an app listing to watch (iOS numeric id or bundle id,
 
 const BRAIN_TOOLS = [
   { name: "track_flight", description: "Live position of a flight by flight number or callsign (e.g. 'AA 2612', 'SWA653', 'N123AB'). Returns altitude (ft), ground speed (kt), heading and coordinates. Also shows it on the World globe.", input_schema: { type: "object", properties: { flight: { type: "string" } }, required: ["flight"], additionalProperties: false }, strict: true },
+  { name: "fleet_status", description: "Every Norwegian Cruise Line ship: live AIS position, speed, destination, or the last known position with how long ago. For 'where are the Norwegian ships', 'fleet status', 'is the Bliss at sea'.", input_schema: { type: "object", properties: {}, additionalProperties: false }, strict: true },
   { name: "find_ship", description: "Find a cruise ship or ferry by name in the live AIS feed: position, speed, heading, destination. Also centres the World globe on it.", input_schema: { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false }, strict: true },
   { name: "watch_ship", description: "Tell Jesse when a named vessel appears in the AIS feed (push + spoken). Use for 'tell me when the <ship> shows up'. Also lists or clears watches.", input_schema: { type: "object", properties: { name: { type: "string" }, action: { type: "string", enum: ["add", "remove", "list"] } }, required: ["name", "action"], additionalProperties: false }, strict: true },
   { name: "flights_overhead", description: "Aircraft currently within N nautical miles of Jesse's home location (default 25).", input_schema: { type: "object", properties: { nm: { type: "number" } }, required: ["nm"], additionalProperties: false }, strict: true },
@@ -880,7 +905,8 @@ const BRAIN_TOOLS = [
 async function runTool(name, input, env, actions) {
   switch (name) {
     case "track_flight": { const r = await trackFlight(env, input.flight); r.route = await flightRoute(env, r.callsign); actions.push({ type: "world", flight: r.callsign }); return JSON.stringify(r).slice(0, 3000); }
-    case "find_ship": { const g = JSON.parse((await env.HUB.get("ships_global")) || '{"ships":[]}'); const q = String(input.name || "").toUpperCase().replace(/\s+/g, " ").trim(); const hits = g.ships.filter((r) => String(r[1]).toUpperCase().includes(q)).slice(0, 5); if (!hits.length) return "No vessel called " + input.name + " in the feed right now (it covers passenger ships: cruise ships and ferries; coverage depends on AIS receivers near the ship)."; actions.push({ type: "ship", mmsi: hits[0][0], lat: hits[0][2], lon: hits[0][3] }); return JSON.stringify(hits.map((r) => ({ name: r[1], mmsi: r[0], lat: r[2], lon: r[3], heading: r[4], speed_kt: r[5], destination: r[7], length_m: r[8], reported_s_ago: r[9] }))); }
+    case "fleet_status": return JSON.stringify(await fleetStatus(env, "ncl"));
+    case "find_ship": { const g = JSON.parse((await env.HUB.get("ships_global")) || '{"ships":[]}'); const q = String(input.name || "").toUpperCase().replace(/\s+/g, " ").trim(); const hits = g.ships.filter((r) => String(r[1]).toUpperCase().includes(q)).slice(0, 5); if (!hits.length) { const last = (await kv.get(env, "fleet_last")) || {}; const k = Object.keys(last).find((n) => n.includes(q)); if (k) { const l = last[k]; actions.push({ type: "ship", mmsi: l.row[0], lat: l.row[2], lon: l.row[3] }); return `${k} is not in the live feed (no shore receiver in range: likely at sea). Last heard ${l.seen}: ${l.row[2]}, ${l.row[3]}${l.row[7] ? ", bound for " + l.row[7] : ""}.`; } } if (!hits.length) return "No vessel called " + input.name + " in the feed right now (it covers passenger ships: cruise ships and ferries; coverage depends on AIS receivers near the ship)."; actions.push({ type: "ship", mmsi: hits[0][0], lat: hits[0][2], lon: hits[0][3] }); return JSON.stringify(hits.map((r) => ({ name: r[1], mmsi: r[0], lat: r[2], lon: r[3], heading: r[4], speed_kt: r[5], destination: r[7], length_m: r[8], reported_s_ago: r[9] }))); }
     case "watch_ship": { let list = (await kv.get(env, "ship_watch")) || []; const q = String(input.name || "").trim(); if (input.action === "list") return list.length ? list.map((w) => `${w.name}${w.lastSeen ? " (last seen " + w.lastSeen.slice(0, 16) + ")" : " (not seen yet)"}`).join("; ") : "No ships on watch."; if (input.action === "remove") { list = list.filter((w) => w.name.toUpperCase() !== q.toUpperCase()); await kv.put(env, "ship_watch", list); return "Removed."; } if (!list.some((w) => w.name.toUpperCase() === q.toUpperCase())) list.push({ name: q, added: new Date().toISOString() }); await kv.put(env, "ship_watch", list); await shipWatch(env); return `Watching for ${q}. I'll push and say so when any receiver hears her.`; }
     case "flights_overhead": { const place = await kv.get(env, "place"); const ac = await flightsNear(env, +(place?.lat || 33.15), +(place?.lon || -96.82), input.nm || 25); actions.push({ type: "world" }); return JSON.stringify({ near: place?.name, count: ac.length, aircraft: ac.slice(0, 25) }); }
     case "open_link": actions.push({ type: "open", url: input.url, label: input.label }); return "Opened " + input.label + ".";
@@ -1543,7 +1569,9 @@ async function tickMinute(env, fromMinuteCron = false) {
     const m = await kv.get(env, "morning"); const fresh = m?.slot === "morning" && now - new Date(m.at) < 3 * 3600e3;
     const headline = fresh ? m.text.split(/(?<=[.!?])\s/).slice(0, 2).join(" ") : "Your morning brief is on its way. Tap to open JARVIS.";
     out.push({ alert: { kind: "watch", text: "Wake-up alarm fired (" + al.time + (late > 1 ? ", " + late + " min late: the minute cron skipped" : "") + ")" }, push: { title: "Good morning, sir", body: headline.slice(0, 500), opts: { priority: "alarm", tags: "sunrise", url: HUB_ORIGIN + "/#wake" } } });
-    al.lastFired = lp.date; al.firedAt = new Date().toISOString(); al.pcDue = lp.date; await kv.put(env, "alarm", al);
+    al.lastFired = lp.date; al.firedAt = new Date().toISOString(); al.pcDue = lp.date; for (const k of ["receipt", "firedReceipt", "delivery", "fallbackAt", "resent", "ackedBy", "called", "callRes"]) delete al[k];
+    if (env.ALARM_CALL === "always" && callConfigured(env)) { al.called = new Date().toISOString(); al.callRes = await alarmCall(env, `Good morning, sir. This is JARVIS. It is ${al.time}. Time to get up.`); }
+    await kv.put(env, "alarm", al);
     if (late > 1) await healthNote(env, "alarm", { late, time: al.time }).catch(() => null);
   } else if (!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER) && al.enabled && al.lastFired === lp.date && al.firedAt && al.acked !== lp.date && now - new Date(al.firedAt) < 45 * 60e3 && (!al.snooze || now >= new Date(al.snooze))) {
     // fired, not yet acknowledged from a phone: ring the browser again (Chrome's notification sound plays once per push)
@@ -1556,7 +1584,51 @@ async function tickMinute(env, fromMinuteCron = false) {
     await healthNote(env, "alarm", { missed: true, time: al.time }).catch(() => null);
   }
   await flushAlerts(env, out);
+  await alarmWatch(env, lp).catch((e) => console.log("alarmWatch", e.message));
   return out.length;
+}
+// After the alarm fires: ask Pushover for the receipt (did the phone get it, was it acknowledged in the app), take an
+// in-app acknowledgement as "I'm up", and escalate when the phone stays silent: ring the browser every minute and send one
+// more Pushover alarm with a BUILT-IN sound (the custom Vivaldi clip can fail on the device while the API says 200).
+// 2026-10-10: a week of Pushover 200s and a phone that never rang; the receipt is the only evidence of what the phone did.
+// A real phone call wakes a phone whose push connection is asleep (2026-10-10: Pushover accepted the 05:00 alarm but could
+// not deliver it until 05:08, when the phone woke on its own). Secrets: TWILIO_SID, TWILIO_TOKEN, TWILIO_FROM (+1...), ALARM_PHONE (+1...).
+// Var ALARM_CALL="always" calls at fire time as well; otherwise the call is the fallback when Pushover has not reached the phone in 2 min.
+const xmlEsc = (s) => String(s).replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" }[c]));
+const callConfigured = (env) => !!(env.TWILIO_SID && env.TWILIO_TOKEN && env.TWILIO_FROM && env.ALARM_PHONE);
+async function alarmCall(env, text) {
+  if (!callConfigured(env)) return { call: "unconfigured" };
+  const say = `<Say voice="Polly.Brian">${xmlEsc(text)}</Say>`; const twiml = `<Response>${say}<Pause length="1"/>${say}<Pause length="1"/>${say}</Response>`;
+  try {
+    const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_SID}/Calls.json`, { method: "POST", headers: { authorization: "Basic " + btoa(env.TWILIO_SID + ":" + env.TWILIO_TOKEN) }, body: new URLSearchParams({ To: env.ALARM_PHONE, From: env.TWILIO_FROM, Twiml: twiml, Timeout: "45" }) });
+    const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {}
+    const out = { call: r.status, sid: j?.sid, detail: r.ok ? undefined : t.slice(0, 200) };
+    try { const log = (await kv.get(env, "push_log")) || []; log.unshift({ at: new Date().toISOString(), title: "Phone call: " + text.slice(0, 40), priority: "alarm", res: [out] }); await kv.put(env, "push_log", log.slice(0, 40)); } catch {}
+    return out;
+  } catch (e) { return { call: "error", detail: String(e.message || e) }; }
+}
+async function alarmWatch(env, lp) {
+  if (!env.PUSHOVER_TOKEN) return;
+  const al = (await kv.get(env, "alarm")) || {}; const now = Date.now();
+  if (!(al.enabled && al.lastFired === lp.date && al.firedAt && al.acked !== lp.date && now - new Date(al.firedAt) < 40 * 60e3)) return;
+  const mins = Math.round((now - new Date(al.firedAt)) / 60e3); if (mins < 1) return;
+  const rc = al.firedReceipt || al.receipt; let d = null;
+  if (rc) { try { const r = await (await fetch(`https://api.pushover.net/1/receipts/${rc}.json?token=${env.PUSHOVER_TOKEN}`)).json(); if (r.status === 1) d = { receipt: rc, acknowledged: !!r.acknowledged, acknowledgedAt: r.acknowledged_at ? new Date(r.acknowledged_at * 1000).toISOString() : null, delivered: !!r.last_delivered_at, deliveredAt: r.last_delivered_at ? new Date(r.last_delivered_at * 1000).toISOString() : null, expired: !!r.expired, device: r.acknowledged_by_device || "", checkedAt: new Date().toISOString() }; } catch {} }
+  if (d) { al.delivery = d; if (!al.firedReceipt) al.firedReceipt = rc; }
+  if (d?.acknowledged) { al.acked = lp.date; al.ackedAt = d.acknowledgedAt || new Date().toISOString(); al.ackedBy = "pushover"; delete al.snooze; await kv.put(env, "alarm", al); return; }
+  if (al.snooze && now < new Date(al.snooze)) { await kv.put(env, "alarm", al); return; }
+  const undelivered = d ? !d.delivered : !rc; const stuck = !!d?.delivered && mins >= 5;
+  if ((undelivered && mins >= 2) || stuck) {
+    if (!al.fallbackAt) { al.fallbackAt = new Date().toISOString(); await healthNote(env, "alarm", { fallback: undelivered ? "undelivered" : "unacknowledged", mins, time: al.time }).catch(() => null); }
+    if (!al.called && callConfigured(env)) { al.called = new Date().toISOString(); al.callRes = await alarmCall(env, `Good morning, sir. This is JARVIS. It is ${lp.hm} and your ${al.time} alarm did not reach your phone. Time to get up.`); }
+    await webPush(env, { title: "JARVIS: wake up", body: `It's ${lp.hm}. Alarm was ${al.time}, ${mins} min ago${undelivered ? ", and Pushover has not reached the phone" : ""}. Tap I'm up.`, url: HUB_ORIGIN + "/#wake", priority: "alarm", kind: "alarm", tag: "alarm", at: new Date().toISOString() }, { ttl: 120, urgency: "high", topic: "alarm" }).catch(() => null);
+    if (!al.resent) {
+      al.resent = new Date().toISOString();
+      const res = await notify(env, "Wake up", `It's ${lp.hm}. The ${al.time} alarm ${undelivered ? "did not reach this phone" : "is still waiting"}. Tap I'm up.`, { priority: "alarm", tags: "sunrise", url: HUB_ORIGIN + "/#wake", sound: "siren" }).catch(() => []);
+      const po = res.find?.((r) => r.pushover != null); if (po?.receipt) al.receipt = po.receipt;
+    }
+  }
+  await kv.put(env, "alarm", al);
 }
 
 /* ---------------- competitors: weekly price/package scan ---------------- */
@@ -1641,7 +1713,7 @@ export default {
     }
     if (p === "/" || p === "/index.html" || p === "/wall") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
-    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago", briefHours: SLOT_HOURS(env), build: BUILD });
+    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), call: callConfigured(env) ? (env.ALARM_CALL === "always" ? "always" : "fallback") : false, ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago", briefHours: SLOT_HOURS(env), build: BUILD });
     if (p === "/api/status") {
       const cached = url.searchParams.get("fresh") ? null : await kv.get(env, "status");
       if (cached && Date.now() - new Date(cached.checkedAt) < 6 * 60000) return json({ ...cached, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
@@ -1688,7 +1760,8 @@ export default {
     }
     if (p === "/api/world/windy") { const v = await windyNear(env, +url.searchParams.get("lat"), +url.searchParams.get("lon"), +url.searchParams.get("km") || 50); return json(v, v.error ? 502 : 200); }
     if (p === "/api/world/cam") { try { const r = await txSnapshot(url.searchParams.get("d"), url.searchParams.get("id")); return r || new Response("no image", { status: 404 }); } catch (e) { return new Response("camera error: " + e.message, { status: 502 }); } }
-    if (p === "/api/world/shipsfeed" && request.method === "POST") { const body = await request.json(); await env.HUB.put("ships_global", JSON.stringify(body)); return json({ ok: true, ships: (body.ships || []).length }); }
+    if (p === "/api/world/shipsfeed" && request.method === "POST") { const body = await request.json(); await env.HUB.put("ships_global", JSON.stringify(body)); await fleetRemember(env, body).catch((e) => console.log("fleet", e.message)); return json({ ok: true, ships: (body.ships || []).length }); }
+    if (p === "/api/world/fleet") { const fs = await fleetStatus(env, url.searchParams.get("line") || "ncl"); return fs ? json(fs) : json({ error: "unknown fleet" }, 404); }
     if (p === "/api/world/ships") { const g = await env.HUB.get("ships_global"); return new Response(g || '{"ships":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
     if (p === "/api/world/globalfeed" && request.method === "POST") { const body = await request.json(); await env.HUB.put("flights_global", JSON.stringify(body)); return json({ ok: true, ac: (body.ac || []).length }); }
     if (p === "/api/world/global") { const g = await env.HUB.get("flights_global"); return new Response(g || '{"ac":[]}', { headers: { "content-type": "application/json", "cache-control": "public, max-age=60" } }); }
@@ -1708,13 +1781,15 @@ export default {
     if (p === "/api/alarm/ack" && request.method === "POST") {
       const b = await request.json().catch(() => ({})); const al = (await kv.get(env, "alarm")) || {}; const lp = localParts(env);
       if (b.action === "snooze") { al.snooze = new Date(Date.now() + 5 * 60e3).toISOString(); delete al.acked; }
-      else { al.acked = lp.date; al.ackedAt = new Date().toISOString(); delete al.snooze; if (al.receipt && env.PUSHOVER_TOKEN) { ctx.waitUntil(fetch(`https://api.pushover.net/1/receipts/${al.receipt}/cancel.json`, { method: "POST", body: new URLSearchParams({ token: env.PUSHOVER_TOKEN }) }).catch(() => null)); delete al.receipt; } }
+      else { al.acked = lp.date; al.ackedAt = new Date().toISOString(); al.ackedBy = b.action === "wake" ? "page" : b.action || "page"; delete al.snooze; for (const rc of new Set([al.receipt, al.firedReceipt].filter(Boolean))) if (env.PUSHOVER_TOKEN) ctx.waitUntil(fetch(`https://api.pushover.net/1/receipts/${rc}/cancel.json`, { method: "POST", body: new URLSearchParams({ token: env.PUSHOVER_TOKEN }) }).catch(() => null)); delete al.receipt; }
       await kv.put(env, "alarm", al); return json({ ok: true, acked: al.acked || null, snooze: al.snooze || null });
     }
     if (p === "/api/push/vapid") return json({ key: (await vapidKeys(env)).pub, subs: (await listSubs(env)).map((s) => ({ ua: s.ua, label: s.label, at: s.at, endpoint: s.endpoint.slice(0, 48) })) });
     if (p === "/api/push/subscribe" && request.method === "POST") { const b = await request.json(); try { const n = await saveSub(env, b.subscription, { ua: request.headers.get("user-agent"), label: b.label }); return json({ ok: true, subs: n }); } catch (e) { return json({ error: e.message }, 400); } }
     if (p === "/api/push/unsubscribe" && request.method === "POST") { const b = await request.json(); return json({ ok: true, subs: await dropSub(env, b.endpoint) }); }
     if (p === "/api/push/log") return json((await kv.get(env, "push_log")) || []);
+    if (p === "/api/alarm/call" && request.method === "POST") { const r = await alarmCall(env, "This is JARVIS. This is a test of the wake-up call. Good morning, sir."); return json(r, r.call === "unconfigured" ? 404 : 200); }
+    if (p === "/api/alarm/receipt") { const al = (await kv.get(env, "alarm")) || {}; const id = url.searchParams.get("id") || al.firedReceipt || al.receipt; if (!id || !env.PUSHOVER_TOKEN) return json({ error: "no receipt" }, 404); try { const r = await (await fetch(`https://api.pushover.net/1/receipts/${id}.json?token=${env.PUSHOVER_TOKEN}`)).json(); const t = (s) => s ? new Date(s * 1000).toISOString() : null; return json({ id, ...r, acknowledged_at: t(r.acknowledged_at), last_delivered_at: t(r.last_delivered_at), expires_at: t(r.expires_at), delivery: al.delivery || null }); } catch (e) { return json({ error: e.message }, 502); } }
     if (p === "/api/push/sounds") { try { const s = await (await fetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); return json({ baroque: !!s?.sounds?.baroque, custom: Object.keys(s?.sounds || {}).filter((k) => !PUSHOVER_BUILTIN.includes(k)) }); } catch (e) { return json({ error: String(e.message || e) }, 502); } }
     if (p === "/api/push/test" && request.method === "POST") {
       // what each channel says right now: Pushover's registered devices, and a real test push to every channel
