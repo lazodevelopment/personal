@@ -286,12 +286,22 @@ async function watchMetrics(env, next) {
     const bc = b.counts || {}, pc = p.counts || {};
     if ((bc.inquiries_unanswered || 0) >= 5 && (bc.inquiries_unanswered || 0) > (pc.inquiries_unanswered || 0)) notes.push(`${BIZ_NAME[id]}: ${bc.inquiries_unanswered} vendor inquiries unanswered`);
   }
+  // Lazo sign-up health (collector counts): a stall against the 7-day average, couples without users docs (the rules break of Sep 29 2026), and recovery
+  const lz = next.businesses?.lazo?.counts, lzp = prev.businesses?.lazo?.counts || {};
+  // stalled = quiet for 3x the typical gap between sign-ups (never under 48 h), so the rule scales with volume: at one sign-up every two days that is six days, at ten a day it is seven hours
+  const stalled = (c) => typeof c?.hours_since_signup === "number" && c.signup_gap_hours && c.hours_since_signup >= Math.max(48, 3 * c.signup_gap_hours);
+  if (lz) {
+    if (stalled(lz)) notes.push(`Lazo: no new user sign-ups for ${Math.round(lz.hours_since_signup / 24)} days (lately one every ${lz.signup_gap_hours < 48 ? Math.round(lz.signup_gap_hours) + " hours" : Math.round(lz.signup_gap_hours / 24) + " days"}). Check the app's sign-up flow and the Firestore users rule.`);
+    else if (stalled(lzp)) notes.push(`Lazo: sign-ups resumed (${lz.users_24h} in the last 24 hours)`);
+    if ((lz.couples_24h || 0) >= 2 && !lz.users_24h) notes.push(`Lazo: ${lz.couples_24h} couples signed up in the last 24 hours but no users docs were written. The users create rule is probably broken again.`);
+  }
   const seen = (await kv.get(env, "watch_seen")) || {};
   for (const n of notes) {
-    const key = n.replace(/\d+/g, "#"); if (seen[key] && Date.now() - seen[key] < 6 * 3600e3) continue;
+    const signup = /sign-ups|users docs/.test(n);
+    const key = n.replace(/\d+(\.\d+)?/g, "#"); if (seen[key] && Date.now() - seen[key] < (signup ? 20 : 6) * 3600e3) continue;
     seen[key] = Date.now();
-    await pushAlert(env, { kind: "watch", text: n });
-    await notify(env, "JARVIS noticed", n, { tags: "eyes" });
+    await pushAlert(env, { kind: signup && !/resumed/.test(n) ? "failed" : "watch", text: n });
+    await notify(env, signup ? "Lazo sign-ups" : "JARVIS noticed", n, signup && !/resumed/.test(n) ? { priority: "high", tags: "rotating_light" } : { tags: "eyes" });
   }
   await kv.put(env, "watch_seen", seen);
 }

@@ -263,6 +263,24 @@ def collect_lazo(db):
     i7 = sum(1 for i in inq if ts(i.get("createdAt")) and ts(i.get("createdAt")) >= D7)
     i_prev = sum(1 for i in inq if ts(i.get("createdAt")) and D14 <= ts(i.get("createdAt")) < D7)
     inq_new = sum(1 for i in inq if i.get("status") == "new")
+    # sign-up health: users docs are written by the app right after Firebase Auth sign-up, so a day with couples but no
+    # users (or no users at all while the 7-day average says there should be) means sign-up is broken (Sep 29 - Oct 9 2026)
+    from collections import Counter
+    users = stream(db.collection("users"), select=["created_time", "createdAt", "signupSource", "role"])   # FlutterFlow writes created_time
+    for u in users: u["_t"] = ts(first(u, "created_time", "createdAt"))
+    uts = sorted(u["_t"] for u in users if u["_t"])
+    D1, D8 = NOW - timedelta(days=1), NOW - timedelta(days=8)
+    u24 = sum(1 for t in uts if t >= D1); u7 = sum(1 for t in uts if t >= D7); u_prev = sum(1 for t in uts if D14 <= t < D7)
+    avg_day = round(sum(1 for t in uts if D8 <= t < D1) / 7, 1)
+    c24 = sum(1 for t in cts if t and t >= D1)
+    cl_ts = [ts(c.get("createdAt")) for c in stream(db.collection("claimRequests"), select=["createdAt"])]
+    def daily(dts, days=14):
+        return [sum(1 for t in dts if t and t.date() == TODAY - timedelta(days=i)) for i in range(days - 1, -1, -1)]
+    signups = {"days": [(TODAY - timedelta(days=i)).isoformat() for i in range(13, -1, -1)], "users": daily(uts), "couples": daily(cts),
+               "inquiries": daily([ts(i.get("createdAt")) for i in inq]), "claims": daily(cl_ts), "lastUserAt": uts[-1].isoformat() if uts else None,
+               "sources": dict(Counter(("claim" if (u.get("signupSource") or {}).get("claim") else (u.get("role") or "couple")) for u in users if u["_t"] and u["_t"] >= D14))}
+    hours_since = round((NOW - uts[-1]).total_seconds() / 3600, 1) if uts else None
+    u14 = sum(1 for t in uts if t >= D14); gap_hours = round(14 * 24 / u14) if u14 >= 3 else None   # typical hours between sign-ups at current volume
     charges = stream(db.collection("proCharges"), select=["amount", "createdAt", "status"])
     ok = lambda c: str(c.get("status", "")).lower() not in ("failed", "refunded", "void", "declined")
     rev30 = sum(num(c.get("amount")) for c in charges if ok(c) and ts(c.get("createdAt")) and ts(c.get("createdAt")) >= D30) / 100
@@ -290,8 +308,10 @@ def collect_lazo(db):
         t = ts(c.get("createdAt"))
         if t and ok(c): months[t.strftime("%Y-%m")] += num(c.get("amount")) / 100
     return {
-        "detail": {"pending": pending, "monthly": {k: round(v) for k, v in sorted(months.items())[-12:]}},
+        "detail": {"pending": pending, "monthly": {k: round(v) for k, v in sorted(months.items())[-12:]}, "signups": signups},
         "headline": [
+            {"label": "New users 24h", "value": u24, "delta": delta(u24, round(avg_day)), "deltaLabel": "vs 7d avg/day"},
+            {"label": "New users 7d", "value": u7, "delta": delta(u7, u_prev), "deltaLabel": "vs prior 7d"},
             {"label": "New couples 7d", "value": c7, "delta": delta(c7, c_prev), "deltaLabel": "vs prior 7d"},
             {"label": "Vendor inquiries 7d", "value": i7, "delta": delta(i7, i_prev), "deltaLabel": "vs prior 7d"},
             {"label": "Claimed vendors", "value": f"{claimed:,} / {vendors:,}"},
@@ -299,7 +319,8 @@ def collect_lazo(db):
         ],
         "series": {"name": "new couples / week", "values": weekly(cts), "color": "#19d3ff"},
         "upcoming": sorted(upcoming, key=lambda e: e["date"])[:3],
-        "counts": {"vendors": vendors, "claimed": claimed, "claims_pending": claims_pending, "inquiries_unanswered": inq_new, "couples": len(couples), "pro_active": subs},
+        "counts": {"vendors": vendors, "claimed": claimed, "claims_pending": claims_pending, "inquiries_unanswered": inq_new, "couples": len(couples), "pro_active": subs,
+                   "users": len(users), "users_24h": u24, "couples_24h": c24, "signup_avg_day": avg_day, "hours_since_signup": hours_since, "signup_gap_hours": gap_hours},
     }
 
 

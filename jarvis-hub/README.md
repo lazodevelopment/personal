@@ -190,3 +190,9 @@ refuse Cloudflare). The PC keeps the social check and the executor. Run with `-D
 - **Radar map**: Esri dark base tiles (no key needed) under RainViewer radar frames.
 - **Radar**: RainViewer frames (past 2 h + 30 min nowcast). Play/scrub. Click a day in the forecast for that day's hourly curve.
 - Install as an app: browser menu → Install / Add to Home Screen.
+
+## Lazo sign-up health (2026-10-10)
+- `collect_lazo` reads `users` (FlutterFlow writes `created_time`; `createdAt` as a fallback) and emits headline `New users 24h` / `New users 7d`, counts `users_24h`, `couples_24h`, `signup_avg_day`, `hours_since_signup`, `signup_gap_hours` (14 days / sign-ups, when there are 3+), and `detail.signups` (14 daily series for users, couples, inquiries, claims; `lastUserAt`; sources = claim / vendor / couple).
+- `watchMetrics` raises a `failed` alert + high push "Lazo sign-ups" when the quiet time reaches 3x the typical gap (never under 48 h), when 2+ couples signed up in 24 h but no `users` doc was written (the Sep 29 - Oct 9 rules break), and a `watch` note when sign-ups resume. Sign-up notes repeat at most every 20 h.
+- The Lazo drill-down shows a 14-day sign-ups chart (users, couples, inquiries per day) with the last sign-up age (amber past 24 h), the daily average and sources.
+- Collector runs on the feeder VM; after editing it: `gcloud compute scp collect_metrics.py jarvis-feeder:jarvis/ --account lazodevelopment@gmail.com --project lazo-513ec --zone us-central1-a`.
