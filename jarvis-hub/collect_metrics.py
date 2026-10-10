@@ -142,6 +142,10 @@ def collect_films(db):
     live = [b for b in books if not b.get("test_mode") and not str(b.get("status", "")).startswith(("abandoned", "cancel"))]
     signed = [b for b in live if b.get("signed_at") or b.get("status") in ("signed", "confirmed", "awaiting_payment")]
     created = lambda b: ts(b.get("created_at"))
+    pif = lambda b: bool(b.get("paid_in_full")) or b.get("payment_option") == "pif"
+    # paid-in-full bookings keep `total` at list price and `balance` at the retainer split, but the one charge was pif_total
+    # (invoice_amount); counting `balance` again at balance_paid_at double-counted them (Medlen/Cherigo, Schaefer, Oct 2026)
+    charged = lambda b: num(first(b, "pif_total", "invoice_amount") if pif(b) else first(b, "total"))
 
     def revenue(since, until):
         total = 0.0
@@ -150,7 +154,7 @@ def collect_films(db):
             if dep and since <= dep < until:
                 total += num(first(b, "invoice_amount") or (b.get("pif_total") if b.get("payment_option") == "pif" else b.get("retainer")))
             bal = ts(b.get("balance_paid_at"))
-            if bal and since <= bal < until:
+            if bal and since <= bal < until and not pif(b):
                 total += num(b.get("balance"))
         try:
             for g in db.collection_group("gratuities").stream():
@@ -173,7 +177,7 @@ def collect_films(db):
     leads_full = leads
     l7 = sum(1 for l in leads if ts(l.get("created_at")) and ts(l.get("created_at")) >= D7)
     l_prev = sum(1 for l in leads if ts(l.get("created_at")) and D14 <= ts(l.get("created_at")) < D7)
-    pipeline = sum(num(b.get("balance")) for b in signed if not b.get("balance_paid_at"))
+    pipeline = sum(num(b.get("balance")) for b in signed if not b.get("balance_paid_at") and not pif(b))
     upcoming = []
     for b in signed:
         raw = b.get("event_date_raw") or b.get("event_date")
@@ -197,7 +201,7 @@ def collect_films(db):
         dep = ts(b.get("deposit_paid_at"))
         if dep: months[dep.strftime("%Y-%m")] += num(first(b, "invoice_amount") or (b.get("pif_total") if b.get("payment_option") == "pif" else b.get("retainer")))
         bal = ts(b.get("balance_paid_at"))
-        if bal: months[bal.strftime("%Y-%m")] += num(b.get("balance"))
+        if bal and not pif(b): months[bal.strftime("%Y-%m")] += num(b.get("balance"))
     try:
         for g in db.collection_group("gratuities").stream():
             gd = g.to_dict(); at = ts(gd.get("at"))
@@ -229,7 +233,7 @@ def collect_films(db):
         t = ts(l.get("created_at"))
         if t and t >= NOW - timedelta(days=90): src[str(l.get("found_us") or "unknown").strip()[:30] or "unknown"] += 1
     detail = {
-        "recent": [{"id": b["_id"], "names": b.get("client_names") or b.get("email") or "?", "date": str(b.get("event_date_raw") or "")[:10], "package": b.get("package_name") or b.get("package_id") or "", "total": round(num(b.get("total"))), "status": b.get("status"), "balance": round(num(b.get("balance"))), "balance_paid": bool(b.get("balance_paid_at"))} for b in recent],
+        "recent": [{"id": b["_id"], "names": b.get("client_names") or b.get("email") or "?", "date": str(b.get("event_date_raw") or "")[:10], "package": b.get("package_name") or b.get("package_id") or "", "total": round(charged(b)), "status": b.get("status"), "balance": 0 if pif(b) else round(num(b.get("balance"))), "balance_paid": bool(b.get("balance_paid_at"))} for b in recent],
         "leadsBySource": dict(sorted(src.items(), key=lambda kv: -kv[1])[:8]),
         "monthly": {k: round(v) for k, v in sorted(months.items())[-12:]},
         "forecast": {k: {"amount": round(v["amount"]), "items": v["items"][:6]} for k, v in sorted(forecast.items())},
