@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import html from "./hub.html";
 import manifest from "./manifest.json";
 import icon192 from "./icon-192.png";
+import baroqueMp3 from "../sounds/baroque.mp3";   // the wake-up clip (Vivaldi, Spring); the open page rings with it, Pushover plays its own uploaded copy
 import { vapidKeys, listSubs, saveSub, dropSub, webPush, SW_JS } from "./webpush.js";
 
 export const SITES = [
@@ -1703,6 +1704,7 @@ export default {
     if (p === "/logout") return new Response(null, { status: 303, headers: [["location", "/"], ["set-cookie", setCookie("hub", "", 0)], ["set-cookie", setCookie("sess", "", 0)]] });
     if (p === "/manifest.webmanifest") return new Response(manifest, { headers: { "content-type": "application/manifest+json" } });
     if (p === "/sw.js") return new Response(SW_JS, { headers: { "content-type": "application/javascript; charset=utf-8", "cache-control": "no-cache", "service-worker-allowed": "/" } });
+    if (p === "/sounds/baroque.mp3") return new Response(baroqueMp3, { headers: { "content-type": "audio/mpeg", "cache-control": "public, max-age=604800" } });
     if (p === "/icon-192.png") return new Response(icon192, { headers: { "content-type": "image/png", "cache-control": "public, max-age=86400" } });
     if (p === "/icon.svg") return new Response(ICON, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
 

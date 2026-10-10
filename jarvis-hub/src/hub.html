@@ -2557,17 +2557,25 @@ $("#pushLogBtn").onclick = async () => {
   const rows = log.slice(0, 15).map(l => { const po = l.res?.find(x => x.pushover != null), wp = l.res?.find(x => x.webpush != null)?.webpush; return `<div class="row"><b>${esc(new Date(l.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</b> ${esc(l.title)} <span class="sub">${esc(l.priority)}</span> · Pushover ${po ? esc(String(po.pushover)) : "–"} · browser ${Array.isArray(wp) ? (wp.length ? wp.map(x => x.status).join("/") : "no device") : "–"}</div>`; }).join("") || "<div class='empty'>No pushes logged yet.</div>";
   $("#dTitle").textContent = "Push log"; $("#dKind").textContent = "WHAT EACH CHANNEL ANSWERED, NEWEST FIRST"; $("#dBody").innerHTML = `<section class="panel">${rows}</section>`; $("#drill").classList.add("open"); document.body.style.overflow = "hidden";
 };
-// if the page is open when the alarm fires (phone on the nightstand, PC), it rings here too: tone, overlay, vibration
-let ringing = false, ringOsc = null, ringTimer = null;
+// if the page is open when the alarm fires (phone on the nightstand, PC), or is opened while it is still unacknowledged, it rings
+// here too: the Vivaldi clip on loop (the same mp3 uploaded to Pushover), overlay, vibration. Square-wave beeps only until the
+// browser lets audio play (autoplay blocked: the first touch anywhere starts the clip). 2026-10-10: he heard the beeps, not the mp3.
+let ringing = false, ringOsc = null, ringTimer = null, ringAudio = null, ringBeeping = false;
 function ringStart(time) {
   if (ringing) return; ringing = true; $("#ringing").hidden = false; $("#ringTime").textContent = time || "";
   try { if (navigator.vibrate) navigator.vibrate([800, 300, 800, 300, 800]); } catch {}
-  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {}
-  const beep = () => { try { const o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = 880; g.gain.value = 0; o.connect(g); g.connect(actx.destination); const t = actx.currentTime; for (let i = 0; i < 4; i++) { g.gain.setValueAtTime(0.25, t + i * 0.25); g.gain.setValueAtTime(0, t + i * 0.25 + 0.12); } o.start(t); o.stop(t + 1.1); } catch {} };
-  beep(); ringTimer = setInterval(() => { beep(); try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch {} }, 2000);
+  const beep = () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = 880; g.gain.value = 0; o.connect(g); g.connect(actx.destination); const t = actx.currentTime; for (let i = 0; i < 4; i++) { g.gain.setValueAtTime(0.25, t + i * 0.25); g.gain.setValueAtTime(0, t + i * 0.25 + 0.12); } o.start(t); o.stop(t + 1.1); } catch {} };
+  const beeps = () => { if (ringBeeping) return; ringBeeping = true; beep(); ringTimer = setInterval(() => { if (!ringing) return; beep(); try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch {} }, 2000); };
+  const stopBeeps = () => { ringBeeping = false; clearInterval(ringTimer); };
+  if (!ringAudio) { ringAudio = new Audio("/sounds/baroque.mp3"); ringAudio.loop = true; ringAudio.preload = "auto"; }
+  ringAudio.volume = 1; try { ringAudio.currentTime = 0; } catch {}
+  if (radioOn) { try { radio.pause(); } catch {} }
+  const tryClip = () => ringAudio.play().then(() => { stopBeeps(); return true; }).catch(() => false);
+  tryClip().then((ok) => { if (ok || !ringing) return; beeps(); const once = () => { if (ringing) tryClip(); }; document.addEventListener("pointerdown", once, { once: true }); document.addEventListener("keydown", once, { once: true }); });
 }
 function ringStop(action) {
-  if (!ringing) return; ringing = false; clearInterval(ringTimer); $("#ringing").hidden = true; try { navigator.vibrate && navigator.vibrate(0); } catch {}
+  if (!ringing) return; ringing = false; ringBeeping = false; clearInterval(ringTimer); $("#ringing").hidden = true; try { navigator.vibrate && navigator.vibrate(0); } catch {}
+  try { ringAudio && ringAudio.pause(); } catch {}
   fetch("/api/alarm/ack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) }).then(() => loadAlarm()).catch(() => {});
   if (action === "wake") { if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); }
 }
