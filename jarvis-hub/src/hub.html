@@ -2496,7 +2496,7 @@ async function wakeSequence() {
   let brief = state.morning; try { const d = await fetch("/api/morning").then(r => r.json()); brief = d.latest || brief; } catch {}
   const fresh = brief?.slot === "morning" && brief.audio && (Date.now() - new Date(brief.at)) < 6 * 3600e3;
   if (fresh) { playUrl("/api/morning/audio?id=" + encodeURIComponent(brief.id)); const prevEnd = player.onended; player.onended = player.onerror = (e) => { try { prevEnd && prevEnd(e); } catch {} setTimeout(() => fadeInRadio(60), 1500); }; }
-  else { speak("Good morning, sir. The brief isn't ready yet; here is the radio."); setTimeout(() => fadeInRadio(60), 4000); }
+  else { speak("Good morning, Mr. Clark. The brief isn't ready yet; here is the radio."); setTimeout(() => fadeInRadio(60), 4000); }
 }
 if (location.hash === "#wake") {
   $("#wake").hidden = false; history.replaceState(null, "", "/");

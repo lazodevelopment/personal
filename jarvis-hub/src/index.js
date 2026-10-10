@@ -869,7 +869,7 @@ const LINKS = {
 
 const BRAIN_SYSTEM = `You are JARVIS, the personal operations assistant for Jesse Clark, who runs five businesses:
 Atavia Weddings and Elizabeth Scott Weddings (wedding films), Lazo (wedding planner app + vendor directory), Roven HR (hiring platform), LeaseReputation (apartment reviews).
-Persona: calm, dry, precise, British; a trusted chief of staff. "Sir" sparingly.
+Persona: calm, dry, precise, British; a trusted chief of staff. Address him sparingly, alternating between "sir" and "Mr. Clark" (never both in one reply; vary from one reply to the next, "Mr. Clark" for greetings and anything formal, "sir" in passing).
 Your replies are spoken aloud through text-to-speech: plain prose, no markdown, no lists, no headers, no URLs read aloud. Two to four sentences unless he asks for detail. Lead with the answer. Round numbers sensibly.
 Everything about his businesses is in the LIVE CONTEXT; answer from it directly and do not invent figures. For anything outside it (news, facts, prices, places, people, how-to questions, "look up", "search") use the web_search tool, then answer in two to four spoken sentences and name the source in words (no URLs). If something isn't in the context and can't be searched, say so.
 Ships: find_ship for "where is the <ship name>" (cruise ships and ferries, from AIS); watch_ship for "tell me when the <ship> shows up"; fleet_status for "where are the Norwegian ships" (the whole Norwegian Cruise Line fleet, live or last known; the World panel lists it too). Coverage is from shore receivers, so mid-ocean and some islands (Bermuda) are blind spots; say so when a ship is not found.
@@ -1569,9 +1569,9 @@ async function tickMinute(env, fromMinuteCron = false) {
   if (al.enabled && late !== null && late >= 0 && late < 60 && al.lastFired !== lp.date && al.missed !== lp.date && (!al.days?.length || al.days.includes(lp.dow))) {
     const m = await kv.get(env, "morning"); const fresh = m?.slot === "morning" && now - new Date(m.at) < 3 * 3600e3;
     const headline = fresh ? m.text.split(/(?<=[.!?])\s/).slice(0, 2).join(" ") : "Your morning brief is on its way. Tap to open JARVIS.";
-    out.push({ alert: { kind: "watch", text: "Wake-up alarm fired (" + al.time + (late > 1 ? ", " + late + " min late: the minute cron skipped" : "") + ")" }, push: { title: "Good morning, sir", body: headline.slice(0, 500), opts: { priority: "alarm", tags: "sunrise", url: HUB_ORIGIN + "/#wake" } } });
+    out.push({ alert: { kind: "watch", text: "Wake-up alarm fired (" + al.time + (late > 1 ? ", " + late + " min late: the minute cron skipped" : "") + ")" }, push: { title: "Good morning, Mr. Clark", body: headline.slice(0, 500), opts: { priority: "alarm", tags: "sunrise", url: HUB_ORIGIN + "/#wake" } } });
     al.lastFired = lp.date; al.firedAt = new Date().toISOString(); al.pcDue = lp.date; for (const k of ["receipt", "firedReceipt", "delivery", "fallbackAt", "resent", "ackedBy", "called", "callRes"]) delete al[k];
-    if (env.ALARM_CALL === "always" && callConfigured(env)) { al.called = new Date().toISOString(); al.callRes = await alarmCall(env, `Good morning, sir. This is JARVIS. It is ${al.time}. Time to get up.`); }
+    if (env.ALARM_CALL === "always" && callConfigured(env)) { al.called = new Date().toISOString(); al.callRes = await alarmCall(env, `Good morning, Mr. Clark. This is JARVIS. It is ${al.time}. Time to get up.`); }
     await kv.put(env, "alarm", al);
     if (late > 1) await healthNote(env, "alarm", { late, time: al.time }).catch(() => null);
   } else if (!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER) && al.enabled && al.lastFired === lp.date && al.firedAt && al.acked !== lp.date && now - new Date(al.firedAt) < 45 * 60e3 && (!al.snooze || now >= new Date(al.snooze))) {
