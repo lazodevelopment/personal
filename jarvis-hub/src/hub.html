@@ -472,7 +472,10 @@ input::placeholder,textarea::placeholder{color:rgba(111,150,180,.75)}
 .cam .ph small{font-size:9px;letter-spacing:.15em;color:var(--dim)}.cam.live .ph{display:none}
 .cam .ph .spin{width:18px;height:18px;border-radius:50%;border:2px solid rgba(var(--glow),.25);border-top-color:var(--cyan);animation:camspin 1s linear infinite}@keyframes camspin{to{transform:rotate(360deg)}}
 .cam .x{position:absolute;top:0;right:0;font-family:var(--mono);font-size:11px;padding:3px 8px;background:rgba(4,7,13,.75);color:var(--red);opacity:0}
-.cam:hover .x{opacity:1}
+.cam:hover .x,.cam:hover .mv{opacity:1}
+.cam .mv{position:absolute;top:0;left:0;display:flex;opacity:0}.cam .mv button{font-family:var(--mono);font-size:11px;padding:3px 8px;background:rgba(4,7,13,.75);color:var(--cyan2);border:0;cursor:pointer}.cam .mv button:disabled{opacity:.3;cursor:default}
+.cam[draggable]{cursor:grab}.cam.drag{opacity:.4}.cam.over{outline:2px solid var(--cyan)}.cams.dragging .cam iframe,.cams.dragging .cam a{pointer-events:none}
+@media (hover:none){.cam .x,.cam .mv{opacity:1}}
 .camlink{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:6px;color:var(--cyan2);font-family:var(--mono);letter-spacing:.15em;font-size:12px;background:radial-gradient(circle at 50% 40%,rgba(var(--glow),.18),transparent 60%),#02050a}
 .camlink small{font-size:9px;color:var(--dim);letter-spacing:.05em}
 .addcam{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.addcam input{flex:1 1 180px}
@@ -1504,7 +1507,7 @@ let camsKeyR = "";
 function renderCams() {
   const cams = state.webcams || []; const k = JSON.stringify(cams); if (k === camsKeyR) return; camsKeyR = k; // redrawing restarts every stream
   $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
-  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam">${c.embed ? `<span class="ph" aria-hidden="true"><i class="spin"></i><small>LOADING</small></span><iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
+  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam" draggable="true" data-i="${i}" style="order:${i}">${c.embed ? `<span class="ph" aria-hidden="true"><i class="spin"></i><small>LOADING</small></span><iframe src="${esc(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${esc(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><span class="mv"><button data-mv="-1" title="Move left" ${i ? "" : "disabled"}>◀</button><button data-mv="1" title="Move right" ${i < cams.length - 1 ? "" : "disabled"}>▶</button></span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
   // lazy tiles show a play glyph until their iframe has actually loaded (autoplay-blocked or not-yet-visible embeds were plain black boxes)
   // YouTube reports "load" long before the first frame shows (about 10 s on a cold tile), so the LOADING mark stays a little longer
   $("#cams").querySelectorAll("iframe").forEach(f => f.addEventListener("load", () => setTimeout(() => f.closest(".cam")?.classList.add("live"), 9000), { once: true }));
@@ -1517,7 +1520,18 @@ async function addFeed(rawIn, nameIn) { const raw = String(rawIn || "").trim(); 
   if (embed && embed.ask && /youtu/i.test(raw)) { camMsg("Looking up the live stream on that page…"); const r = await fetch("/api/yt/resolve?u=" + encodeURIComponent(raw)).then(x => x.json()).catch(() => ({ error: "lookup failed" })); if (r.videoId) { embed = `https://www.youtube.com/embed/${r.videoId}?autoplay=1&mute=1`; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); if (!r.live) camMsg("That channel isn't live right now; added its latest video instead.", true); } else { camMsg((embed.ask || "") + " (" + (r.error || "no live video found") + ")", true); return; } }
   if (embed && embed.ask) return camMsg(embed.ask, true);
   const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); if (!/isn't live/.test($("#camMsg").textContent)) camMsg(`Added ${name}.`); $("#cams").lastElementChild?.scrollIntoView({ block: "nearest" }); };
-$("#cams").onclick = async (e) => { const b = e.target.closest(".x"); if (!b) return; state.webcams.splice(+b.dataset.i, 1); renderCams(); await save({ webcams: state.webcams }); };
+$("#cams").onclick = async (e) => { const m = e.target.closest("[data-mv]"); if (m) { const i = +m.closest(".cam").dataset.i; return moveCam(i, i + +m.dataset.mv); } const b = e.target.closest(".x"); if (!b) return; state.webcams.splice(+b.dataset.i, 1); renderCams(); await save({ webcams: state.webcams }); };
+// reorder by CSS `order` and re-index in place: moving the tiles in the DOM would reload every iframe
+async function moveCam(from, to) { const cams = state.webcams || []; if (to < 0 || to >= cams.length || from === to) return; const [c] = cams.splice(from, 1); cams.splice(to, 0, c); camsKeyR = JSON.stringify(cams);
+  const tiles = [...$("#cams").querySelectorAll(".cam")]; tiles.sort((a, b) => +a.style.order - +b.style.order); const [t] = tiles.splice(from, 1); tiles.splice(to, 0, t);
+  tiles.forEach((el, i) => { el.style.order = i; el.dataset.i = i; el.querySelector(".x").dataset.i = i; el.querySelector("[data-mv='-1']").disabled = !i; el.querySelector("[data-mv='1']").disabled = i === tiles.length - 1; });
+  await save({ webcams: cams }); }
+let camDrag = null;
+$("#cams").addEventListener("dragstart", (e) => { const t = e.target.closest(".cam"); if (!t) return; camDrag = +t.dataset.i; t.classList.add("drag"); $("#cams").classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", String(camDrag)); } catch {} });
+$("#cams").addEventListener("dragover", (e) => { const t = e.target.closest(".cam"); if (camDrag === null || !t) return; e.preventDefault(); e.dataTransfer.dropEffect = "move"; $("#cams").querySelectorAll(".over").forEach(x => x !== t && x.classList.remove("over")); t.classList.add("over"); });
+$("#cams").addEventListener("drop", (e) => { const t = e.target.closest(".cam"); if (camDrag === null || !t) return; e.preventDefault(); const to = +t.dataset.i, from = camDrag; camDrag = null; cleanDrag(); if (to !== from) moveCam(from, to); });
+$("#cams").addEventListener("dragend", () => { camDrag = null; cleanDrag(); });
+function cleanDrag() { $("#cams").classList.remove("dragging"); $("#cams").querySelectorAll(".drag,.over").forEach(x => x.classList.remove("drag", "over")); }
 
 /* ---------- notes, state, system, clock ---------- */
 let notesTimer;
