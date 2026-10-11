@@ -17,7 +17,7 @@ const CONFIG = {
   FORMSPREE_ID: "xojgqprg",   // e.g. "xabcwxyz"
   META_PIXEL_ID: "REPLACE_WITH_PIXEL_ID",
   GA4_ID: "G-2GWEJ459GV",                                   // e.g. "G-XXXXXXXXXX"       // Elizabeth Scott Meta Pixel
-  PHONE: "",                                    // e.g. "(833) 321-7676"
+  PHONE: "(229) 459-3342",
   EMAIL: "info@elizabethscottweddings.com",
   SOCIALS: { instagram: "https://www.instagram.com/elizabethscottweddings", facebook: "https://www.facebook.com/elizabethscottweddings", linkedin: "https://www.linkedin.com/company/elizabethscottweddings", youtube: "" },
   IMAGES: {
@@ -56,7 +56,7 @@ Object.entries(CONFIG.IMAGES).forEach(([key,url])=>{
 
 /* ---- contact details ---- */
 if(CONFIG.PHONE){
-  document.querySelectorAll("[data-tel]").forEach(a=>{a.href="sms:"+CONFIG.PHONE.replace(/\D/g,"");a.textContent=a.classList.contains("btn")?"Text "+CONFIG.PHONE:CONFIG.PHONE;});
+  const _d=CONFIG.PHONE.replace(/\D/g,"");document.querySelectorAll("[data-tel]").forEach(a=>{const b=a.classList.contains("btn");a.href=(b?"sms:":"tel:")+"+1"+_d;a.textContent=b?"Text "+CONFIG.PHONE:"Call or text "+CONFIG.PHONE;});
 }
 if(CONFIG.EMAIL){
   document.querySelectorAll("[data-email]").forEach(a=>{a.href="mailto:"+CONFIG.EMAIL;a.textContent=CONFIG.EMAIL;});

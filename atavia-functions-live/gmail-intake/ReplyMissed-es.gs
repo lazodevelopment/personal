@@ -31,6 +31,7 @@ function replyMissedList() {
     var code = null; try { code = JSON.parse(res.getContentText()).code || null; } catch (e) {}
     try {
       var how = sendAutoReply(hit.msg, hit.inq, code);
+      try { if (typeof sendFirstText === 'function') how += sendFirstText(hit.thread, hit.msg, hit.inq, code) || ''; } catch (e) { Logger.log('text failed: ' + e); }   // JC-ESW-TEXT-1010
       seen.setProperty('sent:' + email, new Date().toISOString()); seen.setProperty('msg:' + hit.msg.getId(), 'sent');
       hit.thread.addLabel(label);
       tellHub(hit.thread, hit.msg, hit.inq, 'replied', 'replyMissedList: ' + how);

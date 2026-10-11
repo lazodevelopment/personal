@@ -160,6 +160,8 @@ function fuOne(c, dry) {
   if (dry) return 'WILL SEND ' + due.k + (skipped.length ? ' (skipping ' + skipped.join(', ') + ')' : '') + ' to ' + c.email
     + '\n----\n' + m.text + '\n----';
   fuSend(first.msg, c.email, m);
+  // JC-ESW-TEXT-1010: where Texting.gs is present (Elizabeth Scott pilot), the Day 5 email gets a text next to it.
+  try { if (typeof fuText === 'function') fuText(c.email, due.k, info); } catch (e) { Logger.log('text nudge: ' + e); }
   fuSkipThrough(st, due.k, false);
   st.done[due.k] = now.toISOString(); st.last = now.toISOString(); st.sent = (st.sent || 0) + 1;
   fuSave(c.email, st);
@@ -195,6 +197,7 @@ function fuFirstReply(email, at) {
 /** Why the sequence should stop because people are already talking, or '' to carry on. */
 function fuEngaged(email, first, st) {
   var since = first.msg.getDate(), after = ' after:' + Math.floor(since.getTime() / 1000), mine = fuMine();
+  try { if (typeof smsRecord === 'function' && smsRecord(email).replies) return 'they replied by text'; } catch (e) {}   // JC-ESW-TEXT-1010
   if (GmailApp.search('from:' + email + after, 0, 1).length) return 'they replied by email';
   var replied = false;
   first.msg.getThread().getMessages().forEach(function (m) { if (m.getDate() > since && !fuFromMe(m, mine)) replied = true; });

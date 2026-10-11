@@ -54,6 +54,7 @@ ORG_SCHEMA = ('<script type="application/ld+json">' + __import__("json").dumps({
   "logo": BASE + "/favicon/icon-512.png",
   "description": "Wedding photography and videography studio serving all 50 states — travel included.",
   "email": "info@elizabethscottweddings.com",
+  "telephone": "+1-229-459-3342",
   "sameAs": ["https://www.instagram.com/elizabethscottweddings",
              "https://www.facebook.com/elizabethscottweddings",
              "https://www.linkedin.com/company/elizabethscottweddings"]}) + '</script>')
