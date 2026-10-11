@@ -414,30 +414,42 @@ class _Voice {
     }
   }
 
+  // web: one element, played to the end; false if it errored before it ended
+  Future<bool> _playWeb(String url, bool withFft) async {
+    final html.AudioElement a = html.AudioElement();
+    _el = a;
+    if (withFft) a.crossOrigin = 'anonymous';
+    a.src = url;
+    a.preload = 'auto';
+    if (withFft) _juneWebAttach(a);
+    final Completer<bool> c = Completer<bool>();
+    a.onEnded.listen((_) {
+      if (!c.isCompleted) c.complete(true);
+    });
+    a.onError.listen((_) {
+      if (!c.isCompleted) c.complete(false);
+    });
+    _t0 = DateTime.now();
+    await a.play().catchError((Object _) {});
+    final bool ok = await c.future.timeout(const Duration(minutes: 6), onTimeout: () => true);
+    if (withFft) _juneWebDetach(a);
+    try {
+      a.remove();
+    } catch (_) {}
+    if (identical(_el, a)) _el = null;
+    return ok;
+  }
+
   // plays one URL to the end (web: an <audio> element; phones: audioplayers)
   Future<void> playUrl(String url, [int? gen, dynamic env]) async {
     final int g = gen ?? _gen;
     _setTrack(env);
     try {
       if (kIsWeb) {
-        final html.AudioElement a = html.AudioElement();
-        _el = a;
-        a.crossOrigin = 'anonymous';
-        a.src = url;
-        a.preload = 'auto';
-        _juneWebAttach(a);
-        final Completer<void> c = Completer<void>();
-        a.onEnded.listen((_) {
-          if (!c.isCompleted) c.complete();
-        });
-        a.onError.listen((_) {
-          if (!c.isCompleted) c.complete();
-        });
-        _t0 = DateTime.now();
-        await a.play().catchError((Object _) {});
-        await c.future.timeout(const Duration(minutes: 6), onTimeout: () {});
-        _juneWebDetach(a);
-        if (identical(_el, a)) _el = null;
+        // through the analyser first; if the element errors (a clip the browser
+        // will not share cross-origin), once more plainly so she is never silent
+        final bool ok = await _playWeb(url, true);
+        if (!ok && g == _gen) await _playWeb(url, false);
       } else {
         final AudioPlayer p = _ensure();
         await p.stop();
@@ -1385,7 +1397,12 @@ class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateM
   String _greeting() {
     final int h = DateTime.now().hour;
     final String tod = h < 4 ? 'Still up' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-    final String who = _couple ? _s(_map(_snap['couple'])['names']) : '';
+    String who = _couple ? _s(_map(_snap['couple'])['names']) : '';
+    if (who.isEmpty) {
+      // the person's own first name, from their Lazo sign-in
+      final String dn = (FirebaseAuth.instance.currentUser?.displayName ?? '').trim();
+      if (dn.isNotEmpty) who = dn.split(' ').first;
+    }
     return who.isEmpty ? '$tod.' : '$tod, $who.';
   }
 
