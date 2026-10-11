@@ -632,6 +632,7 @@ async function runCron(env, ctx) {
       if (hour === (s.hour ?? 7) && snap.brief?.day !== snap.today) {
         const b = await makeBrief(env, ctx, who, vend, true, "daily", snap); out.briefs++;
         let wk = null; if (snap.isMonday && snap.weekly?.day !== snap.today) wk = await makeBrief(env, ctx, who, vend, true, "weekly", snap);
+        await pushTo(env, who.uid, { title: "Good morning from June", body: firstSentence(b.text), data: { open: "june" }, tag: "morning" });
         await sendEmail(env, to, `June: ${snap.counts.waiting ? snap.counts.waiting + " waiting" : "inbox clear"}, ${snap.counts.next30} wedding${snap.counts.next30 === 1 ? "" : "s"} in 30 days`, emailWrap("GOOD MORNING FROM JUNE", `<p style="margin:0 0 10px">${b.text.replace(/\n+/g, "</p><p style=\"margin:0 0 10px\">")}</p>${wk ? `<p style="font-size:12px;letter-spacing:.12em;color:#8A6A2F;margin:18px 0 8px">THE MONDAY REVIEW</p><p style="margin:0 0 10px">${wk.text.replace(/\n+/g, "</p><p style=\"margin:0 0 10px\">")}</p>` : ""}`, link, "Open June and listen"), b.text + (wk ? "\n\nMonday review:\n" + wk.text : "") + "\n\n" + link);
       }
       // a lead that has waited two hours, once per message
@@ -642,10 +643,19 @@ async function runCron(env, ctx) {
         for (const key of Object.keys(seen)) if (Date.now() - seen[key] > 10 * 86400e3) { delete seen[key]; changed = true; }
         if (changed) await kv.put(env, "nudged_" + vendorId, seen);
       }
+      // a lead that has waited ten minutes: a push with the draft ready, once per message (the email follows at two hours)
+      if (s.nudges !== false) {
+        const pushed = (await kv.get(env, "pushed_" + vendorId)) || {}; let changedP = false;
+        for (const r of snap.waiting) { const key = r.inquiryId + "|" + (r.lastMessageAt || ""); const mins = r.lastMessageAt ? (Date.now() - new Date(r.lastMessageAt)) / 60e3 : 0; if (pushed[key] || mins < 10 || mins > 72 * 60) continue; pushed[key] = Date.now(); changedP = true;
+          await pushTo(env, who.uid, { title: `${r.couple} is waiting`, body: `${clip(r.lastMessagePreview, 90) || "A new inquiry."} June has a reply ready.`, data: { thread: r.inquiryId, open: "thread" }, tag: "lead-" + r.inquiryId, urgent: mins < 60 }); }
+        for (const key of Object.keys(pushed)) if (Date.now() - pushed[key] > 10 * 86400e3) { delete pushed[key]; changedP = true; }
+        if (changedP) await kv.put(env, "pushed_" + vendorId, pushed);
+      }
       // reminders that came due since the last pass
       if (s.reminders !== false) {
         const list = (await kv.get(env, "reminders_" + vendorId)) || []; let changed = false;
         for (const r of list) { if (r.done || r.notified || r.at > now.toISOString()) continue; r.notified = true; changed = true; out.reminders++;
+          await pushTo(env, who.uid, { title: "Reminder", body: r.text + (r.couple ? " · " + r.couple : ""), data: { open: "june" }, tag: "reminder" });
           await sendEmail(env, to, "Reminder: " + r.text, emailWrap("JUNE REMINDS YOU", `<p style="margin:0 0 10px"><b>${r.text}</b>${r.couple ? " · " + r.couple : ""}</p><p style="margin:0;color:#6B5F72">${fmtWhen(r.at, tz)}</p>`, link, "Open June"), `${r.text}${r.couple ? " (" + r.couple + ")" : ""} — ${fmtWhen(r.at, tz)}\n${link}`);
           if (r.repeat === "daily" || r.repeat === "weekly") { const next = new Date(new Date(r.at).getTime() + (r.repeat === "daily" ? 1 : 7) * 86400e3).toISOString(); list.push({ ...r, id: uid(), at: next, notified: false, done: false }); r.done = true; } }
         if (changed) await kv.put(env, "reminders_" + vendorId, list.slice(-200));
@@ -653,6 +663,116 @@ async function runCron(env, ctx) {
       s.lastRun = Date.now(); delete s.error; await kv.put(env, k, s);
     } catch (e) { out.errors.push(vendorId + ": " + e.message); }
   }
+  return out;
+}
+
+/* ---------------- the everyday layer (JC-LAZO-JUNE-DAILY-1011-001) ----------------
+   The reasons to open June tomorrow: one thing to do today with a streak, a memory she brings up
+   herself, the milestones, the numbers vendors check compulsively, the RSVP pulse for couples -
+   and a push to the phone for the things that matter. */
+async function pushTo(env, uids, { title, body = "", data = {}, tag = "", urgent = false } = {}) {
+  const list = (Array.isArray(uids) ? uids : [uids]).filter(Boolean);
+  if (!env.JUNE_PUSH_URL || !env.JUNE_PUSH_KEY || !list.length || !title) return { sent: 0, skipped: true };
+  try {
+    const r = await fetch(env.JUNE_PUSH_URL, { method: "POST", headers: { "content-type": "application/json", "x-june-key": env.JUNE_PUSH_KEY }, body: JSON.stringify({ uids: list, title, body, data, tag, urgent }) });
+    return r.ok ? await r.json() : { sent: 0, error: r.status };
+  } catch (e) { return { sent: 0, error: e.message }; }
+}
+const firstSentence = (t) => { const m = str(t).trim().match(/^[\s\S]*?[.!?](?=\s|$)/); return clip(m ? m[0] : t, 160); };
+
+const STREAK_KEY = (uid) => "streak_" + uid;
+async function readStreak(env, uid, today) {
+  const st = (await kv.get(env, STREAK_KEY(uid))) || { count: 0, lastDay: null, doneId: null };
+  const y = new Date(today + "T12:00:00Z"); y.setUTCDate(y.getUTCDate() - 1); const yesterday = y.toISOString().slice(0, 10);
+  const alive = st.lastDay === today || st.lastDay === yesterday;
+  return { count: alive ? st.count : 0, doneToday: st.lastDay === today, doneId: st.lastDay === today ? st.doneId : null, best: st.best || 0 };
+}
+async function markDone(env, uid, today, id) {
+  const st = (await kv.get(env, STREAK_KEY(uid))) || { count: 0, lastDay: null, doneId: null, best: 0 };
+  if (st.lastDay === today) return { count: st.count, doneToday: true, doneId: st.doneId, best: st.best || st.count };
+  const y = new Date(today + "T12:00:00Z"); y.setUTCDate(y.getUTCDate() - 1); const yesterday = y.toISOString().slice(0, 10);
+  const count = st.lastDay === yesterday ? (st.count || 0) + 1 : 1;
+  const out = { count, lastDay: today, doneId: str(id).slice(0, 80), best: Math.max(count, st.best || 0) };
+  await kv.put(env, STREAK_KEY(uid), out);
+  return { count, doneToday: true, doneId: out.doneId, best: out.best };
+}
+// one remembered thing, rotating by day, so she brings it up herself
+function recallOf(memory, today) {
+  const mem = (memory || []).filter((m) => m && m.text); if (!mem.length) return null;
+  const n = parseInt(today.replace(/-/g, ""), 10) || 0; const m = mem[n % mem.length];
+  return { id: m.id, text: m.text, at: m.at || null };
+}
+const daysBetween = (a, b) => Math.round((new Date(b + "T12:00:00Z") - new Date(a + "T12:00:00Z")) / 86400e3);
+const milestoneFor = (days) => days === 365 ? "One year to go" : days === 100 ? "100 days to go" : days === 50 ? "50 days to go" : days === 30 ? "One month to go" : days === 14 ? "Two weeks to go" : days === 7 ? "One week to go" : days === 1 ? "Tomorrow" : days === 0 ? "Today" : null;
+
+function pickVendorTask(s) {
+  const w = s.waiting[0];
+  if (w) return { id: "reply:" + w.inquiryId + ":" + (w.lastMessageAt || ""), kind: "reply", title: "Reply to " + w.couple, why: w.waitedHours != null ? `waited ${w.waitedHours} hour${w.waitedHours === 1 ? "" : "s"}` : "waiting on you", ask: "Draft a reply to " + w.couple, inquiryId: w.inquiryId };
+  const t = s.tasksDue[0];
+  if (t) return { id: "task:" + t.inquiryId + ":" + str(t.title), kind: "task", title: t.title, why: "due today · " + t.couple, ask: "What is due today?", inquiryId: t.inquiryId };
+  if (s.money?.overdue > 0) return { id: "overdue:" + s.today, kind: "money", title: "Chase an overdue invoice", why: money(s.money.overdue) + " past due", ask: "Who is overdue?" };
+  const q = s.quiet[0];
+  if (q) return { id: "quiet:" + q.inquiryId + ":" + (q.lastMessageAt || ""), kind: "nudge", title: "Nudge " + q.couple, why: "quiet since your last message", ask: "Nudge " + q.couple + " about their date", inquiryId: q.inquiryId };
+  const r = s.reviewAsks[0];
+  if (r) return { id: "review:" + r.inquiryId, kind: "review", title: "Ask " + r.couple + " for a review", why: "their wedding was " + fmtDay(r.weddingDate, s.tz), ask: "Ask " + r.couple + " for a review", inquiryId: r.inquiryId };
+  if (!s.vendor.bio) return { id: "bio:" + s.today, kind: "profile", title: "Write your bio", why: "couples read it before they write", ask: "Help me write my bio" };
+  if (s.vendor.gallery.length < 6) return { id: "gallery:" + s.today, kind: "profile", title: "Add a photo to your gallery", why: `${s.vendor.gallery.length} of 6 that couples expect`, ask: "What photos should I add?" };
+  return { id: "post:" + s.today, kind: "post", title: "Post something today", why: "couples who see you this week book you next month", ask: "What should I post this week?" };
+}
+function pickCoupleTask(s, label) {
+  const w = s.waiting[0];
+  if (w) return { id: "reply:" + w.inquiryId + ":" + (w.lastMessageAt || ""), kind: "reply", title: "Reply to " + w.vendor, why: w.waitedHours != null ? `they wrote ${w.waitedHours} hour${w.waitedHours === 1 ? "" : "s"} ago` : "waiting on you", ask: "Draft a reply to " + w.vendor, inquiryId: w.inquiryId };
+  const t = (s.tasks || []).find((x) => x.dueAt && x.dueAt.slice(0, 10) <= s.today && !x.done);
+  if (t) return { id: "task:" + t.inquiryId + ":" + str(t.title), kind: "task", title: t.title, why: "due today" + (t.vendor ? " · " + t.vendor : ""), ask: "What is due today?", inquiryId: t.inquiryId };
+  if (s.money?.overdue > 0) return { id: "overdue:" + s.today, kind: "money", title: "Pay what is past due", why: money(s.money.overdue) + " overdue", ask: "What is overdue?" };
+  const g = s.next[0];
+  if (g) { const l = label(g.category || g.id); return { id: "book:" + str(g.category || g.id), kind: "book", title: "Find your " + l.toLowerCase(), why: "the next thing to book", ask: "Find us a " + l.toLowerCase() }; }
+  if (s.daysToGo != null && s.daysToGo <= 120 && s.guests.pending > 0) return { id: "rsvp:" + s.today, kind: "rsvp", title: `Chase ${s.guests.pending} RSVP${s.guests.pending === 1 ? "" : "s"}`, why: "still pending", ask: "Who hasn't RSVP'd?" };
+  if (s.shopping?.left > 0) return { id: "shop:" + s.today, kind: "shop", title: `Buy one of the ${s.shopping.left} things left`, why: "on your shopping list", ask: "Show our shopping list" };
+  if (!s.couple.weddingDate) return { id: "date:" + s.today, kind: "setup", title: "Set your date", why: "everything builds from it", ask: "Help us pick a date" };
+  return { id: "remember:" + s.today, kind: "memory", title: "Tell June one thing about your day", why: "she plans around what matters to you", ask: "Remember that we want " };
+}
+
+async function enrichVendor(env, s, who) {
+  const today = s.today;
+  s.todayTask = pickVendorTask(s);
+  s.streak = await readStreak(env, who.uid, today);
+  s.recall = recallOf(s.memory, today);
+  const next = s.weddings[0]; s.milestone = next ? { who: next.couple, days: daysBetween(today, next.weddingDate), label: milestoneFor(daysBetween(today, next.weddingDate)) } : null;
+  // intel: rank move week to week, views, price position against the metro
+  const hist = (await kv.get(env, "rankhist_" + s.vendor.id)) || [];
+  const wk = today.slice(0, 7) + "-w" + Math.ceil(+today.slice(8, 10) / 7);
+  if (s.vendor.rank && (!hist.length || hist[hist.length - 1].wk !== wk)) { hist.push({ wk, pos: s.vendor.rank.pos, of: s.vendor.rank.of, d7: s.vendor.views?.d7 || 0 }); await kv.put(env, "rankhist_" + s.vendor.id, hist.slice(-12)); }
+  const prev = hist.length > 1 ? hist[hist.length - 2] : null;
+  const pf = s.pricing?.priceFrom; let pricePos = null;
+  if (pf && s.vendor.startingPrice != null) { const mid = +pf.median || +pf.mid || (+pf.lo && +pf.hi ? (+pf.lo + +pf.hi) / 2 : null); if (mid) pricePos = s.vendor.startingPrice < mid * 0.85 ? "below" : s.vendor.startingPrice > mid * 1.15 ? "above" : "about"; }
+  s.intel = { rank: s.vendor.rank, rankPrev: prev ? { pos: prev.pos, of: prev.of } : null, rankDelta: prev && s.vendor.rank ? prev.pos - s.vendor.rank.pos : null, views: s.vendor.views, pricePos, startingPrice: s.vendor.startingPrice, metroVendors: s.pricing?.vendors || null, reviews: { count: s.vendor.reviewCount, average: s.vendor.reviewAverage }, week: s.week };
+  return s;
+}
+async function enrichCouple(env, s, who, label) {
+  const today = s.today;
+  s.todayTask = pickCoupleTask(s, label);
+  s.streak = await readStreak(env, who.uid, today);
+  s.recall = recallOf(s.memory, today);
+  s.milestone = s.daysToGo != null ? { days: s.daysToGo, label: milestoneFor(s.daysToGo) } : null;
+  s.rsvp = { pending: s.guests.pending, yes: s.guests.yes, no: s.guests.no, total: s.guests.total, silent: s.guestsSample || [] };
+  const b = s.money || {}; s.budgetRoom = b.budgetTotal ? { unallocated: Math.max(0, b.budgetTotal - (b.planned || 0)), uncommitted: Math.max(0, b.budgetTotal - (b.committed || 0)) } : null;
+  return s;
+}
+
+// one caption a day from their own gallery (cached per day; every tier can copy it, Studio can post it)
+async function postIdea(env, s) {
+  const key = "postidea_" + s.vendor.id + "_" + s.today; const hit = await kv.get(env, key); if (hit) return hit;
+  if (!env.ANTHROPIC_API_KEY) return { error: "not configured" };
+  const photos = [...s.vendor.showcases.map((x) => x.cover), ...s.vendor.gallery].filter(Boolean);
+  const photo = photos.length ? photos[(parseInt(s.today.replace(/-/g, ""), 10) || 0) % photos.length] : null;
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const r = await client.beta.messages.create({ model: env.CHAT_MODEL || "claude-sonnet-5-5", max_tokens: 400, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+    system: `You write one Instagram caption a day for ${s.vendor.name}, a ${s.vendor.category} in ${s.vendor.metro}. Warm, specific, first person, 2-3 short sentences, one question or call to action for engaged couples, 3-5 hashtags on the last line. No emojis in the first sentence. Never invent a couple's name. Return the caption only.`,
+    messages: [{ role: "user", content: `Today is ${localTime(s.tz, new Date(), { dateStyle: "full" })}. Bio: ${s.vendor.bio || "(none)"}. Packages: ${s.vendor.packages.map((p) => p.name + " " + p.price).join("; ") || "(none)"}. ${photo ? "The photo is from their gallery." : "No photo today - write a text post."} Weather: ${s.weather ? weatherSummary(s.weather, s.vendor.metro) : "unknown"}.` }] });
+  const caption = clip(r.content.filter((b) => b.type === "text").map((b) => b.text).join(""), 900);
+  const out = { day: s.today, caption, photo, at: new Date().toISOString() };
+  await kv.put(env, key, out, { expirationTtl: 2 * 86400 });
   return out;
 }
 
@@ -704,7 +824,7 @@ function elevenlabs(env, text, format = "mp3_44100_128", model = "eleven_turbo_v
 }
 
 /* ---------------- June for couples (src/couple.js) ---------------- */
-const COUPLE = makeCouple({ fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, speakWithTrack, audioType, Anthropic, BUILD, json });
+const COUPLE = makeCouple({ fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, speakWithTrack, audioType, Anthropic, BUILD, json, enrichCouple, markDone, dayKey });
 
 /* ---------------- worker ---------------- */
 const ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#3D1C3B"/><circle cx="50" cy="50" r="38" fill="none" stroke="#D9B77C" stroke-width="2.5" stroke-dasharray="46 22 12 60" stroke-linecap="round"/><circle cx="50" cy="50" r="26" fill="none" stroke="#E6D6B8" stroke-width="1.5" stroke-dasharray="18 14 6 40"/><circle cx="50" cy="50" r="13" fill="#D9B77C" opacity=".9"/><circle cx="50" cy="50" r="5" fill="#FAF6F0"/></svg>`;
@@ -754,7 +874,9 @@ async function handle(request, env, ctx) {
     }
 
     try {
-      if (p === "/api/state" && request.method === "GET") { const s = await snapshot(env, who, vend); delete s._rows; delete s._customKeys; return json(s); }
+      if (p === "/api/state" && request.method === "GET") { const s = await snapshot(env, who, vend); await enrichVendor(env, s, who); delete s._rows; delete s._customKeys; return json(s); }
+      if (p === "/api/today/done" && request.method === "POST") { const b = await request.json().catch(() => ({})); const day = /^\d{4}-\d{2}-\d{2}$/.test(str(b.day)) ? b.day : dayKey("America/Phoenix"); return json(await markDone(env, who.uid, day, b.id)); }
+      if (p === "/api/post-idea" && request.method === "GET") { const s = await snapshot(env, who, vend, { deep: false }); return json(await postIdea(env, s)); }
       if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx, who, vend);
       if (p === "/api/brief" && request.method === "POST") { const { force } = await request.json().catch(() => ({})); return json(await makeBrief(env, ctx, who, vend, !!force)); }
       if (p === "/api/brief" && request.method === "GET") return json((await kv.get(env, "brief_" + vend.vendorId)) || null);

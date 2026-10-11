@@ -27,6 +27,8 @@ id = "857b7d96321a495a897c3898fdf3b75a"
 crons = ["*/15 * * * *"]
 
 [vars]
+# JC-LAZO-JUNE-DAILY-1011-001: the functions-dashboard junePush door; secret JUNE_PUSH_KEY must match the functions secret
+JUNE_PUSH_URL = "https://us-central1-lazo-513ec.cloudfunctions.net/junePush"
 PUBLIC_URL = "https://june.meetlazo.com"
 EMAIL_FROM = "June at Lazo <hello@meetlazo.com>"
 FIREBASE_API_KEY = "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU"   # the public web key of lazo-513ec (same as the site worker)

@@ -6,7 +6,7 @@
 // Free for every couple on Lazo. Built 2026-10-07 beside the vendor side in index.js; the worker picks
 // the side by who the login is (users/{uid}.vendorId → vendor, else users/{uid}.coupleUid or the uid → couple).
 export function makeCouple(D) {
-  const { fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, speakWithTrack, audioType, Anthropic, BUILD } = D;
+  const { fsGet, fsQuery, fsCreate, fsPatch, kv, str, clip, uid, money, dayKey, fmtDay, fmtWhen, localTime, localToIso, within, weatherFor, dayWeather, weatherSummary, localNews, METROS, elevenlabs, speakWithTrack, audioType, Anthropic, BUILD, enrichCouple, markDone } = D;
   const K = (cid, k) => `${k}_c_${cid}`;   // KV keys for memory, queue, brief, reminders; "_c_" keeps them apart from vendor ids
   const CATS = { "wedding-photographers": "Photographer", "wedding-videographers": "Videographer", "wedding-venues": "Venue", "wedding-planners": "Planner", "wedding-djs": "DJ", "wedding-florists": "Florist", "wedding-caterers": "Caterer", "wedding-cakes": "Cake & desserts", "hair-and-makeup": "Hair & makeup", "wedding-officiants": "Officiant", "wedding-transportation": "Transportation", "wedding-rentals": "Rentals", "wedding-bands": "Live band", "wedding-invitations": "Invitations", "day-of-coordination": "Day-of coordinator" };
   const label = (slug) => CATS[slug] || str(slug).replace(/^wedding-/, "").replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -311,7 +311,8 @@ Planning advice: when asked what to do next, look at STILL TO BOOK, days to go, 
   /* ---------- routes (called by the worker once the login resolved to a couple) ---------- */
   async function route(p, request, env, ctx, who, coup, chat) {
     const cid = coup.coupleId;
-    if (p === "/api/state" && request.method === "GET") { const s = await snapshot(env, who, coup); delete s._rows; delete s._guests; delete s._shopping; return D.json(s); }
+    if (p === "/api/state" && request.method === "GET") { const s = await snapshot(env, who, coup); await enrichCouple(env, s, who, label); delete s._rows; delete s._guests; delete s._shopping; return D.json(s); }
+    if (p === "/api/today/done" && request.method === "POST") { const b = await request.json().catch(() => ({})); const day = /^\d{4}-\d{2}-\d{2}$/.test(str(b.day)) ? b.day : dayKey("America/Phoenix"); return D.json(await markDone(env, who.uid, day, b.id)); }
     if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx, who, coup, { snapshot, buildContext, system: (s) => SYSTEM(s.couple), tools: TOOLS, runTool });
     if (p === "/api/brief" && request.method === "POST") { const { force } = await request.json().catch(() => ({})); return D.json(await makeBrief(env, ctx, who, coup, !!force)); }
     if (p === "/api/brief" && request.method === "GET") return D.json((await kv.get(env, K(cid, "brief"))) || null);
