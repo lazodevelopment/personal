@@ -337,8 +337,9 @@ class _Voice {
   double _pos() {
     if (kIsWeb) {
       try {
-        final html.AudioElement? a = _el;
-        if (a != null) return a.currentTime.toDouble();
+        // read dynamically: the phone stub of the element has no currentTime (iOS archive failed on it)
+        final dynamic a = _el;
+        if (a != null) return ((a.currentTime as num?) ?? 0).toDouble();
       } catch (_) {}
     }
     final DateTime? at = _posAt;

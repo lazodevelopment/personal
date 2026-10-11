@@ -340,5 +340,8 @@ s = rep(s, "  Widget _deck(BuildContext context) {", "  // ---- the morning (JC-
 
 # the chat list is its own expression now; drop the Container's old closing
 s = rep(s, '                itemBuilder: (BuildContext c, int i) => _bubble(_chat[i]),\n              ),\n      );\n\n  Widget _inputRow() => Row(children: <Widget>[', '                itemBuilder: (BuildContext c, int i) => _bubble(_chat[i]),\n              );\n\n  Widget _inputRow() => Row(children: <Widget>[', 'chat list tail')
+
+# iOS: currentTime is not on the phone stub of AudioElement; read it dynamically
+s = rep(s, '        final html.AudioElement? a = _el;\n        if (a != null) return a.currentTime.toDouble();', '        // read dynamically: the phone stub of the element has no currentTime (iOS archive failed on it)\n        final dynamic a = _el;\n        if (a != null) return ((a.currentTime as num?) ?? 0).toDouble();', 'ios currentTime')
 (HERE / "JuneNative_v4.txt").write_text(s, encoding="utf-8")
 print("wrote JuneNative_v4.txt", len(s))
