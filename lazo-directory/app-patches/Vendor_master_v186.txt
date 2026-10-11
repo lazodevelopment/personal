@@ -22916,8 +22916,22 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     if (_tourIdx < 0 || _tourIdx >= _tourSteps.length) return;
     final _TourStep st = _tourSteps[_tourIdx];
     st.before?.call();
-    await Future<void>.delayed(const Duration(milliseconds: 60));
+    // JC-LAZO-VDASH-1010-186: a step's screen can take a few frames to build (a tab switch
+    // on a slow phone) - look for the target across frames before calling
+    // it absent, so Money and Profile are never skipped.
     BuildContext? tc = st.key?.currentContext;
+    bool laidOut(BuildContext? c) {
+      if (c == null) return false;
+      final RenderObject? ro = c.findRenderObject();
+      return ro is RenderBox && ro.hasSize;
+    }
+
+    for (int i = 0; i < 12 && st.key != null && !laidOut(tc); i++) {
+      await WidgetsBinding.instance.endOfFrame;
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      if (!mounted) return;
+      tc = st.key?.currentContext;
+    }
     if (tc == null && st.key != null) {
       // target not on this screen - skip it
       if (mounted) _tourGo(1);
@@ -22948,19 +22962,30 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     }
     if (!mounted) return;
     _tourMeasuring = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tourMeasuring = false;
-      if (!mounted) return;
+    // measure after the frame; if the target has no size yet, try again for
+    // a few frames rather than leaving the ring off the screen
+    Rect? measure() {
       final RenderObject? rootRo =
           _tourRootKey.currentContext?.findRenderObject();
       final RenderObject? ro = st.key?.currentContext?.findRenderObject();
-      Rect? r;
       if (rootRo is RenderBox && ro is RenderBox && ro.hasSize) {
         final Offset o = ro.localToGlobal(Offset.zero, ancestor: rootRo);
-        r = Rect.fromLTWH(o.dx, o.dy, ro.size.width, ro.size.height).inflate(6);
+        return Rect.fromLTWH(o.dx, o.dy, ro.size.width, ro.size.height)
+            .inflate(6);
       }
-      setState(() => _tourRect = r);
-    });
+      return null;
+    }
+
+    for (int i = 0; i < 10; i++) {
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+      final Rect? r = measure();
+      if (r != null || st.key == null || i == 9) {
+        _tourMeasuring = false;
+        setState(() => _tourRect = r);
+        return;
+      }
+    }
   }
 
   Widget _tourOverlay() {
@@ -22987,17 +23012,22 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
           Positioned.fill(
             child: GestureDetector(
               onTap: () => _tourGo(1),
-              child: TweenAnimationBuilder<Rect?>(
-                // v175: re-key when the ring first appears so it doesn't
-                // grow out of the top-left corner (Rect.lerp from null).
-                key: ValueKey<bool>(r == null),
-                tween: RectTween(begin: r, end: r),
-                duration:
-                    Duration(milliseconds: _reducedMotion(context) ? 0 : 260),
-                curve: Curves.easeOutCubic,
-                builder: (BuildContext bc, Rect? v, Widget? _) =>
-                    CustomPaint(painter: _SpotlightPainter(v, plum)),
-              ),
+              // JC-LAZO-VDASH-1010-186: a step with no target (the welcome card) paints the
+              // dim directly - a RectTween with a null end trips an assert in
+              // debug builds, and there is nothing to animate to anyway.
+              child: r == null
+                  ? CustomPaint(painter: _SpotlightPainter(null, plum))
+                  : TweenAnimationBuilder<Rect?>(
+                      // v175: re-key when the ring first appears so it doesn't
+                      // grow out of the top-left corner (Rect.lerp from null).
+                      key: const ValueKey<bool>(false),
+                      tween: RectTween(begin: r, end: r),
+                      duration: Duration(
+                          milliseconds: _reducedMotion(context) ? 0 : 260),
+                      curve: Curves.easeOutCubic,
+                      builder: (BuildContext bc, Rect? v, Widget? _) =>
+                          CustomPaint(painter: _SpotlightPainter(v, plum)),
+                    ),
             ),
           ),
           AnimatedPositioned(
@@ -23134,8 +23164,8 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       _TourStep('Five tabs, one job each',
           'Today is this view. Pipeline is your threads as a board you can drag. Money is payments and how you get paid. Studio is contracts, galleries and files. Profile is how couples see you.',
           key: _kTourModes, before: () => setState(() => _dashMode = 'leads')),
-      _TourStep('Ask June',
-          '"Who is waiting on me?" "What is due this week?" She reads your real threads and money, drafts replies, and adds tasks when you ask.',
+      _TourStep('June',
+          'She lives on your deck. Tap the mic or type - "Who is waiting on me?" "What is due this week?" She reads your real threads and money, drafts replies, adds tasks when you ask, and reads you today\'s brief aloud.',
           key: _kTourJune),
       _TourStep('Money',
           'What is outstanding and what came in, across every couple - and how you get paid: Whop, Stripe or Square.',
