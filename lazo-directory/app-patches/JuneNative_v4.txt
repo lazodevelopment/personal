@@ -948,6 +948,10 @@ class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateM
   // a few answers that never need the brain
   String _local(String raw) {
     final String t = raw.toLowerCase().replaceAll(RegExp(r'^june,?\s*'), '').replaceAll(RegExp(r'[.!?]+$'), '').trim();
+    if (RegExp(r'^(clear|reset|wipe|start over)( the| our| my)? ?(chat|conversation|page)?$').hasMatch(t) && t.length > 4) {
+      _clearChat();
+      return 'Fresh page. What next?';
+    }
     if (RegExp(r'^(what time is it|time)$').hasMatch(t)) {
       final DateTime d = DateTime.now();
       final int h = d.hour % 12 == 0 ? 12 : d.hour % 12;
@@ -1358,18 +1362,47 @@ class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateM
     SharedPreferences.getInstance().then((SharedPreferences p) => p.setBool('juneSpeak', _voice.enabled));
   }
 
+  // JC-LAZO-JUNE-NATIVE-1011-004: a clean page - from the box, the dock, or "clear the chat"
+  void _clearChat() {
+    _voice.stop();
+    setState(() {
+      _chat.clear();
+      _hist = <Map<String, dynamic>>[];
+      _heard = '';
+      _mode = 'idle';
+    });
+  }
+
   Widget _chatBox(double height) => Container(
         height: height,
         decoration: BoxDecoration(color: Colors.black.withOpacity(.25), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withOpacity(.08))),
-        child: _chat.isEmpty
+        clipBehavior: Clip.antiAlias,
+        child: Stack(children: <Widget>[
+          Positioned.fill(child: _chatList()),
+          if (_chat.isNotEmpty)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: GestureDetector(
+                onTap: _clearChat,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                  decoration: BoxDecoration(color: Colors.black.withOpacity(.45), borderRadius: BorderRadius.circular(999), border: Border.all(color: Colors.white.withOpacity(.16))),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: <Widget>[Icon(Icons.close_rounded, size: 12, color: _muted), SizedBox(width: 4), Text('Clear', style: TextStyle(color: _muted, fontSize: 11, fontWeight: FontWeight.w700))]),
+                ),
+              ),
+            ),
+        ]),
+      );
+
+  Widget _chatList() => _chat.isEmpty
             ? Center(child: Padding(padding: const EdgeInsets.all(20), child: Text(_couple ? 'Good to see you both. Ask me anything about your vendors, your guests, the budget or the big day.' : 'Good to see you. Ask me anything about your couples, dates or money.', textAlign: TextAlign.center, style: const TextStyle(color: _muted, fontSize: 13, height: 1.5))))
             : ListView.builder(
                 controller: _chatScroll,
                 padding: const EdgeInsets.all(12),
                 itemCount: _chat.length,
                 itemBuilder: (BuildContext c, int i) => _bubble(_chat[i]),
-              ),
-      );
+              );
 
   Widget _inputRow() => Row(children: <Widget>[
         Expanded(
@@ -1556,6 +1589,7 @@ class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateM
     final Map<String, dynamic> money = _map(_snap['money']);
     final num due = _couple ? _n(money['open']) : _n(money['outstanding']);
     return Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
+      _dockBtn(Icons.wb_twilight_rounded, 'Morning', () => _sheet('Morning', _morningCard)),
       _dockBtn(Icons.auto_stories_rounded, 'Brief', () => _sheet('Brief', _briefCard)),
       _dockBtn(Icons.mark_chat_unread_rounded, 'Waiting', () => _sheet('Waiting', _waitingCard), badge: waiting > 0 ? '$waiting' : null),
       _dockBtn(Icons.event_rounded, 'Coming up', () => _sheet('Coming up', _upcomingCard)),
@@ -1570,11 +1604,7 @@ class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateM
       if (!_couple) _dockBtn(Icons.camera_alt_rounded, 'Post idea', () => _sheet('Post idea', _postIdeaCard)),
       _dockBtn(Icons.timer_rounded, 'Focus', () => _sheet('Focus', _focusCard), on: _focusEnd != null),
       _dockBtn(Icons.radio_rounded, 'Radio', () => _sheet('Radio', _radioCard), on: _radioName.isNotEmpty),
-      if (_chat.isNotEmpty)
-        _dockBtn(Icons.cleaning_services_rounded, 'Clear chat', () => setState(() {
-              _chat.clear();
-              _hist = <Map<String, dynamic>>[];
-            })),
+      if (_chat.isNotEmpty) _dockBtn(Icons.cleaning_services_rounded, 'Clear chat', _clearChat),
     ]);
   }
 
@@ -1749,6 +1779,66 @@ class _JuneNativeState extends State<JuneNative> with SingleTickerProviderStateM
         for (final int m in <int>[25, 50, 90]) _btn('$m min', on ? null : () => _focusStart(m), gold: m == 50, icon: Icons.timer_rounded),
       ]),
     );
+  }
+
+  // ---- the morning (JC-LAZO-JUNE-NATIVE-1011-004): the sky, the city, the trade, the calendar
+  Widget _morningCard() {
+    final List<Map<String, dynamic>> news = _list(_snap['news']);
+    final List<Map<String, dynamic>> ind = _list(_snap['industry']);
+    final String metro = _s(_map(_snap[_couple ? 'couple' : 'vendor'])['metro']);
+    final List<Map<String, dynamic>> cal = <Map<String, dynamic>>[];
+    if (_couple) {
+      cal.addAll(_list(_snap['upcoming']).take(4));
+    } else {
+      for (final Map<String, dynamic> c in _list(_snap['consults']).take(3)) cal.add(<String, dynamic>{'when': _s(c['startAt']), 'kind': 'Consult', 'who': _s(c['who']), 'time': true});
+      for (final Map<String, dynamic> w in _list(_snap['weddings']).take(2)) cal.add(<String, dynamic>{'when': _s(w['weddingDate']), 'kind': 'Wedding', 'who': _s(w['couple'])});
+      cal.sort((Map<String, dynamic> a, Map<String, dynamic> b) => _s(a['when']).compareTo(_s(b['when'])));
+    }
+    Widget head(String t) => Padding(padding: const EdgeInsets.only(top: 14, bottom: 6), child: Text(t.toUpperCase(), style: const TextStyle(color: _muted, fontSize: 10, letterSpacing: 2, fontWeight: FontWeight.w700)));
+    Widget headline(Map<String, dynamic> n) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: GestureDetector(
+            onTap: () {
+              final String u = _s(n['url']);
+              if (u.isNotEmpty) launchUrl(Uri.parse(u), mode: LaunchMode.externalApplication);
+            },
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              const Padding(padding: EdgeInsets.only(top: 6), child: Icon(Icons.circle, size: 5, color: _gold)),
+              const SizedBox(width: 9),
+              Expanded(child: Text(_s(n['title']), style: const TextStyle(color: _ivory, fontSize: 13.5, height: 1.4))),
+              if (_s(n['source']).isNotEmpty) Padding(padding: const EdgeInsets.only(left: 8, top: 2), child: Text(_s(n['source']), style: const TextStyle(color: _muted, fontSize: 11))),
+            ]),
+          ),
+        );
+    String when(Map<String, dynamic> e) {
+      final String w = _s(e['when']);
+      if (w.length < 10) return w;
+      return e['time'] == true && w.length >= 16 ? w.replaceFirst('T', ' ').substring(5, 16) : w.substring(5, 10);
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
+      _weatherCard(),
+      _card(
+        title: 'This morning',
+        sub: 'The city, the trade, and what is on your calendar. Ask me about any of it.',
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          head(metro.isEmpty ? 'In your city' : 'In $metro'),
+          if (news.isEmpty) const Text('Nothing local came through this morning.', style: TextStyle(color: _muted, fontSize: 13)) else for (final Map<String, dynamic> n in news.take(3)) headline(n),
+          if (ind.isNotEmpty) ...<Widget>[head('In the wedding world'), headline(ind.first)],
+          head('On your calendar'),
+          if (cal.isEmpty)
+            Text(_couple ? 'Nothing booked. A quiet day is a planning day.' : 'No consults or weddings on the books this week.', style: const TextStyle(color: _muted, fontSize: 13))
+          else
+            for (final Map<String, dynamic> e in cal)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(children: <Widget>[
+                  SizedBox(width: 92, child: Text(when(e), style: const TextStyle(color: _goldSoft, fontSize: 12.5, fontWeight: FontWeight.w700))),
+                  Expanded(child: Text(_s(e['kind']) + (_s(e['who']).isNotEmpty ? ' · ' + _s(e['who']) : ''), style: const TextStyle(color: _ivory, fontSize: 13.5))),
+                ]),
+              ),
+        ]),
+      ),
+    ]);
   }
 
   Widget _deck(BuildContext context) {

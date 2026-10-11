@@ -26,10 +26,11 @@ function wrap(v, inner) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:24px 12px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
 <tr><td style="background:${b.primary};border-radius:16px 16px 0 0;padding:18px 22px;color:#fff">
-  <table role="presentation" cellpadding="0" cellspacing="0"><tr>${logo ? `<td style="padding-right:12px">${logo}</td>` : ''}<td style="font-size:18px;font-weight:600;letter-spacing:.2px">${esc(b.name || 'Your vendor')}</td></tr></table>
+  <table role="presentation" cellpadding="0" cellspacing="0"><tr>${logo ? `<td style="padding-right:12px">${logo}</td>` : ''}<td style="font-size:18px;font-weight:600;letter-spacing:.2px;color:#ffffff"><font color="#ffffff">${esc(b.name || 'Your vendor')}</font></td></tr></table>
 </td></tr>
 <tr><td style="background:#FFFDF9;border:1px solid #E6D6B8;border-top:0;border-radius:0 0 16px 16px;padding:22px;font-size:15px;line-height:1.55">${inner}</td></tr>
-<tr><td style="padding:14px 6px;font-size:11px;color:#8A7F90;text-align:center">Sent through <a href="https://meetlazo.com" style="color:#8A7F90">Lazo</a> on behalf of ${esc(b.name || 'your vendor')}. Reply STOP to any text to stop texts.</td></tr>
+<tr><td style="padding:16px 6px 6px;text-align:center"><a href="https://meetlazo.com" style="text-decoration:none"><img src="https://meetlazo.com/assets/lazo-mark.png" width="34" height="34" alt="Lazo" style="display:inline-block;width:34px;height:34px;border:0;opacity:.85"></a></td></tr>
+<tr><td style="padding:4px 6px 14px;font-size:11px;color:#8A7F90;text-align:center">Sent through <a href="https://meetlazo.com" style="color:#8A7F90">Lazo</a> on behalf of ${esc(b.name || 'your vendor')}. Reply STOP to any text to stop texts.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
