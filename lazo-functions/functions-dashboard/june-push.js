@@ -73,7 +73,9 @@ module.exports = (JUNE_PUSH_KEY) => {
   // ---------------------------------------------------------------- the worker's door
   const junePush = onRequest({ cors: false, invoker: 'public', memory: '256MiB', secrets: [JUNE_PUSH_KEY] }, async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('POST');
-    if (str(req.get('x-june-key')) !== JUNE_PUSH_KEY.value() || !JUNE_PUSH_KEY.value()) return res.status(401).json({ error: 'no' });
+    // trimmed on both sides: a secret set through a shell pipe carries a newline
+    const want = str(JUNE_PUSH_KEY.value()).trim();
+    if (!want || str(req.get('x-june-key')).trim() !== want) return res.status(401).json({ error: 'no' });
     const b = req.body || {};
     const uids = Array.isArray(b.uids) ? b.uids.map(String) : b.uid ? [String(b.uid)] : [];
     if (!uids.length || !b.title) return res.status(400).json({ error: 'uid and title' });
