@@ -699,6 +699,72 @@ exports.statsRefresh = onSchedule(
 // LEAD AUTO-REPLIES â€” vendor-written, robot-delivered
 // Instant reply on new inquiries; day-3 / day-5 follow-ups.
 // ============================================================
+// ============================================================
+// JC-LAZO-FN-AUTOREPLY-1011-001: June writes the auto-replies.
+// A reply is a real message in the thread (what the couple app renders),
+// written from the couple's own words and the vendor's packages, FAQs and
+// bio. autoReply.mode 'own' keeps the vendor's templates; anything else is June.
+// ============================================================
+const S = (v) => (v == null ? "" : String(v));
+function vendorFacts(vendor) {
+  const pk = (Array.isArray(vendor.packages) ? vendor.packages : []).filter((x) => x && typeof x === "object").slice(0, 8)
+    .map((x) => `${S(x.name)}${x.price ? " - " + S(x.price) : ""}${x.includes || x.description ? ": " + S(x.includes || x.description).slice(0, 160) : ""}`);
+  const faqs = (Array.isArray(vendor.vendorFaqs) ? vendor.vendorFaqs : []).filter((x) => x && typeof x === "object").slice(0, 15)
+    .map((x) => `Q: ${S(x.q).slice(0, 160)} A: ${S(x.a).slice(0, 300)}`);
+  const cats = Array.isArray(vendor.categories) ? vendor.categories.join(", ") : S(vendor.category);
+  return [
+    `Business: ${S(vendor.name)} (${cats || "wedding vendor"}, ${S(vendor.metroId) || "their city"})`,
+    vendor.startingPrice != null ? `Starting price: $${vendor.startingPrice}` : "",
+    vendor.bio ? `About: ${S(vendor.bio).slice(0, 500)}` : "",
+    pk.length ? "Packages:\n- " + pk.join("\n- ") : "No packages listed.",
+    faqs.length ? "FAQs:\n" + faqs.join("\n") : "",
+    Array.isArray(vendor.unavailableDates) && vendor.unavailableDates.length ? `Booked dates: ${vendor.unavailableDates.slice(0, 40).join(", ")}` : "",
+  ].filter(Boolean).join("\n");
+}
+function inquiryFacts(inquiry) {
+  const intent = inquiry.structuredIntent || {};
+  return [
+    `Couple: ${S(inquiry.coupleName) || "a verified couple"}`,
+    `Wedding date: ${S(intent.weddingDate) || "not given"}`,
+    intent.guests ? `Guests: ${S(intent.guests)}` : "",
+    intent.venue || inquiry.venue ? `Venue: ${S(intent.venue || inquiry.venue)}` : "",
+    intent.budget || inquiry.budget ? `Budget: ${S(intent.budget || inquiry.budget)}` : "",
+    `Their message: "${S(inquiry.message || inquiry.intro || inquiry.lastMessagePreview).slice(0, 1200) || "(no message, just an inquiry)"}"`,
+  ].filter(Boolean).join("\n");
+}
+async function juneDraft(vendor, inquiry, kind) {
+  const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY.value() });
+  const ar = vendor.autoReply || {};
+  const booked = Array.isArray(vendor.unavailableDates) && (inquiry.structuredIntent || {}).weddingDate && vendor.unavailableDates.includes(inquiry.structuredIntent.weddingDate);
+  const what = kind === "instant"
+    ? "the FIRST reply to a new inquiry, sent within a minute of it arriving. Answer what they actually asked, using the packages and FAQs where they apply; mention the starting price only if they asked about cost or the FAQs cover it; if their date is in the booked dates, say so kindly and offer to help another way; otherwise say the date looks open and suggest one concrete next step (a quick call, a tour, a few photos of their venue). 70 to 120 words."
+    : kind === "day3"
+      ? "a DAY-3 follow-up: they inquired three days ago and have not replied. One or two warm sentences, a fresh detail (a package, a question about their plans) rather than a repeat, and an easy way to answer. 40 to 70 words."
+      : "a DAY-5 follow-up, the last one: three or four sentences, no pressure, the door stays open, one specific thing they could ask back. 40 to 70 words.";
+  const system = `You write messages for ${S(vendor.name) || "a wedding vendor"} to engaged couples who inquired through Lazo. Write in the first person as the business, warm and specific, plain English, no subject line, no sign-off block (end with the business name on its own line), no emojis, no placeholders or brackets, no invented facts, prices or availability beyond the facts given. Never mention that the message is automated or AI-written.${ar.note ? " The owner's standing instructions: " + S(ar.note).slice(0, 400) : ""}`;
+  const msg = await anthropic.messages.create({
+    model: "claude-sonnet-5-5",
+    max_tokens: 500,
+    system,
+    messages: [{ role: "user", content: `Write ${what}\n\nVENDOR FACTS:\n${vendorFacts(vendor)}\n\nINQUIRY:\n${inquiryFacts(inquiry)}${booked ? "\n\n(Their date is already booked.)" : ""}\n\nReturn the message text only.` }],
+  });
+  const text = (msg.content || []).filter((b) => b.type === "text").map((b) => b.text).join("").trim();
+  if (!text || text.length < 20) throw new Error("empty draft");
+  return text.slice(0, 1500);
+}
+// the reply lands as a real message in the thread, plus the roll-ups the inbox reads
+async function postAutoMessage(inqRef, inquiry, text, extra) {
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  await inqRef.collection("messages").add({ senderRole: "vendor", text, at: now, auto: true, by: "june" });
+  await inqRef.update({
+    vendorReply: text,
+    status: inquiry.status === "new" || !inquiry.status ? "replied" : inquiry.status,
+    respondedAt: inquiry.respondedAt || now,
+    lastMessageAt: now, lastMessageRole: "vendor", lastMessagePreview: text.slice(0, 140),
+    ...extra,
+  });
+}
+
 function fillTokens(text, inquiry, vendor) {
   let t = String(text || "");
   const intent = inquiry.structuredIntent || {};
@@ -711,9 +777,9 @@ exports.autoReplyOnInquiry = onDocumentCreated(
   {
     document: "inquiries/{inquiryId}",
     region: "us-central1",
-    timeoutSeconds: 60,
+    timeoutSeconds: 120,
     memory: "256MiB",
-    secrets: [TELNYX_API_KEY, TELNYX_FROM],
+    secrets: [TELNYX_API_KEY, TELNYX_FROM, ANTHROPIC_API_KEY],
   },
   async (event) => {
     // ============================================================
@@ -848,16 +914,19 @@ exports.autoReplyOnInquiry = onDocumentCreated(
       console.warn("SMS alert error (non-fatal):", e.message || e);
     }
 
-    // --- Vendor-written instant auto-reply ---
+    // --- The instant auto-reply: June writes it from their message, unless the vendor keeps their own words ---
     const ar = vendor.autoReply || {};
-    if (!ar.enabled || !ar.instant || !String(ar.instant).trim()) return;
-    await snap.ref.update({
-      vendorReply: fillTokens(ar.instant, inquiry, vendor),
-      status: "replied",
-      respondedAt: admin.firestore.FieldValue.serverTimestamp(),
-      autoReplied: true,
-    });
-    console.log("Auto-replied to inquiry", event.params.inquiryId);
+    if (!ar.enabled) return;
+    if (inquiry.preview === true || inquiry.practice === true) return;
+    const own = ar.mode === "own";
+    let text = "";
+    if (!own) {
+      try { text = await juneDraft(vendor, inquiry, "instant"); } catch (e) { console.warn("June instant draft failed:", e.message || e); }
+    }
+    if (!text && ar.instant && String(ar.instant).trim()) text = fillTokens(ar.instant, inquiry, vendor);
+    if (!text) return;
+    await postAutoMessage(snap.ref, inquiry, text, { autoReplied: true, autoReplyBy: own ? "vendor" : "june" });
+    console.log("Auto-replied to inquiry", event.params.inquiryId, own ? "(vendor template)" : "(June)");
   }
 );
 
@@ -866,8 +935,9 @@ exports.autoFollowUpSweep = onSchedule(
     schedule: "0 10 * * *",
     timeZone: "America/Phoenix",
     region: "us-central1",
-    timeoutSeconds: 300,
+    timeoutSeconds: 540,
     memory: "256MiB",
+    secrets: [ANTHROPIC_API_KEY],
   },
   async () => {
     const cutoff = new Date(Date.now() - 8 * 24 * 3600 * 1000);
@@ -893,23 +963,21 @@ exports.autoFollowUpSweep = onSchedule(
       }
       const ar = vendor.autoReply || {};
       if (!ar.enabled) continue;
+      if (q.preview === true || q.practice === true) continue;
+      // a couple who wrote back since the reply needs the vendor, not a nudge
+      if (q.lastMessageRole === "couple" && q.respondedAt && q.lastMessageAt && q.lastMessageAt.toMillis && q.respondedAt.toMillis && q.lastMessageAt.toMillis() > q.respondedAt.toMillis()) continue;
+      const own = ar.mode === "own";
       const updates = {};
-      if (ageDays >= 3 && !q.followUp3Sent && ar.day3 && String(ar.day3).trim()) {
-        updates.followUp3Sent = true;
-        updates.followUps = admin.firestore.FieldValue.arrayUnion({
-          day: 3,
-          text: fillTokens(ar.day3, q, vendor),
-          at: new Date().toISOString(),
-        });
+      async function followUp(day, template) {
+        let text = "";
+        if (!own) { try { text = await juneDraft(vendor, q, "day" + day); } catch (e) { console.warn("June day" + day + " draft failed:", e.message || e); } }
+        if (!text && template && String(template).trim()) text = fillTokens(template, q, vendor);
+        if (!text) return false;
+        await postAutoMessage(doc.ref, q, text, { ["followUp" + day + "Sent"]: true, followUps: admin.firestore.FieldValue.arrayUnion({ day, text, at: new Date().toISOString(), by: own ? "vendor" : "june" }) });
+        return true;
       }
-      if (ageDays >= 5 && !q.followUp5Sent && ar.day5 && String(ar.day5).trim()) {
-        updates.followUp5Sent = true;
-        updates.followUps = admin.firestore.FieldValue.arrayUnion({
-          day: 5,
-          text: fillTokens(ar.day5, q, vendor),
-          at: new Date().toISOString(),
-        });
-      }
+      if (ageDays >= 3 && !q.followUp3Sent) { if (await followUp(3, ar.day3)) { sent++; q.followUp3Sent = true; } }
+      if (ageDays >= 5 && !q.followUp5Sent) { if (await followUp(5, ar.day5)) sent++; }
       if (Object.keys(updates).length > 0) {
         await doc.ref.update(updates);
         sent = sent + 1;

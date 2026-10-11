@@ -223,7 +223,7 @@ function vendorCard(v) {
     categoryId: str((Array.isArray(v.categories) && v.categories[0]) || v.category), bio: clip(v.bio, 400), publicEmail: str(v.publicEmail) || null,
     packages: (Array.isArray(v.packages) ? v.packages : []).filter((p) => p && typeof p === "object").map((p) => ({ name: str(p.name), price: str(p.price), offPeak: str(p.offPeak), hours: str(p.hours), includes: clip(p.includes || p.description, 200) })).slice(0, 8),
     savedReplies: (Array.isArray(v.savedReplies) ? v.savedReplies : []).filter((r) => r && typeof r === "object").map((r) => ({ title: str(r.title), text: clip(r.text, 700) })).slice(0, 10),
-    faqs: (Array.isArray(v.vendorFaqs) ? v.vendorFaqs : []).filter((f) => f && typeof f === "object").map((f) => ({ q: clip(f.q, 160), a: clip(f.a, 400) })).slice(0, 12),
+    faqs: (Array.isArray(v.vendorFaqs) ? v.vendorFaqs : []).filter((f) => f && typeof f === "object").map((f) => ({ q: clip(f.q, 160), a: clip(f.a, 400) })).slice(0, 15),
   };
 }
 
