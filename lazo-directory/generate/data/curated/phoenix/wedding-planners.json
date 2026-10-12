@@ -1,0 +1,205 @@
+{
+ "metro": "phoenix",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 76,
+ "listed": 96,
+ "how": "We read the website of every Phoenix wedding planner listed on Lazo (96 listings, 76 sites reachable) and set aside the ones that are not really in the wedding business: stage and festival crews, caterers and venues that also sell coordination, and rental companies. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours and in meetings.",
+  "Which Phoenix venues and vendors have you worked with this year? Local relationships are the job.",
+  "Who is on site on the wedding day, the planner you hired or an associate?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ5Yr-oCN0K4cRw5Bes0leu6Q",
+   "name": "Pop the Cork Productions",
+   "website": "https://popthecorkproductions.com/",
+   "instagram": "popthecorkpro",
+   "tags": [
+    "since 2011",
+    "busy professionals",
+    "hospitality-rooted"
+   ],
+   "blurb": "Pop the Cork Productions has planned Arizona weddings since 2011 with a pitch aimed at busy professionals who want a planner at their side. Celebrations rooted in hospitality, with planning and coordination tiers published on the site.",
+   "since": 2011,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJh8aQdxtpK4cRRfBwy3hFROY",
+   "name": "Events By Jordyn",
+   "website": "http://eventsbyjordyn.com/",
+   "instagram": "eventsbyjordyn",
+   "tags": [
+    "weddings only",
+    "full-service",
+    "destination"
+   ],
+   "blurb": "Jordyn plans weddings and only weddings, full-service in Arizona and at destinations worldwide. The site lays out support levels so you can pick the amount of help that fits your day.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJs9x2kkwHK4cRMRJKOWWYz5k",
+   "name": "Black Tie Optional",
+   "website": "http://btoevents.com/",
+   "instagram": "btoevents",
+   "tags": [
+    "multi-award-winning",
+    "Arizona Bride Best, twice",
+    "design-led"
+   ],
+   "blurb": "Black Tie Optional has twice been named Best by Arizona Bride Magazine and plans weddings for couples who, in its words, do not do boring. Tempe-based, design-heavy, built around the couple's own story.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJM5JnwJULK4cR5fRcqHHz9YA",
+   "name": "Mandy Marie Events",
+   "website": "https://mandymarieevents.com/",
+   "instagram": "mandymarieevents",
+   "tags": [
+    "luxury",
+    "multi-day",
+    "AZ, CA, Mountain West, Mexico"
+   ],
+   "blurb": "Mandy Marie Events plans luxury destination weddings and multi-day celebrations across Arizona, California, the Mountain West and Mexico, with concierge-level planning and editorial-caliber design.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJuzvP8RkACSQR7MmLaih0lyg",
+   "name": "Soul Agave Proposal + Wedding Planner",
+   "website": "https://soulagave.com/",
+   "instagram": "soulagave",
+   "tags": [
+    "luxury",
+    "full-service",
+    "proposal design"
+   ],
+   "blurb": "Soul Agave, led by Dominique Mattessino in Gilbert, does luxury full-service planning plus proposal design, for couples with a distinct style who obsess over their love story.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJI1x1sYljK4cRVb3Dv0XG5x0",
+   "name": "Sweet Simplicity Events",
+   "website": "http://www.sweetsimplicityevents.com/",
+   "instagram": "sweetsimplicityeventsaz",
+   "tags": [
+    "boutique",
+    "8 years",
+    "immersion process"
+   ],
+   "blurb": "Sweet Simplicity Events is a boutique Phoenix planner founded to fight weddings that look perfect but feel impersonal. Eight years in, the process starts with getting to know your story before any design.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOVTuWDwSK4cRaID_CWYQ9vA",
+   "name": "Stylish Events By Lisa",
+   "website": "https://stylisheventsbylisa.com/",
+   "instagram": "stylisheventsbylisa",
+   "tags": [
+    "15+ years",
+    "OK! Magazine Best Wedding Planner 2023"
+   ],
+   "blurb": "Lisa brings more than 15 years in events and hospitality and was voted Best Wedding Planner by OK! Magazine in 2023. Stylish Events by Lisa handles weddings and social events throughout Arizona.",
+   "since": 2015,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJ7g0V1irK4cRPFqdrD6b700",
+   "name": "Apropos Creations",
+   "website": "https://www.aproposcreations.com/",
+   "instagram": "aproposcr8ions",
+   "tags": [
+    "South Asian",
+    "multicultural",
+    "luxury"
+   ],
+   "blurb": "Apropos Creations is Arizona's South Asian and multicultural wedding specialist, keeping traditions at the heart of the celebration while planning at a luxury level. Chandler-based, serves every couple and culture.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1yGAujpPfGMRVP5T2VSF97Y",
+   "name": "MatchBox Event Co",
+   "website": "http://www.matchboxeventco.com/",
+   "instagram": "matchboxeventco",
+   "tags": [
+    "bespoke",
+    "high-end",
+    "hospitality degree"
+   ],
+   "blurb": "MatchBox Event Co. is Natalia's bespoke planning studio in Phoenix, crafted guest experiences backed by a hospitality management degree from Northern Arizona University. Weddings plus social and corporate events.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHfnxobYLK4cRytTA-ojNmu8",
+   "name": "Westgate Events",
+   "website": "http://www.westgateeventplanning.com/",
+   "instagram": "",
+   "tags": [
+    "luxury",
+    "destination",
+    "a decade of experience"
+   ],
+   "blurb": "Westgate Events is Cydney Lundahl's luxury wedding and event studio in Scottsdale, with over a decade in the industry and a curated vendor team tailored to each couple.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5Y7FCflPK4cR-ap5dPYe3SU",
+   "name": "Sweet I Do's",
+   "website": "https://sweetido.com/",
+   "instagram": "sweetido",
+   "tags": [
+    "day-of coordination",
+    "wedding day management"
+   ],
+   "blurb": "Sweet I Do's specializes in wedding day management, the day-of coordination that lets you be a guest at your own wedding. Phoenix metro, for couples who planned it themselves and want the day run by someone else.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJgXd0ReCrK4cR5f7UN4In7xk",
+   "name": "Meander Gatherings",
+   "website": "https://www.meandergatherings.com/",
+   "instagram": "meandergatherings",
+   "tags": [
+    "micro weddings",
+    "all-inclusive",
+    "up to 24 guests"
+   ],
+   "blurb": "Meander Gatherings runs all-inclusive micro and pop-up weddings for up to 24 people, bringing the setup to a location you choose. For couples who want a real ceremony without a 150-person production.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

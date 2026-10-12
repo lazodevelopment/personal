@@ -1,0 +1,190 @@
+{
+ "metro": "phoenix",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 133,
+ "listed": 167,
+ "how": "We read the website of every Phoenix wedding florist listed on Lazo (167 listings, 133 sites reachable) and set aside the ones that are not really in the wedding business: same-day delivery shops and funeral florists that do not do wedding design, a floral preservation drop-off, and a painter. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Do you design for the venue, or deliver arrangements? Installation and teardown are the difference in price.",
+  "What is in season in Phoenix for my month, and what gets shipped in?",
+  "Can I see a full wedding's florals, not a bouquet photo, at a budget like mine?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ5wThAOARK4cR_WeNCf7AYIQ",
+   "name": "LUX Wedding Florist",
+   "website": "https://luxweddingflorist.com/",
+   "instagram": "luxflorist",
+   "tags": [
+    "full-service design",
+    "Phoenix Flower District",
+    "since 2011"
+   ],
+   "blurb": "LUX Wedding Florist is a full-service wedding and event design studio in the heart of the Phoenix Flower District, creating events since 2011. The site lists awards and features and a love-notes page of past couples.",
+   "since": 2011,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJw1yZ_0hwK4cRKWztAI9Z28U",
+   "name": "Flowers By Jodi",
+   "website": "https://flowersbyjodi.com/",
+   "instagram": "flowersbyjodi",
+   "tags": [
+    "weddings only",
+    "since 1995",
+    "locally owned"
+   ],
+   "blurb": "Flowers by Jodi has specialized exclusively in weddings and events since 1995, across Arizona and beyond. An upscale, locally owned studio with three decades of wedding flowers behind it.",
+   "since": 1995,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ91xZ01F0K4cRgGJMU4na0WA",
+   "name": "Your Event Florist LLC",
+   "website": "http://www.youreventflorist.com/",
+   "instagram": "youreventflorist",
+   "tags": [
+    "30+ years in floral",
+    "husband and wife",
+    "events only"
+   ],
+   "blurb": "Your Event Florist in Scottsdale is a husband-and-wife event floral business started as newlyweds more than 19 years ago, with Kevin bringing over 30 years in the floral industry. The site shows real weddings by couple name.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg0MwsPgOK4cRcAHW_x86QyI",
+   "name": "Form Floral",
+   "website": "http://www.formfloral.com/",
+   "instagram": "formfloral",
+   "tags": [
+    "art-focused",
+    "13 years",
+    "thousands of events"
+   ],
+   "blurb": "Form Floral began as Malori Maeva's one-woman operation 13 years ago and has since designed for thousands of weddings and events, with an art-focused style built around the desert landscape.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFfxuRjuyzScRv61RG_8Sxwk",
+   "name": "Snapdragon Bloom Bar",
+   "website": "https://snapdragonbloombar.com/",
+   "instagram": "arizonaweddingflorist",
+   "tags": [
+    "fine art",
+    "installations",
+    "Phoenix and Los Angeles"
+   ],
+   "blurb": "Snapdragon Atelier does fine art wedding florals designed for the space and told through the story, with premium seasonal blooms and installation managed directly with the venue. Phoenix, Scottsdale and Los Angeles.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJPzfmjV6oK4cRSpfHL06jK4k",
+   "name": "Blume Events",
+   "website": "http://idoaz.com/",
+   "instagram": "blumeevents",
+   "tags": [
+    "custom wedding decor",
+    "Mesa",
+    "statewide"
+   ],
+   "blurb": "Blume Events is Kristen and David Mandly's wedding florist in Mesa, designing custom floral decor for weddings from Phoenix and Gilbert to Tucson and Sedona. Kristen has been doing wedding flowers since she was sixteen.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1wsPRpKjXYcRxNlt3VRgNjA",
+   "name": "Social Fleur",
+   "website": "https://www.socialfleur.com/",
+   "instagram": "social_fleur",
+   "tags": [
+    "wedding florals",
+    "mobile bloom bar",
+    "event rentals"
+   ],
+   "blurb": "Social Fleur, founded by Cecilia, does custom wedding florals and centerpieces plus a mobile bloom bar and event rentals, so one team covers the flowers and the vibe. Phoenix and Scottsdale.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTwruUUptK4cRtO7M30aU_JY",
+   "name": "Blooming Canyon",
+   "website": "https://www.bloomingcanyon.com/",
+   "instagram": "",
+   "tags": [
+    "floral design studio",
+    "weddings and delivery"
+   ],
+   "blurb": "Blooming Canyon is Isis Lopez's home-based floral design studio in Phoenix, offering wedding flowers alongside delivery and designer's-choice work, drawing on a love of flowers that started more than 30 years ago.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2fB8RSxFK4cRoWuVTC6iKvc",
+   "name": "Designs by Zima",
+   "website": "http://www.designsbyzima.com/",
+   "instagram": "Designsbyzima",
+   "tags": [
+    "Arizona Master Florist",
+    "planning and floral",
+    "Tongan-American design"
+   ],
+   "blurb": "Designs by Zima is led by an Arizona Master Florist and combines wedding planning with floral design, with palettes inspired by a Tongan-American background. Over ten years of events across the country.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQVYmFOARK4cRmhn2BZOLD_U",
+   "name": "Arizona Flower Market",
+   "website": "https://azflowermarket.com/",
+   "instagram": "azflowermarket",
+   "tags": [
+    "wholesale",
+    "DIY couples",
+    "Flower District"
+   ],
+   "blurb": "Not a designer but worth knowing: Arizona Flower Market sells fresh wholesale and bulk flowers plus supplies in the Phoenix Flower District, the place DIY couples and many local florists buy stems.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHZaRsxUMK4cRd9sRZA5pDIw",
+   "name": "Phoenix Flower Shops",
+   "website": "https://www.phoenixflowershops.com/?utm_source=google&utm_medium=organic&utm_campaign=gmb",
+   "instagram": "phoenixflowershops",
+   "tags": [
+    "50+ years",
+    "four Valley locations",
+    "retail florist"
+   ],
+   "blurb": "Phoenix Flower Shops has been the Valley's local florist for over 50 years, with four retail locations and wedding flowers among its services. The traditional retail option if you want a shop rather than a studio.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

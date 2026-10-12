@@ -1,0 +1,207 @@
+{
+ "metro": "phoenix",
+ "cat": "wedding-photographers",
+ "updated": "2026-10-12",
+ "read": 102,
+ "listed": 130,
+ "how": "We read the website of every Phoenix wedding photographer listed on Lazo (130 listings, 102 sites reachable) and set aside the ones that are not really in the wedding business: headshot studios, newborn and family portrait photographers, and a New York studio with no Arizona presence. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "How many weddings have you shot at venues like mine, and can I see a full gallery from one, not just highlights?",
+  "What is the delivery timeline, and is a second shooter included or an add-on?",
+  "If I want film or a specific editing style, is that your default or a special request?"
+ ],
+ "picks": [
+  {
+   "id": "manual-phoenix-atavia-weddings",
+   "name": "Atavia Weddings",
+   "website": "https://ataviaweddings.com",
+   "instagram": "ataviaweddings",
+   "tags": [
+    "photo and video",
+    "cinematic films",
+    "Lazo verified"
+   ],
+   "blurb": "Atavia Weddings shoots photo and video as one team, pairing timeless stills with cinematic films for couples who value story over spectacle. Now booking 2026 and 2027, and one of the few Phoenix vendors with a verified, claimed Lazo profile.",
+   "since": null,
+   "from_price": "$1,200",
+   "verified": true,
+   "claimed": true
+  },
+  {
+   "id": "ChIJp5g0WuinK4cRUPSASqlRbBs",
+   "name": "Still Life Studios",
+   "website": "http://www.stilllifestudios.com/",
+   "instagram": "stilllifestudios",
+   "tags": [
+    "since 1996",
+    "team of photographers",
+    "true-to-color"
+   ],
+   "blurb": "Matt has been shooting weddings since 1996; he and Dani started Still Life Studios in 2004. A Mesa-based team that specializes in Phoenix, Scottsdale and Gilbert weddings and makes a point of images that are true to color.",
+   "since": 1996,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpV97KbQLK4cRTd8fZCMKkDg",
+   "name": "Desert Light Weddings",
+   "website": "https://desertlightweddings.com/",
+   "instagram": "",
+   "tags": [
+    "150+ weddings",
+    "documentary",
+    "from $1,250"
+   ],
+   "blurb": "Over ten years and 150 Arizona weddings, shot on 50mm and 85mm primes at wide apertures for that soft, dreamy look. Desert Light Weddings publishes packages from $1,250 and promises no hidden fees.",
+   "since": null,
+   "from_price": "$1,250",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJaS_ApI5pK4cRtHtcPlVvLRA",
+   "name": "Lovelee Photography",
+   "website": "https://www.loveleephotos.com/",
+   "instagram": "loveleephoto",
+   "tags": [
+    "16+ years",
+    "luxury",
+    "photo and video"
+   ],
+   "blurb": "Lovelee Photography has photographed Arizona weddings for more than 16 years and says it is trusted by the state's premier venues. Associate videographers shoot in the same natural, elegant style, so photo and film match.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_egzTWYSK4cR_ve8rRgb29A",
+   "name": "Thomas Shull Photography",
+   "website": "http://www.thomasshull.com/",
+   "instagram": "tjshull",
+   "tags": [
+    "adventurous couples",
+    "elopements",
+    "Sedona"
+   ],
+   "blurb": "T.J. Shull has documented love stories for 12 years with a colorful, timeless style aimed at adventurous couples. Based in Phoenix, works Scottsdale and Sedona often, and travels for destination weddings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJuxt7yNxdK4cRLpTy29SaX5Y",
+   "name": "Kate Grutsky Photography",
+   "website": "https://www.kategrutskyphotography.com/",
+   "instagram": "kategrutskyphotography",
+   "tags": [
+    "photo and video",
+    "editorial",
+    "since 2020"
+   ],
+   "blurb": "Kate Grutsky blends candid storytelling with an editorial eye and runs a photo and video team out of Peoria. Documenting Arizona weddings since 2020, with Phoenix, Scottsdale and destination work.",
+   "since": 2020,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJIbQPWaVxK4cRlrx10_szRyw",
+   "name": "Lia`s Photography",
+   "website": "http://www.liasphotography.com/",
+   "instagram": "liasphotography2011",
+   "tags": [
+    "15 years",
+    "faith-rooted",
+    "photobooth"
+   ],
+   "blurb": "Lia's Photography describes an approach rooted in faith, family and connection, photographing the prayers and quiet moments as much as the portraits. Fifteen years of Arizona weddings, plus modern photobooth services.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ97JX60KfToYRqV-ObmAumh0",
+   "name": "Annette Ambrose Photography",
+   "website": "https://annetteambrosephotography.com/",
+   "instagram": "annetteambrose.photos",
+   "tags": [
+    "intimate weddings",
+    "elopements",
+    "digital and film"
+   ],
+   "blurb": "Annette Ambrose photographs intimate weddings and elopements out of Scottsdale, shooting both digital and film. A former flight attendant who spent ten years traveling the world before turning the camera on couples.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJaWmGTAEGK4cRH8JZ5YPnNYE",
+   "name": "Suzy Goodrick Photography",
+   "website": "http://www.suzygoodrick.com/",
+   "instagram": "suzygoodrick",
+   "tags": [
+    "calm approach",
+    "sentimental",
+    "destination"
+   ],
+   "blurb": "Suzy Goodrick promises a calm approach for an effortless photography experience, with intentional storytelling for sentimental couples. Based in Gilbert, shoots Phoenix and destination weddings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJryt_YaFzK4cR-uOO98x8Ar4",
+   "name": "Signature Wedding Photography",
+   "website": "https://signatureweddingphotography.com/",
+   "instagram": "signatureweddingphotos",
+   "tags": [
+    "husband and wife",
+    "hair and makeup on the team",
+    "video available"
+   ],
+   "blurb": "Signature Wedding Photography is Tavit, a veteran event photographer, and Lydia, an award-winning hair and makeup artist. The pairing is unusual and practical, and they cover Phoenix, Scottsdale, Sedona and Flagstaff with video as an option.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8WgrqrULK4cRDQ0_M6KP4a4",
+   "name": "Ivonne and Travis Photography",
+   "website": "http://www.ivonneandtravis.com/",
+   "instagram": "ivonneandtravisphoto",
+   "tags": [
+    "husband and wife",
+    "candid",
+    "Scottsdale"
+   ],
+   "blurb": "Ivonne and Travis are a Scottsdale husband-and-wife team who describe themselves as storytellers of candid, timeless images, photographing weddings across Arizona and beyond.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfVQc7uFsK4cRCLmksm7EHPU",
+   "name": "Inloveness Photography",
+   "website": "https://inlovenessphotography.com/",
+   "instagram": "inloveness",
+   "tags": [
+    "photojournalism",
+    "documentary",
+    "no travel fees in AZ"
+   ],
+   "blurb": "Inloveness Photography works in a photojournalistic style, blending candid documentary moments with artfully composed portraits, for couples who would rather forget Pinterest than follow it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

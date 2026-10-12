@@ -1,0 +1,206 @@
+{
+ "metro": "phoenix",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 123,
+ "listed": 158,
+ "how": "We read the website of every Phoenix wedding venue listed on Lazo (158 listings, 123 sites reachable) and set aside the ones that are not really in the wedding business: meeting rooms, alumni halls and link pages with no venue behind them. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is the date you want a Saturday in October to April? Those go first here, often a year out.",
+  "Does the package include the ceremony site, the coordinator and the rentals, or are those separate lines?",
+  "Where do guests go when it is 105 degrees? Ask to see the indoor and shaded options, not just the lawn."
+ ],
+ "picks": [
+  {
+   "id": "ChIJ7esTJjekK4cRvotkki49sYg",
+   "name": "Stonebridge Manor by Wedgewood Weddings",
+   "website": "https://www.wedgewoodweddings.com/stonebridgemanor?utm_source=google&utm_medium=organic&utm_campaign=gmb&utm_content=stonebridge-manor",
+   "instagram": "stonebridgemanor",
+   "tags": [
+    "historic mansion",
+    "English gardens",
+    "all-inclusive"
+   ],
+   "blurb": "A historic Mesa mansion with English gardens and six ceremony sites, run by Wedgewood Weddings. Packages are all-inclusive and customizable, and the venue publishes real-wedding stories and photo galleries so you can see how the rooms are used.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ9dW2Bq0UK4cRKkDShh2qBjU",
+   "name": "Tercero by Aldea Weddings",
+   "website": "http://www.terceroweddings.com/",
+   "instagram": "tercerobyaldeaweddings",
+   "tags": [
+    "all-inclusive",
+    "family-owned",
+    "one wedding a day"
+   ],
+   "blurb": "Part of Aldea Weddings, the family company two sisters started in 2004 that now runs several Valley venues. Tercero in Glendale is all-inclusive, hosts one event a day, and prints its package pricing on the site rather than making you ask.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_RAVsZmwK4cRmFTksssMoWM",
+   "name": "Superstition Manor Wedding & Event Center",
+   "website": "http://www.superstitionmanor.com/",
+   "instagram": "Superstitionmanoraz",
+   "tags": [
+    "indoor and outdoor",
+    "planning team included",
+    "publishes pricing"
+   ],
+   "blurb": "Mesa's Superstition Manor pairs indoor and outdoor spaces with a planning team that walks you from choosing the ceremony spot to running the day. Packages list two getting-ready suites open all day and six hours of event time, and pricing is published.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJx-ViTZcHK4cRwnkci3vPKnY",
+   "name": "Villa Tuscana Reception Hall",
+   "website": "https://villatuscanaevents.com/?utm_medium=gmb&utm_source=google&utm_campaign=business-listing&utm_content=",
+   "instagram": "villatuscanaevents",
+   "tags": [
+    "ballrooms to 300",
+    "from $4,000",
+    "all-inclusive"
+   ],
+   "blurb": "Tuscan-style ballrooms for up to 300 guests with indoor and outdoor ceremony options. Villa Tuscana's coordinators handle linens, centerpieces and the schedule, and the site states packages start at $4,000, which makes it one of the few Phoenix venues that leads with a number.",
+   "since": null,
+   "from_price": "$4,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJX2YYWH-PK4cRbM9CdI_bQlQ",
+   "name": "Venue at the Cove",
+   "website": "https://www.venueatthecove.com/",
+   "instagram": "covevenueaz",
+   "tags": [
+    "lakeside",
+    "Bartlett Lake",
+    "from-scratch kitchen"
+   ],
+   "blurb": "The newest lakeside venue in Arizona, on Bartlett Lake about 45 minutes from central Phoenix. Venue at the Cove hosts intimate and large weddings and makes a point of its from-scratch kitchen.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJGcyvgpa3K4cRziKBKU_wunI",
+   "name": "The Paseo",
+   "website": "http://thepaseovenue.com/",
+   "instagram": "",
+   "tags": [
+    "desert views",
+    "Superstition Mountains",
+    "family-owned"
+   ],
+   "blurb": "A family-owned desert venue at the foot of the Superstition Mountains, established in 2014. The Paseo bills itself as the place for a true Arizona wedding, and its team page introduces everyone from office staff to the set-up crew.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJgcOXJh6vK4cREGdpkbF6xsY",
+   "name": "Colby Falls by Wedgewood Weddings",
+   "website": "https://www.wedgewoodweddings.com/colbyfalls?utm_source=google&utm_medium=organic&utm_campaign=gmb&utm_content=colby-falls",
+   "instagram": "colbyfalls.wedgewood",
+   "tags": [
+    "waterfalls",
+    "four courtyards",
+    "all-inclusive"
+   ],
+   "blurb": "Colby Falls in Gilbert is Wedgewood's desert-modern venue, with dramatic waterfalls and four courtyards. Same all-inclusive package structure as its sister venues, with an on-site planner assigned to each wedding.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMR-wNsykK4cRgk6Yibb59ds",
+   "name": "The Vistas Pavilion at Las Sendas",
+   "website": "https://www.lassendas.com/weddings/",
+   "instagram": "lassendasgolfclub",
+   "tags": [
+    "mountain views",
+    "sunset",
+    "ceremony and reception in one"
+   ],
+   "blurb": "The Vistas Pavilion sits above the Valley at Las Sendas Golf Club in Mesa, with west-facing views built for sunset ceremonies. Ceremony and reception happen in one place, with the club's kitchen behind the menu.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJL4Bh8HypK4cRU5jtC8t4MHg",
+   "name": "The Cottage Wedding Venue",
+   "website": "https://thecottageweddings.com/",
+   "instagram": "",
+   "tags": [
+    "historic downtown Gilbert",
+    "publishes ballpark pricing"
+   ],
+   "blurb": "A wedding and event venue in historic downtown Gilbert, run by Dina, who came up through Las Vegas hospitality. The Cottage prints ballpark package estimates on its site so you can compare it with other venues before you tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfdW--oVZK4cRe6JAV1dPjyo",
+   "name": "The Willow Wedding & Event Venue",
+   "website": "https://thewillowaz.com/",
+   "instagram": "thewillowaz",
+   "tags": [
+    "West Valley",
+    "desert and mountain views",
+    "family-run"
+   ],
+   "blurb": "The Willow is the West Valley's desert venue in Surprise, with mountain views and a single signature package. The team describes itself as a family driven by faith and creativity, and the site shows galleries of real weddings held there.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJS0QJU42nK4cRkXK58CF7zRY",
+   "name": "The Wright House",
+   "website": "http://thewrighthouse.com/",
+   "instagram": "wrighthouseweddings",
+   "tags": [
+    "1930s farmhouse",
+    "gardens",
+    "weddings since 1991"
+   ],
+   "blurb": "A 1930s Mesa farmhouse that has hosted weddings since 1991. The Wright House runs twilight tours on Monday evenings with no appointment needed, which is a low-pressure way to see the grounds lit up.",
+   "since": 1991,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJDQ-c3_-zK4cRv46x-JyrNPE",
+   "name": "Knotty Barn",
+   "website": "https://knottybarn.com/",
+   "instagram": "knottybarnqc",
+   "tags": [
+    "rustic barn",
+    "Queen Creek",
+    "family-owned"
+   ],
+   "blurb": "A rustic Queen Creek venue built around 1800s architecture and 250-year-old barn wood, run by the Baldwin family since 2020. For couples who want the barn look without leaving the East Valley.",
+   "since": 2020,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

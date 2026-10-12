@@ -65,7 +65,51 @@
     </div>
     {% endif %}
 
-    {% if guide.picks %}
+    {% if guide.curated %}
+    <style>
+      .cu-head{margin-top:34px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+      .cu-head h3{margin:0;font-size:26px}
+      .cu-head small{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8A6A2F;font-weight:700}
+      .cu-list{list-style:none;padding:0;margin:14px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+      .cu{position:relative;background:#fff;border:1px solid rgba(217,183,124,.6);border-radius:18px;padding:16px 18px 16px;display:flex;flex-direction:column;gap:8px;transition:box-shadow .18s,transform .18s}
+      .cu:hover{box-shadow:0 12px 32px rgba(82,40,79,.12);transform:translateY(-2px);border-color:#D9B77C}
+      .cu-top{display:flex;gap:12px;align-items:center}
+      .cu-th{flex:0 0 56px;height:56px;border-radius:14px;background:#3D1C3B center/cover;border:1px solid rgba(217,183,124,.4)}
+      .cu-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:21px;font-weight:600;color:#52284F;text-decoration:none;line-height:1.15}
+      .cu-name::after{content:"";position:absolute;inset:0}
+      .cu-meta{font-size:12px;color:#7A6E80;margin-top:2px}
+      .cu-meta em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.4px;color:#8A6A2F}
+      .cu-tags{display:flex;flex-wrap:wrap;gap:6px}
+      .cu-tags span{font-size:11px;padding:4px 10px;border-radius:999px;background:#FAF6F0;border:1px solid rgba(217,183,124,.55);color:#52284F;font-weight:600}
+      .cu p{margin:0;font-size:14px;line-height:1.65;color:#3E3644}
+      .cu-foot{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#7A6E80;margin-top:auto;position:relative;z-index:1}
+      .cu-foot a{color:#52284F;text-decoration:underline;text-underline-offset:2px}
+      .cu-foot b{color:#3D1C3B}
+      .cu-ask{margin-top:18px;background:#FFFDF9;border:1px solid rgba(217,183,124,.55);border-left:3px solid #D9B77C;border-radius:14px;padding:14px 18px}
+      .cu-ask .k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8A6A2F;font-weight:700;display:block;margin-bottom:6px}
+      .cu-ask ol{margin:0;padding-left:20px;font-size:14px;line-height:1.7;color:#3E3644}
+    </style>
+    <div class="cu-head"><h3>Lazo&rsquo;s picks: {{ cat.label|lower }} in {{ metro.name }}</h3><small>{{ guide.curated.picks|length }} picks &middot; read {{ guide.curated.updated }}</small></div>
+    <p class="cg-sub">{{ guide.curated.how }}</p>
+    <ul class="cu-list">
+      {% for p in guide.curated.picks %}
+      <li class="cu">
+        <div class="cu-top">
+          <span class="cu-th" style="background-image:{% if p.thumb %}url('{{ p.thumb }}'){% else %}linear-gradient(135deg,rgba(61,28,59,.66),rgba(82,40,79,.45)),url('/assets/photos/{{ cat.slug }}.jpg'){% endif %}" aria-hidden="true"></span>
+          <span><a class="cu-name" href="/{{ metro.id }}/{{ cat.slug }}/{{ p.slug }}/">{{ p.name }}</a>
+            <div class="cu-meta">{{ p.town }}{% if p.verified %} &middot; <em>LAZO VERIFIED</em>{% elif p.claimed %} &middot; <em>CLAIMED PROFILE</em>{% endif %}</div></span>
+        </div>
+        <div class="cu-tags">{% for t in p.tags %}<span>{{ t }}</span>{% endfor %}</div>
+        <p>{{ p.blurb }}</p>
+        <div class="cu-foot">{% if p.from_price %}<span>From <b>{{ p.from_price }}</b></span>{% endif %}{% if p.since %}<span>Since <b>{{ p.since }}</b></span>{% endif %}{% if p.website %}<a href="{{ p.website }}" rel="nofollow noopener" target="_blank">Website</a>{% endif %}{% if p.instagram %}<a href="https://www.instagram.com/{{ p.instagram }}/" rel="nofollow noopener" target="_blank">@{{ p.instagram }}</a>{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if guide.curated.ask %}
+    <div class="cu-ask"><span class="k">Three things to ask every {{ cat.singular|lower }} in {{ metro.name }}</span>
+      <ol>{% for q in guide.curated.ask %}<li>{{ q }}</li>{% endfor %}</ol></div>
+    {% endif %}
+    {% elif guide.picks %}
     <h3 style="margin-top:30px">A starting shortlist</h3>
     <ul class="cg-picks">
       {% for p in guide.picks %}

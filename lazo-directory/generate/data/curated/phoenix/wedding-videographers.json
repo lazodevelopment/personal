@@ -1,0 +1,204 @@
+{
+ "metro": "phoenix",
+ "cat": "wedding-videographers",
+ "updated": "2026-10-12",
+ "read": 90,
+ "listed": 107,
+ "how": "We read the website of every Phoenix wedding videographer listed on Lazo (107 listings, 90 sites reachable) and set aside the ones that are not really in the wedding business: corporate video houses, production studios and sound stages that do not film weddings. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is audio from the vows and toasts recorded on lapel mics and a board feed, or just the camera?",
+  "How long until the highlight film and the full-length edit arrive, and are raw files included?",
+  "Is there an hourly cap, and what happens if the reception runs late?"
+ ],
+ "picks": [
+  {
+   "id": "manual-phoenix-atavia-weddings",
+   "name": "Atavia Weddings",
+   "website": "https://ataviaweddings.com",
+   "instagram": "ataviaweddings",
+   "tags": [
+    "cinematic films",
+    "photo and video",
+    "Lazo verified"
+   ],
+   "blurb": "Atavia Weddings crafts cinematic films alongside stills, for couples who want the day remembered as it felt. Now booking 2026 and 2027, with a verified, claimed Lazo profile.",
+   "since": null,
+   "from_price": "$1,200",
+   "verified": true,
+   "claimed": true
+  },
+  {
+   "id": "ChIJn6ReX0-nK4cRPGi4Uas3pAE",
+   "name": "Dangerfield Weddings",
+   "website": "https://www.dangerfieldweddings.co/",
+   "instagram": "dangerfieldweddings",
+   "tags": [
+    "cinematic",
+    "storytelling",
+    "travels worldwide"
+   ],
+   "blurb": "Evan Dangerfield films cinematic wedding films built on authentic storytelling, from luxury Scottsdale celebrations to mountain weddings in Sedona and destinations beyond. Based in Phoenix, offers engagement sessions too.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJWT8o5pRzK4cR1H6nYoubTn0",
+   "name": "SkyPoint Productions, LLC.",
+   "website": "http://www.skypointproductions.com/",
+   "instagram": "skypointproductions",
+   "tags": [
+    "husband and wife",
+    "10 years",
+    "Indian weddings"
+   ],
+   "blurb": "SkyPoint Productions is a husband-and-wife team with ten years of wedding film experience, specializing in story-driven luxury cinematography and Indian wedding videography, with elopement films as well.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5YOuVhj7KocRXqoUebvLP3o",
+   "name": "John Houston Films, LLC",
+   "website": "http://www.johnhoustonfilms.com/",
+   "instagram": "johnh.films",
+   "tags": [
+    "unlimited hours",
+    "drone",
+    "Super 8mm"
+   ],
+   "blurb": "John Houston Films includes unlimited coverage in every package, so there is no hourly limit to watch, plus drone footage, full recordings of the ceremony and formalities, and Super 8mm film as an option. Covers all of Arizona from Maricopa.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ270gyumnK4cRRrR5XVXTkhM",
+   "name": "Serendipity Cinema",
+   "website": "http://www.serendipitycinema.com/",
+   "instagram": "serendipitycinema",
+   "tags": [
+    "hand-crafted films",
+    "two cinematographers",
+    "publishes collections"
+   ],
+   "blurb": "Serendipity Cinema is a Gilbert team making hand-crafted cinematic wedding films, with collections that scale up to two cinematographers for twelve hours. Collection pricing is printed on the site, roughly $4,100 to $6,100 at our read.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJbbSJyemnK4cRSThhJFz96U0",
+   "name": "Simply Cinema",
+   "website": "http://www.simply-cinema.com/",
+   "instagram": "simply.cinema",
+   "tags": [
+    "budget-minded",
+    "since 2009",
+    "Serendipity's sister"
+   ],
+   "blurb": "Simply Cinema is Serendipity's simpler sister brand, born in 2009 for couples who want a quality film with simplified coverage and a lighter price. Same Gilbert team behind it.",
+   "since": 2009,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJWR91BRimK4cRjPxMshNpFT4",
+   "name": "Perry Sevey",
+   "website": "http://www.picturevideo.com/",
+   "instagram": "picturevideoaz",
+   "tags": [
+    "cinematic",
+    "Mesa"
+   ],
+   "blurb": "PictureVideo.com, Perry Sevey's Mesa studio, makes cinematic wedding films meant to transport you back to the day rather than just document it, shot at celebrations across the Valley.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJWb8YPqILK4cRttOo9cMiuho",
+   "name": "Halo Productions",
+   "website": "https://www.haloproductions.net/",
+   "instagram": "haloproductions.studio",
+   "tags": [
+    "photo and film",
+    "Arizona and California"
+   ],
+   "blurb": "Halo Productions pairs timeless photography with cinematic wedding films for couples who want to feel fully present on the day. Scottsdale-based, works Arizona and California.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJKX-Y0gJJWoIRIjPicl-_IZI",
+   "name": "AZ Film Company",
+   "website": "https://www.azfilmcompany.com/",
+   "instagram": "azfilmcompany",
+   "tags": [
+    "documentary",
+    "candid",
+    "local Essentials package"
+   ],
+   "blurb": "AZ Film Company shoots documentary-style films with a candid approach, out of Goodyear. Pricing is by inquiry, with an Essentials package offered only locally.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZ5CgD5sPK4cRyyGhtdQ69f8",
+   "name": "Lee Media Weddings",
+   "website": "https://leemediaweddings.com/",
+   "instagram": "leemediaweddings",
+   "tags": [
+    "photo and cinema",
+    "transparent pricing",
+    "almost ten years"
+   ],
+   "blurb": "Lee Media Weddings has done photo and cinema for almost ten years, and its pricing page is laid out simply by photo, cinema, or both. Tempe-based, editorial polish with a hands-on approach.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJs15tZSrbIUgRFMEfhiscruM",
+   "name": "Diamond Ring Media",
+   "website": "http://diamondringmedia.com/",
+   "instagram": "diamondringmedia",
+   "tags": [
+    "affordable",
+    "no travel fees",
+    "15 years"
+   ],
+   "blurb": "Diamond Ring Media offers affordable photo and video packages with no travel fees in Arizona, led personally through 15 years of weddings by its owner. Based in Glendale.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpXSUt72xK4cRT_PDUT1Jo0w",
+   "name": "Altar Images AZ Wedding Videography",
+   "website": "http://www.altarimagesaz.net/",
+   "instagram": "",
+   "tags": [
+    "economy plans from $549",
+    "deluxe from $1,299"
+   ],
+   "blurb": "Altar Images AZ in Mesa prints its pricing: economy plans from $549 for small, single-location events and deluxe plans from $1,299 for full-day coverage, with photo montages and engagement videos as add-ons.",
+   "since": null,
+   "from_price": "$549",
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

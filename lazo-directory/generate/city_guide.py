@@ -115,8 +115,39 @@ def _picks(cvs, locality):
                  thumb=v.get("thumbUrl") or "") for v in out]
 
 
+import json as _json
+import os as _os
+from pathlib import Path as _Path
+
+# JC-LAZO-CURATE-1012: hand-curated picks per metro x category, written from each vendor's own website
+# (generate/curate_crawl.py -> generate/data/curated/<metro>.py -> <metro>/<cat>.json). Only used when
+# LAZO_CURATED=1 (the preview build sets it; the nightly turns it on once the pages are approved), or
+# when LAZO_CURATED_DIR points at a directory of such files.
+def _curated(metro_id, cat_slug, cvs):
+    base = _os.environ.get("LAZO_CURATED_DIR")
+    if not base and _os.environ.get("LAZO_CURATED") != "1":
+        return None
+    f = _Path(base) / metro_id / f"{cat_slug}.json" if base else _Path(__file__).resolve().parent / "data" / "curated" / metro_id / f"{cat_slug}.json"
+    if not f.exists():
+        return None
+    doc = _json.loads(f.read_text(encoding="utf-8"))
+    by_id = {v.get("placeId"): v for v in cvs}
+    picks = []
+    for p in doc.get("picks", []):
+        v = by_id.get(p["id"])
+        if not v:
+            continue  # not in this build's vendor set (delisted or moved); the pick silently drops
+        picks.append(dict(p, slug=v["slug"], thumb=v.get("thumbUrl") or "", town=(v.get("_town") or "")))
+    if not picks:
+        return None
+    doc["picks"] = picks
+    return doc
+
+
 def build_guide(metro, cat, cvs, locality, cost_typical=None):
     g = GUIDE_METROS[metro["id"]]
+    for v in cvs:
+        v["_town"] = locality(v)
     towns = Counter(locality(v) for v in cvs if not v.get("travelFrom"))
     lead = WHEN_LABEL.get(cat["slug"])
     lic = _license(metro["state"])
@@ -157,6 +188,7 @@ def build_guide(metro, cat, cvs, locality, cost_typical=None):
         towns=[(t, n) for t, n in towns.most_common(8)],
         sunsets=sunsets, lead=lead, license=lic,
         picks=_picks(cvs, locality),
+        curated=_curated(metro["id"], cat["slug"], cvs),
         faqs=faqs,
         other_cats=[c for c in GUIDE_CATS if c != cat["slug"]],
         other_cities=[mid_ for mid_, _ in other_cities],
