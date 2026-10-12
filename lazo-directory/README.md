@@ -152,3 +152,23 @@ app-patches/patch_couple_v140.py (v139 -> v140): Browse merges a top-24-by-score
 - Five ad landing pages, one hook and one promise each, modelled on the live Zola and Knot Meta ads: `/welcome/yes/` (You said YES: June answers on the page from names, date, city), `/welcome/website/` (free website, design picker), `/welcome/budget/` (line-item estimate from `config/cost_guides.py` ranges via `_budget_lines_json()`), `/welcome/switch/` (Knot/Zola/WeddingWire CSV export steps), `/welcome/verified/` (verified reviews vs sponsored listings, city + category picker). Templates in `generate/templates/pages/welcome/`, shared styles/tracking in `_shared.html`, CTA block in `_cta.html`; `build.py` STATIC_PAGES gained the five nested slugs (mkdir parents=True). Every CTA appends `from=welcome-<page>` plus utm_*/fbclid to the app link; pixel events (ViewContent, Lead, WelcomeCTA, JuneAnswer) fire only after consent. Deployed by the 2026-10-04 03:30 nightly.
 - Couple dashboard v144 (`app-patches/patch_couple_v144.py` -> `Couple_master_v144.txt`): `_openPendingWelcome()` reads `from, intent, names, date, metro, design, source, guests` (URL, else SharedPreferences `lazo_pending_welcome`), fills `names` / `weddingDate` / `metroId` / `guestEstimate` on the couple doc only when empty, keeps first-touch attribution once on `couples.acq`, and opens the website editor on the design (v96 path), the budget sheet, the Knot/Zola import sheet, or the setup sheet. **Paste into FlutterFlow still pending**, plus the auth-page stash action `app-patches/Auth_stash_welcome.txt` (goNamed drops the query string, same reason the vendor/template/save stashes exist).
 - 2026-10-05 (JC-LAZO-WELCOME-1005-PHOTO): the five pages were flat plum panels with text cards and read as generic. Rebuilt to the home page's standard: a full-bleed wedding photo under every hero (rings for /yes, the veil at sunset mirrored for /website so the bride stands between the headline and the card, the candlelit table for /budget, the ceremony kiss for /switch, the first dance with guests for /verified), the card floating on the photo, the three App Store screens in phone frames on /yes, the Mindy & John Summit site plus six live design previews in phone frames (the hub's ?frame=1) on /website with tap-to-pick, photo cards carrying the three biggest budget lines, a full-bleed photo band mid-page and a photo behind every closing strip. `_shared.html` takes --img / --pos / --posx / --flip on the hero and strip.
+
+## Curated picks on the city guides (2026-10-12, JC-LAZO-CURATE-1012)
+The 30 guide metros x 6 guide categories (180 pages) carry "Lazo's picks": 8-12 vendors per page with a blurb written
+only from the vendor's own website, three tags, year and starting price where the site prints them, and three questions
+to ask. Rendered by `_city_guide.html` (`guide.curated`) when `LAZO_CURATED=1` (set in lazo-nightly.bat).
+Pipeline, per metro:
+1. `python generate\curate_crawl.py <metro>` - reads the metro's vendors in the guide categories from Firestore, visits
+   each website (home + about + pricing), writes `generate/data/curated-raw/<metro>.json`. ~2 min per 600 sites.
+2. `python generate\curate_sheet.py <metro> out.txt` - ranked candidate sheet (wedding relevance, site substance).
+3. A writer (Claude, following `generate/data/curated/WRITING.md`) writes `generate/data/curated/<metro>.py` (CATS).
+4. `python generate\curate_emit.py <metro>` -> `generate/data/curated/<metro>/<cat>.json` (resolves names, websites, Instagram).
+5. `python generate\curate_check.py [metro]` - guardrails: 6-12 picks, ids in the crawl, blurb length, every $ and
+   year on the vendor's site, no unsupported superlatives. Exit 1 on any problem.
+`generate\preview_metro.py <metro>` builds one metro (plus phoenix for the homepage) into dist-preview/ without
+touching Firestore; serve with launch.json `lazo-preview` (:8796). Picks may sit in a sister category
+(`city_guide.METRO_VENDORS`); a pick whose vendor is missing from the build is dropped with a `[curated]` log line.
+Findings: the Places seed holds many non-wedding businesses in wedding categories (headshot studios, corporate video,
+funeral/delivery florists, chains' per-city landing pages); the crawl is the cheapest way to find them. Zero verified
+or claimed vendors in 27 of the 30 metros. To extend: add a metro/category to `config/city_guides.py` first (the
+picks render only inside a guide), then run the pipeline.
