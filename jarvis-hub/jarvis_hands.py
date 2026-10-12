@@ -114,7 +114,7 @@ def lazo_listing(p):
     batch = db.batch()
     batch.set(v_ref, {"placeId": vendor_id, "name": name, "slug": slug, "address": "Serving " + label, "phone": str(r.get("phone") or ""), "website": str(r.get("website") or ""),
                       "metroId": metro, "categories": cats, "score": 65, "reviewCount": 0, "claimStatus": "claimed", "claimedBy": uid_, "verified": True,
-                      "source": "manual", "serviceArea": True, "seededAt": now}, merge=True)
+                      "source": "manual", "serviceArea": True, "heardAbout": str(r.get("heardAbout") or ""), "seededAt": now}, merge=True)
     batch.set(db.collection("users").document(uid_), {"vendorId": vendor_id}, merge=True)
     batch.update(ref, {"status": "approved", "approvedBy": "admin", "actedByUid": "jarvis", "reviewedAt": now, "reviewedBy": BY})
     batch.commit()

@@ -226,7 +226,8 @@ def decisions():
             c = d.to_dict() or {}
             cats = ", ".join(str(x).replace("wedding-", "") for x in (c.get("categories") or [])) if isinstance(c.get("categories"), list) else ""
             where = f" ({c.get('metroId')}{', ' + cats if cats else ''})" if c.get("metroId") else ""
-            items.append({"id": d.id, "kind": "lazo_listing", "business": "lazo", "label": f"New listing request: {c.get('businessName') or 'vendor'}{where} by {c.get('email') or c.get('uid') or 'unknown'}", "at": (ts(c.get("createdAt")) or NOW).isoformat(), "detail": {k: str(c.get(k))[:80] for k in ("businessName", "legalEntityName", "email", "phone", "website", "metroId", "aiDecision", "aiConfidence", "aiNotes") if c.get(k)}})
+            via = f", heard via {c.get('heardAbout')}" if c.get("heardAbout") else ""   # Vendor app v188+
+            items.append({"id": d.id, "kind": "lazo_listing", "business": "lazo", "label": f"New listing request: {c.get('businessName') or 'vendor'}{where} by {c.get('email') or c.get('uid') or 'unknown'}{via}", "at": (ts(c.get("createdAt")) or NOW).isoformat(), "detail": {k: str(c.get(k))[:80] for k in ("businessName", "legalEntityName", "email", "phone", "website", "metroId", "heardAbout", "heardAboutDetail", "aiDecision", "aiConfidence", "aiNotes") if c.get(k)}})
     except Exception as e:
         print(f"decisions lazo: {str(e)[:120]}")
     try:
