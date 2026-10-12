@@ -196,3 +196,9 @@ refuse Cloudflare). The PC keeps the social check and the executor. Run with `-D
 - `watchMetrics` raises a `failed` alert + high push "Lazo sign-ups" when the quiet time reaches 3x the typical gap (never under 48 h), when 2+ couples signed up in 24 h but no `users` doc was written (the Sep 29 - Oct 9 rules break), and a `watch` note when sign-ups resume. Sign-up notes repeat at most every 20 h.
 - The Lazo drill-down shows a 14-day sign-ups chart (users, couples, inquiries per day) with the last sign-up age (amber past 24 h), the daily average and sources.
 - Collector runs on the feeder VM; after editing it: `gcloud compute scp collect_metrics.py jarvis-feeder:jarvis/ --account lazodevelopment@gmail.com --project lazo-513ec --zone us-central1-a`.
+
+## Listing requests in Decisions (2026-10-12)
+- Missed on 2026-10-11: TickTickBoom (Phoenix, wedding band) asked to be *added* to the directory (`listingRequests`), not to claim an existing listing; the decisions collector only read `claimRequests` with status `pending`, so JARVIS never pushed it and it waited 43 h until Jesse found it in the app.
+- `collect_traffic.py decisions()` now reads both `claimRequests` and `listingRequests` with status in `pending, needs_review` (the Vendor app's admin queue query), emitting kind `lazo_listing` with the AI pre-screen (`aiDecision`, `aiConfidence`, `aiNotes`) in the detail.
+- Hub: push "Lazo listing request to review", APPROVE / DENY buttons in Decisions and the chat cards, `request_action` kind `lazo_listing` (params.requestId, decision approved|denied).
+- Hands (VM): `lazo_listing` mirrors the app's `_adminApproveListing`: vendor doc `manual-<metroId>-<slug>` (claimed, verified, score 65, "Serving <Metro>"), `users/{uid}.vendorId`, request `approved` / `denied` (+ `denyReason`); the `onListingDecided` Cloud Function emails the vendor.

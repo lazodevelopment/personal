@@ -7,6 +7,7 @@ Every write mirrors the existing admin tools exactly:
   roven_reject_job         jobs/{id} {status: rejected}
   roven_approve_employer   employerApplications -> employers doc + auth claim   (roven-admin/approve_employer.py)
   lazo_claim               claimRequests + vendors + users in one batch         (Vendor app admin queue)
+  lazo_listing             listingRequests -> vendors/manual-<metro>-<slug> + users.vendorId   (Vendor app _adminApproveListing)
   booking_note             bookings/{id} admin_notes arrayUnion({at,text,by})   (atavia-admin/index.html addNote)
   lazo_inquiry_responded   inquiries/{id} {status: responded, respondedAt}      (Vendor app)
 Run: jarvis_hands.bat, or `python jarvis_hands.py --once` to process the queue a single time.
@@ -86,6 +87,40 @@ def lazo_claim(p):
     return True, f"{v.get('name', vendor_id)} claimed by {r.get('email') or uid_}"
 
 
+METRO_NAMES = {"dallas-fort-worth": "Dallas-Fort Worth", "raleigh-durham": "Raleigh-Durham", "washington-dc": "Washington DC", "st-louis": "St. Louis", "san-francisco-bay": "San Francisco Bay"}
+
+
+def lazo_listing(p):
+    """Mirror of the Vendor app's _adminApproveListing / _adminDeny for listingRequests: the vendor doc id is
+    manual-<metroId>-<slug(businessName)>, created claimed + verified, and the claimant's users doc gets vendorId.
+    The Cloud Function onListingDecided emails the vendor on the status change."""
+    import re
+    db = client_for("lazo")
+    ref = db.collection("listingRequests").document(p["requestId"]); doc = ref.get()
+    if not doc.exists: return False, "listing request not found"
+    r = doc.to_dict(); now = datetime.now(timezone.utc)
+    if r.get("status") not in ("pending", "needs_review"): return True, f"already {r.get('status')}"
+    if p.get("decision", "approved") != "approved":
+        ref.update({"status": "denied", "denyReason": p.get("reason") or "Not approved for listing", "actedByUid": "jarvis", "reviewedAt": now, "reviewedBy": BY})
+        return True, f"{r.get('businessName')} denied"
+    uid_, name, metro = r.get("uid") or "", r.get("businessName") or "", r.get("metroId") or "phoenix"
+    if not uid_ or not name: return False, "request is missing uid or businessName"
+    slug = re.sub(r"[^a-z0-9]+", "-", name.strip().lower()); slug = re.sub(r"-{2,}", "-", slug).strip("-")[:60]
+    vendor_id = f"manual-{metro}-{slug}"
+    v_ref = db.collection("vendors").document(vendor_id); v = v_ref.get().to_dict() or {}
+    if v.get("claimedBy") and v["claimedBy"] != uid_: return False, f"conflict: {vendor_id} exists and is claimed by someone else"
+    label = METRO_NAMES.get(metro) or " ".join(w.capitalize() for w in metro.split("-"))
+    cats = [str(c) for c in r.get("categories") or []] if isinstance(r.get("categories"), list) else []
+    batch = db.batch()
+    batch.set(v_ref, {"placeId": vendor_id, "name": name, "slug": slug, "address": "Serving " + label, "phone": str(r.get("phone") or ""), "website": str(r.get("website") or ""),
+                      "metroId": metro, "categories": cats, "score": 65, "reviewCount": 0, "claimStatus": "claimed", "claimedBy": uid_, "verified": True,
+                      "source": "manual", "serviceArea": True, "seededAt": now}, merge=True)
+    batch.set(db.collection("users").document(uid_), {"vendorId": vendor_id}, merge=True)
+    batch.update(ref, {"status": "approved", "approvedBy": "admin", "actedByUid": "jarvis", "reviewedAt": now, "reviewedBy": BY})
+    batch.commit()
+    return True, f"{name} listed as {vendor_id} and claimed by {r.get('email') or uid_}"
+
+
 def booking_note(p):
     from google.cloud import firestore
     db = client_for(p.get("business", "atavia"))
@@ -108,6 +143,7 @@ HANDLERS = {
     "roven_reject_job": lambda p: roven_job(p, "rejected"),
     "roven_approve_employer": roven_approve_employer,
     "lazo_claim": lazo_claim,
+    "lazo_listing": lazo_listing,
     "booking_note": booking_note,
     "lazo_inquiry_responded": lazo_inquiry_responded,
 }

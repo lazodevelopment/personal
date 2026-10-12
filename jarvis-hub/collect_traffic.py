@@ -215,10 +215,18 @@ def decisions():
     items = []
     try:
         db = client_for("lazo")
-        for d in db.collection("claimRequests").where(filter=FieldFilter("status", "==", "pending")).stream():
+        # the Vendor app's admin queue shows both collections with status pending OR needs_review (the AI pre-screen may set the latter)
+        OPEN = FieldFilter("status", "in", ["pending", "needs_review"])
+        for d in db.collection("claimRequests").where(filter=OPEN).stream():
             c = d.to_dict() or {}
             name = c.get("businessName") or c.get("vendorName") or c.get("vendorId") or "vendor"
-            items.append({"id": d.id, "kind": "lazo_claim", "business": "lazo", "label": f"Vendor claim: {name} by {c.get('email') or c.get('name') or c.get('uid') or 'unknown'}", "at": (ts(c.get("createdAt")) or NOW).isoformat(), "detail": {k: str(c.get(k))[:80] for k in ("businessName", "vendorName", "email", "name", "phone", "role", "note", "message") if c.get(k)}})
+            items.append({"id": d.id, "kind": "lazo_claim", "business": "lazo", "label": f"Vendor claim: {name} by {c.get('email') or c.get('name') or c.get('uid') or 'unknown'}", "at": (ts(c.get("createdAt")) or NOW).isoformat(), "detail": {k: str(c.get(k))[:80] for k in ("businessName", "vendorName", "email", "name", "phone", "role", "note", "message", "aiDecision", "aiConfidence", "aiNotes") if c.get(k)}})
+        # listing requests: a vendor not in the directory asking to be added (missed on 2026-10-11: TickTickBoom waited 43 h unseen)
+        for d in db.collection("listingRequests").where(filter=OPEN).stream():
+            c = d.to_dict() or {}
+            cats = ", ".join(str(x).replace("wedding-", "") for x in (c.get("categories") or [])) if isinstance(c.get("categories"), list) else ""
+            where = f" ({c.get('metroId')}{', ' + cats if cats else ''})" if c.get("metroId") else ""
+            items.append({"id": d.id, "kind": "lazo_listing", "business": "lazo", "label": f"New listing request: {c.get('businessName') or 'vendor'}{where} by {c.get('email') or c.get('uid') or 'unknown'}", "at": (ts(c.get("createdAt")) or NOW).isoformat(), "detail": {k: str(c.get(k))[:80] for k in ("businessName", "legalEntityName", "email", "phone", "website", "metroId", "aiDecision", "aiConfidence", "aiNotes") if c.get(k)}})
     except Exception as e:
         print(f"decisions lazo: {str(e)[:120]}")
     try:
