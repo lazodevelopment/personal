@@ -1,0 +1,207 @@
+{
+ "metro": "nashville",
+ "cat": "wedding-djs",
+ "updated": "2026-10-12",
+ "read": 22,
+ "listed": 32,
+ "how": "We read the website of every Nashville wedding DJ listed on Lazo (32 listings, 22 sites reachable) and set aside the ones that are not really in the wedding business: a national on-demand DJ chain with a Nashville landing page, a booking agency with an office page per city, a live-music agency for hotels and cruise lines, and sites with little more than a tagline. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Who exactly will DJ my wedding, and can I talk to that person before I sign?",
+  "How do you handle ceremony audio at an outdoor farm venue with no power nearby, and what are your noise-curfew experiences at venues like mine?",
+  "What is in the base price, and what do uplighting, photo booths, cold sparks and extra hours add?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJVVVVVYxmZIgRkXKVB34WnQ8",
+   "name": "DJ Dan Co.",
+   "website": "http://djdanco.com/",
+   "instagram": "djdanco",
+   "tags": [
+    "25+ years",
+    "Dan and team",
+    "Nashville"
+   ],
+   "blurb": "For more than 25 years Dan and his team at DJ DanCo. have worked weddings, parties and corporate events across Nashville and Middle Tennessee. The site frames the DJ as the energy, organization and flow of the whole event, not just the music.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6Xxfg-8jZIgR8Zgt79hzHCc",
+   "name": "Chosen Entertainment LLC – Event & Wedding Entertainment",
+   "website": "https://chosendjs.com/",
+   "instagram": "chosendjs",
+   "tags": [
+    "DJs and MCs",
+    "360 photo booths",
+    "uplighting and effects"
+   ],
+   "blurb": "Chosen Entertainment is a full-service wedding and event company of DJs, MCs and event specialists based in Nashville, serving Mt. Juliet, Lebanon, Hendersonville, Franklin and the rest of Middle Tennessee. 360 photo booths, uplighting and special effects from the same team.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpaS8G23yZIgRMZhU6glSjSE",
+   "name": "Dynamite DJ Service",
+   "website": "http://dynamitedjservice.com/",
+   "instagram": "",
+   "tags": [
+    "owner-operated",
+    "25+ years",
+    "licensed and insured"
+   ],
+   "blurb": "Dynamite DJ is locally owned by Daniel and Allison in Ashland City and has offered licensed, insured DJ services for over 25 years in Nashville, Middle Tennessee and southern Kentucky. Pick a wedding package or build your own.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJi69meo1mZIgRBrOD8uF_Mcg",
+   "name": "Entertain!",
+   "website": "https://www.entertaintn.com/",
+   "instagram": "entertainofficial",
+   "tags": [
+    "Brandon Rolland",
+    "one-stop",
+    "cold spark fountains"
+   ],
+   "blurb": "Entertain! was founded by Brandon Rolland in Brentwood as a one-stop shop: DJs, photo booths, casino parties, event lighting and cold spark fountains. The team meets with every client and learns their taste in music before the event.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJgUiJh9Z_ZIgRU1y_YJMQEmQ",
+   "name": "Move DJ Group",
+   "website": "http://www.movedj.com/",
+   "instagram": "movedjgroup",
+   "tags": [
+    "emcee-led",
+    "Franklin",
+    "weddings and corporate"
+   ],
+   "blurb": "Move DJ Group in Franklin is built around Brice, whose clients say his emceeing keeps the crowd engaged from the first announcement to the last dance, with Nicole McCadden handling client experience. High-energy weddings and private parties.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJl8YasENmZIgRaR_dVjUGLZg",
+   "name": "Premier - The Entertainment Company",
+   "website": "http://requestpremier.com/",
+   "instagram": "",
+   "tags": [
+    "30 years",
+    "all-inclusive entertainment packages",
+    "dance floors and lighting"
+   ],
+   "blurb": "Premier has been creating events in Middle Tennessee for 30 years with DJs, photo booths, event lighting and dance floors. The Nashville company sells all-inclusive entertainment packages so one vendor covers the whole reception.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxRUK4upBZIgRPGQBa4md1hU",
+   "name": "MadDawgs Entertainment",
+   "website": "http://maddawgsent.com/",
+   "instagram": "maddawgsent",
+   "tags": [
+    "DJ plus rentals",
+    "ceremony audio",
+    "bartenders"
+   ],
+   "blurb": "MadDawgs in Hermitage combines DJ, karaoke and MC services with an inventory of tents, tables, chairs, lighting and audio gear, plus bartenders with custom drink menus. Wedding packages scale from ceremony audio to full setups with lighting and a photo booth.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJN8zfaEAhZIgRGXDQ9l714tM",
+   "name": "Sickmiller Entertainment",
+   "website": "https://www.sickmillerentertainment.com/",
+   "instagram": "",
+   "tags": [
+    "DJ since 1989",
+    "Air Force veteran",
+    "Lebanon"
+   ],
+   "blurb": "Todd started DJing in 1989 while serving with the Air Force in Bitburg, Germany, and kept at it through the 1990s and 2000s after coming home to Tennessee. Sickmiller Entertainment covers weddings, corporate and private events from Lebanon.",
+   "since": 1989,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJlwzJUNr5Y4gR4kQXWHr-AcI",
+   "name": "DJ Twotone",
+   "website": "https://twotonellc.com/",
+   "instagram": "twotone.madeit",
+   "tags": [
+    "producer and DJ",
+    "genre-mixing",
+    "Murfreesboro"
+   ],
+   "blurb": "Zach Stevens, TwoTone, began producing music at 14 and DJing at 17, and plays everything from weddings to nightclubs. A versatile Murfreesboro DJ who mixes new and old-school styles rather than sticking to one lane.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJn6RTrjNkZIgRNb6S99HiaMg",
+   "name": "High Tone Entertainment",
+   "website": "http://www.hightoneentertainment.com/",
+   "instagram": "hightoneent",
+   "tags": [
+    "DJs and live musicians",
+    "six-time Couples' Choice",
+    "photo booths"
+   ],
+   "blurb": "High Tone Entertainment offers DJs, lighting, photo booths and live musicians and lists itself as a six-time WeddingWire Couples' Choice winner. Selfie stations, a 360 spin cam and sparkle fountains for entrances and exits are on the menu.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAQAAAKRoZIgRh1T_v0mJmKI",
+   "name": "Mid South Mobile DJs",
+   "website": "http://www.midsouthmobiledjs.com/",
+   "instagram": "midsouthmobiledjs",
+   "tags": [
+    "since 1994",
+    "clean, radio-edited music",
+    "Murfreesboro"
+   ],
+   "blurb": "Mid South Mobile DJs has brought music and games to Middle Tennessee events since 1994 and plays clean, radio-edited music so every guest is comfortable. The site's testimonials come from a country club that has used DJ John Ward since the start.",
+   "since": 1994,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQS_oypjd2YgRH81og07sFXA",
+   "name": "Dj Raulin",
+   "website": "http://www.djraulin.com/",
+   "instagram": "dj_raulin",
+   "tags": [
+    "bilingual",
+    "special effects",
+    "photo booth"
+   ],
+   "blurb": "DJ Raulin offers bilingual DJ services for weddings and private events out of Murfreesboro, with dancing-cloud, cold spark and fog effects, a custom name monogram projection and a photo booth. Package pricing is printed on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

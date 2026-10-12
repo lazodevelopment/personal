@@ -1,0 +1,207 @@
+{
+ "metro": "boston",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 205,
+ "listed": 257,
+ "how": "We read the website of every Boston wedding venue listed on Lazo (257 listings, 205 sites reachable) and set aside the ones that are not really in the wedding business: officiant and elopement services listed as venues, planners and coordinators, a marina, and golf-club pages with nothing specific about their weddings. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is your date a Saturday in September or October? Foliage season books first here, often more than a year out.",
+  "What happens to an outdoor ceremony in rain or an early cold snap, and is the tent or indoor backup already in the price?",
+  "Is catering in-house only, and does the package cover the coordinator, rentals and bar, or are those separate lines?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJByi06BVs44kRcbxLVxGZDmo",
+   "name": "Oceanview of Nahant",
+   "website": "http://www.oceanviewofnahant.com/",
+   "instagram": "oceanviewofnahant",
+   "tags": [
+    "oceanfront",
+    "over a century of weddings",
+    "transparent pricing"
+   ],
+   "blurb": "For over a century Oceanview of Nahant has hosted weddings on the water, and owners Michael and Brenda Gallant run it today. The pricing page leads with real numbers from the first conversation, with every celebration customized from there.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHwSo0id-5IkRFJvlb5hyXO4",
+   "name": "The Tiffany Ballroom at the Four Points by Sheraton Norwood",
+   "website": "http://www.tiffanyballroom.com/",
+   "instagram": "tiffanyballroomnorwood",
+   "tags": [
+    "all-inclusive packages",
+    "hotel ballroom",
+    "South Shore"
+   ],
+   "blurb": "The Tiffany Ballroom at the Four Points by Sheraton in Norwood sells all-inclusive complete wedding packages built for total personalization. Jayme and Mindy, who started working together in 2006, were named Marriott's Elite Catering Team of the Year among the hotel group's North American catering teams.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8abN6DO75IkRNB-PKAQBSjg",
+   "name": "1620 Winery at Cordage Park",
+   "website": "https://1620winery.com/",
+   "instagram": "1620winery",
+   "tags": [
+    "winery",
+    "rustic meets elegant",
+    "Plymouth"
+   ],
+   "blurb": "A winery and wine bar in Plymouth that calls out the wedding-factory model and says its only goal is the day of your dreams. 1620 Winery publishes its approach and a commitment to inclusion, and you can meet the winemaker and buy the wine online.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFSJqood344kR_aBb7yeSZnc",
+   "name": "Dearly Studio",
+   "website": "http://www.dearly.studio/",
+   "instagram": "dearly.studio",
+   "tags": [
+    "micro wedding chapel",
+    "elopements",
+    "Union Square"
+   ],
+   "blurb": "Dearly Studio is a micro wedding chapel and small event space in Union Square, Somerville, which calls itself Boston's first and only Vegas-style chapel. Ceremony packages are bookable online, starting with a 30-minute package inspired by courthouse elopements, and the studio leads with its values, welcoming every couple.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJ6e9aN9T4okRN_rXxVrFmrg",
+   "name": "Hyla Brook Estate",
+   "website": "http://www.hylabrookestate.com/",
+   "instagram": "hylabrookestate",
+   "tags": [
+    "modern farmhouse",
+    "Southern New Hampshire",
+    "owner-run"
+   ],
+   "blurb": "A brand-new modern farmhouse event venue in Derry, New Hampshire, run by owner and event director Kim, a Florida State hospitality graduate with over 20 years in the industry. Hyla Brook Estate publishes bar packages and a details-at-a-glance page so you can see what is customizable.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJo38xkCkR5IkROBoAH-nPOAA",
+   "name": "The Barn at Blackstone National",
+   "website": "https://www.thebarnatblackstonenational.com/",
+   "instagram": "barnatblackstonenational",
+   "tags": [
+    "rustic barn",
+    "240 acres",
+    "one hour from Boston"
+   ],
+   "blurb": "The Barn at Blackstone National sits on 240 acres of the Blackstone National Golf Club in Sutton, about an hour from Boston. Couples get a complimentary tasting for two, on-site chefs, and a wedding coordinator who plans with you and stays through the day.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqzuhc9uP5IkRsfSHpSRMuVw",
+   "name": "Canoe Club Ballroom",
+   "website": "http://www.canoeclubballroom.com/",
+   "instagram": "canoeclubweddings",
+   "tags": [
+    "riverside",
+    "1904 canoe club",
+    "affordable"
+   ],
+   "blurb": "Built in 1904 to store sixty-three canoes on the Nunckatessett River, the former canoe club in West Bridgewater is now a ballroom that bills itself as an affordable outdoor wedding venue for the South Shore. Packages are flexible, and the site says plainly that they will not fit every couple.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjwn2xnGb44kR3uuvprQBqRg",
+   "name": "Pierce House",
+   "website": "http://www.piercehouse.com/",
+   "instagram": "piercehouselincoln",
+   "tags": [
+    "1900 mansion",
+    "National Register",
+    "publishes rates"
+   ],
+   "blurb": "Built in 1900 and listed on the National Register of Historic Places, the Pierce House was left to the town of Lincoln in 1910 and has been a gathering place ever since. Rates depend on the day of the week and are printed with real-time availability, and director Jennifer Westlund brings over 15 years of event management.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJA0NEwpiH5IkRD_-u3KtQOnY",
+   "name": "Saphire Estate",
+   "website": "https://saphireeventgroup.com/saphire-estate/",
+   "instagram": "saphireeventgroup",
+   "tags": [
+    "since 1977",
+    "family-run",
+    "estate grounds"
+   ],
+   "blurb": "Roberta and Gerald Saphire bought the manor on Lake Massapoag in 1977, and the family's Saphire Estate in Sharon has been setting its standard for weddings since. The site lays out what is included, answers common questions and lists preferred vendors and accommodations.",
+   "since": 1977,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJz6Sch6oB5IkR-YuRNp_Z1-E",
+   "name": "Stonehouse on the Hill",
+   "website": "https://stonehouseonthehill.com/",
+   "instagram": "",
+   "tags": [
+    "historic stone estate",
+    "near Worcester",
+    "packages"
+   ],
+   "blurb": "A stone house over 125 years old in the Holden countryside, built in the late 1800s as a summer retreat for a Worcester attorney and still framed by New England fieldstone walls. Stonehouse on the Hill offers a range of wedding packages and is a short drive from downtown Worcester.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJoUiZGCca44kR9CsWrleFE8g",
+   "name": "Willowdale Estate",
+   "website": "https://www.willowdaleestate.com/",
+   "instagram": "willowdaleestate",
+   "tags": [
+    "mansion and grounds",
+    "full-service",
+    "year-round"
+   ],
+   "blurb": "Willowdale Estate in Topsfield opened in 2007 after an extensive renovation of the mansion and grounds, and owner Briar Forsythe built a team of planners, coordinators and caterers around it. Weddings run year-round with catering, coordination, waitstaff and bar service in one full-service package.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJw3u-S9TJ5IkRPxolbjCOmv4",
+   "name": "Bournedale Function Facility",
+   "website": "http://www.capefunctions.com/",
+   "instagram": "",
+   "tags": [
+    "lakefront",
+    "overnight lodging",
+    "all-inclusive pricing"
+   ],
+   "blurb": "Over fifty years of weddings, clambakes and reunions on a private lakefront in Plymouth. Bournedale Function Facility gives couples exclusive use of the waterfront, casual country housing for over 100 overnight guests, and all-inclusive pricing it describes as refined country elegance.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

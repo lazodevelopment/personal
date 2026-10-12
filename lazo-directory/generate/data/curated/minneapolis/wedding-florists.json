@@ -1,0 +1,207 @@
+{
+ "metro": "minneapolis",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 110,
+ "listed": 142,
+ "how": "We read the website of every Minneapolis wedding florist listed on Lazo (142 listings, 110 sites reachable) and set aside the ones that are not really in the wedding business: same-day delivery and gift shops with no wedding design, a bouquet-preservation drop-off, farms selling wholesale stems, and decor rental companies. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "What is in season in Minnesota for my month, and what gets shipped in? Local dahlias in September are a different budget than peonies in January.",
+  "Do you design and install at the venue, or deliver arrangements? Setup and teardown are the price difference.",
+  "Can I see a full wedding's florals at a budget like mine, not a bouquet photo?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJAwiy-Cob9ocR4PWDmM-IozI",
+   "name": "Studio C Floral",
+   "website": "http://www.studiocfloral.com/",
+   "instagram": "studiocfloral",
+   "tags": [
+    "30 years",
+    "color theory",
+    "uncommon weddings"
+   ],
+   "blurb": "Christi has made events come to life through floral design for 30 years and, in her own words, nerds out over color theory. Studio C in Minneapolis specializes in uncommon weddings and will go beyond flowers into linens and room layout; the work has run in Minnesota Bride, The Knot and Style Me Pretty.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJu6pGfy0m9ocRHAhgevJZnV8",
+   "name": "Artemisia Studio",
+   "website": "https://artemisiastudios.com/",
+   "instagram": "artemisiastudiosmn",
+   "tags": [
+    "since 1995",
+    "eco-friendly",
+    "local and fair-trade blooms"
+   ],
+   "blurb": "Artemisia Floral Studio was founded in 1995 with a commitment to sustainability it still leads with: local, fair-trade and organic flowers whenever possible and a minimal footprint. Bespoke wedding designs from a Minneapolis team that includes gardeners, artists and environmentalists.",
+   "since": 1995,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpchgNuNaty8RICB5QIZ-uuc",
+   "name": "Stacyhill Company",
+   "website": "http://www.stacyhillcompany.com/",
+   "instagram": "stacyhillcompany",
+   "tags": [
+    "bold textures",
+    "planner and florist",
+    "25+ years"
+   ],
+   "blurb": "Stacyhill Company pairs bespoke floristry with planning under one roof in Minneapolis. Founder Hillary Rennie has more than 25 years in floral design, and the process runs from a mood-board proposal with vessel selections through on-site setup, with a la carte floral for smaller orders.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEcUJv6Qts1IRyhOr2yZ0Ucg",
+   "name": "Revel & Flourish | Weddings, Galas, & Events",
+   "website": "http://www.revelandflourish.com/",
+   "instagram": "revelandflourish",
+   "tags": [
+    "floral, decor and planning",
+    "Northeast Minneapolis",
+    "in-house rentals"
+   ],
+   "blurb": "Revel & Flourish works out of 1618 NE Central Ave in Northeast Minneapolis with its own rental inventory, handling design, delivery, setup and teardown for weddings across the metro. Floral and planning from one inclusive team, consultations by appointment.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJdW9GWjc19ocRg7S3KbQ2Asg",
+   "name": "Candi's Precious Petals",
+   "website": "http://candispreciouspetals.com/",
+   "instagram": "candispreciouspetals/reel/C5uf_9yMlES",
+   "tags": [
+    "from $3,000",
+    "20 years in floral",
+    "family-owned"
+   ],
+   "blurb": "Candi spent over 20 years in the floral industry before launching her wedding studio in fall 2022, and the Rosemount shop is family-owned. Full-service design typically begins at $3,000, with most clients between $5,000 and $9,000, and the site spells out what that buys.",
+   "since": null,
+   "from_price": "$3,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJM5bayRwr9ocR6SL49x25LvY",
+   "name": "Apricot Floral — By Appointment Only",
+   "website": "http://www.designapricot.com/",
+   "instagram": "apricot.floral",
+   "tags": [
+    "founded 2018",
+    "sculptural and organic",
+    "by appointment"
+   ],
+   "blurb": "Founded in 2018 by designer Genevieve Wilson, Apricot Floral works from a dedicated St. Paul studio with a team sourcing fresh local and seasonal blooms. Sculptural, naturalistic wedding design from personal flowers to installations, by appointment only.",
+   "since": 2018,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ69fuzJTJslIRjdIEMYTY3O4",
+   "name": "Studio Louise Flowers",
+   "website": "https://studiolouiseflowers.com/",
+   "instagram": "studiolouiseflowers",
+   "tags": [
+    "installations",
+    "contemporary",
+    "Stillwater"
+   ],
+   "blurb": "Studio Louise Flowers is Jenn's Stillwater wedding and events studio, with a contemporary approach that layers premium blooms, bespoke mechanics and refined textures into installations. Daily flowers and workshops too, but weddings are the lead.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ4f5zN0gq9ocRDQKCUQLqo0c",
+   "name": "Laurel Street Flowers (Studio Space)",
+   "website": "http://www.laurelstreetflowers.com/",
+   "instagram": "laurelstreetflowers",
+   "tags": [
+    "since 1992",
+    "garden and wildflower",
+    "all budgets"
+   ],
+   "blurb": "Laurel Street Flowers has done complete floral design in St. Paul since 1992, now from a studio on St. Clair Avenue. European-style garden and wildflower arrangements for everything from intimate ceremonies to galas, with wedding consultations by appointment and an extensive portfolio to browse.",
+   "since": 1992,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJddl7JZcq9ocRDvj1x0tSkfM",
+   "name": "Ergo Floral",
+   "website": "https://www.ergofloral.com/",
+   "instagram": "ergofloral",
+   "tags": [
+    "40+ years on Cathedral Hill",
+    "formerly Fleur de Lis",
+    "seasonal and sustainable"
+   ],
+   "blurb": "Ergo is the Cathedral Hill shop formerly known as Fleur de Lis, part of the Twin Cities for over 40 years. David leads weddings and workshops, everything is rooted in seasonality and sustainable practice, and the florals are described as lush, wild and unapologetically juicy.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_cWBWTPRslIR5QyBDR8YH-k",
+   "name": "Hazel & Goose",
+   "website": "https://www.hazelandgoose.com/",
+   "instagram": "hazelandgoose",
+   "tags": [
+    "urban flower farm",
+    "grows its own",
+    "White Bear Lake"
+   ],
+   "blurb": "Staci and Nick were inspired to grow flowers by their own 2016 wedding, and Hazel & Goose is now an urban flower farm with a studio in downtown White Bear Lake. Custom wedding florals from sustainably grown specialty cuts, plus subscriptions and design classes.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6RxnO_cp9ocRKw6OIzeXVbg",
+   "name": "Appleblossom Flowers Wedding Stylists",
+   "website": "http://www.appleblossom-flowers.com/",
+   "instagram": "appleblossom_flowers",
+   "tags": [
+    "weddings only",
+    "inclusive",
+    "St. Paul"
+   ],
+   "blurb": "Dawn Singleton's Appleblossom Flowers is a locally owned St. Paul studio that says it is obsessed with creating florals for weddings. The stated philosophy is intentional inclusivity: all couples are welcome, and the look is organically beautiful.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ53oRiEXTslIRq6HKAZeY9Kg",
+   "name": "Shara’s Floral Designs For Weddings and Special Events By Appointment Only",
+   "website": "http://sharasfloraldesigns.com/",
+   "instagram": "sharasfloraldesigns",
+   "tags": [
+    "est. 2017",
+    "by appointment",
+    "Oakdale"
+   ],
+   "blurb": "Shara found floral design on a whim doing the flowers for her daughter's wedding in 2010, and turned it into Shara's Floral Designs in 2017. Custom wedding and event florals for the Twin Cities from Oakdale, by appointment only.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

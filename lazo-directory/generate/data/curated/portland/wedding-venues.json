@@ -1,0 +1,207 @@
+{
+ "metro": "portland",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 160,
+ "listed": 194,
+ "how": "We read the website of every Portland wedding venue listed on Lazo (194 listings, 160 sites reachable) and set aside the ones that are not really in the wedding business: a golf club whose site is about meetings and tee times, planners and a DJ listed as venues, an orchard, a lodge advertising discounts, and listings whose pages were only vendor credits or magazine logos. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is the date in July through September, the dependable dry season? Those Saturdays go first, and any other month needs a real rain plan.",
+  "What is the indoor or covered option if it rains, does it cost extra, and does it change the guest count?",
+  "If the venue is across the river in Vancouver, you need a Washington marriage license; ask what paperwork has tripped up couples before."
+ ],
+ "picks": [
+  {
+   "id": "ChIJTXjticl2lVQRgvs5VAzCCd0",
+   "name": "Abernethy Center",
+   "website": "http://www.abernethycenter.com/",
+   "instagram": "abernethycenter",
+   "tags": [
+    "since 2001",
+    "all-inclusive",
+    "garden ceremonies"
+   ],
+   "blurb": "Established in 2001, Abernethy Center in Oregon City runs all-inclusive wedding experiences from micro weddings to grand celebrations, with garden ceremonies and a team it describes as seasoned event experts. The site calls itself a luxury all-inclusive venue near Portland and invites you to check your date.",
+   "since": 2001,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMSzTRehwlVQR1Tl-BZryQ4k",
+   "name": "Ainsworth House & Gardens",
+   "website": "http://ainsworthhouse.net/",
+   "instagram": "",
+   "tags": [
+    "historic house",
+    "indoor and outdoor",
+    "day-of coordination offered"
+   ],
+   "blurb": "A historic, full-service indoor and outdoor venue in Oregon City, bought by a family whose children attended the University of Portland and who decided to make Oregon home. Ainsworth House & Gardens also offers day-of wedding coordination, so the venue can run the day as well as host it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1S6Cld4KlVQRmKK4koD12No",
+   "name": "Oaks Pioneer Church",
+   "website": "http://www.oakspioneerchurch.org/",
+   "instagram": "",
+   "tags": [
+    "1851 chapel",
+    "Sellwood",
+    "publishes rental rates"
+   ],
+   "blurb": "The chapel began in 1851 as St Johns Episcopal Church in Milwaukie and was moved three times, once by barge up the Willamette River, before settling in Sellwood. Oaks Pioneer Church hosts intimate weddings, describes itself as affordable, and lists its wedding rental rates on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv5uaCj6flVQRkQPIWBwGn8k",
+   "name": "Lakeside Gardens",
+   "website": "https://www.lakesidegardensevents.com/",
+   "instagram": "lakesidegardens",
+   "tags": [
+    "35+ years",
+    "garden and lakes",
+    "coordinators and chefs on staff"
+   ],
+   "blurb": "For more than 35 years Lakeside Gardens has hosted Portland garden weddings among cedars, weeping willows and swan-filled lakes. The team of coordinators, chefs and creatives is introduced by name on the site, and there is a digital garden promenade to take before you visit.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJk253gQ6nlVQRSqe9XCh2Nmo",
+   "name": "The Baker Building",
+   "website": "https://www.bakerbuilding.org/",
+   "instagram": "baker_building",
+   "tags": [
+    "1911 building",
+    "indoor",
+    "historic"
+   ],
+   "blurb": "A restored indoor venue in Portland with genuine 1911 architecture that, in the venue's words, does not require elaborate decoration. The Baker Building pitches itself to couples who want original craftsmanship and a century of character for an intimate city wedding.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJh6vO4IqplVQR7uyZF0riDKA",
+   "name": "Weddinglandia | PDX Wedding Chapel",
+   "website": "https://weddinglandia.com/",
+   "instagram": "",
+   "tags": [
+    "micro weddings",
+    "all-inclusive chapel",
+    "St. Johns"
+   ],
+   "blurb": "A Vegas-style wedding chapel in the St. Johns neighborhood built for affordable, stress-free micro weddings. Weddinglandia's roughly 1,000-square-foot space is all-inclusive and, in its words, includes everything you need and nothing you don't, with packages laid out on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJNa_myXGDlVQRKGAPug417Ug",
+   "name": "Springwater Lakes Estate",
+   "website": "http://springwaterlakesestate.com/",
+   "instagram": "springwaterlakesestate",
+   "tags": [
+    "16 acres, three lakes",
+    "renovated barn",
+    "husband and wife"
+   ],
+   "blurb": "Sixteen acres with three lakes and an antique renovated barn, run by a husband-and-wife team who call it a labor of love and a work in progress. Springwater Lakes Estate offers an outdoor ceremony site plus an indoor option, and is booking into 2027.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJKzG2h0aXlVQReWDHtVFOwkY",
+   "name": "The Hummingbird Hall",
+   "website": "https://www.thehummingbirdhall.com/",
+   "instagram": "the_hummingbird_hall",
+   "tags": [
+    "1914 chapel",
+    "Columbia River Gorge",
+    "full-day rental"
+   ],
+   "blurb": "A restored 1914 chapel in Corbett, at the Portland end of the Columbia River Gorge, for intimate weddings. Full-day rentals at The Hummingbird Hall include exclusive use of the sanctuary, lower hall and private lawn from 9 AM to 11 PM, plus 75 white folding chairs.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJF5dVblWLlVQRTa9sDtveCPY",
+   "name": "Highland Farms",
+   "website": "http://highlandfarms-oregon.com/",
+   "instagram": "highlandfarmsor",
+   "tags": [
+    "Highland cows",
+    "forest",
+    "farm stays"
+   ],
+   "blurb": "Forest weddings on five forested acres about an hour from Portland, with a working herd of Highland cows as honorary guests. Highland Farms also offers private farm tours, a Nordic spa and farm stays, is booking 2027, and starts with a free 45-minute call with Daunte.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOx3FCruvlVQRGz6epIAFy8g",
+   "name": "Moonlight Events",
+   "website": "https://www.moonlighteventspace.com/",
+   "instagram": "",
+   "tags": [
+    "all-inclusive",
+    "from $1,500",
+    "Vancouver"
+   ],
+   "blurb": "Vancouver's all-inclusive indoor and outdoor venue, with wedding packages that start at $1,500 for elopements and scale up to full all-inclusive weddings. Moonlight Events offers a free tour and lists catering, coordination and planning among its services.",
+   "since": null,
+   "from_price": "$1,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFWukXINvlVQRbYkU2VnmBEI",
+   "name": "The Barn at Countryside",
+   "website": "https://thebarnatcountryside.com/",
+   "instagram": "thebarnatcountryside",
+   "tags": [
+    "up to 400 guests",
+    "seating for 300 included",
+    "12-hour rental"
+   ],
+   "blurb": "A rustic-meets-modern barn in Aurora that holds up to 400 guests, with seating for 300 included in the price. The Barn at Countryside is candid that it has no heating or cooling, relying on fans in summer and propane heaters in winter, and hosts weddings Fridays through Sundays on a 12-hour rental.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJeThkKjZllVQRIT6QEY8358M",
+   "name": "Oak and Hood - Barn Venue (Oak + Hood)",
+   "website": "https://www.oakandhood.com/",
+   "instagram": "oakandhoodvenue",
+   "tags": [
+    "Mount Hood view",
+    "up to 300 guests",
+    "barn"
+   ],
+   "blurb": "A barn venue in Canby surrounded by oak trees, with a frontal view of Mount Hood and indoor and outdoor spaces for up to 300 guests. Oak + Hood offers rentals such as tables and folding chairs as part of its wedding services.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

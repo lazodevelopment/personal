@@ -1,0 +1,206 @@
+{
+ "metro": "raleigh-durham",
+ "cat": "wedding-photographers",
+ "updated": "2026-10-12",
+ "read": 77,
+ "listed": 94,
+ "how": "We read the website of every Raleigh-Durham wedding photographer listed on Lazo (94 listings, 77 sites reachable) and set aside the ones that are not really in the wedding business: a downtown studio rental, headshot and family portrait photographers, a quinceanera-and-everything freelancer, a photographer based in England, and one who lives outside Charlotte. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Summer here is humid and the light is harsh at midday. How do you schedule portraits around that, and can I see a full August gallery?",
+  "What is the delivery timeline, and is a second shooter included or an add-on?",
+  "Have you shot at my venue or one like it, and can I see a full wedding from there rather than highlights?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJa7mkJUZZrIkR5g40kT6z3cs",
+   "name": "In His Image Photography",
+   "website": "https://inhisimagephotography.com/",
+   "instagram": "inhisimagephoto",
+   "tags": [
+    "since 1999",
+    "second generation",
+    "multicultural"
+   ],
+   "blurb": "Dajuan Jones founded In His Image Photography in 1999, before he graduated college, and calls himself a second-generation Raleigh wedding photographer who got it from his Papa. The Apex studio describes itself as multicultural, with a mission rooted in faith, and lists its wedding offerings on the site.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJgYMarjBYrIkRx8gjyDU2xCs",
+   "name": "Autumn Harrison Photography",
+   "website": "http://www.autumnharrison.com/",
+   "instagram": "",
+   "tags": [
+    "17 years",
+    "editorial documentary",
+    "East Coast"
+   ],
+   "blurb": "Seventeen years in, Autumn says she still gets ridiculously excited about weddings. Her editorial, documentary work is for couples who value genuine moments, based in Raleigh and covering North Carolina, the East Coast and destinations.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJuwKLjkrmrIkRz9DioPAfaQ0",
+   "name": "Radian Photography",
+   "website": "https://radianphotography.com/",
+   "instagram": "radianphotography",
+   "tags": [
+    "husband and wife",
+    "medium format film",
+    "fine art"
+   ],
+   "blurb": "Radhika and Ian McDiarmid are a husband-and-wife team who have spent more than a decade photographing weddings, families and brands, specializing in medium format film. Radian's Durham studio pitches fine art, film-forward images with staying power.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSSujmeZYrIkRhzerhl0EUqM",
+   "name": "Azul Photography",
+   "website": "http://www.azulphotography.com/",
+   "instagram": "azul_photography",
+   "tags": [
+    "two photojournalists",
+    "15+ years",
+    "Raleigh"
+   ],
+   "blurb": "Two former photojournalists who met covering the ACC Tournament, married, and combined their careers into Azul Photography. For more than 15 years they have shot weddings and events from Raleigh with the same approach: anticipate moments, stay calm under pressure, stay out of the way.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxUD8EqpZrIkRn_xwpvD3KFo",
+   "name": "Donnell Perry Photography Inc",
+   "website": "http://www.donnellperryphotography.com/",
+   "instagram": "donnellperryphotography",
+   "tags": [
+    "photojournalist style",
+    "Wendell",
+    "featured in Essence"
+   ],
+   "blurb": "Donnell Perry works in a photojournalist style and says his favorite frame is the emotion between the couple right after the vows. Based in Wendell, with work featured in Weddings Magazine, Essence and WeddingWire.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQ1xfCwJfrIkRZLDXWfkyVnI",
+   "name": "Aline Botti Photography",
+   "website": "https://alinebottiphotography.com/",
+   "instagram": "alinebotti_photography",
+   "tags": [
+    "film and digital",
+    "drone",
+    "Italy and Brazil"
+   ],
+   "blurb": "Born in Brazil with Italian heritage, Aline studied international business before turning to photography, and shoots film, digital and drone imagery for weddings in the US, Italy and Brazil. Her Raleigh studio markets itself as luxury destination wedding photography.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJS9YUq_3_7qERi_unbzv3wHQ",
+   "name": "Tom Waldenberg Photography",
+   "website": "http://tomwaldenbergphotography.com/",
+   "instagram": "tomwaldenberg.photo/#",
+   "tags": [
+    "candid documentary",
+    "people over pageantry"
+   ],
+   "blurb": "Tom Waldenberg's pitch is people over pageantry: a candid, documentary photographer who wants to feel like a guest at your wedding rather than a production. Raleigh-based, serving couples across North Carolina.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0c54Ze6sPikRJCR9IxjKyLA",
+   "name": "hishutter photography",
+   "website": "https://www.hishutter.com/",
+   "instagram": "hishutter",
+   "tags": [
+    "since 2010",
+    "couple-run",
+    "documentary"
+   ],
+   "blurb": "A Durham couple who met during the pandemic and now photograph North Carolina weddings in a candid documentary style, blending in rather than directing. HiShutter has shot weddings since 2010 and lays out its Full Day Wedding Collection on a pricing page.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJXTDSo3ePrIkRa7LHgVHo9ds",
+   "name": "Live View Studios",
+   "website": "http://liveviewstudios.com/",
+   "instagram": "liveviewstudios",
+   "tags": [
+    "luxury film",
+    "photo and video",
+    "Raleigh and Charleston"
+   ],
+   "blurb": "A husband-and-wife studio that began when he married Anna and started capturing love stories together; they now have three kids. Live View Studios does luxury film wedding photography and videography out of Fuquay-Varina with a second base in Charleston, serving the Carolinas and the East Coast.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJyw7AZXLtrIkRdgoEwKzYvd0",
+   "name": "Maadhurya Photography & Videography",
+   "website": "https://www.maadhuryaphotography.com/",
+   "instagram": "maadhuryaphotography",
+   "tags": [
+    "Indian weddings",
+    "photo and video",
+    "live streaming"
+   ],
+   "blurb": "Indian wedding photography and cinematic videography from Cary, covering pre-wedding ceremonies, Nikkah, Mehendi and Walima events, with live streaming and destination films also on offer. The site is a long gallery of named couples' highlight films.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJbeZxALko5i0RD7cTA4vfFuA",
+   "name": "Arsalan Abbasi Photography",
+   "website": "https://www.arsalanabbasi.com/",
+   "instagram": "arsalanabbasiphoto",
+   "tags": [
+    "trained architect",
+    "documentary",
+    "Durham"
+   ],
+   "blurb": "Trained as an architect, Arsalan Abbasi approaches weddings with the same eye for light, composition and poetry he brings to buildings. Vibrant, documentary-style work from Durham, covering North Carolina, Virginia and beyond.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqURgdDAcbgUR2hygC3AdzgI",
+   "name": "Diora Media",
+   "website": "http://dioramedia.com/",
+   "instagram": "dioramedia",
+   "tags": [
+    "UNC photojournalism",
+    "destination",
+    "mentorship program"
+   ],
+   "blurb": "Giovanna Diora Torrieri studied business and photojournalism at UNC-Chapel Hill and shoots timeless, emotional wedding photography from Raleigh for hopeless romantics and adventurous couples. Destination work includes New York, Spain, DC, Virginia and Asheville, and she runs a mentorship program for other photographers.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

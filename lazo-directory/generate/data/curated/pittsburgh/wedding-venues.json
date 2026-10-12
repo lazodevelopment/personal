@@ -1,0 +1,207 @@
+{
+ "metro": "pittsburgh",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 146,
+ "listed": 177,
+ "how": "We read the website of every Pittsburgh wedding venue listed on Lazo (177 listings, 146 sites reachable) and set aside the ones that are not really in the wedding business: wedding planners and caterers that showed up in the venue list, a fraternal lodge, and duplicate listings for the same farm. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Where does the cookie table go, and can family bring the cookies in themselves? Ask before you fall for a room with no space for it.",
+  "If the date is November to March, what is the indoor ceremony plan, and how are the hill roads and parking handled in snow?",
+  "What is in the rental: tables, linens, setup hours, a coordinator, catering? Pittsburgh venues range from a bare hall to all-inclusive."
+ ],
+ "picks": [
+  {
+   "id": "ChIJBUVLCADzNIgRwIjBAIpz-tI",
+   "name": "Grand hall",
+   "website": "https://www.pittsburghsgrandhall.com/",
+   "instagram": "pittsburghsgrandhall",
+   "tags": [
+    "historic hall",
+    "family-owned since 1995",
+    "customizable packages"
+   ],
+   "blurb": "Family owned and operated by Ed, Mary Ann, John and Suzanne Graf since 1995, Pittsburgh's Grand Hall at The Priory is a historic hall with rolling barrel vaults and arches that soar 80 feet overhead. Wedding packages are customizable, some offered year-round and some seasonal.",
+   "since": 1995,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJ7GCbFTxNIgRA7Giymq6gwM",
+   "name": "Matrimony PGH",
+   "website": "https://www.matrimonypgh.com/",
+   "instagram": "matrimonypgh",
+   "tags": [
+    "downtown chapel",
+    "elopements and micro-weddings",
+    "book online with clear pricing"
+   ],
+   "blurb": "Pittsburgh's first Vegas-style wedding and event chapel, in the heart of downtown, an alternative to traditional and courthouse weddings. Packages and add-ons are listed with clear pricing so you can book instantly, and Matrimony is now booking 2027 for elopements, micro-weddings and receptions.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQa0VT3qZNIgRcm4h4whVOoE",
+   "name": "Armstrong Farms Westminster Preserve",
+   "website": "http://www.armstrongfarms.com/",
+   "instagram": "",
+   "tags": [
+    "barn",
+    "weekend wedding packages",
+    "Century Farm"
+   ],
+   "blurb": "A Pennsylvania Century Farm with roots back to 1816, about 30 minutes from the heart of Pittsburgh in the historic town of Saxonburg. Armstrong Farms' rustic barn venues specialize in the weekend wedding experience, with weekend packages that stretch the celebration well beyond the ceremony.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJtTjUDkNMNIgRrw_bWBVOqdY",
+   "name": "Shady Elms Farm, LLC",
+   "website": "http://www.shadyelmsfarm.com/",
+   "instagram": "shadyelmsfarmvenue",
+   "tags": [
+    "all-inclusive",
+    "family farm",
+    "two packages"
+   ],
+   "blurb": "Billed as Pittsburgh's all-inclusive venue, Shady Elms Farm is a family farm just south of the city where Alex's grandmother was married in the farmhouse and his parents in the barn nearly 60 years ago. Two all-inclusive packages are offered, both built to take the stress out of planning.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZcMErTBUNIgRbAuBeYQjVGI",
+   "name": "Bella Sera Event Villa",
+   "website": "https://www.bellaserapgh.com/",
+   "instagram": "bellasera_eventvilla",
+   "tags": [
+    "all-inclusive",
+    "indoor and outdoor",
+    "25 minutes south"
+   ],
+   "blurb": "An all-inclusive wedding and event venue 25 minutes south of Pittsburgh in Canonsburg, with multiple indoor and outdoor spaces. Owner Jason Capps describes Bella Sera as a place built around food and family, and the team pitches itself as problem-solvers who want you to actually enjoy your event.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJbZUqNLRPNIgR2ZZoJwMIxJc",
+   "name": "Bramblewood",
+   "website": "http://www.bramblewoodweddings.com/",
+   "instagram": "bramblewood_weddings",
+   "tags": [
+    "barn",
+    "lakeside ceremony",
+    "family-owned"
+   ],
+   "blurb": "Pittsburgh's newest barn wedding venue, Bramblewood at Simmons Hickory Farm sits in the hills of southwestern Pennsylvania about forty minutes from downtown. A small family business run by Cindy and her daughters Bethany and Emma, with a lakeside ceremony site and catering and bartending on offer.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTb2yfHr6ZUARrECrqXyvacA",
+   "name": "Greystone Fields",
+   "website": "http://www.greystonefields.com/",
+   "instagram": "",
+   "tags": [
+    "family-owned",
+    "weddings since 2004",
+    "year-round"
+   ],
+   "blurb": "A small, family-owned venue in Gibsonia on what was the grandparents' working truck farm, now 21 acres of patios, seasonal flower beds and waterfalls. Greystone Fields has hosted weddings since 2004, is available year-round and offers open-air seating for 200 or more guests.",
+   "since": 2004,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQyUY8R-lNIgRjnsIxdCB35w",
+   "name": "Lingrow Farm",
+   "website": "http://lingrowfarm.com/",
+   "instagram": "lingrowfarm",
+   "tags": [
+    "40-acre farm",
+    "on-site catering",
+    "Leechburg"
+   ],
+   "blurb": "A country retreat on 40 acres of farmland in Leechburg, between Westmoreland and Allegheny Counties. Lingrow Farm says it has been featured by The Knot, Pittsburgh and Whirl magazines and the television show Four Weddings, and pairs elegant-but-rustic settings with its own catering.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJPypOioY9NYgRWxgRw8g1AEc",
+   "name": "The Grayson House",
+   "website": "http://www.thegraysonhouse.com/",
+   "instagram": "the_grayson_house",
+   "tags": [
+    "wedding barn",
+    "up to 250 guests",
+    "Laurel Mountains views"
+   ],
+   "blurb": "The Grayson House at Mt. Hope is a Uniontown wedding barn with wooden cross-back chairs, farmhouse tables and a covered cocktail porch leading to a lawn and game yard, with views of farmland, ponds and the Laurel Mountains. The package lists a five-hour rental for up to 250 guests with linens included.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxy2OeMJZM4gRB4OCsCIub6s",
+   "name": "The White Lily Farm",
+   "website": "http://www.whitelilyfarm.com/",
+   "instagram": "",
+   "tags": [
+    "two-level barn",
+    "bring your own vendors",
+    "Kittanning"
+   ],
+   "blurb": "A two-level barn with grounds and a view in Kittanning. The White Lily Farm says plainly it is not a one-stop shop, but its team stays available throughout planning and publishes a list of recommended caterers and vendors that you are not required to use.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJlRhn8RtaNIgRnONLrAOLHHU",
+   "name": "Kinsey Events Warehouse",
+   "website": "http://www.kinseyevents.com/",
+   "instagram": "KinseyEventswarehouse",
+   "tags": [
+    "industrial warehouse",
+    "bridal suite",
+    "publishes pricing"
+   ],
+   "blurb": "Whitney's refined-industrial warehouse in Oakdale, with a 20-ton overhead crane, chippy green steel columns and big warehouse windows, plus a bridal suite. Kinsey Events prints event pricing on its site, which is rare among Pittsburgh venues.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUyuFTCKGNIgRYuRxprl5Jhc",
+   "name": "Twelve Oaks Mansion",
+   "website": "http://www.twelveoaksmansion.com/",
+   "instagram": "twelveoaksmansion",
+   "tags": [
+    "mansion",
+    "farm-sourced menu",
+    "Mars"
+   ],
+   "blurb": "A Mars mansion run by Bethany, who coordinates vendors and logistics behind the scenes, and Andrew, who oversees day-to-day operations and sources seasonal produce from farms across Western Pennsylvania for the menu. Twelve Oaks describes itself as recognized among Pennsylvania's top wedding venues.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

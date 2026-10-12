@@ -1,0 +1,207 @@
+{
+ "metro": "orlando",
+ "cat": "wedding-videographers",
+ "updated": "2026-10-12",
+ "read": 59,
+ "listed": 80,
+ "how": "We read the website of every Orlando wedding videographer listed on Lazo (80 listings, 59 sites reachable) and set aside the ones that are not really in the wedding business: DJ and entertainment companies, a quinceanera studio, a Colorado chain's Orlando landing page, a national multi-service franchise, and a photo-only team. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "How is vow and toast audio captured, with lapel mics and a feed from the DJ, or just the camera?",
+  "When do the highlight film and the full-length edit arrive, and are raw files included?",
+  "What is the plan if a summer storm moves the ceremony indoors at the last minute?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJyWGdNCed54gRaaFZSNG6mcM",
+   "name": "Cricket's Photo and Cinema",
+   "website": "http://www.cricketsphoto.com/",
+   "instagram": "cricketsphotography",
+   "tags": [
+    "husband and wife",
+    "since 2006",
+    "photo and cinema"
+   ],
+   "blurb": "Cricket and Sean shot their first wedding in 2006 and have since filmed and photographed celebrity and pro athlete weddings, with features in People, Cosmopolitan and The Knot. Winter Garden based; the site says most couples spend a minimum of $4,000 on photography.",
+   "since": 2006,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJhU-8iKj62okRMsi03dEN-vk",
+   "name": "Weddings By Ray",
+   "website": "http://weddingsbyray.com/",
+   "instagram": "weddingsbyray",
+   "tags": [
+    "candid",
+    "cinematic",
+    "photo and video"
+   ],
+   "blurb": "Weddings by Ray is Ray's Orlando photo and video studio, built on the idea that wedding photos and films should feel like you. Candid, real and cinematic, serving Central Florida and Tampa and available for destinations.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJvUWa_w-l2YgRYI43JHjKPS8",
+   "name": "Contempo Photos and Videos",
+   "website": "http://www.contempophotos.com/",
+   "instagram": "contempophotos",
+   "tags": [
+    "cinematic and editorial",
+    "bilingual",
+    "13 years"
+   ],
+   "blurb": "Contempo Photos + Videos makes wedding film that is meant to feel like a high-end movie, with 13 years of editorial direction from Kizzy and Fernando and a bilingual team. Windermere based, working throughout Florida.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRZ5HSCyH3YgRtckSOIUiF8A",
+   "name": "Captured By Elle Photo + Video",
+   "website": "http://www.capturedbyelle.com/",
+   "instagram": "capturedbyellephoto",
+   "tags": [
+    "photo and video",
+    "375+ weddings",
+    "content creation"
+   ],
+   "blurb": "Captured By Elle runs photography, videography and content creation as one company and has documented more than 375 weddings since 2013. Orlando and Disney World weddings, with a full pricing guide available on request.",
+   "since": 2013,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJK3kHRrt754gRT_lVENxM_qQ",
+   "name": "Jerzy Nieves Photo & Film",
+   "website": "http://www.jerzynieves.com/",
+   "instagram": "Jerzynievesphotos",
+   "tags": [
+    "luxury photo and film",
+    "documentary",
+    "Orlando and Tampa"
+   ],
+   "blurb": "Jerzy Nieves Photo & Film offers photo-plus-film collections designed around the timeline, built on the belief that it is about how the day felt, not just how it looked. Serving Orlando, Central Florida, Tampa and destination weddings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJLfbNNtA4d60RhckjclrHkRI",
+   "name": "Sugarloaf Productions",
+   "website": "http://www.sugarloafproductions.com/",
+   "instagram": "sugarloafproductions",
+   "tags": [
+    "husband and wife",
+    "20+ years",
+    "wedding albums"
+   ],
+   "blurb": "Sugarloaf Productions is a family-owned, husband-and-wife photo and video business in Central Florida with over 20 years of experience, backed by a team of seasoned professionals. Cinematic films, stills and custom-designed wedding albums.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJufVaADOZyigR9iSNRt_gRTI",
+   "name": "Bryan Bishop Weddings",
+   "website": "http://www.bryanbishopweddings.com/",
+   "instagram": "",
+   "tags": [
+    "cinematic",
+    "ceremony films",
+    "Winter Garden"
+   ],
+   "blurb": "Bishop's pitch is simple: he loves making movies and wants to turn the two of you into the stars of your own romance film. Bryan Bishop Weddings publishes wedding packages and offers ceremony films, out of Winter Garden.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ4ZEEOY1rYogR4Ht5Mia04Uk",
+   "name": "K. Bryant Images",
+   "website": "http://www.kbryantimages.com/",
+   "instagram": "kbryantimages",
+   "tags": [
+    "video and photo team",
+    "engagement giveaway",
+    "Orlando"
+   ],
+   "blurb": "K. Bryant Images is an Orlando-based wedding videography and photography team that regards itself as expert in both cinema and stills, and advertises a free engagement giveaway on its site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJt4Iqe-h2t2ERR0cccGJu13g",
+   "name": "Willow Films",
+   "website": "http://www.willowfilmsfl.com/",
+   "instagram": "willowfilmsfl",
+   "tags": [
+    "cinematic",
+    "Central Florida",
+    "Davenport"
+   ],
+   "blurb": "Willow Films is a Central Florida company based near Davenport offering cinematic wedding videography, with a stated mission of preserving the essence of the day through cinema across the region's venues and settings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ-yggYn9v54gRtXxBYPecZno",
+   "name": "Deenice Productions Videography",
+   "website": "http://www.deenice.com/",
+   "instagram": "deeniceproductions",
+   "tags": [
+    "since 1999",
+    "25+ years in video",
+    "drone"
+   ],
+   "blurb": "Dee opened Deenice Productions in 1999 and brings over 25 years of video production, including video production education at Dean College and Florida State. The wedding approach is naturalistic and non-intrusive, with aerial drone video available.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ__8z3msT54gRm2de7RDzK8E",
+   "name": "PolkBros Entertainment",
+   "website": "https://polkbros.com/",
+   "instagram": "polkbros",
+   "tags": [
+    "family-owned",
+    "30 years",
+    "photo, video and DJ"
+   ],
+   "blurb": "PolkBros is a Sanford family business that Pop started 30 years ago and passed on to Ty, Jake, Joel and Caleb. Photography, videography, DJ and photo booth under one roof, with video packages listed from four hours of coverage and a 5-to-8-minute edited film.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_ZDcfI6B54gRL9FqtarU_wo",
+   "name": "Bella Grey Photography & Studio",
+   "website": "https://bellagreyphotography.com/",
+   "instagram": "BellaGreyPhotography",
+   "tags": [
+    "husband and wife",
+    "photo and film",
+    "Disney weddings"
+   ],
+   "blurb": "Bella Grey films and photographs as a husband-and-wife team, slowing a fast-moving day down so you feel all of it. True-to-color and editorial, working Orlando and Walt Disney World.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,208 @@
+{
+ "metro": "indianapolis",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 104,
+ "listed": 123,
+ "how": "We read the website of every Indianapolis wedding venue listed on Lazo (123 listings, 104 sites reachable) and set aside the ones that are not really in the wedding business: officiants and planners listed as venues, a page that aggregates several venues, a banquet-and-meeting hall, an event hall that doubles as a training hub, and listings whose site said almost nothing about the space. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is the date you want a Saturday between May and October? Those book first here, and Indy 500 weekend in late May fills downtown hotels.",
+  "If the ceremony is outdoors, what is the rain and cold plan, and is the barn heated and air-conditioned?",
+  "What is in the rental: tables, chairs, a coordinator, the catering kitchen, and how many hours of access on the day?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJJ-BjUihZE4gRwimS4cucZP4",
+   "name": "The Sixpence",
+   "website": "https://www.thesixpence.com/?utm_source=GBP",
+   "instagram": "the_sixpence",
+   "tags": [
+    "purpose-built",
+    "publishes pricing",
+    "from $3,500"
+   ],
+   "blurb": "A purpose-built venue in Whitestown that opened to fill what its owners saw as a gap in elevated, design-driven wedding venues in Indiana. The Sixpence prints its pricing: weekday packages start at $3,500 and full-day packages run $6,500 to $12,500, with complimentary private tours to walk through the inclusions.",
+   "since": null,
+   "from_price": "$3,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5SuuTFW0bIgRDGKXb2YFCHI",
+   "name": "Kennedy Estate",
+   "website": "https://www.kennedyestate.com/",
+   "instagram": "kennedy.estate",
+   "tags": [
+    "12-hour rental",
+    "publishes pricing",
+    "30 minutes from Indy"
+   ],
+   "blurb": "About 30 minutes from Indianapolis in Lizton, Kennedy Estate sells a full package experience built around a 12-hour venue rental, with pricing and what is included printed on the site. The team describes its job as the setting, the strategy and the support, from the first walk-through to the final farewell.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJL31bNiDUaogRb1hXhNS90Bc",
+   "name": "Montgomery Creek Ranch",
+   "website": "http://montgomerycreekranch.com/",
+   "instagram": "montgomerycreekranch",
+   "tags": [
+    "barn",
+    "all-inclusive",
+    "venue team guides planning"
+   ],
+   "blurb": "Premium barn weddings in Knightstown, east of the city, with a venue team that walks couples through planning and all-inclusive options rather than handing over keys to a space. Montgomery Creek Ranch calls itself a whole support system, not just a venue, and works with Event Liquor Catering.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_2rjWS0xa4gRjiZCB5o03s0",
+   "name": "For-Lou Farms",
+   "website": "http://www.forloufarms.com/",
+   "instagram": "forloufarms",
+   "tags": [
+    "working farm since 1942",
+    "1947 dairy barn",
+    "affordable"
+   ],
+   "blurb": "A working farm that has been in the Sparks family since 1942, with the 1947 dairy barn as the centerpiece for ceremonies and receptions east of Indy in Greenfield. For-Lou Farms positions itself as one of the most affordable wedding venues in the Indianapolis area and lays out booking in three steps.",
+   "since": 1942,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJu85tp0ivbIgRe1FrYT1sGEA",
+   "name": "Ash and Oak Weddings",
+   "website": "http://www.ashandoakweddings.com/",
+   "instagram": "ashandoakweddings",
+   "tags": [
+    "35 private acres",
+    "family-owned",
+    "indoor and outdoor"
+   ],
+   "blurb": "The owners married in a hay-filled barn on a tight budget in 2010, came back ten years later to find it transformed, and bought the property as a family. Ash and Oak in Avon has 35 private acres, indoor and outdoor ceremony options and a climate-controlled reception space, with pricing in a free wedding guide.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMXoG_HBda4gRu5gEK8_PqlQ",
+   "name": "Folktale Event Center",
+   "website": "http://folktalegreenwood.com/",
+   "instagram": "folktalegreenwood",
+   "tags": [
+    "vintage home",
+    "micro weddings to tents",
+    "up to 14 hours"
+   ],
+   "blurb": "Set on nearly two acres around a preserved vintage home in downtown Greenwood. Folktale hosts everything from full-day outdoor tent weddings to intimate micro weddings, and packages give up to 14 hours of exclusive access with bridal and groom's suites and a catering kitchen.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHYfw1U2vFIgR4fs0caLN0Ow",
+   "name": "Westwood | Vowery & Estate",
+   "website": "https://www.westwoodvenue.com/",
+   "instagram": "westwoodvenue",
+   "tags": [
+    "conservatory ceremony room",
+    "century oaks",
+    "husband and wife owners"
+   ],
+   "blurb": "Tucked beneath century oaks in Westfield, with a conservatory-style ceremony room and a reception hall. Westwood is owned by husband and wife Shelby and Seth Dempsey with partners Tana and Chris Henry, and its packages are written around luxury hospitality and a customized planning experience, with pricing on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7QNrOb5Qa4gRBikwtyeyrgg",
+   "name": "JPS Events at Regions Tower",
+   "website": "http://www.jpsevents.com/",
+   "instagram": "regions_tower_indy",
+   "tags": [
+    "rooftop",
+    "downtown",
+    "in-house catering"
+   ],
+   "blurb": "Indy's only rooftop venue, an 11,000-square-foot terrace on top of Regions Tower downtown, run by JPS Events. The catering is in house, and the site makes food and drink the cornerstone of its pitch rather than an afterthought.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJj_kklLtQa4gR5MMeim-fxTo",
+   "name": "The Indiana Roof Ballroom",
+   "website": "http://www.indianaroof.com/",
+   "instagram": "indianaroofballroom",
+   "tags": [
+    "historic ballroom",
+    "downtown skywalk",
+    "hotel-connected"
+   ],
+   "blurb": "A historic downtown banquet and reception hall connected by skywalk to the Embassy Suites, Circle Centre, the Conrad, the Indiana Convention Center and Lucas Oil Stadium, which matters when most of your guests are from out of town. The Indiana Roof Ballroom hosts weddings alongside corporate events and fundraisers.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7WPHaDdba4gRNGyPBiNzUlg",
+   "name": "Ivory Foundry Weddings & Events",
+   "website": "https://www.ivoryfoundryevents.com/",
+   "instagram": "ivoryfoundry",
+   "tags": [
+    "design-forward",
+    "husband and wife",
+    "upfront pricing"
+   ],
+   "blurb": "A design-forward Indianapolis venue built by Beth and Rich, a husband-and-wife team drawing on twenty years of weddings and a belief that they could feel different. Ivory Foundry says it does not believe in surprising clients with pricing, and puts it up front on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqfAhzhw1E4gRPOhO4IvBkl0",
+   "name": "Haven Hills Estate",
+   "website": "https://www.havenhillsestate.com/",
+   "instagram": "havenhillsestate",
+   "tags": [
+    "40 acres",
+    "on-site lodging",
+    "up to 150 guests",
+    "vendor-flexible"
+   ],
+   "blurb": "A private 40-acre estate in Jamestown with three properties, on-site lodging that can be folded into the wedding package, and room for up to 150 seated guests. Haven Hills is vendor-flexible, so you bring your own caterer and team, though it will recommend partners.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg2pmeNOwFIgRh6AV15c_VPk",
+   "name": "Mill Top Banquet and Conference Center",
+   "website": "http://www.milltop-indy.com/",
+   "instagram": "milltop",
+   "tags": [
+    "1865 flour mill",
+    "over 12 spaces",
+    "Noblesville"
+   ],
+   "blurb": "The Model Mill in Noblesville was founded in 1865 to produce Kismet Flour, and its smokestack is still part of the town skyline. Mill Top keeps much of the original architecture and offers more than 12 spaces for weddings and smaller parties.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

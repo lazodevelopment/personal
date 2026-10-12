@@ -766,6 +766,7 @@ def build(vendors: list[dict]):
                          + "Until reviews arrive, vendors who have claimed and verified their profile come first, then everyone else by name.")
 
             # JC-LAZO-GUIDE-1008: Zola-style city guide on the top metro x category hubs
+            city_guide.METRO_VENDORS[mid] = vs   # JC-LAZO-CURATE-1012: curated picks may live in a sister category
             guide = (city_guide.build_guide(metro, cat, cvs, lambda v, _m=metro: _locality(v, _m),
                                             _COST_TYPICAL.get(cat["slug"]))
                      if city_guide.is_guide(mid, cat["slug"]) and mid in by_metro else None)

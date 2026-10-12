@@ -1,0 +1,207 @@
+{
+ "metro": "philadelphia",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 229,
+ "listed": 295,
+ "how": "We read the website of every Philadelphia wedding florist listed on Lazo (295 listings, 229 sites reachable) and set aside the ones that are not really in the wedding business: same-day delivery shops, two event venues and a wedding planner filed under florists, York and Lebanon florists well outside the metro, and a site with nothing beyond a phone number. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "What is in season locally for my month, and what gets shipped in? Peonies in May and dahlias in September are local; a January wedding is mostly imported.",
+  "Do you design and install at the venue, or deliver arrangements? Installation, teardown and the venue's load-in window change the price.",
+  "Can I see a full wedding's flowers at a budget like mine, not a single bouquet photo?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJU2-YEgLBxokRswPQljenvl4",
+   "name": "Petal and Bloom",
+   "website": "https://www.petalandbloomflowers.com/",
+   "instagram": "petal_and_bloom_florist",
+   "tags": [
+    "a la carte menu",
+    "real weddings listed",
+    "Narberth"
+   ],
+   "blurb": "Petal and Bloom in Narberth posts its weddings by couple and venue, from Spring Mill Cafe in Conshohocken to the Moshulu in Philadelphia and the Avalon Yacht Club. Besides full design, there is an a la carte menu for couples who want a streamlined, budget-friendly way to order wedding flowers.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_-3RxNIBxIkRu55_wb95nj0",
+   "name": "Botanical Blueprints - Custom Floral Design",
+   "website": "https://www.botanicalblueprints.com/",
+   "instagram": "botanical_blueprints",
+   "tags": [
+    "Bucks County",
+    "New Hope and Lambertville",
+    "bespoke"
+   ],
+   "blurb": "A bespoke wedding and event florist in Pineville serving Bucks County, New Hope and Lambertville, whose designer writes about blending color like paint and molding shape and texture like clay. Botanical Blueprints keeps a blog of its weddings under the name Botanical Love Stories.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOVvSguC3xokRFQzj-CvtyEg",
+   "name": "Elegant Events Florist",
+   "website": "http://eleganteventsflorist.com/",
+   "instagram": "eleganteventsflorist",
+   "tags": [
+    "since 2003",
+    "featured in Maharani Weddings",
+    "Philadelphia and NJ"
+   ],
+   "blurb": "Elegant Events Florist has served the Philadelphia community for many years and has been featured in Philadelphia Wedding Magazine, Maharani Weddings and Borrowed and Blue. A wedding and event florist for Philadelphia and New Jersey that describes itself as dependable and knowledgeable.",
+   "since": 2003,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ072gyFrJxokRDMwgn4KihgA",
+   "name": "Ori Floral Design",
+   "website": "https://www.orifloraldesign.com/",
+   "instagram": "orifloraldesign",
+   "tags": [
+    "modern design",
+    "Tokyo to New York to Philadelphia",
+    "weddings and events"
+   ],
+   "blurb": "Kaori Tokuoka founded Ori Floral Design after more than 25 years in luxury hospitality, finance and event planning that took her from Tokyo to New York. Her Philadelphia studio does design-forward florals for weddings and events, blending modern style with natural beauty.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJB-_iEwXBxokRKMpD_2yWf8Y",
+   "name": "7Blooms Wedding & Event Florist",
+   "website": "https://www.7blooms.com/",
+   "instagram": "7bloomsevents",
+   "tags": [
+    "full-service",
+    "Main Line",
+    "PA, NJ, DE and NY"
+   ],
+   "blurb": "Seven Blooms pairs floral design with planning, responsive service and execution, from the first conversation through the final installation. Melissa Parker owns and directs the St. Davids studio, which designs elevated weddings throughout Philadelphia, the Main Line, Pennsylvania, New Jersey, Delaware and New York.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJmXvU8O64xokRjgaLhYkF1Sw",
+   "name": "Lunaria Gardens",
+   "website": "http://www.lunariagardens.com/",
+   "instagram": "lunariagardens",
+   "tags": [
+    "farmed and foraged",
+    "West Philadelphia",
+    "DIY buckets"
+   ],
+   "blurb": "Lunaria Gardens grows its flowers on several lots across West Philadelphia and works with what is farmed, foraged and gleaned from the city, so designs reflect the region and season. Kristen Jas Vietty offers wedding and event design, plant and decor rental and DIY flower buckets, with a background in visual art and agroecology.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJu0x8bAPGxokRXcW7F9dpSdM",
+   "name": "Creations by Coppola",
+   "website": "https://www.creationsbycoppola.com/",
+   "instagram": "creationsbycoppola",
+   "tags": [
+    "South Philadelphia",
+    "Flower School of New York",
+    "stem bar"
+   ],
+   "blurb": "Marianna of Creations by Coppola grew up in Monte di Procida on the Italian coast and trained at the Flower School of New York; her South Philadelphia shop does weddings and events alongside a daily stem bar and flower workshops. Her work has appeared in Philadelphia Gay News and Curb Philly.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAdvtYDGjxokRPTjtxUEG-v8",
+   "name": "Willow & Thistle Floral & Event Design",
+   "website": "http://www.willowandthistle.com/",
+   "instagram": "willowandthistle",
+   "tags": [
+    "at Normandy Farm",
+    "rentals and event design",
+    "Blue Bell"
+   ],
+   "blurb": "Willow & Thistle is a wedding florist and full-service event design studio located at Normandy Farm in Blue Bell, serving Montgomery County, Bucks County and Greater Philadelphia. Beyond custom wedding flowers it offers rentals and event design to transform the venue, not just the tables.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJC-g9hWXIxokRemIOsFozOAI",
+   "name": "Beautiful Blooms Events",
+   "website": "http://www.beautifulblooms.com/",
+   "instagram": "beautifulbloomsevents",
+   "tags": [
+    "full-service event design",
+    "installations",
+    "Philadelphia"
+   ],
+   "blurb": "Beautiful Blooms Events is a Philadelphia full-service event design company whose team stays with you through every step of the process, from luxury floral arrangements to installations. Its philosophy is that each wedding should be a unique reflection of the couple and the occasion.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJT1s79dbJxokRj49fKmmLaTk",
+   "name": "Myrtle & Magnolia",
+   "website": "http://www.myrtleandmagnolia.com/",
+   "instagram": "myrtlemagnolia",
+   "tags": [
+    "Fishtown",
+    "custom wedding flowers",
+    "installations"
+   ],
+   "blurb": "Krissy Schuck owns and designs Myrtle & Magnolia, a Fishtown florist that does custom wedding flowers along with corporate installations, house plants and container gardens. Originally from Ambler, now in South Philly, she tells her own story openly on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZU1xI0_txokR-8gHe22oRj8",
+   "name": "Moss & Meadow (Cottage Flowers)",
+   "website": "https://mossandmeadow.com/",
+   "instagram": "mossandmeadowflowers",
+   "tags": [
+    "garden-style",
+    "Malvern",
+    "real weddings"
+   ],
+   "blurb": "A Malvern shop whose signature is natural, garden-style design with an abundance of texture, Moss & Meadow posts real weddings alongside its seasonal arrangements, gifts and workshops. The team describes its edge as floral design plus customer service.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBQIpF8o3BCgRb_yng5ZZ5qk",
+   "name": "BellabloomsbyTalia",
+   "website": "http://bellabloomsbytalia.com/",
+   "instagram": "bellabloomsbytalia",
+   "tags": [
+    "7+ years",
+    "South Jersey",
+    "bouquets and centerpieces"
+   ],
+   "blurb": "Talia owns and leads Bella Blooms in Maple Shade, a New Jersey floral boutique doing bridal bouquets, event centerpieces and everyday gifting. She has been designing for over seven years and says flowers should tell a story rather than just decorate a room.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

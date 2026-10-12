@@ -1,0 +1,127 @@
+{
+ "metro": "nashville",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 127,
+ "listed": 171,
+ "how": "We read the website of every Nashville wedding florist listed on Lazo (171 listings, 127 sites reachable) and set aside the ones that are not really in the wedding business: venues and planners that landed in this category, a cake baker, a formalwear boutique, a painter, a vendor directory, a retail delivery shop that does not mention weddings, and a coordinator; only seven listings were genuinely wedding floral businesses. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "What is grown locally in Middle Tennessee for my month, and what has to be shipped in?",
+  "Do you install and tear down at the venue, and how do you keep flowers from wilting in July humidity?",
+  "Can I see a full wedding's florals at a budget like mine, not just a bouquet photo?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJQaXl-XD4Y4gRSzc8ibxcKgs",
+   "name": "Kennedy Occasions",
+   "website": "http://kennedyoccasions.com/",
+   "instagram": "k.occasions",
+   "tags": [
+    "florist and planner",
+    "12 years",
+    "Murfreesboro"
+   ],
+   "blurb": "Best known for its floral designs, Kennedy Occasions is an Emily-led floral and design-focused event production company that also plans weddings. Twelve years in, with a stated talent for interpreting a bride's ideas and Pinterest boards into color and texture.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg5bow_hDZIgRQ8xIa6Vn2uw",
+   "name": "CB Designs",
+   "website": "http://www.calebbutlerdesigns.com/",
+   "instagram": "calebjbutler92",
+   "tags": [
+    "luxury",
+    "Caleb Butler",
+    "clean lines and layered texture"
+   ],
+   "blurb": "CB Designs is Caleb Butler's luxury wedding and event floral studio in Goodlettsville, serving Nashville and surrounding areas. Clean lines, layered textures and intentional color stories, with a calm, organized approach from aisle entrance to last dance.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ3WWyodX5Y4gRnxAKkSYOg8A",
+   "name": "Larson Floral",
+   "website": "http://larsonfloralco.com/",
+   "instagram": "larsonfloral",
+   "tags": [
+    "15+ years",
+    "garden-inspired",
+    "Nashville and Murfreesboro"
+   ],
+   "blurb": "Larson Floral's owner has over 15 years in Nashville's floral and event industry and designs romantic, garden-inspired florals with texture and movement. Bespoke installations and arrangements for weddings in Nashville and Murfreesboro.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJG-nITfhnZIgRy7D752MFJC8",
+   "name": "Echoes of Eden",
+   "website": "https://www.echoesofedenflorals.com/",
+   "instagram": "___echoesofeden___",
+   "tags": [
+    "fine art collective",
+    "foam-free",
+    "since 2018"
+   ],
+   "blurb": "Echoes of Eden is a fine art floral collective in East Nashville founded by Kelly in 2018, working foam-free and available to travel. The studio also does textile installations and concept styling, so one team can handle flowers and the larger look.",
+   "since": 2018,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJM9lGNIVmZIgRrQzBHg99QfM",
+   "name": "Beyond Details Catering",
+   "website": "http://www.beyonddetailscatering.com/",
+   "instagram": "beyond_details",
+   "tags": [
+    "catering and floral",
+    "one-stop",
+    "Nashville"
+   ],
+   "blurb": "Beyond Details pairs full-service catering with bespoke floral design in Nashville and bills itself as a one-stop resource for weddings. Worth a look if you would rather have food and flowers under one contract.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJiRn1hUMxZIgRoTGwnjVxE08",
+   "name": "Apple and Dove Flower Company",
+   "website": "https://www.appleanddove.com/",
+   "instagram": "",
+   "tags": [
+    "flower farm",
+    "Gallatin",
+    "wedding floral and you-pick"
+   ],
+   "blurb": "Apple and Dove is a Gallatin flower shop and farm offering farm-fresh flowers, subscriptions and wedding floral, with wearables and handheld bouquets on its special-occasions page. The farm also runs you-pick days and a flower academy.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7d1jdDhHZIgR4Y-F3voyggw",
+   "name": "DekoEvents",
+   "website": "https://www.dekoevents.com/",
+   "instagram": "",
+   "tags": [
+    "faux floral rentals",
+    "ceremony arches",
+    "budget-friendly"
+   ],
+   "blurb": "Not fresh flowers: DekoEvents in Hendersonville rents pre-designed ceremony arches, artificial floral arrangements and centerpieces as a budget-friendly alternative. For couples who want the look without a floral install.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

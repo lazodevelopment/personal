@@ -1,0 +1,207 @@
+{
+ "metro": "seattle",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 48,
+ "listed": 59,
+ "how": "We read the website of every Seattle wedding planner listed on Lazo (59 listings, 48 sites reachable) and set aside the ones that are not really in the wedding business: elopement chapels and officiants, a venue operator that sells planning with its spaces, a wedding show, a party company that does character entertainment, and a rental house. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Which island, ferry or mountain venues have you run? Ask how they handle ferry schedules, shuttle timing and a rain call for an outdoor ceremony.",
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours, meetings and vendor management.",
+  "Who is on site on the wedding day, the planner you hired or an associate, and how many weddings do you take per weekend?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ17U56X0QkFQRW5oT5z9ZKPY",
+   "name": "New Creations Wedding Design & Coordination",
+   "website": "http://www.newcreationsweddings.com/",
+   "instagram": "newcreationswed",
+   "tags": [
+    "luxury",
+    "Chinese, Japanese, Filipino, Hawaiian weddings",
+    "budgets $150,000+"
+   ],
+   "blurb": "Rebecca Grant's New Creations Weddings in Kirkland is a luxury planner that calls itself Seattle's only one specializing in Chinese, Japanese, Filipino and Hawaiian weddings. Full-service planning is for weddings with budgets of $150,000 and above, with partial, final and day-of tiers listed too.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1Tmfb3FkvK0RAZcetoldcfQ",
+   "name": "Amethyst Events LLC",
+   "website": "https://amethysteventsllc.com/",
+   "instagram": "amethystevents_wa",
+   "tags": [
+    "inclusive",
+    "team of planners",
+    "day-of to full"
+   ],
+   "blurb": "Amethyst Events is a Seattle planning studio with a collaborative team of planners and designers, pitched at thoughtful, inclusive celebrations across the Pacific Northwest. Services run from day-of coordination to full planning and design, with a focus on calm at every stage.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6fS2_CkUkFQRTwOyAga4EH8",
+   "name": "Perfectly Posh Events",
+   "website": "http://www.perfectlyposhevents.com/",
+   "instagram": "perfectlyposhevents",
+   "tags": [
+    "limited weddings per year",
+    "design and planning",
+    "Seattle"
+   ],
+   "blurb": "Perfectly Posh Events takes a limited number of weddings so each planner can give the couple full attention, and talks about guest experience and hospitality before design. Seattle-based, with real weddings from the Admiral's House and the Coeur d'Alene Resort on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJo-aX7QsUkFQRM7ijNb2vkOY",
+   "name": "Event Success",
+   "website": "https://www.eventsuccessnw.com/",
+   "instagram": "nweventsuccess",
+   "tags": [
+    "since 1999",
+    "weddings and corporate",
+    "publishes package pricing"
+   ],
+   "blurb": "Jacky's Event Success in Woodinville has coordinated weddings and corporate events since 1999 with a pitch of elevated design and flawless execution. Package pricing for coordination tiers is printed on the site rather than quoted by inquiry.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJk3VzNLJqkFQRkrpWT1Yk804",
+   "name": "KP Style Events",
+   "website": "http://www.kpstyleevents.com/",
+   "instagram": "kpstyleevents",
+   "tags": [
+    "Indian weddings",
+    "destination",
+    "Seattle"
+   ],
+   "blurb": "Kiran's KP Style Events is a Seattle planner focused on Indian and destination weddings, from an extravagant affair with all the bells and whistles to a simpler celebration. The process starts with getting to know the couple before any design.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJL6owhbwnem0RTn6AKsCJ_sw",
+   "name": "VEVENTS - Wedding & Event Services",
+   "website": "https://www.veventspnw.com/?utm_source=google&utm_medium=wix_google_business_profile&utm_campaign=321274693878740837",
+   "instagram": "vevents_pnw",
+   "tags": [
+    "over a decade",
+    "Silver to full packages",
+    "publishes pricing"
+   ],
+   "blurb": "VEVENTS is Victoria's full-service planning company in Seattle, built on more than a decade of event, hospitality and client relations work. Coordination packages start with a Silver tier for couples who want guidance while taking the lead, and the pricing details are on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6RShk-1vkFQRhhc0wYrrcH8",
+   "name": "Perfect Storm Moments",
+   "website": "http://www.perfectstormmoments.com/",
+   "instagram": "explore/tags/weddingpros",
+   "tags": [
+    "husband and wife",
+    "luxury",
+    "free planning guide"
+   ],
+   "blurb": "Amy and Aaron run Perfect Storm Moments, a husband-and-wife luxury planning and design studio in Bellevue with a boutique approach. Services go from full planning to day-of coordination, and there is a free wedding planning guide and FAQ on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBR15EY9rkFQRIEc3Z9KxuAg",
+   "name": "Luxe Event Productions",
+   "website": "https://luxenw.com/seattleweddingplanners",
+   "instagram": "luxeproductions",
+   "tags": [
+    "since 2009",
+    "Seattle and Portland",
+    "moody, eclectic design"
+   ],
+   "blurb": "Luxe NW is a boutique planning and design agency with teams in Seattle and Portland, working since 2009 on private-estate, outdoor, warehouse and culturally rich weddings. The house style is moody and eclectic, delivered with what it calls no-nonsense honesty.",
+   "since": 2009,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEUj7kHJpkFQR2Z01rUwp1SQ",
+   "name": "Sei Anders Events",
+   "website": "https://www.seiandersevents.com/",
+   "instagram": "seiandersevents",
+   "tags": [
+    "since 2022",
+    "flexible packages",
+    "Renton"
+   ],
+   "blurb": "Brittany Dunlap started Sei Anders Events in Renton in May 2022; the name means Be Different in German, and the packages are meant to flex for any budget. She began in events in 2018 planning outings and the Polar Express for an Ohio scenic railroad.",
+   "since": 2022,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJD83fauP7kFQRhaCXN6d1lEI",
+   "name": "Pennies Events",
+   "website": "http://www.penniesevents.biz/",
+   "instagram": "pennies.events",
+   "tags": [
+    "family team",
+    "complimentary consultation",
+    "Sumner"
+   ],
+   "blurb": "Penny is a born-and-raised Washingtonian whose Sumner team brings its family values and creativity to couples. Pennies Events starts with a complimentary consultation over coffee or wine to talk through where you are in planning, your vision and your concerns.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJdyf9umdBkFQRHktiyu_QHRk",
+   "name": "Hallea Events",
+   "website": "http://www.halleaevents.com/",
+   "instagram": "halleaevents",
+   "tags": [
+    "installations",
+    "culture and fashion",
+    "statewide"
+   ],
+   "blurb": "Hallea Events plans weddings and social events throughout Washington and beyond, with inspiration drawn from culture, fashion and interior design and a taste for captivating installations. Seattle-based, with the founder's travel feeding the design.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJndr3ZAwUkFQRy8G-7g0936Q",
+   "name": "Love Blooms Wedding & Event Design",
+   "website": "http://www.lovebloomseventdesign.com/",
+   "instagram": "lovebloomsweddings",
+   "tags": [
+    "planner and florist",
+    "day-of from $1,995",
+    "rentals included"
+   ],
+   "blurb": "Love Blooms in Snoqualmie is a planner and florist under one roof: event design, full-service coordination, custom floral, signage and decor rentals, and installation and teardown. Day-of coordination is printed at $2,795 with Katrina or $1,995 with an associate.",
+   "since": null,
+   "from_price": "$1,995",
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

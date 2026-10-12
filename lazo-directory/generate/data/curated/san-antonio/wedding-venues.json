@@ -1,0 +1,207 @@
+{
+ "metro": "san-antonio",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 153,
+ "listed": 177,
+ "how": "We read the website of every San Antonio wedding venue listed on Lazo (177 listings, 153 sites reachable) and set aside the ones that are not really in the wedding business: a venue chain with a landing page per property, officiant and courthouse-ceremony services, an elopement package company and a generic banquet hall. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Summer afternoons here run past 100 degrees. Where does the ceremony move, and is the reception hall air-conditioned?",
+  "Hill Country venues sit 30 to 60 minutes out of the city. Is there lodging on site, and what does it cost on top of the venue fee?",
+  "Can we bring our own alcohol, and if so, which bar service has to pour it?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJSdCpHMZQV4YRb1CWKkQTo0o",
+   "name": "Dos Palomas Ranch",
+   "website": "http://www.dospalomasranch.com/",
+   "instagram": "dospalomasranch",
+   "tags": [
+    "family-owned",
+    "three siblings",
+    "Guadalupe River valley"
+   ],
+   "blurb": "A new Hill Country venue on a secluded ranch in Boerne, owned and run by the three Wheeler siblings: Madalynn brings custom wedding cakes and interior design, Alexa marketing, Hunter a culinary and construction background. Now booking 2026 and beyond, with a free pricing guide you request from the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJXao4oJKjXIYRecqJCd8w5LE",
+   "name": "The Chapel at Gruene",
+   "website": "https://chapelatgruene.com/",
+   "instagram": "chapelatgruene",
+   "tags": [
+    "from $4,500",
+    "on-site lodging",
+    "up to 100 guests"
+   ],
+   "blurb": "An outdoor chapel, an enclosed reception hall and four cottages on ten private acres one mile from downtown Gruene. The Chapel at Gruene publishes its pricing, weddings starting at $4,500 with all-inclusive rates and no hidden fees, for intimate weddings of up to 100 guests.",
+   "since": null,
+   "from_price": "$4,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_YnW216nXIYRf1gyk7dkfnI",
+   "name": "Posey Meadows",
+   "website": "http://www.poseymeadows.com/",
+   "instagram": "posey_meadows",
+   "tags": [
+    "French farmhouse",
+    "built for weddings",
+    "pricing pamphlet"
+   ],
+   "blurb": "Posey Meadows in San Marcos is entirely new and designed specifically for weddings: guests move from the garden ceremony site to the cocktail patio to a light, airy farmhouse reception hall with seven chandeliers. A wedding pricing pamphlet is a download away.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg5IZNPBnW4YRtTjiIW_vGP0",
+   "name": "Prima Vista",
+   "website": "http://primavistaevents.com/",
+   "instagram": "primavistaevents",
+   "tags": [
+    "BYOB",
+    "50 to 200 guests",
+    "DJ included"
+   ],
+   "blurb": "A luxury BYOB venue in Wimberley, an hour from San Antonio, that says couples can save $5,000 or more on bar costs. Prima Vista holds up to 200 guests, and its all-inclusive packages include a professional DJ along with the open-air ceremony pavilion, a rotunda and a modern indoor reception hall. Pricing is described as transparent with no hidden fees.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJh3bSORl3W4YRz4iOJszqK48",
+   "name": "Carriage Hills Ranch",
+   "website": "http://www.carriagehillsranch.com/",
+   "instagram": "chrweddings_",
+   "tags": [
+    "family-owned",
+    "$4,750 to $5,900",
+    "between Austin and San Antonio"
+   ],
+   "blurb": "Carriage Hills Ranch in Blanco is a family-owned ranch between Austin and San Antonio that prints its venue fees: packages run $4,750 to $5,900. The owner spent eight years in airline management before the venue and now balances it with homeschooling, and the site lets you view availability and book a tour directly.",
+   "since": null,
+   "from_price": "$4,750",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJi3BADxaPW4YRMSgZUewhloM",
+   "name": "Paniolo Ranch",
+   "website": "https://panioloranch.com/",
+   "instagram": "panioloranch",
+   "tags": [
+    "three all-inclusive packages",
+    "overnight packages",
+    "Boerne"
+   ],
+   "blurb": "Named for the Hawaiian cowboys after the family's vacations to the islands, Paniolo Ranch in Boerne mixes aloha spirit with Lone Star tradition. Couples choose from three all-inclusive wedding packages, with overnight wedding packages available on the ranch.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJwRjSZWN5XIYRloJwXo-C2Zo",
+   "name": "Kendall Point",
+   "website": "https://kendallpoint.com/",
+   "instagram": "kendallpointvenue",
+   "tags": [
+    "built just for weddings",
+    "family-owned",
+    "bring your own alcohol"
+   ],
+   "blurb": "Kendall Point is a family-owned and operated Christian business in Boerne, celebrating ten years in 2021 and built just for weddings. The site spells out the house rules: a preferred vendor list, and couples may bring their own alcohol as long as the preferred bar service pours it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJVa9E5FCJW4YRa5O7ruNs8AY",
+   "name": "The Marquardt Ranch",
+   "website": "http://www.marquardtranch.com/",
+   "instagram": "themarquardtranch",
+   "tags": [
+    "18 years of weddings",
+    "Guadalupe River",
+    "micro wedding package"
+   ],
+   "blurb": "A family-owned ranch on the Guadalupe River 15 minutes from Boerne that describes itself as rooted in service and affordability, with 18 years of weddings behind it. Jessica Steubing runs the office and does the floral design on event days; her husband Dru is the other partner. A micro wedding package covers couples who do not want a big production.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjckJxR2OXIYRCGZ3HSLCWnM",
+   "name": "The Club at Garden Ridge",
+   "website": "http://www.theclubatgardenridge.com/",
+   "instagram": "theclubatgardenridge",
+   "tags": [
+    "two lakes and a waterfall",
+    "live oaks",
+    "transparent pricing"
+   ],
+   "blurb": "The Club at Garden Ridge turned an overgrown meadow into landscaped grounds with towering live oaks, two lakes and a waterfall. The team promises simple, transparent pricing and offers a free wedding pricing pamphlet so you can compare before touring.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0WMa3FGpXIYRmclWKicsS_0",
+   "name": "Enchanted Ranch",
+   "website": "https://myenchantedranch.com/",
+   "instagram": "myenchantedranch",
+   "tags": [
+    "opened 2019",
+    "11 acres",
+    "San Marcos"
+   ],
+   "blurb": "Enchanted Ranch began as a vision in 2017 and opened its doors in May 2019 on 11 acres east of downtown San Marcos. The site shows real celebrations held there, and the current wedding pricing brochure is sent on request so you can compare packages and amenities.",
+   "since": 2019,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOabOy-jzW4YR4uUTM0pXYgQ",
+   "name": "Spinelli's Wedding Venue",
+   "website": "http://www.spinellisvistro.com/",
+   "instagram": "dennisspinelli4444",
+   "tags": [
+    "100-year-old rock chapel",
+    "in-house catering",
+    "guest lodging"
+   ],
+   "blurb": "Spinelli's in Comfort pairs a historic 100-year-old rock chapel with an outdoor ceremony site for 200 guests, a dining hall, in-house catering and lodging for guests. Micro wedding packages are offered.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJs6UpOttoXIYRuBIYjeL0yNI",
+   "name": "Gardens at Old Town Helotes",
+   "website": "http://gardensatoldtown.com/",
+   "instagram": "gardensatoldtownhelotes",
+   "tags": [
+    "6.3 acres",
+    "indoor and outdoor",
+    "all-inclusive"
+   ],
+   "blurb": "Minutes from San Antonio in Helotes, The Gardens at Old Town spans 6.3 acres of indoor and outdoor space with Hill Country character. Weddings are sold as curated all-inclusive packages with concierge support, and the venue also hosts corporate gatherings, so ask what is reserved for your date.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

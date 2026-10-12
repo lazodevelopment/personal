@@ -1,0 +1,215 @@
+{
+ "metro": "chicago",
+ "cat": "wedding-photographers",
+ "updated": "2026-10-12",
+ "read": 147,
+ "listed": 191,
+ "how": "We read the website of every Chicago wedding photographer listed on Lazo (191 listings, 147 sites reachable) and set aside the ones that are not really in the wedding business: studios that mostly do family portraits and headshots, a duplicate listing, and a site whose headings had been overrun by spam links. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Can I see a full gallery from a wedding in my season? Chicago in January looks nothing like June, and most portfolios are summer.",
+  "Do you handle the permits for lakefront or Millennium Park portraits, or is that on us?",
+  "When do the final images arrive, and is a second shooter included or priced separately?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ-8xSsduPD4gRgclrahxWFx0",
+   "name": "Y&K Photography",
+   "website": "http://ykphotography.com/",
+   "instagram": "yandkphotography",
+   "tags": [
+    "husband and wife",
+    "since 2009",
+    "final images in 2-3 weeks"
+   ],
+   "blurb": "Yanko and Kalina are a husband-and-wife team who opened their studio in 2009 and describe their style as a mix of romantic, classic, candid and artistic. Based in Glen Ellyn, they send next-day sneak peeks and deliver the final images in two to three weeks.",
+   "since": 2009,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_y6hN5G3D4gR-1FRwvdyLDc",
+   "name": "Red Barn Wedding Studio",
+   "website": "https://redbarnweddingstudio.com/",
+   "instagram": "redbarnweddingstudio",
+   "tags": [
+    "photo, video and booth",
+    "since 2010",
+    "1,000+ weddings",
+    "family-owned"
+   ],
+   "blurb": "A family-owned Des Plaines studio that has done photography, cinematography and photo booths since 2010, and puts its count at fifteen years and 1,000-plus weddings. Documentary coverage with warm, timeless color grading, and every collection includes a consultation, a full-resolution gallery and printing rights.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJn_fqJMrSD4gRZ9tgEtMl9d4",
+   "name": "WS Photography",
+   "website": "https://wsphotography.us/",
+   "instagram": "",
+   "tags": [
+    "artistic-documentary",
+    "founded in Europe 2009",
+    "photo and video",
+    "600+ weddings"
+   ],
+   "blurb": "Founded in Europe in 2009 by Milan Lazic and relocated to Chicago in 2016, WS is a team that shoots photo and video in an artistic-documentary style and counts more than 600 weddings. Comfortable with anything from a small ceremony to 500 guests.",
+   "since": 2009,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJyZshXdCsD4gRSPKf42T3knk",
+   "name": "Milestone Photo and Video",
+   "website": "http://www.milestonedigital.com/",
+   "instagram": "milestonephotovideo",
+   "tags": [
+    "since 1984",
+    "3,000+ weddings",
+    "from $1,400",
+    "all photos with print rights"
+   ],
+   "blurb": "Milestone has photographed over 3,000 weddings since 1984 out of Glendale Heights and prints its prices: six hours of coverage for $1,400, nine hours with an album for $1,800. Couples get every photo in two resolutions with full print rights and no reorder charges.",
+   "since": 1984,
+   "from_price": "$1,400",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJz1JYLq76DogRO4PxsAPSrY8",
+   "name": "Windy City Production",
+   "website": "https://windycityproduction.com/",
+   "instagram": "windy_city_production",
+   "tags": [
+    "husband and wife",
+    "14-day delivery",
+    "pricing on its own page",
+    "photo and cinema"
+   ],
+   "blurb": "Sam Velasquez and Katie are a husband-and-wife photo and cinema studio in Aurora, in business since 2012. Their own packages come with a 14-day delivery guarantee for gallery and film, pricing sits on its own page with no 'starting at' teasers, and every wedding, even one shot by an associate, is edited by the two of them.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOZjUKMIsDogREbC_o7CvSYQ",
+   "name": "Pabst Photo",
+   "website": "http://www.pabstphoto.com/",
+   "instagram": "pabst_photo",
+   "tags": [
+    "husband and wife",
+    "shooting together since 2007",
+    "a la carte packages",
+    "Chicago and Indianapolis"
+   ],
+   "blurb": "Josh and Jamie have shot together since 2007 and married in 2012, bringing architecture, graphic design and art history backgrounds to a fashion-influenced style. Packages are custom-built a la carte rather than one-size-fits-all, and they work Indianapolis as well as Chicago.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFZpiDo1PDogRrSpxcef4_vg",
+   "name": "Fox + Ivory",
+   "website": "https://foxandivory.com/",
+   "instagram": "foxandivory",
+   "tags": [
+    "boutique studio",
+    "80% documentary",
+    "from $3,900",
+    "full galleries on request"
+   ],
+   "blurb": "A boutique Chicago studio that describes its blend as 80 percent documentation and 20 percent direction, with no posing for twenty minutes to get one frame. Photography collections begin at $3,900 and films at $3,700, with no credit card or local travel fees, and the studio shares complete galleries on request.",
+   "since": null,
+   "from_price": "$3,900",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJV2mISVksDogR3zvXdOp-nJU",
+   "name": "This Is Feeling Photo + Video",
+   "website": "http://www.thisisfeeling.com/",
+   "instagram": "thisisfeeling",
+   "tags": [
+    "documentary collective",
+    "photo and video",
+    "less posing"
+   ],
+   "blurb": "A documentary photo and video collective built around the idea of being present, not perfect: less posing, calm planning support from the first call, and a candid style with an editorial edge. Based in Chicago, with a studio you can visit before deciding.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJn5Cu-yTTD4gRcJgUSaatE1Q",
+   "name": "Nakai Photography",
+   "website": "https://www.nakaiphotography.com/",
+   "instagram": "nakaiphotography",
+   "tags": [
+    "since 2007",
+    "clean and modern",
+    "iconic city venues"
+   ],
+   "blurb": "Kenny Nakai has photographed Chicago weddings since 2007 in a clean, modern style and works often at venues like The Langham, the Ritz-Carlton and the Chicago Cultural Center. A former biology major who started at a Skokie camera shop, he writes at length about looking past the couple to the parents and grandparents in the room.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1Va8vAxTDogRBW6NDGya3vA",
+   "name": "Visi Studio",
+   "website": "https://visistudio.com/",
+   "instagram": "visi_studio",
+   "tags": [
+    "began 2007 in Albania",
+    "multicultural weddings",
+    "photo and cinema",
+    "multi-day events"
+   ],
+   "blurb": "Visi Studio began in 2007 in Korçë, Albania, with Ervis and Ilva, grew across Europe and moved to Chicago, bringing a photo and cinema team geared to multicultural and multi-day celebrations, including South Asian and Albanian weddings. Documentary meets editorial, now based in Glen Ellyn.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJnzrJQ1q5D4gRVd-lu1l950I",
+   "name": "Jolie Images Photography",
+   "website": "http://www.jolieimages.com/",
+   "instagram": "",
+   "tags": [
+    "from $1,195",
+    "family photo lab",
+    "Wheeling"
+   ],
+   "blurb": "Jolie Images grew out of a professional photofinishing lab the family has run for over 45 years in Wheeling, and it leads with price: wedding packages start at $1,195 and top out at $2,395 for the Prestige package, with the lab still active for prints.",
+   "since": null,
+   "from_price": "$1,195",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ-79oe9AzDogRwO2JnIPnBCc",
+   "name": "Emma Mullins Photography",
+   "website": "https://emullinsphoto.com/",
+   "instagram": "emullinsphoto",
+   "tags": [
+    "since 2014",
+    "film and digital",
+    "documentary",
+    "West Town"
+   ],
+   "blurb": "Emma Mullins has documented weddings since 2014 with a hybrid digital and film approach that started in a high school darkroom. A documentary team based in Chicago's West Town and available for travel, with couples on the site describing the experience as easygoing and queer-friendly.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

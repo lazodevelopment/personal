@@ -1,0 +1,207 @@
+{
+ "metro": "salt-lake-city",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 166,
+ "listed": 193,
+ "how": "We read the website of every Salt Lake City wedding venue listed on Lazo (193 listings, 166 sites reachable) and set aside the ones that are not really in the wedding business: a multi-service chain with a Salt Lake landing page, planners and florists listed as venues, and a venue whose site showed only guest reviews. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "If the date is November to April, what is the snow plan for the ceremony, the photos and the guest parking?",
+  "Does the rental cover the whole day for a temple-plus-reception schedule, or are a luncheon and an evening reception two bookings?",
+  "What are the rules on alcohol, your own caterer and outside vendors, and what does the flat rental actually include?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJa2JIEm5hUocR4JnFLBO3Mzw",
+   "name": "Millcreek Inn",
+   "website": "https://www.millcreekinn.com/",
+   "instagram": "millcreekinn",
+   "tags": [
+    "canyon setting",
+    "private venue",
+    "since 1999"
+   ],
+   "blurb": "A rustic mountain venue up one of Utah's canyons, among pines, streams and wildflowers, and still within 20 minutes of downtown Salt Lake. Millcreek Inn is a private venue, so when you rent it, it is yours, with morning and evening rental blocks priced by date and season.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBZ74CMV_UocRsnPmWgOD8Ik",
+   "name": "Siempre Utah - Weddings",
+   "website": "http://siempreutah.com/",
+   "instagram": "siempreutah",
+   "tags": [
+    "one wedding per day",
+    "bring your own vendors",
+    "500+ guests"
+   ],
+   "blurb": "Siempre sits on the foothills just south of the Salt Lake Valley with valley views and an iconic rotunda. One wedding a day, bring your own vendors, and room for more than 500 guests, with rates and details published on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8-MiLGV9UocRpoFKuOJ8A34",
+   "name": "Le Jardin",
+   "website": "http://www.lejardinweddings.com/",
+   "instagram": "lejardinweddings",
+   "tags": [
+    "two garden venues",
+    "year-round gardens",
+    "Sandy"
+   ],
+   "blurb": "Two garden venues at the base of the Wasatch in Sandy, with year-round garden settings and twinkle lights included. Le Jardin says thousands of past brides have chosen it, and it offers space for the ceremony, the reception, or both.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJh76YIreXTYcRhWxCRO5S3Mg",
+   "name": "The Ivory Hall",
+   "website": "https://theivoryhall.com/",
+   "instagram": "theivoryhallvenue",
+   "tags": [
+    "family-run",
+    "full-day rental",
+    "transparent pricing"
+   ],
+   "blurb": "The Ivory Hall is a family-run modern venue in downtown Provo built around clear, all-day rentals, 9am to 10pm, with the bridal room and a large kitchen included. Seats up to 200 for a formal reception, and the pricing is published so there are no surprise fees.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJC6tXGGOXTYcRSG9g1WTyIB4",
+   "name": "La Fête Wedding & Event Venue",
+   "website": "https://lafetevenue.com/",
+   "instagram": "lafetevenue",
+   "tags": [
+    "French-inspired",
+    "from $2,300",
+    "in-house florist"
+   ],
+   "blurb": "Downtown Provo's French-inspired venue, minutes from the Provo City Center Temple, with packages starting at $2,300 printed on the site. La Fête has an in-house florist and holds up to 225 guests.",
+   "since": null,
+   "from_price": "$2,300",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJlbF3IUSbTYcR2858nK_4x98",
+   "name": "Sleepy Ridge Weddings",
+   "website": "http://www.sleepyridgeweddings.com/",
+   "instagram": "sleepyridgeweddings",
+   "tags": [
+    "16 years",
+    "flat rental by date",
+    "hostess included"
+   ],
+   "blurb": "Over 16 years, Sleepy Ridge in Orem has become a Utah County landmark with its clubhouse as the backdrop and thousands of couples hosted. The venue charges a flat rental by date that covers the space, tables and chairs, setup and takedown, linens and an onsite hostess; catering is separate.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ09_f2ymHTYcRE75t4nmdnnc",
+   "name": "The Villa",
+   "website": "http://weddingsatthevilla.com/",
+   "instagram": "weddingsatthevilla",
+   "tags": [
+    "pear orchard",
+    "Tuscan villa",
+    "since 1999"
+   ],
+   "blurb": "An Italian-style villa set in a three-acre, 125-year-old organic pear orchard in Cedar Hills, built in 1999 by Gary and Teresa Moore. The Villa specializes in outdoor events in spring, summer and fall, for a luncheon, dinner, ceremony or reception.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJtxxizFh_UocRkpEAUdfzq6A",
+   "name": "Alpine Art Center",
+   "website": "https://alpineartcenter.com/",
+   "instagram": "",
+   "tags": [
+    "since 1998",
+    "Streadbeck family",
+    "ceremony pricing published"
+   ],
+   "blurb": "The Alpine Art Center opened in August 1998 with an art show and grew into one of Alpine's reception centers at the suggestion of a community leader. The Streadbeck family still runs it, and the site prints ceremony pricing: $350 indoors or outdoors, chairs and setup included.",
+   "since": 1998,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJH-a6aaABU4cRBMbOlTmOOps",
+   "name": "Sweet Magnolia Venues, LLC",
+   "website": "http://www.sweetmagnoliavenues.com/",
+   "instagram": "sweetmagnoliavenues",
+   "tags": [
+    "affordable",
+    "since 2018",
+    "near Davis County temples"
+   ],
+   "blurb": "Established in 2018 in Kaysville to give couples a picturesque venue that does not break the budget. Sweet Magnolia is near the Layton, Bountiful, Syracuse and Ogden temples and prints its prices, including a $150 ring ceremony or vow exchange.",
+   "since": 2018,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpd3TDC_4UocRtvf3Dh8VKms",
+   "name": "Eldredge Manor",
+   "website": "http://www.eldredgemanor.com/",
+   "instagram": "eldredgemanor",
+   "tags": [
+    "historic mansion",
+    "all-inclusive packages",
+    "Bountiful"
+   ],
+   "blurb": "A historic mansion in the heart of Bountiful with all-inclusive packages. Eldredge Manor introduces its team on the site, including Alicia, who runs the day with seven years in event planning and catering behind her.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZdLZn02nU4cRkv9zYxslvLs",
+   "name": "Old Town Hall Huntsville Weddings & Events",
+   "website": "http://www.oldtownhallhuntsville.com/",
+   "instagram": "oldtownhallhuntsville",
+   "tags": [
+    "DIY rental",
+    "up to 70 guests",
+    "Ogden Valley"
+   ],
+   "blurb": "The historic Huntsville town hall, bought by its current owners in spring 2022 and turned into an intimate venue about a block from Pineview Reservoir. Old Town Hall offers full-day do-it-yourself rentals for up to 70 guests, with the grounds, the main hall and 60 white folding chairs included.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJG0gHBWO_UocRynDozbP3gi8",
+   "name": "Mill Pond Farms Events",
+   "website": "http://www.millpondfarmsevents.com/",
+   "instagram": "millpondfarms_events",
+   "tags": [
+    "historic barn",
+    "Tooele County",
+    "indoor and outdoor"
+   ],
+   "blurb": "Mill Pond Farms Events is a historic barn venue in Stansbury Park, in the heart of Tooele County, pairing pioneer heritage with modern amenities. Indoor and outdoor spaces for couples who want the historic look west of the Salt Lake Valley.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

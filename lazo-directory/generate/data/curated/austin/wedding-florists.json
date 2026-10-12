@@ -1,0 +1,207 @@
+{
+ "metro": "austin",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 107,
+ "listed": 141,
+ "how": "We read the website of every Austin wedding florist listed on Lazo (141 listings, 107 sites reachable) and set aside the ones that are not really in the wedding business: venues and a caterer listed as florists, a planning team, a faux-flower sister brand, a floral preservation studio and a venue's in-house floral page. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Do you design for the venue, or deliver arrangements? Installation and teardown are the difference in price.",
+  "What holds up outdoors in Austin heat for my month, what is in season locally, and what gets shipped in?",
+  "Can I see a full wedding's florals, not a bouquet photo, at a budget like mine?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJESpOjiXNRIYRryJ_ZNXrx4E",
+   "name": "Flora Fetish - Wedding and Event Floral Design",
+   "website": "http://florafetish.com/",
+   "instagram": "florafetish",
+   "tags": [
+    "since 1996",
+    "artistic and expressive",
+    "Austin"
+   ],
+   "blurb": "Flora Fetish is an Austin wedding florist creating romantic, artistic blooms since 1996, turning blank canvases into bold reflections of a couple's story, palette and personality. The studio describes its approach as organized yet adventurous and makes a point of clients feeling heard through the design process.",
+   "since": 1996,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJNZ6FTONCW4YRNCdZpHmUmLI",
+   "name": "Wild Bunches Floral",
+   "website": "http://www.wildbunchesfloral.com/",
+   "instagram": "wildbunchesfloral",
+   "tags": [
+    "full-service",
+    "over a decade",
+    "Austin to Dallas and Houston"
+   ],
+   "blurb": "Wild Bunches is a full-service floral studio specializing in romantic, thoughtfully designed wedding and event florals, with lush, textural arrangements. For over a decade the team has worked with couples, planners and brands, from intimate gatherings to grand affairs, across Austin, Dripping Springs, Driftwood, Dallas and Houston.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMWhZ5EfKRIYRadmvJXWyIno",
+   "name": "Gypsy Floral and Events",
+   "website": "http://www.gypsyfloral.com/",
+   "instagram": "gypsyfloral",
+   "tags": [
+    "since 2011",
+    "boutique",
+    "flower bar"
+   ],
+   "blurb": "Gypsy Floral is a boutique floral company in the heart of Texas that has created elevated experiences since 2011 for clients with a keen eye for design and a playful approach. Everything is custom, with full-service floral design for weddings plus brand activations and a flower bar.",
+   "since": 2011,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_36Msp7LRIYRiAhnIkb-zFw",
+   "name": "Remi & Gold",
+   "website": "http://remiandgold.com/",
+   "instagram": "remiandgold",
+   "tags": [
+    "floral and event design",
+    "destination",
+    "Austin"
+   ],
+   "blurb": "Remi + Gold is a floral and event design studio led by founder and creative director Twyla, crafting experiences that blur the line between art and environment. The team describes itself as full of sass, humor and moxie, designing weddings, events and destination celebrations from Austin.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ01oEZmbPRIYRlGSnNRJkF8M",
+   "name": "Ida Mayes Floral Design House",
+   "website": "http://www.idamayes.com/",
+   "instagram": "idamayesfloral",
+   "tags": [
+    "12+ years",
+    "luxury",
+    "Round Rock"
+   ],
+   "blurb": "Tiffany, the lead florist and creative director at Ida Mayes Floral Design House, is jokingly known as a walking flower encyclopedia, with more than twelve years of design experience. The Round Rock studio does luxury florals for weddings, corporate events, brand activations and interiors.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJs0ylpttRQ4YRZ1jT9yI2LEc",
+   "name": "The Sunrise Petal Company | Wedding Florist",
+   "website": "https://sunrisepetalcompany.com/",
+   "instagram": "sunrisepetalcompany",
+   "tags": [
+    "minimums from $6,000",
+    "color-forward",
+    "Lockhart"
+   ],
+   "blurb": "The Sunrise Petal Company is a small team of floral artists in Lockhart making color-forward florals with a vintage wink. The studio is upfront that its full-service design work carries minimum orders starting at $6,000 to $8,000, with a custom proposal and planning process built in.",
+   "since": null,
+   "from_price": "$6,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJa1hsqXFrW4YRZi27Tw35aHk",
+   "name": "Henly House",
+   "website": "http://www.henlyhousetx.com/",
+   "instagram": "henlyhouse",
+   "tags": [
+    "grows its own flowers",
+    "bridal and elopement bouquets",
+    "Dripping Springs"
+   ],
+   "blurb": "Henly House grows its own roses, dahlias, zinnias and sunflowers in Dripping Springs and turns them into handcrafted bouquets for weddings and elopements, garden to vase. Local, natural, seasonal and sustainable, and because it is a small operation, the services are focused on bridal flowers rather than full installs.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJB-D7xREvjGsR9PqAmxUh_Dk",
+   "name": "Wild Heart Floral",
+   "website": "https://www.wildheartfloralaustin.com/",
+   "instagram": "wildheartfloralatx",
+   "tags": [
+    "founded 2019",
+    "8+ years in Austin floral",
+    "same-day delivery too"
+   ],
+   "blurb": "Wild Heart Floral is an Austin design studio founded in 2019 by lead designer Kaylie Bernhardt, who brought more than eight years in the city's floral industry and named the business after a Stevie Nicks record. Artful wedding and event flowers, with same-day delivery for everyday orders.",
+   "since": 2019,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ-TkZMVOrKAARe_1TNZGHlq4",
+   "name": "Jo.An Floral Design",
+   "website": "https://www.joanflorals.com/",
+   "instagram": "jo.anfloraldesign",
+   "tags": [
+    "luxury drapery and floral",
+    "American and Japanese design",
+    "Texas and Hawaii"
+   ],
+   "blurb": "Jo.An Florals specializes in luxury, bespoke drapery and floral design, from signature bridal bouquets to elaborate drapes, mixing American and Japanese modern aesthetics. Based in Manchaca, serving all of Texas and the team's home state of Hawaii, with ohana as the stated driver of the business.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUwzD1XleW4YReClvh8Uvzro",
+   "name": "Wow Factor Floral",
+   "website": "http://wowfactorfloral.com/",
+   "instagram": "wowfactorfloraldesign",
+   "tags": [
+    "Hill Country boutique",
+    "team of three",
+    "Kyle"
+   ],
+   "blurb": "Wow Factor Floral is a Texas Hill Country floral boutique in Kyle specializing in weddings, corporate events and celebrations, and its site introduces the team by name: Kristy, Ashlie and Katelynn. Couples' notes on the site credit Kristy with making the planning side easy.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJE0SRGJ3PRIYRUPuRtBYOxzk",
+   "name": "Jordan Flowers & Events",
+   "website": "http://jordanflowersandevents.com/",
+   "instagram": "jordanflowersevent",
+   "tags": [
+    "since 2012",
+    "luxury floral and event design",
+    "Pflugerville"
+   ],
+   "blurb": "Jordan Flowers & Events has designed elevated floral experiences since 2012, combining art, nature and technology into what it calls sensory-rich environments. Based in Pflugerville, the team does bespoke floral and event production for weddings, corporate events and private parties.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJnc-GBQlNW4YRJ1sCVISPr5I",
+   "name": "Exquisite Petals Floral Design",
+   "website": "https://www.exquisitepetals.com/",
+   "instagram": "exquisitepetals",
+   "tags": [
+    "co-owned by its designers",
+    "inclusive",
+    "Austin and Hill Country"
+   ],
+   "blurb": "Rebecca and Alex are the co-owners and lead designers of Exquisite Petals, having worked for years under the previous owner before taking over the studio together. Artful, inclusive wedding florals for Austin and the Hill Country, pitched at the fun ones.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

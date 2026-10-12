@@ -1,0 +1,207 @@
+{
+ "metro": "atlanta",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 211,
+ "listed": 268,
+ "how": "We read the website of every Atlanta wedding venue listed on Lazo (268 listings, 211 sites reachable) and set aside the ones that are not really in the wedding business: a second listing for a venue already here, a Texas venue chain's Atlanta landing page, and sites that were only a navigation menu or a single review. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is the ceremony site covered or air-conditioned? Atlanta summers bring heat, humidity and late-afternoon storms, so ask for the rain plan in writing.",
+  "If the venue is in the North Georgia foothills, how long is the drive from the airport and are there rooms on site or nearby for guests?",
+  "What exactly does all-inclusive include here: catering, florals, coordinator, rentals, bar? Ask for the list, not the word."
+ ],
+ "picks": [
+  {
+   "id": "ChIJ9aU1rzR89YgRChCop3cH9Oc",
+   "name": "The Wheeler House",
+   "website": "http://www.thewheelerhouse.net/",
+   "instagram": "thismodernromance",
+   "tags": [
+    "built 1906",
+    "all-inclusive",
+    "onsite accommodations"
+   ],
+   "blurb": "Built in 1906 by the owner of the Wheeler lumber yard, this Ball Ground venue has heart pine floors, walls and ceilings through its 6,000 square feet, plus two-story wrap-around porches. The Wheeler House is all-inclusive, with indoor and outdoor spaces and accommodations on site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJPwagnB8D9YgRdeDmROaLvkc",
+   "name": "Pryor Engagements",
+   "website": "http://pryorengagementsatl.com/",
+   "instagram": "pryorengagementsatl",
+   "tags": [
+    "micro weddings",
+    "rooftop",
+    "since 2022"
+   ],
+   "blurb": "An intimate downtown Atlanta venue for micro weddings and elopements, with a loft-style indoor space and a rooftop with skyline views. Pryor Engagements has hosted champagne elopements and rooftop ceremonies since 2022, built on the idea that elegance does not have to be expensive.",
+   "since": 2022,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHcNI3J4j9YgRwUja4YG7ZC4",
+   "name": "Whitestone Reserve Wedding Venue",
+   "website": "http://www.whitestonereserve.com/",
+   "instagram": "whitestonereserve",
+   "tags": [
+    "garden estate",
+    "10 acres",
+    "all-inclusive packages"
+   ],
+   "blurb": "Whitestone Reserve is a boutique garden-estate venue on 10 manicured acres in Austell, 18 miles west of Atlanta, and says plainly it is not a banquet hall hosting dozens of events a weekend. Elopements and all-inclusive packages are offered, with pricing on request.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJbd-jnRi9YgR02gwRNAIdww",
+   "name": "Pleasant Union Farm",
+   "website": "https://www.pleasantunionfarm.com/",
+   "instagram": "pleasantunionfarm1994",
+   "tags": [
+    "up to 150 guests",
+    "all-inclusive",
+    "indoor and outdoor"
+   ],
+   "blurb": "Twenty minutes from downtown Canton, Pleasant Union Farm pairs a mountain setting with indoor and outdoor ceremony and reception options for up to 150 guests. Its all-inclusive packages are pitched as anything but cookie-cutter, and on-site parking keeps arrivals simple.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJc_xVxJKS9YgRBrmXLsztg1k",
+   "name": "Bradford House & Gardens",
+   "website": "https://www.bradfordhouseandgardens.com/",
+   "instagram": "bradfordhouse_gardens",
+   "tags": [
+    "since 2006",
+    "all-inclusive",
+    "historic house and gardens"
+   ],
+   "blurb": "Open since 2006 and bought and renovated by the Kupis Sisters in 2021, the Bradford House is a historic house and gardens in Flowery Branch. It bills itself as affordable and all-inclusive: everything you need to get married except the officiant is included.",
+   "since": 2006,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOVhzZQdh9YgRuSHLF8kKOtg",
+   "name": "Lewallen Farms",
+   "website": "http://www.weddingsatlewallenfarms.com/",
+   "instagram": "lewallenfarms",
+   "tags": [
+    "since 1990",
+    "380-acre farm",
+    "family-run"
+   ],
+   "blurb": "Larry and Peggy Lewallen have grown Lewallen Farms from a 10-acre tract in the early 1990s into a 380-acre farm in Waleska, and the family has hosted weddings there since 1990. Open house dates are posted on the site for couples who want to walk the property first.",
+   "since": 1990,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJvZbAX2v59IgRsY_6kDMsJzQ",
+   "name": "Pristine Chapel Lakeside",
+   "website": "https://pristinechapel.com/",
+   "instagram": "pristine_chapel",
+   "tags": [
+    "since 1979",
+    "lakeside chapel",
+    "planners on staff"
+   ],
+   "blurb": "Charles and Alice Johnston started Pristine Chapel more than 40 years ago, and it has served brides since 1979. The Jonesboro chapel sits lakeside and keeps professional planners on staff to work within your budget; the site notes a Best of Zola 2026 win.",
+   "since": 1979,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJR5poVYai9YgRBDPHf-EhwCw",
+   "name": "Payne-Corley House",
+   "website": "http://www.paynecorleyhouse.com/",
+   "instagram": "",
+   "tags": [
+    "since 1998",
+    "family-owned",
+    "garden ceremonies"
+   ],
+   "blurb": "A family-owned garden venue in Duluth that has hosted weddings since 1998 and lists itself as a member of The Knot's Hall of Fame. Hope, the director of sales since 2010, came to the Payne-Corley House from the Ritz-Carlton Atlanta downtown.",
+   "since": 1998,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJKyolE9Dp9YgREK13AR0_qg8",
+   "name": "Carl House",
+   "website": "http://www.carlhouse.com/",
+   "instagram": "",
+   "tags": [
+    "built 1903",
+    "all-inclusive",
+    "in-house floral and catering"
+   ],
+   "blurb": "Built in 1903 as the Durham family home at the center of their ornamental plant nursery, Carl House sits on four manicured acres in Auburn with a restored Southern garden and gazebo. It is all-inclusive, with in-house culinary, wedding direction and a full-service floral department.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJj6KXyid99YgR1XuK5ve7XkU",
+   "name": "The Gardens at The Greystone Estate",
+   "website": "https://www.thegreystoneestate.com/",
+   "instagram": "thegreystoneestate",
+   "tags": [
+    "two venues",
+    "since 2016",
+    "all-inclusive"
+   ],
+   "blurb": "Two all-inclusive venues on one Ball Ground property 40 minutes from Atlanta: The Gardens and The Grand, each with its own setting. The Greystone Estate has served hundreds of couples since 2016 and lists a 2023 Couples' Choice award.",
+   "since": 2016,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJF1a7JbKk9YgRCmu5iVPM1YM",
+   "name": "Natalie House by Wedgewood Weddings",
+   "website": "https://www.wedgewoodweddings.com/nataliehouse",
+   "instagram": "nataliehouse.wedgewoodweddings",
+   "tags": [
+    "since 1987",
+    "waterfall and koi pond",
+    "all-inclusive"
+   ],
+   "blurb": "A 7-acre garden estate on a hill in Lawrenceville that has hosted celebrations since 1987, formerly known as Little Gardens and now run by Wedgewood Weddings. The ceremony site has a waterfall and koi pond, there is a grand ballroom, and packages are all-inclusive.",
+   "since": 1987,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJC8-2Z_369IgR8ZKegWye9iE",
+   "name": "Cha'le Gardens",
+   "website": "http://www.chalegardens.com/",
+   "instagram": "chale_gardens",
+   "tags": [
+    "lakeside",
+    "south of the airport",
+    "garden ceremony and ballroom"
+   ],
+   "blurb": "South of Hartsfield-Jackson in Riverdale, Cha'le Gardens is a lakeside venue with 15,000 square feet of space, offering a garden ceremony overlooking the lake and an indoor ballroom for the reception. The venue works with a set of partner vendors it uses event after event.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

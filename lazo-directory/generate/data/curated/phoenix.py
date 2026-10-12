@@ -6,12 +6,6 @@
 import json
 from pathlib import Path
 
-HOW = ("We read the website of every Phoenix {cat} listed on Lazo ({n} listings, {ok} sites reachable) and "
-       "set aside the ones that are not really in the wedding business: {excluded}. What is left is a shortlist "
-       "of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo "
-       "vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews "
-       "from couples who booked.")
-
 CATS = {
 "wedding-venues": dict(
   excluded="meeting rooms, alumni halls and link pages with no venue behind them",
@@ -223,28 +217,11 @@ CATS = {
 }
 
 
-def main():
-    here = Path(__file__).resolve().parent
-    raw = json.loads((here.parent / "curated-raw" / "phoenix.json").read_text(encoding="utf-8"))
-    vendors = {v["id"]: v for v in raw["vendors"]}
-    sites = raw["sites"]
-    out_dir = here / "phoenix"; out_dir.mkdir(exist_ok=True)
-    for cat, c in CATS.items():
-        n = sum(1 for v in raw["vendors"] if cat in v["categories"])
-        ok = sum(1 for v in raw["vendors"] if cat in v["categories"] and sites.get(v["id"], {}).get("ok"))
-        picks = []
-        for p in c["picks"]:
-            v = vendors[p["id"]]; s = sites.get(p["id"], {})
-            ig = next((x.split("instagram.com/")[-1].strip("/") for x in s.get("socials", []) if "instagram.com/" in x and "/p/" not in x and x.split("instagram.com/")[-1].strip("/") not in ("wix", "")), "")
-            picks.append(dict(id=p["id"], name=v["name"], website=s.get("url") or v["website"], instagram=ig, tags=p["tags"], blurb=p["blurb"],
-                              since=p.get("since"), from_price=p.get("from_price"), verified=v["verified"], claimed=v["claimed"]))
-        doc = dict(metro="phoenix", cat=cat, updated="2026-10-12", read=ok, listed=n,
-                   how=HOW.format(cat={"wedding-venues": "wedding venue", "wedding-photographers": "wedding photographer", "wedding-videographers": "wedding videographer",
-                                       "wedding-planners": "wedding planner", "wedding-florists": "wedding florist", "wedding-djs": "wedding DJ"}[cat], n=n, ok=ok, excluded=c["excluded"]),
-                   ask=c["ask"], picks=picks)
-        (out_dir / f"{cat}.json").write_text(json.dumps(doc, ensure_ascii=False, indent=1), encoding="utf-8")
-        print(cat, len(picks), "picks;", ok, "of", n, "sites read")
-
+UPDATED = "2026-10-12"
 
 if __name__ == "__main__":
-    main()
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+    from curate_emit import emit
+    for line in emit("phoenix", CATS, UPDATED):
+        print("phoenix", line)

@@ -1,0 +1,206 @@
+{
+ "metro": "portland",
+ "cat": "wedding-djs",
+ "updated": "2026-10-12",
+ "read": 27,
+ "listed": 33,
+ "how": "We read the website of every Portland wedding DJ listed on Lazo (33 listings, 27 sites reachable) and set aside the ones that are not really in the wedding business: rental and large-scale production companies, a DJ whose site still leads with a 2019 info sheet, a site whose text was placeholder lorem ipsum, a multi-city DJ chain, and DJs based an hour or more south in Dallas and Lebanon. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "For an outdoor ceremony in the Gorge or on a farm, do you bring a battery-powered remote ceremony setup and a weather cover, and what happens if it rains?",
+  "Who exactly will be at my wedding, and can I talk to that DJ before I sign?",
+  "What is in the base price, and what are uplighting, photo booth and extra hours on top?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJq6qqqlYNlVQRpobhiXyQj54",
+   "name": "Silicon Forest Entertainment",
+   "website": "http://www.siliconforestdj.com/",
+   "instagram": "siliconforestdj",
+   "tags": [
+    "500+ weddings",
+    "from $1,800",
+    "comes as a pair"
+   ],
+   "blurb": "Craig started Silicon Forest Entertainment in Portland in 2015 and has worked over 500 weddings and events since. Laid-back and tech-forward, they come as a pair, and the pricing page is explicit: packages start at $1,800, against what it says is a typical $1,500 to $3,500 for Portland wedding DJs.",
+   "since": null,
+   "from_price": "$1,800",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7_DiOTARlVQRyN4gUp6ilnc",
+   "name": "THUMP Entertainment",
+   "website": "https://bestdjaround.com/",
+   "instagram": "",
+   "tags": [
+    "published packages",
+    "from $1,750",
+    "remote ceremony setups"
+   ],
+   "blurb": "Patrick Nolan's THUMP Entertainment prints its wedding packages, starting with The Alder at $1,750 for a reception only, and specializes in remote ceremony setups. The promise is a wedding that feels like a party, not a production, with no cheese.",
+   "since": null,
+   "from_price": "$1,750",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSWl8SecIlVQRLHAJKgJdpdA",
+   "name": "A Beat Above Ent. - DJ & Photo Booth at Every Event",
+   "website": "http://www.abeataboveentertainment.com/",
+   "instagram": "abeataboveentertainment",
+   "tags": [
+    "established 2010",
+    "700+ events",
+    "base fee $2950"
+   ],
+   "blurb": "Established in 2010, A Beat Above runs on a base DJ/MC fee of $2950 plus a la carte options, with Guy bringing 16 years and over 700 events. The gear is distinctive: QSC speakers and JBL subwoofers in custom hardwood enclosures, plus unlimited meetings before the day.",
+   "since": 2010,
+   "from_price": "$2950",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv0HMRhenlVQRYbXUiFp2AcI",
+   "name": "Stumptown DJs",
+   "website": "http://www.stumptowndjs.com/",
+   "instagram": "",
+   "tags": [
+    "since 2008",
+    "create your own playlist",
+    "affordable"
+   ],
+   "blurb": "Since January 2008 Stumptown DJs has pitched itself as the professional and affordable option: create your own playlist and they provide the equipment, then MC and coordinate the ceremony, grand entrance and toasts. Covers the Portland suburbs out to Hood River, Salem and Vancouver.",
+   "since": 2008,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJvTtadlihlVQRm6H2elPzVuU",
+   "name": "DJs with Style",
+   "website": "http://djswithstyle.com/",
+   "instagram": "djswithstyle",
+   "tags": [
+    "15 years",
+    "DJ Aquamarine",
+    "electronic to world music"
+   ],
+   "blurb": "Sonja Corzano, DJ Aquamarine, brings 15 years and a hand-selected mix of electronic, hip hop, funk, soul, jazz and world music to weddings and parties. An experienced event producer as well, so technical issues and atmosphere are both hers to handle.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJu1EJYYKglVQR-aottS9ZM_8",
+   "name": "Bollywood Dreams Entertainment",
+   "website": "http://dreamsperfected.com/",
+   "instagram": "dreamprashant",
+   "tags": [
+    "Indian weddings",
+    "DJ Prashant",
+    "11+ years"
+   ],
+   "blurb": "DJ Prashant's Bollywood Dreams brings Indian wedding DJ services and more than 11 years of high-energy, inclusive events to Portland, with experience producing events from 50 to 5,000 people in the United States and beyond.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJw8mR3teglVQRj2Zv9RKZLAc",
+   "name": "JR Music Collective",
+   "website": "http://www.johnrossmusic.com/",
+   "instagram": "jrmusiccollective",
+   "tags": [
+    "live music and DJ",
+    "all-inclusive packages"
+   ],
+   "blurb": "All-inclusive live music and DJ/MC packages for the whole wedding day. JR Music Collective offers three tiers, starting with DJ/MC services for the full day and adding live music from there, so the ceremony and the dance floor come from one team.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJkxQIOsdzlVQRTCA2Mw-Gle8",
+   "name": "Event Team Entertainment",
+   "website": "http://www.eventteament.com/",
+   "instagram": "eventteamentertainment",
+   "tags": [
+    "choose your DJ",
+    "Lake Oswego",
+    "team"
+   ],
+   "blurb": "A Lake Oswego DJ company with a roster you choose from, rather than whoever is free. Event Team Entertainment emphasizes a personalized experience, and its DJs write about weddings as life's work and about nights that are fun and nostalgic.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_0VAZUKvlVQR67vWuMoO1-I",
+   "name": "Williams Weddings and Events",
+   "website": "http://www.williamsweddings.co/",
+   "instagram": "",
+   "tags": [
+    "since 2010",
+    "SW Washington",
+    "customized playlist"
+   ],
+   "blurb": "Garrett Williams has been an audio/visual technician since 2010, when a friend's wedding became his first DJ gig. Williams Weddings and Events covers SW Washington and the Portland metro, from Longview down to Salem, and every couple gets a customized playlist.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJ-jGJ1mulVQRmO6kUrPu-g0",
+   "name": "Paradox Productions",
+   "website": "http://www.djpdx.com/",
+   "instagram": "paradox_productions",
+   "tags": [
+    "Portland and Bend",
+    "MCs",
+    "photo booth and uplighting"
+   ],
+   "blurb": "Paradox exists, in its own words, because most Oregon weddings are underserved by their DJs. Based in Portland with a Bend branch, it offers premium sound, expert MCs, and after-party, photo booth, uplighting, audio guestbook and tube light add-ons.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAQAMG40OllQRiVOVVeenvpk",
+   "name": "Gorge DJ",
+   "website": "http://gorgedj.com/",
+   "instagram": "",
+   "tags": [
+    "25 years",
+    "vinyl and digital",
+    "Hood River"
+   ],
+   "blurb": "DJ Grok has 25 years spinning both vinyl and digital, and calls himself the only vinyl-spinning, performance-level DJ in the Gorge. Hood River and Columbia River Gorge weddings at what the site calls competitive prices, specifics on request.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJIRbrflEHwFQRGGbXvW2nOZU",
+   "name": "Apogee at Cellar 54",
+   "website": "https://weareapogee.com/",
+   "instagram": "apogeeisawesome",
+   "tags": [
+    "since 2006",
+    "2,000+ events",
+    "every price published"
+   ],
+   "blurb": "Zach Thomas started Apogee in Salem in 2006 with one DJ rig; twenty years and 2,000+ events later it is a full-service event company with DJs, photo booths, photography, films and planning on one invoice. Every price is published on the site, and every event gets backup gear and a planned timeline.",
+   "since": 2006,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

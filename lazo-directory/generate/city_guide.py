@@ -123,6 +123,9 @@ from pathlib import Path as _Path
 # (generate/curate_crawl.py -> generate/data/curated/<metro>.py -> <metro>/<cat>.json). Only used when
 # LAZO_CURATED=1 (the preview build sets it; the nightly turns it on once the pages are approved), or
 # when LAZO_CURATED_DIR points at a directory of such files.
+METRO_VENDORS = {}   # metro_id -> every live vendor in the metro, set by build.py; picks may sit in a sister category
+
+
 def _curated(metro_id, cat_slug, cvs):
     base = _os.environ.get("LAZO_CURATED_DIR")
     if not base and _os.environ.get("LAZO_CURATED") != "1":
@@ -131,13 +134,16 @@ def _curated(metro_id, cat_slug, cvs):
     if not f.exists():
         return None
     doc = _json.loads(f.read_text(encoding="utf-8"))
-    by_id = {v.get("placeId"): v for v in cvs}
+    by_id = {v.get("placeId"): v for v in METRO_VENDORS.get(metro_id, [])}
+    by_id.update({v.get("placeId"): v for v in cvs})
     picks = []
     for p in doc.get("picks", []):
         v = by_id.get(p["id"])
         if not v:
-            continue  # not in this build's vendor set (delisted or moved); the pick silently drops
-        picks.append(dict(p, slug=v["slug"], thumb=v.get("thumbUrl") or "", town=(v.get("_town") or "")))
+            print(f"[curated] {metro_id}/{cat_slug}: pick {p.get('name')} ({p['id']}) is not in this build; dropped")
+            continue
+        vcat = (v.get("categories") or [cat_slug])[0]   # the vendor's own page lives under its first category
+        picks.append(dict(p, slug=v["slug"], cat=vcat, thumb=v.get("thumbUrl") or "", town=(v.get("_town") or p.get("town") or "")))
     if not picks:
         return None
     doc["picks"] = picks

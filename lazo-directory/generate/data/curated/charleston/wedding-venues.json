@@ -1,0 +1,207 @@
+{
+ "metro": "charleston",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 132,
+ "listed": 163,
+ "how": "We read the website of every Charleston wedding venue listed on Lazo (163 listings, 132 sites reachable) and set aside the ones that are not really in the wedding business: beach-ceremony package sellers and officiants, planners listed as venues, a decorating hall, and a North Carolina estate. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Which months do you steer couples away from? Ask how the venue handles July heat and humidity and what the plan is for a hurricane-season date.",
+  "Is the rental the whole property for the weekend, or hours on the day? Ask when vendors can load in and when the music has to stop.",
+  "What is included in the package versus rented separately: chairs, tent, catering kitchen, getting-ready rooms, and a coordinator?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJrdT1oPxZ_ogRzqiRgkYrPFY",
+   "name": "108 W Main Wedding + Event Venue",
+   "website": "http://www.108wmain.com/",
+   "instagram": "108wmain",
+   "tags": [
+    "historic house",
+    "air-conditioned pavilion",
+    "160 guests"
+   ],
+   "blurb": "A historic two-story house under an oak canopy in the heart of Moncks Corner, a short drive from Charleston. 108 W Main pairs a ceremony garden with an air-conditioned pavilion, has parking and room for 160 guests, and publishes its packages, including one that leaves out the 1940s home.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1-XLp23V_YgRpLVbUy7IPnw",
+   "name": "Wingate Place",
+   "website": "https://wingateplace.com/",
+   "instagram": "wingateplace",
+   "tags": [
+    "Johns Island",
+    "180 acres",
+    "family owned"
+   ],
+   "blurb": "Wingate Place, formerly Wingate Plantation, is an outdoor venue built around an old farmhouse among centuries-old oaks draped in Spanish moss. Family owned and operated on 180 acres of Johns Island, minutes from Kiawah and Seabrook and a short drive to the peninsula.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJhVD5wPaP_ogRpIPBJjRmUvI",
+   "name": "Lovegrove Estate - Wedding & Event Venue",
+   "website": "http://www.lovegroveestates.com/",
+   "instagram": "lovegrove.estate",
+   "tags": [
+    "waterfront",
+    "25 private acres",
+    "gardens"
+   ],
+   "blurb": "A waterfront estate on 25 private acres of gardens near Summerville, surrounded by a river and Spanish moss. Lovegrove bills itself as Charleston's classic Southern wedding venue for local and destination couples, run by a family and staff who say they care about the details of your day.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJS6Se8_Ol_ogREnQSNQUcnlE",
+   "name": "Eden at Gracefield",
+   "website": "http://www.edenatgracefield.com/",
+   "instagram": "EdenatGracefield",
+   "tags": [
+    "secluded estate",
+    "luxury barn",
+    "south of Charleston"
+   ],
+   "blurb": "Paul and Laura Walker acquired Eden, a secluded estate just south of Charleston with multiple ceremony settings, and built a large luxury barn on site. The venue investment includes access to the property for an engagement or bridal photo session.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ4RPfmzIs_IgR4bJIRe7KWRM",
+   "name": "Seabrook Island Weddings",
+   "website": "https://www.seabrookislandweddings.com/",
+   "instagram": "seabrookweddings",
+   "tags": [
+    "oceanfront",
+    "open to non-members",
+    "booking spring 2028"
+   ],
+   "blurb": "Seabrook Island Club is an oceanfront, private-island venue just outside historic Charleston, open to members and non-members alike. Vows by the sea, receptions in the clubhouse, and a resort-style weekend for guests; the site says it is now booking spring 2028 and describes its package pricing.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJG9bYpG2B_ogRNjrhsB3Sgu0",
+   "name": "Old Wide Awake",
+   "website": "https://oldwideawake.com/",
+   "instagram": "oldwideawake",
+   "tags": [
+    "circa 1800 home",
+    "oak-lined drive",
+    "publishes seasonal pricing"
+   ],
+   "blurb": "Old Wide Awake in Hollywood is a circa 1800 plantation-style home that once served as the convenience store and family home for the Stono Ferry. Guests arrive down an oak-lined entrance to a wrap-around covered porch, and the site prints 2026 to 2027 pricing by peak and regular season.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJC5sFjBj5-4gRD8zUyRytxF4",
+   "name": "Cotton Hall",
+   "website": "http://www.cottonhallevents.com/",
+   "instagram": "cottonhallevents",
+   "tags": [
+    "venue and bed and breakfast",
+    "opened 2020",
+    "between Charleston and Savannah"
+   ],
+   "blurb": "Cotton Hall is a Lowcountry wedding venue and bed and breakfast in Yemassee, positioned between Charleston, Beaufort and Savannah just off Old Sheldon Church Road. Open since 2020 on grounds that were once part of the Tomotley Barony granted in 1773, with wedding packages and pricing on the site.",
+   "since": 2020,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJM7uPHn97_ogRjrB-_bGN9hU",
+   "name": "Poogan's Courtyard",
+   "website": "https://www.pooganscourtyard.com/",
+   "instagram": "pooganscourtyardchs",
+   "tags": [
+    "downtown Charleston",
+    "restaurant-backed",
+    "publishes venue fees"
+   ],
+   "blurb": "Poogan's Courtyard grows out of Poogan's Porch, an 1891 home that became a restaurant in 1976. Downtown Charleston weddings, rehearsal dinners and welcome parties, with a pricing page that lays out venue fees and food and beverage minimums so you can match the budget before you tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJf1AGfhR_AIkRCL5kkEqlFw8",
+   "name": "White Oaks | Myrtle Beach SC Wedding and Event Venue",
+   "website": "https://thevenueatwhiteoaksfarm.com/",
+   "instagram": "thevenueatwhiteoaksfarm",
+   "tags": [
+    "43 private acres",
+    "five ceremony sites",
+    "all-inclusive"
+   ],
+   "blurb": "Forty-three private acres near Myrtle Beach with five ceremony sites, a 220-guest Main Hall and all-inclusive packages. Founded in 2015 by Mark and Stephanie Smith, White Oaks passed to a new local couple in April 2026, and its site answers the cost question directly on a pricing page.",
+   "since": 2015,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjeRWAKqrqokRoAP_BOb2jwM",
+   "name": "Wildberry Farm",
+   "website": "http://www.thewildberryfarm.com/",
+   "instagram": "wildberry_farm",
+   "tags": [
+    "39 acres",
+    "stay and celebrate",
+    "owner-built"
+   ],
+   "blurb": "Nolan and Ashlee Scarborough's farm in historic Marion sits on 39 acres of countryside and is set up for a full weekend, with pre-celebration and stay-and-celebrate options. Ashlee came from a decade as a hospice nurse and Nolan from building custom homes, and they offer as much or as little planning help as you want.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJC_SShxqzqokR0Vt3pqVGTm4",
+   "name": "Hidden Acres",
+   "website": "http://www.hiddenacresweddings.com/",
+   "instagram": "hiddenacresmarionsc",
+   "tags": [
+    "37 acres",
+    "Thursday to Sunday",
+    "owner-run"
+   ],
+   "blurb": "Donny Gerald started Hidden Acres in Marion in 2007 as something closer to a hunting lodge, and turned it into a wedding venue as couples kept asking. Pricing includes use of the entire 37-acre property from Thursday through Sunday.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJrcxL7KlpAIkRxNdQzJdx8l4",
+   "name": "Wedding Chapel by the Sea",
+   "website": "http://www.weddingchapelbythesea.com/",
+   "instagram": "",
+   "tags": [
+    "former church",
+    "Myrtle Beach",
+    "package comparison chart"
+   ],
+   "blurb": "Wedding Chapel by the Sea was home to a Myrtle Beach congregation for more than thirty years before it was reinvented as a wedding chapel. Packages run from a just-the-two-of-us ceremony up to full wedding and reception, with a comparison chart on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,207 @@
+{
+ "metro": "miami",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 184,
+ "listed": 254,
+ "how": "We read the website of every Miami wedding venue listed on Lazo (254 listings, 184 sites reachable) and set aside the ones that are not really in the wedding business: golf-course restaurants and hotel meeting-space pages, banquet-hall chains with a page per location, and duplicate listings for the same estate. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is my date inside hurricane season (June through November), and what is the written rain and storm plan: a covered space, a tent, or a reschedule clause?",
+  "What exactly is in the all-inclusive package, and which vendors can I bring in from outside if I want to?",
+  "How many hours of event time are included, when can vendors load in, and what does an extra hour cost?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJQ0tLYJnA2YgRoqUQomYr-so",
+   "name": "Vignette Gardens",
+   "website": "https://www.vignettegardens.com/?utm_campaign=gmb",
+   "instagram": "vignette_gardens",
+   "tags": [
+    "converted greenhouse",
+    "horse country",
+    "all-inclusive"
+   ],
+   "blurb": "A converted greenhouse in Miami's horse country. Vignette Gardens puts an 8,000 square foot covered greenhouse at the center of the property, surrounded by gardens and open-sky ceremony spaces, and sells all-inclusive packages for intimate and large weddings alike.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJeRNWPgDp2YgR9nAPCahFdYQ",
+   "name": "Gran Paraiso Gardens",
+   "website": "https://granparaisogardens.com/",
+   "instagram": "granparaisogardens",
+   "tags": [
+    "glass barn",
+    "5 acres",
+    "360 projection mapping"
+   ],
+   "blurb": "Five tropical acres in South Miami with waterfalls, palms and over 8,000 square feet of covered space. Gran Paraiso Gardens pairs outdoor garden ceremonies with a glass barn reception space and full 360-degree projection mapping across the walls and ceiling, with full-service packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJd0eVg9Dl2YgRy4IWY8roOL0",
+   "name": "Villa Toscana Miami LLC",
+   "website": "https://www.vtmiami.com/?utm_source=google&utm_medium=organic&utm_campaign=gbp-listing",
+   "instagram": "villatoscanamiami",
+   "tags": [
+    "Tuscan-style estate",
+    "900+ weddings",
+    "since 2019"
+   ],
+   "blurb": "A Tuscan-inspired estate surrounded by botanical gardens in Homestead that says it has hosted over 900 weddings since 2019. Villa Toscana calls itself a luxury outdoor wedding venue and keeps a frequently asked questions page on the site for the practical details.",
+   "since": 2019,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJA9GbWC3d2YgR_bSsLr0h3KU",
+   "name": "The Cooper Estate",
+   "website": "http://thecooperestate.com/",
+   "instagram": "thecooperestate",
+   "tags": [
+    "Old Florida landmark",
+    "native plant nursery",
+    "all-inclusive"
+   ],
+   "blurb": "Old Florida as it looked a century ago: an oolite limestone barn and home on a working native plant nursery, with live oak canopies, waterfalls, fish ponds and a sunken grotto. The Cooper Estate in Redland offers all-inclusive packages for weddings, elopements and vow renewals, and sends its pricing guide after an online inquiry.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv-QSpLqt2YgR7Da-jhWuV2o",
+   "name": "The Ancient Spanish Monastery",
+   "website": "http://www.spanishmonastery.com/",
+   "instagram": "",
+   "tags": [
+    "12th-century cloisters",
+    "historic",
+    "any faith or civil"
+   ],
+   "blurb": "Monastery cloisters begun in Spain in 1133 and brought to the United States by William Randolph Hearst in 1924, now standing in North Miami Beach. The wedding staff at the Ancient Spanish Monastery will work with a traditional, contemporary, non-denominational, inter-faith or civil ceremony.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJE3sYIOzp2YgRHNIL_JjH_Mo",
+   "name": "The White Orchid",
+   "website": "https://thewhiteorchidfl.com/",
+   "instagram": "thewhiteorchidfl",
+   "tags": [
+    "all-white space",
+    "family-run",
+    "no hidden fees"
+   ],
+   "blurb": "A serene all-white event space started by Lucy and Luis and now run with more of their family. The White Orchid says it looks for the path to yes with couples and vendors, welcomes licensed and insured outside vendors, and promises a clear pricing structure with no hidden fees.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJV6d-NEK22YgRLBaUbpLj9II",
+   "name": "The Loft on Bayshore",
+   "website": "https://www.loftbayshore.com/",
+   "instagram": "theloftbayshore",
+   "tags": [
+    "white loft",
+    "Coconut Grove to Brickell",
+    "inclusive packages"
+   ],
+   "blurb": "A loft-style venue between Coconut Grove and Brickell, just off historic Bayshore Drive, recently redesigned as an elegant white canvas. The Loft on Bayshore now offers inclusive packages and sits near Biscayne Bay and the neighborhood's historic gardens.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJq9WdfYm_2YgR50ohMk-A9mA",
+   "name": "Reception Palace Ballrooms",
+   "website": "http://www.receptionpalace.com/?utm_source=GMB&utm_medium=website+link&utm_campaign=Reception+Palace+GMB",
+   "instagram": "receptionpalace",
+   "tags": [
+    "opened in 2000",
+    "mother-daughter founders",
+    "in-house vendors"
+   ],
+   "blurb": "A stand-alone Miami ballroom venue that opened in 2000, founded by a mother-and-daughter team, with its own flower shop, bakery, caterer, entertainer and event planner under one roof. Reception Palace is for couples who want the vendors bundled rather than sourced one by one.",
+   "since": 2000,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJKaA6IZPD2YgRw1TY1B-r60c",
+   "name": "Estrella Estate",
+   "website": "http://www.estrellaestate.com/",
+   "instagram": "estrellaestate",
+   "tags": [
+    "10 acres",
+    "air-conditioned barn",
+    "rustic"
+   ],
+   "blurb": "Ten acres in the Redlands with a glade ringed by Longan trees and an air-conditioned barn with its own history, built for rustic-chic weddings. Estrella Estate also rents the grounds to photographers for shoots, so you can see how the grove photographs before you commit.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJaGUHWen2YgR_V0avzOCaCc",
+   "name": "SAINT PATRICK PALACE",
+   "website": "https://www.saintpatrickpalace.com/",
+   "instagram": "saintpatrickpalace",
+   "tags": [
+    "private estate",
+    "five gated acres",
+    "overnight stays"
+   ],
+   "blurb": "A gated five-acre private estate in Davie that combines, in its own words, the intimacy of an Airbnb wedding venue with the sophistication of a luxury event space, with estate accommodations for weekend stays. Saint Patrick Palace is built for mansion weddings, retreats and productions.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJK57KgNkB2YgR0uL6-tUkOXI",
+   "name": "The Oceanview Ballroom",
+   "website": "https://www.pelicanbeach.com/fort-lauderdale-wedding-venues/?utm_source=gmb-wedding&utm_medium=organic&utm_campaign=gmb",
+   "instagram": "pelicanbeach",
+   "tags": [
+    "beachfront resort",
+    "two ballrooms",
+    "hotel rooms upstairs"
+   ],
+   "blurb": "Pelican Grand Beach Resort's beachfront wedding spaces in Fort Lauderdale: the Oceanview and Atlantic ballrooms plus two terraces, with the resort's event planners and catering menus behind the day. The hotel option when you want the ocean as the backdrop and guest rooms in the same building.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJnbSN0G7d2YgRcBvymZe_bvs",
+   "name": "Villa Paraiso Miami - Wedding Venue",
+   "website": "https://villaparaisomiami.com/",
+   "instagram": "villaparaisomiami",
+   "tags": [
+    "all-inclusive",
+    "family-run",
+    "priced by guest count"
+   ],
+   "blurb": "A family-run Homestead venue with over a decade in the event industry that prices its all-inclusive packages by guest count plus the package you choose, with a personalized quote and planning brochure sent by email. Villa Paraiso walks through a real wedding on the site so you can see the format.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

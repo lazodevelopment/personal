@@ -1,0 +1,207 @@
+{
+ "metro": "charlotte",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 162,
+ "listed": 208,
+ "how": "We read the website of every Charlotte wedding venue listed on Lazo (208 listings, 162 sites reachable) and set aside the ones that are not really in the wedding business: event rooms built for meetings and showers, a hobby farm that mostly runs field trips, and listings whose site was really a loan offer or a directory page. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is the reception space air-conditioned, and where do guests go if a July afternoon storm rolls through the ceremony?",
+  "Which side of the state line are you on? Alcohol permits and who can pour differ between North and South Carolina, so ask what the venue requires.",
+  "Does the rental include tables, chairs and a day-of director, or are those separate lines, and what is the hard stop time for music?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJv4UyC2kfVIgR6WH9KTDylH4",
+   "name": "Alexander Homestead by Wedgewood Weddings",
+   "website": "https://www.wedgewoodweddings.com/alexanderhomestead?utm_source=google&utm_medium=organic&utm_campaign=gmb&utm_content=alexander-homestead",
+   "instagram": "alexanderhomestead",
+   "tags": [
+    "1903 estate",
+    "historic district",
+    "all-inclusive"
+   ],
+   "blurb": "A 1903 Queen Anne estate in Charlotte's historic district, run by Wedgewood Weddings with gardens, ballrooms and suites on site. Packages are all-inclusive and customizable, built from the essentials up, and the site posts real-wedding photo galleries and couples' notes.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpRmwuhWlVogRrYOSO16pS9c",
+   "name": "Pleasant Grove Farm",
+   "website": "https://www.pleasantgrovefarmvenue.com/",
+   "instagram": "pleasantgrovefarmclt",
+   "tags": [
+    "family farm",
+    "dog-friendly",
+    "minutes from Uptown"
+   ],
+   "blurb": "Pleasant Grove Farm is a barn venue in Northwest Charlotte on land the Mozeley family has held since the farmhouse went up in 1960; Megan M. Waters, a granddaughter, opened it as a venue in 2022. Indoor and outdoor options, dog-friendly, and booking helps keep the farmland from being developed.",
+   "since": 2022,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJT013kkAZVIgRJGwo1dzS4No",
+   "name": "The 1932 Barn by The YES",
+   "website": "https://www.theyesweddings.com/venues/venue-the-1932-barn?utm_source=google&utm_medium=organic&utm_campaign=google_my_business",
+   "instagram": "theyesweddings",
+   "tags": [
+    "historic barn",
+    "upfront pricing",
+    "part of The YES"
+   ],
+   "blurb": "The 1932 Barn is the Charlotte venue in The YES, the multi-venue brand Lori and her husband Mike built after she coordinated one wedding for a friend. Rolling pastures around a rustic barn, with packages the site describes as clear pricing with no hidden fees and a pricing guide you can request.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqZvZSlEOVIgROnimfGWJvug",
+   "name": "The Hotel Concord Wedding Venue",
+   "website": "http://www.thehotelconcord.com/",
+   "instagram": "hotelconcord",
+   "tags": [
+    "downtown Concord",
+    "landmark since 1926",
+    "all-inclusive"
+   ],
+   "blurb": "The Hotel Concord has been a downtown Concord landmark since 1926, designed by architect William L. Stoddart after the original St. Cloud Hotel came down. Wedding packages are all-inclusive and sized from intimate gatherings to large celebrations, and the reviews on the site keep naming Lynn as the heart of the place.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJefkUbi0NVIgRdS_4qqxy9r0",
+   "name": "The Farm At New Gilead",
+   "website": "https://thefarmatnewgilead.com/",
+   "instagram": "thefarmatnewgilead",
+   "tags": [
+    "family farm",
+    "barn or outdoor",
+    "12-hour access"
+   ],
+   "blurb": "A legacy family farm in Concord that the family turned into a wedding property to honor the land's history. The package gives you the whole property for 12 hours on the day for setup, celebration and cleanup, with all music ending by 10 PM, which is worth knowing before you plan a late party.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxbanXEd0VIgRy3W5U8Sav24",
+   "name": "Carolina Country Weddings",
+   "website": "https://www.carolinacountryweddings.com/",
+   "instagram": "carolinacountryweddings",
+   "tags": [
+    "nature-inspired",
+    "first wedding 2013",
+    "prints price ranges"
+   ],
+   "blurb": "Carolina Country Weddings started with the owners' own daughter marrying on the family farm in September 2013, and the barn and grounds have hosted couples since. Indoor and outdoor spaces in Mt Pleasant with a quiet-luxury pitch, and the packages page prints price ranges for different wedding sizes rather than making you ask.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJuacCdnZtVIgRHoE_38bcTd4",
+   "name": "Saratoga Springs",
+   "website": "http://www.thesaratogasprings.com/",
+   "instagram": "",
+   "tags": [
+    "over 20 years",
+    "wedding director included",
+    "Mt Pleasant"
+   ],
+   "blurb": "Saratoga Springs has been creating weddings for over 20 years on land the owners bought in 1994 to build their own home, after Tammy's sister asked to marry there. Packages include a wedding director for the day, a rehearsal on site and a planning session, with the bridal party arriving up to four hours ahead.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJvwIoRRqNVogRRMF4IfDUdzw",
+   "name": "The Grand",
+   "website": "https://thegrandvenue.co/",
+   "instagram": "thegrand_venue_",
+   "tags": [
+    "timber-frame hall",
+    "up to 275 guests",
+    "husband and wife"
+   ],
+   "blurb": "A traditional timber-frame hall on ten acres in York, South Carolina, that husband and wife Steve and Andreea Szasz found and restored themselves. The Grand seats up to 275 for an exclusive rental 45 minutes from Charlotte, and the two owners are likely the people who greet you at the tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJq6pmKtuwVogRmJRfBmghn-A",
+   "name": "Mariposa Chapel & Events",
+   "website": "https://www.mariposachapel.com/",
+   "instagram": "MariposaChapel",
+   "tags": [
+    "1887 chapel",
+    "up to 100 guests",
+    "30 minutes out"
+   ],
+   "blurb": "Mariposa Chapel is a restored white chapel from 1887, founded by war veteran J.W. Sigmon as a Sunday school for the rural Iron Station community, now surrounded by gardens about 30 minutes from Charlotte. Room for up to 100 guests, with a reception hall, terrace and bridal suite, and complimentary tours.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJxGEZ7vHVogRYYpK0WHLvDc",
+   "name": "The Barn at Blue Sky Farm",
+   "website": "https://www.thebarnatblueskyfarm.com/",
+   "instagram": "thebarnatblueskyfarm",
+   "tags": [
+    "white barn",
+    "five ceremony sites",
+    "climate-controlled ballroom"
+   ],
+   "blurb": "In Dallas, NC, about 30 minutes from Charlotte, The Barn at Blue Sky Farm gives couples exclusive use of a white barn with five ceremony spots: the Plateau, the Pond, the Covered Veranda, the Front Patio or the climate-controlled Ballroom itself.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6ckO-TGVVogRPl8180CkJpA",
+   "name": "Bansen Farms",
+   "website": "http://www.bansenfarms.com/",
+   "instagram": "bansenfarms",
+   "tags": [
+    "whole weekend",
+    "garden estate",
+    "flexible vendor policy"
+   ],
+   "blurb": "Bansen Farms rents its European-inspired garden estate outside Charlotte for the weekend rather than a single window, so you arrive, rehearse, celebrate and leave without rushing. Gastonia, designed for intimate to mid-size weddings, with a flexible vendor policy.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJExETfYWnVogRnWFSj9q8jCY",
+   "name": "The Rafters at Historic St. Mark's",
+   "website": "http://theraftersevents.com/",
+   "instagram": "the.rafters",
+   "tags": [
+    "church and reception on one campus",
+    "14 acres",
+    "venue with a mission"
+   ],
+   "blurb": "The Rafters at Historic St. Mark's is a multi-building campus on 14 secluded acres in Huntersville, with 1800s charm and everything from the church to the reception in one place. The venue describes itself as a venue with a mission and says couples who come up the hill become family.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

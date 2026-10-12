@@ -1,0 +1,207 @@
+{
+ "metro": "austin",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 157,
+ "listed": 200,
+ "how": "We read the website of every Austin wedding venue listed on Lazo (200 listings, 157 sites reachable) and set aside the ones that are not really in the wedding business: duplicate listings for individual halls of one venue, a 40-venue chain with a landing page per location, a planner's rental hall, a city park pavilion and a venue page that was really a photographer's site. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Where do 150 guests go when it is 100 degrees in August, and is the reception hall air-conditioned or just shaded?",
+  "Is the ceremony site, the coordinator and the tables and chairs in the rental fee, or are those separate lines?",
+  "How far is the Hill Country drive from downtown hotels, and is there on-site lodging or a shuttle for guests who do not want to make it twice?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJEb0lA4pWW4YRU6ST-l13cbA",
+   "name": "Texas Old Town",
+   "website": "http://texasoldtown.com/",
+   "instagram": "texasoldtown",
+   "tags": [
+    "since 2004",
+    "55 acres",
+    "four venues on one property"
+   ],
+   "blurb": "Texas Old Town in Kyle has been the go-to venue for thousands of Central Texas couples since 2004. The property spans more than 55 acres with four private venues, so it can fit a small ceremony or a large one, and the best way to see it is to reserve a tour.",
+   "since": 2004,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJU6-RrFRBW4YRia4604UKkMk",
+   "name": "The Terrace Club",
+   "website": "https://www.theterraceclub.com/",
+   "instagram": "theterraceclubatx",
+   "tags": [
+    "26+ years",
+    "indoor and outdoor",
+    "publishes pricing"
+   ],
+   "blurb": "A long-established Dripping Springs venue that has hosted Hill Country weddings for more than 26 years. The Terrace Club offers indoor and outdoor ceremony spaces, an outside ceremony site that seats 250, an experienced on-site team, and a pricing page it describes as simple, flexible and easy to understand.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJvcq47b9IW4YRekWbZE1BVag",
+   "name": "Pecan Springs Ranch",
+   "website": "http://www.pecanspringsranch.com/",
+   "instagram": "pecanspringsranch",
+   "tags": [
+    "17 acres",
+    "10 miles from downtown",
+    "family-owned"
+   ],
+   "blurb": "Pecan Springs Ranch is a 17-acre indoor and outdoor venue about ten miles from downtown Austin, bought and run as a family. The grounds are full of pecan trees, and the owners make a point of caring for the land and keeping the space in pristine condition so the event is the focus.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ3YAtJxLpRIYR7z3c3p8dbkY",
+   "name": "Tequila Ranch Events",
+   "website": "http://www.tequilaranchevents.com/",
+   "instagram": "RanchVenueTaylor",
+   "tags": [
+    "rustic ranch",
+    "150 seated",
+    "on-site lodging"
+   ],
+   "blurb": "Tequila Ranch is a rustic wedding venue in rural Taylor, a 30-minute drive from Austin, and the passion project of owners Joe and Stormy Krippelz, who hand-selected the reclaimed materials. Capacity is 150 seated guests, with on-site lodging and event coordinating available.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5788jGDRWoYRsdN13tIZ_aQ",
+   "name": "Lone Star Oaks",
+   "website": "https://www.lonestaroaks.com/",
+   "instagram": "lonestaroakslh",
+   "tags": [
+    "Liberty Hill",
+    "indoor and outdoor",
+    "pricing pamphlet"
+   ],
+   "blurb": "Two friends of 33 years drew Lone Star Oaks up on a yellow pad and handed it to a contractor, with every detail planned so weddings would flow smoothly. The Liberty Hill venue has indoor and outdoor locations and offers a free wedding pricing pamphlet to download before you tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJLb0GKyBAW4YR6OUMxznyLpQ",
+   "name": "Ma Maison Wedding Venue",
+   "website": "https://www.themamaison.com/",
+   "instagram": "themamaison",
+   "tags": [
+    "French style",
+    "Dripping Springs",
+    "from $5,400"
+   ],
+   "blurb": "Ma Maison marries French elegance with Southern hospitality in a European-style setting in Dripping Springs, just outside Austin. The site answers the money question directly: venue pricing begins at $5,400, with payment plans available on request.",
+   "since": null,
+   "from_price": "$5,400",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSTaI30sxW4YR4wSYbpvoGQo",
+   "name": "Hudson Bend Ranch",
+   "website": "https://www.hudsonbendranch.com/",
+   "instagram": "hudsonbendranch",
+   "tags": [
+    "five acres",
+    "Lake Travis",
+    "multi-day packages"
+   ],
+   "blurb": "Steven Ray bought the five-acre Hudson Bend Ranch plot in 1999 and spent 25 years personally designing every structure and landscaping every outdoor space before opening it for weddings and events in 2015. Set on the outskirts of Austin surrounded by Lake Travis, with a choice of two multi-day or two single-day packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJsY8qHB5EW4YRiSFbBNJBvSk",
+   "name": "Canyonwood Ridge",
+   "website": "http://www.canyonwoodridge.com/",
+   "instagram": "canyonwoodridge",
+   "tags": [
+    "12,000 square feet",
+    "two ceremony sites for 300",
+    "from $5,000"
+   ],
+   "blurb": "Canyonwood Ridge in Dripping Springs is a 12,000-square-foot event space 20 minutes from downtown Austin, with exclusive use of the venue and grounds for 15 hours and two ceremony sites built for 300, an outdoor trellis and an indoor chapel with sunset views. Rental rates are published, from $5,000 to $15,500 depending on the day and the season.",
+   "since": null,
+   "from_price": "$5,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJofTFSQIwW4YR7g8qE8Nf9bU",
+   "name": "Villa Antonia",
+   "website": "https://www.villaantonia.com/",
+   "instagram": "thevillaantonia",
+   "tags": [
+    "Italian-inspired estate",
+    "chapel",
+    "Jonestown"
+   ],
+   "blurb": "Villa Antonia began as the private Italian-inspired home of its namesake, who started hosting weddings there in the early 1990s and added a chapel, butterfly garden and stone terraces. Amy Maulding, with more than 30 years in the Austin wedding industry, took ownership in January 2022 after managing the venue.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5T2oh5FWW4YRxTmhWX-5qlI",
+   "name": "The Winfield Inn",
+   "website": "http://www.thewinfieldinn.com/",
+   "instagram": "thewinfieldinn",
+   "tags": [
+    "built 1884",
+    "33 acres",
+    "up to 500 guests"
+   ],
+   "blurb": "The Winfield Inn is an 1884 estate in Kyle with a vintage-style mansion on 33 acres shaded by live oaks, with room for weddings up to 500 guests. The venue rental includes early access to the estate to get ready, set up and take photos, and the pricing guide is available by filling out a form.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjQZnmZ5IW4YRIxkFTs_iERs",
+   "name": "Rambling Rose Ranch",
+   "website": "http://www.ramblingroseranch.com/",
+   "instagram": "ramblingroseranchatx",
+   "tags": [
+    "affordable",
+    "LGBT-owned",
+    "elopement days"
+   ],
+   "blurb": "Rambling Rose Ranch bills itself as the affordable Austin wedding venue for outdoor enthusiasts, LGBT-friendly and LGBT-owned, with resident animals the owner Morgan calls family. It also books elopement days twice a month for intimate outdoor ceremonies.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfWHtLATfWoYRl6S5uhS-AhU",
+   "name": "Twisted Ranch Weddings",
+   "website": "https://www.twistedranchweddings.com/",
+   "instagram": "",
+   "tags": [
+    "Old West town",
+    "200 acres",
+    "Bertram"
+   ],
+   "blurb": "Why settle for one building when you can celebrate in an entire Old West town: Twisted Ranch is 200 acres in the Hill Country near Bertram, designed as an authentic Texas town with rustic elegance and modern amenities. Pricing and options are in a brochure you download from the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

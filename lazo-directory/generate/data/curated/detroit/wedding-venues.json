@@ -1,0 +1,208 @@
+{
+ "metro": "detroit",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 178,
+ "listed": 226,
+ "how": "We read the website of every Detroit wedding venue listed on Lazo (226 listings, 178 sites reachable) and set aside the ones that are not really in the wedding business: an officiant service whose chapel became a church again, a venue that moved and has not updated its site, Ontario venues across the river, and barns 70 miles out in the Irish Hills. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "If the date is between November and April, where does the ceremony go when it snows, and who clears the lot and the walkways that morning?",
+  "What is in the package and what is a separate line: ceremony site, coordinator, tables and chairs, linens, the tent?",
+  "Is there a per-guest fee on top of the base rental, and does the bar count against it?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJed-vLUK_JIgRrr3HWwJxqRM",
+   "name": "The Iroquois Club",
+   "website": "https://www.theiroquoisclub.com/?utm_source=google_my_business&utm_medium=referral&utm_campaign=gmb_website_button",
+   "instagram": "theiroquoisclub",
+   "tags": [
+    "since 2006",
+    "15 to 200 guests",
+    "in-house planners"
+   ],
+   "blurb": "Established in 2006, The Iroquois Club in Bloomfield Hills is a full-service special events venue for parties of 15 to 200 guests, with what it calls a refined, rustic elegance. The staff includes culinary creatives, dedicated managers and event planners who help plan from start to finish.",
+   "since": 2006,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJXW5PnkGxJIgRDKBQAGUh3oY",
+   "name": "The Bank Wedding Venue",
+   "website": "https://eleven11eventstudio.com/about-the-bank-wedding-venue/",
+   "instagram": "eleven11eventstudio",
+   "tags": [
+    "up to 200 guests",
+    "blank canvas",
+    "rentals and planning"
+   ],
+   "blurb": "Five 8-foot grand chandeliers hang in The Bank, the newest venue from Eleven11 Event Studio in Farmington Hills, pitched as a blank canvas for intimate gatherings or grand celebrations of up to 200 guests. Event rentals and wedding planning come from the same company.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJa5TQ6f_YJIgRXvmJUqY0roU",
+   "name": "Vintage Gardens Wedding Chapel and Event Center",
+   "website": "https://vintagegardensweddingchapel.com/",
+   "instagram": "vintagehousefraser",
+   "tags": [
+    "wedding chapel",
+    "5.5 acres",
+    "packages",
+    "virtual tour"
+   ],
+   "blurb": "A brand new chapel and event center in Fraser, built next to the Vintage House banquet facility that has been a Macomb County fixture for over 60 years, so the 5.5-acre property covers ceremony and reception in one place. Several wedding packages are offered, the site has a virtual walk-through, and a minister and wedding coordinator are among the services.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJaXJfOQSWJIgRNfrfmsIP4VA",
+   "name": "Victoria Wedding Chapel & Garden",
+   "website": "http://www.victoriachapel.com/",
+   "instagram": "victoriaweddingchapelandgarden",
+   "tags": [
+    "ceremony only",
+    "Silver Lake",
+    "indoor and outdoor"
+   ],
+   "blurb": "Ceremonies only, by design: Victoria Wedding Chapel & Garden sits on the shore of Silver Lake in Waterford and specializes exclusively in the wedding ceremony, with a vintage chapel indoors and a garden setting outside. For couples who want the vows handled simply and the reception somewhere else.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0Uh4mtxjI4gRxqKMoNwO0hw",
+   "name": "Cushing Field House",
+   "website": "https://cushingfieldhouse.com/",
+   "instagram": "cushingfieldhouse",
+   "tags": [
+    "former cattle farm",
+    "from $21,500",
+    "Eleganza package"
+   ],
+   "blurb": "What started in 1994 as Cushing Cattle Company in Holly became a wedding venue after one of the family's own children got engaged and the working farm was transformed. The Eleganza package is printed on the site: a base fee of $21,500 plus $25 per guest covering setup of the ceremony, cocktail hour and reception.",
+   "since": null,
+   "from_price": "$21,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ45ZLWNO3PIgRfq6Mw88escI",
+   "name": "The Valley at Frutig Farms",
+   "website": "https://frutigfarms.com/",
+   "instagram": "frutig_farms",
+   "tags": [
+    "historic barns",
+    "family farm",
+    "Ann Arbor"
+   ],
+   "blurb": "The Frutig family bought this old farm on the west side of Ann Arbor in 1999, with two historic barns on site, one built around 1860. After their daughter's wedding there in 2009, Kelly started offering the farm for weddings, and The Valley is the result, with a team the site says supports you every step of the way.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6ywwdva-JIgRcFlIru93Ask",
+   "name": "Greenhouse at Goldner Walsh",
+   "website": "https://goldnerwalsh.com/greenhouse-wedding-venue-michigan/",
+   "instagram": "goldnerwalsh",
+   "tags": [
+    "greenhouse venue",
+    "since 1953",
+    "gardens and amphitheater"
+   ],
+   "blurb": "A greenhouse wedding venue inside Goldner Walsh Garden & Home, a Pontiac nursery that has been around since 1953. The Venues include the Celebration Space, the Gardens and Amphitheater and the Cedar House, for showers, parties and wedding receptions.",
+   "since": 1953,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJT39VKGVTI4gRrmh2MUDLRf0",
+   "name": "Sutton Barn",
+   "website": "https://www.suttonbarn.com/",
+   "instagram": "suttonbarn",
+   "tags": [
+    "restored barn",
+    "golf course",
+    "Friday $6,975 / Saturday $7,975"
+   ],
+   "blurb": "Hidden under a drop ceiling and paneling until the Ianni family bought the property in 2015, Sutton Barn took over three years to restore and sits on Rolling Meadows Golf Course in Whitmore Lake. Rental is printed plainly: $6,975 for a Friday and $7,975 for a Saturday, including the barn and a white dinner tent with a walkway to the cocktail patio.",
+   "since": null,
+   "from_price": "$6,975",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_aHkxcHaJIgRODtA6WeSnVk",
+   "name": "White House Wedding Chapel",
+   "website": "http://www.whitehouseweddingchapel.com/",
+   "instagram": "Whitehouseweddingchapel",
+   "tags": [
+    "1943 mansion",
+    "formal gardens",
+    "ceremonies and vow renewals"
+   ],
+   "blurb": "A stately white mansion in Warren, built in 1943 and until recently the private residence of just two owners since the 1940s. The ceremony package includes a wedding consultant, use of the formal gardens, a bridal suite and a grooms lounge, and bringing your own minister is a $75 add-on.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJG2Aw043EJIgRoqtZ7K8MG4k",
+   "name": "San Marino Club",
+   "website": "http://sanmarinoclub.com/",
+   "instagram": "sanmarinoclubtroy",
+   "tags": [
+    "founded 1938",
+    "Sammarinese club",
+    "grand staircase"
+   ],
+   "blurb": "Founded in 1938 by Sammarinese immigrants to the Detroit area, the San Marino Club in Troy offers an intimate ceremony space and a grand staircase down into its lit lobby for the first moments as newlyweds. Its history page tells the story of the Republic of San Marino, which gives the club its name.",
+   "since": 1938,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBeUOddSsJIgRYxPJ-Y5QNa4",
+   "name": "Meeting House Grand Ballroom",
+   "website": "http://www.meetinghousegrandballroom.com/",
+   "instagram": "",
+   "tags": [
+    "family operation",
+    "downtown Plymouth",
+    "Mayflower Hotel roots"
+   ],
+   "blurb": "A family operation on South Main in Plymouth, run by Tracy and Todd, who first met at the original Mayflower Hotel downtown where the family business began. Tracy served in the Mayflower's dining room and steak house and Todd cooked in its kitchens before the two opened the ballroom.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSefkkCY4O4gRs1_yLTh92rs",
+   "name": "The Grecian Center",
+   "website": "http://thegreciancenter.com/",
+   "instagram": "",
+   "tags": [
+    "Downriver",
+    "two ballrooms",
+    "all-inclusive packages"
+   ],
+   "blurb": "Downriver's banquet facility in Southgate, with the Parthenon and Apollo ballrooms plus the Grecian Center Park on the grounds. Menus are posted on the site, from brunch and plated dinners to family-style, along with all-inclusive packages, and the staff offers to help plan the occasion.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

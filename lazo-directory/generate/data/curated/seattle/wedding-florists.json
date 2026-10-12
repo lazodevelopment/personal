@@ -1,0 +1,208 @@
+{
+ "metro": "seattle",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 157,
+ "listed": 202,
+ "how": "We read the website of every Seattle wedding florist listed on Lazo (202 listings, 157 sites reachable) and set aside the ones that are not really in the wedding business: same-day delivery shops that mention weddings in passing, a cut-flower farm, a floral class studio, a venue and two planners listed as florists, and a studio whose site was mid-rebuild. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "What is grown locally in the Pacific Northwest for my month, and what gets shipped in from Ecuador or Holland?",
+  "Do you design for the venue, or deliver arrangements? Installation, teardown and a wet-weather plan for outdoor pieces are where the price moves.",
+  "Can I see a full wedding's florals, not one bouquet photo, at a budget like mine?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJndr3ZAwUkFQRy8G-7g0936Q",
+   "name": "Love Blooms Wedding & Event Design",
+   "website": "http://www.lovebloomseventdesign.com/",
+   "instagram": "lovebloomsweddings",
+   "tags": [
+    "florist and planner",
+    "rentals and installation",
+    "by appointment"
+   ],
+   "blurb": "Love Blooms is a florist that also plans and coordinates, so custom floral, signage, decor rentals and full setup and teardown come from one Snoqualmie team. Couples can hire them for all of it or just the flowers, with a budget-first approach to the design.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ48IxZNkPkFQRUuN7VZgNeHM",
+   "name": "Holly Yee Wedding Florist",
+   "website": "https://www.hollyyee.com/",
+   "instagram": "v/t51.82787-15/638289776_18533126779069814_1924206500451746663_n.jpg",
+   "tags": [
+    "floral architect",
+    "Woodinville studio",
+    "Kauai roots"
+   ],
+   "blurb": "Holly Yee's journey with flowers began at 11 with a lei-making workshop on Kauai; she now runs a wedding floral studio in Woodinville serving Seattle and the surrounding area. She calls the work floral architecture, joyful settings built from the handling and placement of flowers.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUyW4EgARkFQRscPme_AcDTw",
+   "name": "Blooms and Twine Floral Design",
+   "website": "http://www.bloomsandtwinefloral.com/",
+   "instagram": "bloomsandtwinefloral",
+   "tags": [
+    "sustainable",
+    "local growers",
+    "garden style",
+    "Lake City Way"
+   ],
+   "blurb": "Katie of Blooms and Twine works side by side with local growers and flower farmers to bring sustainable, garden-style wedding florals to couples across the Pacific Northwest. The studio sits on Lake City Way in Seattle and offers a complimentary consult after you browse the package options.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ50RdpfgUkFQRwrSN-wChoRs",
+   "name": "Flora Nova Design",
+   "website": "http://www.floranovadesign.com/",
+   "instagram": "floranovadesign",
+   "tags": [
+    "since 2003",
+    "team of designers",
+    "weddings and galas"
+   ],
+   "blurb": "Flora Nova Design has done floral and event design in Seattle since 2003 with a named team: Christiane running it, Jenny, Mandi and Rebecca as lead designers, plus Claire and Olga. Weddings sit alongside corporate events, galas and intimate dinners.",
+   "since": 2003,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ__8v94OqmlQRnblAL7_kbBU",
+   "name": "Flora D' Amore",
+   "website": "https://www.floradamore.com/",
+   "instagram": "floradamorefloral",
+   "tags": [
+    "since 1946",
+    "third generation",
+    "wedding consultants"
+   ],
+   "blurb": "Flora D'Amore, by Stadium Flowers in Everett, is a third-generation florist that has served Everett and Lynnwood for over 70 years. Every wedding gets an experienced wedding consultant to guide flower selection, and the shop argues for fresh flowers over artificial ones.",
+   "since": 1946,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJkaSruNZBkFQRPG9DWFHAqbo",
+   "name": "Villanelle Floral Company",
+   "website": "http://villanellefloral.com/",
+   "instagram": "villanellefloral",
+   "tags": [
+    "bespoke",
+    "elopement packages from $650",
+    "narrative design"
+   ],
+   "blurb": "Villanelle Floral Company is a bespoke Seattle designer, a self-described dreamer, poet and gardener, who treats each wedding as a floral interpretation of a personal story. Custom elopement packages begin at $650 and include a design consultation.",
+   "since": null,
+   "from_price": "$650",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTaVpeVFrkFQR_LOi3rwRsm0",
+   "name": "Emerald City Flowers",
+   "website": "https://www.emeraldcityflowers.shop/",
+   "instagram": "emeraldcityflowers",
+   "tags": [
+    "luxury studio",
+    "romantic and modern",
+    "Seattle"
+   ],
+   "blurb": "Bao-Tram started Emerald City Flowers, a Seattle luxury floral design studio with a romantic and modern flair and a team that spans design, botany and technology. Weddings and events, with arrangements by order as well.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUfvkArT_kFQRouILrUooTpc",
+   "name": "FleursTouch",
+   "website": "https://www.fleurstouch.com/",
+   "instagram": "",
+   "tags": [
+    "over 15 years",
+    "French-trained",
+    "Tacoma and Seattle"
+   ],
+   "blurb": "Dana of FleursTouch brings more than 15 years of floral design and training in France, North Carolina and Toronto to weddings around Tacoma, Seattle and the Pacific Northwest. Intimate celebrations through grand luxury weddings, in every style.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOfl4kLtrkFQRvuWx3BSCcrk",
+   "name": "Butterfly’s Rest Floral Design Studio",
+   "website": "https://www.butterflysrest.com/",
+   "instagram": "butterflysrest",
+   "tags": [
+    "independent",
+    "seasonal",
+    "environmentally conscious"
+   ],
+   "blurb": "Butterfly's Rest is an independent Seattle studio making seasonal flowers for weddings, gatherings and designer's-choice delivery, with environmentally conscious practices and workshops. The founder describes starting it in a season of transition away from constant pressure.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ73aW-jxtkFQRvyBBboa5wjU",
+   "name": "FLEUR",
+   "website": "https://www.fleurstudio.co/",
+   "instagram": "fleurstudio.co",
+   "tags": [
+    "florist since 2013",
+    "unique and tropical blooms",
+    "Bellevue and Kirkland"
+   ],
+   "blurb": "FLEUR's owner became a florist in 2013 after years in the corporate world, driven by wanting people to find unique and tropical flowers that local shops did not carry. Custom wedding and event designs from locations in Bellevue, Kirkland and Nordstrom.",
+   "since": 2013,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJP48puBcJkFQRpF2S0pd6egI",
+   "name": "Delight Garland Hub",
+   "website": "https://www.delightgarlandhub.com/",
+   "instagram": "",
+   "tags": [
+    "Indian garlands",
+    "south and north Indian styles",
+    "Bothell"
+   ],
+   "blurb": "A specialist rather than a full florist: Delight Garland Hub in Bothell makes fresh flower garlands for Indian weddings, engagements and poojas in both south and north Indian styles, to custom order across the greater Seattle area.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1c-jQLJykFQRkCS1qZJ8dqk",
+   "name": "Redmond Floral",
+   "website": "https://redmondfloral.com/",
+   "instagram": "redmondfloral",
+   "tags": [
+    "since 1968",
+    "retail florist",
+    "Redmond"
+   ],
+   "blurb": "The traditional shop option: Redmond Floral has served its neighborhood since 1968 and counts weddings among the anniversaries, birthdays and births it designs for. A local florist with a storefront rather than a studio.",
+   "since": 1968,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

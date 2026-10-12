@@ -1,0 +1,207 @@
+{
+ "metro": "salt-lake-city",
+ "cat": "wedding-videographers",
+ "updated": "2026-10-12",
+ "read": 87,
+ "listed": 103,
+ "how": "We read the website of every Salt Lake City wedding videographer listed on Lazo (103 listings, 87 sites reachable) and set aside the ones that are not really in the wedding business: corporate AV and live-event production companies, venues and planners listed as videographers, a general-projects video team, and a site with no readable text. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is audio from the vows and toasts recorded on lapel mics and a board feed, or just the camera?",
+  "How do you shoot a temple exit and an evening reception in winter, when the light is gone by five?",
+  "How long until the highlight film and the full edit arrive, and are raw files included?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJo8jrtQGwrBQRprDNWuimgLg",
+   "name": "Katinov Photography & Videography",
+   "website": "https://katinov.com/",
+   "instagram": "katinovphotography",
+   "tags": [
+    "photo and video",
+    "combos from $2,900",
+    "statewide"
+   ],
+   "blurb": "Katinov's Provo studio shoots photo and video as one team, serving couples from Salt Lake City and Park City to Zion and St. George. Photo-plus-video combos start at $2,900, printed on the site, with no hidden travel fees.",
+   "since": null,
+   "from_price": "$2,900",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJM3QQnKd_U4cR0Asc6qWqUF0",
+   "name": "Tanner Castro Films",
+   "website": "https://www.tannercastrofilms.com/",
+   "instagram": "tannercastrofilms",
+   "tags": [
+    "documentary",
+    "full ceremony",
+    "drone and Super 8"
+   ],
+   "blurb": "Tanner Castro films weddings as they really happen, with real vows and real moments, and offers full ceremony coverage, drone and Super 8 alongside the cinematic film. Based in Salt Lake City and available anywhere in the world.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ3zAGSWQRU4cRwy4JM8dQ4qg",
+   "name": "TROPICAL FILM",
+   "website": "http://tropicalfilm.org/",
+   "instagram": "tropical.film_",
+   "tags": [
+    "storyteller",
+    "Samoa-born",
+    "Roy"
+   ],
+   "blurb": "Pule Togagae of Tropical Film was born and raised in Samoa, lived in Australia and New Zealand, and now films weddings out of Roy for couples across Utah and the rest of the country. A one-person storyteller rather than a crew.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRWDLR3GaTYcR0E1xTiae1tw",
+   "name": "Branson Maxwell Photography & Videography",
+   "website": "http://www.bransonmaxwell.com/",
+   "instagram": "bransonmaxwell.photo",
+   "tags": [
+    "photo and video",
+    "first-look videos",
+    "Salt Lake City"
+   ],
+   "blurb": "Branson Maxwell offers wedding videography on its own or paired with photography, plus first-look videos, from a base in Salt Lake City. Also runs workshops and mentoring for other filmmakers and photographers.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv34huLt_VIcR41-BJyGHYB8",
+   "name": "Bella Alder Photography Videography",
+   "website": "http://bellaalderphotography.com/",
+   "instagram": "bellaalderphotography",
+   "tags": [
+    "photo and video",
+    "Bella and Brachen",
+    "Logan"
+   ],
+   "blurb": "Bella and Brachen shoot weddings, elopements and portraits in both photo and video out of Logan, with a plain-spoken pitch about doing things a little differently and not sugar-coating the process. Cache Valley and the rest of Utah.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ9ZgVMDOXTYcRX_Yz2bNd17I",
+   "name": "Jillie's Films",
+   "website": "https://www.jilliesfilms.com/",
+   "instagram": "jilliesfilms",
+   "tags": [
+    "nearly 10 years",
+    "photo and film",
+    "starting prices published"
+   ],
+   "blurb": "Jillie has created hundreds of wedding photos and films over nearly ten years, with a relaxed approach that still handles the dress fluffing and the posing. Provo-based, and the site walks through the booking process with starting prices.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2xBZKbKQTYcRsU0Tdj5-FHg",
+   "name": "Scarlet Oak Studio",
+   "website": "http://www.scarletoakstudio.com/",
+   "instagram": "scarletoakstudio",
+   "tags": [
+    "full-time team",
+    "video and lighting",
+    "Provo"
+   ],
+   "blurb": "Scarlet Oak Studio's videographers work full time alongside its photographers and lighting crew in Provo, a true team rather than subcontractors. Video is priced at the same rate as photo, by crew count.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJK8t5UrmKUocRE4PoL2_H7fo",
+   "name": "Sugar Rush Photo + Video",
+   "website": "http://www.sugarrushphotovideo.com/",
+   "instagram": "sugarrushphoto_video",
+   "tags": [
+    "photo and video team",
+    "adventure elopements",
+    "Salt Lake City"
+   ],
+   "blurb": "Sugar Rush is a Salt Lake City photo and video team: Rob shoots adventure elopements and dance parties, Lyndi handles boudoir, and the site is written with the same irreverence they bring to a wedding.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxeEI9at_TYcRfgDTilm-Kq4",
+   "name": "Videographer Jones LLC",
+   "website": "https://videographerjones.com/collections--pricing-page",
+   "instagram": "videographer_jones",
+   "tags": [
+    "build your package",
+    "raw files on SSD",
+    "drone"
+   ],
+   "blurb": "Videographer Jones in Lehi lets you build the package yourself and promises you will never feel content is missing. Professional audio and lighting rather than GoPros or phones, drone footage where the venue allows, a 2TB SSD with raw video and the Premiere project, and an optional no-social-media privacy setting.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJP4BdiIyEUocRwQxMvUg3NNA",
+   "name": "TT Videography",
+   "website": "http://www.ttphotovideo.com/",
+   "instagram": "ttphotovideo",
+   "tags": [
+    "affordable",
+    "10+ years",
+    "quick turnaround"
+   ],
+   "blurb": "TT Videography in Riverton has filmed weddings for more than ten years with a focus on affordable packages, friendly service and quick turnaround. Dual-camera highlight videos with example films and pricing options on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMTNCJMuaTYcRTE4aBnqGKIY",
+   "name": "Datura Photo",
+   "website": "https://www.daturaphoto.net/",
+   "instagram": "",
+   "tags": [
+    "photo and video",
+    "elopements",
+    "Utah and the PNW"
+   ],
+   "blurb": "Datura Photo is Jules, a Utah wedding photographer and videographer who also works Washington and Oregon with no travel fees. Adventure weddings and elopements with an emphasis on landscapes and emotion.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUZRnM6TXHSERZjKB5T5m2zg",
+   "name": "Boehlke Media Park City",
+   "website": "https://www.boehlkemedia.com/",
+   "instagram": "bell_key_media",
+   "tags": [
+    "two sisters",
+    "photo and film",
+    "Utah and Wisconsin"
+   ],
+   "blurb": "Boehlke Media is Sabrina and Andrea Boehlke, two sisters with two cameras who grew up filming everything, including a Survivor audition tape. Photography and filmmaking in Park City and Wisconsin.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

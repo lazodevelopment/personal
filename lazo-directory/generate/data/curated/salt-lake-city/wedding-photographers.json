@@ -1,0 +1,207 @@
+{
+ "metro": "salt-lake-city",
+ "cat": "wedding-photographers",
+ "updated": "2026-10-12",
+ "read": 84,
+ "listed": 111,
+ "how": "We read the website of every Salt Lake City wedding photographer listed on Lazo (111 listings, 84 sites reachable) and set aside the ones that are not really in the wedding business: family and portrait studios, a multi-service chain, venues listed as photographers, a Moab-based photographer, and a studio whose site had no readable text. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "How do you handle a temple exit, a luncheon and an evening reception as separate sessions, and is that one package or three?",
+  "Can I see a full winter wedding gallery? Snow and short days change the timeline here.",
+  "What is the delivery timeline, and is a second shooter included or an add-on?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJo8jrtQGwrBQRprDNWuimgLg",
+   "name": "Katinov Photography & Videography",
+   "website": "https://katinov.com/",
+   "instagram": "katinovphotography",
+   "tags": [
+    "photo and video",
+    "from $1,900",
+    "10+ years"
+   ],
+   "blurb": "Stoyan Katinov leads a full-service photo and video studio in Provo that works the whole state, from Salt Lake and Park City to Zion and St. George. Ten-plus years of weddings, with photography starting at $1,900 and photo-plus-video combos from $2,900 printed on the site.",
+   "since": null,
+   "from_price": "$1,900",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRWDLR3GaTYcR0E1xTiae1tw",
+   "name": "Branson Maxwell Photography & Videography",
+   "website": "http://www.bransonmaxwell.com/",
+   "instagram": "bransonmaxwell.photo",
+   "tags": [
+    "photo and video",
+    "teaches workshops",
+    "destination"
+   ],
+   "blurb": "A Utah destination wedding photographer and videographer based out of Salt Lake City who also teaches workshops, retreats and mentoring for other creatives. Branson Maxwell offers photo and video packages separately or together, plus engagements, bridals and first-look videos.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSQ64dgmHTYcRViE6cROEyEg",
+   "name": "Hopes and Cheers Photo",
+   "website": "https://www.hopesandcheers.com/",
+   "instagram": "hopesandcheers",
+   "tags": [
+    "documentary",
+    "analog and digital",
+    "artist's eye"
+   ],
+   "blurb": "Yana of Hopes and Cheers brings an artist's eye and a documentary approach, shooting both analog and digital, from a small garden gathering to a grand celebration. Based in American Fork and Salt Lake City.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMTNCJMuaTYcRTE4aBnqGKIY",
+   "name": "Datura Photo",
+   "website": "https://www.daturaphoto.net/",
+   "instagram": "",
+   "tags": [
+    "adventure elopements",
+    "Utah and the PNW",
+    "no travel fees to WA/OR"
+   ],
+   "blurb": "Jules at Datura Photo photographs adventure weddings and elopements in Utah and the Pacific Northwest, with no travel fees for Washington and Oregon, and travels worldwide. Epic landscapes and moody vibes, in her words, with video available too.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRU9uYo19VIcRm_e2Bv-QO3U",
+   "name": "Hiliary Stewart Photography",
+   "website": "http://www.hiliarystewart.com/",
+   "instagram": "hiliarystewart",
+   "tags": [
+    "team",
+    "photographer and coach",
+    "since 2017"
+   ],
+   "blurb": "Hiliary Stewart started wedding photography when she became a single mom in 2017 and has grown it into a Farmington-based team for couples who want a stress-free day. She describes herself as your photographer and coach, and writes about the mistakes to avoid when hiring one.",
+   "since": 2017,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8YJ1RT71UocRh_qsplZS7Vo",
+   "name": "Caela Photo Co.",
+   "website": "http://caelaphotoco.com/",
+   "instagram": "caelaphoto.co",
+   "tags": [
+    "7+ years",
+    "weddings and elopements",
+    "Salt Lake City"
+   ],
+   "blurb": "Caela West has documented stories for more than seven years and has lived in Utah almost her whole life, with short stints abroad. Wedding and elopement photography out of Salt Lake City, centered on genuine emotion and connection.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJKwQojJEDU4cRNcqSj5EWvZA",
+   "name": "Brandon Burk Photography",
+   "website": "https://www.brandonburkphotography.com/",
+   "instagram": "utahweddingphotographer",
+   "tags": [
+    "19 years",
+    "elegant simplicity",
+    "North Salt Lake"
+   ],
+   "blurb": "Nineteen years of professional photography, summed up on the site as elegant simplicity and a promise that it is about you, not the photographer. Brandon Burk works weddings and portraits out of North Salt Lake and is available for travel.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2xBZKbKQTYcRsU0Tdj5-FHg",
+   "name": "Scarlet Oak Studio",
+   "website": "http://www.scarletoakstudio.com/",
+   "instagram": "scarletoakstudio",
+   "tags": [
+    "full-time team",
+    "photo, video and lighting",
+    "same rate per service"
+   ],
+   "blurb": "Scarlet Oak Studio is a Provo team of full-time photographers, videographers and lighting crew that stresses it is not an outsourcing model. Rates for photo, video and location lighting are the same, and the site explains pricing by crew count.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJoVbrWyxPJq8R8ScS4VErsFA",
+   "name": "Backcountry Portraits | Utah Elopement Photographer",
+   "website": "https://www.backcountryphotographers.com/",
+   "instagram": "backcountryportraits",
+   "tags": [
+    "husband and wife",
+    "elopement planning",
+    "Park City"
+   ],
+   "blurb": "Leti and Stefan Olson are a Park City husband-and-wife team who photograph and help plan adventure elopements and small weddings in Utah, the Tetons and Glacier. For couples who love the outdoors and want help designing the day, not just someone behind a camera.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJi_DMMkOc3IAR3vpGSryYntQ",
+   "name": "Poppy & Hive Photography",
+   "website": "http://www.poppyandhivephotography.com/",
+   "instagram": "poppyandhivephoto",
+   "tags": [
+    "husband and wife",
+    "fine art",
+    "travels worldwide"
+   ],
+   "blurb": "Chris and Erinn of Poppy & Hive have photographed together almost as long as they have been married, with Erinn bringing a painting background to the camera. Fine art weddings, engagements and portraits around Salt Lake City, available for travel.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEZ0-cP6bTYcR0q6adHIYm_U",
+   "name": "Abigail Leanne Photo",
+   "website": "http://abigailleannephoto.com/",
+   "instagram": "abigailleannephoto",
+   "tags": [
+    "100+ weddings",
+    "5+ years",
+    "travel"
+   ],
+   "blurb": "Abbey has photographed professionally for more than five years and documented over 100 weddings, and calls it the funnest job. Based in Provo, with a stated passion for shooting new people in new places around the world.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJVeoE0DO7JIgRXZLMqDWWRdI",
+   "name": "Photos By Gayle",
+   "website": "http://photosbygayle.net/",
+   "instagram": "photosbygayle",
+   "tags": [
+    "intimate weddings",
+    "elopements",
+    "documentary"
+   ],
+   "blurb": "Photos By Gayle is a Utah-based intimate wedding and elopement photographer whose site describes the work as documentary, honest, imperfect and real, and whose packages are built around a day that is joyful and messy rather than staged.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

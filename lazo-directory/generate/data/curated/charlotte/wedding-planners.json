@@ -1,0 +1,207 @@
+{
+ "metro": "charlotte",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 60,
+ "listed": 81,
+ "how": "We read the website of every Charlotte wedding planner listed on Lazo (81 listings, 60 sites reachable) and set aside the ones that are not really in the wedding business: venues that list in-house coordination, a coaching program, an event decorator, a rental company and a listing whose site was a wedding-loan page. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full, partial or day-of? Ask what each tier includes in meetings and hours, and who is actually on site on the wedding day.",
+  "Which Charlotte-area venues and vendors have you worked with this year, including across the South Carolina line where permits and rules differ?",
+  "How do you plan for an outdoor ceremony in Charlotte heat or an afternoon thunderstorm, and when is the rain call made?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ7elOkhghVIgR3HnrHSqKAv4",
+   "name": "Jackie Fogartie Events",
+   "website": "http://www.jackiefogartie.com/",
+   "instagram": "jackiefogartieevents",
+   "tags": [
+    "since 2010",
+    "people person",
+    "Charlotte"
+   ],
+   "blurb": "Jackie Fogartie has been helping couples get down the aisle in Charlotte since 2010, after moving there from New Jersey two decades ago. Her service list runs from choosing the venue and curating the vendor team to managing budget and vendors through planning, and she says getting to know clients and their families is the favorite part.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRc8f5jinVogRu22KEI_dU7I",
+   "name": "SoHo Event Design & Planning",
+   "website": "http://www.sohoeventdesign.com/",
+   "instagram": "sohoeventdesign",
+   "tags": [
+    "luxury planning and design",
+    "Southeast",
+    "travels worldwide"
+   ],
+   "blurb": "SoHo Event Design & Planning does luxury planning and design for couples it calls sophisticated, romantic and intentional, from a North Carolina studio that works across the Southeast and travels worldwide. Known, in its words, for a signature romantic style and a relaxed, concierge-level approach.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJbamU-jkDVIgRd91mOimRm7g",
+   "name": "Jewel of Ruby Events, LLC",
+   "website": "http://www.jewelofrubyevents.com/",
+   "instagram": "jewelofrubyevents",
+   "tags": [
+    "certified planner",
+    "culturally diverse weddings",
+    "day-of to full-service"
+   ],
+   "blurb": "Victoria Adu is a certified wedding planner and designer in Charlotte and the founder of Jewel of Ruby Events, offering full-service planning, day-of coordination and culturally diverse celebrations. The name is deliberate: a jewel for something precious, a ruby for rarity and durability.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJwxm8mrq_VogRrQY065_xnzg",
+   "name": "Whitlock Events",
+   "website": "http://whitlockevents.com/",
+   "instagram": "whitlock_events",
+   "tags": [
+    "full-service planning and design",
+    "near Charlotte",
+    "once a stressed bride"
+   ],
+   "blurb": "Whitlock Events is a full-service wedding planning and design company near Charlotte whose founder describes herself as a once stressed-out bride who planned a garden party and got Jump Around instead. The promise is simple, easy and fun, for weddings and events.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJV6nBMAeTVogRJXS1XeKul3E",
+   "name": "Scout and Grace Events",
+   "website": "http://www.scoutandgrace.com/",
+   "instagram": "scout_and_grace",
+   "tags": [
+    "certified since 2001",
+    "Lake Wylie",
+    "planning and design"
+   ],
+   "blurb": "Miriam of Scout and Grace has been a certified wedding planner since 2001 and started the company fresh when she moved to Charlotte, naming it after her daughters' middle names. Lake Wylie-based planning and design, with couples' notes on the site about her calm on the day.",
+   "since": 2001,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEwI-O-yfVogR8MAejGoLH6o",
+   "name": "Events Without a Hitch",
+   "website": "http://www.eventswithoutahitch.com/",
+   "instagram": "eventswithoutahitch",
+   "tags": [
+    "since 2013",
+    "tailored tiers",
+    "Charlotte"
+   ],
+   "blurb": "Events Without a Hitch has planned weddings and events in the greater Charlotte area since 2013. Founder Ashley Snider offers tailored planning experiences that meet couples wherever they are in the process, with more than a decade behind her, from baby showers to full weddings.",
+   "since": 2013,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJP6AVPHWXaGARUdGFFqD5F0U",
+   "name": "Jenkins & Co. Weddings",
+   "website": "http://jenkinsandcoweddings.com/",
+   "instagram": "jenkinsandcoweddings",
+   "tags": [
+    "full-service",
+    "planning and design firm",
+    "Southeast"
+   ],
+   "blurb": "A full-service wedding planning and design firm in Charlotte serving the Southeast. Jenkins & Co. plans around three ideas it repeats on the site: graciously hosted, beautifully designed, deeply remembered, with guests who feel welcomed and couples who feel present.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ9cgzvv0fVIgRlaSIktcVaIA",
+   "name": "House of Matrimonies",
+   "website": "http://www.houseofmatrimonies.com/",
+   "instagram": "",
+   "tags": [
+    "day-of from $2,000",
+    "partial from $3,500",
+    "prints pricing"
+   ],
+   "blurb": "House of Matrimonies prints its package pricing: day-of coordination starting at $2,000, partial planning from $3,500, and full planning above that. Brittney Lashea Dolan got into planning after people kept telling her she should, and then she planned her own wedding.",
+   "since": null,
+   "from_price": "$2,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJnejvPoGeVogRHUMeYHrr46s",
+   "name": "Sarah Elizabeth Events",
+   "website": "http://www.sarahelizabethevents.com/",
+   "instagram": "sarahbeththie",
+   "tags": [
+    "full-service planning and design",
+    "Charleston native",
+    "Charlotte"
+   ],
+   "blurb": "Sarah Beth Thie is a Charleston native who now calls Charlotte home, running Sarah Elizabeth Events as full-service planning and design with her husband Doug behind the scenes. The site describes couples who become friends and vendor relationships built over years.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJwS4NSDSvVogRMUc0Garyg78",
+   "name": "A Simple Affair Events",
+   "website": "http://www.simpleaffairevents.com/",
+   "instagram": "asimpleaffairevents",
+   "tags": [
+    "luxury style",
+    "published in Bride's and Style Me Pretty",
+    "destinations"
+   ],
+   "blurb": "Tina of A Simple Affair Events works with fashion-forward clients in Charlotte and around the globe, and her work has appeared in Bride's Magazine, Southpark Magazine, Style Me Pretty and The Knot. Huntersville-based, luxury style with natural compositions.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEc0MY6mnVogR4tc4xNZ_Pes",
+   "name": "P.U.R.E. Events & Decor, LLC",
+   "website": "http://www.pureeventsanddecor.com/",
+   "instagram": "",
+   "tags": [
+    "consulting from $150 an hour",
+    "design and rentals",
+    "MBA"
+   ],
+   "blurb": "Gresha McCain founded P.U.R.E. Events & Decor with a business administration background and master's degrees in business and health administration. Beyond coordination and design, the Charlotte company rents decor and offers wedding consulting starting at $150 an hour for couples planning their own day.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJGazCU_25VogRJjgQ2-c5eJI",
+   "name": "Rose Petal Weddings & Events",
+   "website": "https://www.rosepetalweddingevents.com/",
+   "instagram": "rose_petal_weddings",
+   "tags": [
+    "wedding coordinator",
+    "Denver, NC",
+    "engagement to aisle"
+   ],
+   "blurb": "Lydia Francis runs Rose Petal Weddings & Events from Denver, NC, where she lives with her husband and two boys. A coordinator who wants to be beside you from the engagement to the walk down the aisle, for couples north of Charlotte.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

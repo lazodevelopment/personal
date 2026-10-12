@@ -1,0 +1,175 @@
+{
+ "metro": "salt-lake-city",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 97,
+ "listed": 129,
+ "how": "We read the website of every Salt Lake City wedding planner listed on Lazo (129 listings, 97 sites reachable) and set aside the ones that are not really in the wedding business: decor rental companies, a vendor directory, venues that sell coordination, a multi-service chain, and a planner whose site text looked like an unedited template. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours and in meetings.",
+  "Have you run a temple sealing, luncheon and reception on one day, and how do you keep a mountain venue on schedule when it snows?",
+  "Who is on site on the wedding day, the planner you hired or an associate?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJB7_CFH1pUocRdTFFcUi-j3k",
+   "name": "Soirée Productions Wedding & Event Planning",
+   "website": "http://www.soireeproductions.com/",
+   "instagram": "soireeproductions",
+   "tags": [
+    "luxury",
+    "Park City",
+    "hospitality background"
+   ],
+   "blurb": "Kristin of Soirée Productions plans bespoke luxury weddings in Park City and beyond, with a pitch of impeccable taste and zero drama. She started in hospitality, was educated in Las Vegas and has made Park City home.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAQCwrwP1UocRXTE76CNuTwg",
+   "name": "Fuse Weddings and Events",
+   "website": "https://www.fuseweddings.com/",
+   "instagram": "",
+   "tags": [
+    "17 years",
+    "Park City and Deer Valley",
+    "full service"
+   ],
+   "blurb": "Mara Mazdzer has run Fuse Weddings for seventeen years and calls herself the professional decider of flatware placement. The Salt Lake City studio is known for destination-Utah weddings in the Park City and Deer Valley area and also plans for local couples.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfaXYwv9hUocRXlD8FieA4G8",
+   "name": "Melissa Fancy Weddings & Events",
+   "website": "http://www.melissafancy.com/",
+   "instagram": "melissa_fancy",
+   "tags": [
+    "since 2010",
+    "interior design training",
+    "destinations"
+   ],
+   "blurb": "Melissa Fancy became a wedding planner in Park City in 2010 and combines interior design training with the logistics side of the job. Plans weddings in Park City and Deer Valley and destination celebrations as far as Cabo San Lucas.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJMUKCsA3eGSgRWe-ztBD8ujc",
+   "name": "Heirloom Weddings & Events",
+   "website": "https://heirloomweddingsutah.com/",
+   "instagram": "",
+   "tags": [
+    "boutique",
+    "planning and design",
+    "Saratoga Springs"
+   ],
+   "blurb": "Heirloom Weddings & Events is a boutique planning and design firm in Saratoga Springs whose pitch is that the effortless, refined wedding you see in photos is hours of research, sourcing and coordination you should not have to do yourself. Custom planning and coordination packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJT6HzGgmFTYcR8A8MocS4IwY",
+   "name": "Britt Warnick Designs",
+   "website": "http://www.brittwarnickdesigns.com/",
+   "instagram": "brittwarnickdesigns",
+   "tags": [
+    "design-focused",
+    "nature-inspired",
+    "editorial work"
+   ],
+   "blurb": "Britt Warnick Designs in Lindon is a design-led planner that leans on the asymmetry of nature: a flower in the breeze, foraged fruit on the table. Weddings plus editorial direction and brand collaborations, in Utah and beyond.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRUDVfiqZTYcRpJMl5wXkL9o",
+   "name": "The Wedding Time Utah",
+   "website": "https://weddingtimeutah.com/",
+   "instagram": "theweddingtimeutah",
+   "tags": [
+    "certified and licensed",
+    "vendor background",
+    "free consultation"
+   ],
+   "blurb": "The Wedding Time's founder came up as a wedding vendor before becoming a certified, licensed planner, and leads with design and decorating. Provo-based, and the first step is a free video consultation with one of the planners.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSQOxUcEfwVQRwKgQjvt90HY",
+   "name": "J. Emry Events",
+   "website": "http://www.jemryevents.com/",
+   "instagram": "j.emryevents",
+   "tags": [
+    "5+ years",
+    "full planning package",
+    "travels"
+   ],
+   "blurb": "Jade Emry started planning in Eugene, Oregon, and brings more than five years of experience to her Salt Lake City practice. J. Emry Events offers a start-to-finish package covering budget, vendor booking, design and day-of coordination, and she will travel.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJyYh0Nx2BTYcRs3-64ZIKQqw",
+   "name": "Queen Hollidae",
+   "website": "https://queenhollidae.com/",
+   "instagram": "queenhollidae1",
+   "tags": [
+    "planning plus decor rentals",
+    "catering",
+    "American Fork"
+   ],
+   "blurb": "Queen Hollidae in American Fork does full-service planning alongside high-end decor rentals and catering, so one vendor can cover several lines. Intimate elopements through large events across Utah.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJP0zPgIpiUocRoCD3d7nzLN0",
+   "name": "Legacy Weddings & Events",
+   "website": "https://legacyweddingsutah.com/",
+   "instagram": "",
+   "tags": [
+    "since 2007",
+    "2,000+ receptions decorated",
+    "Wasatch Front"
+   ],
+   "blurb": "Legacy Weddings & Events has decorated more than 2,000 wedding receptions and events since 2007, turning ordinary rooms into reception spaces anywhere on the Wasatch Front. Murray-based and decor-first; ask what coordination is included.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6451aezXxoERZ82r98T-90Q",
+   "name": "Bellus Nexus",
+   "website": "http://www.bellusnexus.com/",
+   "instagram": "",
+   "tags": [
+    "planning and floral",
+    "Filipino-American",
+    "Ogden"
+   ],
+   "blurb": "Lauren Sebaske of Bellus Nexus grew up in a Filipino and American family that threw a party for everything, and now plans and designs weddings in Ogden from conception to clean-up. Planning, invitations and a floral design package from the same person.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

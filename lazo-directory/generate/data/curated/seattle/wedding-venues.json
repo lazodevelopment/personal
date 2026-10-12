@@ -1,0 +1,212 @@
+{
+ "metro": "seattle",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 157,
+ "listed": 201,
+ "how": "We read the website of every Seattle wedding venue listed on Lazo (201 listings, 157 sites reachable) and set aside the ones that are not really in the wedding business: castles and lodges that mainly sell overnight stays, a church-owned hall, a flower shop listed as a venue, and link pages with no venue behind them. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Most farm and garden venues here run May to October and book one wedding a day. Is your date inside that window, and what is the rain plan, a tent, a barn or a covered pavilion?",
+  "What does the rental hour count include? Ten to twelve hours is common, but ask whether setup, rehearsal and teardown are inside it.",
+  "If the venue is an hour or more from Seattle, is there on-site lodging or a shuttle, and does the package include tables, chairs and a coordinator or only the grounds?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJBYtGm0dJhVQRqRhpv8qPJ70",
+   "name": "Jackson Manor Events",
+   "website": "http://www.jacksonmanorevents.com/",
+   "instagram": "jacksonmanorevents",
+   "tags": [
+    "French country garden",
+    "family-owned",
+    "all-inclusive",
+    "since 2012"
+   ],
+   "blurb": "A family-owned, French country-inspired outdoor venue near Arlington, built for all-inclusive garden weddings. Jackson Manor started as a personal vision and grew with the owners' daughters into the garden estate it is today, with wedding experiences designed for varying levels of planning involvement.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1a59GXX8j1QRmBF30ebmMkY",
+   "name": "Whidbey Island Weddings",
+   "website": "http://www.whidbeyislandweddings.com/",
+   "instagram": "whidbeyislandweddings",
+   "tags": [
+    "Whidbey Island",
+    "1913 farmhouse",
+    "May to October"
+   ],
+   "blurb": "Two venues on Whidbey Island from Kelly, who moved there over 18 years ago and found a historic 1913 farmhouse on five acres in Bayview Valley. Weddings at Crockett Farm run May through October and include exclusive use of the property for one full day on a Saturday or Sunday.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJA-aYc9aLkFQRScFfMcVJL34",
+   "name": "Rein Fire Ranch",
+   "website": "http://www.reinfireranch.com/",
+   "instagram": "reinfireranch",
+   "tags": [
+    "working horse ranch",
+    "publishes rates",
+    "elopement packages"
+   ],
+   "blurb": "Rein Fire Ranch is a working horse ranch in Ravensdale that hosts weddings April through October and is already taking bookings for the 2027 and 2028 seasons. Current rates are printed on the site, and there are elopement packages for 50 guests or fewer with shorter rental periods than the full 12 hours.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBWwoEZRNhVQR-ThPLMXVQ50",
+   "name": "The Landing at Lake Ploenta",
+   "website": "http://lakeploenta.com/",
+   "instagram": "lakeploenta",
+   "tags": [
+    "60 acres",
+    "multi-day with lodging",
+    "from $6,000",
+    "one wedding at a time"
+   ],
+   "blurb": "Sixty acres of forest and lakeside in the foothills outside Arlington, with on-site lodging so the whole party can stay for a multi-day wedding. The Landing at Lake Ploenta hosts one wedding at a time, every package includes exclusive use of the venue, and the site states packages start at $6,000.",
+   "since": null,
+   "from_price": "$6,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFz6g0cxNhVQRiWR72e0hIDw",
+   "name": "The Bannan House Farm",
+   "website": "https://thebannanhousefarm.com/",
+   "instagram": "reel/DS-axtcDy3Q",
+   "tags": [
+    "Granite Falls",
+    "river and wildflower fields",
+    "owner-run"
+   ],
+   "blurb": "Mindy Bannan runs The Bannan House Farm in Granite Falls, an hour north of Seattle, with spaces designed to shine without heavy decorating. River, wildflower fields and mountain views frame the ceremony, with firepit gatherings and lounge moments built into the layout.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZb27iwaomlQRdGk030zmbJA",
+   "name": "Woodland Meadow Farms",
+   "website": "https://www.woodlandmeadowfarms.com/",
+   "instagram": "woodlandmeadowfarms",
+   "tags": [
+    "forest venue",
+    "former tree farm",
+    "pricing pamphlet",
+    "since 2010"
+   ],
+   "blurb": "Woodland Meadow Farms in Snohomish began as a first-generation farm, hosted its first wedding in 2009 and became a full wedding venue in 2010. Meadows, forested outdoor spaces and covered structures, with a free pricing pamphlet you can download before you tour.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqaDzUM3ikFQRf4gPml7de1w",
+   "name": "Rock Creek Gardens Wedding and Event Venue",
+   "website": "https://www.marriedatthegardens.com/",
+   "instagram": "",
+   "tags": [
+    "20-acre estate",
+    "Puyallup",
+    "publishes 2027 rates"
+   ],
+   "blurb": "A 20-acre private estate in Puyallup that was the owner's childhood home; the original 1958 brick house is now the wedding party house. Rock Creek Gardens lists its 2027 packages and rates on the site, with ten hours of private access and room for 200 guests.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJtZMfJHPjkFQRmp790dnMUQ4",
+   "name": "Orting Manor",
+   "website": "https://www.ortingmanor.com/",
+   "instagram": "ortingmanor",
+   "tags": [
+    "women-owned",
+    "up to 150 guests",
+    "11-hour rentals"
+   ],
+   "blurb": "Orting Manor is a newly renovated, women-owned venue in Orting that blends modern elegance with French country garden charm. Its 5,000 square feet hold events up to 150 guests on 11-hour rentals, and the team says it comes from planning, coordination and event design backgrounds.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEwmUsBOomlQRz_pQkBoql2k",
+   "name": "Dairyland Venue",
+   "website": "https://www.dairylandvenue.com/",
+   "instagram": "aphotobright",
+   "tags": [
+    "white barn",
+    "on-site brewery",
+    "family-owned",
+    "since 2013"
+   ],
+   "blurb": "Established in 2013 when the Woodland Meadow Farms family expanded onto an adjacent 50-acre former dairy, Dairyland is a working Christmas tree, vegetable and flower farm with a white barn, garden ceremonies and its own brewery on site. The site promises transparent pricing by way of a free pamphlet.",
+   "since": 2013,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ794TZkHxkFQRcS9S30B_jFE",
+   "name": "Grandview Estate Weddings",
+   "website": "http://grandviewestateweddings.com/",
+   "instagram": "grandviewestateweddings",
+   "tags": [
+    "Mt. Rainier backdrop",
+    "$5,900 for 12 hours",
+    "May to September"
+   ],
+   "blurb": "Grandview Estate is a rustic 10-acre venue in rural Enumclaw with Mt. Rainier directly behind the altar, a reception tent and a barn. The site prints its rate: $5,900 for a 12-hour rental from 10 AM to 10 PM, with weddings hosted May through September.",
+   "since": null,
+   "from_price": "$5,900",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv2yduqHxkFQRUH0P-qnr_Pk",
+   "name": "Mountain View Manor",
+   "website": "http://www.mtnviewmanor.com/",
+   "instagram": "mountainviewmanor",
+   "tags": [
+    "Enumclaw",
+    "8 private acres",
+    "simple packages"
+   ],
+   "blurb": "More than eight acres of countryside at the base of Mount Rainier, about an hour from Seattle. Mountain View Manor offers simple packages for full weddings and intimate gatherings and describes itself as a private estate where guests can slow down.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZSsQMaVqkFQRbCbmasZ4tLY",
+   "name": "Shotgun Ceremonies | Come Elope With Us in Seattle",
+   "website": "https://www.shotgunceremonies.com/",
+   "instagram": "shotgunceremonies",
+   "tags": [
+    "elopement chapel",
+    "$500 ceremony",
+    "since 2010",
+    "Elvis option"
+   ],
+   "blurb": "Not a standard venue and does not try to be: Shotgun Ceremonies is Seattle's courthouse alternative since 2010, with a pink shipping-container chapel, an outdoor gazebo, a licensed officiant, witnesses and paperwork handled. A legal ceremony costs $500 in the chapel, the gazebo or within 15 miles of Georgetown.",
+   "since": 2010,
+   "from_price": "$500",
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

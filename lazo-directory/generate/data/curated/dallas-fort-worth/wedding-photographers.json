@@ -1,0 +1,208 @@
+{
+ "metro": "dallas-fort-worth",
+ "cat": "wedding-photographers",
+ "updated": "2026-10-12",
+ "read": 167,
+ "listed": 208,
+ "how": "We read the website of every Dallas-Fort Worth wedding photographer listed on Lazo (208 listings, 167 sites reachable) and set aside the ones that are not really in the wedding business: headshot and senior-portrait studios, a photographer community site that is not a studio, a multi-city brand's Dallas landing page, and duplicate listings of one photographer. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "How do you handle a 100-degree August ceremony or a rained-out garden, and can I see a full gallery from a day like that?",
+  "What is the delivery timeline, and is a second shooter included or an add-on?",
+  "Is travel inside Dallas-Fort Worth included, and where does the travel fee start?"
+ ],
+ "picks": [
+  {
+   "id": "manual-dallas-fort-worth-elizabeth-scott-weddings",
+   "name": "Elizabeth Scott Weddings",
+   "website": "https://www.elizabethscottweddings.com",
+   "instagram": "",
+   "tags": [
+    "photo and video",
+    "travel included",
+    "from $1,200",
+    "Lazo verified"
+   ],
+   "blurb": "Elizabeth Scott is a national wedding photography and videography studio that treats every wedding as a signature work, with travel included in all 50 states. Packages start at $1,200, and it is a verified, claimed Lazo vendor in Dallas-Fort Worth.",
+   "since": null,
+   "from_price": "$1,200",
+   "verified": true,
+   "claimed": true
+  },
+  {
+   "id": "ChIJT24yPhJxToYRBEI09qoRTwA",
+   "name": "Tracy Autem & Lightly Photography Inc",
+   "website": "https://tracyautem.com/",
+   "instagram": "tracyautemphotography",
+   "tags": [
+    "since 2005",
+    "light and bright",
+    "Fort Worth"
+   ],
+   "blurb": "Photographing Fort Worth weddings since 2005 in a light, bright and timeless style. Tracy's team describes itself as organized, structured and a little Type A, with thoughtful pre-planning built into every booking over the last 20 years.",
+   "since": 2005,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTTq9c4GBToYRLnIO1Ws7-F8",
+   "name": "The GRACE Pictures",
+   "website": "http://www.thegrace.pictures/",
+   "instagram": "thegracepictures",
+   "tags": [
+    "photo and film",
+    "est. 2015",
+    "400+ couples"
+   ],
+   "blurb": "Photography and cinematic film from one Irving team, established 2015 and trusted by more than 400 couples. The GRACE Pictures guides the flow of the day rather than just showing up with a camera, and publishes its photo and video pricing.",
+   "since": 2015,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJb96twGadToYRs-DX2FceFkY",
+   "name": "Matool Weddings Photography & Videography",
+   "website": "http://matoolweddings.com/",
+   "instagram": "matool_weddings",
+   "tags": [
+    "500+ weddings",
+    "since 2014",
+    "photo and films"
+   ],
+   "blurb": "Jordan and the Matool Weddings team have photographed more than 500 weddings since 2014, with elegance, emotion and a seamless client experience as the pitch. Photography and films for weddings, engagements and elopements, based in Dallas.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ4wg83LlzTIYRmlvnjQ18Ft8",
+   "name": "The MacMeekens",
+   "website": "http://www.themacmeekens.com/",
+   "instagram": "",
+   "tags": [
+    "documentary",
+    "full-day coverage",
+    "inclusive"
+   ],
+   "blurb": "Dallas-based documentary photographers who promise full-day coverage, bold storytelling and no cookie-cutter vibes, for couples who want the real stuff. Inclusive by design, serving DFW, Europe and wherever the wedding goes.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJcURvkpLtW2QRHbpoTYz9eu0",
+   "name": "Emily Liz Photography",
+   "website": "http://www.emilyliz.com/",
+   "instagram": "emilylizphotography",
+   "tags": [
+    "documentary",
+    "digital, film and Super 8",
+    "all-inclusive price"
+   ],
+   "blurb": "A documentary, photojournalistic approach for an uninterrupted wedding day, shot on digital, film and Super 8 video. Emily's collection is one all-inclusive price; most of her brides spend $6,500 for full coverage, and she offers DFW micro weddings too.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjdpSt4l9ToYR5jtAtqyuDa8",
+   "name": "Scott Aleman Photography",
+   "website": "https://scottaleman.com/",
+   "instagram": "scottalemanphotography",
+   "tags": [
+    "natural light",
+    "less posing",
+    "booking 2026-2027"
+   ],
+   "blurb": "Less posing, more partying is the approach: natural light, music that moves you and no stiff poses. Scott is a luxury wedding photographer based in Dallas who travels worldwide and is taking inquiries for 2026 and 2027 dates.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJE4RpHMYjTIYRU_3BIkITuZM",
+   "name": "Tara Arseven Photography",
+   "website": "https://www.taraarseven.com/",
+   "instagram": "TarArseven",
+   "tags": [
+    "500+ weddings",
+    "18+ years",
+    "elopements"
+   ],
+   "blurb": "More than 500 weddings and 18-plus years behind the camera, for people who want their photos to feel like them. Tara was born in California, grew up in Türkiye, and says she still gets giddy on wedding mornings. Dallas-based, available worldwide.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJF-QgtDTZTYYRmaCASJ7IkX8",
+   "name": "The Lockharts",
+   "website": "http://www.thelockharts.co/",
+   "instagram": "thelockharts",
+   "tags": [
+    "husband and wife",
+    "photo and video",
+    "Dallas and NYC"
+   ],
+   "blurb": "Luis and Michelle Lockhart run a luxury photo and video studio based in Dallas and New York City, offering a fully integrated experience where stills and film are designed to work together. Weddings worldwide.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0RatN2qAToYRrFsQcEOtZy8",
+   "name": "Tiffany Hopwood Photography",
+   "website": "http://www.tiffanyhopwoodphotography.com/",
+   "instagram": "tiffanyhopwoodphotography",
+   "tags": [
+    "9 countries, 23 states",
+    "build your own package",
+    "10% deposit"
+   ],
+   "blurb": "Dallas based, internationally inspired: nine countries, 23 states and hundreds of weddings, from Scottish estates to Tuscan villas. Tiffany lets you build your own package, many prices include travel, and a 10% deposit reserves the date.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJd412P6V5ToYR6PUF2GKJEOI",
+   "name": "Moon Dwellers Photography",
+   "website": "https://moondwellers.com/",
+   "instagram": "moon.dwellers",
+   "tags": [
+    "husband and wife",
+    "native Texans",
+    "Fort Worth"
+   ],
+   "blurb": "Greg and Areli are a husband-and-wife team a few minutes from downtown Fort Worth, two native Texans who married in the Montana wilderness with only close family and friends. Weddings in Fort Worth and wherever your story takes them.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJPYbBj4SnToYREfb4j5n8ohE",
+   "name": "Rafael Serrano Photography",
+   "website": "https://www.rafaelserranophotography.com/",
+   "instagram": "rserranophoto",
+   "tags": [
+    "10+ years",
+    "guided posing",
+    "quinceañeras too"
+   ],
+   "blurb": "For more than 10 years Rafael and his team have photographed hundreds of weddings and quinceañeras across Dallas-Fort Worth, combining real moments with guided posing and cinematic lighting. The site lists the venues they have photographed.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

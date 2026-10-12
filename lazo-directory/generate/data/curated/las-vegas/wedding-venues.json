@@ -1,0 +1,209 @@
+{
+ "metro": "las-vegas",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 84,
+ "listed": 104,
+ "how": "We read the website of every Las Vegas wedding venue listed on Lazo (104 listings, 84 sites reachable) and set aside the ones that are not really in the wedding business: banquet halls built around quinceaneras and corporate parties, hotel event centers and blank-canvas event spaces, chapel booking services, and duplicate listings of the same chapel. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is this a timed chapel slot or the whole venue for the day? Ask how many ceremonies they run before and after yours.",
+  "Are the photos, officiant, flowers and limo included in the package price, or are there copyright, minister and gratuity fees on top?",
+  "Where is the ceremony in July? Ask to see the indoor or shaded option, and how an outdoor garden or lakeside site handles a 110-degree afternoon."
+ ],
+ "picks": [
+  {
+   "id": "ChIJCXAOYITDyIARYhWAb4xiDBI",
+   "name": "Viva Las Vegas Wedding Chapel",
+   "website": "https://www.vivalasvegasweddings.com/",
+   "instagram": "vivalasvegasweddings",
+   "tags": [
+    "since 1999",
+    "themed ceremonies",
+    "from $159",
+    "LGBTQ+ since day one"
+   ],
+   "blurb": "Viva Las Vegas calls itself the first theme wedding chapel in the world and the first LGBTQ+ wedding venue in Las Vegas, open since 1999. Classic, Elvis and Gothic ceremonies with more than 40 live characters, cars down the aisle and your names on the chapel's Strip marquee, with packages from $159.",
+   "since": 1999,
+   "from_price": "$159",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5TWZUpzDyIARoNTQCbJH7_8",
+   "name": "Graceland Wedding Chapel",
+   "website": "https://gracelandchapel.com/",
+   "instagram": "gracelandweddingchapel",
+   "tags": [
+    "first Elvis chapel",
+    "over 80 years",
+    "commitment ceremonies"
+   ],
+   "blurb": "The world's first Elvis wedding chapel, and by its own count more than 80 years in Las Vegas on the same spot while the Sands and the original Aladdin came and went. Graceland does traditional and Elvis weddings, vow renewals and non-legal commitment ceremonies, and has added a new Storybook chapel.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJU8h3w8PFyIARnFiOnOVAF3c",
+   "name": "Little Church of the West, Wedding Chapel",
+   "website": "https://littlechurchofthewest.com/",
+   "instagram": "littlechurchofthewest",
+   "tags": [
+    "oldest chapel in Vegas",
+    "conceived 1941",
+    "chapel and garden"
+   ],
+   "blurb": "Little Church of the West bills itself as the oldest wedding chapel in Vegas, conceived by architect William J. Moore Jr. in 1941 as part of a resort hotel plan. Packages are named (Elopement, Ace of Hearts, Neon Lights, Supernova Love) and run in the chapel, the garden and a few off-site spots.",
+   "since": 1941,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjWdUzYfDyIAROV_fB2A0ONc",
+   "name": "Chapel of the Flowers",
+   "website": "https://www.littlechapel.com/",
+   "instagram": "",
+   "tags": [
+    "60 years on the Strip",
+    "indoor and outdoor",
+    "ceremony and reception packages"
+   ],
+   "blurb": "Sixty years of weddings on the Las Vegas Strip, with a choice of indoor and outdoor sites: the Glass Gardens, La Capella Chapel and the Gazebo among them. Chapel of the Flowers sells ceremony-and-reception packages and keeps a video library of past weddings so you can see each room in use.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfRkfTQPQyIAR31gX-r6PZQ8",
+   "name": "Sunset Gardens",
+   "website": "http://www.sunsetgardens.com/",
+   "instagram": "sunsetgardensweddings",
+   "tags": [
+    "4-acre garden",
+    "since 1983",
+    "all-inclusive",
+    "five rooms"
+   ],
+   "blurb": "A four-acre private garden venue and chapel minutes from the Strip, in business since 1983. Sunset Gardens runs all-inclusive packages across the Garden Room, Terrace Room, Sunset Room, Cellar and Side Yard, already lists 2027 packages, and keeps marriage-license and hotel guides on the site for out-of-town couples.",
+   "since": 1983,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTxjwxsjsyIAR9ikmMng0wZU",
+   "name": "The Grove Wedding Venue",
+   "website": "http://www.the-grove.com/",
+   "instagram": "the_grove_lv",
+   "tags": [
+    "established 1991",
+    "outdoor garden chapel",
+    "micro wedding packages"
+   ],
+   "blurb": "Established in 1991, The Grove is an all-inclusive outdoor garden wedding chapel with two private reception rooms. The package list goes from Grand Garden sunset and brunch packages down to micro-wedding and reception-only options, so smaller weddings are built in rather than squeezed in.",
+   "since": 1991,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZRlzIQTEyIARRHiZ2UffcIA",
+   "name": "Always & Forever Weddings and Receptions",
+   "website": "https://lasvegaswedding4u.com/",
+   "instagram": "always_and_forever_weddings",
+   "tags": [
+    "lakefront",
+    "Desert Shores, Summerlin",
+    "all-inclusive"
+   ],
+   "blurb": "Outdoor lakefront garden ceremonies on the shores of Lake Jacqueline in the Desert Shores area of Summerlin, with chapels and receptions on site. Always & Forever sells all-inclusive ceremony-and-reception packages and pitches itself to couples coming from out of town who still want to be close to the Strip.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRc_td9zAyIARcrovdnBZjJg",
+   "name": "Wellington Place",
+   "website": "https://wellingtonlv.com/",
+   "instagram": "wellingtonvegasweddingvenue",
+   "tags": [
+    "since 2001",
+    "all-inclusive",
+    "central Las Vegas"
+   ],
+   "blurb": "Wellington Place has hosted weddings in central Las Vegas since 2001 as an all-inclusive ceremony and reception venue, classic or modern, intimate or grand. The site pushes you to book a visit, meet the staff and ask questions before you commit.",
+   "since": 2001,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_XM_jKbqyIARE5534pWYYeA",
+   "name": "Lakeside Weddings & Events",
+   "website": "https://lakesideweddings.com/",
+   "instagram": "lakesideweddings",
+   "tags": [
+    "lake views",
+    "garden ceremonies",
+    "ceremony-only option"
+   ],
+   "blurb": "Lakeside Weddings & Events is a waterfront venue with lake views and garden ceremony spaces, offering both all-inclusive wedding-and-reception packages and simple ceremony-only bookings. The site warns that dates are limited and asks you to tour first.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJURnlV6LWyIARwJ2N1-MNqgA",
+   "name": "Little Chapel on the Corner",
+   "website": "http://littlechapelonthecorner.com/",
+   "instagram": "thechapelhouse",
+   "tags": [
+    "Henderson's oldest chapel",
+    "customized packages",
+    "officiant included"
+   ],
+   "blurb": "Henderson's oldest wedding chapel, and a deliberate change of pace from Strip-style weddings. Little Chapel on the Corner customizes each package to the couple, includes an officiant in every one, and can add a reception on request.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ05wpPVm-yIARMR4aWLbpw0I",
+   "name": "Red Rock Country Club Weddings",
+   "website": "https://www.redrockcountryclubweddings.com/contact/",
+   "instagram": "redrockcountryclubweddings",
+   "tags": [
+    "Summerlin",
+    "Red Rock views",
+    "ceremony lawn"
+   ],
+   "blurb": "A West Las Vegas country club with a wedding lawn under the Red Rock Mountains and reception rooms that look back toward the Strip. Red Rock Country Club's site is mostly a contact page, so expect to tour and talk rather than read packages online.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAet0kjUryYARe3SnOLUd4JM",
+   "name": "Forge Social House",
+   "website": "https://forgesocialhouse.com/?utm_source=GoogleListing&utm_medium=organic&utm_content=&utm_campaign=website",
+   "instagram": "forgesocialhouse",
+   "tags": [
+    "Boulder City",
+    "historic post office",
+    "intimate"
+   ],
+   "blurb": "Forge Social House sits in the very first location of the Boulder City Post Office, which the owners took over in 2014. An intimate space for weddings and celebrations in a small town minutes from the Strip, with open-house dates posted on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

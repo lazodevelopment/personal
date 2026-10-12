@@ -1,0 +1,176 @@
+{
+ "metro": "las-vegas",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 62,
+ "listed": 90,
+ "how": "We read the website of every Las Vegas wedding florist listed on Lazo (90 listings, 62 sites reachable) and set aside the ones that are not really in the wedding business: same-day delivery shops and grocery floral counters with no wedding design, a bouquet preservation studio, and a flower-wall and balloon rental company. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Do you design on site at the venue with installation and teardown, or deliver arrangements to the door?",
+  "How do you keep florals alive through a desert afternoon ceremony in summer, and what will not survive it?",
+  "Can I see a full wedding's flowers at my budget, not just a bouquet photo?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJM6gQSgPQyIARTlNXvtGOlg8",
+   "name": "Petals Flowers & Events Inc",
+   "website": "http://petalsflowersandevents.com/",
+   "instagram": "petalsflowersandeventsinc",
+   "tags": [
+    "since 2004",
+    "full-service events",
+    "free consultation",
+    "Henderson"
+   ],
+   "blurb": "Petals Flowers and Events has specialized in wedding and corporate events since 2004, with a creative team claiming more than 20 years of experience. Full-service planning, design and production from a Henderson base that covers the whole Las Vegas Valley, with free wedding consultations.",
+   "since": 2004,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1cTRpQLEyIARO4CmtlA8ycU",
+   "name": "Miss Daisy",
+   "website": "http://www.missdaisyflowers.com/",
+   "instagram": "missdaisyfloral",
+   "tags": [
+    "low and lush",
+    "weddings to installations",
+    "since 2014"
+   ],
+   "blurb": "Miss Daisy is a Las Vegas floral and gift studio known for an artistic low-and-lush style built on premium flowers. Bespoke wedding florals run alongside grand-scale installations and corporate work, and the same shop does same-day delivery.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJzRbBntbFyIARyOXVIW6C-dQ",
+   "name": "Julie Reed Event Floral Designer",
+   "website": "http://www.juliereedevents.com/",
+   "instagram": "",
+   "tags": [
+    "25+ years",
+    "floral school founder",
+    "planning and florals"
+   ],
+   "blurb": "Julie Reed is president and founder of both Julie Reed Events and the Las Vegas School of Floral Design, with more than 25 years in the craft. A competition winner in her native UK, she has worked floral design for the Emmys and Golden Globes and offers event planning alongside wedding flowers.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJwcL_ZvXDyIARP3b-W_we78Y",
+   "name": "Flora Couture",
+   "website": "https://www.floracouture.com/?utm_source=google&utm_medium=gbp&y_source=1_MjA4OTQwMTAtNzE1LWxvY2F0aW9uLndlYnNpdGU%3D",
+   "instagram": "floracouture",
+   "tags": [
+    "Michelle Joy",
+    "30+ years",
+    "installations"
+   ],
+   "blurb": "Flora Couture is led by creative director Michelle Joy, whose style the studio says has shaped Las Vegas floral design for more than 30 years. Bespoke weddings and immersive installations sit next to a retail delivery side with seasonal collections.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6VAKuGjpyIARn6Gceoreq6g",
+   "name": "The Palette",
+   "website": "http://www.the-palette.com/",
+   "instagram": "thepalettelv",
+   "tags": [
+    "est. 2001",
+    "Pam Basilio",
+    "North Las Vegas"
+   ],
+   "blurb": "The Palette is a floral design company established in 2001 and led by event florist Pam Basilio, a Fine Arts graduate. Each event is tailored to the client's vision and style, with a relationship-first process the team says shapes the whole concept.",
+   "since": 2001,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJW_pJfR3PyIARp2jSGtJCILA",
+   "name": "Flourish",
+   "website": "http://www.flourishlv.com/",
+   "instagram": "flourishnv",
+   "tags": [
+    "Molly",
+    "ex-Wynn and Encore",
+    "LV, Reno, Tahoe"
+   ],
+   "blurb": "Flourish is Molly's floral and event design studio for weddings, parties, mitzvahs and corporate events across Las Vegas, Reno, Tahoe and California. Born and raised in Las Vegas, she spent seven years as Assistant Director of Stores for Wynn and Encore before founding an eco-friendly art store and then Flourish.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJGa7OuquWdksRO7ZO6lRRLG8",
+   "name": "Village Floral House",
+   "website": "http://www.villagefloralhouse.com/",
+   "instagram": "villagefloralhouse",
+   "tags": [
+    "Boulder City",
+    "26 years in events",
+    "own studio since 2022"
+   ],
+   "blurb": "Twenty-six years in top Las Vegas events before opening an independent studio in Boulder City in 2022. Village Floral House calls itself the high-end designer with honest prices, covering weddings and events in every style from Ikebana to faux silk, plus floral design classes.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv_KuwgLEyIARCzaZQ8x8EYA",
+   "name": "Naakiti Floral Design",
+   "website": "http://www.naakitifloraldesign.com/",
+   "instagram": "naakitifloral",
+   "tags": [
+    "in-house supply",
+    "weddings and trade shows",
+    "decor"
+   ],
+   "blurb": "Naakiti Floral Design specializes in creative floral and decor for weddings, events and trade shows, and supplies everything in house. The site is light on text and heavy on the work, so start with the wedding gallery.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxx7s8ALEyIARKGLE0okOJ5o",
+   "name": "Rosy Flowers Events Design",
+   "website": "https://www.rosyflowersevent.com/",
+   "instagram": "rosyflowerslv",
+   "tags": [
+    "event florist",
+    "Strip hotel delivery",
+    "professional setup"
+   ],
+   "blurb": "Rosy Flowers is a Las Vegas event florist doing custom floral design for weddings, corporate events and conventions, with professional setup and delivery to Strip hotels. A separate wedding section covers ordering and a gallery, alongside the everyday delivery shop.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJlQtpqTDFyIAR34jL_qxmxeM",
+   "name": "Eufloria Designs Floral & Events",
+   "website": "https://eufloriafloralevents.com/",
+   "instagram": "eufloriadesignslv",
+   "tags": [
+    "wedding consultations",
+    "altar and wall installs",
+    "15 years"
+   ],
+   "blurb": "Eufloria Designs runs a wedding and event side with its own consultation forms and inspiration galleries, including altar arrangements and custom wall installations. A Las Vegas shop that also handles everyday and sympathy orders, with 15 years behind it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

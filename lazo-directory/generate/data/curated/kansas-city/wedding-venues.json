@@ -1,0 +1,207 @@
+{
+ "metro": "kansas-city",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 164,
+ "listed": 190,
+ "how": "We read the website of every Kansas City wedding venue listed on Lazo (190 listings, 164 sites reachable) and set aside the ones that are not really in the wedding business: hotel meeting floors, an officiant service listed as a venue, a site still showing placeholder text, and duplicate listings of the same small-event space. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is your date in May, June, September or October? Several venues here call those peak months, so ask what a Friday or Sunday saves.",
+  "What is the rain and heat plan? Ask to see the indoor ceremony backup and whether using it means flipping the reception room.",
+  "What does the rental fee actually include: tables and chairs, a coordinator, bar service, set-up and teardown, or just the building?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJh_b9jdLtwIcR07syJ2XBrCs",
+   "name": "The Mission Theatre",
+   "website": "http://missiontheatrekc.com/",
+   "instagram": "themissiontheatrekc",
+   "tags": [
+    "1938 Art Deco cinema",
+    "50 to 250 guests",
+    "Mission"
+   ],
+   "blurb": "A 1938 Art Deco cinema on Johnson Drive in Mission, restored in 2017 with its soaring ceilings, original proscenium arch and crystal chandeliers intact. The Mission Theatre hosts ceremonies and receptions for 50 to 250 guests, with a ballroom for up to 250 and an investment page on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJeY9sGQv1wIcRhb8tyjoxydk",
+   "name": "Hawthorne House",
+   "website": "http://www.thehawthornehouse.com/",
+   "instagram": "thehawthornehouse",
+   "tags": [
+    "since 1997",
+    "onsite chapel",
+    "Parkville"
+   ],
+   "blurb": "Hawthorne House in Parkville has hosted Kansas City weddings since 1997, with sprawling grounds and an onsite wedding chapel. The site is built around couples' own accounts of the planning, naming the team members who walked them through it.",
+   "since": 1997,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJLWzeIADvwIcRfgmGX76wNtI",
+   "name": "Melrose Abbey",
+   "website": "http://melroseabbeykc.com/",
+   "instagram": "",
+   "tags": [
+    "1922 Gothic church",
+    "hotel suites sleep 24",
+    "Saturday $8,500"
+   ],
+   "blurb": "A 1922 Gothic church in midtown Kansas City, built by Swedish immigrants and restored by the couple who now run it as a venue for up to 200 guests. Melrose Abbey has boutique hotel suites on site sleeping 24, and prints its rates: Saturdays are $8,500.",
+   "since": null,
+   "from_price": "$8,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg1Tc-2XdwIcR3fUIotDz56w",
+   "name": "8th and Main KC",
+   "website": "http://www.8thandmainkc.com/",
+   "instagram": "8thandmainkc",
+   "tags": [
+    "restored 1900s bank",
+    "from $2,575",
+    "up to 200 guests"
+   ],
+   "blurb": "8th and Main KC is a restored early-20th-century bank in historic downtown Grandview, 20 minutes from downtown Kansas City, with indoor and outdoor space for up to 200 guests. Pricing starts at $2,575 and the site shows availability, which few venues here do.",
+   "since": null,
+   "from_price": "$2,575",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFdGQxWR9v4cRg4XtJHy2qTE",
+   "name": "Whiskey Ridge",
+   "website": "https://whiskeyridgeevents.com/",
+   "instagram": "whiskeyridgeevents",
+   "tags": [
+    "60 acres",
+    "9,000 sq ft black barn",
+    "1869 farmhouse"
+   ],
+   "blurb": "Nearly 60 acres in Tonganoxie with a hilltop ceremony site, an 1869 farmhouse remodeled for bridal parties, and a 9,000-square-foot black barn for the reception, which Whiskey Ridge calls the only one in Kansas City. Two interior bars with full-service, tab and cash options.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJibiLBI5pwIcRit64_bj9spU",
+   "name": "The Bell of Camden Point",
+   "website": "https://thebellofcamdenpoint.com/",
+   "instagram": "the_bellofcamdenpoint",
+   "tags": [
+    "opened 2020",
+    "60 secluded acres",
+    "one wedding at a time"
+   ],
+   "blurb": "The Bell of Camden Point opened in June 2020 on 60 secluded acres behind a curtain of trees, so no other event or crowd is anywhere nearby on your day. A pond-view outdoor ceremony site and a climate-controlled reception hall were built to work together.",
+   "since": 2020,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJsdlVv33LwIcRz1dYDaRArts",
+   "name": "The English Barn",
+   "website": "https://www.theenglishbarn.com/",
+   "instagram": "theenglishbarnkc",
+   "tags": [
+    "castle-inspired",
+    "English countryside look",
+    "first wedding 2021"
+   ],
+   "blurb": "A castle-inspired venue at Lily Creek Farm in Louisburg that styles itself as Kansas City's English countryside wedding venue. The English Barn held its first wedding in April 2021 and the owners describe the project as one guided by faith and love.",
+   "since": 2021,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJm9PndMoCwYcRbB0cp8agSks",
+   "name": "The Rhapsody",
+   "website": "http://www.therhapsody.com/",
+   "instagram": "rhapsodyweddings",
+   "tags": [
+    "all-inclusive",
+    "planner included",
+    "rain backup, no flip"
+   ],
+   "blurb": "Independence's all-inclusive option, with a wedding planner included, several indoor and outdoor ceremony choices and a rain backup that does not require flipping the room. The Rhapsody allows open catering and a stock-your-own bar, and cites 20 years of experience.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJq6p6wXqjwIcRIOtsxwUkFh0",
+   "name": "Warren Place Venue",
+   "website": "http://www.warrenplaceevents.com/",
+   "instagram": "warrenplacevenue",
+   "tags": [
+    "est. 2020",
+    "three renovated buildings",
+    "$4,500 peak Saturday minimum"
+   ],
+   "blurb": "Raelee, a Kansas City native with more than a decade in event management, spent two years with her grandmother renovating three buildings on one block of downtown Gardner, finishing the first in February 2020. Warren Place requires a $4,500 minimum for peak-season Saturdays and says so on the site.",
+   "since": 2020,
+   "from_price": "$4,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJC520R4TdwIcRPI_TV6kWyTs",
+   "name": "The Glasshouse at River Oaks",
+   "website": "http://www.theglasshouseatriveroaks.com/",
+   "instagram": "theglasshouseatriveroaks",
+   "tags": [
+    "glasshouse",
+    "climate controlled",
+    "European-inspired"
+   ],
+   "blurb": "A climate-controlled glasshouse with panoramic views, plus gardens and indoor rooms, in Grandview. The Glasshouse at River Oaks is run by a couple who met traveling and took their inspiration from Italy, and the site lays out key details and FAQs before you tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2ee-zsduwYcRPh72P4WCZGQ",
+   "name": "Berry Acres",
+   "website": "https://www.berry-acres.com/?utm_source=google&utm_medium=organic&utm_campaign=googlemybusiness",
+   "instagram": "berryacres",
+   "tags": [
+    "full service",
+    "owners were wedding DJs",
+    "Odessa"
+   ],
+   "blurb": "Berry Acres is a full-service country venue in Odessa run by Alan and his wife, who DJed weddings across Kansas City together before opening it; she came from Marriott management. The site walks through its offerings on a dedicated pricing page.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJdYgcbyV-v4cRB-7uLEzNd9I",
+   "name": "Deer Ridge Estate",
+   "website": "http://www.deerridgeestate.com/",
+   "instagram": "deerridgeestate",
+   "tags": [
+    "160 acres",
+    "215+ weddings since 2017",
+    "virtual tour"
+   ],
+   "blurb": "Deer Ridge Estate is a 160-acre park just outside Kansas City in Tonganoxie that has hosted more than 215 weddings since opening in 2017. The team stays involved from first tour to send-off, there is a virtual tour online, and the pricing guide is sent on request.",
+   "since": 2017,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

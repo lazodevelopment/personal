@@ -1,0 +1,207 @@
+{
+ "metro": "boston",
+ "cat": "wedding-djs",
+ "updated": "2026-10-12",
+ "read": 65,
+ "listed": 86,
+ "how": "We read the website of every Boston wedding DJ listed on Lazo (86 listings, 65 sites reachable) and set aside the ones that are not really in the wedding business: live wedding bands, an entertainment agency that rents arcade games and inflatables, and DJ pages with nothing specific about their own weddings. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Who exactly will DJ my wedding, and can I meet that person before I sign?",
+  "How do you handle ceremony audio and toasts, and do you coordinate with the venue on its noise limit and hard stop time?",
+  "What is in the base price, and what do uplighting, a photo booth and extra hours add on top?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ72hhU-t544kRDOyvRKmb7Uk",
+   "name": "Beat Train Productions",
+   "website": "https://beattrainproductions.com/award-winning-boston-djs/",
+   "instagram": "beattrain",
+   "tags": [
+    "since 2010",
+    "pick your own DJ",
+    "uplighting and photo booth"
+   ],
+   "blurb": "Beat Train Productions lets couples hand-pick their Boston DJ by preference and personality instead of being assigned a stranger a month out, and builds custom music programming from there. Working since 2010, with uplighting and photo booths available, serving all of Massachusetts and Cape Cod.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxV9OKm5z44kRNU5eN5lzzhw",
+   "name": "Black Diamond Event Production",
+   "website": "https://blackdiamondep.com/",
+   "instagram": "blackdiamondboston",
+   "tags": [
+    "since 2002",
+    "everything in-house",
+    "Stoneham"
+   ],
+   "blurb": "Black Diamond Event Production started in the early 2000s as Spinner Music Productions and has grown into a full-service house in Stoneham: wedding DJ, lighting, live musicians, photo booths, photography and videography, all on one team. Serving New England and the East Coast since 2002.",
+   "since": 2002,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6fGsLwcyDogRopLOF8xQpA0",
+   "name": "DJ Kyd",
+   "website": "https://www.djkydandco.com/",
+   "instagram": "djkyd617",
+   "tags": [
+    "bilingual English-Spanish MC",
+    "nearly three decades",
+    "one accountable team"
+   ],
+   "blurb": "Kyd Sanchez leads DJ KYD & Co. in Quincy with nearly three decades of live mixing and bilingual English-Spanish hosting, and is the principal DJ on every direct booking. Sound, lighting, dancing on the clouds, photo booths and optional video come from the same accountable team.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJk6gkTOHr44kRWw3OkBfFYn0",
+   "name": "Elation Entertainment",
+   "website": "https://elationdj.com/",
+   "instagram": "djhath",
+   "tags": [
+    "packages from $1,799",
+    "20 years",
+    "Shirley"
+   ],
+   "blurb": "John of Elation Entertainment has performed at hundreds of weddings over 20 years, alongside club residencies and livestreamed mixshows, and handles DJ, lighting and photo booths himself. Wedding packages start at $1,799, printed on the site.",
+   "since": null,
+   "from_price": "$1,799",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJmyE4jA8M44kRhp2INJPjEJM",
+   "name": "NuImage Entertainment",
+   "website": "http://www.nuimagedj.com/",
+   "instagram": "nuimageentertainment",
+   "tags": [
+    "trained DJ team",
+    "custom dance floors",
+    "North Reading"
+   ],
+   "blurb": "NuImage Entertainment trains its DJs to read the importance of every moment from the first arrival to the last dance, and backs them with uplighting, custom dance floors and interactive photo booths. A North Reading company that aims for elegant yet fun.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ___iYcxv44kRDHLOLiWnNBw",
+   "name": "Gaeta Entertainment",
+   "website": "http://www.gaetaentertainment.com/",
+   "instagram": "gaetaentertainment",
+   "tags": [
+    "DJ and MC",
+    "former band frontman",
+    "Winthrop"
+   ],
+   "blurb": "Mikey of Gaeta Entertainment is a full-time teacher and former lead singer of several Boston bands who moved into DJ and MC work when the live scene dried up, nearly 20 years and 23 states ago. DJ, MC, lighting and photo and video services, based in Winthrop.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJS6wTUJBw44kRA2xkjzhgpTA",
+   "name": "A Beat Away Entertainment",
+   "website": "http://www.abeataway.com/",
+   "instagram": "abeatawayentertainment",
+   "tags": [
+    "founded by DJ Joe Pet",
+    "fifteen years",
+    "Boston"
+   ],
+   "blurb": "A Beat Away Entertainment was established by international recording artist and DJ Joe Pet and has served thousands of clients across New England over the past fifteen years. The stated goal is simple: exceed expectations every time, with personalized service from a Boston base.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg3gsKXx544kR1gpi2XsYgpw",
+   "name": "Disc Jockey Boston",
+   "website": "http://www.discjockeyboston.com/",
+   "instagram": "",
+   "tags": [
+    "since 2007",
+    "DJ Omari",
+    "uplighting"
+   ],
+   "blurb": "Omari Hayles started Disc Jockey Boston in 2007 out of love for music, and his eclectic taste has carried hundreds of events across Boston and New England. Wedding DJ services sit alongside proms and parties, with uplighting offered as an add-on.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_3pCS2p744kRlewxZbblhyc",
+   "name": "Kim Collins Entertainment",
+   "website": "https://www.djkimcollins.com/",
+   "instagram": "djkimcollins1",
+   "tags": [
+    "female DJ and MC",
+    "former radio host",
+    "no shameless promotion"
+   ],
+   "blurb": "Kim Collins spent years as an on-air radio personality at top stations before returning to live events, and promises no shameless self-promotion or screaming at guests to dance. She lets the music do that, for Boston weddings and corporate events.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJk5VG9lAE5IkR8XLXycJLpx8",
+   "name": "Greg Bedard DJ Entertainment",
+   "website": "http://www.djgregb.com/",
+   "instagram": "djgregb1",
+   "tags": [
+    "Central Massachusetts",
+    "DJ and lighting",
+    "Auburn"
+   ],
+   "blurb": "Greg Bedard has been a DJ his whole life and works Central Massachusetts weddings from Auburn, with Harrington Farm, the Publick House, Fern Hill Barn and Pinecroft Estate among his local venues. Natural announcements, personal planning and lighting, and he travels to Boston, the Cape and Providence.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJP-2o4xGl44kR3_7hHQfBZbg",
+   "name": "DJ Chillin McMillin, LLC. Entertainment",
+   "website": "http://www.chillinmcmillin.com/",
+   "instagram": "dj_chillin_mcmillin",
+   "tags": [
+    "20 years",
+    "team of DJs",
+    "cocktail hour performer"
+   ],
+   "blurb": "Matt McMillin has been a wedding DJ for 20 years and hundreds of weddings, and his Nashua company adds DJ Jeff Dubia for weddings and corporate events plus Paul Lussier as a cocktail hour performer. A free wedding guide and a date checker are on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJYetOJH3h7IARLA7NvdXfW3c",
+   "name": "Cheetah DJ & Photography",
+   "website": "https://cheetahdjphotography.com/",
+   "instagram": "cheetahdjphotography",
+   "tags": [
+    "husband and wife",
+    "DJ and photography",
+    "since 2000"
+   ],
+   "blurb": "Cheetah is a Salem family team: Brian is the DJ and MC, Nadine the lead photographer, and their son Aidan the second shooter. The couple has worked weddings together since 2000, and the DJ package covers ceremony and reception sound and personalized music all day.",
+   "since": 2000,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

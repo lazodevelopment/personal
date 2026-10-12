@@ -1,0 +1,207 @@
+{
+ "metro": "minneapolis",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 71,
+ "listed": 85,
+ "how": "We read the website of every Minneapolis wedding planner listed on Lazo (85 listings, 71 sites reachable) and set aside the ones that are not really in the wedding business: DJ companies that list planning, draping and rental houses, venues that also sell coordination, an officiant, and a multi-city chain with a Minneapolis landing page. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours and in meetings.",
+  "Which Twin Cities venues and vendors have you worked with this year? Local relationships are the job.",
+  "If my ceremony is outdoors, what is the rain and cold plan, and who makes the call on the day?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJOzN3P1vZ94cRDVr7lQctjnI",
+   "name": "Rustic Elegance",
+   "website": "http://www.rusticeleganceweddings.com/",
+   "instagram": "rusticeleganceweddings",
+   "tags": [
+    "since 2012",
+    "tent, barn and backyard",
+    "rentals too"
+   ],
+   "blurb": "Rustic Elegance has coordinated tent, barn and backyard weddings across Minnesota and Wisconsin since 2012. The day-of package includes two planning meetings, a week-of recap and full access to Aisle Planner, and the Plymouth team also supplies wedding rentals.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJVVXlUnots1IRSKAX9y-HEeg",
+   "name": "Style-Architects Weddings",
+   "website": "https://www.style-architectsweddings.com/",
+   "instagram": "",
+   "tags": [
+    "20+ years",
+    "20+ industry awards",
+    "mother-daughter team"
+   ],
+   "blurb": "Style-Architects is a mother-daughter design house with more than 20 years, 20+ industry awards and hundreds of weddings behind it. Luxury full-service planning, curated design and wedding day management across Minneapolis, St. Paul and greater Minnesota, planned for energy and flow as much as looks.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJN-vluePVslIRcH_P7afa2D8",
+   "name": "Kahani Events & Design",
+   "website": "http://www.kahanievents.com/",
+   "instagram": "kahanieventdesign",
+   "tags": [
+    "multicultural weddings",
+    "ethnic rentals",
+    "henna and rangoli"
+   ],
+   "blurb": "Reena Maheshwari started Kahani after seeing how poorly the Twin Cities market served culturally specific and multicultural weddings. Planning runs from rentals only to complete design, with a Minneapolis warehouse of hand-selected ethnic wedding rentals, henna and rangoli, and a free first consultation.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJN6byz8U79ocRBL7QBk9nl5Y",
+   "name": "Piece of Cake Wedding Planning",
+   "website": "http://www.pieceofcakemn.com/",
+   "instagram": "",
+   "tags": [
+    "15+ years",
+    "three service tiers",
+    "Savage"
+   ],
+   "blurb": "Erica Boe has planned events for more than 15 years and runs Piece of Cake from Savage with a degree in communication and event planning from St. Thomas. Three service levels, from complete planning to day-of, built around the idea that couples should be the guests of honor, not the hosts.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfRk9oQQvs1IRN4p5BrgDpzM",
+   "name": "Events by Jess",
+   "website": "http://www.eventsbyjessmn.com/",
+   "instagram": "eventsbyjess",
+   "tags": [
+    "hospitality degree",
+    "classic and colorful",
+    "New Brighton"
+   ],
+   "blurb": "Jessica Mead came up as a catering sales manager and a wedding coordinator at the James J. Hill Reference Library before Events by Jess became a business. UW-Stout hospitality graduate, classic and colorful events, with full-service, partial and wedding management packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJY6wlvtRlhyERr0STYaM2qd0",
+   "name": "Rosewood Events and Weddings",
+   "website": "https://www.rosewoodweddingsmn.com/",
+   "instagram": "rosewoodeventsandweddingsmn",
+   "tags": [
+    "unlimited hours on the day",
+    "over a decade",
+    "pet-friendly"
+   ],
+   "blurb": "Rosewood's whole pitch is unlimited communication during planning and unlimited hours on the wedding day. Owner Weihe has worked in weddings for over a decade, from a bridal boutique to catering director at a Burnsville hotel, started Rosewood in 2016, and will happily greet your ring-dog.",
+   "since": 2016,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEV7-OwwF9ocR7BgocGe8s6k",
+   "name": "Essen Events",
+   "website": "http://essen-events.com/",
+   "instagram": "essenevents",
+   "tags": [
+    "planning and floral",
+    "four packages",
+    "New Brighton"
+   ],
+   "blurb": "Essen is Hailey's planning and floral design company in the Twin Cities, with four packages: wedding day management, partial, full-service and custom. The team describes itself as your built-in wedding besties and is outspoken about welcoming every couple.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJDcOG_R4zs1IREg8BfhjO5EY",
+   "name": "Laine Palm Planning + Design",
+   "website": "http://lainepalmdesigns.com/",
+   "instagram": "lainepalmplanning",
+   "tags": [
+    "luxury",
+    "Minnesota, Colorado, California",
+    "more than a decade"
+   ],
+   "blurb": "Laine Palm plans and designs luxury weddings in Minneapolis, Colorado and California for couples who want someone to lead the vision, not just get it. More than a decade in the industry, with a stated focus on inclusive spaces and cultural traditions.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJiyB4hisj9ocRkPYqLBoOM68",
+   "name": "de Vasco's Daughters Wedding & Event Design",
+   "website": "https://www.devascosdaughters.com/",
+   "instagram": "devascosdaughters",
+   "tags": [
+    "design-led",
+    "style-led couples",
+    "Bloomington"
+   ],
+   "blurb": "Krista named de Vasco's Daughters for her grandmother Shirley Maree Vasconcellos, the artist matriarch of a large Portuguese family. A former personal stylist, she designs and plans one-of-a-kind weddings for style-led couples out of Bloomington, with nothing cookie-cutter about it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFVVZdP0D9ocRfQw2RFc5CYw",
+   "name": "kismet event group",
+   "website": "http://kismeteventgroup.com/",
+   "instagram": "kismeteventgroup",
+   "tags": [
+    "since 2010",
+    "20 years of events",
+    "Excelsior"
+   ],
+   "blurb": "Beth Anderson has been an event planner for 20 years and started Kismet Event Group in 2010, planning weddings and corporate events from Excelsior. She says she brings corporate production habits to weddings and wedding warmth to corporate events, and she is usually holding a caffeinated beverage.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJpchgNuNaty8RICB5QIZ-uuc",
+   "name": "Stacyhill Company",
+   "website": "http://www.stacyhillcompany.com/",
+   "instagram": "stacyhillcompany",
+   "tags": [
+    "planner and florist",
+    "25+ years",
+    "Minneapolis"
+   ],
+   "blurb": "Hillary Rennie founded Stacyhill Company after more than 25 years in floral design, event planning and wedding decorating; her grandmother owned a flower shop and her mother was a florist. One Minneapolis team for planning, day-of coordination, florals and decor rentals.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJVxEpl2Izs1IR8VRG9WzyrsU",
+   "name": "Minne Weddings",
+   "website": "https://www.minneweddings.com/",
+   "instagram": "tinyweddingsmpls",
+   "tags": [
+    "all-inclusive micro weddings",
+    "400+ couples",
+    "elopement package"
+   ],
+   "blurb": "Minne Weddings is an all-inclusive small-wedding package: venue and furnishings, planning and design, a photo and video team, a ceremony installation, personal flowers, cake in five flavors and an officiant. Over 400 couples married so far, plus a simpler 'minnelopement' option for two.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,206 @@
+{
+ "metro": "dallas-fort-worth",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 94,
+ "listed": 128,
+ "how": "We read the website of every Dallas-Fort Worth wedding planner listed on Lazo (128 listings, 94 sites reachable) and set aside the ones that are not really in the wedding business: venues that also sell coordination, decor and rental companies, and event planners whose sites lead with corporate work. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours and in meetings.",
+  "Which Dallas-Fort Worth venues and vendors have you worked with this year, and who handles a weather call on a stormy spring Saturday?",
+  "Who is on site on the wedding day, the planner I hired or an associate, and how many of you are there?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJxcy6CIEkTIYRU1HgjVUmpG8",
+   "name": "Stardust Celebrations",
+   "website": "http://www.stardustcelebrations.com/",
+   "instagram": "",
+   "tags": [
+    "since 1999",
+    "Certified Master Wedding Planner",
+    "Uptown Dallas"
+   ],
+   "blurb": "A planning studio in Uptown Dallas since 1999, led by Certified Master Wedding Planner Marsha Ballard French with Certified Wedding Planner Peyton Pelham. Packages begin with a complimentary consultation.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJK8RGm7EjTIYRX4Zeu79apXI",
+   "name": "Sue Kelson Events",
+   "website": "https://www.suekelsonevents.com/",
+   "instagram": "sue_kelson_events",
+   "tags": [
+    "30+ years",
+    "luxury",
+    "boutique"
+   ],
+   "blurb": "Sue brings over 30 years in luxury wedding planning and hospitality, drawn from Dallas' top venues, to a boutique practice built around each bride's vision. Luxury weddings, based in Plano.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJW_bUkYqjToYRktf-ht7oe3M",
+   "name": "Rachel Willis Events",
+   "website": "http://www.rachelwillisevents.com/",
+   "instagram": "rachelwillisevents",
+   "tags": [
+    "Certified Master Wedding Planner",
+    "bold design",
+    "Texas and beyond"
+   ],
+   "blurb": "Bold weddings, impeccably run, is the line. Rachel Willis is a Certified Master Wedding Planner pairing big ideas with obsessive organization for couples who want something personal and genuinely fun. Rooted in DFW, serving Texas and beyond.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8TAU85cfTIYRNZQm6_1_xxc",
+   "name": "Double Blessing Events LLC",
+   "website": "http://www.doubleblessingevents.com/",
+   "instagram": "doubleblessingevents",
+   "tags": [
+    "twin sisters",
+    "since 2013",
+    "three on site"
+   ],
+   "blurb": "Twin sisters Chelsey and Danae run a Christian planning team that has been at it since 2013, and at least three team members work every wedding day no matter which package you choose.",
+   "since": 2013,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxU_p6QB5ToYRxYAeN5NJAoA",
+   "name": "Birds of a Feather Events",
+   "website": "http://birdsofafeatherevents.com/",
+   "instagram": "v/t51.71878-15/505378297_2829085674146677_1958817452693539560_n.jpg",
+   "tags": [
+    "former TV producer",
+    "full-service design",
+    "intimate weddings"
+   ],
+   "blurb": "Wendy, a former television producer, builds events from the ground up: design concept, creative team, day-of direction. A full-service planning and design firm for Dallas and Fort Worth that calls itself a curator of intimate weddings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJya2rJxYXTIYRMtH_m8azOLc",
+   "name": "Weddings and Events by 7Elements",
+   "website": "https://www.7elementsdecor.com/",
+   "instagram": "weddings_events_by_7elements",
+   "tags": [
+    "South Asian and multicultural",
+    "decor and planning",
+    "8+ years"
+   ],
+   "blurb": "Multicultural wedding design and planning from Allen: Hindu mandaps, Nikah stages, Mehndi, Haldi and fusion celebrations, with 8-plus years of planning and decor expertise. Design, vendor coordination and day-of execution from one team.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJIZEXtgOZToYRhZzl1CvuVFU",
+   "name": "Artisan Rose Event Co.",
+   "website": "http://artisanroseeventco.com/",
+   "instagram": "artisanroseeventco",
+   "tags": [
+    "team of planners",
+    "day management",
+    "elopements"
+   ],
+   "blurb": "A Dallas team whose planners come from project management, entrepreneurship, engineering and chemistry, matched to each couple. Full-service planning, wedding day management, and elopement or renewal planning, serving Dallas and Fort Worth.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHTfj5IHxToYRZcr4pDOK9qU",
+   "name": "Serendipity Events byTina",
+   "website": "http://serendipityeventsbytina.com/",
+   "instagram": "serendipity_events_by_tina",
+   "tags": [
+    "day-of to full service",
+    "DFW and Central Florida"
+   ],
+   "blurb": "Day-of, partial and full-service planning for DFW and Central Florida, out of Waxahachie. Tina's team acts as advisors and vendor coordinators while keeping an eye on your time, budget and priorities.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ08f9eG-fToYRb9jwPMB41Ts",
+   "name": "After Yes",
+   "website": "http://www.afteryesweddings.com/",
+   "instagram": "AfterYes",
+   "tags": [
+    "weddings only",
+    "three packages",
+    "Richardson"
+   ],
+   "blurb": "Weddings are all After Yes does, with three packages at different levels of involvement and a team page that jokes about the real jobs: therapist, referee, seamstress, financial advisor.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJjZm9bNQNTIYRvfJETJVqzVo",
+   "name": "Events by Laura Anne",
+   "website": "https://eventsbylauraanne.com/",
+   "instagram": "events_by_laura_anne",
+   "tags": [
+    "since 2021",
+    "planning and floral",
+    "McKinney"
+   ],
+   "blurb": "Established in February 2021 after years of corporate and fundraising events, and partnered with more than a hundred couples in its first year. Planning plus in-house floral design out of McKinney.",
+   "since": 2021,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ4cv0X8ZwToYRkw5btyYIlwE",
+   "name": "The Perfect Plan Events",
+   "website": "http://www.theperfectplanevents.com/",
+   "instagram": "theperfectplanevents",
+   "tags": [
+    "planning and floral",
+    "in-house studio",
+    "Fort Worth"
+   ],
+   "blurb": "A Fort Worth planning and floral design company that houses its own full-service floral studio, so the consultant and the florist are the same team. Full-service packages for weddings, commitment ceremonies and anniversaries.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJD37VCz__S4YR2tOznCDnB_w",
+   "name": "Blissful Weddings & Events",
+   "website": "http://www.blissfulweddingsandeventsco.com/",
+   "instagram": "blissful_planning",
+   "tags": [
+    "since 2015",
+    "hundreds of weddings",
+    "Royse City"
+   ],
+   "blurb": "Planning weddings and events since 2015, with hundreds of weddings big and small behind the team. Blissful offers planning, coordination and design, from venue setup and vendor coordination to the day's timeline, out of Royse City.",
+   "since": 2015,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

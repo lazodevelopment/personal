@@ -1,0 +1,207 @@
+{
+ "metro": "dallas-fort-worth",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 249,
+ "listed": 318,
+ "how": "We read the website of every Dallas-Fort Worth wedding venue listed on Lazo (318 listings, 249 sites reachable) and set aside the ones that are not really in the wedding business: the eleven per-location landing pages of one venue chain (shown once), and sister locations of the same operator. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is there a real indoor plan for a July or August afternoon, and a rain plan for a spring storm, not just a tent?",
+  "What is in the package: ceremony site, coordinator, catering and rentals, or are those separate lines?",
+  "How many hours of event time do I get, and what does an extra hour cost on a Saturday?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJU8pQZz6ZToYRA3qjKqGEVbI",
+   "name": "Level Two Events",
+   "website": "http://www.leveltwoevents.com/",
+   "instagram": "leveltwo.events",
+   "tags": [
+    "Design District",
+    "13,000 square feet",
+    "loft-style"
+   ],
+   "blurb": "Over 13,000 square feet of modern loft-style space in the Dallas Design District, with skyline views and a private bridal suite. Level Two says its team brings more than 37 years of event experience and calls itself the best value in the district.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfUjj-plVSYYRDrI415MZPfY",
+   "name": "Parrish House",
+   "website": "http://www.parrishhouserockwall.com/",
+   "instagram": "parrishhouserockwall",
+   "tags": [
+    "barn",
+    "Rockwall",
+    "publishes pricing"
+   ],
+   "blurb": "A barn venue designed and built by Clyde and Susan Parrish, about 30 miles east of downtown Dallas. The site prints its pricing, with peak-season Friday and Saturday dates at $3,500, and the owners make a point of giving you the freedom to make the event your own.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ03U1sY3KTYYRekHaMWh6-Hs",
+   "name": "Walters Wedding Estates",
+   "website": "https://waltersweddingestates.com/",
+   "instagram": "waltersweddingestates",
+   "tags": [
+    "all-inclusive",
+    "venue collection",
+    "catering built in"
+   ],
+   "blurb": "The company Keith and Sarah Walters started in Denton with one venue, the Wildwood Inn, now runs a collection of all-inclusive venues across Texas, Georgia and Tennessee, with Metroplex locations from Hurst and Arlington to Flower Mound, Denton and McKinney. Catering packages are built in, with a buffet included in every celebration.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5xRNXAMKToYRvNygfqkyeug",
+   "name": "Fort Worth Country Memories",
+   "website": "https://www.fortworthcountrymemories.com/",
+   "instagram": "fortworthcountrymemories",
+   "tags": [
+    "budget-friendly",
+    "from $2,500",
+    "minimal restrictions"
+   ],
+   "blurb": "Started by a family who went venue shopping for their daughter's wedding and came away frustrated by high costs and restrictions. Eight years on, packages for up to 150 guests run $3,000 to $7,500 and intimate packages $2,500 to $3,500, all printed on the site.",
+   "since": null,
+   "from_price": "$2,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7zgZ9SZlToYR5bH7wkehWFw",
+   "name": "Weston Gardens Weddings",
+   "website": "https://www.westongardensweddings.com/",
+   "instagram": "westongardensweddings",
+   "tags": [
+    "historic gardens",
+    "outdoor",
+    "1930s estate"
+   ],
+   "blurb": "An outdoor garden venue whose grounds were built as a private estate by Leon and Peggy Bandy in the 1930s and 40s, before air conditioning, so every space was designed for entertaining outside. Sue and Randy Weston started the garden center here in 1984.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJERCrIJbhTYYRoBmGfAhDiPk",
+   "name": "Grace Manor Events",
+   "website": "http://www.gracemanorevents.com/",
+   "instagram": "gracemanorevents",
+   "tags": [
+    "family-owned",
+    "modern luxury",
+    "semi-all-inclusive"
+   ],
+   "blurb": "A family-owned luxury venue in Fort Worth run by the Sladecek family, with indoor and outdoor ceremony spaces and a modern feel. Grace Manor offers a semi-all-inclusive wedding package meant to take most of the planning off your plate.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHV5MJBXrToYRpiX-Skwe4ZU",
+   "name": "Arrowwood Weddings + Events",
+   "website": "https://arrowwoodevents.com/",
+   "instagram": "arrowwoodevents",
+   "tags": [
+    "forest setting",
+    "pre-decorated",
+    "all-inclusive feel"
+   ],
+   "blurb": "A forest venue in Palmer that comes pre-decorated: backdrops, hanging wisteria over the dance floor, drapery, chandeliers, string lights, a photo wall and fire pits tucked among the trees. The owners describe an all-inclusive feel and a goal of giving couples a sigh of relief.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJeTDxe8RTTIYRpWFJgAU0mT8",
+   "name": "The Springs Weddings & Events",
+   "website": "https://springsvenue.com/valley-view/",
+   "instagram": "springsvenue",
+   "tags": [
+    "federalist estate",
+    "white wood chapel",
+    "family business since 2001"
+   ],
+   "blurb": "The Springs' Valley View estate pairs a federalist-style house and grand ballroom with a white wood chapel. Founder Larry Kruzie started The Springs in 2001 as a family business, and the company now sells a package of wedding services on top of the venue.",
+   "since": 2001,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJgSiM4614ToYRYZXl3dXToyE",
+   "name": "Feragne Villa Event Venue",
+   "website": "https://theferagnevilla.com/",
+   "instagram": "feragnevilla",
+   "tags": [
+    "villa style",
+    "Hurst",
+    "everything included"
+   ],
+   "blurb": "Tiled floors, crystal chandeliers and wrought-iron and stone accents give Feragne Villa in Hurst its villa look. The pricing page leads with everything included, and figures of $3,000, $4,200 and $5,200 appear on it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJkWIhS5ArTIYR00ku9xl7ong",
+   "name": "The Laurel",
+   "website": "http://www.thelaureltexas.com/",
+   "instagram": "TheLaurelTexas",
+   "tags": [
+    "estate on six acres",
+    "chapel",
+    "50 to 350 guests"
+   ],
+   "blurb": "An estate venue in Grapevine on more than six acres, designed with Texas Hill Country inspiration, with a chapel, a garden ceremony space and event halls that open up as needed, so a rehearsal dinner for 50 gets the same feel as a celebration for 350.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJnzh5ycj9S4YR4Av_1UQqJqM",
+   "name": "Occasions At Stone River",
+   "website": "https://occasionsatstoneriver.com/",
+   "instagram": "occasionsatstoneriver",
+   "tags": [
+    "all-inclusive",
+    "affordable",
+    "Royse City"
+   ],
+   "blurb": "Johnny and Betty Crenshaw's all-inclusive venue in Royse City, with catering and indoor and outdoor spaces, pitched as affordable. Betty's background includes floral design and decorating, and the site leads with why couples across Dallas-Fort Worth choose it.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqazw_gZoToYRz7r8-jyACzI",
+   "name": "Lone Star Mansion",
+   "website": "https://lonestarmansion.com/?utm_campaign=gmb",
+   "instagram": "lonestarmansion",
+   "tags": [
+    "antebellum-style mansion",
+    "20 acres",
+    "Burleson"
+   ],
+   "blurb": "An antebellum-style mansion on more than 20 acres in Burleson, outside Fort Worth. Lone Star Mansion calls itself one of the most coveted venues in the Metroplex and publishes a page of wedding and large-event packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

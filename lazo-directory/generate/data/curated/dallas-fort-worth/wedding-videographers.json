@@ -1,0 +1,208 @@
+{
+ "metro": "dallas-fort-worth",
+ "cat": "wedding-videographers",
+ "updated": "2026-10-12",
+ "read": 122,
+ "listed": 163,
+ "how": "We read the website of every Dallas-Fort Worth wedding videographer listed on Lazo (163 listings, 122 sites reachable) and set aside the ones that are not really in the wedding business: corporate AV houses, a multi-state brand's Dallas page, a photographer community site, and photographers whose sites do not show films. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is audio from the vows and toasts recorded on lapel mics and a board feed, or just the camera?",
+  "How long until the highlight film and the full-length edit arrive, and are raw files included?",
+  "If the reception runs late or an outdoor ceremony moves inside for weather, what changes in the price?"
+ ],
+ "picks": [
+  {
+   "id": "manual-dallas-fort-worth-elizabeth-scott-weddings",
+   "name": "Elizabeth Scott Weddings",
+   "website": "https://www.elizabethscottweddings.com",
+   "instagram": "",
+   "tags": [
+    "real-audio films",
+    "photo and video",
+    "from $1,200",
+    "Lazo verified"
+   ],
+   "blurb": "Cinematic films built from the real audio of the day, vows, letters and laughter, from a national photo and video studio with travel included in all 50 states. Packages from $1,200, a second videographer for $500, and a verified, claimed Lazo profile.",
+   "since": null,
+   "from_price": "$1,200",
+   "verified": true,
+   "claimed": true
+  },
+  {
+   "id": "ChIJqZLrMQ09TIYRli1aHFXJTfo",
+   "name": "Paradigm Wedding Films",
+   "website": "http://www.paradigmweddingfilms.com/",
+   "instagram": "paradigmweddingfilms",
+   "tags": [
+    "from $4,000",
+    "over a decade",
+    "Knot Hall of Fame"
+   ],
+   "blurb": "Cinematic highlight and documentary films from a Plano studio with over a decade of experience and hundreds of weddings, recognized as a Hall of Fame filmmaker on The Knot. Wedding video collections start at $4,000.",
+   "since": null,
+   "from_price": "$4,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJDTG8HSUfTIYRT-uijNU0hlg",
+   "name": "Candlelight Films",
+   "website": "http://www.candlelightfilms.com/",
+   "instagram": "candlelightfilms",
+   "tags": [
+    "husband and wife",
+    "hundreds of films",
+    "Farmersville"
+   ],
+   "blurb": "Clint and Lauren got a single camera on a tripod at their own wedding 15 years ago and set out to make the kind of film they later saw, the kind with the energy of a movie. They have edited hundreds of wedding films since, out of Farmersville.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7ze4BX0VTIYRue6rRziN0Kk",
+   "name": "Daniel K. Films",
+   "website": "https://www.danielkfilms.com/",
+   "instagram": "danielkfilms",
+   "tags": [
+    "since 2016",
+    "300+ weddings",
+    "AACWP Favorite Videographer 2026"
+   ],
+   "blurb": "Daniel launched the business in 2016, trying to impress the woman who became his wife, and has filmed more than 300 weddings since, with films meant to still feel real years later. Named AACWP Favorite Videographer for 2026.",
+   "since": 2016,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJdXNxoxAMToYRbT822J6VIrI",
+   "name": "Bow Tie Media",
+   "website": "http://bowtie.media/",
+   "instagram": "bowtie.media",
+   "tags": [
+    "from $2,499",
+    "photo and video bundles",
+    "since 2017"
+   ],
+   "blurb": "Born in spring 2017 as a team of bow-tie-wearing photographers and videographers, Bow Tie Media has captured hundreds of weddings across North Texas. Packages start at $2,499 and include photo-plus-video bundles; the price list is sent automatically after a date check.",
+   "since": 2017,
+   "from_price": "$2,499",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJibOir7-hToYRWGkA1YYIDwI",
+   "name": "Paul Michael Film",
+   "website": "https://www.paulmichaelfilm.com/",
+   "instagram": "paulmichaelfilm",
+   "tags": [
+    "cinematic",
+    "Dallas and East Texas",
+    "laid-back"
+   ],
+   "blurb": "Cinematic wedding films for Dallas, DFW, Tyler, Mineola and East Texas, with a professional, laid-back approach. Paul started with storytelling and filmmaking among friends and now turns the day into a lasting film; quinceañera videos too.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ4YPbi2hzToYRbwtqi7W205E",
+   "name": "Leon Love Stories",
+   "website": "http://leonlovestories.com/",
+   "instagram": "",
+   "tags": [
+    "fine art",
+    "creative",
+    "Fort Worth"
+   ],
+   "blurb": "Ariel's pitch is that living the day matters more than the footage, and the job is to capture the living: the laughs, the toasts, the way you hold each other. Creative and fine-art wedding films for Dallas-Fort Worth.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZzLWS_LRRIYRZ1f9NKG6THY",
+   "name": "Ladybird Studios",
+   "website": "http://ladybirdstudios.com/",
+   "instagram": "ladybirdstudios",
+   "tags": [
+    "brother and sister",
+    "photo and video",
+    "WPPI judge"
+   ],
+   "blurb": "A brother-and-sister photo and video team working DFW and Austin, led by Jordan Taylor Bunch, who speaks at industry events across the US and Mexico and has judged the WPPI competition for six years. Packages run six to ten hours of coverage plus a signature highlight film.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJwZZZ3WiJToYRPU2zyKNzLUg",
+   "name": "Alarcon Studios",
+   "website": "http://www.alarconstudios.com/",
+   "instagram": "alarconstudios",
+   "tags": [
+    "founded 2014",
+    "photographers and filmmakers",
+    "Arlington"
+   ],
+   "blurb": "Founded in 2014 by creative director Eliseo Alarcon, bringing photographers and filmmakers together under one Arlington studio. Cinematic films, photography and heirloom albums, with planning that starts from the people you want to remember.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJF-QgtDTZTYYRmaCASJ7IkX8",
+   "name": "The Lockharts",
+   "website": "http://www.thelockharts.co/",
+   "instagram": "thelockharts",
+   "tags": [
+    "photo and film together",
+    "luxury",
+    "Dallas and NYC"
+   ],
+   "blurb": "Luis and Michelle shoot photo and film as one studio, based in Dallas and NYC, so the two are made to work together on the day and in the edit. A custom-tailored, fully integrated experience for weddings worldwide.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJEWbnUsYzTIYRgRToS8YBfDQ",
+   "name": "April Pinto Photography",
+   "website": "https://www.aprilpintophotography.com/?utm_source=google&utm_medium=organic&utm_campaign=googlebusiness",
+   "instagram": "aprilpintophotography",
+   "tags": [
+    "family-owned",
+    "photo and video team",
+    "Denton area"
+   ],
+   "blurb": "A family-owned photo and video team serving Dallas-Fort Worth and Denton, with an artfully organic approach and a stated focus on emotion as much as atmosphere. Wedding photo and film collections and pricing are published on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTTq9c4GBToYRLnIO1Ws7-F8",
+   "name": "The GRACE Pictures",
+   "website": "http://www.thegrace.pictures/",
+   "instagram": "thegracepictures",
+   "tags": [
+    "cinematic film",
+    "est. 2015",
+    "publishes pricing"
+   ],
+   "blurb": "The GRACE Pictures films and photographs weddings as one Irving team, established 2015, with cinematic film alongside stills and pricing for both published on the site. More than 400 couples so far.",
+   "since": 2015,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,207 @@
+{
+ "metro": "raleigh-durham",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 120,
+ "listed": 140,
+ "how": "We read the website of every Raleigh-Durham wedding venue listed on Lazo (140 listings, 120 sites reachable) and set aside the ones that are not really in the wedding business: placeholder sites still showing lorem ipsum, keyword-only pages with no venue described, a bridal-styling shop with a rental hall, and event spaces that lead with corporate meetings. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "What is the rain and heat plan for a July or August date? Ask to see the indoor or tented option, not just the lawn.",
+  "October and April Saturdays go first in the Triangle. If you want one, how far out does this venue book?",
+  "Does the rental include tables, chairs, a coordinator and the getting-ready spaces, or are those separate lines?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJB9f7C5VXq4kRHsPzHpZc-dA",
+   "name": "Wild Rock Farm",
+   "website": "http://www.wildrockfarm.com/",
+   "instagram": "",
+   "tags": [
+    "42-acre farm",
+    "full day $4,000",
+    "climate-controlled reception"
+   ],
+   "blurb": "Home to the Dycus family for more than 50 years, Wild Rock Farm is a 42-acre Sandhills property near Sanford with rolling land and a collection of farm animals, pitched at couples who want a rustic country wedding. The site prints a Full-Day Wedding Experience at $4,000: up to 14 hours, greenhouse access for first looks and a reception building with heat and air conditioning.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJzzxjXrJTrIkRyV4nfQalNNA",
+   "name": "The Sutherland Wedding Venue",
+   "website": "https://www.thesutherland.com/about-us?utm_source=rsd&utm_medium=gmb",
+   "instagram": "sutherlandevents",
+   "tags": [
+    "18th century estate",
+    "National Register",
+    "all-inclusive"
+   ],
+   "blurb": "An 18th century Wake Forest estate on the National Register of Historic Places that now hosts weddings and corporate events. The Sutherland sells itself as all-inclusive and offers a free wedding pricing pamphlet to download before you tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJYUazzvyfrIkRAcjObIr9j9I",
+   "name": "The Greenhouse at Arrows Farm",
+   "website": "https://www.thegreenhouseatarrowsfarm.com/",
+   "instagram": "thegreenhouse_atarrowsfarm",
+   "tags": [
+    "greenhouse venue",
+    "horse farm",
+    "pricing pamphlet"
+   ],
+   "blurb": "An editorial greenhouse venue on a Lillington horse farm run by Jessie Gallegos, a former labor and delivery nurse, with her family and a yard of goats, horses, donkeys and chickens. Wedding pricing comes as a downloadable pamphlet rather than a quote request.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxXlsvIBNrIkRLTIUy8u2g_g",
+   "name": "Pinehill Pavilion",
+   "website": "http://pinehillpavilion.com/",
+   "instagram": "",
+   "tags": [
+    "160 private acres",
+    "15 minutes from Raleigh",
+    "three ceremony sites"
+   ],
+   "blurb": "A private 160-acre wooded venue in Youngsville, 15 minutes north of Raleigh, with three or more ceremony locations. Gina built it on family land after retiring from the grading business she founded, and the site currently advertises $2,000 off Friday, Saturday or Sunday weddings with a 10-hour rental booked through August 2027.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8yhL0cDzrIkR_h0qG2KnBbc",
+   "name": "Chandelier Wedding & Event Venue",
+   "website": "http://chandeliereventvenue.com/",
+   "instagram": "chandeliereventvenue",
+   "tags": [
+    "all-inclusive",
+    "chef-led catering",
+    "publishes pricing"
+   ],
+   "blurb": "An all-inclusive modern venue in Cary with chef-led on-site catering and bar service, aimed at couples who want the planning handled in one place. Chandelier publishes its wedding pricing on the site, with package figures between $4,500 and $6,800 at our read, and says there should be no surprise costs.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJDeJfCIXbrIkRM9PlakrVQRE",
+   "name": "Cates Farm at Cane Creek",
+   "website": "http://www.catesfarmatcanecreek.com/",
+   "instagram": "catesfarmatcanecreek",
+   "tags": [
+    "1940s barn",
+    "whole weekend",
+    "LGBTQ friendly"
+   ],
+   "blurb": "John and Jennifer Cates own this Hillsborough farm, where John restored the barn his grandparents Carl and Alda built in the 1940s. The pitch is your wedding, your way, all weekend, with two get-ready spaces, and the owners state plainly that they are an LGBTQ-friendly business.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJTcE3egGOrIkReoG2-39VsQg",
+   "name": "Leslie-Alford-Mims House",
+   "website": "https://raleighweddingvenue.com/",
+   "instagram": "mimshouse",
+   "tags": [
+    "built 1840",
+    "downtown Holly Springs",
+    "all-inclusive packages"
+   ],
+   "blurb": "Built in 1840 by Scottish tailor Archibald Leslie as a wedding gift for his bride, whose carved initials are still inside, the Leslie-Alford-Mims House sits in downtown Holly Springs on the National Register of Historic Places. Original hardwood floors, chandeliers and southern porches, with all-inclusive packages on offer.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJVYjdrsR9rIkRKKQmSyAXd3I",
+   "name": "The Barn at Wood Angus",
+   "website": "https://www.thebarnatwoodangus.com/",
+   "instagram": "",
+   "tags": [
+    "Angus cattle farm",
+    "up to 200 guests",
+    "family-owned"
+   ],
+   "blurb": "A family-owned venue on a working Angus cattle farm in Johnston County, southeast of Raleigh, with pastures and black rail fencing as the photo backdrop. The barn itself is a 3,500-square-foot climate-controlled indoor space for up to 200 guests, rented for exclusive use.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJh3ozHUmLrIkRYo8Ty7rit70",
+   "name": "The Meadows at Firefly Farm Preserve",
+   "website": "https://themeadowsraleigh.com/?utm_source=google&utm_medium=organic&utm_campaign=gbp",
+   "instagram": "themeadowsraleigh",
+   "tags": [
+    "five ceremony settings",
+    "private prep houses",
+    "Raleigh"
+   ],
+   "blurb": "The Meadows at Firefly Farm Preserve offers five outdoor ceremony settings, spacious reception areas and private preparation houses on a nature-led property in Raleigh. Its blog walks through real weddings held there, including a September celebration that leaned into the first hints of fall.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5TuFZDdDrIkRfIYhbQnipBs",
+   "name": "The Barn at King Hill Farm",
+   "website": "http://www.barnatkinghillfarm.com/",
+   "instagram": "barnkinghillfarm",
+   "tags": [
+    "50-acre working farm",
+    "70 years in the family",
+    "Knightdale"
+   ],
+   "blurb": "A full-service, 50-acre working farm in Knightdale, just east of Raleigh, that has been in the owner's family for more than 70 years. The owner grew up on this land and promises couples a stress-free day; the site says it hosts receptions, reunions and corporate events too.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJl3vdkk_brIkRH_Ur1J1iCvU",
+   "name": "Sanctuary Farm",
+   "website": "http://www.sanctuaryfarmnc.com/",
+   "instagram": "",
+   "tags": [
+    "28 acres",
+    "on-site lodging",
+    "eco-friendly"
+   ],
+   "blurb": "A 28-acre eco-friendly farm venue and retreat space in Chapel Hill with indoor and outdoor spaces and overnight accommodations, so the wedding can run as a weekend rather than a day. Sanctuary Farm is minutes from Durham, Pittsboro and Hillsborough.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJeWOJsbW5rIkRIITAqBJl9Zg",
+   "name": "Forest Hall at Chatham Mills",
+   "website": "https://foresthallatchathammills.com/",
+   "instagram": "foresthallatchathammills",
+   "tags": [
+    "historic industrial",
+    "brick walls",
+    "Pittsboro"
+   ],
+   "blurb": "A 3,500-square-foot historic and industrial event space in Pittsboro with natural light, brick walls and restored wood floors. Forest Hall at Chatham Mills hosts small and large weddings as well as showers and dinners, and sits central to Chapel Hill, Carrboro, Durham, Cary, Apex and Raleigh.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

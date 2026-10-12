@@ -1,0 +1,207 @@
+{
+ "metro": "minneapolis",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 133,
+ "listed": 157,
+ "how": "We read the website of every Minneapolis wedding venue listed on Lazo (157 listings, 133 sites reachable) and set aside the ones that are not really in the wedding business: officiants and ceremony services, coordinators and micro-wedding packages listed as venues, and a page that was only a list of other venues' names. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is the barn or tent heated, and what is the plan if your date lands in a snowstorm or a 95-degree July weekend?",
+  "Is catering in-house only, or open? Open catering changes the budget more than the rental fee does.",
+  "What exactly is in the rental window: hours, setup and teardown, a rehearsal, and a coordinator on the day?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJGTUWkEEE9ocRi4ax3dzn94M",
+   "name": "Edward Anne Estate at Bavaria Downs",
+   "website": "https://www.bavariadowns.com/",
+   "instagram": "bavaria_downs",
+   "tags": [
+    "200-acre estate",
+    "three venues",
+    "all-inclusive"
+   ],
+   "blurb": "Bavaria Downs in Chaska is 200 acres with three venues on it, and the Edward Anne Estate is the original home on the property, a European-inspired mansion. Between the three venues the packages fit 50 to 400 guests, with all-inclusive Custom and Essentials options.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJY1zrH2ojs1IRaccI54-aFJM",
+   "name": "White & Sable",
+   "website": "https://www.whiteandsable.com/",
+   "instagram": "whiteandsable",
+   "tags": [
+    "family-owned",
+    "transparent pricing",
+    "booking 2027 and 2028"
+   ],
+   "blurb": "Landon and Angela built White & Sable in Ham Lake after a decade in the industry, him as a wedding videographer with 300+ weddings filmed, her as a corporate event planner. The site prints what is included, promises no surprise charges, taxes or service fees, and seats up to 225 on a 13-hour rental.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJg6m95g3b94cRasPIi_Ph7oA",
+   "name": "The Madison",
+   "website": "http://www.themadisonmn.com/",
+   "instagram": "themadisonmn",
+   "tags": [
+    "historic dairy barn",
+    "up to 500 guests",
+    "heated and air conditioned"
+   ],
+   "blurb": "A white gothic-arched dairy barn built in 1947 in Old Cottage Grove, converted to a wedding venue in 2010 and run by Brad and Louise Madison, who worked as wedding photographers for over a decade. The Madison bills itself as Minnesota's largest barn venue, seating up to 500, and it is heated and air conditioned.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJOSRmCTcw9ocRdVFH680NUus",
+   "name": "Royal Cliff Weddings & Events Center",
+   "website": "https://www.fabweddingsmn.com/royal-cliff",
+   "instagram": "glenhaveneventsmn",
+   "tags": [
+    "all-inclusive ballroom",
+    "near MSP Airport",
+    "up to 350 guests"
+   ],
+   "blurb": "Royal Cliff is the classic ballroom of Fab! Weddings, a family company with three venues and one all-inclusive package. Ten minutes from the airport in Eagan, seats up to 350 for a plated meal, and every booking gets a dedicated planner, a rehearsal, and a DJ sound system already in the room. The kitchen is Brianno's, catering across the Twin Cities since 1993.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJR-eWmVrV94cRZNiQy-C8Yi4",
+   "name": "A’BULAE",
+   "website": "http://www.abulae.com/",
+   "instagram": "abulae",
+   "tags": [
+    "downtown Saint Paul",
+    "rooftop ceremonies",
+    "all-inclusive"
+   ],
+   "blurb": "A loft-style venue in downtown Saint Paul with floor-to-ceiling windows and a Skyline Rooftop for ceremonies and cocktail hours. A'BULAE packages are all-inclusive, offered as Custom or Essentials, with private getting-ready suites and views from the state capitol to the bluffs.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0Subz46-slIRQ0atr9UpQo0",
+   "name": "Croix-View Farm",
+   "website": "http://www.croixviewfarm.com/",
+   "instagram": "croixviewfarm",
+   "tags": [
+    "Western Wisconsin barn",
+    "from $7,000",
+    "weekday packages"
+   ],
+   "blurb": "Sara Haase bought the Osceola farm in 2012, hosted the first event in 2016 and has run over 160 weddings since, largely as a one-woman show. The barn dates to around 1870 and seats 300, and the site prints a standard weekend package from $7,000 with cheaper Thursday, Friday and Sunday-to-Wednesday options.",
+   "since": null,
+   "from_price": "$7,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ30RPsYpM9ocR6EzeEgC_sps",
+   "name": "THE GARDENS of Castle Rock",
+   "website": "http://www.thegardensofcastlerock.com/",
+   "instagram": "thegardensofcr",
+   "tags": [
+    "garden venue",
+    "one event a day",
+    "8 am to midnight"
+   ],
+   "blurb": "The Gardens of Castle Rock grew out of Switzer's Nursery in Northfield: owner Glenn Switzer is a third-generation landscaper with over 30 years in design and construction, and the first wedding here happened by chance in 2012. Four ceremony locations, a semi-permanent reception tent, and only one event a day with the grounds from 8 am to midnight.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJK8w98LHaslIRo-c6UaZKJ4o",
+   "name": "Dellwood Barn Weddings, LLC",
+   "website": "http://www.dellwoodbarnweddings.com/",
+   "instagram": "dellwoodbarnweddings",
+   "tags": [
+    "1800s red barn",
+    "climate-controlled",
+    "50 acres"
+   ],
+   "blurb": "Dellwood's red barn has stood in Grant since the late 1800s, part of a dairy farm that ran for five generations, and is now fully climate-controlled with hand-milled pine walls and exposed loft trusses. A 50-acre private property less than 20 miles from Minneapolis and St. Paul, with capacity for 250.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ1Z_r6gaU94cROZsg2lP8D8w",
+   "name": "Legacy Hill Farm",
+   "website": "https://legacyhillfarm.com/gbp",
+   "instagram": "legacyhillfarm",
+   "tags": [
+    "700+ weddings",
+    "family farm",
+    "since 2015"
+   ],
+   "blurb": "A family farm in Welch that has hosted over 700 weddings and 150,000 guests since 2015. Legacy Hill Farm has indoor and outdoor ceremony sites and nine signature spaces including a pavilion and an upper barn, and the owners describe the venue as made with love, for love.",
+   "since": 2015,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJm9qOz6-ptFIRZRIQ_imRJjw",
+   "name": "The Jerome Event Center",
+   "website": "https://www.thejeromedelano.com/",
+   "instagram": "thejerome_eventcenter",
+   "tags": [
+    "1905 building",
+    "up to 275",
+    "downloadable pricing"
+   ],
+   "blurb": "The Jerome in Delano keeps its original 1905 architecture, exposed brick and timber beams, and holds up to 275 guests. The Great Room takes the ceremony and reception, the 2,100-square-foot Stein Room handles cocktails, and a wedding pricing pamphlet is available to download from the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJsRNrX_jFslIROG4KxPyf-Yw",
+   "name": "Keystone Weddings & Events",
+   "website": "http://keystoneweddingsmn.com/",
+   "instagram": "keystoneweddingsmn",
+   "tags": [
+    "$3,500 to $7,600",
+    "open catering",
+    "ballroom to 400"
+   ],
+   "blurb": "Keystone in the countryside near Stillwater is one of the few venues here that prints its rental range: $3,500 to $7,600 depending on season and day, for 8 or 12 hours of exclusive access. Open catering lets you pick your own food vendors, and the ballroom holds up to 400.",
+   "since": null,
+   "from_price": "$3,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxQb9eDDJslIRtZRAql_GkdI",
+   "name": "Trellis Weddings & Events",
+   "website": "http://www.trellisevents.com/",
+   "instagram": "",
+   "tags": [
+    "ceremony venue",
+    "English-style garden",
+    "no hidden charges"
+   ],
+   "blurb": "Trellis is an outdoor ceremony venue in historic Stillwater built around a classic English-style garden, with Canopy and Gazebo ceremony spaces. The package is a private three-hour rental with a bridal cottage, a day-of ceremony coordinator, sound system and chairs; you bring your own officiant and photographer. A Garden Social Package covers a cocktail hour or small reception afterward.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

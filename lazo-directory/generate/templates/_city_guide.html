@@ -96,7 +96,7 @@
       <li class="cu">
         <div class="cu-top">
           <span class="cu-th" style="background-image:{% if p.thumb %}url('{{ p.thumb }}'){% else %}linear-gradient(135deg,rgba(61,28,59,.66),rgba(82,40,79,.45)),url('/assets/photos/{{ cat.slug }}.jpg'){% endif %}" aria-hidden="true"></span>
-          <span><a class="cu-name" href="/{{ metro.id }}/{{ cat.slug }}/{{ p.slug }}/">{{ p.name }}</a>
+          <span><a class="cu-name" href="/{{ metro.id }}/{{ p.cat or cat.slug }}/{{ p.slug }}/">{{ p.name }}</a>
             <div class="cu-meta">{{ p.town }}{% if p.verified %} &middot; <em>LAZO VERIFIED</em>{% elif p.claimed %} &middot; <em>CLAIMED PROFILE</em>{% endif %}</div></span>
         </div>
         <div class="cu-tags">{% for t in p.tags %}<span>{{ t }}</span>{% endfor %}</div>

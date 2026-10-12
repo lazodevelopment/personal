@@ -1,0 +1,207 @@
+{
+ "metro": "pittsburgh",
+ "cat": "wedding-djs",
+ "updated": "2026-10-12",
+ "read": 30,
+ "listed": 42,
+ "how": "We read the website of every Pittsburgh wedding DJ listed on Lazo (42 listings, 30 sites reachable) and set aside the ones that are not really in the wedding business: an entertainment booking agency, a karaoke-first outfit that says its packages are not suited to weddings, a corporate team-building company, and sites with no readable text. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Who exactly will be at my wedding, and can I talk to that DJ before I sign?",
+  "How do you handle the ceremony audio and the toasts, not just the dance floor?",
+  "Have you worked my venue, and can you power sound for an outdoor ceremony at a hillside barn if the weather turns?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJDwpunTLxNIgRcKs01ByQsnU",
+   "name": "Premium Soundz DJ Service",
+   "website": "http://www.premiumsoundzdj.com/",
+   "instagram": "pittsburghweddingdj",
+   "tags": [
+    "since 2003",
+    "one rate",
+    "female DJ"
+   ],
+   "blurb": "DJ Stephanie Crooks has run Premium Soundz since 2003 as a modern, indie and alternative-friendly wedding DJ. There is one rate rather than tiered packages, because every event gets the full premium setup, and she arrives two hours early for setup and sound check.",
+   "since": 2003,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5UOGx51WNIgRSLMfyFCVXz8",
+   "name": "Redford DJs and Photo Booth",
+   "website": "http://www.redfordevents.com/",
+   "instagram": "dj_kevin_redford/#",
+   "tags": [
+    "the DJ you book is the DJ you get",
+    "photo booth",
+    "Canonsburg"
+   ],
+   "blurb": "Kevin Redford and Andy Miller's Canonsburg team promises that the DJ you contract is the one who brings your reception to life. Wedding specialists whose packages let you choose ceremony music and a microphone or a reception photo booth.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJKeEZOP_3NIgRu_0ltZ0upbQ",
+   "name": "Party With Paulie DJ Services",
+   "website": "http://partywithpaulie.com/",
+   "instagram": "",
+   "tags": [
+    "since 2000",
+    "full-time DJ",
+    "publishes package prices"
+   ],
+   "blurb": "Paulie has run his own Pittsburgh DJ business full-time since 2000, working five days a week at the city's venues. Wedding package prices and lighting packages are printed on the site, and karaoke and trivia shows are also on offer.",
+   "since": 2000,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJRaI9PFLANIgRaHLFHtiEI7w",
+   "name": "DJ Jason Rullo | Rullo Productions",
+   "website": "https://www.jamminjason.com/",
+   "instagram": "djjasonrullo",
+   "tags": [
+    "27 years",
+    "DJ and MC",
+    "uplighting and monograms"
+   ],
+   "blurb": "Jason Rullo started spinning at 15 under the nickname Jammin' Jason and has 27 years in, offering DJ, MC, lighting, decor uplighting and monograms for Pittsburgh weddings. He pitches himself on reading crowds and creating energy.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJI2L_ULndNIgRK3NuArMS-Dg",
+   "name": "Jam-Master Productions - DJ Ed Lorenc",
+   "website": "https://www.jam-master.com/",
+   "instagram": "jammasterproductions",
+   "tags": [
+    "35 years",
+    "weddings are the focus",
+    "Irwin"
+   ],
+   "blurb": "Ed Lorenc, The Jam-Master, is an Irwin DJ and MC with 35 years of professional experience whose main focus is weddings. He is already booking 2026 and 2027 dates and leads with organization and trustworthiness as much as crowd motivation.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJXAbgziONIgRaUxoJsHMdSo",
+   "name": "Boff's Entertainment Services",
+   "website": "https://www.boffentertainment.com/",
+   "instagram": "",
+   "tags": [
+    "since 1985",
+    "father and sons",
+    "Gibsonia"
+   ],
+   "blurb": "Established in 1985 by Greg Boff in Wexford and now run from Gibsonia with his sons Gregory and Mark, Boff's is a family-owned entertainment service with over 30 years of Pittsburgh and tri-state weddings behind it.",
+   "since": 1985,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJc6SOV9piNIgR76s7sz4mhk4",
+   "name": "mobileMIX Entertainment",
+   "website": "http://www.djmobilemix.com/",
+   "instagram": "",
+   "tags": [
+    "since 1993",
+    "family-owned",
+    "Mars"
+   ],
+   "blurb": "A family-owned DJ company in Mars that has been at it since 1993, mixing what it calls elegance and fun for weddings, schools and special occasions across Western Pennsylvania.",
+   "since": 1993,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ-bHzroPxNIgR7ZX3XKGKh_4",
+   "name": "Moxie Events",
+   "website": "https://www.mymoxieevent.com/",
+   "instagram": "mymoxieevent",
+   "tags": [
+    "since 2012",
+    "DJ, photo booth and lighting",
+    "Mt Pleasant"
+   ],
+   "blurb": "Moxie Events grew out of PowerBomb Productions, a Pittsburgh wedding DJ company led by DJ AdamBomb since 2012. Based in Mt Pleasant, it now bundles high-energy DJs with photo booths, lighting and effects so one vendor handles the whole entertainment side.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6202DVZbNIgRF2gsd4mgpm8",
+   "name": "Loyalty Weddings & Events",
+   "website": "http://www.loyaltyevents.com/",
+   "instagram": "loyaltyentertains",
+   "tags": [
+    "DJ plus photo and video",
+    "woman and minority owned",
+    "LGBTQ+ allied"
+   ],
+   "blurb": "Loyal Martinez's journey began on the dance floor, and he and Nicole built Loyalty around DJ services plus photography, videography and photo booths. Woman and minority owned, LGBTQ+ allied, serving Pittsburgh and Ohio.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJted1x_LwNIgRM2x6D_nFmow",
+   "name": "Pittsburgh Event Group",
+   "website": "http://www.pittsburgheventgroup.com/",
+   "instagram": "PittsburghEventGroup",
+   "tags": [
+    "ceremony sound",
+    "360 and glam booths",
+    "check your date online"
+   ],
+   "blurb": "A wedding DJ and photo booth company offering DJs and MCs, ceremony sound, uplighting and 360, glam and AI photo booths, with date availability you can check online. Ten years in and built around what it calls WOW moments.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJISOT3L_3NIgRPeKjFtyi5h0",
+   "name": "Kelli Burns Entertainment",
+   "website": "http://kelliburns.com/",
+   "instagram": "",
+   "tags": [
+    "weddings and corporate",
+    "ceremony production add-on",
+    "Carnegie"
+   ],
+   "blurb": "Kelli Burns Entertainment in Carnegie specializes in weddings and corporate events, aiming for celebrations that feel unmistakably you. Optional enhancements such as ceremony production can be added to the base DJ service.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ94cv0yPFNIgRZG77eaxUVP0",
+   "name": "DJ Tom and Sue",
+   "website": "https://www.djstomandsue.com/",
+   "instagram": "",
+   "tags": [
+    "husband and wife",
+    "20+ years",
+    "Westmoreland County"
+   ],
+   "blurb": "Tom and Sue are a husband-and-wife DJ team from Jeannette with over 20 years of packing dance floors, serving Westmoreland County, Pittsburgh and most of southwestern Pennsylvania, with karaoke, music videos and video projection as extras.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

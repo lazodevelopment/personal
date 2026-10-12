@@ -1,0 +1,127 @@
+{
+ "metro": "pittsburgh",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 54,
+ "listed": 60,
+ "how": "We read the website of every Pittsburgh wedding planner listed on Lazo (60 listings, 54 sites reachable) and set aside the ones that are not really in the wedding business: officiants, DJs and lighting crews that list coordination, a bartending service, venues, a vendor directory, a corporate event producer, and an out-of-state planning company with a Pittsburgh listing. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours and in meetings.",
+  "Which Pittsburgh venues and vendors have you worked with this year? Local relationships are the job.",
+  "How do you handle a Saturday that collides with a Steelers or Pitt home game or a downtown event, for traffic, parking and hotel blocks?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ6dBTX3D3NIgRpZnhfB36z-w",
+   "name": "Weddings of Pittsburgh",
+   "website": "http://www.weddingsofpittsburgh.com/",
+   "instagram": "pittsburghweddingplanner",
+   "tags": [
+    "20 years",
+    "luxury",
+    "proposal experience"
+   ],
+   "blurb": "Twenty years of luxury wedding planning in Pittsburgh and beyond, with a never-lift-a-finger approach the planner calls mental insurance that every detail is handled. Boutique weddings, plus a new Ruby Red proposal experience.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2Q5sqHf1NIgRjQhipsFSZ20",
+   "name": "Stark White Weddings",
+   "website": "https://www.starkwhiteweddings.com/",
+   "instagram": "starkwhiteweddings",
+   "tags": [
+    "15 years in events",
+    "full-service and day-of",
+    "practical luxury"
+   ],
+   "blurb": "Jessica has been a professional event planner for 15 years and a Pittsburgh wedding creative for six, with a corporate events background. Stark White is a team of full-service wedding managers and planners offering practical luxury and meticulous day-of coordination.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5yBu2GvxNIgRBtrPnjKbRno",
+   "name": "Hello Productions",
+   "website": "http://www.helloproductions.com/",
+   "instagram": "helloproductions",
+   "tags": [
+    "Knot Hall of Fame",
+    "luxury and destination",
+    "three offices"
+   ],
+   "blurb": "Owned by Ashley Moss Kurkiewicz, Hello Productions began in Pittsburgh and now has three offices: greater Pittsburgh, Meadville and Erie, and Raleigh, NC. The company is in The Knot Hall of Fame and specializes in luxury weddings and destination events, with corporate work on the side.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJM4wU-oHRNIgR8_JBgz26FP0",
+   "name": "Joy Filled Occasions",
+   "website": "https://joyfilledoccasions.com/",
+   "instagram": "joyfilledoccasions",
+   "tags": [
+    "photographer turned planner",
+    "since 2017",
+    "Greensburg"
+   ],
+   "blurb": "After 15-plus years as a wedding photographer at Jackson Signature Photography, the owner opened Joy Filled Occasions in 2017 as a planner for the Pittsburgh and Greensburg area, bringing a photographer's view of how wedding days actually run.",
+   "since": 2017,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJaR0uHwz3NIgR56Y7PGoxTVg",
+   "name": "Olive & Rose Events",
+   "website": "http://www.oliveroseevents.com/",
+   "instagram": "oliveroseevents",
+   "tags": [
+    "clean design",
+    "publishes package pricing",
+    "your way"
+   ],
+   "blurb": "Clean design is the specialty: every element has a purpose, from linens to florals to signage. Olive & Rose plans weddings your way rather than by tradition or Pinterest, and prints its package pricing, including its most comprehensive package, on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJXzHROLDpNIgRb0391U-QHaU",
+   "name": "Regal Event Decor",
+   "website": "https://regaleventdecor.com/",
+   "instagram": "regaleventdecorators",
+   "tags": [
+    "South Asian weddings",
+    "planning and decor",
+    "10+ years"
+   ],
+   "blurb": "Aarzu, a mom of two and full-time academic advisor with over a decade in the wedding industry, designs luxury South Asian wedding decor in Pittsburgh and beyond. Planning-and-decor packages are named Diamond and Ruby, from end-to-end planning down.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8aZ0yqqSNIgR9sirtAL1X4E",
+   "name": "Perfectly Planned by Shari",
+   "website": "https://perfectlyplannedbyshari.com/",
+   "instagram": "perfectlyplanned_pgh",
+   "tags": [
+    "25 years",
+    "luxury production",
+    "custom design"
+   ],
+   "blurb": "A full-service luxury wedding and event production company with 25 years behind it. Shari and her team design a custom event styled and personalized for you, with planning, design and consulting services for weddings, mitzvahs and corporate events.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,207 @@
+{
+ "metro": "charleston",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 62,
+ "listed": 77,
+ "how": "We read the website of every Charleston wedding planner listed on Lazo (77 listings, 62 sites reachable) and set aside the ones that are not really in the wedding business: officiants, beach-ceremony package sellers, a wedding chapel, a multi-service chain, and a multi-office planning company. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Which downtown venues have you run recently, and how do you handle the historic district's noise cutoffs and street-closure permits?",
+  "Full planning, partial, or month-of: what does each tier include in hours, meetings and vendor management?",
+  "Who is on site on the wedding day, you or an associate, and how many weddings does your team take per weekend?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJJYrAehB6_ogRlWtALU-cM0E",
+   "name": "Christina Baxter Destination Weddings",
+   "website": "https://christinabaxterweddings.com/",
+   "instagram": "christinabaxterweddings",
+   "tags": [
+    "25+ years",
+    "full-service only",
+    "Charleston and DC"
+   ],
+   "blurb": "Christina Baxter offers full-service planning and design exclusively, with 25-plus years producing luxury weddings, galas and Presidential inaugural dinners. Based in Mt Pleasant and Washington, DC, working from Nantucket to Napa, and defining luxury as the absence of worry.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ9X21mw_vwIcRJFFYKGfsCZQ",
+   "name": "Reagan Events",
+   "website": "http://reaganevents.com/",
+   "instagram": "reaganevents",
+   "tags": [
+    "since 2012",
+    "Charleston and Italy",
+    "Kiawah"
+   ],
+   "blurb": "Reagan Kerr has planned and designed from Charleston since 2012, from luxury destination weddings on Lake Como to celebrations in Kiawah and Charlottesville. Full-service planning and production rooted in storytelling and seamless design.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_xib4F16_ogRpGmxm2gLvC0",
+   "name": "Engaging Events, LLC",
+   "website": "http://www.engagingeventscharleston.com/",
+   "instagram": "engagingevents",
+   "tags": [
+    "21+ years",
+    "luxury",
+    "owner-led"
+   ],
+   "blurb": "Anna Burr is the lead consultant, designer and owner of Engaging Events, a luxury wedding planner in Charleston with more than 21 years of experience. A University of South Carolina business and marketing degree and a long-held passion for hospitality sit behind the client relationships she builds.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ57xzDT56_ogR4IVakxyLq7Y",
+   "name": "A Charleston Bride LLC",
+   "website": "http://www.acharlestonbride.com/",
+   "instagram": "acharlestonbride",
+   "tags": [
+    "since 2001",
+    "luxury",
+    "Southeast estates"
+   ],
+   "blurb": "A Charleston Bride has planned weddings since 2001 under founder Melissa Williams, serving venues and private estates throughout the Southeast, indoors and out. The firm says Southern Living named it one of the South's best wedding planners.",
+   "since": 2001,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJkTUbC0F6_ogRwq4ccCc3m_g",
+   "name": "Calder Clark",
+   "website": "http://www.calderclark.com/",
+   "instagram": "calderclark",
+   "tags": [
+    "two decades",
+    "destination",
+    "editorial"
+   ],
+   "blurb": "After two decades of wedding planning, Calder Clark still describes the work as fun for everyone involved, including the planners. Full-service destination planning out of Mt Pleasant, with high-touch logistics and clean, classic design instead of one-size-fits-all weddings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJIXucNL99_ogRUrKr8f38U74",
+   "name": "Katie Jean Events",
+   "website": "http://www.katiejeanevents.com/",
+   "instagram": "katiejeanevents",
+   "tags": [
+    "since 2014",
+    "Charleston native",
+    "partial and full"
+   ],
+   "blurb": "Born and raised in Charleston, Katie Jean founded her planning business in 2014 and has built vendor relationships across the city since. The firm offers both partial and full-service packages, aimed at couples at any stage of planning.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJr0K-KVh5_ogRBAxyRpRJw_c",
+   "name": "Anderson Event Design",
+   "website": "http://andersoneventdesign.com/",
+   "instagram": "andersoneventdesign",
+   "tags": [
+    "venue-founder on staff",
+    "timeless Southern design",
+    "full-service"
+   ],
+   "blurb": "Anderson Event Design is a full-service planning and design team in historic Charleston specializing in timeless Southern weddings. Lead planner Sarah Rickman founded and managed Wingate Place, a venue holding more than 45 weddings a year, before planning events across South Carolina.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJj-NFCp2K_ogRCYvk_LJD8Ns",
+   "name": "Lenai Events",
+   "website": "http://lenaievents.com/",
+   "instagram": "lenaievents",
+   "tags": [
+    "since 2016",
+    "Southeast and worldwide",
+    "Southern hosting"
+   ],
+   "blurb": "Felita Lenai leads Lenai Events, a Charleston planner crafting polished celebrations across the Southeast and worldwide. The team says the art of hosting is in its DNA, but designs warm, sophisticated celebrations around your story rather than pretty for its own sake.",
+   "since": 2016,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUzqrCKFx_ogRAMjXHD4GkDU",
+   "name": "Meredith Tanton Events",
+   "website": "http://www.meredithtantonevents.com/",
+   "instagram": "meredithtantonevents",
+   "tags": [
+    "15+ years",
+    "luxury destination",
+    "Mt Pleasant"
+   ],
+   "blurb": "Meredith Tanton Events does full-service luxury planning and design in Charleston, across the South and at destinations beyond. Meredith was raised in Charlotte with Lowcountry roots and an Elon communications degree, and the team cites more than 15 years of experience.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJkWZEQDkx3YARTqrdc8Vzt0k",
+   "name": "Sweet Peach Planning",
+   "website": "http://www.sweetpeachplanning.com/",
+   "instagram": "sweet_peach_planning",
+   "tags": [
+    "publishes package pricing",
+    "wedding weekends",
+    "Charleston and beyond"
+   ],
+   "blurb": "Megan Papageorge's Sweet Peach Planning prints its package prices and builds full planning around the whole weekend, with two additional social events and transportation and accommodation coordination. Her favorite part of the day is the recessional.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJiQOyand7_ogRCFUqtRpNcRI",
+   "name": "b Wed Charleston",
+   "website": "http://www.bwedcharleston.com/",
+   "instagram": "bwedcharleston",
+   "tags": [
+    "elopements",
+    "micro weddings",
+    "all-inclusive packages"
+   ],
+   "blurb": "b Wed Charleston specializes in elopements, intimate ceremonies, micro weddings, vow renewals and commitment ceremonies, with customizable all-inclusive packages. Thirteen years in, its line is that simple does not mean boring.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8-BTVmdrAIkRFJ0rTKGED9A",
+   "name": "Cheers & Champagne",
+   "website": "https://cheersandchampagne.com/",
+   "instagram": "cheersandchampagne",
+   "tags": [
+    "Myrtle Beach",
+    "personality-packed",
+    "50 to 350 guests"
+   ],
+   "blurb": "Sarah of Cheers & Champagne plans personality-packed weddings in Myrtle Beach, Murrells Inlet and coastal Carolina, for 50 guests or 350. If your vision involves a pink polka dot dress, the site says, the only question will be what size.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,207 @@
+{
+ "metro": "nashville",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 143,
+ "listed": 184,
+ "how": "We read the website of every Nashville wedding venue listed on Lazo (184 listings, 143 sites reachable) and set aside the ones that are not really in the wedding business: hourly elopement chapels, a micro-wedding venue whose site says the business is for sale, downtown event spaces aimed at corporate bookings, and listings with little more than a contact page. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is there a climate-controlled room for the whole guest count? Middle Tennessee summers are humid and spring brings storms, so ask where the ceremony moves if it rains.",
+  "Which farm venues sit 30 to 45 minutes out of town, and is there lodging on site or a shuttle plan for guests staying downtown?",
+  "What does all-inclusive actually cover here: catering, coordinator, florals, DJ, cake? Ask for the line items, not the headline."
+ ],
+ "picks": [
+  {
+   "id": "ChIJl42ZbdstZIgRvfPgh5BJvUM",
+   "name": "Rock Creek Farm",
+   "website": "http://www.rockcreekfarmnashville.com/",
+   "instagram": "rockcreekfarmnashville",
+   "tags": [
+    "since 2011",
+    "all-inclusive",
+    "Gallatin"
+   ],
+   "blurb": "Rock Creek Farm has hosted Nashville-area weddings and events since 2011 on sprawling Gallatin landscapes it describes as rustic elegance with Southern charm. All-inclusive, and the site also takes gatherings and retreats, not only weddings.",
+   "since": 2011,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAeAVn1MYZIgRoqfpflbI4TM",
+   "name": "Terian Farms Event Center",
+   "website": "https://terianfarmseventcenter.com/",
+   "instagram": "terianfarmseventcenter",
+   "tags": [
+    "barn venue",
+    "all-inclusive",
+    "ponds and rolling hills"
+   ],
+   "blurb": "A barn wedding venue just east of downtown Nashville in Lebanon, with ponds, rolling hills and an outdoor ceremony site surrounded by fields and woodlands. Terian Farms has a wedding pricing and packages page with customizable all-inclusive options and pitches a stress-free day.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJZ2slCJBZIgR3pOYznQ8oiM",
+   "name": "Treemont Mansion",
+   "website": "http://www.treemontmansion.com/",
+   "instagram": "treemontmansion",
+   "tags": [
+    "historic mansion",
+    "no hidden fees",
+    "15 minutes out"
+   ],
+   "blurb": "Treemont Mansion is a 17,500-square-foot historic home in Old Hickory, about 15 minutes outside Nashville. Its pricing page promises straightforward pricing with no hidden fees, which is rare among the historic-house venues here.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJb_dOPmX4Y4gRWVouGJ9m1Bo",
+   "name": "Carriage Lane Events and Catering",
+   "website": "http://www.carriagelaneinnweddings.com/",
+   "instagram": "carriagelaneinn",
+   "tags": [
+    "four historic homes",
+    "25 to 150 guests",
+    "catering and decor included"
+   ],
+   "blurb": "Four restored historic homes among magnolia trees in the heart of Murfreesboro. Carriage Lane Inn specializes in all-inclusive weddings for 25 to 150 guests with catering, decor and coordination included, plus a garden ceremony space and a historic reception hall.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJk-XZL10bZIgRrTjPdku67EI",
+   "name": "Legacy Farms",
+   "website": "http://www.legacyfarmstn.com/",
+   "instagram": "legacyfarmstn",
+   "tags": [
+    "over 25 years",
+    "22 acres",
+    "overnight lodging"
+   ],
+   "blurb": "For over 25 years Legacy Farms in Lebanon has planned and hosted weddings, including couples who fly in and have the team handle every detail from thousands of miles away. All-inclusive packages on 22 acres with catering and on-site lodging in one place.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ57KrqKE4ZIgR6CgGyPDHgeo",
+   "name": "Spring Haven Mansion and Estate",
+   "website": "https://springhavenmansion.com/",
+   "instagram": "springhavenmansion",
+   "tags": [
+    "built around 1825",
+    "terrace for 125",
+    "three published collections"
+   ],
+   "blurb": "Spring Haven was built around 1825 as the home of Andrew Jackson's personal physician, and the site tells that history in detail. The Hendersonville estate near Old Hickory Lake has formal parlors, a cabin from around 1800 and a covered terrace for 125, with three collections priced on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJmbHeaRCjZIgR85TGptLf6Ho",
+   "name": "WindSong Farm Weddings & Events",
+   "website": "https://windsongfarmevents.com/",
+   "instagram": "autumnphotovideo",
+   "tags": [
+    "owner-run farm",
+    "Saturdays $6,000",
+    "weekday rates from $3,500"
+   ],
+   "blurb": "Michael and Aimee Fisher own WindSong Farm in Burns; Michael bought the farm in 2016 and the first wedding held there, in 2019, was their own. The price page is plain: Saturday 9am to 10pm is $6,000, Fridays $5,500, and October weekdays run $3,500.",
+   "since": null,
+   "from_price": "$3,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ78chhmNVYYgRlNAAWmFm_ao",
+   "name": "FiveSense Farm Venue",
+   "website": "http://www.fivesensefarm.com/",
+   "instagram": "fivesensefarmtn",
+   "tags": [
+    "family-owned since 2013",
+    "all-inclusive",
+    "Murfreesboro countryside"
+   ],
+   "blurb": "Family-owned and operated since 2013, FiveSense Farm was built around a streamlined all-inclusive package for couples tired of managing every detail. Every event in the Murfreesboro countryside includes tables, seating and on-site parking.",
+   "since": 2013,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJf4tzRawZZIgRY19pZO-THk0",
+   "name": "Tucker's Gap Event Center",
+   "website": "http://tuckersgap.com/",
+   "instagram": "tuckersgapeventcenter",
+   "tags": [
+    "53 acres",
+    "300+ guests",
+    "three ceremony sites"
+   ],
+   "blurb": "Tucker's Gap in Lebanon has 13,000 square feet under roof on 53 private acres, with three outdoor ceremony sites and a 5,000-square-foot climate-controlled main hall with a gas fireplace that seats 300 or more. One of the larger capacities on this list.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJoWgKXVB-ZIgRnbHsGoaT1FQ",
+   "name": "CJ's Off the Square",
+   "website": "https://cjsoffthesquare.com/",
+   "instagram": "cjsoffthesquare",
+   "tags": [
+    "since 2005",
+    "garden venue",
+    "transparent pricing"
+   ],
+   "blurb": "CJ's Off the Square is an all-inclusive garden venue in Franklin that has run weddings since 2005. The pitch is that you find the venue and they handle the vendors, estimates and organizing, with pricing it describes as transparent.",
+   "since": 2005,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJIYZUzvpTYYgRBR5WMfb1CiY",
+   "name": "The Farm at Spring Valley, LLC",
+   "website": "http://thefarmatspringvalley.com/",
+   "instagram": "the.farm.at.spring.valley",
+   "tags": [
+    "176 acres",
+    "two weddings a month",
+    "Friday-to-Saturday access"
+   ],
+   "blurb": "A modern barn on 176 private acres in Readyville, outside Murfreesboro, with mountain views and water features. The Farm at Spring Valley hosts just two weddings a month, and each couple gets the property from Friday noon through Saturday.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJB-8BJFd-ZIgRF6Z5kTwNs30",
+   "name": "Homestead Manor",
+   "website": "https://homesteadmanor.com/?utm_source=googlemybusiness&utm_medium=websitelink&utm_campaign=homestead_gmb",
+   "instagram": "homesteadmanor",
+   "tags": [
+    "built 1819",
+    "National Register",
+    "48 acres"
+   ],
+   "blurb": "Homestead Manor in Thompson's Station was built in 1819 and is listed on the National Register of Historic Places, on 48 pastoral acres with an old schoolhouse on the grounds. Wedding packages are customizable, from a fully curated experience to a flexible venue rental.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

@@ -1,0 +1,207 @@
+{
+ "metro": "tampa",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 187,
+ "listed": 226,
+ "how": "We read the website of every Tampa wedding venue listed on Lazo (226 listings, 187 sites reachable) and set aside the ones that are not really in the wedding business: beach ceremony package companies, planners and DJs that were listed as venues, a food hall, and a duplicate listing of the same ballroom. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Where do guests go when the afternoon thunderstorm rolls in or it is 95 degrees in August? Ask to see the indoor or covered plan, not a tent clause.",
+  "What is in the rental: how many hours, tables, chairs, a coordinator, and what is a separate line?",
+  "What happens to my date and deposit if a hurricane closes the venue between June and November?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJXZK11HT7wogRuG69bPNOfvc",
+   "name": "Wedding Venue Clearwater, East Bay CC",
+   "website": "https://www.weddingvenueclearwater.com/",
+   "instagram": "east_baycc",
+   "tags": [
+    "all-inclusive",
+    "lakeside",
+    "27 years"
+   ],
+   "blurb": "An all-inclusive lakeside venue in Largo, minutes from Clearwater, that cites 27 years of experience and more than 10,000 weddings. East Bay Country Club builds its pitch around everything-included packages and a sunset ceremony by the lake.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJHbMbtZPvwogRNJ6_qpsqxvw",
+   "name": "Harborside Chapel",
+   "website": "https://harborsidechapel.org/?utm_source=google&utm_medium=organic&utm_campaign=GMB",
+   "instagram": "harborsidechapel",
+   "tags": [
+    "ceremony chapel",
+    "publishes pricing",
+    "church-founded"
+   ],
+   "blurb": "A wedding ceremony chapel in Safety Harbor, founded by Harborside Christian Church in 2017 to prepare couples for marriage as well as host the day. Chapel reservations are priced by block on the site: four hours runs $1,400 Monday to Thursday and $2,400 on a Saturday.",
+   "since": 2017,
+   "from_price": "$1,400",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZfp8CH_RwogRj8c9sKI1iP4",
+   "name": "The Waterside Ranch",
+   "website": "https://thewatersideranch.com/",
+   "instagram": "thewatersideranch",
+   "tags": [
+    "waterfront",
+    "Highland cattle",
+    "pricing brochure on request"
+   ],
+   "blurb": "A working Highland cattle ranch on the Alafia River in Gibsonton, with six waterfront acres for weddings and events alongside its cow experiences. The Waterside Ranch describes the blend as southern charm, rustic elegance and waterfront serenity, and sends a pricing brochure and custom quote on request.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJf-LDo_HLwogRM_aYMfCPAp0",
+   "name": "Mill Pond Estate",
+   "website": "http://www.millpondestate.com/",
+   "instagram": "millpondestate",
+   "tags": [
+    "18 acres",
+    "outdoor estate",
+    "blank slate"
+   ],
+   "blurb": "Eighteen acres of untouched natural beauty in Seffner, built as a blank slate for couples who love the outdoors and also booked by creatives for photo and film shoots. Mill Pond Estate leans on quality service and communication to take the stress out of venue shopping.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJd-l0QQRV3YgR2PMNDmPp5pY",
+   "name": "S&S Ranch Wedding and Entertainment Venue",
+   "website": "https://www.ssranchwedding.com/",
+   "instagram": "ssranchvenue",
+   "tags": [
+    "rustic barn",
+    "all-inclusive",
+    "family-owned"
+   ],
+   "blurb": "A family-owned ranch in Dade City that pitches itself as Central Florida's affordable venue, with rustic barn settings and all-inclusive packages. S&S Ranch calls the look refined meets rural, and offers packages for weddings as well as parties.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJmwdPdZm1wogRIajq2JobkJM",
+   "name": "The Madison Event Venue",
+   "website": "https://themadisoneventvenue.com/",
+   "instagram": "",
+   "tags": [
+    "indoor and courtyard",
+    "near Tampa",
+    "tables and chairs included"
+   ],
+   "blurb": "Minutes from Tampa in Thonotosassa: a secluded 2,200 square foot air-conditioned and heated room paired with a 2,500 square foot lighted courtyard. Tables, chairs and cocktail tables come with the rental, and the site notes that events over 100 guests carry an additional fee.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJrQkA4t8z3YgRNrM3PebVnG0",
+   "name": "Wishing Well Barn, Inc.",
+   "website": "http://wishingwellbarn.com/",
+   "instagram": "",
+   "tags": [
+    "since 2012",
+    "family farm",
+    "all-inclusive"
+   ],
+   "blurb": "The Welch family has farmed this Plant City land since 1960, and Blake and Michelle Welch opened the Wishing Well Barn in 2012 for couples who want a rustic, vintage or agricultural setting. The venue describes itself as affordable, with country charm and all-inclusive packages.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBRbAfRb9wogR6BErmgGaHQg",
+   "name": "The West Events",
+   "website": "http://www.thewesteventspace.com/",
+   "instagram": "thewestevents",
+   "tags": [
+    "industrial chic",
+    "steps from the beach",
+    "8-hour rental"
+   ],
+   "blurb": "An industrial-chic venue in Madeira Beach with exposed brick walls, steps from the Gulf beaches, founded by two-time Olympic gold medalist Michele Smith. The West Events rental covers eight hours, all four spaces, tables, chairs and high tops, with pricing in a downloadable brochure.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJuZn6kf0T3YgRDooNtGTUMTk",
+   "name": "Blue View Barn",
+   "website": "http://www.blueviewbarn.com/",
+   "instagram": "",
+   "tags": [
+    "blueberry farm",
+    "DIY venue",
+    "since 1979"
+   ],
+   "blurb": "A true farm setting in Winter Haven, on a family farm in agriculture since 1979 that built the barn after U-pick visitors kept asking. Blue View Barn is a do-it-yourself wedding and reception venue, with an on-site ceremony coordinator, planner and other vendors available for added fees.",
+   "since": 1979,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFXwBmcI13YgRirN3b9wcfds",
+   "name": "Origins Ranch",
+   "website": "https://www.originsranch.org/",
+   "instagram": "originsranch",
+   "tags": [
+    "former horse ranch",
+    "modern barn",
+    "Plant City"
+   ],
+   "blurb": "Once a World Champion horse ranch in Plant City, Origins Ranch has turned its rustic horse barn into a modern, elegant space for barn, farm and farmhouse-style weddings. The pitch is real country minutes from Tampa, everything you need and nothing you don't.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJP0E9pK8z3YgR6KBzTRBWbP8",
+   "name": "Happy Hearts Barn",
+   "website": "https://www.happyheartsbarn.com/?utm_source=google_profile&utm_campaign=localo&utm_medium=mainlink",
+   "instagram": "happyheartsbarn",
+   "tags": [
+    "air-conditioned barn",
+    "one flat price",
+    "up to 150 guests"
+   ],
+   "blurb": "A rustic-modern barn in Plant City with an air-conditioned barn, oak-shaded ceremonies, open lawns and an on-site farmhouse. Happy Hearts Barn charges one flat price for the barn, grounds and team at any guest count up to 150, on the principle that every couple deserves to know what their day costs.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJkcsk10k73YgR_RdDdWuG4kM",
+   "name": "Uliana Estate",
+   "website": "https://www.ulianaestate.com/",
+   "instagram": "ulianaestate",
+   "tags": [
+    "7 acres",
+    "110 guests indoors",
+    "family-run"
+   ],
+   "blurb": "Seven acres of oak trees in the heart of Lakeland, with indoor and outdoor wedding spaces, bridal and groom suites and room for 110 guests indoors. Uliana Estate started as a passion project between the owner and her mom and is still run as a family business.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

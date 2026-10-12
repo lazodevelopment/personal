@@ -1,0 +1,212 @@
+{
+ "metro": "chicago",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 241,
+ "listed": 297,
+ "how": "We read the website of every Chicago wedding venue listed on Lazo (297 listings, 241 sites reachable) and set aside the ones that are not really in the wedding business: officiants, bridal-suite lodging, a park district's general page, and venue sites whose text was only a menu or guest directions. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Does the venue end at a set time, and what does an extra hour cost? City venues and suburban banquet halls differ on curfews.",
+  "If the date is November to March, where does the ceremony go when the lawn is under snow, and is the indoor option the same price?",
+  "What is in the package and what is a line item: ceremony fee, coordinator, linens, cake cutting, parking?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ96mW9WG7D4gRoIubZTdujOg",
+   "name": "Astoria Banquets All-Inclusive Chicago and Suburb Venue",
+   "website": "https://www.astoriabanquets.com/",
+   "instagram": "astoriabanquetsandevents",
+   "tags": [
+    "all-inclusive",
+    "family-owned since 2005",
+    "per-person pricing published"
+   ],
+   "blurb": "Family owned since 2005, Astoria Banquets in Buffalo Grove sells all-inclusive packages that it prices at $48 to $100 per person, with in-house catering, the on-site ceremony and decor in the number. The site makes a point of clear, predictable pricing so you know the cost before you tour.",
+   "since": 2005,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJfMgcPHyDogRKoMzZg6fHUc",
+   "name": "Northfork Farm Weddings",
+   "website": "https://nforkfarm.com/",
+   "instagram": "northfork_farm",
+   "tags": [
+    "horse farm",
+    "since 1961",
+    "up to 300",
+    "bring your own vendors"
+   ],
+   "blurb": "A working thoroughbred horse farm that has been part of Oswego since 1961, run by Pete and Laurie. Receptions happen in a heated and air-conditioned tent for up to 300, you bring your own vendors, and ceremony chair setup, a breakdown crew and a bridal suite are included.",
+   "since": 1961,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQWg7dgD9DogRsCPZagW2IEU",
+   "name": "Revelry 675",
+   "website": "http://www.revelry675.com/",
+   "instagram": "revelry675",
+   "tags": [
+    "Fox River",
+    "opened 2022",
+    "seats 300"
+   ],
+   "blurb": "Opened in 2022 on the Fox River in Batavia by Shuki Moran, an event planner with over 25 years in the business. The 5,000-square-foot reception room seats up to 300, there are two wedding party suites, and the venue's own planning staff can be hired for day-of coordination.",
+   "since": 2022,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJzbU2fiyDD4gRzSWdx4wIgtA",
+   "name": "Parkway Banquets",
+   "website": "http://www.parkwaybanquetsil.com/",
+   "instagram": "",
+   "tags": [
+    "two Lake County venues",
+    "lakeside",
+    "one event at a time"
+   ],
+   "blurb": "Two Lake County venues under an owner of 30-plus years: Parkway by the Lake in Ingleside, on Long Lake with a canopied outdoor ceremony area, and the newer Parkway Banquets Salon in Round Lake for up to 400. One event at a time, no facility fee, and a printed intimate wedding package at $4,795.",
+   "since": null,
+   "from_price": "$4,795",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBcrmx-wVD4gRxJz8Yybz9dc",
+   "name": "Lincoln Farmstead",
+   "website": "https://lincolnfarmstead.com/",
+   "instagram": "lincolnfarmstead",
+   "tags": [
+    "1920s dairy farm",
+    "barn",
+    "April to November"
+   ],
+   "blurb": "A 1920s dairy farm in Huntley that the Lincoln family turned into a barn wedding venue in 2017, six miles north of I-90 on Route 47. Open April through November with heating and air conditioning, and the pricing pamphlet is a download rather than a phone call.",
+   "since": 2017,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfdC_zjZFDogRS2D5sxJ1UsM",
+   "name": "The Bridge Lemont",
+   "website": "https://thebridgelemontil.com/?utm_source=GMB&utm_medium=website+link&utm_campaign=The+Bridge+Lemont+GMB",
+   "instagram": "jermainehortonphotography",
+   "tags": [
+    "rustic industrial",
+    "up to 250",
+    "family-owned",
+    "no hidden fees"
+   ],
+   "blurb": "Family owned by Kevin and Alisa with Alisa's parents Jerry and Julie, The Bridge Lemont is 7,000 square feet of wood ceilings, exposed brick and ironwork in downtown Lemont, with a courtyard for outdoor ceremonies and a reception room for up to 250. The site promises straightforward pricing with no hidden fees.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ05CBZ9FTDogRnjF9Cx7Ce70",
+   "name": "Abbington Distinctive Banquets",
+   "website": "https://abbingtonbanquets.com/",
+   "instagram": "abbingtonbanquets",
+   "tags": [
+    "Fabbri family since 2002",
+    "100 to 1,300 guests",
+    "in-house catering"
+   ],
+   "blurb": "The Fabbri family has owned and run the Abbington in Glen Ellyn since 2002, a lineage that goes back to Louis Fabbri's Mar Lac House in Oak Park in 1969. Ballrooms take 100 to 1,300 guests, with in-house catering, cakes and planners, and parking for more than 400 cars.",
+   "since": 2002,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2Tj8kW_ND4gRLL81cg2sjzo",
+   "name": "Stan Mansion",
+   "website": "https://www.stanmansion.com/",
+   "instagram": "stanmansion",
+   "tags": [
+    "former Masonic lodge",
+    "Logan Square",
+    "300 seated"
+   ],
+   "blurb": "A former Masonic lodge in the Logan Square Historic District, restored by Cera Stan with the final phase finished in 2018. The Grand Ballroom seats 300 for dinner or 450 for cocktails, with a lower ballroom, marble lobby and front garden, and the venue says plainly that couples of every gender, faith and background are welcome.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJU7IxW6JWDogRNJiZ9oo2Hus",
+   "name": "Danada House",
+   "website": "https://danadahouse.org/",
+   "instagram": "danadahouse",
+   "tags": [
+    "forest preserve estate",
+    "garden ceremonies",
+    "renovated Atrium"
+   ],
+   "blurb": "The former Rice family estate inside the Danada Forest Preserve in Wheaton, once the home farm of a Kentucky Derby winner. Several garden ceremony sites, including a Formal Garden for up to 250, pair with a renovated climate-controlled Atrium with floor-to-ceiling windows.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJNQcXaF-TDogR28lT97HBqAw",
+   "name": "Sable Creek Homestead",
+   "website": "http://sablecreekhomestead.com/",
+   "instagram": "",
+   "tags": [
+    "1930s barn",
+    "prairie",
+    "veteran and family owned",
+    "concierge planning"
+   ],
+   "blurb": "A restored 1930s barn on an acre of wildflowers beside Aux Sable Creek in Minooka, veteran and family owned. The all-inclusive experience adds concierge planning, decor setup and teardown and a private bridal suite, and the venue describes itself as fully guided so you are not managing the day.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJcZxrGrc0DogRiARp6pz8y0s",
+   "name": "Elizabeth F Cheney Mansion",
+   "website": "http://www.cheneymansion.com/",
+   "instagram": "",
+   "tags": [
+    "historic mansion",
+    "Oak Park",
+    "rates published",
+    "bring a caterer"
+   ],
+   "blurb": "An estate in Oak Park's Frank Lloyd Wright Historic District with 2.2 acres of grounds, a greenhouse and a woodland walk, nine miles west of downtown. Rental rates are printed on the site, from $2,900 for a weekday or Sunday evening to $4,200 for a peak-season Saturday evening, and you bring in a caterer from its list.",
+   "since": null,
+   "from_price": "$2,900",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJVVUVBqcFD4gRoFbVfhMzbFo",
+   "name": "The Highland Loft",
+   "website": "https://thehighlandloft.com/",
+   "instagram": "highlandlofteventvenue",
+   "tags": [
+    "1890s loft",
+    "downtown Elgin",
+    "overnight suites",
+    "all-inclusive option"
+   ],
+   "blurb": "The top floors of an 1890s department store building in downtown Elgin, opened as a venue in late 2019, with exposed brick, maple floors and tin ceilings across 19,500 square feet. Two event spaces, overnight loft suites and all-inclusive packages that bundle catering, bar and decor.",
+   "since": 2019,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

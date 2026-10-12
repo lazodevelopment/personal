@@ -1,0 +1,159 @@
+{
+ "metro": "salt-lake-city",
+ "cat": "wedding-djs",
+ "updated": "2026-10-12",
+ "read": 24,
+ "listed": 33,
+ "how": "We read the website of every Salt Lake City wedding DJ listed on Lazo (33 listings, 24 sites reachable) and set aside the ones that are not really in the wedding business: a self-serve DJ equipment rental, an Idaho sound company with a Utah listing, a live acoustic duo, venues and planners listed as DJs, and DJs whose only page was Instagram or had no readable text. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Who exactly will be at my wedding, and can I talk to that DJ before I sign?",
+  "Have you worked a dry reception or a venue with Utah's alcohol rules, and how do you keep the floor full without a bar?",
+  "What is in the base price, and what are uplighting, photo booth and extra hours on top?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJaYMtD-KPUocR8YthPId2lKc",
+   "name": "DJ Casey Weddings & Events",
+   "website": "http://djcasey.com/",
+   "instagram": "djcasey_events",
+   "tags": [
+    "family DJ team",
+    "since 2016",
+    "from $445"
+   ],
+   "blurb": "Casey, Jenae and Saydee Taylor are a West Jordan family DJ team that started after Casey DJed his own wedding in 2016. Casey runs the planning calls and the mic, and every price is published, with services from $445.",
+   "since": 2016,
+   "from_price": "$445",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJx-iGTdj1UocRdCevL5Oo0KY",
+   "name": "Best DJ In Utah",
+   "website": "https://www.bestdjinutah.com/",
+   "instagram": "bestdjinutah",
+   "tags": [
+    "radio producer",
+    "DJ and emcee",
+    "Taylorsville"
+   ],
+   "blurb": "Richie T, the founder of Best DJ In Utah, is a radio producer, DJ, emcee and actor who plays everything from classic rock to hip-hop to country and reads the room. Taylorsville-based, weddings and corporate events.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJccRKV4g1kmARzHfMvLMO7jc",
+   "name": "Utah Jive",
+   "website": "http://www.utahjive.com/",
+   "instagram": "utahjive",
+   "tags": [
+    "DJ and MC",
+    "photo booth",
+    "green screen"
+   ],
+   "blurb": "Keith at Utah Jive comes from music, dance and stage performing and calls weddings a specialty, acting as MC and event director as well as DJ. Photo booth and green screen services from the same Draper company.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJId5TKKGQTYcR_mwGi7FEXhM",
+   "name": "Pro GJDJ",
+   "website": "https://www.progjdj.com/about-us/",
+   "instagram": "progjdj",
+   "tags": [
+    "15 years",
+    "light show",
+    "disabled veteran"
+   ],
+   "blurb": "Gordon Jacobs has DJed professionally for 15 years and says he has put over $30,000 into equipment, including lasers, moving lights, fog and a haze machine. A 100 percent disabled veteran, based in Provo, who prices each event individually.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJc9I-YBL_UocR8Rjc2N7r48s",
+   "name": "DJ Cam Reeve | Utah",
+   "website": "https://www.djcamreeve.com/dj-cam/",
+   "instagram": "djcamreeve",
+   "tags": [
+    "10+ years",
+    "Reeverb Entertainment team",
+    "Farmington"
+   ],
+   "blurb": "DJ Cam Reeve fronts Reeverb Entertainment, a team that handles weddings across Salt Lake City, Park City, Provo and Logan, with more than ten years behind the decks. A booking manager handles the details so the DJs focus on the night.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJcQfPs0iLUocR7vO8WUHDDUE",
+   "name": "Flipside Fun",
+   "website": "https://www.flipsidefun.com/",
+   "instagram": "flipsidefunslc",
+   "tags": [
+    "DJ JJ",
+    "photo booths and rentals",
+    "Taylorsville"
+   ],
+   "blurb": "Flipside Fun is DJ JJ plus photo booths, inflatables and event rentals, and he is hands-on with the setup of all of it. Taylorsville, for weddings, school dances and company parties.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJD_lRjdUaU4cRVQyHZU5XHvE",
+   "name": "Beat of Time",
+   "website": "https://www.thebeatoftime.com/",
+   "instagram": "",
+   "tags": [
+    "since 1985",
+    "sound, lighting and video",
+    "karaoke"
+   ],
+   "blurb": "The Beat of Time has entertained the Western United States since 1985 with sound, video and lighting shows, and keeps a staff in each department. Clinton-based, with karaoke and entertainers on the menu beside the DJs.",
+   "since": 1985,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ_63caABzUocRfzeMwVifPNM",
+   "name": "DJ Davken",
+   "website": "https://davkenmusic.com/",
+   "instagram": "",
+   "tags": [
+    "luxury",
+    "dedicated wedding team",
+    "Park City to Las Vegas"
+   ],
+   "blurb": "Booking DJ Davken means working with a dedicated wedding team rather than a single DJ, for luxury weddings from Park City to Moab, Las Vegas and destinations across the country.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJqXZFsBADU4cRLuJOTcorJY4",
+   "name": "1 Night Events",
+   "website": "https://www.1nightevents.com/",
+   "instagram": "",
+   "tags": [
+    "DJ and photobooth",
+    "30 to 300 guests",
+    "Kaysville"
+   ],
+   "blurb": "Josh Beckstrom's 1 Night Events in Kaysville pairs a DJ with a photobooth and promises to treat a party of 30 like a party of 300. First dance to last song, with any genre you can name.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

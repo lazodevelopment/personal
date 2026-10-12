@@ -1,0 +1,207 @@
+{
+ "metro": "atlanta",
+ "cat": "wedding-planners",
+ "updated": "2026-10-12",
+ "read": 89,
+ "listed": 122,
+ "how": "We read the website of every Atlanta wedding planner listed on Lazo (122 listings, 89 sites reachable) and set aside the ones that are not really in the wedding business: venues that also sell coordination, an officiant service, an Ireland elopement planner, a decor rental company, and a national chain's Atlanta page. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Full planning, partial, or day-of only? Ask what each tier includes in hours and in meetings.",
+  "Which Atlanta venues and vendors have you worked with this year, and how do you plan around game-day and festival traffic for guests?",
+  "Who is on site on the wedding day, the planner you hired or an associate?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJHYnc-kKW9YgRLXX50EKeImE",
+   "name": "Ribha Events",
+   "website": "http://ribha.com/",
+   "instagram": "ribhaevents",
+   "tags": [
+    "Indian weddings",
+    "since 2004",
+    "day-of package"
+   ],
+   "blurb": "Founded in 2004, Ribha Events is an Atlanta Indian wedding planner that has grown into a full-service wedding management firm for luxury celebrations and destination weddings, with more than three decades of combined team experience. A day-of package is offered for couples who have everything planned.",
+   "since": 2004,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZyFQCuBl9YgRzBQRiEczlnw",
+   "name": "Lean on me wedding planner",
+   "website": "https://www.leanonmeweddingplanner.com/",
+   "instagram": "",
+   "tags": [
+    "charge by the hour",
+    "in-person meetings",
+    "Canton"
+   ],
+   "blurb": "Two planners who have worked Georgia venues since 2012 and launched Lean On Me in Canton as their own company two years ago. They charge by the hour, meet in person at their place, and offer a package to talk through ideas and leave with a solid plan.",
+   "since": 2012,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQb6cjmac9YgR5rbCXYn9IN0",
+   "name": "House Of BASH",
+   "website": "https://houseofbash.net/",
+   "instagram": "houseofbashatl",
+   "tags": [
+    "planning and floral",
+    "decor setup",
+    "Alpharetta"
+   ],
+   "blurb": "Ida, born and raised in Atlanta, found weddings through styled shoots at Occasions Magazine and now runs House of BASH, an Alpharetta planning and coordination team that also does floral and decor design and decor setup. On event day she is the one talking to vendors and putting out small fires.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7zqp03SW9YgRZ7ZUGlAB9_M",
+   "name": "Pop + Fizz",
+   "website": "http://www.popandfizz.com/",
+   "instagram": "popandfizz",
+   "tags": [
+    "luxury",
+    "design and planning",
+    "destination"
+   ],
+   "blurb": "Pop + Fizz is a luxury wedding design and planning agency in Atlanta that works destinations worldwide and describes itself as widely published. Its stated goal is for guests to feel something from the invitation onward, while having fun and getting a lot done.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJISeJockH9YgRVOF7_VTIQMw",
+   "name": "Organized Occasions",
+   "website": "https://www.organizemyoccasion.com/contact/",
+   "instagram": "organized.occasions",
+   "tags": [
+    "since 2008",
+    "three packages",
+    "Atlanta"
+   ],
+   "blurb": "Ryan Marston has been in hospitality and special events since 2008 and offers three service packages for couples, with pricing sent after a contact form. Weddings are her passion, with rehearsal dinners and milestone parties on the side.",
+   "since": 2008,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJAQCwx-4D9YgRaPGbutyzLdg",
+   "name": "Events by Mesita",
+   "website": "https://www.eventsbymesita.com/",
+   "instagram": "_eventsbymesita",
+   "tags": [
+    "luxury",
+    "floral design in house",
+    "Atlanta"
+   ],
+   "blurb": "Southern hospitality meets curated luxury is the line at Events by Mesita, where couture weddings, corporate galas and milestone celebrations are planned with event floral design in house. The owner credits daily gratitude, faith and her muses Maxim and Chloe for the approach.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJmYDhDsgF9YgRjLHhgMQ_fhA",
+   "name": "W Events | Atlanta Wedding Planner",
+   "website": "https://weventsco.com/",
+   "instagram": "weventsco",
+   "tags": [
+    "Atlanta, Nashville, Chattanooga",
+    "full team",
+    "design and planning"
+   ],
+   "blurb": "Formerly Wildflower Wedding Planning, W Events plans and designs weddings in Atlanta, Nashville and Chattanooga with a team of designers, planners and coordinators. The pitch is high-touch work with meaning in each detail.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2fjd5-QX9YgRyqsGaqoxeyg",
+   "name": "Simply Chic Soirées",
+   "website": "http://scsforyou2.com/",
+   "instagram": "scs_lady",
+   "tags": [
+    "veteran-owned",
+    "all-inclusive planning",
+    "Austell"
+   ],
+   "blurb": "Amaris Taylor's Simply Chic Soirées is a woman-owned, Black-owned and veteran-owned planner in metro Atlanta that began after she joined the Army Reserves in 2002 and was volunteered to organize a holiday ball. All-inclusive event planning, with ceremony decor listed in the packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7dry--nv9YgRnFFMPpIzYcY",
+   "name": "M&G Weddings and Events, LLC - North GA wedding coordinator",
+   "website": "http://www.mandgweddings.com/",
+   "instagram": "mandgweddings",
+   "tags": [
+    "coordination",
+    "Braselton",
+    "photography background"
+   ],
+   "blurb": "Brittnie, an Atlanta native, fell for weddings in 2011 working in wedding photography and realized she belonged in the middle of the organization rather than behind the camera. M&G's coordinating process is built on hours of planning before the day, out of Braselton.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJBb6sr5ME9YgRM8CkaxSWyQk",
+   "name": "Lemiga Events, LLC",
+   "website": "http://www.lemiga.com/",
+   "instagram": "lemiga",
+   "tags": [
+    "since 2004",
+    "event design house",
+    "Atlanta"
+   ],
+   "blurb": "Michelle Gainey has designed, planned and produced events since 2004 at Lemiga, an Atlanta event design house that takes on weddings alongside brand and corporate work. Bold, innovative and noteworthy is the stated standard for every gathering.",
+   "since": 2004,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJe6TtlTYF9YgR3sOXr5mSr4w",
+   "name": "Chic Soirées",
+   "website": "https://chicsoirees.com/",
+   "instagram": "chicsoirees",
+   "tags": [
+    "sustainable",
+    "partial planning from $5,000",
+    "publishes pricing"
+   ],
+   "blurb": "Teshika's Chic Soirées does luxury, eco-friendly weddings with structured planning and clear communication, and prints its pricing: partial planning starts at $5,000 and begins four or more months before the wedding.",
+   "since": null,
+   "from_price": "$5,000",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJldw-dMF19YgRGAo9XdLP9sg",
+   "name": "Gorgeous by Design Events",
+   "website": "http://www.gorgeousbydesignevents.com/",
+   "instagram": "gorgeousbydesignevents",
+   "tags": [
+    "luxury",
+    "$60,000 minimum",
+    "GA, AL, NC"
+   ],
+   "blurb": "Arletta's Gorgeous by Design Events is a luxury planning and design studio in Roswell serving clients in Georgia, Alabama and North Carolina. The site is upfront that full-service wedding design carries a minimum spend of $60,000 or more for 100-plus guests, and Halimah brings a fashion-design eye to the team.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

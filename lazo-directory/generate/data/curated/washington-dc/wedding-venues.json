@@ -1,0 +1,211 @@
+{
+ "metro": "washington-dc",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 180,
+ "listed": 226,
+ "how": "We read the website of every Washington DC wedding venue listed on Lazo (226 listings, 180 sites reachable) and set aside the ones that are not really in the wedding business: golf and country club pages that are really about the pro shop, a county parks page, a meeting house that mostly rents conference rooms, and planners and photographers who were listed as venues. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "What is the rate for a Friday, a Sunday or a January date, and does a Saturday in May or October need a year's lead time here?",
+  "If a summer thunderstorm or August humidity hits, where does the ceremony move, and does that backup cost extra?",
+  "What time does the music have to stop, and is that a county rule or the venue's? Ask about shuttles and parking for a farm or vineyard site too."
+ ],
+ "picks": [
+  {
+   "id": "ChIJT8uIXN3RyYkRl_l-G9iFtww",
+   "name": "Morningside Inn",
+   "website": "https://morningside-inn.com/",
+   "instagram": "morningside_inn",
+   "tags": [
+    "300 private acres",
+    "all-inclusive",
+    "since 1995"
+   ],
+   "blurb": "Set on 300 private acres in the rolling hills of Frederick, Morningside Inn has hosted indoor and outdoor weddings for over 25 years with a family legacy behind it. Packages are all-inclusive, from day-of coordination on, and the site publishes a packages and pricing page rather than making you ask.",
+   "since": 1995,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJvzkbZjkntokRGOlYjE4J9DI",
+   "name": "Bluebird Manor",
+   "website": "https://www.bluebirdmanor.com/",
+   "instagram": "bluebirdmanorweddings",
+   "tags": [
+    "1880 red barn",
+    "family-run",
+    "from $8,500"
+   ],
+   "blurb": "A red barn dating to 1880 and a White Chapel near Frederick, run by Carol, Glenn and their daughter Bailey, who renovated the barn in 2018 after first hosting weddings there for friends and family. Rental is 12 hours, 11am to 11pm, and the site prints the rate by day: Sunday and holiday Mondays $8,500, Friday $9,000, Saturday $9,800.",
+   "since": null,
+   "from_price": "$8,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0XgypiDWyYkRA2jmNX1PSCw",
+   "name": "Milton Ridge",
+   "website": "http://www.miltonridge.com/",
+   "instagram": "miltonridgevenue",
+   "tags": [
+    "historic chapel",
+    "small and intimate",
+    "elopement options",
+    "family-owned"
+   ],
+   "blurb": "A family-owned Maryland venue with a historic wedding chapel, a reception hall and outdoor ceremony sites, built for small and intimate celebrations. Milton Ridge also offers elopement options for couples who want to get married quickly but in style, and the leadership team introduces itself on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ2xR4p2optokRw_wYiLhAqog",
+   "name": "Comus Farm",
+   "website": "http://www.comusfarm.com/",
+   "instagram": "comusfarm",
+   "tags": [
+    "working farm",
+    "farmhouse stays",
+    "established 1921"
+   ],
+   "blurb": "A working farm established in 1921 as Hershey Farm, under new ownership since 2019, with cows, chickens, goats and alpacas still on the property and local farmers rotating corn and soy. Comus Farm hosts rustic farm weddings from small to large and rents its farmhouse for cozy stays.",
+   "since": 2019,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8xA2T9C5t4kRC5X_Ik7zbLg",
+   "name": "District Winery",
+   "website": "https://www.districtwinery.com/",
+   "instagram": "districtwinery",
+   "tags": [
+    "waterfront",
+    "DC's first winery",
+    "full-service packages"
+   ],
+   "blurb": "DC's first winery, on the waterfront, with full-service wedding packages and custom-created menus. District Winery also runs corporate events, tastings and tours, so a city couple gets an urban venue with the wine experience built in.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJhw3LQgdXtokRz4BqhTqtkQY",
+   "name": "Bel Air 1740 Weddings & Events",
+   "website": "https://belair1740.com/",
+   "instagram": "belair1740",
+   "tags": [
+    "English garden",
+    "25 acres",
+    "25 minutes from DC",
+    "hotel and shuttle package"
+   ],
+   "blurb": "A new English garden venue on a 25-acre historic home site in Prince William County, 25 minutes south of Washington, with a great hall under 25-foot ceilings and a theatrical sound and lighting system. Bel Air 1740 sits in an urban area with rideshares, hotels and restaurants close by and offers a hotel and shuttle package.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJr086Y8QjtokRnUy2nHGG7DM",
+   "name": "48 Fields Farm",
+   "website": "http://www.48fields.com/",
+   "instagram": "48fields",
+   "tags": [
+    "barn",
+    "wine country",
+    "pricing brochure"
+   ],
+   "blurb": "Macy and Cory run 48 Fields, a barn venue on a tranquil estate in Northern Virginia wine country, and pitch themselves as guides from idea to I do for couples who do not know where to start. A free wedding pricing brochure can be downloaded from the site before you tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJFQDt5YJJtokRAuIoBH8shQI",
+   "name": "The Barn at Willow Brook",
+   "website": "http://www.thebarnatwillowbrook.com/",
+   "instagram": "thismodernromance",
+   "tags": [
+    "full wedding weekends",
+    "on-site lodging",
+    "luxury barn"
+   ],
+   "blurb": "Willow Brook started when its owners, frustrated by added fees and rigid timelines while planning their son's wedding, set out to build the experience they had wanted. An intimate luxury barn in Leesburg with full wedding weekends and on-site lodging.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQ2fJ9jUQtokRgw-vMF7wleI",
+   "name": "Shadow Creek Weddings & Events",
+   "website": "https://weddingsatshadowcreek.com/",
+   "instagram": "shadowcreekweddings",
+   "tags": [
+    "year-round barn",
+    "almost 1,000 weddings",
+    "200-acre farm",
+    "since 2014"
+   ],
+   "blurb": "The Carlyle family hosted their first wedding at Shadow Creek in September 2014 and have hosted almost 1,000 since, in a year-round barn on their private 200-acre farm in Purcellville. The site says plainly that it welcomes everyone.",
+   "since": 2014,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJz9pOk6oQtokRxBuUR7CbwpQ",
+   "name": "Zion Springs",
+   "website": "https://zionsprings.com/",
+   "instagram": "zionsprings",
+   "tags": [
+    "all-inclusive",
+    "one team, one plan",
+    "24-acre estate",
+    "since 2010"
+   ],
+   "blurb": "A 24-acre private estate in Hamilton, Loudoun County, running all-inclusive weddings since 2010 on the principle of one place, one team, one plan. Zion Springs was founded on the observation that most weddings ask too much of the couple, and it also hosts marriage retreats and overnight couple getaways.",
+   "since": 2010,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJbSCXpTUFtokRHg1qL1QQjhU",
+   "name": "Silverbrook Farm",
+   "website": "http://www.silverbrookfarmweddings.com/",
+   "instagram": "silverbrookfarmweddings",
+   "tags": [
+    "built 1765",
+    "Blue Ridge foothills",
+    "bed and breakfast"
+   ],
+   "blurb": "A 1700s farm in the foothills of the Blue Ridge, with a stone and wood-frame house originally built in 1765 and added to over the years. Silverbrook Farm is a barn wedding venue that doubles as a bed and breakfast, and a virtual tour by Bowen Films is on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJJ0qkAQALtokRHubvYlnKzuo",
+   "name": "The View at Bluemont",
+   "website": "https://www.bluemontview.com/",
+   "instagram": "theviewatbluemont",
+   "tags": [
+    "hilltop manor",
+    "grand ballroom",
+    "100 acres"
+   ],
+   "blurb": "A hilltop manor in Bluemont wine country with a grand ballroom and 100 acres of manicured landscape, and the site notes a feature in Brides magazine. The View at Bluemont's team guides couples through the tour and the booking process.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

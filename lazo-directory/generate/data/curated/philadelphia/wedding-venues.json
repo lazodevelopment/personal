@@ -1,0 +1,207 @@
+{
+ "metro": "philadelphia",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 250,
+ "listed": 317,
+ "how": "We read the website of every Philadelphia wedding venue listed on Lazo (317 listings, 250 sites reachable) and set aside the ones that are not really in the wedding business: a caterer's site standing in for its mansion, a 60-guest party room, menu-only sites with no venue behind them, a duplicate listing of the same estate, and a Maryland barn that serves Delaware. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is your date a Saturday in September or October? Fall is the crowded season here, and the barns in Lancaster County book well ahead.",
+  "What is the rain and snow plan? Ask to stand in the indoor ceremony space, not just hear that one exists.",
+  "Is the catering in-house or exclusive, and does the package price cover the ceremony site, the coordinator and the rentals, or are those separate lines?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJ_6X_tLBMwYkRiaR-5Yvkwik",
+   "name": "Pen Ryn Estate",
+   "website": "https://penrynestate.com/",
+   "instagram": "penrynestate",
+   "tags": [
+    "waterfront",
+    "Bucks County",
+    "three venues, 300 to 400 seated"
+   ],
+   "blurb": "A waterfront estate in Bensalem with three separate venues: Pen Ryn Mansion and the River's Edge Pavilion each seat 300 with a dance floor, and Belle Voir Manor seats 400. The property traces back to the Bickley family, British shipping merchants who named it Belle Voir, French for beautiful view.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJF1Sr3Z28xokRQwIRwf4dRXQ",
+   "name": "The Manor House at Prophecy Creek",
+   "website": "http://www.manorhouseprophecycreek.com/",
+   "instagram": "themanorhouseatprophecycreek",
+   "tags": [
+    "all-inclusive",
+    "tented ballroom with AC",
+    "82 private acres"
+   ],
+   "blurb": "An all-inclusive tented wedding venue on 82 private acres in Ambler, with four ceremony options, in-house catering and an air-conditioned ballroom tent in one price. The Fair family behind it counts five generations in food service, and tours run seven days a week.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJI8sDjqeuxokRVUOYMGnO980",
+   "name": "Spring Mill Manor",
+   "website": "https://springmillmanor.com/",
+   "instagram": "spring_mill_manor",
+   "tags": [
+    "Bucks County",
+    "two wings",
+    "all-inclusive"
+   ],
+   "blurb": "Spring Mill Manor in Ivyland is two distinct venues under one roof, the North Wing and the South Wing, each pairing private gardens and water features with cocktail spaces and a Grand Ballroom. Packages are all-inclusive, combining the venue, catering and full-service planning in one price.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJl7vUGVrrxokRZiN3_0b0Vys",
+   "name": "Hilltop House",
+   "website": "https://www.hilltopdevon.com/",
+   "instagram": "hilltophousedevon",
+   "tags": [
+    "Main Line estate",
+    "23 acres",
+    "publishes hourly rates"
+   ],
+   "blurb": "A historic Main Line mansion on twenty-three acres of Chester County countryside in Devon, with gardens, meadows and fountains. Hilltop House is managed and exclusively catered by Perfect Setting Catering, founded in 1991 by Deborah and Jerry Diehl, and its site prints the rental terms: weekend rates cover five hours, with extra hours at $500 each.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ7eji17BJwYkRLvE6gcH_EWg",
+   "name": "The Bradford Estate",
+   "website": "https://www.thebradfordestate.com/",
+   "instagram": "thebradfordestate",
+   "tags": [
+    "South Jersey",
+    "family-owned",
+    "Beau Truesdale Venues"
+   ],
+   "blurb": "The Bradford Estate in Hainesport is part of Beau Truesdale Wedding Venues, a family-owned collection across central and southern New Jersey run by George Truesdale and his children. The origin story on the site: George set out to build a venue worthy of hosting his own daughters' weddings.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJuW_CgsVCwYkRclVZnFdNzSM",
+   "name": "The Estate at Eagle Lake",
+   "website": "https://estateateaglelake.com/",
+   "instagram": "theestateateaglelake",
+   "tags": [
+    "lakeside",
+    "South Jersey",
+    "publishes 2026 pricing"
+   ],
+   "blurb": "An indoor and outdoor venue in Chesterfield built around a six-acre lake, with a main house locals once called The Bunker after a 1970s hillside construction project. The Estate at Eagle Lake prints its 2026 wedding pricing on the site and pitches itself as affordable and hassle-free.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJH_RetlIAx4kRLwxrifF45rs",
+   "name": "The Farmhouse",
+   "website": "http://www.thefarmhousede.com/",
+   "instagram": "thefarmhousede",
+   "tags": [
+    "women-owned",
+    "fourth generation",
+    "all-inclusive"
+   ],
+   "blurb": "A restored farmhouse and estate in Wilmington, Delaware, women-owned and still managed by the fourth generation of the Murray family. The Farmhouse sells all-inclusive ceremony and reception packages, and the three owners, Anna Madonna, Laura Pierson and Katie Bowers, double as the wedding coordinators.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJZTdm3XsbxokRJatgoMc8RBM",
+   "name": "Elizabeth Furnace Event and Wedding Venue",
+   "website": "https://elizabethfurnace.com/?utm_source=google&utm_medium=organic&utm_campaign=GBP&utm_content=GBPwebsitelink",
+   "instagram": "elizabethfurnaceevents",
+   "tags": [
+    "National Historic Landmark",
+    "Lancaster County",
+    "all-inclusive"
+   ],
+   "blurb": "Elizabeth Furnace in Lititz is an 18th-century estate whose Steigel-Coleman Mansion dates to 1776 and has been a registered National Historic Landmark since 1966. Craig and Bruce Coleman bought it in 2013, and the venue offers all-inclusive packages across several indoor and outdoor spaces and gardens.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ5wsz2rI4xokRctfBpzGOIvg",
+   "name": "Stoltzfus Homestead & Gardens",
+   "website": "http://stoltzfushomestead.com/",
+   "instagram": "reel/DY0Iso-OveB",
+   "tags": [
+    "all-inclusive",
+    "$12,500",
+    "two historic barns"
+   ],
+   "blurb": "Stoltzfus Homestead in Gordonville leads with one number: all-inclusive boutique weddings for $12,500. Receptions are in the Grand Barn built in 1820, ceremonies in the late-1800s Tobacco Barn, and cocktail hour on the lawn of the 19th-century farmhouse.",
+   "since": null,
+   "from_price": "$12,500",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJSatAGLg7xokRuRgMoFvCRrQ",
+   "name": "The Barn at Silverstone",
+   "website": "http://www.thebarnatsilverstone.com/",
+   "instagram": "thebarnatsilverstone",
+   "tags": [
+    "historic stone barn",
+    "family-owned",
+    "no hidden fees"
+   ],
+   "blurb": "The owners restored this 1800s Lancaster estate by hand, with the owner's parents, to host their own wedding in 2015 and have run it as a luxury venue since. The Barn at Silverstone publishes its pricing and investment page with a no-hidden-fees promise, and courts couples traveling from New York, New Jersey and Maryland.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJL3k9_-AtxokRnwg1AA_94y4",
+   "name": "Drumore Estate",
+   "website": "https://drumoreestate.com/",
+   "instagram": "drumoreestate",
+   "tags": [
+    "1938 mansion",
+    "Lancaster County",
+    "off-season weddings"
+   ],
+   "blurb": "Drumore Estate in Pequea was founded in 1938 by Lancaster newspaper magnate John F. Steinman, who had Philadelphia architect Robert R. McGoodwin design his retreat on the second-highest peak in the county's farmland. The site makes a case for off-season weddings, with a crackling fireplace and hot drinks.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJw-bOP7yhyIkR9oYnU6hLMEU",
+   "name": "Harvest View Barn at Hershey Farms",
+   "website": "http://www.harvestviewbarn.com/",
+   "instagram": "v/t39.30808-6/818865586_1496893232466563_420822866945610541_n.jpg",
+   "tags": [
+    "working farm",
+    "family-run",
+    "transparent packages"
+   ],
+   "blurb": "A barn venue on a family farm in Elizabethtown that has been in the same family for close to a century; Jim and Shirley Hershey bought it from her parents in 1978 and still farm over 450 acres. Harvest View Barn describes its packages as transparent and started its renovation of the property in 2013.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

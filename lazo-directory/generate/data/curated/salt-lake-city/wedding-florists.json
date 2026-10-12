@@ -1,0 +1,207 @@
+{
+ "metro": "salt-lake-city",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 152,
+ "listed": 203,
+ "how": "We read the website of every Salt Lake City wedding florist listed on Lazo (203 listings, 152 sites reachable) and set aside the ones that are not really in the wedding business: a flower preservation franchise, a garden nursery, a u-pick flower farm, venues and planners listed as florists, and a duplicate listing for the same shop. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Do you design for the venue, or deliver arrangements? Installation and teardown are the difference in price.",
+  "What holds up outdoors in a Utah July, or in a cold January temple exit, and what gets shipped in?",
+  "Can I see a full wedding's florals, not a bouquet photo, at a budget like mine?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJYbaIq4KRTYcRdyTMp3RCDsE",
+   "name": "Castleberry Wedding Floral of Provo",
+   "website": "https://castleberryfloral.com/",
+   "instagram": "castleberry.floral",
+   "tags": [
+    "one-person studio",
+    "8 years",
+    "free written quote"
+   ],
+   "blurb": "Loryn Castleberry has made wedding florals for eight years and is the person who will actually make and deliver yours. A one-person studio on 500 North in Provo that promises a free written quote within a week.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJB8__4G2BTYcRaYwtWV8JhQI",
+   "name": "Floral Rhapsody Studio",
+   "website": "https://www.floralrhapsody.com/",
+   "instagram": "floralrhapsody",
+   "tags": [
+    "25+ years",
+    "refrigerated delivery van",
+    "full service"
+   ],
+   "blurb": "Floral Rhapsody's designer began more than 25 years ago and runs a Lehi studio with a refrigerated delivery van and an inventory of compotes and risers for full-service work, candlelight included. Organic, timeless, bohemian or sleek, designed to the venue and the season.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJQRH2viv1UocRpCpotY0Rs8Y",
+   "name": "Botanica Floral Studio",
+   "website": "https://botanicafloral.com/",
+   "instagram": "botanicafloralstudio",
+   "tags": [
+    "floral art",
+    "installations",
+    "workshops"
+   ],
+   "blurb": "Botanica treats flowers as sculpture and atmosphere, drawing on bonsai, the garden and the still life. A Salt Lake City studio doing wedding florals, sculptural installations, event design and hands-on workshops.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ6WulbtQNUocRrGSplzi69O4",
+   "name": "Florette",
+   "website": "http://www.florettefloral.com/",
+   "instagram": "florettefloraldesign",
+   "tags": [
+    "McQueens-trained",
+    "luxury",
+    "Park City and Deer Valley"
+   ],
+   "blurb": "Florette's founder trained at London's McQueens School of Floristry after a theatre education and sees weddings as a stage. A luxury wedding and corporate floral studio in Park City and Deer Valley, for intimate and grand celebrations.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJfd8cPIyLUocRtCChx1PwZFY",
+   "name": "Wild Earth Designs",
+   "website": "https://wildearthdesigns.com/",
+   "instagram": "wildearth.designs",
+   "tags": [
+    "modern",
+    "Best of State",
+    "pricing on request"
+   ],
+   "blurb": "Wild Earth Designs is a modern wedding floral company in Salt Lake City that lists a Best of State award and an ABC4 News appearance. Upscale bouquets, boutonnieres and installations, with pricing sent on inquiry.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJq0vkWXFsUocRAsuuk_WIKcM",
+   "name": "Silver Cricket Floral Atelier",
+   "website": "http://www.silvercricketfloral.com/",
+   "instagram": "silvercricketfloral",
+   "tags": [
+    "since 1998",
+    "high-end studio",
+    "Redstone Center"
+   ],
+   "blurb": "Silver Cricket has served Park City since 1998 from its studio in the Redstone Center, handling weddings, mitzvahs and corporate events from design through cleanup. Everyday flowers and local delivery too.",
+   "since": 1998,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJr-DPU4j1TYcRnAamVmzsC9E",
+   "name": "Five Penny Floral Co",
+   "website": "https://www.fivepennyfloral.com/",
+   "instagram": "fivepennyfloral",
+   "tags": [
+    "since 2007",
+    "local flowers",
+    "Heber City"
+   ],
+   "blurb": "Five Penny Floral has designed wedding flowers since 2007 from Heber City, with a founder whose childhood was spent digging up the family garden for more hydrangeas and peonies. Fresh local Utah flowers are the pitch.",
+   "since": 2007,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJGwlLcAoDU4cRrY1Z6jDNlBA",
+   "name": "Berglund Floral & Wedding",
+   "website": "https://berglundfloral.com/",
+   "instagram": "berglundfloral",
+   "tags": [
+    "almost 30 years",
+    "family business",
+    "Layton"
+   ],
+   "blurb": "Pat Berglund started Berglund Floral & Wedding almost 30 years ago as a family business her children could work in. A Layton shop that does weddings alongside everyday bouquets, with sample arrangements priced on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJi42m4KeFTYcRN0OX8YpJ_9A",
+   "name": "The English Rose Floral",
+   "website": "http://theenglishrosefloral.com/",
+   "instagram": "TheEnglishRoseFloral",
+   "tags": [
+    "10 years in wedding decor",
+    "bouquets to backdrops",
+    "Lindon"
+   ],
+   "blurb": "Carrie Shaw spent 10 years running her own wedding decor company before founding The English Rose Floral in Lindon. Bouquets, boutonnieres and corsages plus centerpieces, arches, backdrops and stairway and table florals for the reception.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ8-8ByhP1UocRT2GoAqXJDWw",
+   "name": "Blooms & Co.",
+   "website": "http://www.bloomsandco.com/",
+   "instagram": "bloomsandco",
+   "tags": [
+    "boutique shop",
+    "bespoke weddings",
+    "delivery"
+   ],
+   "blurb": "Blooms & Company is a boutique flower shop in Millcreek for the wild and whimsical, doing bespoke weddings and events alongside everyday deliveries, with seasonal stems sourced fresh.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJzZUASeqFTYcRqV9HQ4KdnPE",
+   "name": "Fern's Flowers",
+   "website": "https://fernsflowers.co/",
+   "instagram": "fernsflowers",
+   "tags": [
+    "garden style",
+    "named for her great-grandmother",
+    "Lindon"
+   ],
+   "blurb": "Monica Fern named her Lindon studio after a great-grandmother with a green thumb and designs in an elegant, natural garden style. Weddings, events, editorials and everyday orders.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJv66WQSmETYcRX-tbwix9gqU",
+   "name": "The Potted Pansy",
+   "website": "http://www.thepottedpansy.com/",
+   "instagram": "thepottedpansy",
+   "tags": [
+    "desert tones",
+    "crave the imperfect",
+    "Pleasant Grove"
+   ],
+   "blurb": "Mandy of The Potted Pansy in Pleasant Grove works in desert tones, weeds and texture under the motto crave the imperfect, and promises to be as excited about your wedding as you are. Custom bridal and wedding florals for Salt Lake City and surrounding areas.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}
