@@ -17,7 +17,7 @@ metro = sys.argv[1] if len(sys.argv) > 1 else "phoenix"
 import build  # noqa: E402
 import config.metros as metros_cfg  # noqa: E402
 
-only = [m for m in metros_cfg.METROS if m["id"] == metro]
+only = [m for m in metros_cfg.METROS if m["id"] in (metro, "phoenix")]   # the homepage needs its home metro (phoenix)
 assert only, f"unknown metro {metro}"
 build.metros_for_tranche = lambda t: only
 build._writeback_slugs = lambda by_metro: None          # preview never writes to Firestore

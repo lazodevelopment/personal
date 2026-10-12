@@ -86,7 +86,7 @@ CATS = {
          blurb="Jolie Images grew out of a professional photofinishing lab the family has run for over 45 years in Wheeling, and it leads with price: wedding packages start at $1,195 and top out at $2,395 for the Prestige package, with the lab still active for prints.",
          from_price="$1,195"),
     dict(id="ChIJ-79oe9AzDogRwO2JnIPnBCc", tags=["since 2014", "film and digital", "documentary", "West Town"],
-         blurb="Emma Mullins has documented weddings since 2014 with a hybrid digital and film approach that started in a high school darkroom. A documentary team based in Chicago's West Town and available for travel, with couples on the site describing the experience as easygoing and queer-friendly.",
+         blurb="Emma Mullins has documented weddings since 2014 with a hybrid digital and film approach that started in a high school darkroom. A documentary team based in Chicago's West Town and available for travel, with couples on the site describing her as fun to spend the day with and queer-friendly.",
          since=2014),
   ]),
 
@@ -197,7 +197,7 @@ CATS = {
          blurb="Tiffany Schimmerling opened Oliver Dogwood in the West Loop in 2005 after years at Chicago flower shops, and prints starting prices: bridal bouquets from $225, centerpieces from $150, with a $10,000 minimum for weddings.",
          since=2005),
     dict(id="ChIJ-Ym_VmkPD4gRtmS5NYf5_2g", tags=["30 or 300 guests", "sets up and strikes", "West Dundee"],
-         blurb="Christine Boulton turned to flowers 15 years ago after 30 years writing about weddings, and runs Branching Out from West Dundee with co-owner Kevin. The team sets up from the entry to the dessert table and returns to make it disappear, for weddings of 30 or 300."),
+         blurb="Christine Boulton turned to flowers 15 years ago after 30 years tracking wedding trends as the voice of Think Like A Bride, and runs Branching Out from West Dundee with co-owner Kevin. The team sets up from the entry to the dessert table and returns to make it disappear, for weddings of 30 or 300."),
     dict(id="ChIJ63pEzYBqqCAR_wcsvAwx1A0", tags=["from $3,000 full service", "City Hall bundle", "South Loop"],
          blurb="Funky floral design for cool people, in the studio's own words, from the South Loop. Prices are on the site: full-service weddings from $3,000, event pieces from $500, and a $390 bouquet-and-boutonniere bundle delivered to City Hall.",
          from_price="$3,000"),

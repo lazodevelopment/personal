@@ -1,0 +1,207 @@
+{
+ "metro": "new-york-city",
+ "cat": "wedding-florists",
+ "updated": "2026-10-12",
+ "read": 380,
+ "listed": 486,
+ "how": "We read the website of every New York City wedding florist listed on Lazo (486 listings, 380 sites reachable) and set aside the ones that are not really in the wedding business: bouquet preservation studios, preserved-rose shops, same-day delivery florists, duplicate landing pages of one Westchester studio, and a studio whose site still shows template placeholder text. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Do you design and install at the venue, or deliver arrangements? Teardown at a Manhattan venue often has a hard time limit.",
+  "What is in season in the Northeast for my month, and what gets shipped in?",
+  "Can I see a full wedding's florals at a budget like mine, not just a bouquet photo, and do you charge for a sample centerpiece?"
+ ],
+ "picks": [
+  {
+   "id": "ChIJG_ZyCzlZwokRHjmG9gI1W0U",
+   "name": "Blooms Florist",
+   "website": "http://nycweddingfloristblooms.com/",
+   "instagram": "bloomweddingflorist",
+   "tags": [
+    "weddings only",
+    "600 New York weddings",
+    "28th Street Flower Market"
+   ],
+   "blurb": "Blooms is a wedding-only floral atelier in Midtown: no daily arrangements, no birthday roses. Ten years of design and six hundred New York weddings, with stems hand-picked at the 28th Street Flower Market every Tuesday and Friday and one lead designer assigned to your wedding.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJPxlsNQJZwokRegQA5XBcjjU",
+   "name": "Bride & Blossom",
+   "website": "http://www.brideandblossom.com/?utm_source=google&utm_medium=organic&utm_content=local_listing_website_link&utm_campaign=google_googlemybusiness_website_link_021116",
+   "instagram": "brideandblossom",
+   "tags": [
+    "weddings exclusively",
+    "luxury",
+    "NYC and Naples"
+   ],
+   "blurb": "Bride & Blossom designs custom floral decor exclusively for weddings, in New York City and Naples, Florida. Boutique-style service starts with a complimentary consultation, and the design language is color, texture and movement.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJm6OjFKVZwokRwr1Wpeiz7qk",
+   "name": "Bastille Flowers & Events LLC",
+   "website": "http://www.bastillenyc.com/?utm_source=google&utm_medium=maps&utm_campaign=local",
+   "instagram": "bastilleflowersnyc",
+   "tags": [
+    "Paris-trained",
+    "boutique",
+    "Cipriani weddings"
+   ],
+   "blurb": "Emily Pinon grew up among lilacs and peonies in the New England countryside, trained alongside Paris designers, then founded Bastille Flowers & Events in New York City. The homepage features weddings at Cipriani South Street and in Sleepy Hollow.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJxx8wzzRXwokRJQRzBB_MUkE",
+   "name": "A Petal To Peddle - Wedding + Event Florist",
+   "website": "http://www.apetaltopeddle.com/",
+   "instagram": "apetaltopeddle",
+   "tags": [
+    "founded 2016",
+    "sustainable",
+    "Jersey City"
+   ],
+   "blurb": "A Petal To Peddle is a Jersey City floral design studio founded in 2016 for weddings and events. It describes thoughtful sourcing, mindful mechanics and practices that significantly reduce waste, for intimate gatherings through large celebrations.",
+   "since": 2016,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ89hcjnbtwokRnMI412lrnDA",
+   "name": "Lets Bloom Florist Westchester",
+   "website": "https://letsbloomflorist.com/",
+   "instagram": "letsbloomflorist",
+   "tags": [
+    "full event design",
+    "draping and lighting",
+    "Westchester"
+   ],
+   "blurb": "Let's Bloom started as a Westchester wedding florist and grew into a full event design studio with installations, draping, lighting and rentals across NY, NJ, CT and PA. The Yonkers team came to flowers after years working weddings from the other side of the room.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJc1_sjzW6wokRqiPmqtB3WyA",
+   "name": "Forever in Bloom Event Design & Floral Decor",
+   "website": "http://foreverinbloomny.com/",
+   "instagram": "Foreverinbloommtkisco",
+   "tags": [
+    "since 1999",
+    "family-run",
+    "installations"
+   ],
+   "blurb": "Forever In Bloom in Mt Kisco has been a family-run floral and event design business serving greater New York since 1999. Floral meadows down the aisle, flowering trees and custom installations are the kind of work the site describes.",
+   "since": 1999,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ0XRs1qxiwokRv46g4PQzo-w",
+   "name": "Pedestals Floral Decorators",
+   "website": "https://pedestalsflorist.com/",
+   "instagram": "pedestalsfloraldecorators",
+   "tags": [
+    "over thirty years",
+    "free consultations",
+    "Garden City Park"
+   ],
+   "blurb": "Philip Sammut's Pedestals Floral Decorators in Garden City Park has designed wedding and event florals for over thirty years across the Tri-State area. Full-service design with free consultations.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJtVRTJEJiwokRy5NoFxSg3Ec",
+   "name": "House of Dipali",
+   "website": "https://www.dipali.com/",
+   "instagram": "houseofdipali",
+   "tags": [
+    "multicultural weddings",
+    "25 years",
+    "decor and floral"
+   ],
+   "blurb": "House of Dipali began as a small family store for pooja essentials, garlands and diyas and grew over 25 years into a wedding decor and floral design studio for multicultural celebrations. Mineola-based, serving Long Island, NYC and NJ.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJt7J-5GVZ6IkRMIJ9fcXgxzo",
+   "name": "Wildflower Touch Floral Design",
+   "website": "https://www.wildflowertouchbybri.com/",
+   "instagram": "wildflowertouch",
+   "tags": [
+    "farm roots",
+    "Catskills to the shore",
+    "Kings Park"
+   ],
+   "blurb": "Wildflower Touch grew out of Bri's time on a micro farm in a coastal Long Island town, and the Kings Park studio notes it was voted Best in Blooms by Florists' Review. Elevated wedding design from Catskills elopements to receptions by the sea.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ41-MjHwo6IkRfu6kNb1wOEE",
+   "name": "The Flower Petaler",
+   "website": "https://www.flowerpetalerlongisland.com/",
+   "instagram": "flowerpetaler",
+   "tags": [
+    "over 20 years",
+    "publishes prices",
+    "Huntington"
+   ],
+   "blurb": "The Flower Petaler is a full-service boutique florist in Huntington with over 20 years of experience that prints its wedding pricing: altar arrangements and tall centerpieces each start at $200, and sample bridal-party flowers and centerpieces are optional but recommended.",
+   "since": null,
+   "from_price": "$200",
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJUYO0n407wokRFqy2rFIxprk",
+   "name": "Flower Barn at Locust Pointe",
+   "website": "https://www.flowerbarnatlocustpointe.com/",
+   "instagram": "flowerbarnatlocustpointe",
+   "tags": [
+    "flower farm",
+    "since 2021",
+    "Monmouth County"
+   ],
+   "blurb": "Flower Barn at Locust Pointe is a boutique flower farm and design studio planted in 2021 on land that was a working farm decades ago. Garden-inspired wedding flowers using its own locally grown blooms, for venues and beach weddings around Red Bank, Rumson and Middletown.",
+   "since": 2021,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ3xOwzL0pwokRajA2HiIxvEY",
+   "name": "Bespoke Floral & Event Design",
+   "website": "https://bespokefloral.com/",
+   "instagram": "bespokefloralinc",
+   "tags": [
+    "custom wedding flowers",
+    "NJ, PA and NY",
+    "Neptune City"
+   ],
+   "blurb": "Bespoke Floral & Event Design in Neptune City is a team of designers making custom wedding flowers for couples throughout New Jersey, Pennsylvania and New York. The pitch is extravagant, timeless design for couples who want florals to be an experience for their guests.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}

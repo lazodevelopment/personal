@@ -1,0 +1,207 @@
+{
+ "metro": "new-york-city",
+ "cat": "wedding-venues",
+ "updated": "2026-10-12",
+ "read": 345,
+ "listed": 430,
+ "how": "We read the website of every New York City wedding venue listed on Lazo (430 listings, 345 sites reachable) and set aside the ones that are not really in the wedding business: elopement-package companies and same-day marriage services listed as venues, a hotel ballroom whose site would not load, and Jersey Shore venues more than an hour out. What is left is a shortlist of vendors who say clearly what they do, show their work, and tell you how they work. Verified Lazo vendors come first. Nobody paid to be here, and this is not a ranking: Lazo ranks only on reviews from couples who booked.",
+ "ask": [
+  "Is my date a Saturday in September or October? Those book first across the city and the suburbs, often 12 to 18 months out.",
+  "What is the noise curfew and the load-in situation? Many Manhattan and Brooklyn spaces have a hard end time and a freight elevator your vendors must share.",
+  "Is the pricing guide on the site or behind a form? Ask what the per-person figure includes before you tour: ceremony fee, cocktail hour, bar, cake and the service charge."
+ ],
+ "picks": [
+  {
+   "id": "ChIJU0gkDheCwokRfBbLYbB_T9M",
+   "name": "The Fox Hollow",
+   "website": "https://www.thefoxhollow.com/",
+   "instagram": "foxhollowcatering",
+   "tags": [
+    "hotel on site",
+    "Gold Coast",
+    "wedding weekends"
+   ],
+   "blurb": "A Woodbury hotel and event venue on eight acres of Long Island's Gold Coast, so guests can stay where the party is. The Fox Hollow hosts weddings in The Somerley and keeps separate pages for Indian, Korean and LGBTQ weddings, brunch weddings and full wedding weekends.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJi2-dYhNjwokRYkAQo4t7RNw",
+   "name": "Sand Castle",
+   "website": "https://sandcastlevenue.com/",
+   "instagram": "sandcastlevenue",
+   "tags": [
+    "one wedding at a time",
+    "all-inclusive",
+    "four private acres"
+   ],
+   "blurb": "Sand Castle in Franklin Square is an all-inclusive Nassau County estate that hosts one wedding a day on four private acres, with landscaped gardens and both indoor and outdoor ceremony options. The venue makes a point of its cocktail receptions; the pricing guide is behind a form.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ9wierHkl6IkRlY-bEGQ3SO4",
+   "name": "Larkfield",
+   "website": "http://www.larkfield.com/",
+   "instagram": "thelarkfield",
+   "tags": [
+    "Tuscan-style estate",
+    "gardens to 250",
+    "Long Island"
+   ],
+   "blurb": "Inspired by the Tuscan villas of Italy, the rebuilt Larkfield in East Northport does estate catering in timber and stone, with hearths, interior balconies and manicured gardens. Larkfield Gardens is fully private and takes up to 250 guests.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJ9VXHK2mpwokRlvHSaCflh2g",
+   "name": "Le Chateau",
+   "website": "http://lechateaubanquets.com/",
+   "instagram": "",
+   "tags": [
+    "Gilded Age mansion",
+    "J.P. Morgan commission",
+    "Hudson Valley sunsets"
+   ],
+   "blurb": "A hilltop Gilded Age mansion in South Salem that J.P. Morgan commissioned in 1907 as a gift for his pastor. Le Chateau pairs terraced patios and acres of gardens with views of Hudson Valley sunsets, and the staff walks you through the building and grounds on a tour.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJayzMNDnRwokRfUJ7ow71nBU",
+   "name": "Falkirk Estate and Country Club",
+   "website": "http://www.falkirkestate.com/",
+   "instagram": "falkirkestateandcountryclub",
+   "tags": [
+    "Glatt kosher",
+    "up to 400 guests",
+    "one hour from NYC"
+   ],
+   "blurb": "Falkirk Estate and Country Club opened in 1990 as one of New York's first wedding venues and is now a Glatt kosher venue in Central Valley, about an hour from the city. The redesigned building has floor-to-ceiling windows and an outdoor deck facing the Ramapo Mountains, with room for 400.",
+   "since": 1990,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJmSbeN2k0wokRwfPvzHOA2Es",
+   "name": "The Gramercy at Lakeside Manor",
+   "website": "https://www.thegramercynj.com/",
+   "instagram": "thegramercynj",
+   "tags": [
+    "lakeside",
+    "one event at a time",
+    "boutique service"
+   ],
+   "blurb": "The Gramercy at Lakeside Manor in Hazlet has run weddings for over two decades on the shore of Natco Lake, one event at a time. The pitch is boutique service and a lakeside setting; the wedding pricing guide is behind a form on the site.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJU9R68AdjwYkRoHq05RN775M",
+   "name": "Windows on the Water at Frogbridge",
+   "website": "https://www.windowsonthewaternj.com/?utm_source=google&utm_medium=organic&utm_campaign=gmb",
+   "instagram": "wotwfrogbridge",
+   "tags": [
+    "86 acres",
+    "horse country",
+    "senior wedding planners"
+   ],
+   "blurb": "Windows on the Water is an 86-acre lakeside resort in the horse country of Millstone Township, Monmouth County. Indoor and outdoor spaces, contemporary cuisine and senior wedding planners who guide the whole process, with customizable all-inclusive packages.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJcVGW-r2ow4kR3t6VRCKF1EY",
+   "name": "The Park Savoy Estate",
+   "website": "https://theparksavoy.com/",
+   "instagram": "theparksavoy",
+   "tags": [
+    "19th-century mansion",
+    "gardens",
+    "new chapel"
+   ],
+   "blurb": "The Park Savoy Estate in Florham Park is a 19th-century mansion with gardens, a chef-driven kitchen and, as of its homepage, a brand new chapel on the grounds. The site describes a dedicated team from house staff to the owners working each wedding.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJraQSdwdVwokRYukuushFup4",
+   "name": "Nanina's In the Park",
+   "website": "https://www.naninasinthepark.com/",
+   "instagram": "naninasinthepark",
+   "tags": [
+    "Tuscan villa style",
+    "gardens and ballrooms",
+    "Belleville"
+   ],
+   "blurb": "Nanina's In the Park in Belleville is built to feel like a villa in Tuscany, with outdoor gardens, grand ballrooms, marble staircases and detailed ceilings and chandeliers. The homepage currently invites couples to see the brand new Nanina's.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJN8qYQssBw4kRlO_7UczYsiM",
+   "name": "il Tulipano",
+   "website": "https://iltulipano.com/",
+   "instagram": "iltulipanoweddings",
+   "tags": [
+    "since 1982",
+    "family-owned",
+    "Italian cuisine"
+   ],
+   "blurb": "A family business since 1982, il Tulipano in Cedar Grove began as a restaurant and still leads with the Polimeni family's authentic Italian cuisine. The site says it is admired by New Jersey Bride, The Knot and WeddingWire.",
+   "since": 1982,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJPfx6ee7Aw4kRLCquxbl_mKQ",
+   "name": "The Palace at Somerset Park",
+   "website": "http://www.palacesomersetpark.com/",
+   "instagram": "palacesomerset",
+   "tags": [
+    "Palladian mansion",
+    "two venues on one property",
+    "since 2005"
+   ],
+   "blurb": "Established in 2005, The Palace at Somerset Park is an 80,000-square-foot Palladian-style mansion modeled on the Newport homes of the Vanderbilts and Astors, with two exclusive venues on one property. Featured real weddings include a Chinese American and an Islamic celebration.",
+   "since": 2005,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  },
+  {
+   "id": "ChIJudWKr7Sqw4kRrfvMwUM7KZQ",
+   "name": "Montclair Wedding Sanctuary",
+   "website": "https://www.montclairwedding.com/",
+   "instagram": "montclairweddingsanctuary",
+   "tags": [
+    "ceremony venue",
+    "church and garden",
+    "all couples welcome"
+   ],
+   "blurb": "A ceremony-only option: Montclair Wedding Sanctuary is a ministry of First Congregational Church of Montclair, which has stood for nearly 150 years for progressive values. Interfaith, unaffiliated and same-gender couples are welcome in the church or the outdoor garden, and a four-camera livestream is offered.",
+   "since": null,
+   "from_price": null,
+   "verified": false,
+   "claimed": false
+  }
+ ]
+}
