@@ -688,6 +688,7 @@ function detail(r){
         <dt>Reception</dt><dd class="${r.reception_venue?"":"mute"}">${esc(r.reception_venue||"same / not given")}</dd>
         <dt>Coverage</dt><dd>${r.start_time||"?"} – ${r.end_time||"?"} · ${r.coverage_hours||"?"}h${r.extra_hours?` (+${r.extra_hours} extra)`:""}${r.second_shooter?" · second shooter":""}</dd>
         <dt>Guests</dt><dd>${esc(r.guest_count||"—")}</dd>
+        <dt>Website</dt><dd>${r.wedding_website?`<a href="${esc(/^https?:/i.test(r.wedding_website)?r.wedding_website:"https://"+r.wedding_website)}" target="_blank" rel="noopener">${esc(r.wedding_website)}</a>`:"<span class=mute>—</span>"}</dd>
         <dt>Mailing</dt><dd class="mute">${esc([r.mailing_address,r.city_state_zip].filter(Boolean).join(", ")||"—")}</dd>
         <dt>Booking id</dt><dd><code>${esc(r.booking_id||r.id)}</code></dd>
       </dl>

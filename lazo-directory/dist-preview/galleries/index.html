@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Lazo Galleries — deliver a wedding</title>
+<!-- JC-LAZO-GALLERY-0912-006: vendor uploader (Pro Studio).
+     Served by the worker at /galleries/ from lazo-site. Everything heavy happens
+     in the browser: decode, dimensions, thumb/web derivatives, MD5 of the
+     original, then one presigned PUT per object straight to lazo-galleries.
+     Progress is kept in localStorage per gallery so a closed laptop resumes. -->
+<style>
+  :root{--plum:#52284F;--plum2:#3B1C3A;--ink:#2B1C2A;--mute:#7A6E80;--ivory:#FAF6F0;--line:#E6DCD2;--gold:#B8913F;--ok:#2E7D5B;--bad:#B23A3A}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ivory);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  h1,h2,h3{font-family:Georgia,'Times New Roman',serif;font-weight:600;color:var(--plum2);margin:0 0 .4em}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--line);background:#fff}
+  header .brand{font-family:Georgia,serif;font-size:20px;color:var(--plum);letter-spacing:.06em}
+  header .brand small{color:var(--gold);letter-spacing:.2em;font-size:11px;margin-left:10px}
+  main{max-width:1100px;margin:0 auto;padding:28px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:18px}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  label{display:block;font-size:12px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;margin:12px 0 4px}
+  input[type=text],input[type=email],input[type=password],input[type=date],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  textarea{min-height:70px;resize:vertical}
+  .row{display:flex;gap:10px;align-items:center}
+  .row label{margin:0;text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink)}
+  button{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;background:var(--plum);color:#fff}
+  button.ghost{background:#fff;color:var(--plum);border:1px solid var(--plum)}
+  button.gold{background:var(--gold)}
+  button[disabled]{opacity:.45;cursor:not-allowed}
+  .hint{color:var(--mute);font-size:13px}
+  .err{color:var(--bad);font-size:13px;margin-top:8px}
+  .ok{color:var(--ok)}
+  .hidden{display:none!important}
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:38px;text-align:center;color:var(--mute);transition:.15s}
+  .drop.over{border-color:var(--plum);background:#F6EEF5;color:var(--plum)}
+  .bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:12px 0}
+  .bar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--plum),var(--gold));transition:width .2s}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--mute);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+  td.st{white-space:nowrap}
+  .st-wait{color:var(--mute)} .st-prep{color:var(--gold)} .st-up{color:var(--plum)} .st-done{color:var(--ok)} .st-fail{color:var(--bad)}
+  .stats{display:flex;gap:22px;font-size:13px;color:var(--mute);margin:6px 0 2px}
+  .stats b{color:var(--ink)}
+  .glist button{width:100%;text-align:left;background:#fff;color:var(--ink);border:1px solid var(--line);margin-bottom:8px;padding:10px 12px}
+  .glist button.sel{border-color:var(--plum);background:#F6EEF5}
+  .glist small{display:block;color:var(--mute)}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:#F1E9EF;color:var(--plum);margin-left:6px}
+  .link{word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#F6EEF5;padding:8px 10px;border-radius:8px}
+  .tbl-wrap{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">LAZO <small>GALLERIES</small></div>
+  <div id="who" class="hint"></div>
+</header>
+
+<main>
+  <!-- ─────────────── sign in ─────────────── -->
+  <section id="signin" class="card" style="max-width:420px;margin:60px auto">
+    <h2>Sign in to deliver a gallery</h2>
+    <p class="hint">Use the same email and password as the Lazo vendor app. Galleries are a Pro Studio feature.</p>
+    <label>Email</label><input id="email" type="email" autocomplete="username">
+    <label>Password</label><input id="pass" type="password" autocomplete="current-password">
+    <div style="margin-top:16px"><button id="btnSignin">Sign in</button></div>
+    <div id="signinErr" class="err"></div>
+  </section>
+
+  <!-- ─────────────── app ─────────────── -->
+  <section id="app" class="hidden">
+    <div class="grid">
+      <div>
+        <div class="card">
+          <h3>Your studio</h3>
+          <label>Vendor profile</label>
+          <select id="vendorSel"></select>
+          <div id="tierNote" class="hint" style="margin-top:8px"></div>
+        </div>
+
+        <div class="card">
+          <h3>Galleries</h3>
+          <div id="glist" class="glist"><span class="hint">Loading…</span></div>
+          <button id="btnNew" class="ghost" style="width:100%;margin-top:6px">+ New gallery</button>
+        </div>
+
+        <div id="newForm" class="card hidden">
+          <h3>New gallery</h3>
+          <label>Couple</label><input id="fNames" type="text" placeholder="Sarah & Tom">
+          <label>Wedding date</label><input id="fDate" type="date">
+          <label>Passcode (optional)</label><input id="fPass" type="text" placeholder="leave blank for open">
+          <label>Note to the couple (optional)</label><textarea id="fMsg" placeholder="Thank you for having us. Here's your day."></textarea>
+          <div class="row" style="margin-top:12px"><input id="fDl" type="checkbox" checked><label for="fDl">Allow full-resolution downloads</label></div>
+          <div class="row" style="margin-top:6px"><input id="fStore" type="checkbox" checked><label for="fStore">Show the print store</label></div>
+          <div style="margin-top:16px" class="row"><button id="btnCreate">Create</button><button id="btnCancelNew" class="ghost">Cancel</button></div>
+          <div id="newErr" class="err"></div>
+        </div>
+      </div>
+
+      <div>
+        <div id="noSel" class="card"><p class="hint">Pick a gallery on the left, or create a new one.</p></div>
+
+        <div id="work" class="hidden">
+          <div class="card">
+            <h3 id="wTitle"></h3>
+            <div class="hint" id="wMeta"></div>
+            <div class="link" id="wLink" style="margin-top:10px"></div>
+          </div>
+
+          <div class="card">
+            <div id="drop" class="drop">
+              <div style="font-size:15px;color:var(--plum2)"><b>Drop the finished JPEGs here</b></div>
+              <div style="margin-top:6px">or <button id="btnPick" class="ghost" style="padding:6px 12px">choose files</button></div>
+              <div class="hint" style="margin-top:10px">JPEG only · up to 3,000 photos · each is uploaded once; if you close this tab, re-drop the same folder and finished files are skipped.</div>
+              <input id="fileInput" type="file" accept="image/jpeg,.jpg,.jpeg" multiple class="hidden">
+            </div>
+
+            <div id="progWrap" class="hidden">
+              <div class="stats">
+                <span>Total <b id="sTotal">0</b></span>
+                <span>Done <b id="sDone">0</b></span>
+                <span>Uploading <b id="sUp">0</b></span>
+                <span>Failed <b id="sFail">0</b></span>
+                <span>Size <b id="sSize">0</b></span>
+              </div>
+              <div class="bar"><i id="barFill"></i></div>
+              <div class="row">
+                <button id="btnStart">Start upload</button>
+                <button id="btnRetry" class="ghost hidden">Retry failed</button>
+                <button id="btnPublish" class="gold" disabled>Publish gallery</button>
+                <span id="pubNote" class="hint"></span>
+              </div>
+              <div id="workErr" class="err"></div>
+            </div>
+          </div>
+
+          <div class="card tbl-wrap hidden" id="tblWrap" style="padding:0">
+            <table><thead><tr><th>#</th><th>File</th><th>Size</th><th>Status</th></tr></thead><tbody id="tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, orderBy }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getFunctions, httpsCallable }
+  from "https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU",
+  authDomain: "lazo-513ec.firebaseapp.com",
+  projectId: "lazo-513ec",
+  storageBucket: "lazo-513ec.firebasestorage.app",
+  messagingSenderId: "751424405339",
+  appId: "1:751424405339:web:4a65d77ed182a217cf247e",
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+const fns = getFunctions(app, "us-central1");
+const call = (name) => httpsCallable(fns, name, { timeout: 120000 });
+
+const $ = (id) => document.getElementById(id);
+const THUMB_PX = 480, WEB_PX = 2048, JPEG_Q = 0.86;
+const BATCH = 40, PARALLEL = 4;
+
+let uid = null, vendors = [], vendorId = null, galleries = [], gallery = null;
+let files = [];      // [{file, id, name, size, w, h, md5, bytes, status, err, thumb, web}]
+let running = false;
+
+// ───────────────────────────── auth ─────────────────────────────
+$("btnSignin").onclick = async () => {
+  $("signinErr").textContent = "";
+  try { await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value); }
+  catch (e) { $("signinErr").textContent = "Couldn't sign in. Check your email and password."; }
+};
+$("pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnSignin").click(); });
+
+onAuthStateChanged(auth, async (u) => {
+  if (!u) { $("app").classList.add("hidden"); $("signin").classList.remove("hidden"); $("who").textContent = ""; return; }
+  uid = u.uid;
+  $("who").innerHTML = `${u.email} · <a href="#" id="out">sign out</a>`;
+  $("out").onclick = (e) => { e.preventDefault(); signOut(auth); };
+  $("signin").classList.add("hidden"); $("app").classList.remove("hidden");
+  await loadVendors();
+});
+
+// ───────────────────────────── vendors ─────────────────────────────
+async function loadVendors() {
+  const snap = await getDocs(query(collection(db, "vendors"), where("claimedBy", "==", uid)));
+  vendors = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const sel = $("vendorSel"); sel.innerHTML = "";
+  if (!vendors.length) {
+    sel.innerHTML = `<option>No claimed vendor profile on this account</option>`;
+    $("tierNote").textContent = "Claim your listing in the Lazo app first.";
+    return;
+  }
+  for (const v of vendors) {
+    const o = document.createElement("option"); o.value = v.id;
+    o.textContent = v.name || v.businessName || v.id; sel.appendChild(o);
+  }
+  sel.onchange = () => selectVendor(sel.value);
+  selectVendor(vendors[0].id);
+}
+
+function selectVendor(id) {
+  vendorId = id;
+  const v = vendors.find((x) => x.id === id) || {};
+  const studio = v.tier === "studio" || v.foundingPreview === true;
+  $("tierNote").innerHTML = studio
+    ? `<span class="ok">Pro Studio</span> — galleries are on.`
+    : `Galleries are a <b>Pro Studio</b> feature. Upgrade in the Lazo app to deliver here.`;
+  $("btnNew").disabled = !studio;
+  gallery = null; showWork(false);
+  loadGalleries();
+}
+
+// ───────────────────────────── galleries ─────────────────────────────
+async function loadGalleries() {
+  const box = $("glist"); box.innerHTML = `<span class="hint">Loading…</span>`;
+  try {
+    const snap = await getDocs(query(collection(db, "galleries"),
+      where("ownerUid", "==", uid), where("vendorId", "==", vendorId)));
+    galleries = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (e) {
+    box.innerHTML = `<span class="err">Couldn't load galleries (${e.code || e.message}).</span>`; return;
+  }
+  if (!galleries.length) { box.innerHTML = `<span class="hint">No galleries yet.</span>`; return; }
+  box.innerHTML = "";
+  for (const g of galleries) {
+    const b = document.createElement("button");
+    b.innerHTML = `${esc(g.names || g.id)} <span class="pill">${g.status || "draft"}</span>
+      <small>${g.dateIso || ""} · ${g.photoCount || 0} photos</small>`;
+    b.onclick = () => selectGallery(g, b);
+    box.appendChild(b);
+  }
+}
+
+function selectGallery(g, btn) {
+  gallery = g;
+  document.querySelectorAll(".glist button").forEach((x) => x.classList.remove("sel"));
+  if (btn) btn.classList.add("sel");
+  $("newForm").classList.add("hidden");
+  files = []; renderTable(); updateStats();
+  $("wTitle").textContent = g.names || g.id;
+  $("wMeta").textContent = `${g.dateIso || "no date"} · ${g.photoCount || 0} photos delivered · ${g.status}`;
+  $("wLink").textContent = `https://meetlazo.com/g/${g.id}`;
+  $("pubNote").textContent = g.photoCount ? "Publishing adds these to the delivered set." : "";
+  $("progWrap").classList.add("hidden"); $("tblWrap").classList.add("hidden");
+  showWork(true);
+}
+function showWork(on) { $("noSel").classList.toggle("hidden", on); $("work").classList.toggle("hidden", !on); }
+
+$("btnNew").onclick = () => { $("newForm").classList.remove("hidden"); $("newErr").textContent = ""; };
+$("btnCancelNew").onclick = () => $("newForm").classList.add("hidden");
+$("btnCreate").onclick = async () => {
+  $("newErr").textContent = ""; $("btnCreate").disabled = true;
+  try {
+    const r = await call("galleryCreate")({
+      vendorId,
+      names: $("fNames").value, dateIso: $("fDate").value, passcode: $("fPass").value,
+      message: $("fMsg").value, downloadsOn: $("fDl").checked, storeOn: $("fStore").checked,
+    });
+    await loadGalleries();
+    const g = galleries.find((x) => x.id === r.data.slug);
+    if (g) selectGallery(g, [...document.querySelectorAll(".glist button")].find((b) => b.textContent.startsWith(g.names)));
+    $("newForm").classList.add("hidden");
+    ["fNames","fPass","fMsg"].forEach((i) => $(i).value = ""); $("fDate").value = "";
+  } catch (e) {
+    $("newErr").textContent = friendly(e);
+  } finally { $("btnCreate").disabled = false; }
+};
+
+// ───────────────────────────── files ─────────────────────────────
+const drop = $("drop");
+["dragenter","dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave","drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => addFiles([...e.dataTransfer.files]));
+$("btnPick").onclick = () => $("fileInput").click();
+$("fileInput").onchange = (e) => { addFiles([...e.target.files]); e.target.value = ""; };
+
+function resumeKey() { return `lazo_gal_${gallery.id}`; }
+function loadDone() { try { return JSON.parse(localStorage.getItem(resumeKey()) || "{}"); } catch { return {}; } }
+function saveDone(done) { try { localStorage.setItem(resumeKey(), JSON.stringify(done)); } catch {} }
+
+function addFiles(list) {
+  if (!gallery || running) return;
+  const done = loadDone();
+  const known = new Set(files.map((f) => f.name + ":" + f.size));
+  let skipped = 0;
+  for (const file of list) {
+    const isJpeg = /image\/jpe?g/i.test(file.type) || /\.jpe?g$/i.test(file.name);
+    if (!isJpeg) { skipped++; continue; }
+    const k = file.name + ":" + file.size;
+    if (known.has(k)) continue;
+    known.add(k);
+    const prev = Object.values(done).find((d) => d.name === file.name && d.size === file.size);
+    files.push(prev
+      ? { file, ...prev, status: "done", fromResume: true }
+      : { file, id: newId(), name: file.name, size: file.size, status: "wait" });
+  }
+  files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  if (skipped) $("workErr").textContent = `${skipped} non-JPEG file(s) skipped.`;
+  $("progWrap").classList.remove("hidden"); $("tblWrap").classList.remove("hidden");
+  renderTable(); updateStats();
+}
+
+function newId() {
+  const a = crypto.getRandomValues(new Uint8Array(9));
+  return btoa(String.fromCharCode(...a)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// ───────────────────────────── prepare one photo ─────────────────────────────
+async function prepare(f) {
+  f.status = "prep"; renderRow(f);
+  // MD5 of the original bytes — WHCC's ImageHash. Chunked so a 25 MB file
+  // doesn't need a second full copy in memory.
+  const spark = new SparkMD5.ArrayBuffer();
+  const CH = 4 * 1024 * 1024;
+  for (let off = 0; off < f.file.size; off += CH) {
+    spark.append(await f.file.slice(off, off + CH).arrayBuffer());
+  }
+  f.md5 = spark.end();
+  f.bytes = f.file.size;
+
+  // Decode once, honour EXIF orientation, record true pixel size for WHCC.
+  const bmp = await createImageBitmap(f.file, { imageOrientation: "from-image" });
+  f.w = bmp.width; f.h = bmp.height;
+  f.web = await derivative(bmp, WEB_PX);
+  f.thumb = await derivative(bmp, THUMB_PX);
+  bmp.close();
+}
+
+async function derivative(bmp, maxPx) {
+  const scale = Math.min(1, maxPx / Math.max(bmp.width, bmp.height));
+  const w = Math.max(1, Math.round(bmp.width * scale)), h = Math.max(1, Math.round(bmp.height * scale));
+  const c = ("OffscreenCanvas" in window) ? new OffscreenCanvas(w, h) : Object.assign(document.createElement("canvas"), { width: w, height: h });
+  const ctx = c.getContext("2d", { alpha: false });
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(bmp, 0, 0, w, h);
+  if (c.convertToBlob) return c.convertToBlob({ type: "image/jpeg", quality: JPEG_Q });
+  return new Promise((res) => c.toBlob(res, "image/jpeg", JPEG_Q));
+}
+
+// ───────────────────────────── upload ─────────────────────────────
+$("btnStart").onclick = () => runUpload(files.filter((f) => f.status !== "done"));
+$("btnRetry").onclick = () => runUpload(files.filter((f) => f.status === "fail"));
+
+async function runUpload(todo) {
+  if (running || !todo.length) return;
+  running = true; setButtons();
+  $("workErr").textContent = "";
+  const done = loadDone();
+
+  // presign in batches of 40, then upload each batch with PARALLEL workers
+  for (let i = 0; i < todo.length; i += BATCH) {
+    const batch = todo.slice(i, i + BATCH);
+    let urls;
+    try {
+      const r = await call("galleryPresign")({ vendorId, slug: gallery.id, photos: batch.map((f) => ({ id: f.id })) });
+      urls = Object.fromEntries(r.data.urls.map((u) => [u.id, u.put]));
+    } catch (e) {
+      batch.forEach((f) => { f.status = "fail"; f.err = friendly(e); renderRow(f); });
+      $("workErr").textContent = friendly(e);
+      continue;
+    }
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < batch.length) {
+        const f = batch[cursor++];
+        try {
+          if (!f.md5) await prepare(f);
+          f.status = "up"; renderRow(f); updateStats();
+          await put(urls[f.id].full, f.file);
+          await put(urls[f.id].web, f.web);
+          await put(urls[f.id].thumb, f.thumb);
+          f.status = "done"; f.err = "";
+          f.web = f.thumb = null; // free memory
+          done[f.id] = { id: f.id, name: f.name, size: f.size, w: f.w, h: f.h, md5: f.md5, bytes: f.bytes };
+          saveDone(done);
+        } catch (e) {
+          f.status = "fail"; f.err = (e && e.message) || "upload failed";
+        }
+        renderRow(f); updateStats();
+      }
+    };
+    await Promise.all(Array.from({ length: PARALLEL }, worker));
+  }
+  running = false; setButtons(); updateStats();
+}
+
+async function put(url, blob) {
+  // Presigned with ContentType image/jpeg, so the header must match exactly.
+  const r = await fetch(url, { method: "PUT", body: blob, headers: { "content-type": "image/jpeg" } });
+  if (!r.ok) throw new Error(`R2 ${r.status}`);
+}
+
+// ───────────────────────────── publish ─────────────────────────────
+$("btnPublish").onclick = async () => {
+  const ready = files.filter((f) => f.status === "done");
+  if (!ready.length) return;
+  $("btnPublish").disabled = true; $("workErr").textContent = "";
+  try {
+    const r = await call("galleryFinalize")({
+      vendorId, slug: gallery.id,
+      append: (gallery.photoCount || 0) > 0,
+      photos: ready.map((f) => ({ id: f.id, name: f.name, w: f.w, h: f.h, md5: f.md5, bytes: f.bytes })),
+    });
+    localStorage.removeItem(resumeKey());
+    $("pubNote").innerHTML = `<span class="ok">Live — ${r.data.photoCount} photos at</span> <a href="${r.data.url}" target="_blank">${r.data.url}</a>`;
+    await loadGalleries();
+    const g = galleries.find((x) => x.id === gallery.id); if (g) gallery = g;
+    $("wMeta").textContent = `${g.dateIso || "no date"} · ${g.photoCount} photos delivered · live`;
+  } catch (e) {
+    $("workErr").textContent = friendly(e);
+  } finally { setButtons(); }
+};
+
+// ───────────────────────────── ui helpers ─────────────────────────────
+function setButtons() {
+  const pending = files.some((f) => f.status !== "done");
+  const failed = files.some((f) => f.status === "fail");
+  const doneN = files.filter((f) => f.status === "done").length;
+  $("btnStart").disabled = running || !pending;
+  $("btnRetry").classList.toggle("hidden", !failed || running);
+  $("btnPublish").disabled = running || !doneN || pending;
+}
+function updateStats() {
+  const n = files.length, d = files.filter((f) => f.status === "done").length,
+        u = files.filter((f) => f.status === "up" || f.status === "prep").length,
+        fl = files.filter((f) => f.status === "fail").length,
+        sz = files.reduce((s, f) => s + f.size, 0);
+  $("sTotal").textContent = n; $("sDone").textContent = d; $("sUp").textContent = u; $("sFail").textContent = fl;
+  $("sSize").textContent = fmt(sz);
+  $("barFill").style.width = n ? (100 * d / n).toFixed(1) + "%" : "0";
+  setButtons();
+}
+function renderTable() {
+  const tb = $("tbody"); tb.innerHTML = "";
+  files.forEach((f, i) => {
+    const tr = document.createElement("tr"); tr.id = "row-" + f.id;
+    tr.innerHTML = `<td>${i + 1}</td><td>${esc(f.name)}</td><td>${fmt(f.size)}</td><td class="st"></td>`;
+    tb.appendChild(tr); renderRow(f);
+  });
+}
+function renderRow(f) {
+  const td = document.querySelector(`#row-${CSS.escape(f.id)} td.st`); if (!td) return;
+  const label = { wait: "waiting", prep: "preparing", up: "uploading", done: f.fromResume ? "done (resumed)" : "done", fail: "failed" }[f.status];
+  td.className = "st st-" + f.status;
+  td.textContent = f.err ? `${label} — ${f.err}` : label;
+}
+const fmt = (b) => b < 1e6 ? (b / 1e3).toFixed(0) + " KB" : b < 1e9 ? (b / 1e6).toFixed(1) + " MB" : (b / 1e9).toFixed(2) + " GB";
+const esc = (t) => String(t || "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function friendly(e) {
+  const m = (e && (e.message || "")).toString();
+  if (m.includes("studio-required")) return "Galleries need Pro Studio. Upgrade in the Lazo app.";
+  if (m.includes("permission-denied")) return "That vendor profile isn't on this account.";
+  if (m.includes("unauthenticated")) return "Sign in again.";
+  return m.replace(/^FirebaseError:\s*/i, "") || "Something went wrong.";
+}
+</script>
+</body>
+</html>

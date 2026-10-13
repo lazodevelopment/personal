@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your wedding photos</title>
+<!-- JC-LAZO-GALLERY-0912-006: couple-facing delivery gallery.
+     The worker serves this at /g/{slug}, injecting window.LAZO_GALLERY
+     (names, date, vendor, message, cover, photos[{id,name,w,h}], locked,
+     downloadsOn, storeOn, expiresAt) plus noindex + og tags. Images come from
+     /g/{slug}/i/{id}/{thumb|web|full}; a passcode gallery sets a cookie via
+     POST /api/gallery-auth and reloads. Favorites are kept in localStorage. -->
+<style>
+  :root{--plum:#52284F;--plum2:#3B1C3A;--ink:#2B1C2A;--mute:#7A6E80;--ivory:#FAF6F0;--line:#E6DCD2;--gold:#B8913F;--gold2:#D9B77C}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--ivory);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  a{color:var(--plum)}
+  .serif{font-family:Georgia,'Times New Roman',serif}
+  .hidden{display:none!important}
+
+  /* hero */
+  .hero{position:relative;min-height:62vh;display:flex;align-items:flex-end;background:var(--plum2);color:#fff;overflow:hidden}
+  .hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.55}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,12,32,.1) 0%,rgba(30,12,32,.85) 100%)}
+  .hero .in{position:relative;z-index:1;padding:48px 28px 40px;max-width:1100px;margin:0 auto;width:100%}
+  .kicker{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold2);margin-bottom:12px}
+  .kicker::before{content:"";display:inline-block;width:6px;height:6px;background:var(--gold2);transform:rotate(45deg);margin-right:10px;vertical-align:middle}
+  h1{font-family:Georgia,serif;font-weight:600;font-size:clamp(34px,6vw,64px);line-height:1.05;margin:0 0 10px;color:#fff}
+  .sub{color:#EDE3E8;font-family:Georgia,serif;font-style:italic;font-size:18px}
+  .credit{margin-top:14px;font-size:13px;color:#D8CBD5}
+  .credit a{color:var(--gold2);text-decoration:none;border-bottom:1px solid rgba(217,183,124,.4)}
+
+  /* toolbar */
+  .bar{position:sticky;top:0;z-index:5;background:rgba(250,246,240,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .bar .in{max-width:1100px;margin:0 auto;padding:10px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .bar .n{color:var(--mute);font-size:13px;margin-right:auto}
+  button{font:inherit;border:1px solid var(--plum);border-radius:999px;padding:8px 14px;cursor:pointer;background:#fff;color:var(--plum);font-size:13px}
+  button.solid{background:var(--plum);color:#fff}
+  button.on{background:#F6EEF5;border-color:var(--plum)}
+  button[disabled]{opacity:.45;cursor:not-allowed}
+
+  /* message */
+  .msg{max-width:720px;margin:36px auto 6px;padding:0 28px;text-align:center;font-family:Georgia,serif;font-size:19px;line-height:1.6;color:var(--plum2)}
+  .msg::before,.msg::after{content:"";display:block;width:44px;height:1px;background:var(--gold);margin:14px auto}
+
+  /* grid */
+  .grid{max-width:1100px;margin:22px auto 60px;padding:0 20px;columns:3 300px;column-gap:10px}
+  .ph{break-inside:avoid;margin:0 0 10px;position:relative;background:#E9DFE6;border-radius:8px;overflow:hidden;cursor:zoom-in}
+  .ph img{display:block;width:100%;height:auto;opacity:0;transition:opacity .35s}
+  .ph img.ld{opacity:1}
+  .ph .hf{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;background:rgba(30,12,32,.45);border:0;color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;opacity:0;transition:.15s;padding:0}
+  .ph:hover .hf,.ph .hf.on{opacity:1}
+  .ph .hf.on{background:var(--gold);color:#fff}
+  @media(hover:none){.ph .hf{opacity:1}}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(20,8,22,.96);z-index:20;display:flex;flex-direction:column}
+  .lb .top{display:flex;align-items:center;gap:10px;padding:12px 16px;color:#D8CBD5;font-size:13px}
+  .lb .top .nm{margin-right:auto;font-family:ui-monospace,Menlo,monospace;font-size:12px;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .lb .top button{border-color:rgba(255,255,255,.35);color:#fff;background:transparent}
+  .lb .top button.on{background:var(--gold);border-color:var(--gold)}
+  .lb .stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0}
+  .lb .stage img{max-width:96vw;max-height:calc(100vh - 70px);object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .lb .nav{position:absolute;top:0;bottom:0;width:22%;cursor:pointer}
+  .lb .nav.l{left:0}.lb .nav.r{right:0}
+
+  /* passcode */
+  .lock{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:28px;background:var(--plum2);color:#fff}
+  .lock .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:32px;max-width:400px;width:100%;text-align:center;backdrop-filter:blur(10px)}
+  .lock h1{font-size:30px}
+  .lock input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font:inherit;font-size:16px;text-align:center;letter-spacing:.08em;margin:14px 0 10px}
+  .lock button{width:100%;background:var(--gold);border-color:var(--gold);color:#fff;font-size:15px;padding:11px}
+  .lock .e{color:#F1B1B1;font-size:13px;min-height:18px;margin-top:8px}
+
+  footer{border-top:1px solid var(--line);padding:26px 28px 40px;text-align:center;color:var(--mute);font-size:13px}
+  footer .lz{font-family:Georgia,serif;letter-spacing:.14em;color:var(--plum);font-size:15px;margin-bottom:6px}
+  footer .lz small{color:var(--gold);letter-spacing:.2em;font-size:10px;margin-left:8px}
+</style>
+</head>
+<body>
+
+<div id="lock" class="lock hidden">
+  <div class="card">
+    <div class="kicker">Private gallery</div>
+    <h1 class="serif" id="lockNames">Your wedding photos</h1>
+    <p style="color:#D8CBD5;margin:6px 0 0">Enter the passcode from your photographer.</p>
+    <input id="pc" type="text" autocomplete="off" autocapitalize="off" placeholder="passcode">
+    <button id="pcGo">Open gallery</button>
+    <div class="e" id="pcErr"></div>
+  </div>
+</div>
+
+<div id="gal" class="hidden">
+  <section class="hero">
+    <img id="cover" alt="">
+    <div class="in">
+      <div class="kicker" id="dateLine">Your wedding</div>
+      <h1 id="names"></h1>
+      <div class="sub" id="count"></div>
+      <div class="credit" id="credit"></div>
+    </div>
+  </section>
+
+  <div class="bar"><div class="in">
+    <span class="n" id="favN"></span>
+    <button id="btnFavOnly">♥ Favorites</button>
+    <button id="btnDlFav" class="hidden">Download favorites</button>
+    <button id="btnStore" class="solid hidden">Order prints</button>
+  </div></div>
+
+  <div class="msg hidden" id="msg"></div>
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    <div class="lz">LAZO <small>TIED TOGETHER.</small></div>
+    <div id="expiry"></div>
+    <div style="margin-top:6px">Delivered through <a href="https://meetlazo.com/">Lazo</a></div>
+  </footer>
+</div>
+
+<div id="lb" class="lb hidden">
+  <div class="top">
+    <span class="nm" id="lbName"></span>
+    <span id="lbPos"></span>
+    <button id="lbFav">♥</button>
+    <button id="lbDl">Download</button>
+    <button id="lbX">Close</button>
+  </div>
+  <div class="stage">
+    <div class="nav l" id="lbPrev"></div>
+    <img id="lbImg" alt="">
+    <div class="nav r" id="lbNext"></div>
+  </div>
+</div>
+
+<div id="nf" class="lock hidden"><div class="card"><h1 class="serif">Gallery not found</h1><p style="color:#D8CBD5">Check the link from your photographer.</p></div></div>
+
+<script>
+(function () {
+  var G = window.LAZO_GALLERY;
+  var $ = function (id) { return document.getElementById(id); };
+  if (!G || !G.slug) { $("nf").classList.remove("hidden"); return; }
+
+  var base = "/g/" + G.slug + "/i/";
+  var img = function (id, v) { return base + id + "/" + v; };
+
+  // ---------- passcode ----------
+  if (G.locked) {
+    $("lock").classList.remove("hidden");
+    if (G.names) $("lockNames").textContent = G.names;
+    var go = function () {
+      $("pcErr").textContent = ""; $("pcGo").disabled = true;
+      fetch("/api/gallery-auth", { method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ slug: G.slug, passcode: $("pc").value }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d.ok) location.reload();
+        else { $("pcErr").textContent = "That passcode didn't match."; $("pcGo").disabled = false; }
+      })
+      .catch(function () { $("pcErr").textContent = "Couldn't check the passcode. Try again."; $("pcGo").disabled = false; });
+    };
+    $("pcGo").onclick = go;
+    $("pc").addEventListener("keydown", function (e) { if (e.key === "Enter") go(); });
+    $("pc").focus();
+    return;
+  }
+
+  // ---------- header ----------
+  $("gal").classList.remove("hidden");
+  var photos = G.photos || [];
+  $("names").textContent = G.names || "Your wedding photos";
+  document.title = (G.names ? G.names + " — photos" : "Your wedding photos");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(G.dateIso || "")) {
+    var d = new Date(G.dateIso + "T12:00:00");
+    $("dateLine").textContent = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  }
+  $("count").textContent = photos.length + (photos.length === 1 ? " photo" : " photos");
+  if (G.vendorName) {
+    $("credit").innerHTML = "Photographed by " + (G.vendorSlug
+      ? '<a href="https://meetlazo.com/' + esc(G.vendorSlug) + '">' + esc(G.vendorName) + "</a>"
+      : esc(G.vendorName));
+  }
+  var coverId = G.coverId && photos.some(function (p) { return p.id === G.coverId; }) ? G.coverId : (photos[0] && photos[0].id);
+  if (coverId) $("cover").src = img(coverId, "web");
+  if (G.message) { $("msg").textContent = G.message; $("msg").classList.remove("hidden"); }
+  if (G.expiresAt) {
+    var ex = new Date(G.expiresAt);
+    if (!isNaN(ex)) $("expiry").textContent = "Available until " + ex.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) + ".";
+  }
+  // JC-LAZO-PRINTS-0920-001 lz-store: the print store is live
+  window.LAZO_STORE_READY = true;
+  if (G.storeOn && !G.locked) $("btnStore").classList.remove("hidden");
+  $("btnStore").addEventListener("click", function () {
+    var ids = Object.keys(favs);
+    var picked = ids.length ? ids : photos.slice(0, 40).map(function (p) { return p.id; });
+    var b = $("btnStore"); b.disabled = true; b.textContent = ids.length ? "Opening your " + ids.length + " favorite" + (ids.length === 1 ? "" : "s") + "…" : "Opening…";
+    fetch("/g/" + G.slug + "/store/editor", { method: "POST", headers: { "content-type": "application/json" }, credentials: "same-origin", body: JSON.stringify({ ids: picked }) })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.ok && j.url) { location.href = j.url; return; }
+        b.disabled = false; b.textContent = "Order prints";
+        alert(j.error === "locked" ? "Unlock the gallery first." : "The print store is not available right now. Try again in a minute.");
+      })
+      .catch(function () { b.disabled = false; b.textContent = "Order prints"; alert("The print store is not available right now."); });
+  });
+
+  // ---------- favorites ----------
+  var FK = "lazo_fav_" + G.slug, favs = {};
+  try { favs = JSON.parse(localStorage.getItem(FK) || "{}"); } catch (e) {}
+  var saveF = function () { try { localStorage.setItem(FK, JSON.stringify(favs)); } catch (e) {} updateFavUI(); };
+  var favOnly = false;
+  function updateFavUI() {
+    var n = Object.keys(favs).length;
+    $("favN").textContent = n ? n + " favorite" + (n === 1 ? "" : "s") : "Tap ♥ to save favorites";
+    $("btnFavOnly").classList.toggle("on", favOnly);
+    $("btnDlFav").classList.toggle("hidden", !(n && G.downloadsOn));
+    document.querySelectorAll(".ph").forEach(function (el) {
+      var on = !!favs[el.dataset.id];
+      el.querySelector(".hf").classList.toggle("on", on);
+      el.classList.toggle("hidden", favOnly && !on);
+    });
+  }
+  $("btnFavOnly").onclick = function () { favOnly = !favOnly; updateFavUI(); };
+
+  // ---------- grid ----------
+  var grid = $("grid");
+  var io = ("IntersectionObserver" in window) ? new IntersectionObserver(function (ents) {
+    ents.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var im = e.target; im.src = im.dataset.src; im.onload = function () { im.classList.add("ld"); }; io.unobserve(im);
+    });
+  }, { rootMargin: "600px 0px" }) : null;
+
+  photos.forEach(function (p, i) {
+    var el = document.createElement("figure"); el.className = "ph"; el.dataset.id = p.id;
+    if (p.w && p.h) el.style.aspectRatio = p.w + " / " + p.h;
+    var im = document.createElement("img"); im.alt = ""; im.loading = "lazy"; im.dataset.src = img(p.id, "thumb");
+    var hf = document.createElement("button"); hf.className = "hf"; hf.textContent = "♥"; hf.setAttribute("aria-label", "Favorite");
+    hf.onclick = function (e) { e.stopPropagation(); if (favs[p.id]) delete favs[p.id]; else favs[p.id] = 1; saveF(); };
+    el.appendChild(im); el.appendChild(hf);
+    el.onclick = function () { openLb(i); };
+    grid.appendChild(el);
+    if (io) io.observe(im); else { im.src = im.dataset.src; im.classList.add("ld"); }
+  });
+  updateFavUI();
+
+  // ---------- lightbox ----------
+  var cur = -1;
+  function visible() { return favOnly ? photos.filter(function (p) { return favs[p.id]; }) : photos; }
+  function openLb(i) { cur = i; showLb(); $("lb").classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+  function closeLb() { $("lb").classList.add("hidden"); document.body.style.overflow = ""; $("lbImg").src = ""; }
+  function showLb() {
+    var p = photos[cur]; if (!p) return;
+    $("lbImg").src = img(p.id, "web");
+    $("lbName").textContent = p.name || "";
+    $("lbPos").textContent = (cur + 1) + " / " + photos.length;
+    $("lbFav").classList.toggle("on", !!favs[p.id]);
+    $("lbDl").classList.toggle("hidden", !G.downloadsOn);
+    // warm neighbours
+    [cur + 1, cur - 1].forEach(function (k) { if (photos[k]) { var w = new Image(); w.src = img(photos[k].id, "web"); } });
+  }
+  function step(dir) { var n = photos.length; if (!n) return; cur = (cur + dir + n) % n; showLb(); }
+  $("lbPrev").onclick = function () { step(-1); };
+  $("lbNext").onclick = function () { step(1); };
+  $("lbX").onclick = closeLb;
+  $("lbFav").onclick = function () { var p = photos[cur]; if (!p) return; if (favs[p.id]) delete favs[p.id]; else favs[p.id] = 1; saveF(); $("lbFav").classList.toggle("on", !!favs[p.id]); };
+  $("lbDl").onclick = function () { var p = photos[cur]; if (p) dl(p); };
+  document.addEventListener("keydown", function (e) {
+    if ($("lb").classList.contains("hidden")) return;
+    if (e.key === "Escape") closeLb();
+    else if (e.key === "ArrowRight") step(1);
+    else if (e.key === "ArrowLeft") step(-1);
+    else if (e.key.toLowerCase() === "f") $("lbFav").click();
+  });
+  var tx = null;
+  $("lb").addEventListener("touchstart", function (e) { tx = e.touches[0].clientX; }, { passive: true });
+  $("lb").addEventListener("touchend", function (e) {
+    if (tx == null) return; var dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  // ---------- downloads ----------
+  function dl(p) {
+    var a = document.createElement("a");
+    a.href = img(p.id, "full") + "?name=" + encodeURIComponent(p.name || (p.id + ".jpg"));
+    a.download = p.name || (p.id + ".jpg");
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  $("btnDlFav").onclick = function () {
+    var list = photos.filter(function (p) { return favs[p.id]; });
+    if (!list.length) return;
+    var b = $("btnDlFav"); b.disabled = true; var i = 0;
+    (function next() {
+      if (i >= list.length) { b.disabled = false; b.textContent = "Download favorites"; return; }
+      b.textContent = "Downloading " + (i + 1) + " / " + list.length;
+      dl(list[i++]); setTimeout(next, 700);
+    })();
+  };
+
+  function esc(t) { return String(t || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+})();
+</script>
+</body>
+</html>

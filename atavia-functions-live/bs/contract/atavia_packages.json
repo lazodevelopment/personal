@@ -10,6 +10,7 @@
     "retainer": 500,
     "pif_discount": 100,
     "balance_due_days_from_booking": 14,
+    "pif_required_within_days": 45,
     "overtime_day_of_rate": 175,
     "overtime_prearranged_rate": 125,
     "addon_second_shooter": 500,

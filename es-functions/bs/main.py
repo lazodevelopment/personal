@@ -133,7 +133,8 @@ REQUIRED_FIELDS = [
     "mailing_address", "city_state_zip", "governing_state", "event_date",
     "ceremony_venue", "agree_terms",
 ]
-OPTIONAL_FIELDS = ["guest_count", "reception_venue", "start_time", "end_time"]
+OPTIONAL_FIELDS = ["guest_count", "reception_venue", "start_time", "end_time",
+                   "wedding_website"]   # JC-ES-NEXT-1012: optional link so the studio can read up on the couple
 
 
 def _compute_balance_due(event_dt, now):
@@ -357,6 +358,8 @@ def _reservation_due(data):
         raise ValueError("event date must be in the future")
     if days_to_event <= RULES.get("rush_days", 14):
         option = "pif"                      # rush dates are PIF-only
+    if RULES.get("pif_required_within_days", 0) and days_to_event <= RULES["pif_required_within_days"]:
+        option = "pif"                      # JC-ES-ENGAGE-1012: close-in weddings are paid in full
     second_shooter = bool(data.get("second_shooter"))
     try:
         extra_hours = int(data.get("extra_hours") or 0)
@@ -658,6 +661,9 @@ def _create_booking(data, client_ip, source="page", state=None):
         event_dt = datetime.strptime(data["event_date"], "%Y-%m-%d")
         if event_dt.date() <= datetime.now().date():
             return _res({"error": "event date must be in the future"}, 400)
+        _dte = (event_dt.date() - datetime.now().date()).days
+        if RULES.get("pif_required_within_days", 0) and _dte <= RULES["pif_required_within_days"]:
+            data["payment_option"] = "pif"   # JC-ES-ENGAGE-1012: close-in weddings are paid in full
     except ValueError:
         return _res({"error": "event_date must be YYYY-MM-DD"}, 400)
 
@@ -1202,6 +1208,7 @@ def _confirm_paid(ref, booking, payment_method_id, tx_id, amount,
              f"\u2022\u2022\u2022\u2022{booking.get('card_last4','')})",
              f"Event: {booking['event_date']} — "
              f"{booking.get('ceremony_venue','')}",
+             f"Wedding website: {booking.get('wedding_website') or 'not given'}",
              f"Balance: ${0 if plan=='pif' else booking['balance']:,}"
              + ("" if plan == "pif" else
                 (f" auto-charges {booking['balance_due_date']}"
@@ -1543,6 +1550,7 @@ def _confirm_link_paid(ref, booking, payment_id, via="link"):
                 if booking.get('extra_hours') else ""),
              f"Event: {booking['event_date']} — "
              f"{booking.get('ceremony_venue','')}",
+             f"Wedding website: {booking.get('wedding_website') or 'not given'}",
              f"Paid now: ${booking.get('invoice_amount') or 0:,}",
              f"Balance: ${0 if plan=='pif' else booking['balance']:,}"
              + ("" if plan == "pif" else
@@ -2041,8 +2049,86 @@ def _send_gratuity_invites():
 
 
 
+# ========================================================== milestones ==
+# JC-ES-ENGAGE-1012: see lib/emails.py. Stamps on the booking doc:
+#   roadmap_sent_at, studio_note_count, studio_note_last_at, final_details_sent_at
+MILESTONE_ROADMAP_AFTER_DAYS = 3      # planning_roadmap: days after the retainer is paid
+MILESTONE_ROADMAP_MAX_DAYS = 21       # ...but never to a couple who booked longer ago than this
+MILESTONE_NOTE_EVERY_DAYS = 42        # studio_note cadence (six weeks)
+MILESTONE_NOTE_MIN_DAYS_OUT = 45      # no notes inside this window (questionnaire reminders take over)
+MILESTONE_FINAL_DAYS = 10             # final_details
+MILESTONE_QUIET_AROUND_BALANCE_DAYS = 2
+
+
+def _send_milestones(db, now):
+    """The studio's planning rhythm between signing and the wedding. At most
+    one email per booking per run; every send is stamped. Non-fatal."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    try:
+        snaps = (db.collection("bookings")
+                   .where(filter=FieldFilter("status", "==", "confirmed")).get())
+    except Exception as e:
+        print(f"milestones query failed: {e}"); return
+    today = now.date()
+    counts = {"roadmap": 0, "note": 0, "final": 0}
+    for snap in snaps:
+        b = snap.to_dict() or {}
+        if b.get("test_mode") or not b.get("email") or "@" not in str(b.get("email")):
+            continue
+        try:
+            ev = datetime.strptime(b.get("event_date_raw", ""), "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        days = (ev - today).days
+        if days < 0:
+            continue
+        paid = b.get("deposit_paid_at") or b.get("created_at")
+        if not paid:
+            continue
+        if hasattr(paid, "tzinfo") and paid.tzinfo is None:
+            paid = paid.replace(tzinfo=timezone.utc)
+        since_paid = (now - paid).days
+        q_done = bool(b.get("questionnaire_submitted_at"))
+        link = _q_link(b["booking_id"], GRATUITY_SECRET.value)
+        bd = b.get("balance_due_at")
+        near_balance = False
+        if bd is not None and not b.get("balance_paid_at"):
+            if hasattr(bd, "tzinfo") and bd.tzinfo is None:
+                bd = bd.replace(tzinfo=timezone.utc)
+            near_balance = abs((bd - now).days) <= MILESTONE_QUIET_AROUND_BALANCE_DAYS
+        try:
+            if days <= MILESTONE_FINAL_DAYS and days >= 3 and not b.get("final_details_sent_at"):
+                emails.final_details(RESEND_API_KEY.value, b, link, q_done)
+                snap.reference.update({"final_details_sent_at": firestore.SERVER_TIMESTAMP})
+                counts["final"] += 1
+                continue
+            if (not b.get("roadmap_sent_at")
+                    and MILESTONE_ROADMAP_AFTER_DAYS <= since_paid <= MILESTONE_ROADMAP_MAX_DAYS
+                    and days > MILESTONE_FINAL_DAYS):
+                bdd = b.get("balance_due_at")
+                b["balance_due_date"] = bdd.strftime("%B %d, %Y") if hasattr(bdd, "strftime") else ""
+                emails.planning_roadmap(RESEND_API_KEY.value, b, q_link=link)
+                snap.reference.update({"roadmap_sent_at": firestore.SERVER_TIMESTAMP})
+                counts["roadmap"] += 1
+                continue
+            if ((b.get("roadmap_sent_at") or since_paid > MILESTONE_ROADMAP_MAX_DAYS)
+                    and days > MILESTONE_NOTE_MIN_DAYS_OUT and not near_balance):
+                last = b.get("studio_note_last_at") or b.get("roadmap_sent_at") or paid
+                if hasattr(last, "tzinfo") and last.tzinfo is None:
+                    last = last.replace(tzinfo=timezone.utc)
+                if (now - last).days >= MILESTONE_NOTE_EVERY_DAYS:
+                    n = int(b.get("studio_note_count") or 0)
+                    emails.studio_note(RESEND_API_KEY.value, b, link, n, days, q_done)
+                    snap.reference.update({"studio_note_last_at": firestore.SERVER_TIMESTAMP,
+                                           "studio_note_count": n + 1})
+                    counts["note"] += 1
+        except Exception as e:
+            print(f"milestone failed {b.get('booking_id', snap.id)}: {e}")
+    print(f"milestones: {counts}")
+
+
 # ======================================================== lazo invite ==
-LAZO_INVITE_DELAY_DAYS = 3    # JC-LZ-INVITE-0928: days after the booking is paid
+LAZO_INVITE_DELAY_DAYS = 8    # JC-LZ-INVITE-0928: days after the booking is paid (3 -> 8 on 2026-10-12 so the roadmap lands first)
 LAZO_INVITE_PER_RUN = 25      # cap per daily run: the first run reaches existing couples gradually
 LAZO_INVITE_RELAY = ("zola.com", "theknot.com", "weddingpro.com", "example.com")
 
@@ -2094,6 +2180,10 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
     _chase_abandoned()                # recover stalled bookings
     _chase_leads()                    # card-window abandons (no booking yet)
     _send_lazo_invites(firestore.client(), datetime.now(timezone.utc))   # JC-LZ-INVITE-0928
+    try:
+        _send_milestones(firestore.client(), datetime.now(timezone.utc))   # JC-ES-ENGAGE-1012
+    except Exception as e:
+        print(f"milestone sweep failed: {e}")
     db = firestore.client()
     now = datetime.now(timezone.utc)
     from google.cloud.firestore_v1.base_query import FieldFilter

@@ -15,6 +15,7 @@
     "addon_extra_hour": 175,
     "rush_days": 14,
     "rush_fee": 149,
+    "pif_required_within_days": 45,
     "balance_due_days_before_event": 14
   },
   "packages": [

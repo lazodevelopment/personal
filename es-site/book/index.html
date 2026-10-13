@@ -130,6 +130,7 @@ input[type=checkbox]{width:auto;accent-color:var(--champagne)}
       <div class="bk-field"><label for="event_date">Wedding Date</label>
         <input type="date" id="event_date" required>
         <div class="bk-err" id="err_event_date"></div>
+        <p class="bk-note" id="closeNote" style="display:none">This date is within 45 days &mdash; dates this close are reserved with payment in full, so there is no second charge before your wedding.</p>
         <p class="bk-note" id="rushNote">This date is within 14 days &mdash; short-notice dates are paid in full and include a $149 accommodation fee.</p></div>
       <div class="bk-field"><label for="guest_count">Estimated Guests <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
         <input type="number" id="guest_count" min="1" max="2000" placeholder="120"></div>
@@ -138,6 +139,9 @@ input[type=checkbox]{width:auto;accent-color:var(--champagne)}
       <input id="ceremony_venue" placeholder="Venue name, city, state" required><div class="bk-err" id="err_ceremony_venue"></div></div>
     <div class="bk-field"><label for="reception_venue">Reception Venue <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
       <input id="reception_venue" placeholder="Same as ceremony, or venue name"></div>
+    <div class="bk-field"><label for="wedding_website">Wedding Website <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <input type="url" id="wedding_website" inputmode="url" autocomplete="url" placeholder="Zola, The Knot, or your own site"><!-- JC-ES-NEXT-1012: lets the studio read up on the couple before planning -->
+      <p class="bk-note" style="display:block">Paste the link if you have one. We read it before we plan your day.</p></div>
     <div class="bk-row">
       <div class="bk-field"><label for="start_time">Coverage Start <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
         <input type="time" id="start_time"></div>
@@ -300,7 +304,7 @@ const PKGS = [
  {id:"keepsake",n:"The Keepsake",st:"combined",t:4000,h:8,b:["8 Hours of Coverage","One Photographer","One Videographer","All Images Edited","4K Video + Pro Audio","Highlight Film + Extended Edit","Drone Footage","Sneak-Peek + Online Gallery","Full Ownership Rights","Engagement Session","Raw Footage"]},
  {id:"opus",n:"The Opus",st:"combined",t:4500,h:10,b:["10 Hours of Coverage","One Photographer","One Videographer","All Images Edited","4K Video + Pro Audio","Highlight Film + Extended Edit","Drone Footage","Sneak-Peek + Online Gallery","Full Ownership Rights","Engagement Session","Raw Footage"]}
 ];
-const R = {pif:500, ss:500, xh:175, rushDays:14, rushFee:149};
+const R = {pif:500, ss:500, xh:175, rushDays:14, rushFee:149, pifWithinDays:45};  /* JC-ES-ENGAGE-1012 */
 const FAM = {video:"Videography", photo:"Photography", combined:"Photography & Film"};
 const $ = id => document.getElementById(id);
 const money = n => "$" + n.toLocaleString("en-US");
@@ -338,11 +342,14 @@ function daysOut(){
   return Math.floor((ev - new Date(new Date().toDateString()))/864e5);
 }
 function isRush(){ const d = daysOut(); return d!==null && d>0 && d<=R.rushDays; }
+function isClose(){ const d = daysOut(); return d!==null && d>0 && d<=R.pifWithinDays; }  /* paid in full, no plan (server enforces the same) */
 function recalc(){
   const p = PKGS.find(x=>x.id===$("pkg").value);
   $("pkgBullets").innerHTML = p.b.map(x=>`<li>${x}</li>`).join("");
   const rush = isRush();
   $("rushNote").style.display = rush ? "block":"none";
+  const close = !rush && isClose();
+  const closeNote = $("closeNote"); if(closeNote) closeNote.style.display = close ? "block":"none";
   const chip = $("chipStandard");
   /* The Ceremony: flat $500, paid in full, no plan and no enhancements */
   const flat = !!p.pifOnly;
@@ -350,7 +357,7 @@ function recalc(){
   $("addonRow").style.display = flat ? "none" : "";
   $("planChoice").style.display = flat ? "none" : "";
   const flatNote = $("flatNote"); if(flatNote) flatNote.style.display = flat ? "block" : "none";
-  if(rush || flat){ plan="pif"; chip.classList.add("off"); chip.classList.remove("on");
+  if(rush || flat || close){ plan="pif"; chip.classList.add("off"); chip.classList.remove("on");
     document.querySelector('[data-plan="pif"]').classList.add("on");
   } else chip.classList.remove("off");
   const ss = $("ss").value==="yes", xh = parseInt($("xh").value)||0;
@@ -541,7 +548,7 @@ function whopResume(){
     const P=pend.payload; const set=(id,v)=>{ const el=$(id); if(el && v!==undefined && v!==null && v!=="") el.value=v; };
     set("p1",P.partner1_name); set("p2",P.partner2_name); set("email",P.email); set("phone",P.phone); set("mailing_address",P.mailing_address);
     set("city_state_zip",P.city_state_zip); set("governing_state",P.governing_state); set("event_date",P.event_date); set("ceremony_venue",P.ceremony_venue);
-    set("reception_venue",P.reception_venue); set("guest_count",P.guest_count); set("start_time",P.start_time); set("end_time",P.end_time);
+    set("reception_venue",P.reception_venue); set("wedding_website",P.wedding_website); set("guest_count",P.guest_count); set("start_time",P.start_time); set("end_time",P.end_time);
     try{ if($("agree_terms")) $("agree_terms").checked=true; }catch(e){}
   }
   if((payId||sint) && status!=="failed" && status!=="canceled" && pend){
@@ -615,6 +622,7 @@ async function submitBooking(){
     event_date: $("event_date").value,
     ceremony_venue: $("ceremony_venue").value.trim(),
     reception_venue: $("reception_venue").value.trim(),
+    wedding_website: $("wedding_website").value.trim().slice(0,300),
     guest_count: $("guest_count").value.trim(),
     start_time: $("start_time").value, end_time: $("end_time").value,
     agree_terms: true,

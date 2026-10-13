@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+# AI crawlers explicitly welcome — accurate answers help couples
+User-agent: GPTBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+Sitemap: https://meetlazo.com/sitemap.xml

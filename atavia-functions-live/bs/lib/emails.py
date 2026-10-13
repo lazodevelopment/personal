@@ -423,3 +423,124 @@ def lazo_invite(api_key, booking):
     }, headers={"Authorization": f"Bearer {api_key}"}, timeout=30)
     r.raise_for_status()
     return r.json()
+
+
+# ============================================================ engagement ==
+# JC-ENGAGE-1012: couples heard nothing between the welcome email and the
+# balance heads-up (and the Lazo plug), and one cancelled a week in citing
+# "no communication". Three warm, non-transactional touches fill the gap:
+#   meet_your_team   2 days after booking  - who we are, what happens next
+#   planning_checkin every 30 days         - while the wedding is > 45 days out
+#   final_week       7 days before         - what we have on file, day-of number
+# All driven by _send_engagement in main.py.
+
+_SIG = ('<p style="color:#B0713F">&mdash; The Atavia Weddings Team<br>'
+        '(336) 537-9590 &middot; info@ataviaweddings.com &middot; ataviaweddings.com</p>')
+_WRAP = ('<div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">'
+         '<h1 style="font-weight:normal;letter-spacing:2px">ATAVIA WEDDINGS</h1>{body}' + _SIG + '</div>')
+
+
+def _first(booking):
+    return booking["client_names"].split("&")[0].strip().split()[0]
+
+
+def meet_your_team(api_key, booking, q_link=None):
+    first = _first(booking)
+    plan = booking.get("payment_option")
+    bal = ""
+    if plan == "standard" and booking.get("balance_due_date"):
+        bal = (f"<li><b>{booking['balance_due_date']}</b> &mdash; your remaining balance is "
+               f"charged to the card on file, as set out in your agreement. We send a reminder "
+               f"the day before, and you can swap the card any time by replying.</li>")
+    q = ("" if not q_link else
+         f'<p style="text-align:center;margin:22px 0"><a href="{q_link}" style="background:#B0713F;'
+         'color:#FAF7F2;padding:14px 30px;text-decoration:none;letter-spacing:2px;'
+         'font-family:Arial,sans-serif;font-size:13px">OPEN YOUR QUESTIONNAIRE</a></p>')
+    body = f"""
+      <p>Hi {first},</p>
+      <p>Now that the paperwork is done, we wanted to say a proper hello and show you
+      exactly what happens between today and <b>{booking.get('event_date','')}</b>, so
+      there are no surprises and nothing you have to chase.</p>
+      <ul style="line-height:1.7">
+        <li><b>Done:</b> your date is reserved, your agreement is signed, and your
+        <b>{booking.get('package_name','')}</b> coverage is locked in.</li>
+        {bal}
+        <li><b>Whenever you have ten minutes:</b> the Wedding Day Questionnaire (venues,
+        timeline, key people, must-have moments). You can update it any time until two
+        weeks before the wedding.</li>
+        <li><b>Along the way:</b> we check in every few weeks. Reply to any of those with
+        changes, questions, or just to say hi &mdash; a real person reads every one.</li>
+        <li><b>30 days out:</b> we review your questionnaire and build your coverage plan,
+        and reach out if anything needs clarifying.</li>
+        <li><b>The week of:</b> you get your final timeline and the direct number for your
+        filmmaker on the day.</li>
+      </ul>
+      {q}
+      <p>If anything is ever unclear, <b>reply to this email or call (336) 537-9590</b>.
+      You should never have to wonder where things stand.</p>"""
+    return _send(api_key, booking["email"],
+                 f"What happens next — {booking.get('event_date','')}", _WRAP.format(body=body))
+
+
+_CHECKIN_TIPS = [
+    "If your venue has a coordinator, send us their name and number when you have it &mdash; "
+    "it makes the day run smoother for everyone.",
+    "Start a short list of the people who matter most on the day (parents, grandparents, the "
+    "friend who flew in). We make sure they are on film.",
+    "Think about your first look, if you want one. It is the single biggest timeline decision "
+    "and the easiest to change now.",
+    "Sunset is the best light of the day. If you can give us fifteen minutes with the two of "
+    "you around then, those are usually the shots couples love most.",
+    "Readings, vows, toasts: if anyone is writing something personal, a quick heads-up lets us "
+    "capture the audio cleanly.",
+]
+
+
+def planning_checkin(api_key, booking, q_link, n, days_to_event, q_done):
+    """n-th check-in (0-based) picks a rotating tip."""
+    first = _first(booking)
+    tip = _CHECKIN_TIPS[n % len(_CHECKIN_TIPS)]
+    months = max(1, round(days_to_event / 30))
+    qline = ("Your questionnaire is in &mdash; thank you. Reopen it any time if details change."
+             if q_done else
+             f'Your questionnaire is still open whenever you are ready: <a href="{q_link}" '
+             'style="color:#B0713F">complete it here</a>.')
+    body = f"""
+      <p>Hi {first},</p>
+      <p>A quick check-in from us &mdash; about <b>{months} month{'s' if months != 1 else ''}</b>
+      to go until {booking.get('event_date','')}. Nothing is required of you; your date and
+      your coverage are secure.</p>
+      <p>{qline}</p>
+      <p><b>One thing worth thinking about now:</b> {tip}</p>
+      <p>Anything changed &mdash; venue, times, guest count, a new must-have? Just reply and
+      we will update your file the same day.</p>"""
+    return _send(api_key, booking["email"],
+                 f"Checking in — {booking.get('event_date','')}", _WRAP.format(body=body))
+
+
+def final_week(api_key, booking, q_link, q_done):
+    first = _first(booking)
+    rows = ""
+    for label, key in (("Ceremony", "ceremony_venue"), ("Reception", "reception_venue"),
+                       ("Coverage starts", "start_time"), ("Coverage ends", "end_time")):
+        v = booking.get(key)
+        if v:
+            rows += (f'<tr><td style="padding:3px 14px 3px 0;color:#6B6B6B;font-size:12px">{label}</td>'
+                     f'<td style="padding:3px 0;font-size:13px">{v}</td></tr>')
+    table = (f'<table style="width:100%;border-collapse:collapse;margin:16px 0">{rows}</table>'
+             if rows else "")
+    qline = ("" if q_done else
+             f'<p><b>We still do not have your questionnaire.</b> Please <a href="{q_link}" '
+             'style="color:#B0713F">complete it today</a> so we can plan your coverage properly, '
+             'or reply with your timeline and we will take it from there.</p>')
+    body = f"""
+      <p>Hi {first},</p>
+      <p>One week to go. Here is what we have on file for <b>{booking.get('event_date','')}</b>:</p>
+      {table}
+      {qline}
+      <p>If anything above has changed, reply today. Otherwise you are all set &mdash; we will
+      arrive early, stay out of the way, and capture everything.</p>
+      <p><b>Day-of number:</b> (336) 537-9590. Save it; it reaches us directly on the day.</p>
+      <p>We are so looking forward to it.</p>"""
+    return _send(api_key, booking["email"],
+                 f"One week to go — {booking.get('event_date','')}", _WRAP.format(body=body))

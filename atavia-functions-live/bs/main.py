@@ -344,6 +344,8 @@ def _reservation_due(data):
     days_to_event = (event_dt.date() - datetime.now(timezone.utc).date()).days
     if days_to_event <= 0:
         raise ValueError("event date must be in the future")
+    if RULES.get("pif_required_within_days", 0) and days_to_event <= RULES["pif_required_within_days"]:
+        option = "pif"          # JC-ENGAGE-1012: close-in weddings are paid in full at reservation
     second_shooter = bool(data.get("second_shooter"))
     try:
         extra_hours = int(data.get("extra_hours") or 0)
@@ -638,6 +640,9 @@ def _create_booking(data, client_ip, source="page", state=None):
         event_dt = datetime.strptime(data["event_date"], "%Y-%m-%d")
         if event_dt.date() <= datetime.now().date():
             return _res({"error": "event date must be in the future"}, 400)
+        _dte = (event_dt.date() - datetime.now().date()).days
+        if RULES.get("pif_required_within_days", 0) and _dte <= RULES["pif_required_within_days"]:
+            data["payment_option"] = "pif"   # JC-ENGAGE-1012: close-in weddings are paid in full
     except ValueError:
         return _res({"error": "event_date must be YYYY-MM-DD"}, 400)
 
@@ -2038,8 +2043,90 @@ def _send_balance_heads_up(db, now):
 
 
 
+# ========================================================== engagement ==
+# JC-ENGAGE-1012: see lib/emails.py. Stamps on the booking doc:
+#   meet_sent_at, checkin_count, checkin_last_at, final_week_sent_at
+ENGAGE_MEET_AFTER_DAYS = 2        # meet_your_team: days after the retainer is paid
+ENGAGE_MEET_MAX_DAYS = 21         # ...but never to a couple who booked longer ago than this
+ENGAGE_CHECKIN_EVERY_DAYS = 30    # planning_checkin cadence
+ENGAGE_CHECKIN_MIN_DAYS_OUT = 45  # no check-ins inside this window (30-day questionnaire flow takes over)
+ENGAGE_FINAL_WEEK_DAYS = 7
+ENGAGE_QUIET_AROUND_BALANCE_DAYS = 2   # don't stack a check-in on the balance heads-up / charge
+
+
+def _send_engagement(db, now):
+    """Warm, non-transactional touches between booking and the wedding. One
+    email per booking per run at most; every send is stamped so nothing
+    repeats. Non-fatal throughout."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+    try:
+        snaps = (db.collection("bookings")
+                   .where(filter=FieldFilter("status", "==", "confirmed")).get())
+    except Exception as e:
+        print(f"engagement query failed: {e}"); return
+    today = now.date()
+    counts = {"meet": 0, "checkin": 0, "final": 0}
+    for snap in snaps:
+        b = snap.to_dict() or {}
+        if b.get("test_mode") or not b.get("email") or "@" not in str(b.get("email")):
+            continue
+        try:
+            ev = datetime.strptime(b.get("event_date_raw", ""), "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        days = (ev - today).days
+        if days < 0:
+            continue
+        paid = b.get("deposit_paid_at") or b.get("created_at")
+        if not paid:
+            continue
+        if hasattr(paid, "tzinfo") and paid.tzinfo is None:
+            paid = paid.replace(tzinfo=timezone.utc)
+        since_paid = (now - paid).days
+        q_done = bool(b.get("questionnaire_submitted_at"))
+        link = _q_link(b["booking_id"], GRATUITY_SECRET.value)
+        bd = b.get("balance_due_at")
+        near_balance = False
+        if bd is not None and not b.get("balance_paid_at"):
+            if hasattr(bd, "tzinfo") and bd.tzinfo is None:
+                bd = bd.replace(tzinfo=timezone.utc)
+            near_balance = abs((bd - now).days) <= ENGAGE_QUIET_AROUND_BALANCE_DAYS
+        try:
+            # 1. final week (highest priority)
+            if days <= ENGAGE_FINAL_WEEK_DAYS and days >= 2 and not b.get("final_week_sent_at"):
+                emails.final_week(RESEND_API_KEY.value, b, link, q_done)
+                snap.reference.update({"final_week_sent_at": firestore.SERVER_TIMESTAMP})
+                counts["final"] += 1
+                continue
+            # 2. meet your team, a couple of days after paying (couples who booked
+            #    before this shipped skip straight to the check-in track)
+            if (not b.get("meet_sent_at") and ENGAGE_MEET_AFTER_DAYS <= since_paid <= ENGAGE_MEET_MAX_DAYS
+                    and days > ENGAGE_FINAL_WEEK_DAYS):
+                bdd = b.get("balance_due_at")
+                b["balance_due_date"] = bdd.strftime("%B %d, %Y") if hasattr(bdd, "strftime") else ""
+                emails.meet_your_team(RESEND_API_KEY.value, b, q_link=link)
+                snap.reference.update({"meet_sent_at": firestore.SERVER_TIMESTAMP})
+                counts["meet"] += 1
+                continue
+            # 3. monthly check-in while the wedding is comfortably far out
+            if ((b.get("meet_sent_at") or since_paid > ENGAGE_MEET_MAX_DAYS)
+                    and days > ENGAGE_CHECKIN_MIN_DAYS_OUT and not near_balance):
+                last = b.get("checkin_last_at") or b.get("meet_sent_at") or paid
+                if hasattr(last, "tzinfo") and last.tzinfo is None:
+                    last = last.replace(tzinfo=timezone.utc)
+                if (now - last).days >= ENGAGE_CHECKIN_EVERY_DAYS:
+                    n = int(b.get("checkin_count") or 0)
+                    emails.planning_checkin(RESEND_API_KEY.value, b, link, n, days, q_done)
+                    snap.reference.update({"checkin_last_at": firestore.SERVER_TIMESTAMP,
+                                           "checkin_count": n + 1})
+                    counts["checkin"] += 1
+        except Exception as e:
+            print(f"engagement failed {b.get('booking_id', snap.id)}: {e}")
+    print(f"engagement: {counts}")
+
+
 # ======================================================== lazo invite ==
-LAZO_INVITE_DELAY_DAYS = 3    # JC-LZ-INVITE-0928: days after the booking is paid
+LAZO_INVITE_DELAY_DAYS = 7    # JC-LZ-INVITE-0928: days after the booking is paid (3 -> 7 on 2026-10-12 so the meet-your-team email lands first)
 LAZO_INVITE_PER_RUN = 25      # cap per daily run: the first run reaches existing couples gradually
 LAZO_INVITE_RELAY = ("zola.com", "theknot.com", "weddingpro.com", "example.com")
 
@@ -2091,6 +2178,10 @@ def charge_balances(event: scheduler_fn.ScheduledEvent) -> None:
     _chase_abandoned()                # recover stalled bookings
     _chase_leads()                    # card-window abandons (no booking yet)
     _send_lazo_invites(firestore.client(), datetime.now(timezone.utc))   # JC-LZ-INVITE-0928
+    try:
+        _send_engagement(firestore.client(), datetime.now(timezone.utc))   # JC-ENGAGE-1012
+    except Exception as e:
+        print(f"engagement sweep failed: {e}")
     db = firestore.client()
     now = datetime.now(timezone.utc)
     try:

@@ -249,6 +249,7 @@ border:1px solid var(--c-copper);border-top:none;max-height:260px;overflow:auto;
             <span><b>Standard Plan</b><p>$500 retainer today reserves your date. Your remaining balance of <span class="js-bal">—</span> is charged automatically to the same card 14 days after you reserve. Nothing else to remember.</p></span></label>
           <label class="opt" data-plan="pif"><input type="radio" name="payment_option" value="pif">
             <span><b>Pay in Full</b><span class="tag">Save $100</span><p>Pay <span class="js-pif">—</span> when you reserve and you're done — a $100 discount, no future charges.</p></span></label>
+          <p id="pif_note" style="display:none;font-size:13px;color:#6B6B6B;margin:6px 0 0">Weddings within 45 days are reserved with payment in full (with the $100 discount), so there is no second charge between now and your date.</p>
           <div class="promo"><input type="text" id="promo_code" placeholder="Discount code" maxlength="20" autocomplete="off"><button type="button" id="promo_apply">Apply</button></div>
           <div class="promo-msg" id="promo_msg"></div>
         </div></div>
@@ -606,6 +607,13 @@ async function captureCard(names,email,phone,addr,attr){attr=attr||{};
 const procBoot=()=>{if(FINISH_PAY){finishBoot();return;}if(PROCESSOR==="whop"){whopInit().then(()=>{try{whopResume();}catch(e){console.error("whop resume",e);}});}else zohoReadyCheck();};
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",procBoot);else procBoot();
 $("#event_date").addEventListener("change",renderSummary);
+/* JC-ENGAGE-1012: weddings within PIF_WITHIN_DAYS are paid in full at reservation (server enforces the same rule) */
+const PIF_WITHIN_DAYS=45;
+function applyPifRule(){const v=$("#event_date").value;const std=$('.opt[data-plan="standard"]'),pif=$('.opt[data-plan="pif"]'),note=$("#pif_note");if(!std||!pif)return;
+  const d=v?Math.ceil((new Date(v+"T12:00:00")-new Date())/864e5):999;const close=d<=PIF_WITHIN_DAYS;
+  std.style.display=close?"none":"";if(note)note.style.display=close?"":"none";
+  if(close&&selPlan!=="pif"){$$(".opt[data-plan]").forEach(x=>x.classList.remove("sel"));pif.classList.add("sel");pif.querySelector("input").checked=true;selPlan="pif";renderSummary();}}
+$("#event_date").addEventListener("change",applyPifRule);applyPifRule();
 /* ---- validation: one rule per field, shown under the field as soon as it is left ---- */
 const LABEL={partner1_name:"Partner 1 name",email:"Email",phone:"Phone",mailing_address:"Billing address",city_state_zip:"City / State / ZIP",
   governing_state:"State of residence",event_date:"Wedding date",ceremony_venue:"Ceremony venue",agree_terms:"Retainer terms",collection:"A collection"};

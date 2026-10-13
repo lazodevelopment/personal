@@ -43,6 +43,7 @@ def _btn(href, label):
 
 
 def welcome_email(api_key, booking, q_link=None):
+    # JC-ES-NEXT-1012: the confirmation carries the what-happens-next timeline
     first = booking["client_names"].split("&")[0].strip().split()[0]
     plan = booking["payment_option"]
     if plan == "standard":
@@ -62,14 +63,25 @@ def welcome_email(api_key, booking, q_link=None):
       <p>Hi {first},</p>
       <p><b>Your date is officially reserved.</b> We're honored to be part of
       your day on <b>{booking['event_date']}</b>.</p>
-      <p>{money_line}</p>
-      <p><b>One thing we need from you:</b> your Wedding Day Questionnaire —
-      venues, timeline, key people, must-have shots. It takes about ten
-      minutes and helps us capture everything perfectly. Please complete it
-      at least two weeks before your date.</p>
+      <p><b>What happens next.</b> We work in a few set milestones and we come
+      to you at each one, so you never need to chase us.</p>
+      <ol style="line-height:1.8;padding-left:20px">
+        <li><b>Now.</b> {money_line}</li>
+        <li><b>At your pace.</b> Your Wedding Day Questionnaire: venues, timeline,
+        key people, must-have shots. About ten minutes, and you can reopen the
+        same link to update it until two weeks before your date.</li>
+        <li><b>Every six weeks.</b> A short note from the studio with one question
+        that shapes how we film your day. Reply or ignore; both are fine.</li>
+        <li><b>Ten days out.</b> Final details: we send back everything we have and
+        ask you to confirm it in one reply.</li>
+        <li><b>Your wedding day.</b> We arrive at the time set in your questionnaire
+        and film the day as planned.</li>
+        <li><b>After.</b> Your film, delivered as set out in your agreement.</li>
+      </ol>
+      <p><b>The one thing we need from you</b> is the questionnaire.</p>
       QBTN_PLACEHOLDER
-      <p>If any details change afterward — venues, times, guest count — just
-      reopen the same link and update your answers.</p>
+      <p>Questions at any point: reply to this email. It reaches the studio
+      directly and is answered by a person, usually the same day.</p>
       <p>Your signed agreement is attached to the signature confirmation you
       received separately. Keep it handy.</p>
       {_SIGNOFF}
@@ -313,3 +325,109 @@ def balance_link(api_key, booking, amount, pay_url):
     </div>"""
     return _send(api_key, booking["email"],
                  f"Your balance for {booking['event_date']} is due", html)
+
+
+# ============================================================ milestones ==
+# JC-ES-ENGAGE-1012: the studio's planning rhythm between signing and the
+# wedding. Written for ES's editorial voice (not the Atavia timeline emails):
+#   planning_roadmap  3 days after signing   - the five milestones, in order
+#   studio_note       every 6 weeks          - one question for the couple, while > 45 days out
+#   final_details     10 days before         - confirm the day, reply required
+# Driven by _send_milestones in main.py.
+
+_ES_WRAP = ('<div style="font-family:Georgia,serif;color:#2B2B2B;max-width:560px;margin:0 auto">'
+            '<h1 style="font-weight:normal;letter-spacing:2px">ELIZABETH SCOTT WEDDINGS</h1>'
+            '{body}' + _SIGNOFF + '</div>')
+
+
+def _es_first(booking):
+    return booking["client_names"].split("&")[0].strip().split()[0]
+
+
+def planning_roadmap(api_key, booking, q_link=None):
+    first = _es_first(booking)
+    plan = booking.get("payment_option")
+    money = ("Your collection is paid in full. There is nothing further to pay."
+             if plan != "standard" else
+             f"Your balance is scheduled for <b>{booking.get('balance_due_date','')}</b>, fourteen days "
+             "before the wedding, to the card you reserved with, exactly as your agreement sets out.")
+    body = f"""
+      <p>Hi {first},</p>
+      <p>Your agreement is signed and <b>{booking.get('event_date','')}</b> is yours. From here we
+      work in five milestones, and we will come to you at each one. You never need to chase us.</p>
+      <ol style="line-height:1.8;padding-left:20px">
+        <li><b>Now.</b> {money}</li>
+        <li><b>At your pace.</b> Your Wedding Day Questionnaire: venues, timeline, the people who
+        matter. Ten minutes, editable until two weeks out.</li>
+        <li><b>Every six weeks.</b> A short note from the studio with one question that shapes how we
+        film your day. Reply or ignore; both are fine.</li>
+        <li><b>Ten days out.</b> Final details: we send back everything we have and ask you to confirm
+        it in one reply.</li>
+        <li><b>After.</b> Your film, delivered as set out in your agreement, with a note from the
+        editor on what we loved.</li>
+      </ol>
+      {_btn(q_link, "BEGIN YOUR QUESTIONNAIRE") if q_link else ""}
+      <p>Questions at any point: reply to this email. It reaches the studio directly and is answered
+      by a person, usually the same day.</p>"""
+    return _send(api_key, booking["email"],
+                 f"Your planning roadmap — {booking.get('event_date','')}", _ES_WRAP.format(body=body))
+
+
+_STUDIO_QUESTIONS = [
+    ("Who is the one person you most want to see react when you walk in?",
+     "Tell us who, and we will have a camera on them."),
+    ("Are you writing your own vows, or reading letters to each other beforehand?",
+     "Either way, we record the audio separately so every word survives."),
+    ("Is there a song, a place, or an object that will mean something only to the two of you?",
+     "These are the details that make a film yours and not a template."),
+    ("Would you rather we are invisible, or part of the room?",
+     "Some couples want us never noticed; others like a little direction. Both are good answers."),
+    ("What is the one moment you are nervous about?",
+     "Often it is the one we can make easiest, if we know in advance."),
+]
+
+
+def studio_note(api_key, booking, q_link, n, days_to_event, q_done):
+    first = _es_first(booking)
+    q, why = _STUDIO_QUESTIONS[n % len(_STUDIO_QUESTIONS)]
+    weeks = max(1, round(days_to_event / 7))
+    qline = ("" if q_done else
+             f'<p style="font-size:13px;color:#6B6B6B">Your questionnaire is still open: '
+             f'<a href="{q_link}" style="color:{ACCENT}">complete it when you have ten minutes</a>.</p>')
+    body = f"""
+      <p>Hi {first},</p>
+      <p>A note from the studio, {weeks} weeks out from {booking.get('event_date','')}.
+      Everything is on track and nothing is required of you.</p>
+      <p style="font-size:18px;line-height:1.5;margin:22px 0 6px"><i>{q}</i></p>
+      <p>{why} Reply with a line or two if you like.</p>
+      {qline}
+      <p>And if anything has changed since we last spoke, that is the other reason to reply.</p>"""
+    return _send(api_key, booking["email"],
+                 f"A note from the studio — {booking.get('event_date','')}", _ES_WRAP.format(body=body))
+
+
+def final_details(api_key, booking, q_link, q_done):
+    first = _es_first(booking)
+    rows = ""
+    for label, key in (("Ceremony", "ceremony_venue"), ("Reception", "reception_venue"),
+                       ("Coverage begins", "start_time"), ("Coverage ends", "end_time"),
+                       ("Collection", "package_name")):
+        v = booking.get(key)
+        if v:
+            rows += (f'<tr><td style="padding:4px 14px 4px 0;color:#6B6B6B;font-size:12px">{label}</td>'
+                     f'<td style="padding:4px 0;font-size:13px">{v}</td></tr>')
+    table = f'<table style="width:100%;border-collapse:collapse;margin:16px 0">{rows}</table>' if rows else ""
+    missing = ("" if q_done else
+               f'<p><b>We do not yet have your questionnaire.</b> Please <a href="{q_link}" '
+               f'style="color:{ACCENT}">complete it now</a>, or simply reply with your timeline and '
+               'the names that matter, and we will build the plan from that.</p>')
+    body = f"""
+      <p>Hi {first},</p>
+      <p>Ten days out. This is everything we are working from for <b>{booking.get('event_date','')}</b>:</p>
+      {table}
+      {missing}
+      <p><b>Please reply to this email with one word, "confirmed", or with any corrections.</b>
+      We lock the plan and assign the crew on your reply.</p>
+      <p>Thank you for trusting us with this.</p>"""
+    return _send(api_key, booking["email"],
+                 f"Final details, please confirm — {booking.get('event_date','')}", _ES_WRAP.format(body=body))

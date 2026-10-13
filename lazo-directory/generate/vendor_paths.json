@@ -1,6 +1,6 @@
 {
 "paths": {
-"manual-phoenix-atavia-weddings|wedding-photographers": "/austin/wedding-photographers/atavia-weddings/",
+"manual-phoenix-atavia-weddings|wedding-photographers": "/tucson/wedding-photographers/atavia-weddings/",
 "manual-dallas-fort-worth-elizabeth-scott-weddings|wedding-photographers": "/tucson/wedding-photographers/elizabeth-scott-weddings/",
 "ChIJoYbeEHYPK4cRJWeJonH3ia0|wedding-photographers": "/phoenix/wedding-photographers/a-moment-in-time-photography-by-d-lynn/",
 "ChIJ1SwhlV8TK4cR00SpgQPW4OE|wedding-photographers": "/phoenix/wedding-photographers/a-marie-studio/",
@@ -131,7 +131,7 @@
 "ChIJRXl36YxFK4cR7NNrjTsbHIY|wedding-photographers": "/phoenix/wedding-photographers/whiskey-wy-photography/",
 "ChIJr9g1BI9FK4cR7eHparB_tY0|wedding-photographers": "/phoenix/wedding-photographers/white-sheet-studios/",
 "ChIJe7_7VRSpK4cRojPrLi3qLrs|wedding-photographers": "/phoenix/wedding-photographers/zion-photography/",
-"manual-phoenix-atavia-weddings|wedding-videographers": "/austin/wedding-videographers/atavia-weddings/",
+"manual-phoenix-atavia-weddings|wedding-videographers": "/tucson/wedding-videographers/atavia-weddings/",
 "manual-dallas-fort-worth-elizabeth-scott-weddings|wedding-videographers": "/tucson/wedding-videographers/elizabeth-scott-weddings/",
 "ChIJm9h3n_6nK4cRdoCyOn3Uv1k|wedding-videographers": "/phoenix/wedding-videographers/360-photo-booth-az/",
 "ChIJmX9RRF6pK4cRTDoMK_iu1co|wedding-videographers": "/phoenix/wedding-videographers/360-platform-moments/",
@@ -1359,6 +1359,7 @@
 "ChIJqduszDu3ma4R9Qu5XETQXdQ|wedding-rentals": "/phoenix/wedding-rentals/y-j-party-rentals/",
 "ChIJLQTslHIRK4cRWd9fsckVXe0|wedding-rentals": "/phoenix/wedding-rentals/yeyo-s-party-rentals-llc/",
 "ChIJX-GS_cw4K4cRH-DkJ0_ojmQ|wedding-rentals": "/phoenix/wedding-rentals/you-can-t-beat-this-party-rentals-event-decor/",
+"manual-phoenix-ticktickboom|wedding-bands": "/phoenix/wedding-bands/ticktickboom/",
 "ChIJj9M-0IRDK4cRbtLXxEbPQlM|wedding-bands": "/phoenix/wedding-bands/50k/",
 "ChIJKdg_jwITK4cRVtDSOlaFxzY|wedding-bands": "/phoenix/wedding-bands/a-r-t-festival-live-music-spot/",
 "ChIJq2XpXsxtK4cRIO7IwFwqiHU|wedding-bands": "/phoenix/wedding-bands/affinity-the-band/",
@@ -163788,6 +163789,8 @@
 "/asheville/wedding-rentals/the-beck-barn/": "/greenville-sc/wedding-venues/the-beck-barn/",
 "/asheville/wedding-rentals/the-school-house-events-stays/": "/greenville-sc/wedding-venues/the-school-house-events-stays/",
 "/asheville/wedding-invitations/purple-ivy-events-llc/": "/greenville-sc/wedding-planners/purple-ivy-events-llc/",
-"/asheville/day-of-coordination/south-wind-ranch-tr/": "/greenville-sc/wedding-venues/south-wind-ranch-tr/"
+"/asheville/day-of-coordination/south-wind-ranch-tr/": "/greenville-sc/wedding-venues/south-wind-ranch-tr/",
+"/austin/wedding-photographers/atavia-weddings/": "/tucson/wedding-photographers/atavia-weddings/",
+"/austin/wedding-videographers/atavia-weddings/": "/tucson/wedding-videographers/atavia-weddings/"
 }
 }
