@@ -161,3 +161,17 @@ is where open_thread sends them.
 
 App hand-off: `app-patches/patch_couple_v145.py` adds a gold "Talk to June" button beside "Ask June" in the
 couple dashboard (juneToken callable → `?t=`; any signed-in uid works). Jesse pastes v145 into FlutterFlow.
+
+## Voice fix and the hero (2026-10-13)
+
+- **Silent voice on phones, fixed on the server.** `/clip/<id>` advertised byte ranges but always answered 200 with
+  the whole file; iOS AVPlayer probes with `Range: bytes=0-1` and refuses such a clip, so the text showed and June
+  stayed silent while the radio (a live stream, no probe) played. `clipResponse` now answers 206 / HEAD / 416
+  (JC-LAZO-JUNE-CLIP-RANGE-1013-001; the same fix is in jovi-hub).
+- **JuneNative v5** ports Jovi's safeguards: a playback watchdog and the phone's own voice (flutter_tts, en-GB) as the
+  fallback per sentence and for the brief. New FlutterFlow dependency: `flutter_tts`.
+- **JuneNative v6 + Vendor v189 + Couple v153 (JC-LAZO-JUNE-HERO-1013-001).** June is the top of both dashboards:
+  layout `hero` on the cover photo - her greeting, the core beside her line from the brief (typed in), today's one
+  thing as one pill, an Ask June bar (chat, chips and the whole dock open as a sheet), two columns on wide screens.
+  The dashboards keep their own live tiles beneath her (a swipeable row on phones); the couple's countdown is the
+  first tile, the vendor's name and verify action sit in the eyebrow. Paste JuneNative v6 first, then the dashboards.
