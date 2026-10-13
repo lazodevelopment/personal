@@ -814,6 +814,20 @@ async function speakWithTrack(env, text, model = "eleven_turbo_v2_5") {
   const r = await elevenlabs(env, text, "pcm_16000", model); if (!r.ok) return null;
   const pcm = await r.arrayBuffer(); return { wav: wavFromPcm16(pcm, 16000), env: levelTrack(pcm) };
 }
+// JC-LAZO-JUNE-CLIP-RANGE-1013-001: a clip served the way AVPlayer and ExoPlayer expect (byte ranges, HEAD)
+function clipResponse(request, buf, type) {
+  const size = buf.byteLength;
+  const base = { "content-type": type, "cache-control": "private, max-age=600", "accept-ranges": "bytes" };
+  const head = request.method === "HEAD";
+  const h = (request.headers.get("range") || "").trim();
+  const m = /^bytes=(\d*)-(\d*)$/.exec(h);
+  if (!m || (m[1] === "" && m[2] === "")) return new Response(head ? null : buf, { status: 200, headers: { ...base, "content-length": String(size) } });
+  let start, end;
+  if (m[1] === "") { start = Math.max(0, size - +m[2]); end = size - 1; }
+  else { start = +m[1]; end = m[2] === "" ? size - 1 : Math.min(+m[2], size - 1); }
+  if (start >= size || start > end) return new Response(null, { status: 416, headers: { ...base, "content-range": `bytes */${size}` } });
+  return new Response(head ? null : buf.slice(start, end + 1), { status: 206, headers: { ...base, "content-range": `bytes ${start}-${end}/${size}`, "content-length": String(end - start + 1) } });
+}
 const isWav = (buf) => buf && buf.byteLength > 12 && new Uint8Array(buf, 0, 4).join(",") === "82,73,70,70";
 const audioType = (buf) => isWav(buf) ? "audio/wav" : "audio/mpeg";
 
@@ -835,7 +849,7 @@ async function handle(request, env, ctx) {
     if (p === "/" || p === "/index.html") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-security-policy": "frame-ancestors 'self' https://app.meetlazo.com https://meetlazo.com https://*.meetlazo.com" } });   // embeddable by the Lazo dashboards only
     if (p === "/icon.svg") return new Response(ICON, { headers: { "content-type": "image/svg+xml", "cache-control": "public, max-age=86400" } });
     if (p === "/manifest.json") return json(MANIFEST);
-    if (p.startsWith("/clip/")) { const id = p.slice(6).replace(/\.(mp3|wav)$/, ""); if (!/^[a-z0-9]{20,30}$/.test(id)) return new Response("Not found", { status: 404 }); const a = await env.JUNE.get("clip_" + id, "arrayBuffer"); if (!a) return new Response("Gone", { status: 404 }); return new Response(a, { headers: { "content-type": audioType(a), "cache-control": "private, max-age=600", "accept-ranges": "bytes" } }); }
+    if (p.startsWith("/clip/")) { const id = p.slice(6).replace(/\.(mp3|wav)$/, ""); if (!/^[a-z0-9]{20,30}$/.test(id)) return new Response("Not found", { status: 404 }); const a = await env.JUNE.get("clip_" + id, "arrayBuffer"); if (!a) return new Response("Gone", { status: 404 }); return clipResponse(request, a, audioType(a)); }
     if (p === "/api/config") return json({ brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, apiKey: env.FIREBASE_API_KEY, app: env.APP_URL || "https://app.meetlazo.com/dashboard", coupleApp: env.COUPLE_APP_URL || "https://app.meetlazo.com/", build: BUILD });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
 
