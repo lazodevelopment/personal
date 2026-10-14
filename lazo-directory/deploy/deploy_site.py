@@ -146,7 +146,7 @@ def sync(prune: bool):
     # it into dist (source of truth: lazo-directory/wedding-websites/), and the old
     # unanchored "wedding-websites/**" also matched every {metro}/wedding-websites/
     # page, which is why the 2026-09-20 nightly built 83 metro pages and shipped none.
-    for _pfx in ("pro/**", "assets/chime-*.mp3", "badges/**", ".well-known/**", "seating/**", "showcase/**", "nearby/**", "_inbox/**", "signups/**"):
+    for _pfx in ("pro/**", "assets/chime-*.mp3", "badges/**", ".well-known/**", "seating/**", "showcase/**", "nearby/**", "stay/**", "_inbox/**", "signups/**"):
         base += ["--exclude", _pfx]
     if prune:
         print("== 4/5 sync (PRUNE dry-run first) ==")
