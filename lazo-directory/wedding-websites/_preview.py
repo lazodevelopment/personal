@@ -22,7 +22,7 @@ payload = {
     "travelNotes": "The road in is gravel for the last mile.",
     "registryLinks": [{"label": "Crate & Barrel", "url": "https://www.crateandbarrel.com"}], "registryNote": "",
     "rsvpBy": "May 1, 2027", "vendorTeam": [{"category": "Photographer", "name": "Atavia Weddings", "vendorId": "ChIJdemo", "url": "https://meetlazo.com/phoenix/wedding-photographers/atavia-weddings/"}, {"category": "Venue", "name": "The Orchard House"}],
-    "siteGallery": [f"{U}1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=74", f"{U}1473116763249-2faaef81ccda?auto=format&fit=crop&w=900&q=74", f"{U}1505142468610-359e7d316be0?auto=format&fit=crop&w=900&q=74"],
+    "siteGallery": [f"{U}1519046904884-53103b34b206?auto=format&fit=crop&w=1200&q=74", f"{U}1473116763249-2faaef81ccda?auto=format&fit=crop&w=900&q=74", f"{U}1505142468610-359e7d316be0?auto=format&fit=crop&w=900&q=74", f"{U}1511285560929-80b456fea0bc?auto=format&fit=crop&w=900&q=74", f"{U}1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=900&q=74", f"{U}1519225421980-715cb0215aed?auto=format&fit=crop&w=900&q=74", f"{U}1606216794074-735e91aa2c92?auto=format&fit=crop&w=900&q=74"],
     "passcode": "", "rsvpOpen": True, "coverUrl": "", "palette": "",
     # JC-LAZO-WWS-0929-PHOTOS: positioned photos + the guests' wall (add ?photos=1 to the preview URL to see it before the date)
     "heroPhoto": {"url": f"{U}1519741497674-611481863552?auto=format&fit=crop&w=1900&q=74", "x": 0.5, "y": 0.35, "zoom": 1.3},
@@ -33,6 +33,21 @@ payload = {
     "timelineOn": True, "timeline": [{"time": "16:00", "label": "Guests arrive", "note": "Cold drinks on the porch", "dur": 30}, {"time": "16:30", "label": "Ceremony", "note": "", "dur": 30}, {"time": "17:15", "label": "Cocktail hour", "note": "", "dur": 75}, {"time": "18:30", "label": "Dinner", "note": "", "dur": 90}, {"time": "20:00", "label": "First dance, then everyone", "note": "", "dur": 150}, {"time": "22:30", "label": "Send-off", "note": "Sparklers by the barn", "dur": 15}],
     "events": [{"name": "Welcome dinner", "dateIso": "2027-06-11", "time": "6:30 PM", "venueName": "The Sedona Inn", "venueAddress": "120 Main St, Sedona, AZ", "note": "Casual, come as you are", "dress": "", "rsvp": True}, {"name": "Farewell brunch", "dateIso": "2027-06-13", "time": "10:00 AM", "venueName": "The Orchard House", "venueAddress": "1400 Old Mill Road, Sedona, Arizona", "note": "", "dress": "", "rsvp": True}],
     "hotelAddress": "120 Main St, Sedona, AZ", "guestPhotosHold": False,
+    # JC-LAZO-WWS-1014-PLUS: party, hotels, airports, hashtag, story in dates
+    "hashtag": "SarahSaysYesToMike", "partySides": ["Sarah's side", "Mike's side"],
+    "weddingParty": [
+        {"name": "Jenna Cole", "role": "Maid of honor", "side": "a", "photo": f"{U}1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=74", "note": "Sister, and the keeper of every embarrassing story."},
+        {"name": "Ava Lin", "role": "Bridesmaid", "side": "a", "photo": "", "note": ""},
+        {"name": "Marcus Reed", "role": "Best man", "side": "b", "photo": f"{U}1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=74", "note": "Roommate for six years."},
+        {"name": "Dev Patel", "role": "Groomsman", "side": "b", "photo": "", "note": ""},
+        {"name": "Rev. Ann Hale", "role": "Officiant", "side": "", "photo": "", "note": ""}],
+    "hotels": [
+        {"name": "The Sedona Inn", "address": "120 Main St, Sedona, AZ", "url": "https://example.com/book", "code": "SARAHMIKE27", "deadline": "May 1, 2027", "rate": "$189 a night", "phone": "(928) 555-0100", "note": "Shuttle to the venue from 3:30", "block": True}],
+    "airports": [], "drivingNotes": "From Phoenix take I-17 N to exit 298, then 179 N into Sedona. The last mile to the Orchard House is gravel.",
+    "milestones": [
+        {"when": "August 2019", "title": "The playlist argument", "text": "An hour by the speaker at Dana's party.", "photo": f"{U}1529634806980-85c3dd6d34ac?auto=format&fit=crop&w=600&q=74"},
+        {"when": "Spring 2022", "title": "Moved in", "text": "One apartment, two record collections.", "photo": ""},
+        {"when": "New Year's Eve 2025", "title": "He asked", "text": "On the roof, at midnight, during the wrong song.", "photo": ""}],
     "seatingOn": True, "mealOptions": ["Chicken", "Salmon", "Garden risotto"], "galleryUrl": "https://meetlazo.com/g/sarah-and-mike", "translateOn": True,
     "song": {"title": "Perfect", "artist": "Ed Sheeran", "art": "", "trackId": "", "autoplay": True,
              "src": ("https://meetlazo.com/music/preview?u=" + urllib.parse.quote(src, safe="")) if src else ""} if src else None,
