@@ -27278,7 +27278,8 @@ class _SkyCard extends StatelessWidget {
           Padding(padding: const EdgeInsets.symmetric(vertical: 14), child: Text(status, style: t(15, color: fg2)))
         else
           Row(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
-            Text('${w['hi']}°', style: t(64, wt: FontWeight.w200, h: 1, ls: -2.5)),
+            // today the big number is the temperature now, as Apple's is; another day shows that day's high
+            Text('${daysOut == 0 && hours.isNotEmpty ? hours.first['t'] : w['hi']}°', style: t(64, wt: FontWeight.w200, h: 1, ls: -2.5)),
             const Spacer(),
             Padding(
               padding: const EdgeInsets.only(bottom: 8, right: 4),
