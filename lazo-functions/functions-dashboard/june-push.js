@@ -23,6 +23,7 @@ const { onRequest } = require('firebase-functions/v2/https');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
+const { feedTo } = require('./june-feed'); // 027: every push also waits in June's feed (the bell)
 
 module.exports = (JUNE_PUSH_KEY) => {
   const db = () => admin.firestore();
@@ -79,6 +80,7 @@ module.exports = (JUNE_PUSH_KEY) => {
     const b = req.body || {};
     const uids = Array.isArray(b.uids) ? b.uids.map(String) : b.uid ? [String(b.uid)] : [];
     if (!uids.length || !b.title) return res.status(400).json({ error: 'uid and title' });
+    if (b.feed !== false) for (const uid of uids) await feedTo(uid, { title: b.title, text: b.body || b.title, kind: str(b.tag) || 'june', open: str((b.data || {}).open), thread: str((b.data || {}).thread) });
     if (quiet() && !b.urgent) return res.json({ sent: 0, quiet: true });
     let sent = 0;
     for (const uid of uids) { try { sent += await pushTo(uid, { title: b.title, body: b.body || '', data: b.data || {}, tag: b.tag || '' }); } catch (e) { console.log('junePush', uid, e.message); } }
@@ -95,6 +97,7 @@ module.exports = (JUNE_PUSH_KEY) => {
     const when = str(d.weddingDate || d.weddingDateIso).slice(0, 10);
     const uids = await vendorPeople(vendorId);
     for (const uid of uids) {
+      await feedTo(uid, { title: `New lead: ${who}`, text: `New inquiry from ${who}${when ? ' for ' + when : ''}${str(d.venue || (d.structuredIntent || {}).venue) ? ' at ' + str(d.venue || (d.structuredIntent || {}).venue) : ''}.`, kind: 'lead', thread: event.params.inquiryId });
       try {
         await pushTo(uid, {
           title: `New lead: ${who}`,
@@ -118,17 +121,20 @@ module.exports = (JUNE_PUSH_KEY) => {
     const text = clip(m.text || m.body || (m.attachment ? 'Sent an attachment' : ''), 140) || 'New message';
     if (role === 'couple') {
       const uids = await vendorPeople(str(d.vendorId));
+      for (const uid of uids) await feedTo(uid, { title: `${str(d.coupleName) || 'A couple'} wrote back`, text: `${str(d.coupleName) || 'A couple'} wrote back: "${text}"`, kind: 'message', thread: event.params.inquiryId });
       for (const uid of uids) {
         if (quiet()) break;
         try { await pushTo(uid, { title: `${str(d.coupleName) || 'A couple'} wrote back`, body: text, data: { thread: event.params.inquiryId, open: 'thread' }, tag: 'thread-' + event.params.inquiryId }); } catch (e) { console.log('messageArrived', uid, e.message); }
       }
     } else if (role === 'vendor') {
       const cuid = str(d.coupleUid);
-      if (!cuid || quiet()) return;
+      if (!cuid) return;
       // the couple and any partner on the same plan
       const partners = await db().collection('users').where('coupleUid', '==', cuid).get();
       const uids = new Set([cuid]);
       partners.forEach((p) => uids.add(p.id));
+      for (const uid of uids) await feedTo(uid, { title: `${str(d.vendorName) || 'Your vendor'} replied`, text: `${str(d.vendorName) || 'Your vendor'} replied: "${text}"`, kind: 'message', thread: event.params.inquiryId });
+      if (quiet()) return;
       for (const uid of uids) {
         try { await pushTo(uid, { title: `${str(d.vendorName) || 'Your vendor'} replied`, body: text, data: { thread: event.params.inquiryId, open: 'thread' }, tag: 'thread-' + event.params.inquiryId }); } catch (e) { console.log('messageArrived couple', uid, e.message); }
       }
@@ -167,7 +173,7 @@ module.exports = (JUNE_PUSH_KEY) => {
       const partners = await db().collection('users').where('coupleUid', '==', doc.id).get();
       const uids = new Set([doc.id]);
       partners.forEach((p) => uids.add(p.id));
-      for (const uid of uids) { try { sent += await pushTo(uid, { title, body, data: { open: 'june' }, tag: 'morning' }); } catch (e) { console.log('coupleMorning', uid, e.message); } }
+      for (const uid of uids) { await feedTo(uid, { title, text: body, kind: 'morning', open: 'june' }); try { sent += await pushTo(uid, { title, body, data: { open: 'june' }, tag: 'morning' }); } catch (e) { console.log('coupleMorning', uid, e.message); } }
     }
     console.log('coupleMorning sent', sent);
   });

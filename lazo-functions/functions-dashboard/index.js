@@ -165,8 +165,27 @@ exports.pulse = onRequest({ cors: true, invoker: 'public', memory: '128MiB' }, a
   if (Buffer.isBuffer(body)) body = body.toString('utf8');
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch (e) { body = {}; } }
   body = body || {};
+  // 027: a couple's wedding website counts its own visits (only a site that exists)
+  const w = str(body.w).slice(0, 80);
+  if (/^[a-z0-9-]{1,80}$/.test(w)) {
+    const day = dayKey(new Date());
+    try {
+      await db.collection('weddingSites').doc(w).update({ viewsTotal: FieldValue.increment(1), [`viewsByDay.${day}`]: FieldValue.increment(1) });
+    } catch (e) { /* no such site */ }
+    return res.status(204).send('');
+  }
   const v = str(body.v).slice(0, 160);
   if (!/^[A-Za-z0-9_-]+$/.test(v)) return res.status(204).send('');
+  // 027: a tap on the vendor page (call, website, email, check your date, save, instagram)
+  const ev = str(body.e).toLowerCase();
+  if (['call', 'web', 'email', 'date', 'save', 'ig'].includes(ev)) {
+    try {
+      await db.collection('vendorPulse').doc(v).collection('days').doc(dayKey(new Date())).set({
+        day: dayKey(new Date()), clicks: { [ev]: FieldValue.increment(1) }, updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (e) { console.error('pulse tap', e.message); }
+    return res.status(204).send('');
+  }
   const src = classify(str(body.r), str(body.s));
   try {
     await db.collection('vendorPulse').doc(v).collection('days').doc(dayKey(new Date())).set({
@@ -284,17 +303,23 @@ exports.nightlyVendorStats = onSchedule({
       .where('day', '>=', dayKey(daysAgo(14))).get();
     let v7 = 0, vPrev = 0;
     const src = {};
+    const clicks = {};               // 027: taps in the last 7 days
+    const byDay = {};                // 027: views per day, last 14
     const cut = dayKey(daysAgo(7));
     for (const pd of pSnap.docs) {
       const p = pd.data();
       const n = Number(p.views) || 0;
+      byDay[str(p.day)] = n;
       if (str(p.day) >= cut) {
         v7 += n;
         for (const [k, val] of Object.entries(p.src || {})) src[k] = (src[k] || 0) + (Number(val) || 0);
+        for (const [k, val] of Object.entries(p.clicks || {})) clicks[k] = (clicks[k] || 0) + (Number(val) || 0);
       } else {
         vPrev += n;
       }
     }
+    const days14 = [];
+    for (let i = 13; i >= 0; i--) days14.push(Number(byDay[dayKey(daysAgo(i))]) || 0);
     const r = rankOf.get(`${c.key}|${c.id}`);
     const update = {
       badges,
@@ -302,7 +327,7 @@ exports.nightlyVendorStats = onSchedule({
       statsUpdatedAt: FieldValue.serverTimestamp(),
     };
     if (pSnap.size > 0 || v7 > 0) {
-      update.views = { d7: v7, d7Prev: vPrev, src, updatedAt: FieldValue.serverTimestamp() };
+      update.views = { d7: v7, d7Prev: vPrev, src, clicks, days: days14, updatedAt: FieldValue.serverTimestamp() };
     }
     if (r) {
       update.rank = {
@@ -894,6 +919,8 @@ Object.assign(exports, require('./june-vendor')(ANTHROPIC_API_KEY));
 Object.assign(exports, require('./june-token'));
 // 026: push from June - the worker's door (junePush), the lead alarm, message pushes, the couples' morning line
 Object.assign(exports, require('./june-push')(JUNE_PUSH_KEY));
+// 027: June's feed - every notice in users/{uid}/juneFeed + pushes for bookings, contracts, invoices, payments, reviews, consults, RSVPs, partner activity, payments due
+Object.assign(exports, require('./june-feed')());
 
 // JC-LAZO-FNDASH-0913-018: the practice couple
 Object.assign(exports, require('./demo')(RESEND_API_KEY, ANTHROPIC_API_KEY));
