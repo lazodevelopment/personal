@@ -984,7 +984,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, collectionGroup, query, where, orderBy, limit, startAt, endAt,
-         getDocs, getDoc, getCountFromServer, onSnapshot, updateDoc, doc, serverTimestamp, Timestamp }
+         getDocs, getDoc, getCountFromServer, onSnapshot, updateDoc, doc, serverTimestamp, Timestamp, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getFunctions, httpsCallable }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
@@ -1466,10 +1466,63 @@ function loadClaims() {
   });
 }
 
+// Approving has to do what the Vendor app's _adminApproveClaim / _adminApproveListing
+// do: mark the listing claimed and point the claimant's users doc at it. The vendor
+// app shows "we are reviewing your claim" until users/{uid}.vendorId is set, so a
+// status-only update leaves the vendor stuck (Olivia Layne, 2026-10-14).
+const slugify = s => String(s || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-{2,}/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+const metroLabel = m => ({ "dallas-fort-worth": "Dallas-Fort Worth", "raleigh-durham": "Raleigh-Durham", "washington-dc": "Washington DC",
+  "st-louis": "St. Louis", "san-francisco-bay": "San Francisco Bay" }[m] || String(m || "").split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" "));
+const decided = status => ({ status, reviewedAt: serverTimestamp(), reviewedBy: stamp(), approvedBy: "admin", actedByUid: auth.currentUser.uid });
+
+async function approveClaim(id) {
+  const req = (await getDoc(doc(db, C.claims, id))).data() || {};
+  const vendorId = String(req.vendorId || ""), uid = String(req.uid || "");
+  if (!vendorId || !uid) throw new Error("Request is missing the vendor or user id.");
+  const vSnap = await getDoc(doc(db, C.vendors, vendorId));
+  if (!vSnap.exists()) throw new Error(`Vendor listing ${vendorId} not found.`);
+  const by = vSnap.data().claimedBy;
+  if (by && by !== uid) throw new Error("Conflict: this listing is already claimed by another account.");
+  if (!(await getDoc(doc(db, "users", uid))).exists()) throw new Error("The claimant has no Lazo user record yet.");
+  const b = writeBatch(db);
+  b.update(doc(db, C.vendors, vendorId), { claimedBy: uid, claimStatus: "claimed", verified: true });
+  b.update(doc(db, "users", uid), { vendorId });
+  b.update(doc(db, C.claims, id), decided("approved"));
+  await b.commit();
+}
+
+async function approveListing(id) {
+  const req = (await getDoc(doc(db, "listingRequests", id))).data() || {};
+  const uid = String(req.uid || ""), name = String(req.businessName || "").trim();
+  const metroId = String(req.metroId || "phoenix");
+  if (!uid || !name) throw new Error("Request is missing the user or business name.");
+  const slug = slugify(name), vendorId = `manual-${metroId}-${slug}`;
+  const vRef = doc(db, C.vendors, vendorId), vSnap = await getDoc(vRef);
+  const by = vSnap.exists() ? vSnap.data().claimedBy : null;
+  if (by && by !== uid) throw new Error(`Conflict: ${vendorId} already exists and is claimed.`);
+  if (!(await getDoc(doc(db, "users", uid))).exists()) throw new Error("The requester has no Lazo user record yet.");
+  const b = writeBatch(db);
+  b.set(vRef, {
+    placeId: vendorId, name, slug, address: "Serving " + metroLabel(metroId),
+    phone: String(req.phone || ""), website: String(req.website || ""), metroId,
+    categories: Array.isArray(req.categories) ? req.categories.map(String) : [],
+    score: 65, reviewCount: 0, claimStatus: "claimed", claimedBy: uid, verified: true,
+    source: "manual", serviceArea: true, heardAbout: String(req.heardAbout || ""), seededAt: serverTimestamp(),
+  }, { merge: true });
+  b.update(doc(db, "users", uid), { vendorId });
+  b.update(doc(db, "listingRequests", id), { ...decided("approved"), vendorId });
+  await b.commit();
+}
+
 async function decide(id, status, tr) {
   tr.style.opacity = .4;
-  const ok = await safe(`claim ${status}: ${id}`, () =>
-    updateDoc(doc(db, C.claims, id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() }));
+  const ok = await safe(`claim ${status}: ${id}`, async () => {
+    try {
+      if (status === "approved") await approveClaim(id);
+      else await updateDoc(doc(db, C.claims, id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() });
+      return true;
+    } catch (e) { alert("Could not " + (status === "approved" ? "approve" : "reject") + ": " + (e.message || e)); throw e; }
+  });
   if (ok === null) tr.style.opacity = 1;
 }
 
@@ -1524,8 +1577,13 @@ async function decideListing(id, status, tr) {
   const cell = tr.lastElementChild;
   tr.querySelectorAll("button").forEach(b => b.disabled = true);
   tr.style.opacity = .4;
-  const ok = await safe(`listing ${status}: ${id}`, () =>
-    updateDoc(doc(db, "listingRequests", id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() }));
+  const ok = await safe(`listing ${status}: ${id}`, async () => {
+    try {
+      if (status === "approved") await approveListing(id);
+      else await updateDoc(doc(db, "listingRequests", id), { status, reviewedAt: serverTimestamp(), reviewedBy: stamp() });
+      return true;
+    } catch (e) { alert("Could not " + (status === "approved" ? "approve" : "reject") + ": " + (e.message || e)); throw e; }
+  });
   if (ok === null) { tr.style.opacity = 1; tr.querySelectorAll("button").forEach(b => b.disabled = false); return; }
   cell.innerHTML = `<span class="pill ${status === "approved" ? "ok" : "bad"}">${status}</span>`;
   tr.style.transition = "opacity .6s ease";
