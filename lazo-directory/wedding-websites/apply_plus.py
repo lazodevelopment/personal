@@ -46,6 +46,7 @@ CSS = r"""
 .lzp-pn{display:block;font-size:17px;line-height:1.25}
 .lzp-pr{display:block;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--acc);margin-top:6px}
 .lzp-pt{display:block;font-size:13px;color:var(--mut);margin-top:8px;line-height:1.5;text-wrap:pretty}
+@media(max-width:560px){.lzp-party{grid-template-columns:1fr 1fr;gap:26px 14px}.lzp-ph{width:96px;font-size:24px;margin-bottom:10px}.lzp-pn{font-size:15.5px}.lzp-pr{letter-spacing:.2em}.lzp-pt{font-size:12.5px}.lzp-tab{padding:8px 12px;font-size:11px;letter-spacing:.1em}}
 /* our story in dates */
 .lzp-ms{position:relative;max-width:760px;margin:clamp(26px,3.4vw,42px) auto 0;padding:0;list-style:none}
 .lzp-ms::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;background:var(--line)}
