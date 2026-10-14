@@ -231,6 +231,16 @@ service cloud.firestore {
             || ((!('role' in resource.data) || resource.data.role == null)
                 && request.resource.data.role in ['couple','vendor'])));
       allow delete: if false;
+
+      // JC-LAZO-RULES-1014-019: June's feed (the bell). Written only by the server
+      // (functions-dashboard june-feed.js); the owner reads it and marks entries read.
+      match /juneFeed/{feedId} {
+        allow read: if isOwner(uid);
+        allow update: if isOwner(uid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'readAt']);
+        allow delete: if isOwner(uid);
+        allow create: if false;
+      }
     }
 
     match /claimRequests/{requestId} {

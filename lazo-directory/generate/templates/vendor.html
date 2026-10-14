@@ -40,7 +40,7 @@
 {% block jsonld %}
 <meta property="og:url" content="{{ base }}/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ base }}/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/","name":{{ v.name|tojson }},{% if v.areaServed %}"areaServed":[{% for a in v.areaServed %}{"@type":"Place","name":{{ a|tojson }}}{{ "," if not loop.last }}{% endfor %}],{% endif %}"address":{{ (v.address or '')|tojson }}{% if v.phone %},"telephone":{{ v.phone|tojson }}{% endif %}{% if v.website %},"url":{{ v.website|tojson }}{% endif %}{% if v.bio %},"description":{{ v.bio|tojson }}{% endif %}{% if v.coverUrl or v.gallery %},"image":{{ (([v.coverUrl] if v.coverUrl else []) + (v.gallery or [])[:6])|tojson }}{% endif %}{% if v.priceRangeDisplay %},"priceRange":{{ v.priceRangeDisplay|tojson }}{% endif %}{% if v.reviewCount and v.score %},"aggregateRating":{"@type":"AggregateRating","ratingValue":{{ v.score }},"bestRating":100,"worstRating":0,"ratingCount":{{ v.reviewCount }}}{% endif %}}
+{"@context":"https://schema.org","@type":"LocalBusiness","@id":"{{ base }}/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/","name":{{ v.name|tojson }},{% if v.areaServed %}"areaServed":[{% for a in v.areaServed %}{"@type":"Place","name":{{ a|tojson }}}{{ "," if not loop.last }}{% endfor %}],{% endif %}"address":{{ (v.address or '')|tojson }}{% if v.phone %},"telephone":{{ v.phone|tojson }}{% endif %}{% if v.website %},"url":{{ v.website|tojson }}{% endif %}{% if v.bio %},"description":{{ v.bio|tojson }}{% endif %}{% if v.coverUrl or v.gallery %},"image":{{ (([v.coverUrl] if v.coverUrl else []) + (v.gallery or [])[:6])|tojson }}{% endif %}{% if v.priceRangeDisplay %},"priceRange":{{ v.priceRangeDisplay|tojson }}{% endif %}{% if v.reviewCount and v.score %},"aggregateRating":{"@type":"AggregateRating","ratingValue":{{ v.score }},"bestRating":100,"worstRating":0,"ratingCount":{{ v.reviewCount }}}{% endif %}{% for k, val in (v.site_ld or {}).items() %},{{ k|tojson }}:{{ val|tojson }}{% endfor %}}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
@@ -134,6 +134,8 @@
         <div class="vp-about-txt">
           <p class="v-bio" id="hy-bio" {% if not v.bio %}style="display:none"{% endif %}>{{ v.bio or '' }}</p>
           {% if not v.bio and v.intro %}<p class="v-bio" id="hy-intro">{{ v.intro }}</p>{% endif %}
+          {#- JC-LAZO-SOCIALS-1014-001: the profiles the vendor saved as handles (generate/socials.py) -#}
+          <p class="v-socials" id="hy-soc" {% if not v.social_links %}style="display:none"{% endif %}><span id="hy-soc-l">Find {{ v.name }} on</span>{% for sl in v.social_links or [] %}<a class="v-soc v-soc-{{ sl.id }}" href="{{ sl.url }}" rel="noopener nofollow" target="_blank">{{ sl.label }}</a>{% endfor %}</p>
           {#- JC-LAZO-VPAGE-0915-010: what is true of this vendor and no other.
               Every value is computed from data we already hold - address, lat/lng,
               categories - so the rows differ because the businesses differ. -#}
@@ -231,6 +233,26 @@
         <div id="hy-web" {% if not v.website %}style="display:none"{% endif %}><dt>Website</dt><dd><a id="hy-web-a" rel="nofollow" href="{{ v.website or '#' }}">Visit site</a></dd></div>
         <div id="hy-email" {% if not v.publicEmail %}style="display:none"{% endif %}><dt>Email</dt><dd><a id="hy-email-a" href="mailto:{{ v.publicEmail or '' }}">{{ v.publicEmail or '' }}</a></dd></div>
       </dl>
+
+      {#- JC-LAZO-SITEFACTS-1013: what the vendor's own website says, as facts in our words (generate/site_facts.py).
+          Never their paragraphs: only the services/prices/years the site lists, their meta description as a short
+          attributed quote, and their social profiles. Unclaimed vendors only. -#}
+      {% set sf_rows = (v.site_rows_by_cat or {}).get(cat.slug) %}
+      {% if v.site and (sf_rows or v.site.socials) %}
+      <div class="v-site" id="from-their-site">
+        <h2 class="vp-h2">From {{ v.name }}'s website</h2>
+        {% if v.site.quote %}<blockquote class="v-site-q">&ldquo;{{ v.site.quote }}&rdquo;<cite>{{ v.site.host }}</cite></blockquote>{% endif %}
+        {% if sf_rows %}
+        <dl class="v-facts v-site-facts">
+          {%- for label, value in sf_rows %}
+          <div><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+          {%- endfor %}
+        </dl>
+        {% endif %}
+        {% if v.site.socials %}<p class="v-site-social">Find them on {% for name, url in v.site.socials.items() %}<a href="{{ url }}" rel="nofollow noopener" target="_blank">{{ name }}</a>{{ ", " if not loop.last }}{% endfor %}</p>{% endif %}
+        <p class="geo-note">Read from <a href="{{ v.website }}" rel="nofollow noopener" target="_blank">{{ v.site.host }}</a>{% if v.site.checked %} in {{ v.site.checked }}{% endif %}. Prices and services change; confirm with {{ v.name }} before you book. Is this your business? <a href="/for-vendors/?vendor={{ v.placeId }}&amp;name={{ v.name|urlencode }}#claim">Claim the page</a> to write your own.</p>
+      </div>
+      {% endif %}
 
       <!-- lz-around -->
       {% if v.around %}
@@ -673,6 +695,20 @@ window.__lazoLogo=function(img){
       var ig=s(f.instagramUrl),ige=document.getElementById('hy-owner-ig');if(ige){ige.style.display=ig?'':'none';if(ig)ige.href=ig;}
       var web=s(f.website),we=document.getElementById('hy-owner-web');if(we){we.style.display=web?'':'none';if(web)we.href=web;}
     }
+    // JC-LAZO-SOCIALS-1014-001: social profiles saved as handles; same rules as generate/socials.py
+    (function(){
+      var P=[['instagram','Instagram','https://www.instagram.com/'],['tiktok','TikTok','https://www.tiktok.com/@'],['facebook','Facebook','https://www.facebook.com/'],['pinterest','Pinterest','https://www.pinterest.com/'],['youtube','YouTube','https://www.youtube.com/@'],['vimeo','Vimeo','https://vimeo.com/'],['threads','Threads','https://www.threads.net/@'],['x','X','https://x.com/']];
+      var so=m(f.socials)||{},el=document.getElementById('hy-soc');if(!el)return;
+      var out=[];P.forEach(function(p){var h=s(so[p[0]]).trim().replace(/^@+/,''),u='';if(!h)return;
+        if(p[0]==='youtube'&&/^(channel|c|user)\/[A-Za-z0-9._-]{1,80}$/.test(h))u='https://www.youtube.com/'+h;
+        else if(p[0]==='facebook'&&/^profile\.php\?id=\d{5,25}$/.test(h))u='https://www.facebook.com/'+h;
+        else if(/^[A-Za-z0-9._-]{1,80}$/.test(h))u=p[2]+h;
+        if(u)out.push([p[0],p[1],u]);});
+      if(!out.length){el.style.display='none';return;}
+      el.textContent='';var l=document.createElement('span');l.id='hy-soc-l';l.textContent='Find '+(s(f.name)||'them')+' on';el.appendChild(l);
+      out.forEach(function(x){var a=document.createElement('a');a.className='v-soc v-soc-'+x[0];a.href=x[2];a.rel='noopener nofollow';a.target='_blank';a.textContent=x[1];el.appendChild(a);});
+      el.style.display='';
+    })();
     // specialties
     var at=m(f.attributes)||{};var chips=[];
     arr(at.styles).forEach(function(x){chips.push(s(x));});arr(at.settings).forEach(function(x){chips.push(s(x));});
@@ -706,6 +742,17 @@ window.__lazoLogo=function(img){
   var el=document.querySelector('.vp[data-vendor-id]');var v=el&&el.getAttribute('data-vendor-id');if(!v)return;
   var s=new URLSearchParams(location.search).get('utm_source')||'';
   if(navigator.sendBeacon){navigator.sendBeacon('https://us-central1-lazo-513ec.cloudfunctions.net/pulse',JSON.stringify({v:v,r:document.referrer,s:s}));}
+}catch(e){}})();
+// JC-LAZO-TAPS-1014: which way couples reach out - call, website, email, check your date, save, instagram
+(function(){try{
+  var el=document.querySelector('.vp[data-vendor-id]');var v=el&&el.getAttribute('data-vendor-id');if(!v||!navigator.sendBeacon)return;
+  function kind(a){var h=(a.getAttribute('href')||'');
+    if(/^tel:/i.test(h))return 'call';if(/^mailto:/i.test(h))return 'email';
+    if(/[?&]save=/.test(h))return 'save';if(/app\.meetlazo\.com\/\?vendor=/.test(h))return 'date';
+    if(a.id==='hy-owner-ig'||/instagram\.com/i.test(h))return 'ig';
+    if(a.id==='hy-web-a'||a.id==='hy-owner-web')return 'web';return '';}
+  document.addEventListener('click',function(ev){var a=ev.target&&ev.target.closest?ev.target.closest('a'):null;if(!a)return;var k=kind(a);if(!k)return;
+    navigator.sendBeacon('https://us-central1-lazo-513ec.cloudfunctions.net/pulse',JSON.stringify({v:v,e:k}));},true);
 }catch(e){}})();
 </script>
 {% endblock %}

@@ -1412,6 +1412,8 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",arguments.callee);return}
  if(document.body.classList.contains("framed"))return;
  var LIVE=window.LAZO_SITE||null,LS=LIVE||{};
+ /* JC-LAZO-SITEVIEWS-1014: the couple sees how many people opened their site */
+ if(LIVE&&LS.slug&&navigator.sendBeacon){try{navigator.sendBeacon("https://us-central1-lazo-513ec.cloudfunctions.net/pulse",JSON.stringify({w:LS.slug}))}catch(e){}}
  var vName=String(LS.venueName||"").replace(/\s*\([^)]*$/,"").trim();   /* "Willow Creek (" from a clipped autocomplete */
  var esc=function(t){return String(t==null?"":t).replace(/[<>&"]/g,function(c){return{"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]})};
  var sized=function(u,w){return /^https:\/\//.test(u)&&u.indexOf("wsrv.nl")<0?"https://wsrv.nl/?url="+encodeURIComponent(u)+"&w="+w+"&q=74":u};
