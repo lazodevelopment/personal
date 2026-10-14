@@ -34,6 +34,7 @@ s = rep(s, "  bool _postBusy = false;\n",
   int _typed = 0;
   String _typedFor = '';
   Timer? _typeT;
+  DateTime? _typeStart;
   bool _entered = false;
   bool _onScreen = true;
   int _visTick = 0;
@@ -72,16 +73,21 @@ s = rep(s, "  // ---- data\n", """  void _checkOnScreen() {
     _typedFor = text;
     final bool reduce = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduce || text.isEmpty) {
+      _typeStart = null;
       setState(() => _typed = text.length);
       return;
     }
     setState(() => _typed = 0);
-    _typeT = Timer.periodic(const Duration(milliseconds: 22), (Timer t) {
+    // the line is a function of time, not of ticks: a throttled timer (a backgrounded app, low power)
+    // can slow the redraws but never leave her line half typed
+    final DateTime start = DateTime.now();
+    _typeStart = start;
+    _typeT = Timer.periodic(const Duration(milliseconds: 30), (Timer t) {
       if (!mounted || _typedFor != text) {
         t.cancel();
         return;
       }
-      setState(() => _typed = math.min(text.length, _typed + 1));
+      setState(() => _typed = math.min(text.length, DateTime.now().difference(start).inMilliseconds ~/ 22));
       if (_typed >= text.length) t.cancel();
     });
   }
@@ -138,7 +144,7 @@ s = rep(s, "  Widget _deck(BuildContext context) {", r"""  // ------------------
       ),
       const SizedBox(width: 9),
       Expanded(
-        child: Text(done ? 'Done for today${streak > 1 ? ' · $streak days running' : ''}.' : _s(t['title']), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: done ? _muted : _ivory, fontSize: 14, fontWeight: FontWeight.w600)),
+        child: Text(done ? 'Done for today${streak > 1 ? ' · $streak days running' : ''}.' : _s(t['title']), maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(color: done ? _muted : _ivory, fontSize: 14, height: 1.25, fontWeight: FontWeight.w600)),
       ),
       if (!done) ...<Widget>[
         const SizedBox(width: 4),
@@ -228,7 +234,10 @@ s = rep(s, "  Widget _deck(BuildContext context) {", r"""  // ------------------
     }
     final String line = _heroLine();
     if (line != _typedFor) WidgetsBinding.instance.addPostFrameCallback((_) => _typeIn(line));
-    final String shown = line.substring(0, math.min(_typed, line.length));
+    // every frame catches up to where the line should be by now (the core redraws each frame anyway)
+    final DateTime? ts = _typeStart;
+    final int due = line != _typedFor ? 0 : (ts == null ? _typed : math.max(_typed, DateTime.now().difference(ts).inMilliseconds ~/ 22));
+    final String shown = line.substring(0, math.min(due, line.length));
     final bool typing = shown.length < line.length;
     Widget rise(Widget child, {int delay = 0}) => reduce
         ? child
@@ -253,9 +262,9 @@ s = rep(s, "  Widget _deck(BuildContext context) {", r"""  // ------------------
     final Widget greeting = FittedBox(fit: BoxFit.scaleDown, alignment: Alignment.centerLeft, child: Text(_heroGreeting(), maxLines: 1, style: _serif(30, color: _ivory, w: FontWeight.w500).copyWith(letterSpacing: -.5, shadows: const <Shadow>[Shadow(color: Color(0x99000000), blurRadius: 10, offset: Offset(0, 1))])));
     final Widget lineText = Text(
       shown.isEmpty && (_loading || typing) ? (line.isEmpty ? 'Reading your day…' : ' ') : shown + (typing ? '|' : ''),
-      maxLines: 5,
+      maxLines: 7,
       overflow: TextOverflow.ellipsis,
-      style: _serif(17.5, color: _goldSoft, w: FontWeight.w400).copyWith(height: 1.35, fontStyle: FontStyle.italic, shadows: const <Shadow>[Shadow(color: Color(0x99000000), blurRadius: 8, offset: Offset(0, 1))]),
+      style: _serif(16.5, color: _goldSoft, w: FontWeight.w400).copyWith(height: 1.35, fontStyle: FontStyle.italic, shadows: const <Shadow>[Shadow(color: Color(0x99000000), blurRadius: 8, offset: Offset(0, 1))]),
     );
     final Widget recall = _s(_map(_snap['recall'])['text']).isEmpty
         ? const SizedBox.shrink()

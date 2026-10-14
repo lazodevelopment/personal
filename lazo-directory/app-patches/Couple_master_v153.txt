@@ -11696,9 +11696,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                             alignment: Alignment.centerLeft,
                             child: _lazoMark(height: 22, color: gold))
                         : Text(
-                            firstName.isEmpty
-                                ? 'Your wedding'
-                                : 'Hi, $firstName',
+                            'Your wedding',
                             style: _serif(
                                 size: 30,
                                 weight: FontWeight.w500,
@@ -12080,13 +12078,19 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         .replaceAll(' ', '\u00a0')
         .replaceAll('-', '\u2011')
         .replaceAll('\u2013', '\u2011');
-    final String eyebrow = <String>[
+    final String eyeTop = <String>[
       if (names.isNotEmpty) glue(names),
       if (names.isEmpty && !_hasRail && greetFirst.isNotEmpty)
         glue('HI, $greetFirst'),
+    ].join(' \u00b7 ');
+    final String eyeBottom = <String>[
       if (wedding != null) glue(_longDate(wedding)),
       if (metro.isNotEmpty) glue(metro),
     ].join(' \u00b7 ');
+    final String eyebrow = <String>[
+      if (eyeTop.isNotEmpty) eyeTop,
+      if (eyeBottom.isNotEmpty) eyeBottom,
+    ].join('\n');
     final String photo = (couple['photoUrl'] ?? '').toString();
     final String nextLabel = nextSlug.isEmpty ? '' : _catLabel(nextSlug);
 
@@ -12143,7 +12147,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             onTap: () => _setupSheet(couple),
             child: Padding(
               // v128: right inset keeps the text out from under the camera pill
-              padding: EdgeInsets.only(bottom: 8, right: photo.isEmpty ? 148 : 52),
+              padding: EdgeInsets.only(bottom: 8, right: photo.isEmpty && MediaQuery.of(context).size.width >= 600 ? 148 : 52),
               // v125: ivory, not gold - gold vanished into the cover photo at
               // the top of the hero where the scrim is lightest; a soft dark
               // shadow keeps it legible over a bright photo too.
@@ -12208,33 +12212,27 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                         padding: EdgeInsets.only(left: i == 0 ? 0 : 10),
                         child: SizedBox(
                           width: 168,
+                          // a column with one tile lets it fill the height: no empty slot
                           child: Column(children: <Widget>[
                             Expanded(child: tiles[i]),
-                            const SizedBox(height: 10),
-                            Expanded(
-                                child: i + 1 < tiles.length
-                                    ? tiles[i + 1]
-                                    : const SizedBox.shrink()),
+                            if (i + 1 < tiles.length) ...<Widget>[
+                              const SizedBox(height: 10),
+                              Expanded(child: tiles[i + 1]),
+                            ],
                           ]),
                         ),
                       ),
                   ]),
             )
-          : SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                clipBehavior: Clip.none,
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      for (int i = 0; i < tiles.length; i++) ...<Widget>[
-                        if (i > 0) const SizedBox(width: 10),
-                        SizedBox(width: 132, child: tiles[i]),
-                      ],
-                    ],
-                  ),
-                ),
+          : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  if (tiles.length.isOdd) ...<Widget>[
+                    tiles.first,
+                    if (tiles.length > 1) const SizedBox(height: 10),
+                  ],
+                  _twoUp(tiles.length.isOdd ? tiles.sublist(1) : tiles),
+                ],
               );
       return Container(
         // v117: gradient + photo are clipped by the rounded shape; the gold
@@ -12296,7 +12294,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     : () => _adjustPhotoSheet(couple), // v127
                 child: Container(
                   padding: EdgeInsets.symmetric(
-                      horizontal: photo.isEmpty ? 12 : 8, vertical: 7),
+                      horizontal: photo.isEmpty && MediaQuery.of(context).size.width >= 600 ? 12 : 8, vertical: 7),
                   decoration: BoxDecoration(
                       color: plumDeep.withOpacity(.55),
                       borderRadius: BorderRadius.circular(999),
@@ -12304,7 +12302,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
                     const Icon(Icons.photo_camera_rounded,
                         color: ivory, size: 15),
-                    if (photo.isEmpty) ...<Widget>[
+                    if (photo.isEmpty && MediaQuery.of(context).size.width >= 600) ...<Widget>[
                       const SizedBox(width: 6),
                       const Text('Add your photo',
                           style: TextStyle(
@@ -12320,22 +12318,55 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           Padding(
             padding: EdgeInsets.fromLTRB(
                 wide ? 28 : 18, wide ? 28 : 20, wide ? 28 : 18, wide ? 24 : 18),
-            // JC-LAZO-JUNE-HERO-1013-001: June is the top of the dashboard - the day as
-            // the eyebrow, her hero, then the numbers and this week's step.
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                nameBlock,
-                KeyedSubtree(
-                    key: _kTourJune,
-                    child: const JuneNative(role: 'couple', layout: 'hero')),
-                SizedBox(height: wide ? 22 : 18),
-                wide
-                    ? Align(alignment: Alignment.centerLeft, child: grid)
-                    : grid,
-                stepBlock,
-              ],
-            ),
+            // JC-LAZO-JUNE-HERO-1013-001/002: June is the top of the dashboard - the day as
+            // the eyebrow, her hero, then the numbers (beside her when the card has room for both, >= 1100;
+            // a narrower wide card - beside the sidebar - stacks them under her in one even row) and this week's step.
+            child: wide && cons.maxWidth >= 1100
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            nameBlock,
+                            KeyedSubtree(
+                                key: _kTourJune,
+                                child: const JuneNative(
+                                    role: 'couple', layout: 'hero')),
+                            stepBlock,
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 28),
+                      grid,
+                    ],
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      nameBlock,
+                      KeyedSubtree(
+                          key: _kTourJune,
+                          child: const JuneNative(role: 'couple', layout: 'hero')),
+                      const SizedBox(height: 18),
+                      wide
+                          ? IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: <Widget>[
+                                  for (int i = 0; i < tiles.length; i++) ...<Widget>[
+                                    if (i > 0) const SizedBox(width: 10),
+                                    Expanded(child: tiles[i]),
+                                  ],
+                                ],
+                              ),
+                            )
+                          : grid,
+                      stepBlock,
+                    ],
+                  ),
           ),
         ]),
       );

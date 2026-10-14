@@ -9003,9 +9003,9 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
           ),
           const SizedBox(height: 4),
           Text(sub,
-              maxLines: 1,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: ivory.withOpacity(.78))),
+              style: TextStyle(fontSize: 12, height: 1.3, color: ivory.withOpacity(.78))),
         ],
       ),
     );
@@ -9183,34 +9183,42 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
         final Widget grid = wide
             ? IntrinsicHeight(
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    for (int i = 0; i < tiles.length; i++) ...<Widget>[
-                      if (i > 0) const SizedBox(width: 10),
-                      SizedBox(width: 158, child: tiles[i]),
-                    ],
-                  ],
-                ),
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      for (int i = 0; i < tiles.length; i += 2)
+                        Padding(
+                          padding: EdgeInsets.only(left: i == 0 ? 0 : 10),
+                          child: SizedBox(
+                            width: 168,
+                            // a column with one tile lets it fill the height: no empty slot
+                            child: Column(children: <Widget>[
+                              Expanded(child: tiles[i]),
+                              if (i + 1 < tiles.length) ...<Widget>[
+                                const SizedBox(height: 10),
+                                Expanded(child: tiles[i + 1]),
+                              ],
+                            ]),
+                          ),
+                        ),
+                    ]),
               )
-            : SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              clipBehavior: Clip.none,
-              child: IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    for (int i = 0; i < tiles.length; i++) ...<Widget>[
-                      if (i > 0) const SizedBox(width: 10),
-                      SizedBox(width: 132, child: tiles[i]),
-                    ],
-                  ],
-                ),
-              ),
+            : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                if (tiles.length.isOdd) ...<Widget>[
+                  tiles.first,
+                  if (tiles.length > 1) const SizedBox(height: 10),
+                ],
+                _twoUp(tiles.length.isOdd ? tiles.sublist(1) : tiles),
+              ],
             );
+        // JC-LAZO-JUNE-HERO-1013-002: the gold border is painted on top (as the couple card does since
+        // v117), so the cover gradient can no longer cover it at the corners and along the dark bottom
         return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(22)), color: plum),
+          foregroundDecoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: gold),
           ),
@@ -9259,22 +9267,58 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               Padding(
                 padding: EdgeInsets.fromLTRB(wide ? 28 : 20, wide ? 30 : 22,
                     wide ? 28 : 20, wide ? 26 : 20),
-                // JC-LAZO-JUNE-HERO-1013-001: June is the top of the dashboard - the business
-                // and its badges as the eyebrow, her hero, then the live numbers.
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: <Widget>[
-                    nameBlock,
-                    SizedBox(height: wide ? 18 : 14),
-                    KeyedSubtree(
-                        key: _kTourJune,
-                        child: const JuneNative(role: 'vendor', layout: 'hero')),
-                    SizedBox(height: wide ? 22 : 18),
-                    wide
-                        ? Align(alignment: Alignment.centerLeft, child: grid)
-                        : grid,
-                  ],
-                ),
+                // JC-LAZO-JUNE-HERO-1013-001/002: June is the top of the dashboard - the business
+                // and its badges as the eyebrow, her hero, then the live numbers (beside her on wide
+                // screens, so the card has no empty half; under her on phones).
+                // Beside her only when the card has room for both (>= 1040): narrower wide cards stack the
+                // tiles under her in one even row, so June is never squeezed into a strip.
+                child: LayoutBuilder(builder: (BuildContext hc, BoxConstraints hb) {
+                  final Widget june = KeyedSubtree(
+                      key: _kTourJune,
+                      child: const JuneNative(role: 'vendor', layout: 'hero'));
+                  if (wide && hb.maxWidth >= 1040) {
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              nameBlock,
+                              const SizedBox(height: 18),
+                              june,
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 28),
+                        grid,
+                      ],
+                    );
+                  }
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      nameBlock,
+                      const SizedBox(height: 14),
+                      june,
+                      const SizedBox(height: 18),
+                      wide
+                          ? IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: <Widget>[
+                                  for (int i = 0; i < tiles.length; i++) ...<Widget>[
+                                    if (i > 0) const SizedBox(width: 10),
+                                    Expanded(child: tiles[i]),
+                                  ],
+                                ],
+                              ),
+                            )
+                          : grid,
+                    ],
+                  );
+                }),
               ),
             ],
           ),
@@ -11035,20 +11079,18 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     <dynamic>['studio', 'Studio', Icons.business_center_rounded],
     <dynamic>['profile', 'Profile', Icons.storefront_rounded],
   ];
-  static const double _kSegW = 116;
-  static const double _kSegH = 38;
-
   // v175: one plum pill glides between positions; the labels stay put.
   Widget _dashModeToggle() {
     int idx = _kModes.indexWhere((List<dynamic> m) => m[0] == _dashMode);
     if (idx < 0) idx = 0;
     final bool reduced = _reducedMotion(context);
-    return Align(
+    return LayoutBuilder(
       key: _kTourModes,
-      alignment: Alignment.centerLeft,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Container(
+      builder: (BuildContext c, BoxConstraints box) {
+        final double segW = (box.maxWidth - 10) / _kModes.length;
+        final bool compact = segW < 104; // phones: icon over label
+        final double segH = compact ? 52 : 40;
+        return Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: _lzBg(const Color(0xFFF1E9E1)),
@@ -11056,32 +11098,32 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
             border: Border.all(color: _lzLine(goldLine)),
           ),
           child: SizedBox(
-            width: _kSegW * _kModes.length,
-            height: _kSegH,
+            height: segH,
             child: Stack(children: <Widget>[
               AnimatedPositioned(
                 duration: Duration(milliseconds: reduced ? 0 : 280),
                 curve: Curves.easeOutCubic,
-                left: idx * _kSegW,
+                left: idx * segW,
                 top: 0,
                 bottom: 0,
-                width: _kSegW,
+                width: segW,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                       color: plum, borderRadius: BorderRadius.circular(9)),
                 ),
               ),
               Row(children: <Widget>[
-                for (int i = 0; i < _kModes.length; i++) _modeSeg(i),
+                for (int i = 0; i < _kModes.length; i++)
+                  _modeSeg(i, segW, segH, compact),
               ]),
             ]),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
-  Widget _modeSeg(int i) {
+  Widget _modeSeg(int i, double segW, double segH, bool compact) {
     final String mode = _kModes[i][0] as String;
     final bool sel = _dashMode == mode;
     final bool locked = mode == 'studio' && _studioLocked;
@@ -11090,27 +11132,47 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       tick: _Tick.select,
       onTap: sel ? null : () => setState(() => _dashMode = mode),
       child: SizedBox(
-        width: _kSegW,
-        height: _kSegH,
-        child:
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
-          Icon(_kModes[i][2] as IconData, size: 15, color: _lzFg(sel ? gold : muted)),
-          const SizedBox(width: 7),
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            style: TextStyle(
-                color: _lzFg(sel ? ivory : muted),
-                fontSize: 13.5,
-                fontWeight: sel ? FontWeight.w700 : FontWeight.w600),
-            child: Text(_kModes[i][1] as String),
-          ),
-          if (locked) ...<Widget>[
-            const SizedBox(width: 6),
-            Icon(Icons.lock_rounded,
-                size: 12, color: _lzFg(sel ? gold : muted.withOpacity(.7))),
-          ],
-        ]),
+        width: segW,
+        height: segH,
+        child: compact
+            ? Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                  Icon(_kModes[i][2] as IconData, size: 18, color: _lzFg(sel ? gold : muted)),
+                  if (locked) ...<Widget>[
+                    const SizedBox(width: 3),
+                    Icon(Icons.lock_rounded,
+                        size: 10, color: _lzFg(sel ? gold : muted.withOpacity(.7))),
+                  ],
+                ]),
+                const SizedBox(height: 3),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  style: TextStyle(
+                      color: _lzFg(sel ? ivory : muted),
+                      fontSize: 11,
+                      fontWeight: sel ? FontWeight.w700 : FontWeight.w600),
+                  child: Text(_kModes[i][1] as String, maxLines: 1, overflow: TextOverflow.fade, softWrap: false),
+                ),
+              ])
+            : Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                Icon(_kModes[i][2] as IconData, size: 15, color: _lzFg(sel ? gold : muted)),
+                const SizedBox(width: 7),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  style: TextStyle(
+                      color: _lzFg(sel ? ivory : muted),
+                      fontSize: 13.5,
+                      fontWeight: sel ? FontWeight.w700 : FontWeight.w600),
+                  child: Text(_kModes[i][1] as String),
+                ),
+                if (locked) ...<Widget>[
+                  const SizedBox(width: 6),
+                  Icon(Icons.lock_rounded,
+                      size: 12, color: _lzFg(sel ? gold : muted.withOpacity(.7))),
+                ],
+              ]),
       ),
     );
   }

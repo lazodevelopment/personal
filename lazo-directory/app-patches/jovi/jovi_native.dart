@@ -584,6 +584,7 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
   int _typed = 0;
   String _typedFor = '';
   Timer? _typeT;
+  DateTime? _typeStart;
   bool _entered = false;
   bool _onScreen = true;
   int _visTick = 0;
@@ -696,16 +697,21 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
     _typedFor = text;
     final bool reduce = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduce || text.isEmpty) {
+      _typeStart = null;
       setState(() => _typed = text.length);
       return;
     }
     setState(() => _typed = 0);
-    _typeT = Timer.periodic(const Duration(milliseconds: 22), (Timer t) {
+    // the line is a function of time, not of ticks: a throttled timer (a backgrounded app, low power)
+    // can slow the redraws but never leave her line half typed
+    final DateTime start = DateTime.now();
+    _typeStart = start;
+    _typeT = Timer.periodic(const Duration(milliseconds: 30), (Timer t) {
       if (!mounted || _typedFor != text) {
         t.cancel();
         return;
       }
-      setState(() => _typed = math.min(text.length, _typed + 1));
+      setState(() => _typed = math.min(text.length, DateTime.now().difference(start).inMilliseconds ~/ 22));
       if (_typed >= text.length) t.cancel();
     });
   }
@@ -1824,7 +1830,10 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
     }
     final String line = _heroLine();
     if (line != _typedFor) WidgetsBinding.instance.addPostFrameCallback((_) => _typeIn(line));
-    final String shown = line.substring(0, math.min(_typed, line.length));
+    // every frame catches up to where the line should be by now (the core redraws each frame anyway)
+    final DateTime? ts = _typeStart;
+    final int due = line != _typedFor ? 0 : (ts == null ? _typed : math.max(_typed, DateTime.now().difference(ts).inMilliseconds ~/ 22));
+    final String shown = line.substring(0, math.min(due, line.length));
     final bool typing = shown.length < line.length;
     if (_err.isNotEmpty) {
       return Row(children: <Widget>[
