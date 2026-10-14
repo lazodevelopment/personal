@@ -406,7 +406,7 @@ rep("""  List<_TourStep> _coupleTourSteps({required bool needsSetup}) {""", r"""
         final int days = DateTime(dd.toDate().year, dd.toDate().month, dd.toDate().day).difference(DateTime(now.year, now.month, now.day)).inDays;
         if (days >= 0 && days <= 3) {
           final String amt = i['total'] is num ? _money(i['total'] as num) : '';
-          _cwSay('due:${i['_id']}', 'Your ${amt.isEmpty ? '' : '\$$amt '}payment to $v is due ${_cwDay(dd.toDate())}.', threadId: inqId, icon: Icons.payments_rounded);
+          _cwSay('due:${i['_id']}', 'Your ${amt.isEmpty ? '' : '$amt '}payment to $v is due ${_cwDay(dd.toDate())}.', threadId: inqId, icon: Icons.payments_rounded);
         }
       }
       if (mounted) setState(() {});
@@ -866,12 +866,12 @@ rep("""  List<_TourStep> _coupleTourSteps({required bool needsSetup}) {""", r"""
     if (total <= 0 && planned <= 0) return _crEmpty('Set a total budget and give each vendor a number, and this shows where you stand.');
     final double base = (total > 0 ? total : planned).toDouble();
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
-      if (total > 0) Text('\$${_money(total)} total', style: TextStyle(color: _lzFg(plum), fontSize: 16, fontWeight: FontWeight.w800)),
+      if (total > 0) Text('${_money(total)} total', style: TextStyle(color: _lzFg(plum), fontSize: 16, fontWeight: FontWeight.w800)),
       const SizedBox(height: 10),
-      _crBar('Planned', '\$${_money(planned)}', planned / base, color: planned > base ? const Color(0xFFB4534B) : gold),
-      _crBar('Committed to vendors', '\$${_money(committed)}', committed / base, color: committed > base ? const Color(0xFFB4534B) : const Color(0xFF8DA399)),
-      _crBar('Paid so far', '\$${_money(paid)}', paid / base, color: vGreen),
-      if (total > 0) Text(committed <= total ? '\$${_money(total - committed)} left to commit' : '\$${_money(committed - total)} over your total', style: TextStyle(color: committed <= total ? _lzFg(muted) : const Color(0xFFB4534B), fontSize: 12)),
+      _crBar('Planned', '${_money(planned)}', planned / base, color: planned > base ? const Color(0xFFB4534B) : gold),
+      _crBar('Committed to vendors', '${_money(committed)}', committed / base, color: committed > base ? const Color(0xFFB4534B) : const Color(0xFF8DA399)),
+      _crBar('Paid so far', '${_money(paid)}', paid / base, color: vGreen),
+      if (total > 0) Text(committed <= total ? '${_money(total - committed)} left to commit' : '${_money(committed - total)} over your total', style: TextStyle(color: committed <= total ? _lzFg(muted) : const Color(0xFFB4534B), fontSize: 12)),
     ]);
   }
 
@@ -956,7 +956,7 @@ rep("""  List<_TourStep> _coupleTourSteps({required bool needsSetup}) {""", r"""
           return _crRow(
             title: (_cwInq[inq]?['vendor'] ?? 'Your vendor').toString(),
             sub: (i['title'] ?? 'Invoice').toString(),
-            right: '${i['total'] is num ? '\$${_money(i['total'] as num)}' : ''}  ${days < 0 ? '${-days}d late' : days == 0 ? 'today' : 'in ${days}d'}',
+            right: '${i['total'] is num ? '${_money(i['total'] as num)}' : ''}  ${days < 0 ? '${-days}d late' : days == 0 ? 'today' : 'in ${days}d'}',
             rightColor: days < 0 ? const Color(0xFFB4534B) : (days <= 7 ? gold : _lzFg(plum)),
             onTap: () {
               setState(() => _view = _View.messages);
@@ -1063,8 +1063,8 @@ rep("""  List<_TourStep> _coupleTourSteps({required bool needsSetup}) {""", r"""
         }
         return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
           _crBar('Bought', '${all.length - left.length} of ${all.length}', (all.length - left.length) / all.length, color: vGreen),
-          for (final Map<String, dynamic> m in left.take(4)) _crRow(title: (m['name'] ?? '').toString(), sub: '', right: m['est'] is num && (m['est'] as num) > 0 ? '\$${_money(m['est'] as num)}' : ''),
-          if (est > 0) Text('About \$${_money(est)} still to spend', style: TextStyle(color: _lzFg(muted), fontSize: 12)),
+          for (final Map<String, dynamic> m in left.take(4)) _crRow(title: (m['name'] ?? '').toString(), sub: '', right: m['est'] is num && (m['est'] as num) > 0 ? '${_money(m['est'] as num)}' : ''),
+          if (est > 0) Text('About ${_money(est)} still to spend', style: TextStyle(color: _lzFg(muted), fontSize: 12)),
           Align(alignment: Alignment.centerRight, child: TextButton(onPressed: () => setState(() => _view = _View.shopping), child: const Text('Open list', style: TextStyle(color: gold, fontWeight: FontWeight.w800, fontSize: 12)))),
         ]);
       },

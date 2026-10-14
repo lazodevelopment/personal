@@ -348,7 +348,7 @@ rep("""  Widget _railCard(String title, IconData icon, Widget content, {String? 
     int n = 0;
     for (final QueryDocumentSnapshot<Map<String, dynamic>> d in docs) {
       if (d.data()['read'] == true) continue;
-      b.update(d.reference, <String, dynamic>{'read': true, 'readAt': FieldValue.serverTimestamp()});
+      b.update(d.reference, <String, dynamic>{'read': true, 'readAt': Timestamp.now()});
       n++;
     }
     if (n > 0) b.commit().catchError((Object _) {});
@@ -420,6 +420,9 @@ rep("""  Widget _railCard(String title, IconData icon, Widget content, {String? 
   }
 
   Widget _railCard(String title, IconData icon, Widget content, {String? sub}) => Padding(""")
+
+# ---- the Search segment reads in dark mode
+rep("""const Map<String, Color> srcColor = <String, Color>{'search': Color(0xFF52284F),""", """final Map<String, Color> srcColor = <String, Color>{'search': _lzDark ? const Color(0xFFC9A0C6) : const Color(0xFF52284F),""")
 
 OUT.write_text(s, encoding="utf-8", newline="\n")
 print(f"wrote {OUT.name} ({len(s):,} chars)")

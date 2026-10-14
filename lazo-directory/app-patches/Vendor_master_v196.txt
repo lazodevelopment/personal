@@ -510,7 +510,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     int n = 0;
     for (final QueryDocumentSnapshot<Map<String, dynamic>> d in docs) {
       if (d.data()['read'] == true) continue;
-      b.update(d.reference, <String, dynamic>{'read': true, 'readAt': FieldValue.serverTimestamp()});
+      b.update(d.reference, <String, dynamic>{'read': true, 'readAt': Timestamp.now()});
       n++;
     }
     if (n > 0) b.commit().catchError((Object _) {});
@@ -758,7 +758,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
         final int rate = leads.isEmpty ? 0 : ((booked / leads.length) * 100).round();
         final Map<String, dynamic> rank = vd['rank'] is Map ? Map<String, dynamic>.from(vd['rank'] as Map) : <String, dynamic>{};
         const Map<String, String> srcName = <String, String>{'search': 'Search', 'social': 'Social', 'lazo': 'Lazo', 'direct': 'Direct', 'other': 'Other'};
-        const Map<String, Color> srcColor = <String, Color>{'search': Color(0xFF52284F), 'social': Color(0xFFC7869C), 'lazo': Color(0xFFD9B77C), 'direct': Color(0xFF8DA399), 'other': Color(0xFFB9ADC0)};
+        final Map<String, Color> srcColor = <String, Color>{'search': _lzDark ? const Color(0xFFC9A0C6) : const Color(0xFF52284F), 'social': Color(0xFFC7869C), 'lazo': Color(0xFFD9B77C), 'direct': Color(0xFF8DA399), 'other': Color(0xFFB9ADC0)};
         final List<MapEntry<String, num>> parts = src.entries
             .map((MapEntry<String, dynamic> e) => MapEntry<String, num>(srcName.containsKey(e.key) ? e.key : 'other', e.value is num ? e.value as num : 0))
             .where((MapEntry<String, num> e) => e.value > 0)

@@ -236,7 +236,7 @@ rep("""  Widget _crCard(String title, IconData icon, Widget content, {String? su
         for (final Map<String, dynamic> p in plan.values) {
           if (p['budgetActual'] is num) committed += p['budgetActual'] as num;
         }
-        return total > 0 ? '\$${_money(total - committed)} left' : 'Budget';
+        return total > 0 ? '${_money(total - committed)} left' : 'Budget';
       case 'replies':
         final int w = inqs.where((QueryDocumentSnapshot<Map<String, dynamic>> d) => (d.data()['lastMessageRole'] ?? '') == 'vendor' && (d.data()['status'] ?? '') != 'lost').length;
         return w == 0 ? 'Nobody waiting' : '$w waiting on you';
@@ -247,7 +247,7 @@ rep("""  Widget _crCard(String title, IconData icon, Widget content, {String? su
             if ((i['status'] ?? '') != 'paid' && (i['status'] ?? '') != 'void' && i['total'] is num && i['dueDate'] is Timestamp) t += i['total'] as num;
           }
         }
-        return t > 0 ? '\$${_money(t)} due' : 'Nothing due';
+        return t > 0 ? '${_money(t)} due' : 'Nothing due';
       case 'rsvp':
         int yes = 0;
         for (final QueryDocumentSnapshot<Map<String, dynamic>> d in _liveQ['guests:$_cid']?.latest?.docs ?? <QueryDocumentSnapshot<Map<String, dynamic>>>[]) {
@@ -381,7 +381,7 @@ rep("""  Widget _crCard(String title, IconData icon, Widget content, {String? su
     int n = 0;
     for (final QueryDocumentSnapshot<Map<String, dynamic>> d in docs) {
       if (d.data()['read'] == true) continue;
-      b.update(d.reference, <String, dynamic>{'read': true, 'readAt': FieldValue.serverTimestamp()});
+      b.update(d.reference, <String, dynamic>{'read': true, 'readAt': Timestamp.now()});
       n++;
     }
     if (n > 0) b.commit().catchError((Object _) {});
