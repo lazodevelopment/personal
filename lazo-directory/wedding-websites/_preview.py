@@ -42,7 +42,8 @@ payload = {
         {"name": "Dev Patel", "role": "Groomsman", "side": "b", "photo": "", "note": ""},
         {"name": "Rev. Ann Hale", "role": "Officiant", "side": "", "photo": "", "note": ""}],
     "hotels": [
-        {"name": "The Sedona Inn", "address": "120 Main St, Sedona, AZ", "url": "https://example.com/book", "code": "SARAHMIKE27", "deadline": "May 1, 2027", "rate": "$189 a night", "phone": "(928) 555-0100", "note": "Shuttle to the venue from 3:30", "block": True}],
+        {"name": "The Sedona Inn", "address": "120 Main St, Sedona, AZ", "url": "https://example.com/book", "code": "SARAHMIKE27", "deadline": "May 1, 2027", "rate": "$189 a night", "phone": "(928) 555-0100", "note": "Shuttle to the venue from 3:30", "block": True},
+        {"name": "L'Auberge de Sedona", "address": "301 L'Auberge Ln, Sedona, AZ", "url": "https://example.com/book2", "code": "", "deadline": "", "rate": "From $425 a night", "phone": "", "note": "Creekside cottages, ten minutes from the venue", "block": False}],
     "airports": [], "drivingNotes": "From Phoenix take I-17 N to exit 298, then 179 N into Sedona. The last mile to the Orchard House is gravel.",
     "milestones": [
         {"when": "August 2019", "title": "The playlist argument", "text": "An hour by the speaker at Dana's party.", "photo": f"{U}1529634806980-85c3dd6d34ac?auto=format&fit=crop&w=600&q=74"},

@@ -254,6 +254,58 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
 @media(max-width:600px){.cmpt{font-size:13px}.cmpt th,.cmpt td{padding:10px 8px}}
 /* ---- /lz-sell ---- */
 </style>
+
+<style id="lzfoot">/* JC-LAZO-WWS-1014-FOOT */
+.site-foot{--gold:#D9B77C;--night:#2E1530;--plum-deep:#3D1C3B;--sans:Inter,system-ui,sans-serif;--serif:"Cormorant Garamond",Georgia,serif;--ease-out:cubic-bezier(.16,1,.3,1);--ease-std:cubic-bezier(.4,0,.2,1);--t-hover:220ms;--t-press:90ms;--t-release:260ms}
+.btn-gold,.nav-cta,.finder .btn-gold,.tile,.metro-card,.cat-card,.vendor-card,.related-links a,
+.vf,.fv-cta,.tcta,.ww .demo .row span,.faq summary,.foot-col a,.site-nav a,.rowhead .more,.vf.claim .go{transition:transform var(--t-release) var(--ease-out),box-shadow var(--t-release) var(--ease-out),
+    border-color var(--t-hover) var(--ease-std),background-color var(--t-hover) var(--ease-std),color var(--t-hover) var(--ease-std),opacity var(--t-hover) var(--ease-std)}
+.site-foot{position:relative;border-top:0;text-align:initial;padding:64px 28px 32px;margin-top:64px;color:rgba(250,246,240,.78);background:var(--night)}
+.site-foot::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(217,183,124,.55) 30%,rgba(217,183,124,.55) 70%,transparent)}
+.foot-top{max-width:1280px;margin:0 auto;text-align:left}
+.foot-brand{display:grid;grid-template-columns:1fr auto;align-items:flex-end;gap:24px 40px;max-width:none;
+  padding-bottom:32px;margin-bottom:34px;border-bottom:1px solid rgba(250,246,240,.1)}
+.foot-act{display:flex;flex-direction:column;align-items:flex-end;gap:0}
+.foot-mark img,.foot-mark-img{height:72px;width:auto;display:block;margin:0 0 12px}
+.foot-line{font-family:var(--serif);font-size:22px;color:var(--gold);margin:.2em 0}
+.foot-promise{font-size:13px;color:rgba(250,246,240,.62);max-width:480px;margin:0}
+.foot-cta{display:inline-flex;align-items:center;justify-content:center;margin:0;padding:12px 24px;border-radius:999px;
+  background:linear-gradient(180deg,#E3C78F,var(--gold));color:var(--plum-deep);font:600 14.5px/1.2 var(--sans);text-decoration:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 12px 26px -14px rgba(0,0,0,.8);
+  transition:transform var(--t-release) var(--ease-out),background-color var(--t-hover) var(--ease-std),box-shadow var(--t-release) var(--ease-out)}
+.foot-cta:hover{background:linear-gradient(180deg,#EAD09C,#E0BF86);transform:translateY(-1px)}
+.foot-cta:active{transform:scale(.97);transition-duration:var(--t-press)}
+.foot-stores{display:flex;gap:10px;justify-content:flex-end;margin:14px 0 0}
+.foot-stores img{height:40px;width:auto;display:block}
+.foot-stores a{display:block;transition:transform var(--t-hover) var(--ease-std)}
+.foot-stores a:hover{transform:translateY(-1px)}
+.foot-social{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 16px;margin:16px 0 0;font-size:13px}
+.foot-social a{color:rgba(250,246,240,.62);text-decoration:none;transition:color var(--t-hover) var(--ease-std)}
+.foot-social a:hover{color:var(--gold)}
+.foot-cols{display:grid;gap:28px 24px;grid-template-columns:repeat(6,minmax(0,1fr))}
+.foot-col-2{grid-column:span 2}
+.foot-col-2 .foot-stack{columns:2;column-gap:20px}
+.foot-col-2 .foot-stack a{break-inside:avoid}
+.foot-col h4{font:600 11px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin:0 0 10px}
+.foot-col a{display:block;width:fit-content;font-size:14px;text-decoration:none;color:rgba(250,246,240,.85);padding:4px 0}
+.foot-col a:hover{color:var(--gold);transform:translateX(2px)}
+.foot-cities{max-width:1280px;margin:52px auto 0;padding-top:30px;border-top:1px solid rgba(250,246,240,.1)}
+.foot-city-list{columns:200px;column-gap:24px}
+.foot-city-list a{break-inside:avoid;font-size:13.5px;color:rgba(250,246,240,.74)}
+.site-foot .foot-legal{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 24px;
+  max-width:1280px;margin:40px auto 0;padding-top:22px;border-top:1px solid rgba(250,246,240,.1);
+  text-align:left;font-size:12px;color:rgba(250,246,240,.5)}
+.foot-copy{margin:0}
+.foot-fine{display:flex;flex-wrap:wrap;gap:6px 20px}
+.foot-fine a{color:rgba(250,246,240,.5);text-decoration:none;transition:color var(--t-hover) var(--ease-std)}
+.foot-fine a:hover{color:var(--gold)}
+@media (max-width:1000px){.foot-cols{grid-template-columns:repeat(3,minmax(0,1fr))}.foot-col-2{grid-column:span 1}.foot-col-2 .foot-stack{columns:1}}
+@media (max-width:900px){.foot-top{grid-template-columns:1fr}.foot-cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.site-foot{padding:44px 20px 28px}.foot-brand{grid-template-columns:1fr;gap:20px;padding-bottom:26px;margin-bottom:6px}.foot-act{align-items:stretch}.foot-cta{width:100%;padding:14px 24px;font-size:15px}.foot-social{justify-content:flex-start}.foot-stores{justify-content:flex-start}.foot-mark img,.foot-mark-img{height:58px}.foot-cols{grid-template-columns:1fr;gap:0}.foot-cities{margin-top:0;padding-top:0;border-top:0}.site-foot.foot-acc .foot-col{border-top:1px solid rgba(250,246,240,.1)}.site-foot.foot-acc .foot-col h4{position:relative;margin:0;padding:17px 30px 17px 0;cursor:pointer;
+    font-size:12px;color:rgba(250,246,240,.9);letter-spacing:.14em;-webkit-tap-highlight-color:transparent}.site-foot.foot-acc .foot-col h4::after{content:"";position:absolute;right:6px;top:50%;width:8px;height:8px;
+    margin-top:-6px;border-right:1.5px solid var(--gold);border-bottom:1.5px solid var(--gold);
+    transform:rotate(45deg);transform-origin:center;transition:transform var(--t-release) var(--ease-out)}.site-foot.foot-acc .foot-col.open h4::after{transform:rotate(-135deg);margin-top:-2px}.site-foot.foot-acc .foot-col h4:active{color:var(--gold)}.site-foot.foot-acc .foot-links{display:none}.site-foot.foot-acc .foot-col.open .foot-links{display:block;padding-bottom:14px}html.motion .site-foot.foot-acc .foot-col.open .foot-links{animation:footOpen .3s var(--ease-out) both}.foot-city-list{columns:1}.site-foot .foot-legal{justify-content:flex-start;margin-top:26px}}
+</style>
 </head>
 <body>
 <nav class="top"><div class="in">
@@ -376,44 +428,225 @@ footer{background:var(--plumDeep);color:var(--ivory);padding:56px 22px 30px}
  <p class="f">No card required. Couples are free on Lazo, always.</p>
 </section>
 
-<footer>
- <div class="fin">
-  <div class="fbrand">
-   <img class="flogo" src="https://meetlazo.com/assets/foot-logo.png" alt="Lazo">
-   <p class="ftied">Tied together.</p>
-   <p class="fslog">Real couples. Real reviews. Rankings no one can buy.</p>
+<footer class="site-foot">
+  <div class="foot-top">
+    <div class="foot-brand">
+      <div class="foot-id">
+      <img src="/assets/foot-logo.png" alt="Lazo" class="foot-mark-img">
+      <p class="foot-line">Tied together.</p>
+      <p class="foot-promise">Real couples. Real reviews. Rankings no one can buy.</p>
+      </div>
+      <div class="foot-act">
+        <a class="foot-cta" href="https://app.meetlazo.com">Start planning</a>
+        <div class="foot-stores">
+          <a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675" aria-label="Download Lazo on the App Store"><img src="/assets/appstore-badge.svg" alt="Download on the App Store" width="120" height="40" loading="lazy"></a>
+          <a href="https://play.google.com/store/apps/details?id=com.meetlazo.app" aria-label="Get Lazo on Google Play"><img src="/assets/googleplay-badge.png" alt="Get it on Google Play" width="135" height="40" loading="lazy"></a>
+        </div>
+        <p class="foot-social">
+          <a href="https://instagram.com/trylazo" rel="noopener">Instagram</a>
+          <a href="https://facebook.com/getlazo" rel="noopener">Facebook</a>
+          <a href="https://tiktok.com/@trylazo" rel="noopener">TikTok</a>
+        </p>
+      </div>
+    </div>
+    <nav class="foot-cols" aria-label="Footer">
+      <div class="foot-col">
+        <h4>Plan your wedding</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="https://app.meetlazo.com">Start planning</a>
+          <a href="/app/">The Lazo app</a>
+          <a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675">Get the iPhone app</a>
+          <a href="https://play.google.com/store/apps/details?id=com.meetlazo.app">Get the Android app</a>
+          <a href="/wedding-websites/">Free wedding websites</a>
+          <a href="/phoenix/">Find vendors</a>
+          <a href="/planning/">How to plan a wedding</a>
+          <a href="/marriage-license/">Marriage license by state</a>
+          <a href="/guests/">Wedding guest etiquette</a>
+          <a href="/cost/">What a wedding costs</a>
+          <a href="/questions/">What to ask your vendors</a>
+          <a href="/when-to-book/">When to book everything</a>
+          <a href="/why-lazo/">Why Lazo</a>
+          <a href="/traditions/">Wedding traditions</a>
+          <a href="/what-is-a-lazo/">The Lazo tradition</a>
+        </div></div>
+      </div>
+      <div class="foot-col foot-col-2">
+        <h4>Find vendors</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/phoenix/wedding-photographers/">Wedding Photographers</a>
+          <a href="/phoenix/wedding-videographers/">Wedding Videographers</a>
+          <a href="/phoenix/wedding-venues/">Wedding Venues</a>
+          <a href="/phoenix/wedding-planners/">Wedding Planners</a>
+          <a href="/phoenix/wedding-djs/">Wedding DJs</a>
+          <a href="/phoenix/wedding-florists/">Wedding Florists</a>
+          <a href="/phoenix/wedding-caterers/">Wedding Caterers</a>
+          <a href="/phoenix/wedding-cakes/">Wedding Cakes &amp; Desserts</a>
+          <a href="/phoenix/hair-and-makeup/">Hair &amp; Makeup Artists</a>
+          <a href="/phoenix/wedding-officiants/">Wedding Officiants</a>
+          <a href="/phoenix/wedding-transportation/">Wedding Transportation</a>
+          <a href="/phoenix/wedding-rentals/">Wedding Rentals</a>
+          <a href="/phoenix/wedding-bands/">Live Wedding Bands</a>
+          <a href="/phoenix/wedding-invitations/">Invitations &amp; Stationery</a>
+          <a href="/phoenix/day-of-coordination/">Day-Of Coordinators</a>
+        </div></div>
+      </div>
+      <div class="foot-col">
+        <h4>For vendors</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/for-vendors/">How it works</a>
+          <a href="/for-vendors/#claim">Claim your profile</a>
+          <a href="/for-vendors/#pricing">Pricing</a>
+          <a href="/for-vendors/#promise">Our vendor promise</a>
+          <a href="/for-vendors/#showcase">What your profile looks like</a>
+        </div></div>
+      </div>
+      <div class="foot-col">
+        <h4>Compare</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/zola-alternative/">Lazo vs Zola</a>
+          <a href="/the-knot-alternative/">Lazo vs The Knot</a>
+          <a href="/weddingwire-alternative/">Lazo vs WeddingWire</a>
+          <a href="/the-knot-alternative-for-vendors/">The Knot alternative for vendors</a>
+          <a href="/weddingwire-alternative-for-vendors/">WeddingWire alternative for vendors</a>
+          <a href="/honeybook-alternative/">HoneyBook alternative</a>
+        </div></div>
+      </div>
+      <div class="foot-col">
+        <h4>Company &amp; help</h4>
+        <div class="foot-links"><div class="foot-stack">
+          <a href="/about/">About Lazo</a>
+          <a href="/contact/">Contact us</a>
+          <a href="/the-knot-alternative/">Lazo vs The Knot</a>
+          <a href="/zola-alternative/">Lazo vs Zola</a>
+          <a href="/delete-account/">Delete your account</a>
+        </div></div>
+      </div>
+    </nav>
   </div>
-  <div class="fcols">
-   <div>
-    <h4>For couples</h4>
-    <a href="https://app.meetlazo.com">Start planning</a>
-    <a href="https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675">Get the iPhone app</a>
-    <a href="https://meetlazo.com/phoenix/">Find vendors</a>
-    <a href="https://meetlazo.com/what-is-a-lazo/">The Lazo tradition</a>
-    <a href="https://meetlazo.com/why-lazo/">Why Lazo</a>
-   </div>
-   <div>
-    <h4>For vendors</h4>
-    <a href="https://meetlazo.com/for-vendors/">How it works</a>
-    <a href="https://meetlazo.com/for-vendors/#claim">Claim your profile</a>
-    <a href="https://meetlazo.com/for-vendors/#promise">Our vendor promise</a>
-   </div>
-   <div>
-    <h4>Company</h4>
-    <a href="https://meetlazo.com/about/">About</a>
-    <a href="https://meetlazo.com/contact/">Contact</a>
-    <a href="https://instagram.com/trylazo">Instagram</a>
-    <a href="https://facebook.com/getlazo">Facebook</a>
-    <a href="https://tiktok.com/@trylazo">TikTok</a>
-   </div>
-   <div>
-    <h4>Legal</h4>
-    <a href="https://meetlazo.com/terms/">Terms of Service</a>
-    <a href="https://meetlazo.com/privacy/">Privacy Policy</a>
-   </div>
+
+  <div class="foot-col foot-cities">
+    <h4>Wedding vendors by city</h4>
+    <div class="foot-links"><div class="foot-stack foot-city-list">
+      <a href="/albany/">Albany wedding vendors</a>
+      <a href="/albuquerque/">Albuquerque wedding vendors</a>
+      <a href="/anchorage/">Anchorage wedding vendors</a>
+      <a href="/asheville/">Asheville wedding vendors</a>
+      <a href="/aspen-vail/">Aspen wedding vendors</a>
+      <a href="/atlanta/">Atlanta wedding vendors</a>
+      <a href="/austin/">Austin wedding vendors</a>
+      <a href="/bakersfield/">Bakersfield wedding vendors</a>
+      <a href="/baltimore/">Baltimore wedding vendors</a>
+      <a href="/baton-rouge/">Baton Rouge wedding vendors</a>
+      <a href="/billings/">Billings wedding vendors</a>
+      <a href="/birmingham/">Birmingham wedding vendors</a>
+      <a href="/boise/">Boise wedding vendors</a>
+      <a href="/boston/">Boston wedding vendors</a>
+      <a href="/buffalo/">Buffalo wedding vendors</a>
+      <a href="/burlington-vt/">Burlington wedding vendors</a>
+      <a href="/cape-cod/">Cape Cod wedding vendors</a>
+      <a href="/charleston/">Charleston wedding vendors</a>
+      <a href="/charleston-wv/">Charleston wedding vendors</a>
+      <a href="/charlotte/">Charlotte wedding vendors</a>
+      <a href="/chicago/">Chicago wedding vendors</a>
+      <a href="/cincinnati/">Cincinnati wedding vendors</a>
+      <a href="/cleveland/">Cleveland wedding vendors</a>
+      <a href="/colorado-springs/">Colorado Springs wedding vendors</a>
+      <a href="/columbia-sc/">Columbia wedding vendors</a>
+      <a href="/columbus/">Columbus wedding vendors</a>
+      <a href="/dallas-fort-worth/">Dallas-Fort Worth wedding vendors</a>
+      <a href="/dayton/">Dayton wedding vendors</a>
+      <a href="/daytona-beach/">Daytona Beach wedding vendors</a>
+      <a href="/denver/">Denver wedding vendors</a>
+      <a href="/des-moines/">Des Moines wedding vendors</a>
+      <a href="/detroit/">Detroit wedding vendors</a>
+      <a href="/el-paso/">El Paso wedding vendors</a>
+      <a href="/fargo/">Fargo wedding vendors</a>
+      <a href="/fort-myers-naples/">Fort Myers wedding vendors</a>
+      <a href="/fresno/">Fresno wedding vendors</a>
+      <a href="/smoky-mountains/">Gatlinburg wedding vendors</a>
+      <a href="/grand-rapids/">Grand Rapids wedding vendors</a>
+      <a href="/greensboro/">Greensboro wedding vendors</a>
+      <a href="/greenville-sc/">Greenville wedding vendors</a>
+      <a href="/hartford-new-haven/">Hartford-New Haven wedding vendors</a>
+      <a href="/honolulu/">Honolulu wedding vendors</a>
+      <a href="/houston/">Houston wedding vendors</a>
+      <a href="/hudson-valley/">Hudson Valley wedding vendors</a>
+      <a href="/indianapolis/">Indianapolis wedding vendors</a>
+      <a href="/inland-empire/">Inland Empire wedding vendors</a>
+      <a href="/jackson-ms/">Jackson wedding vendors</a>
+      <a href="/jackson-hole/">Jackson Hole wedding vendors</a>
+      <a href="/jacksonville/">Jacksonville wedding vendors</a>
+      <a href="/kansas-city/">Kansas City wedding vendors</a>
+      <a href="/key-west/">Key West wedding vendors</a>
+      <a href="/knoxville/">Knoxville wedding vendors</a>
+      <a href="/lake-tahoe-reno/">Lake Tahoe wedding vendors</a>
+      <a href="/las-vegas/">Las Vegas wedding vendors</a>
+      <a href="/lehigh-valley/">Lehigh Valley wedding vendors</a>
+      <a href="/little-rock/">Little Rock wedding vendors</a>
+      <a href="/los-angeles/">Los Angeles wedding vendors</a>
+      <a href="/louisville/">Louisville wedding vendors</a>
+      <a href="/madison/">Madison wedding vendors</a>
+      <a href="/manchester-nh/">Manchester wedding vendors</a>
+      <a href="/maui/">Maui wedding vendors</a>
+      <a href="/memphis/">Memphis wedding vendors</a>
+      <a href="/miami/">Miami wedding vendors</a>
+      <a href="/milwaukee/">Milwaukee wedding vendors</a>
+      <a href="/minneapolis/">Minneapolis wedding vendors</a>
+      <a href="/monterey-big-sur/">Monterey wedding vendors</a>
+      <a href="/napa-sonoma/">Napa wedding vendors</a>
+      <a href="/nashville/">Nashville wedding vendors</a>
+      <a href="/new-orleans/">New Orleans wedding vendors</a>
+      <a href="/new-york-city/">New York City wedding vendors</a>
+      <a href="/oklahoma-city/">Oklahoma City wedding vendors</a>
+      <a href="/omaha/">Omaha wedding vendors</a>
+      <a href="/orange-county/">Orange County wedding vendors</a>
+      <a href="/orlando/">Orlando wedding vendors</a>
+      <a href="/outer-banks/">Outer Banks wedding vendors</a>
+      <a href="/palm-springs/">Palm Springs wedding vendors</a>
+      <a href="/philadelphia/">Philadelphia wedding vendors</a>
+      <a href="/phoenix/">Phoenix wedding vendors</a>
+      <a href="/pittsburgh/">Pittsburgh wedding vendors</a>
+      <a href="/poconos/">Poconos wedding vendors</a>
+      <a href="/portland/">Portland wedding vendors</a>
+      <a href="/portland-maine/">Portland wedding vendors</a>
+      <a href="/providence/">Providence wedding vendors</a>
+      <a href="/raleigh-durham/">Raleigh-Durham wedding vendors</a>
+      <a href="/richmond/">Richmond wedding vendors</a>
+      <a href="/rochester/">Rochester wedding vendors</a>
+      <a href="/sacramento/">Sacramento wedding vendors</a>
+      <a href="/salt-lake-city/">Salt Lake City wedding vendors</a>
+      <a href="/san-antonio/">San Antonio wedding vendors</a>
+      <a href="/san-diego/">San Diego wedding vendors</a>
+      <a href="/san-francisco-bay/">San Francisco Bay wedding vendors</a>
+      <a href="/santa-barbara/">Santa Barbara wedding vendors</a>
+      <a href="/sarasota/">Sarasota wedding vendors</a>
+      <a href="/savannah/">Savannah wedding vendors</a>
+      <a href="/seattle/">Seattle wedding vendors</a>
+      <a href="/sedona/">Sedona wedding vendors</a>
+      <a href="/sioux-falls/">Sioux Falls wedding vendors</a>
+      <a href="/st-louis/">St. Louis wedding vendors</a>
+      <a href="/syracuse/">Syracuse wedding vendors</a>
+      <a href="/tampa/">Tampa wedding vendors</a>
+      <a href="/hamptons/">The Hamptons wedding vendors</a>
+      <a href="/toledo/">Toledo wedding vendors</a>
+      <a href="/tucson/">Tucson wedding vendors</a>
+      <a href="/tulsa/">Tulsa wedding vendors</a>
+      <a href="/virginia-beach/">Virginia Beach wedding vendors</a>
+      <a href="/washington-dc/">Washington DC wedding vendors</a>
+      <a href="/wichita/">Wichita wedding vendors</a>
+      <a href="/wilmington-nc/">Wilmington wedding vendors</a>
+    </div></div>
   </div>
- </div>
- <p class="fcopy">© 2026 Lazo Weddings, LLC · meetlazo.com</p>
+
+  <div class="foot-legal">
+    <p class="foot-copy">&copy; 2026 Lazo Weddings, LLC &middot; meetlazo.com</p>
+    <nav class="foot-fine" aria-label="Legal">
+      <a href="/terms/">Terms of Service</a>
+      <a href="/privacy/">Privacy Policy</a>
+      <a href="/privacy/#cookies" data-lz-consent>Cookie choices</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </div>
 </footer>
 
 <script>
@@ -524,6 +757,55 @@ document.querySelectorAll(".pals").forEach(function(row){
   });
  });
 });
+</script>
+
+<script>/* JC-LAZO-WWS-1014-FOOT */
+(function(){var d=document;(function () {
+    var foot = d.querySelector('.site-foot');
+    if (!foot) return;
+    var cols = [].slice.call(foot.querySelectorAll('.foot-col'));
+    if (!cols.length) return;
+
+    var parts = cols.map(function (col, i) {
+      var h = col.querySelector('h4'), stack = col.querySelector('.foot-stack');
+      if (!h || !stack) return null;
+      var id = 'footc' + i;
+      stack.id = id;
+      h.setAttribute('role', 'button');
+      h.setAttribute('tabindex', '0');
+      h.setAttribute('aria-controls', id);
+      function set(open) {
+        col.classList.toggle('open', open);
+        h.setAttribute('aria-expanded', open ? 'true' : 'false');
+        /* a link you cannot see is a link you should not be able to tab to */
+        if (open) stack.removeAttribute('inert'); else stack.setAttribute('inert', '');
+      }
+      function toggle() { set(!col.classList.contains('open')); }
+      h.addEventListener('click', toggle);
+      h.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggle(); }
+      });
+      return { col: col, h: h, stack: stack, set: set };
+    }).filter(Boolean);
+
+    var mq = window.matchMedia('(max-width:760px)');
+    function sync() {
+      var phone = mq.matches;
+      foot.classList.toggle('foot-acc', phone);
+      parts.forEach(function (p) {
+        if (phone) {
+          p.set(p.col.classList.contains('open'));      /* keep what the reader opened */
+        } else {
+          p.col.classList.remove('open');
+          p.h.removeAttribute('aria-expanded');
+          p.stack.removeAttribute('inert');
+        }
+      });
+    }
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+    else if (mq.addListener) mq.addListener(sync);
+    sync();
+  })();})();
 </script>
 </body>
 </html>
