@@ -716,6 +716,20 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
     });
   }
 
+  // JC-LAZO-JUNE-ERR-1014-001: one plain sentence, never a raw exception
+  String _friendlyErr(Object e) {
+    final String raw = e.toString().replaceFirst('Exception: ', '').trim();
+    debugPrint('assistant load: ' + raw);
+    final String low = raw.toLowerCase();
+    if (low.contains('timeout') || low.contains('socket') || low.contains('host lookup') || low.contains('clientexception') || low.contains('connection') || low.contains('xmlhttprequest')) {
+      return 'I can\'t reach my notes right now. Check your connection, then try again.';
+    }
+    if (low.contains('sign in') || low.contains('(401)') || low == '401') return 'Please sign in again and I\'ll pick up where we left off.';
+    // the hub's own messages are written for people; anything that still looks like code is not shown
+    if (raw.isNotEmpty && raw.length < 220 && !RegExp(r'(Exception|Error|Future|0x|\(\d{3}\)|null)').hasMatch(raw)) return raw;
+    return 'Something went wrong on my side. Try again in a moment.';
+  }
+
   // ---- data
   Future<void> _load({bool first = false}) async {
     try {
@@ -739,7 +753,7 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _err = e.toString().replaceFirst('Exception: ', '');
+        _err = _friendlyErr(e);
       });
     }
   }
@@ -1839,7 +1853,7 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
       return Row(children: <Widget>[
         _core(96),
         const SizedBox(width: 14),
-        Expanded(child: Text('Jovi couldn\'t load your records. $_err', style: const TextStyle(color: _muted, fontSize: 13, height: 1.4))),
+        Expanded(child: Text(_err, style: const TextStyle(color: _muted, fontSize: 13, height: 1.4))),
         const SizedBox(width: 10),
         _btn('Try again', () => _load(first: true), accent: true),
       ]);
@@ -1914,7 +1928,7 @@ class _JoviNativeState extends State<JoviNative> with SingleTickerProviderStateM
         child: Row(children: <Widget>[
           _core(96),
           const SizedBox(width: 14),
-          Expanded(child: Text('Jovi couldn\'t load your records. $_err', style: const TextStyle(color: _muted, fontSize: 13, height: 1.4))),
+          Expanded(child: Text(_err, style: const TextStyle(color: _muted, fontSize: 13, height: 1.4))),
           const SizedBox(width: 10),
           _btn('Try again', () => _load(first: true), accent: true),
         ]),

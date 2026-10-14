@@ -13,7 +13,12 @@ JuneNative must be build 006 or later in the project first.
   python app-patches\\patch_june_hero_dashboards.py
 """
 from pathlib import Path
+import sys
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from patch_lazo_fab import apply_fab
+from patch_lazo_weather import apply_weather
+from patch_vendor_couple_view import apply_couple_view
 
 
 def rep(s, old, new, label, count=1):
@@ -372,6 +377,9 @@ v = rep(v, """          Text(sub,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 12, height: 1.3, color: ivory.withOpacity(.78))),""", "vendor tile footnote")
+v = apply_fab(v, "_vendorFab", 16, 18, 54, "lazo_fab_vendor", rep)
+v = apply_weather(v, "vendor", rep)
+v = apply_couple_view(v, rep)
 (HERE / "Vendor_master_v189.txt").write_text(v, encoding="utf-8")
 print("wrote Vendor_master_v189.txt", len(v))
 
@@ -551,5 +559,7 @@ c = rep(c, """                          child: Column(children: <Widget>[
                               Expanded(child: tiles[i + 1]),
                             ],
                           ]),""", "couple wide pairs")
+c = apply_fab(c, "_deskFab", 18, 86, 58, "lazo_fab_couple", rep)
+c = apply_weather(c, "couple", rep)
 (HERE / "Couple_master_v153.txt").write_text(c, encoding="utf-8")
 print("wrote Couple_master_v153.txt", len(c))

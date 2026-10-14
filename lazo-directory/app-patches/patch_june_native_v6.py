@@ -334,6 +334,12 @@ s = rep(s, "  Widget _deck(BuildContext context) {", r"""  // ------------------
 s = rep(s, "    if (widget.layout == 'deck') return _deck(context);",
         "    if (widget.layout == 'hero') return _hero(context);\n    if (widget.layout == 'deck') return _deck(context);", "build switch")
 s = rep(s, "// END OF FILE - JC-LAZO-JUNE-NATIVE-1013-005", "// END OF FILE - JC-LAZO-JUNE-NATIVE-1013-006", "eof")
+
+# ---- JC-LAZO-JUNE-ERR-1014-001: never show a raw exception
+s = rep(s, "        _err = e.toString().replaceFirst('Exception: ', '');", "        _err = _friendlyErr(e);", "friendly assign")
+s = rep(s, "  // ---- data\n", "  // JC-LAZO-JUNE-ERR-1014-001: one plain sentence, never a raw exception\n  String _friendlyErr(Object e) {\n    final String raw = e.toString().replaceFirst('Exception: ', '').trim();\n    debugPrint('assistant load: ' + raw);\n    final String low = raw.toLowerCase();\n    if (low.contains('timeout') || low.contains('socket') || low.contains('host lookup') || low.contains('clientexception') || low.contains('connection') || low.contains('xmlhttprequest')) {\n      return 'I can\\'t reach my notes right now. Check your connection, then try again.';\n    }\n    if (low.contains('sign in') || low.contains('(401)') || low == '401') return 'Please sign in again and I\\'ll pick up where we left off.';\n    // the hub's own messages are written for people; anything that still looks like code is not shown\n    if (raw.isNotEmpty && raw.length < 220 && !RegExp(r'(Exception|Error|Future|0x|\\(\\d{3}\\)|null)').hasMatch(raw)) return raw;\n    return 'Something went wrong on my side. Try again in a moment.';\n  }\n\n  // ---- data\n", "friendly fn")
+s = rep(s, "Text('June couldn\\'t load your data. $_err',", "Text(_err,", "deck err text")
+s = rep(s, "Text('June couldn\\'t load your day. $_err',", "Text(_err,", "hero err text")
 out = HERE / "JuneNative_v6.txt"
 out.write_text(s, encoding="utf-8")
 print("wrote", out.name, len(s))

@@ -6797,7 +6797,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       if (daysOut >= 0 && daysOut <= 15) {
         final Uri u = Uri.parse(
             'https://api.open-meteo.com/v1/forecast?latitude=${ll[0]}&longitude=${ll[1]}'
-            '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunset'
+            '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunset,sunrise'
+            '&hourly=temperature_2m,weather_code,precipitation_probability,is_day'
             '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&start_date=${_ymd(wedding)}&end_date=${_ymd(wedding)}');
         final httpc.Response r =
             await httpc.get(u).timeout(const Duration(seconds: 10));
@@ -6813,6 +6814,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           'rainPct': _numAt(d['precipitation_probability_max']).round(),
           'wind': _numAt(d['wind_speed_10m_max']).round(),
           'sunset': (d['sunset'] as List).first.toString(),
+          'hours': _SkyCard.hoursFrom(j, daysOut), // JC-LAZO-WX-1014-001
           'daysOut': daysOut,
         };
       } else {
@@ -6837,6 +6839,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         }
         final List<httpc.Response> rs = await Future.wait(reqs);
         double hi = 0, lo = 0;
+        final List<Map<String, dynamic>> yearsRows = <Map<String, dynamic>>[]; // JC-LAZO-WX-1014-001
         int n = 0, rainy = 0;
         final Map<int, int> codes = <int, int>{};
         String sunset = '';
@@ -6858,6 +6861,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             rainy++; // under 1 mm is a trace, not a rainy day
           final dynamic c = (d['weather_code'] as List).first;
           if (c is num) codes[c.toInt()] = (codes[c.toInt()] ?? 0) + 1;
+          yearsRows.add(<String, dynamic>{
+            'y': (d['time'] is List && (d['time'] as List).isNotEmpty) ? (d['time'] as List).first.toString().substring(0, 4) : '',
+            'hi': h.round(),
+            'lo': l.round(),
+            'code': c is num ? c.toInt() : 1,
+            'rain': p is num && p >= 1.0,
+          });
           if (sunset.isEmpty &&
               d['sunset'] is List &&
               (d['sunset'] as List).isNotEmpty) {
@@ -6875,6 +6885,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         });
         _wx = <String, dynamic>{
           'mode': 'typical',
+          'yearsRows': yearsRows,
           'hi': (hi / n).round(),
           'lo': (lo / n).round(),
           'code': code,
@@ -7059,9 +7070,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   // THE HAPTIC moved to touch-down, onto the same frame as the scale. Fired
   // on release it was confirming something the finger had already finished.
   Widget _deskFab() {
-    return Positioned(
-      right: 18,
-      bottom: 86, // v129: always above the Ask June bar (never shown on June)
+    return Positioned.fill(
+      child: _MovableFab(
+      prefKey: 'lazo_fab_couple',
+      size: 58,
+      defaultBottom: 86, // v129: always above the Ask June bar (never shown on June)
       child: Material(
         key: _kTourFab,
         color: Colors.transparent,
@@ -7077,7 +7090,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           ),
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _deskSheet() async {
@@ -7408,176 +7421,34 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     final String city = _metroLabel(metro);
     final int code = w == null ? -1 : (w['code'] as int);
     final bool fc = w != null && w['mode'] == 'forecast';
-    // sky tint by condition
-    List<Color> sky;
-    if (code < 0) {
-      sky = <Color>[const Color(0xFF4A2B4C), const Color(0xFF3D1C3B)];
-    } else if (code <= 1) {
-      sky = <Color>[
-        const Color(0xFF2E5C8A),
-        const Color(0xFF7FB3D5),
-        const Color(0xFFF2D7A0)
-      ];
-    } else if (code <= 3) {
-      sky = <Color>[
-        const Color(0xFF4C5C7A),
-        const Color(0xFF8C9BB5),
-        const Color(0xFFD9D2C5)
-      ];
-    } else if (code >= 71 && code <= 77) {
-      sky = <Color>[
-        const Color(0xFF5B6B8C),
-        const Color(0xFFB9C7DB),
-        const Color(0xFFEEF2F7)
-      ];
-    } else if (code >= 95) {
-      sky = <Color>[
-        const Color(0xFF2B2A45),
-        const Color(0xFF4C4A72),
-        const Color(0xFF8A86A8)
-      ];
-    } else {
-      sky = <Color>[
-        const Color(0xFF34506B),
-        const Color(0xFF5F7E9C),
-        const Color(0xFFA9BCCB)
-      ];
-    }
-    final bool light = code >= 0 && (code <= 3 || (code >= 71 && code <= 77));
-    final Color fg = light ? const Color(0xFF1E2430) : Colors.white;
-    final Color fg2 = fg.withOpacity(.72);
+    // JC-LAZO-WX-1014-001: drawn the way Apple draws its weather widget
     final String sunset =
         w == null ? '' : _sunsetClock((w['sunset'] ?? '').toString());
     final String rain = w == null
         ? ''
         : fc
-            ? '${w['rainPct']}% rain'
+            ? '${w['rainPct']}% chance of rain'
             : (w['rainYears'] == 0
                 ? 'Dry ${w['years']} of ${w['years']} years'
                 : 'Rain ${w['rainYears']} of ${w['years']} years');
-    // v130: laid out like a weather widget, not a stat row. The sky runs top
-    // to bottom with light catching the upper edge, the temperature leads,
-    // the condition and low sit beside it, the details ride in frosted
-    // tiles, and the icon holds the corner.
-    final bool loaded = w != null;
-    final String condition = loaded
-        ? _wmoLabel(code)
-        : (_wxErr.isEmpty ? 'Reading the sky\u2026' : _wxErr);
-    Widget tile(String t, {IconData? icon}) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-          decoration: BoxDecoration(
-              color: (light ? Colors.white : Colors.black)
-                  .withOpacity(light ? .30 : .18),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: fg.withOpacity(.14))),
-          child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-            if (icon != null) ...<Widget>[
-              Icon(icon, size: 12, color: fg),
-              const SizedBox(width: 4),
-            ],
-            Text(t,
-                style: TextStyle(
-                    color: fg, fontSize: 11, fontWeight: FontWeight.w700)),
-          ]),
-        );
     return _Press(
       scale: .985,
       dim: .92,
       onTap: () => setState(() => _view = _View.dayof),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: sky),
-        ),
-        foregroundDecoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: gold.withOpacity(.55)),
-            // light on the top edge - the surface reads as glass
-            gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: <Color>[
-                  Colors.white.withOpacity(.16),
-                  Colors.white.withOpacity(0)
-                ],
-                stops: const <double>[
-                  0,
-                  .4
-                ])),
-        clipBehavior: Clip.antiAlias,
-        padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
-                        hasDate
-                            ? '${fc ? 'FORECAST' : 'USUALLY'} \u00b7 ${_shortDate(wedding).toUpperCase()} \u00b7 ${city.toUpperCase()}'
-                            : 'TODAY \u00b7 ${city.toUpperCase()} \u00b7 SET YOUR DATE FOR YOUR DAY',
-                        style: TextStyle(
-                            color: fg2,
-                            fontSize: 10.5,
-                            letterSpacing: 1.8,
-                            fontWeight: FontWeight.w700)),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(loaded ? _wmoIcon(code) : Icons.cloud_queue_rounded,
-                      color: fg.withOpacity(.92), size: 32),
-                  const SizedBox(width: 6),
-                  _foldBtn('weather', onDark: !light),
-                ]),
-            const SizedBox(height: 10),
-            if (!loaded)
-              Text(condition, style: TextStyle(color: fg, fontSize: 14))
-            else
-              Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: <Widget>[
-                    Text('${w['hi']}\u00b0',
-                        style: _serif(
-                            size: 50,
-                            color: fg,
-                            weight: FontWeight.w500,
-                            height: .95)),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(condition,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      color: fg,
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w800)),
-                              Text('Low ${w['lo']}\u00b0',
-                                  style: TextStyle(
-                                      color: fg2,
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600)),
-                            ]),
-                      ),
-                    ),
-                  ]),
-            const SizedBox(height: 12),
-            Wrap(spacing: 6, runSpacing: 6, children: <Widget>[
-              if (loaded && rain.isNotEmpty)
-                tile(rain, icon: Icons.water_drop_outlined),
-              if (loaded && sunset.isNotEmpty)
-                tile('Sunset $sunset', icon: Icons.wb_twilight_rounded),
-              tile('All dates \u203a'),
-            ]),
-          ],
-        ),
+      child: _SkyCard(
+        place: city,
+        when: hasDate
+            ? '${fc ? 'Forecast' : 'Usually'} · ${_shortDate(wedding)}'
+            : 'Today · set your date to see your day',
+        w: w,
+        status: _wxErr.isEmpty ? 'Reading the sky…' : _wxErr,
+        fold: _foldBtn('weather', onDark: true),
+        note: <String>[
+          if (rain.isNotEmpty) rain,
+          if (sunset.isNotEmpty) 'Sunset $sunset',
+        ].join(' · '),
+        action: 'All dates',
+        radius: 22,
       ),
     );
   }
@@ -27031,3 +26902,414 @@ class _JuneEmbedState extends State<_JuneEmbed> {
 }
 
 // END OF FILE - JC-LAZO-COUPLE-1011-V152
+
+// JC-LAZO-FAB-1014-001: the desk button, movable. Drag it anywhere; it settles against the nearer side edge
+// at the height it was dropped and remembers the spot on this device. Left alone for a few seconds it tucks
+// partly behind the edge and dims (AssistiveTouch style), so it covers almost nothing until it is touched.
+class _MovableFab extends StatefulWidget {
+  const _MovableFab({required this.prefKey, required this.child, this.size = 56, this.defaultBottom = 18});
+  final String prefKey;
+  final Widget child;
+  final double size;
+  final double defaultBottom;
+  @override
+  State<_MovableFab> createState() => _MovableFabState();
+}
+
+class _MovableFabState extends State<_MovableFab> {
+  bool _left = false;
+  double? _yFrac;
+  Offset? _drag;
+  bool _awake = true;
+  Timer? _sleep;
+  Offset _grab = Offset.zero; // where on the disc the finger went down
+  final GlobalKey _area = GlobalKey();
+
+  // the finger's real position in the button's area, so a fast flick lands exactly where it is let go
+  Offset _at(Offset global) {
+    final RenderObject? ro = _area.currentContext?.findRenderObject();
+    if (ro is! RenderBox) return global - _grab;
+    return ro.globalToLocal(global) - _grab;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((SharedPreferences p) {
+      final String? s = p.getString(widget.prefKey);
+      if (s == null || !mounted) return;
+      final List<String> parts = s.split('|');
+      setState(() {
+        _left = parts[0] == 'L';
+        _yFrac = parts.length > 1 ? double.tryParse(parts[1]) : null;
+      });
+    }).catchError((Object _) {});
+    _wake();
+  }
+
+  @override
+  void dispose() {
+    _sleep?.cancel();
+    super.dispose();
+  }
+
+  void _wake() {
+    _sleep?.cancel();
+    if (!_awake && mounted) setState(() => _awake = true);
+    _sleep = Timer(const Duration(seconds: 4), () {
+      if (mounted && _drag == null) setState(() => _awake = false);
+    });
+  }
+
+  void _save() {
+    final String v = '${_left ? 'L' : 'R'}|${(_yFrac ?? -1).toStringAsFixed(4)}';
+    SharedPreferences.getInstance().then((SharedPreferences p) => p.setString(widget.prefKey, v)).catchError((Object _) => false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool reduce = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    return LayoutBuilder(builder: (BuildContext c, BoxConstraints box) {
+      final double s = widget.size;
+      const double edge = 14;
+      const double minY = 12;
+      final double maxY = math.max(minY, box.maxHeight - s - widget.defaultBottom);
+      final double span = math.max(1, box.maxHeight - s);
+      double y = (_yFrac == null || _yFrac! < 0) ? maxY : (_yFrac! * span).clamp(minY, maxY).toDouble();
+      // tucked: 40% of the disc behind the edge
+      final double tuck = _awake ? 0 : s * .4;
+      double x = _left ? edge - tuck : box.maxWidth - s - edge + tuck;
+      final Offset? d = _drag;
+      if (d != null) {
+        x = d.dx.clamp(0, math.max(0, box.maxWidth - s)).toDouble();
+        y = d.dy.clamp(minY, maxY).toDouble();
+      }
+      return Stack(key: _area, children: <Widget>[
+        AnimatedPositioned(
+          duration: Duration(milliseconds: d != null || reduce ? 0 : 340),
+          curve: Curves.easeOutCubic,
+          left: x,
+          top: y,
+          child: Listener(
+            onPointerDown: (PointerDownEvent e) {
+              _grab = e.localPosition;
+              _wake();
+            },
+            child: GestureDetector(
+              onPanStart: (DragStartDetails st) {
+                HapticFeedback.selectionClick();
+                _sleep?.cancel();
+                setState(() {
+                  _awake = true;
+                  _drag = _at(st.globalPosition);
+                });
+              },
+              onPanUpdate: (DragUpdateDetails u) => setState(() => _drag = _at(u.globalPosition)),
+              onPanEnd: (DragEndDetails _) {
+                final Offset p = _drag ?? Offset(x, y);
+                HapticFeedback.lightImpact();
+                setState(() {
+                  _left = p.dx + s / 2 < box.maxWidth / 2;
+                  _yFrac = p.dy.clamp(minY, maxY).toDouble() / span;
+                  _drag = null;
+                });
+                _save();
+                _wake();
+              },
+              child: AnimatedOpacity(
+                duration: Duration(milliseconds: reduce ? 0 : 260),
+                opacity: _awake ? 1 : .55,
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 150),
+                  scale: d != null ? 1.08 : 1,
+                  child: Semantics(
+                    hint: 'Drag to move it',
+                    child: widget.child,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ]);
+    });
+  }
+}
+
+// JC-LAZO-WX-1014-001: the weather card, drawn the way Apple draws its weather widget. The sky is the card
+// (a gradient picked by the condition and by day or night), type is white, the temperature large and thin,
+// the condition and H / L on the right, and underneath either the hours of the day or, further out, this
+// date in each of the last five years as range bars on one scale.
+class _SkyCard extends StatelessWidget {
+  const _SkyCard({
+    required this.place,
+    required this.when,
+    required this.w,
+    required this.status,
+    required this.fold,
+    this.who = '',
+    this.note = '',
+    this.action = '',
+    this.radius = 22,
+  });
+  final String place;
+  final String when;
+  final String who;
+  final Map<String, dynamic>? w;
+  final String status;
+  final Widget fold;
+  final String note;
+  final String action;
+  final double radius;
+
+  static String label(int c) {
+    if (c == 0) return 'Clear';
+    if (c == 1) return 'Mostly Clear';
+    if (c == 2) return 'Partly Cloudy';
+    if (c == 3) return 'Cloudy';
+    if (c == 45 || c == 48) return 'Foggy';
+    if (c >= 51 && c <= 57) return 'Drizzle';
+    if (c >= 61 && c <= 67) return c >= 65 ? 'Heavy Rain' : 'Rain';
+    if (c >= 71 && c <= 77) return 'Snow';
+    if (c >= 80 && c <= 82) return 'Showers';
+    if (c == 85 || c == 86) return 'Snow Showers';
+    if (c >= 95) return 'Thunderstorms';
+    return 'Cloudy';
+  }
+
+  static IconData icon(int c, bool day) {
+    if (c <= 1) return day ? Icons.wb_sunny_rounded : Icons.nightlight_round;
+    if (c == 2) return day ? Icons.wb_cloudy_rounded : Icons.cloud_rounded;
+    if (c == 3 || c == 45 || c == 48) return Icons.cloud_rounded;
+    if (c >= 95) return Icons.thunderstorm_rounded;
+    if ((c >= 71 && c <= 77) || c == 85 || c == 86) return Icons.ac_unit_rounded;
+    return Icons.water_drop_rounded;
+  }
+
+  // Apple colours its glyphs: a yellow sun, white moon and cloud, blue rain, a yellow bolt
+  static Color iconColor(int c, bool day) {
+    if (c <= 1) return day ? const Color(0xFFFFD60A) : Colors.white;
+    if (c >= 95) return const Color(0xFFFFD60A);
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return const Color(0xFF64D2FF);
+    return Colors.white;
+  }
+
+  static List<Color> sky(int c, bool day) {
+    if (c < 0) return const <Color>[Color(0xFF3B4A63), Color(0xFF1F2A3D)];
+    if (!day) {
+      if (c <= 2) return const <Color>[Color(0xFF0B1230), Color(0xFF1E2C57), Color(0xFF34477A)];
+      return const <Color>[Color(0xFF1B2232), Color(0xFF2E3850), Color(0xFF45506A)];
+    }
+    if (c <= 1) return const <Color>[Color(0xFF2A6FDB), Color(0xFF4C93EE), Color(0xFF7DB8F5)];
+    if (c == 2) return const <Color>[Color(0xFF3C74C4), Color(0xFF6B97CF), Color(0xFF9DB9DB)];
+    if (c >= 95) return const <Color>[Color(0xFF2B2745), Color(0xFF443D6B), Color(0xFF615A8A)];
+    if ((c >= 71 && c <= 77) || c == 85 || c == 86) return const <Color>[Color(0xFF6E86A8), Color(0xFF97ABC6), Color(0xFFC3D0E1)];
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return const <Color>[Color(0xFF3E4D61), Color(0xFF5A6A80), Color(0xFF7C8B9E)];
+    return const <Color>[Color(0xFF55667F), Color(0xFF75859B), Color(0xFF97A4B6)];
+  }
+
+  // the hours of one day from an Open-Meteo forecast: the next six today, 2 PM to 7 PM on another day
+  static List<Map<String, dynamic>> hoursFrom(Map<String, dynamic> j, int daysOut) {
+    final List<Map<String, dynamic>> out = <Map<String, dynamic>>[];
+    try {
+      final Map<String, dynamic> h = Map<String, dynamic>.from(j['hourly'] as Map);
+      final List<dynamic> t = h['time'] as List<dynamic>;
+      final List<dynamic> temp = h['temperature_2m'] as List<dynamic>;
+      final List<dynamic> code = h['weather_code'] as List<dynamic>;
+      final List<dynamic> pop = (h['precipitation_probability'] as List<dynamic>?) ?? <dynamic>[];
+      final List<dynamic> isDay = (h['is_day'] as List<dynamic>?) ?? <dynamic>[];
+      final int startHour = daysOut == 0 ? DateTime.now().hour : 14;
+      int start = 0;
+      for (int i = 0; i < t.length; i++) {
+        final DateTime? d = DateTime.tryParse(t[i].toString());
+        if (d != null && d.hour >= startHour) {
+          start = i;
+          break;
+        }
+      }
+      for (int i = start; i < t.length && out.length < 6; i++) {
+        final DateTime? d = DateTime.tryParse(t[i].toString());
+        if (d == null || temp[i] is! num) continue;
+        final int h12 = d.hour % 12 == 0 ? 12 : d.hour % 12;
+        out.add(<String, dynamic>{
+          'label': daysOut == 0 && out.isEmpty ? 'Now' : '$h12${d.hour < 12 ? 'AM' : 'PM'}',
+          't': (temp[i] as num).round(),
+          'code': code[i] is num ? (code[i] as num).toInt() : 1,
+          'pop': i < pop.length && pop[i] is num ? (pop[i] as num).round() : 0,
+          'day': i < isDay.length ? isDay[i] == 1 : (d.hour >= 7 && d.hour < 19),
+        });
+      }
+    } catch (_) {}
+    return out;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, dynamic>? w = this.w;
+    final bool loaded = w != null;
+    final int code = loaded ? (w['code'] as int) : -1;
+    final int daysOut = loaded && w['daysOut'] is int ? w['daysOut'] as int : 1;
+    // night only matters for today: after sunset or before seven
+    bool day = true;
+    if (loaded && daysOut == 0) {
+      final DateTime now = DateTime.now();
+      final DateTime? ss = DateTime.tryParse((w['sunset'] ?? '').toString());
+      day = now.hour >= 7 && (ss == null || now.isBefore(ss));
+    }
+    final List<Map<String, dynamic>> hours = loaded && w['hours'] is List
+        ? (w['hours'] as List).whereType<Map>().map((Map m) => Map<String, dynamic>.from(m)).toList()
+        : <Map<String, dynamic>>[];
+    final List<Map<String, dynamic>> years = loaded && w['yearsRows'] is List
+        ? (w['yearsRows'] as List).whereType<Map>().map((Map m) => Map<String, dynamic>.from(m)).toList()
+        : <Map<String, dynamic>>[];
+    const Color fg = Colors.white;
+    final Color fg2 = Colors.white.withOpacity(.78);
+    TextStyle t(double size, {FontWeight wt = FontWeight.w500, Color color = fg, double h = 1.2, double ls = 0}) =>
+        TextStyle(color: color, fontSize: size, fontWeight: wt, height: h, letterSpacing: ls,
+            shadows: const <Shadow>[Shadow(color: Color(0x33000000), blurRadius: 6, offset: Offset(0, 1))]);
+    final Widget divider = Container(height: .6, color: Colors.white.withOpacity(.22));
+
+    Widget hourStrip() => Row(children: <Widget>[
+          for (final Map<String, dynamic> hr in hours)
+            Expanded(
+              child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                Text(hr['label'].toString(), style: t(12, wt: FontWeight.w600, color: fg2)),
+                const SizedBox(height: 7),
+                Icon(icon(hr['code'] as int, hr['day'] == true), size: 20, color: iconColor(hr['code'] as int, hr['day'] == true)),
+                SizedBox(
+                  height: 14,
+                  child: (hr['pop'] as int) >= 20
+                      ? Text('${hr['pop']}%', style: t(10.5, wt: FontWeight.w700, color: const Color(0xFF8FDBFF)))
+                      : const SizedBox.shrink(),
+                ),
+                Text('${hr['t']}°', style: t(15, wt: FontWeight.w600)),
+              ]),
+            ),
+        ]);
+
+    Widget yearRows() {
+      int lo = 999, hi = -999;
+      for (final Map<String, dynamic> y in years) {
+        lo = math.min(lo, y['lo'] as int);
+        hi = math.max(hi, y['hi'] as int);
+      }
+      final double span = math.max(1, hi - lo).toDouble();
+      return Column(children: <Widget>[
+        for (final Map<String, dynamic> y in years)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(children: <Widget>[
+              SizedBox(width: 44, child: Text(y['y'].toString(), style: t(14, wt: FontWeight.w600))),
+              SizedBox(
+                width: 30,
+                child: Icon(y['rain'] == true ? Icons.water_drop_rounded : icon(y['code'] as int, true),
+                    size: 18, color: y['rain'] == true ? const Color(0xFF64D2FF) : iconColor(y['code'] as int, true)),
+              ),
+              SizedBox(width: 38, child: Text('${y['lo']}°', textAlign: TextAlign.right, style: t(14, wt: FontWeight.w600, color: fg2))),
+              const SizedBox(width: 10),
+              Expanded(
+                child: LayoutBuilder(builder: (BuildContext c, BoxConstraints b) {
+                  final double a = ((y['lo'] as int) - lo) / span * b.maxWidth;
+                  final double z = ((y['hi'] as int) - lo) / span * b.maxWidth;
+                  return SizedBox(
+                    height: 5,
+                    child: Stack(children: <Widget>[
+                      Positioned.fill(child: DecoratedBox(decoration: BoxDecoration(color: Colors.black.withOpacity(.16), borderRadius: BorderRadius.circular(3)))),
+                      Positioned(
+                        left: a,
+                        width: math.max(5, z - a),
+                        top: 0,
+                        bottom: 0,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(3),
+                            gradient: const LinearGradient(colors: <Color>[Color(0xFF5AC8FA), Color(0xFFFFD60A), Color(0xFFFF9F0A)]),
+                          ),
+                        ),
+                      ),
+                    ]),
+                  );
+                }),
+              ),
+              const SizedBox(width: 10),
+              SizedBox(width: 34, child: Text('${y['hi']}°', style: t(14, wt: FontWeight.w600))),
+            ]),
+          ),
+      ]);
+    }
+
+    final List<Color> bg = sky(code, day);
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: bg),
+        boxShadow: <BoxShadow>[BoxShadow(color: Colors.black.withOpacity(.22), blurRadius: 18, offset: const Offset(0, 8))],
+      ),
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: Colors.white.withOpacity(.14), width: .8),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: <Color>[Colors.white.withOpacity(.12), Colors.white.withOpacity(0)],
+          stops: const <double>[0, .35],
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.fromLTRB(18, 16, 14, 16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                Flexible(child: Text(place, maxLines: 1, overflow: TextOverflow.ellipsis, style: t(17, wt: FontWeight.w600))),
+                const SizedBox(width: 5),
+                const Icon(Icons.navigation_rounded, size: 12, color: Colors.white),
+              ]),
+              const SizedBox(height: 1),
+              Text(when, maxLines: 1, overflow: TextOverflow.ellipsis, style: t(12.5, wt: FontWeight.w500, color: fg2)),
+              if (who.isNotEmpty) Text(who, maxLines: 1, overflow: TextOverflow.ellipsis, style: t(12.5, wt: FontWeight.w600)),
+            ]),
+          ),
+          fold,
+        ]),
+        const SizedBox(height: 4),
+        if (!loaded)
+          Padding(padding: const EdgeInsets.symmetric(vertical: 14), child: Text(status, style: t(15, color: fg2)))
+        else
+          Row(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
+            Text('${w['hi']}°', style: t(64, wt: FontWeight.w200, h: 1, ls: -2.5)),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, right: 4),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
+                Icon(icon(code, day), size: 24, color: iconColor(code, day)),
+                const SizedBox(height: 4),
+                Text(label(code), style: t(14, wt: FontWeight.w600)),
+                Text('H:${w['hi']}°  L:${w['lo']}°', style: t(14, wt: FontWeight.w600)),
+              ]),
+            ),
+          ]),
+        if (loaded && (hours.isNotEmpty || years.isNotEmpty)) ...<Widget>[
+          const SizedBox(height: 12),
+          divider,
+          const SizedBox(height: 10),
+          if (hours.isNotEmpty) hourStrip() else ...<Widget>[
+            Text('THIS DATE, THE LAST ${years.length} YEARS', style: t(10.5, wt: FontWeight.w700, color: fg2, ls: 1.2)),
+            const SizedBox(height: 6),
+            yearRows(),
+          ],
+        ],
+        if (loaded && (note.isNotEmpty || action.isNotEmpty)) ...<Widget>[
+          const SizedBox(height: 10),
+          divider,
+          const SizedBox(height: 9),
+          Row(children: <Widget>[
+            Expanded(child: Text(note, maxLines: 2, overflow: TextOverflow.ellipsis, style: t(12.5, wt: FontWeight.w500, color: fg2))),
+            if (action.isNotEmpty) Text('$action ›', style: t(12.5, wt: FontWeight.w700)),
+          ]),
+        ],
+      ]),
+    );
+  }
+}
