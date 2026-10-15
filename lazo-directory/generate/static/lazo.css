@@ -1079,3 +1079,10 @@ html.motion .ap-rail img{transition:transform .5s var(--ease-out)}
 .lz-consent .no{background:none;color:var(--ivory)}
 .lz-consent .no:hover{border-color:var(--gold)}
 @media(max-width:480px){.lz-consent{left:10px;right:10px;max-width:none;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}}
+
+/* JC-LAZO-SITEFACTS-1013: "From their website" block on unclaimed vendor pages */
+main .v-site-q{margin:0 0 18px;padding:14px 18px;border-left:3px solid var(--gold);background:rgba(0,0,0,.025);border-radius:0 10px 10px 0;font-family:var(--serif,Georgia,serif);font-size:16px;line-height:1.5;color:var(--ink)}
+main .v-site-q cite{display:block;margin-top:6px;font-family:inherit;font-style:normal;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+main .v-site-social{margin:16px 0 0;font-size:13.5px;color:var(--ink)}
+main .v-site-social a{color:var(--plum);font-weight:600;border-bottom:1px solid var(--gold);text-decoration:none}
+main .v-site .geo-note{margin-top:12px}

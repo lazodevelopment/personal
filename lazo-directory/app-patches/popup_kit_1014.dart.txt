@@ -1,0 +1,408 @@
+  // ================= POPUPS (JC-LAZO-POPUP-1014) =================
+  // One frame for every popup in the dashboard. Phones get a bottom sheet with a
+  // grab handle over a plum veil. Wide screens (760 px and up) get a centred card
+  // that rises and fades in, instead of a sheet stretched along the bottom of a
+  // monitor. Every showModalBottomSheet / showDialog in this widget goes through
+  // _lzSheet / _lzDialog, so a popup built before this still gets the new frame.
+  // New and rebuilt popups also use _lzFrame (header, scrolling body, footer that
+  // stays put), _lzActions, _lzConfirm, _lzBusy and _lzNote.
+  static const double _lzWideAt = 760;
+
+  Color get _lzVeil =>
+      _lzDark ? Colors.black.withOpacity(.6) : plumDeep.withOpacity(.42);
+
+  Widget _lzRise(Animation<double> a, Widget child, {Color? veil}) {
+    final CurvedAnimation c = CurvedAnimation(
+        parent: a, curve: Curves.easeOutCubic, reverseCurve: Curves.easeInCubic);
+    return Stack(children: <Widget>[
+      Positioned.fill(
+          child: IgnorePointer(
+              child: FadeTransition(
+                  opacity: c, child: ColoredBox(color: veil ?? _lzVeil)))),
+      FadeTransition(
+        opacity: c,
+        child: SlideTransition(
+          position: Tween<Offset>(
+                  begin: const Offset(0, .035), end: Offset.zero)
+              .animate(c),
+          child: ScaleTransition(
+              scale: Tween<double>(begin: .975, end: 1).animate(c),
+              child: child),
+        ),
+      ),
+    ]);
+  }
+
+  Future<T?> _lzSheet<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    Color? backgroundColor,
+    ShapeBorder? shape,
+    bool isScrollControlled = true,
+    BoxConstraints? constraints,
+    bool isDismissible = true,
+    Color? barrierColor,
+  }) {
+    final Size size = MediaQuery.of(context).size;
+    final Color bg = backgroundColor ?? _lzBg(ivory);
+    final bool clear = bg.opacity == 0;
+    if (size.width >= _lzWideAt) {
+      final double wantW = constraints?.maxWidth ?? 620;
+      final double maxW = wantW > 760 ? 760 : wantW;
+      return showGeneralDialog<T>(
+        context: context,
+        barrierDismissible: isDismissible,
+        barrierLabel: 'Close',
+        barrierColor: Colors.transparent,
+        transitionDuration: const Duration(milliseconds: 280),
+        pageBuilder: (BuildContext ctx, Animation<double> a1,
+                Animation<double> a2) =>
+            SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxWidth: maxW, maxHeight: size.height * .88),
+                child: Material(
+                  color: clear ? Colors.transparent : bg,
+                  elevation: clear ? 0 : 22,
+                  shadowColor: plumDeep.withOpacity(.4),
+                  shape: clear
+                      ? null
+                      : RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(26),
+                          side: BorderSide(color: _lzLine(goldLine))),
+                  clipBehavior: clear ? Clip.none : Clip.antiAlias,
+                  child: builder(ctx),
+                ),
+              ),
+            ),
+          ),
+        ),
+        transitionBuilder: (BuildContext ctx, Animation<double> a1,
+                Animation<double> a2, Widget child) =>
+            _lzRise(a1, child),
+      );
+    }
+    return showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: isScrollControlled,
+      isDismissible: isDismissible,
+      useSafeArea: true,
+      backgroundColor: bg,
+      barrierColor: barrierColor ?? _lzVeil,
+      elevation: 0,
+      constraints: constraints,
+      shape: shape ??
+          const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+      clipBehavior: Clip.antiAlias,
+      builder: (BuildContext ctx) => clear
+          ? builder(ctx)
+          : Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(top: 9, bottom: 3),
+                child: Container(
+                    width: 38,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                        color: _lzLine(goldLine).withOpacity(.95),
+                        borderRadius: BorderRadius.circular(3))),
+              ),
+              Flexible(child: builder(ctx)),
+            ]),
+    );
+  }
+
+  Future<T?> _lzDialog<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    bool barrierDismissible = true,
+    Color? barrierColor,
+  }) {
+    return showGeneralDialog<T>(
+      context: context,
+      barrierDismissible: barrierDismissible,
+      barrierLabel: 'Close',
+      barrierColor: Colors.transparent,
+      transitionDuration: const Duration(milliseconds: 240),
+      pageBuilder: (BuildContext ctx, Animation<double> a1,
+              Animation<double> a2) =>
+          Theme(
+        data: Theme.of(ctx).copyWith(
+          dialogTheme: DialogThemeData(
+            backgroundColor: _lzBg(ivory),
+            surfaceTintColor: Colors.transparent,
+            elevation: 22,
+            shadowColor: plumDeep.withOpacity(.4),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: _lzLine(goldLine))),
+            titleTextStyle: _serif(size: 24),
+            contentTextStyle:
+                TextStyle(color: _lzFg(ink), fontSize: 14, height: 1.5),
+            actionsPadding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
+          ),
+          filledButtonTheme: FilledButtonThemeData(
+              style: FilledButton.styleFrom(
+                  backgroundColor: gold,
+                  foregroundColor: plumDeep,
+                  minimumSize: const Size(0, 44),
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  textStyle: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w700),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)))),
+          textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                  foregroundColor: _lzFg(muted),
+                  minimumSize: const Size(0, 44),
+                  textStyle: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w600))),
+        ),
+        child: Builder(builder: builder),
+      ),
+      transitionBuilder: (BuildContext ctx, Animation<double> a1,
+              Animation<double> a2, Widget child) =>
+          _lzRise(a1, child, veil: barrierColor),
+    );
+  }
+
+  /// The standard popup layout: an icon, a serif title and one line under it,
+  /// a close button, a body that scrolls, and a footer that never scrolls away.
+  /// Sits inside _lzSheet; lifts above the keyboard on phones.
+  Widget _lzFrame(
+    BuildContext ctx, {
+    IconData? icon,
+    required String title,
+    String? subtitle,
+    required List<Widget> children,
+    Widget? footer,
+    Widget? headerExtra,
+    VoidCallback? onBack,
+    EdgeInsets bodyPadding = const EdgeInsets.fromLTRB(22, 4, 22, 22),
+    bool fill = false,
+  }) {
+    final Widget body = SingleChildScrollView(
+      padding: bodyPadding,
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+    );
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 160),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+      child: Column(mainAxisSize: fill ? MainAxisSize.max : MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            // A popup with no title (a "done" card) gets only a close button, no empty header strip.
+            if (title.isEmpty && icon == null && onBack == null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 4, 10, 0),
+                  child: IconButton(
+                      tooltip: 'Close',
+                      icon: Icon(Icons.close_rounded, color: _lzFg(muted)),
+                      onPressed: _h(() => Navigator.of(ctx).maybePop())),
+                ),
+              )
+            else
+            Padding(
+              padding: EdgeInsets.fromLTRB(onBack != null ? 8 : 22, 14, 10, 12),
+              child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    if (onBack != null)
+                      IconButton(
+                          tooltip: 'Back',
+                          icon: Icon(Icons.arrow_back_rounded,
+                              color: _lzFg(plum)),
+                          onPressed: _h(onBack)),
+                    if (icon != null) ...<Widget>[
+                      Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                              color: plumDeep,
+                              borderRadius: BorderRadius.circular(13)),
+                          child: Icon(icon, color: gold, size: 21)),
+                      const SizedBox(width: 13),
+                    ],
+                    Expanded(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            const SizedBox(height: 2),
+                            Text(title, style: _serif(size: 25, height: 1.1)),
+                            if (subtitle != null && subtitle.isNotEmpty) ...<Widget>[
+                              const SizedBox(height: 4),
+                              Text(subtitle,
+                                  style: TextStyle(
+                                      fontSize: 13.5,
+                                      color: _lzFg(muted),
+                                      height: 1.4)),
+                            ],
+                          ]),
+                    ),
+                    IconButton(
+                        tooltip: 'Close',
+                        icon: Icon(Icons.close_rounded, color: _lzFg(muted)),
+                        onPressed: _h(() => Navigator.of(ctx).maybePop())),
+                  ]),
+            ),
+            if (headerExtra != null)
+              Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 10),
+                  child: headerExtra),
+            if (title.isNotEmpty || icon != null || onBack != null)
+              Divider(height: 1, thickness: 1, color: _lzLine(goldLine).withOpacity(.7)),
+            if (fill) Expanded(child: body) else Flexible(child: body),
+            if (footer != null)
+              Container(
+                decoration: BoxDecoration(
+                    color: _lzBg(ivory),
+                    border: Border(
+                        top: BorderSide(color: _lzLine(goldLine).withOpacity(.7)))),
+                padding: EdgeInsets.fromLTRB(
+                    18, 12, 18, 12 + MediaQuery.of(ctx).padding.bottom * .5),
+                child: footer,
+              ),
+          ]),
+    );
+  }
+
+  /// The footer row: a quiet way out on the left, one clear action on the right.
+  Widget _lzActions({
+    String? secondary,
+    VoidCallback? onSecondary,
+    required String primary,
+    VoidCallback? onPrimary,
+    bool busy = false,
+    bool danger = false,
+    IconData? icon,
+  }) {
+    return Row(children: <Widget>[
+      if (secondary != null)
+        TextButton(
+            style: TextButton.styleFrom(
+                foregroundColor: _lzFg(muted),
+                minimumSize: const Size(0, 46),
+                padding: const EdgeInsets.symmetric(horizontal: 14)),
+            onPressed: busy ? null : _h(onSecondary),
+            child: Text(secondary,
+                style: const TextStyle(
+                    fontSize: 14, fontWeight: FontWeight.w600))),
+      const Spacer(),
+      FilledButton.icon(
+        style: FilledButton.styleFrom(
+            backgroundColor: danger ? const Color(0xFFB3261E) : gold,
+            foregroundColor: danger ? Colors.white : plumDeep,
+            disabledBackgroundColor:
+                (danger ? const Color(0xFFB3261E) : gold).withOpacity(.45),
+            disabledForegroundColor:
+                (danger ? Colors.white : plumDeep).withOpacity(.7),
+            minimumSize: const Size(0, 46),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(13))),
+        onPressed: busy || onPrimary == null ? null : _h(onPrimary, _Tick.medium),
+        icon: busy
+            ? SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: danger ? Colors.white : plumDeep))
+            : Icon(icon ?? Icons.arrow_forward_rounded, size: 18),
+        label: Text(primary,
+            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700)),
+      ),
+    ]);
+  }
+
+  /// A yes/no question in the same frame. Returns true only on the main button.
+  Future<bool> _lzConfirm(String title, String body,
+      {String confirm = 'Continue',
+      String cancel = 'Not now',
+      bool danger = false,
+      IconData? icon}) async {
+    if (!mounted) return false;
+    final bool? ok = await _lzSheet<bool>(
+      context: context,
+      constraints: const BoxConstraints(maxWidth: 480),
+      builder: (BuildContext ctx) => _lzFrame(ctx,
+          icon: icon ?? (danger ? Icons.warning_amber_rounded : null),
+          title: title,
+          children: <Widget>[
+            Text(body,
+                style: TextStyle(
+                    fontSize: 14.5, color: _lzFg(ink), height: 1.5)),
+          ],
+          footer: _lzActions(
+              secondary: cancel,
+              onSecondary: () => Navigator.pop(ctx, false),
+              primary: confirm,
+              danger: danger,
+              icon: danger ? Icons.delete_outline_rounded : Icons.check_rounded,
+              onPrimary: () => Navigator.pop(ctx, true))),
+    );
+    return ok == true;
+  }
+
+  /// Work in progress inside a popup, in place of a toast nobody sees.
+  Widget _lzBusy(String label) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+            color: _lzBg(const Color(0xFFFFFDF9)),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _lzLine(goldLine))),
+        child: Row(children: <Widget>[
+          const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2.2, color: gold)),
+          const SizedBox(width: 12),
+          Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      fontSize: 14, color: _lzFg(ink), height: 1.35))),
+        ]),
+      );
+
+  /// A short hint with an icon: how something works, what happens next.
+  Widget _lzNote(IconData icon, String text) => Container(
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+        decoration: BoxDecoration(
+            color: _lzBg(const Color(0xFFF6EEDF)),
+            borderRadius: BorderRadius.circular(13)),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+          Icon(icon, size: 18, color: _lzFg(plum)),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text(text,
+                  style: TextStyle(
+                      fontSize: 13, color: _lzFg(ink), height: 1.45))),
+        ]),
+      );
+
+  /// A labelled section inside a popup.
+  Widget _lzSection(String label, {String? trailing}) => Padding(
+        padding: const EdgeInsets.only(top: 16, bottom: 8),
+        child: Row(children: <Widget>[
+          Expanded(
+              child: Text(label.toUpperCase(),
+                  style: TextStyle(
+                      fontSize: 11,
+                      letterSpacing: 1.1,
+                      fontWeight: FontWeight.w700,
+                      color: _lzFg(muted)))),
+          if (trailing != null)
+            Text(trailing,
+                style: TextStyle(fontSize: 12, color: _lzFg(muted))),
+        ]),
+      );
+
+  // ================= /POPUPS =================
+

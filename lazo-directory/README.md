@@ -172,3 +172,25 @@ Findings: the Places seed holds many non-wedding businesses in wedding categorie
 funeral/delivery florists, chains' per-city landing pages); the crawl is the cheapest way to find them. Zero verified
 or claimed vendors in 27 of the 30 metros. To extend: add a metro/category to `config/city_guides.py` first (the
 picks render only inside a guide), then run the pipeline.
+
+## Facts from vendors' own websites (2026-10-13, JC-LAZO-SITEFACTS-1013)
+Unclaimed vendor pages are stubs Google declines. `generate/site_facts.py` visits each vendor's website (home plus
+up to four linked pages: pricing, services, about, FAQ, spaces), honours robots.txt, and keeps FACTS only: the
+services and styles the site lists (per-category vocabulary, Lazo's wording), a starting price only where the site
+prints one beside "starting at / from / begins at", per-guest prices for caterers/cakes/venues, years in business
+(venues only count "established/founded", since "since 1918" is usually the building), venue capacity, languages,
+destination work, social profiles, and the site's meta description. Prose is never copied: republished site text is
+"scraped content" under Google's spam policy and would rank as a duplicate of the vendor's own site.
+- `python generate\site_facts.py --metro phoenix` (or `--tranche 7` for everything; resumable, skips sites checked in
+  the last 30 days, `--refresh` to redo, `--workers 48` to go faster) -> `generate/data/site-facts/<metro>.json`.
+  Phoenix: 1,271 sites in 12.5 min at 24 workers; all metros is roughly 20+ hours, so run it in pieces.
+- `python generate\site_facts.py --metro phoenix --report [--show 20]` summarises without crawling.
+- `LAZO_SITEFACTS=1` makes build.py call `site_facts.attach()`: unclaimed vendors whose site mentions weddings
+  (2+ hits) and is not parked get a "From <name>'s website" block (quote with the host as citation, 2+ fact rows for
+  that page's category, social links, "read from <host> in <month>", claim link) and LocalBusiness JSON-LD gains
+  sameAs / foundingDate / maximumAttendeeCapacity / knowsLanguage. `preview_metro.py` does not set it; pass it in
+  the environment. Not yet in lazo-nightly.bat.
+- `LAZO_SITEFACTS_RICH=1` also counts a vendor with 5+ site facts as rich (sitemap). Left off until the 2026-10-12
+  sitemap read is in (6-8 weeks), per the no-flip-flop rule.
+- Finding (Phoenix): 402 of 970 readable sites never mention weddings (candy stores, sign shops, PostNet, bakeries,
+  portable toilets). `wedding_hits == 0` in the facts file is the cheapest delist list we have.

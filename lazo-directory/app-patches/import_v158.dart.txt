@@ -1,0 +1,1328 @@
+  // ---------------- v158: BRING YOUR WEDDING TO LAZO (JC-LAZO-POPUP-1014) ----------------
+  // One popup, one place at a time. Pick where you are coming from (the steps
+  // name that site's own menus), then a tile per thing to bring. Each import
+  // happens inside the popup: June reads it while you watch, you check and fix
+  // what she found (vendors are an editable list: name, what they do, amount),
+  // and it ends on a "done" card. Tiles remember what came across this visit.
+  static const List<List<String>> _kImportFrom = <List<String>>[
+    <String>['knot', 'The Knot'],
+    <String>['zola', 'Zola'],
+    <String>['weddingwire', 'WeddingWire'],
+    <String>['joy', 'Joy'],
+    <String>['other', 'Somewhere else'],
+  ];
+
+  String _importFromGuess(Map<String, dynamic> couple) {
+    final dynamic acq = couple['acq'];
+    final String s =
+        (acq is Map ? (acq['source'] ?? acq['from'] ?? '') : '').toString().toLowerCase();
+    if (s.contains('knot')) return 'knot';
+    if (s.contains('zola')) return 'zola';
+    if (s.contains('wire')) return 'weddingwire';
+    if (s.contains('joy')) return 'joy';
+    return '';
+  }
+
+  /// The site's own display date when June found one, else the ISO date as "March 27, 2027".
+  String _importNiceDate(Map<String, dynamic> site) {
+    final String shown = (site['dateDisplay'] ?? '').toString().trim();
+    if (shown.isNotEmpty) return shown;
+    final String iso = (site['dateIso'] ?? '').toString().trim();
+    final DateTime? d = DateTime.tryParse(iso);
+    if (d == null) return iso;
+    const List<String> mo = <String>['January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December'];
+    return '${mo[d.month - 1]} ${d.day}, ${d.year}';
+  }
+
+  String _importFromName(String src) {
+    for (final List<String> e in _kImportFrom) {
+      if (e[0] == src) return e[1];
+    }
+    return 'the other site';
+  }
+
+  List<String> _guestExportSteps(String src) {
+    switch (src) {
+      case 'knot':
+        return <String>['On The Knot, open Guest List.', 'Choose Manage (or the three-dot menu), then Export. A CSV downloads.'];
+      case 'zola':
+        return <String>['On Zola, open Guest List.', 'Choose Manage, then Export guest list. A CSV downloads.'];
+      case 'weddingwire':
+        return <String>['On WeddingWire, open Guests.', 'Choose Export, then CSV.'];
+      case 'joy':
+        return <String>['On Joy, open your guest list.', 'Export it as a CSV file.'];
+      default:
+        return <String>['Export your guest list as a spreadsheet (CSV).', 'Any columns work. A name column is enough.'];
+    }
+  }
+
+  String _siteHint(String src) {
+    switch (src) {
+      case 'knot':
+        return 'theknot.com/us/your-names';
+      case 'zola':
+        return 'zola.com/wedding/your-names';
+      case 'weddingwire':
+        return 'weddingwire.com/web/your-names';
+      case 'joy':
+        return 'withjoy.com/your-names';
+      default:
+        return 'Your website link, or paste the page text';
+    }
+  }
+
+  Future<void> _importSheet(Map<String, dynamic> couple) async {
+    if (!mounted) return;
+    bool open = true;
+    String src = _importFromGuess(couple);
+    String view = 'home'; // home | guests | vendors | website | budget | done
+    final Map<String, String> done = <String, String>{};
+    bool busy = false;
+    String busyLabel = '';
+    String err = '';
+    String doneTitle = '', doneBody = '';
+    // guests
+    List<Map<String, dynamic>> gRows = <Map<String, dynamic>>[];
+    String gFile = '';
+    // vendors
+    String vMode = 'type';
+    final TextEditingController vText = TextEditingController();
+    final List<Map<String, dynamic>> vRows = <Map<String, dynamic>>[];
+    // website
+    final TextEditingController wText = TextEditingController();
+    Map<String, dynamic> wSite = <String, dynamic>{};
+    List<dynamic> wRegs = <dynamic>[];
+    final Set<String> wKeep = <String>{};
+    // budget
+    String bMode = '';
+    final TextEditingController bText = TextEditingController();
+    Map<String, Map<String, num>> bCats = <String, Map<String, num>>{};
+    double bTotal = 0;
+
+    const List<List<String>> siteFields = <List<String>>[
+      <String>['names', 'Names'],
+      <String>['dateIso', 'Date'],
+      <String>['venueName', 'Venue'],
+      <String>['venueAddress', 'Address'],
+      <String>['ceremonyTime', 'Ceremony'],
+      <String>['cocktailTime', 'Cocktail hour'],
+      <String>['receptionTime', 'Reception'],
+      <String>['dressCode', 'Dress code'],
+      <String>['hotelBlock', 'Hotel block'],
+      <String>['transport', 'Getting there'],
+      <String>['parking', 'Parking'],
+      <String>['travelNotes', 'Travel'],
+      <String>['story', 'Your story'],
+    ];
+
+    Map<String, dynamic> vRow(String name, String cat, String amt, String lazoId) =>
+        <String, dynamic>{
+          'name': TextEditingController(text: name),
+          'amount': TextEditingController(text: amt),
+          'category': cat,
+          'lazoVendorId': lazoId,
+        };
+
+    await _lzSheet<void>(
+      context: context,
+      constraints: const BoxConstraints(maxWidth: 640),
+      builder: (BuildContext sheetCtx) => StatefulBuilder(
+          builder: (BuildContext ctx, StateSetter set) {
+        void up(VoidCallback f) {
+          if (open) set(f);
+        }
+
+        void finish(String key, String summary, String title, String body) {
+          up(() {
+            done[key] = summary;
+            doneTitle = title;
+            doneBody = body;
+            busy = false;
+            err = '';
+            view = 'done';
+          });
+        }
+
+        Widget fromChips() => Wrap(spacing: 8, runSpacing: 8, children: <Widget>[
+              for (final List<String> e in _kImportFrom)
+                _Press(
+                  scale: .97,
+                  onTap: () => up(() => src = e[0]),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    decoration: BoxDecoration(
+                        color: src == e[0] ? plumDeep : _lzBg(cardBg),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                            color: src == e[0] ? plumDeep : _lzLine(goldLine))),
+                    child: Text(e[1],
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: src == e[0] ? gold : _lzFg(plum))),
+                  ),
+                ),
+            ]);
+
+        Widget errBox() => err.isEmpty
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                  decoration: BoxDecoration(
+                      color: _lzBg(const Color(0xFFFBEAEA)),
+                      borderRadius: BorderRadius.circular(13)),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                    const Icon(Icons.error_outline_rounded, size: 18, color: Color(0xFFB3261E)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                        child: Text(err,
+                            style: TextStyle(fontSize: 13.5, color: _lzFg(ink), height: 1.4))),
+                  ]),
+                ),
+              );
+
+        Widget stepList(List<String> steps) => Column(children: <Widget>[
+              for (int i = 0; i < steps.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                    Container(
+                        width: 24,
+                        height: 24,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(color: plumDeep, shape: BoxShape.circle),
+                        child: Text('${i + 1}',
+                            style: const TextStyle(
+                                color: gold, fontSize: 12, fontWeight: FontWeight.w800))),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(steps[i],
+                          style: TextStyle(fontSize: 14, color: _lzFg(ink), height: 1.45)),
+                    )),
+                  ]),
+                ),
+            ]);
+
+        Widget bigPick(IconData ic, String title, String sub, VoidCallback onTap) => _Press(
+              scale: .985,
+              onTap: busy ? null : onTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+                decoration: BoxDecoration(
+                    color: _lzBg(cardBg),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: gold.withOpacity(.75), width: 1.4)),
+                child: Column(children: <Widget>[
+                  Icon(ic, color: _lzFg(plum), size: 30),
+                  const SizedBox(height: 10),
+                  Text(title,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: _lzFg(plum))),
+                  const SizedBox(height: 4),
+                  Text(sub,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12.5, color: _lzFg(muted), height: 1.35)),
+                ]),
+              ),
+            );
+
+        Widget stat(String n, String label) => Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+                decoration: BoxDecoration(
+                    color: _lzBg(cardBg),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: _lzLine(goldLine))),
+                child: Column(children: <Widget>[
+                  Text(n, style: _serif(size: 28)),
+                  const SizedBox(height: 2),
+                  Text(label, style: TextStyle(fontSize: 12, color: _lzFg(muted))),
+                ]),
+              ),
+            );
+
+        Widget rowCard({required Widget child}) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+              decoration: BoxDecoration(
+                  color: _lzBg(cardBg),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: _lzLine(goldLine))),
+              child: child,
+            );
+
+        // ---------- actions ----------
+        Future<void> pickGuests() async {
+          final FilePickerResult? res = await FilePicker.platform.pickFiles(
+              type: FileType.custom,
+              allowedExtensions: <String>['csv', 'txt', 'tsv'],
+              withData: true);
+          if (res == null || res.files.isEmpty || res.files.first.bytes == null) return;
+          String bad = '';
+          final List<Map<String, dynamic>> g =
+              _parseGuestFile(res.files.first.bytes!, (String m) => bad = m);
+          up(() {
+            gRows = g;
+            gFile = res.files.first.name;
+            err = bad;
+          });
+        }
+
+        Future<void> saveGuests() async {
+          up(() {
+            busy = true;
+            err = '';
+          });
+          try {
+            final int added = await _saveImportedGuests(gRows);
+            final int skipped = gRows.length - added;
+            finish(
+                'guests',
+                '$added added',
+                added == 0 ? 'Everyone was already here' : '$added guest${added == 1 ? '' : 's'} added',
+                skipped > 0
+                    ? '$skipped already on your list ${skipped == 1 ? 'was' : 'were'} left as they were.'
+                    : 'Find them under Guests, with their parties, meals and RSVPs.');
+          } catch (e) {
+            up(() {
+              busy = false;
+              err = 'Couldn’t save the guests. Check your connection and try again.';
+            });
+          }
+        }
+
+        Future<void> readVendors() async {
+          if (vText.text.trim().isEmpty) return;
+          up(() {
+            busy = true;
+            busyLabel = 'June is reading your list and looking for each vendor on Lazo…';
+            err = '';
+          });
+          String why = '';
+          final Map<String, dynamic>? r = await _juneImport(<String, dynamic>{
+            'kind': 'vendors',
+            'input': vText.text.trim(),
+            'metroId': (couple['metroId'] ?? '').toString()
+          }, onError: (String m) => why = m);
+          final List<dynamic> vs = r != null && r['vendors'] is List ? r['vendors'] as List : <dynamic>[];
+          up(() {
+            busy = false;
+            if (r == null) {
+              err = why.isEmpty ? 'June couldn’t read that. Try again in a moment.' : why;
+              return;
+            }
+            if (vs.isEmpty) {
+              err = 'June couldn’t find vendors in that. Put each one on its own line.';
+              return;
+            }
+            vRows.clear();
+            for (final dynamic e in vs) {
+              if (e is! Map) continue;
+              final String cat = (e['category'] ?? '').toString();
+              vRows.add(vRow(
+                  (e['name'] ?? '').toString(),
+                  kCategories.any((Map<String, String> c) => c['slug'] == cat) ? cat : '',
+                  e['amount'] is num && (e['amount'] as num) > 0
+                      ? (e['amount'] as num).round().toString()
+                      : '',
+                  (e['lazoVendorId'] ?? '').toString()));
+            }
+          });
+        }
+
+        List<Map<String, dynamic>> readyVendors() => vRows
+            .where((Map<String, dynamic> r) =>
+                (r['name'] as TextEditingController).text.trim().isNotEmpty &&
+                (r['category'] as String).isNotEmpty)
+            .toList();
+
+        Future<void> saveVendors() async {
+          final List<Map<String, dynamic>> ready = readyVendors();
+          if (ready.isEmpty) return;
+          up(() {
+            busy = true;
+            err = '';
+          });
+          try {
+            final WriteBatch b = FirebaseFirestore.instance.batch();
+            for (final Map<String, dynamic> r in ready) {
+              final num? amt = num.tryParse(
+                  (r['amount'] as TextEditingController).text.replaceAll(RegExp(r'[^0-9.]'), ''));
+              b.set(
+                  _planRef.doc(r['category'] as String),
+                  <String, dynamic>{
+                    'status': 'booked',
+                    'vendorName': (r['name'] as TextEditingController).text.trim(),
+                    if ((r['lazoVendorId'] as String).isNotEmpty) 'vendorId': r['lazoVendorId'],
+                    if (amt != null && amt > 0) 'budgetActual': amt,
+                    'bookedAt': FieldValue.serverTimestamp(),
+                    'source': 'import',
+                  },
+                  SetOptions(merge: true));
+            }
+            await b.commit();
+            await _coupleRef.set(<String, dynamic>{'importedAt': FieldValue.serverTimestamp()},
+                SetOptions(merge: true));
+            _logActivity(
+                'added ${ready.length} booked vendor${ready.length == 1 ? '' : 's'} from ${_importFromName(src)}.',
+                open: 'vendors');
+            finish(
+                'vendors',
+                '${ready.length} on your team',
+                '${ready.length} vendor${ready.length == 1 ? '' : 's'} on your team',
+                'They’re marked booked, with the amounts you gave. Message the ones on Lazo straight from Vendor team.');
+          } catch (e) {
+            up(() {
+              busy = false;
+              err = 'Couldn’t save your vendors. Check your connection and try again.';
+            });
+          }
+        }
+
+        Future<void> readSite() async {
+          if (wText.text.trim().isEmpty) return;
+          up(() {
+            busy = true;
+            busyLabel = 'June is reading your website…';
+            err = '';
+          });
+          String why = '';
+          final Map<String, dynamic>? r = await _juneImport(
+              <String, dynamic>{'kind': 'website', 'input': wText.text.trim()},
+              onError: (String m) => why = m);
+          up(() {
+            busy = false;
+            if (r == null) {
+              err = why.isEmpty ? 'June couldn’t read that. Try again in a moment.' : why;
+              return;
+            }
+            wSite = r['site'] is Map ? Map<String, dynamic>.from(r['site'] as Map) : <String, dynamic>{};
+            wRegs = r['registryLinks'] is List ? r['registryLinks'] as List : <dynamic>[];
+            wKeep.clear();
+            for (final List<String> f in siteFields) {
+              if ((wSite[f[0]] ?? '').toString().trim().isNotEmpty) wKeep.add(f[0]);
+            }
+            if (wRegs.isNotEmpty) wKeep.add('registries');
+            if (wKeep.isEmpty) {
+              err = 'June couldn’t find wedding details there. If the site has a password, paste the page text instead of the link.';
+            }
+          });
+        }
+
+        Future<void> saveSite() async {
+          up(() {
+            busy = true;
+            err = '';
+          });
+          try {
+            final Map<String, dynamic> keep = <String, dynamic>{
+              for (final String k in wKeep)
+                if (k != 'registries') k: wSite[k],
+            };
+            if (wKeep.contains('dateIso') && (wSite['dateDisplay'] ?? '').toString().isNotEmpty) {
+              keep['dateDisplay'] = wSite['dateDisplay'];
+            }
+            final bool live = await _saveImportedSite(
+                keep, wKeep.contains('registries') ? wRegs : const <dynamic>[], couple);
+            final int n = wKeep.length;
+            finish(
+                'website',
+                '$n detail${n == 1 ? '' : 's'}',
+                live ? 'Your Lazo website is updated' : 'Your website is ready to design',
+                live
+                    ? 'The details you kept are on your site now. Photos you’ll add yourself - they’re yours, and we can’t copy them from another site.'
+                    : 'Open Website and pick a design - it’s filled in with what you kept.');
+          } catch (e) {
+            up(() {
+              busy = false;
+              err = 'Couldn’t save. Check your connection and try again.';
+            });
+          }
+        }
+
+        Future<void> readBudget(Map<String, dynamic> args) async {
+          up(() {
+            busy = true;
+            busyLabel = 'June is reading your budget…';
+            err = '';
+          });
+          String why = '';
+          final Map<String, dynamic>? r = await _juneImport(args, onError: (String m) => why = m);
+          up(() {
+            busy = false;
+            if (r == null) {
+              err = why.isEmpty ? 'June couldn’t read that. Try again in a moment.' : why;
+              return;
+            }
+            final List<dynamic> lines = r['lines'] is List ? r['lines'] as List : <dynamic>[];
+            bCats = <String, Map<String, num>>{};
+            bTotal = 0;
+            for (final dynamic e in lines) {
+              if (e is! Map) continue;
+              final String slug = (e['category'] ?? '').toString();
+              if (!kCategories.any((Map<String, String> c) => c['slug'] == slug)) continue;
+              final num planned = e['planned'] is num ? e['planned'] as num : 0;
+              final num paid = e['paid'] is num ? e['paid'] as num : 0;
+              final Map<String, num> cur =
+                  bCats.putIfAbsent(slug, () => <String, num>{'planned': 0, 'paid': 0});
+              cur['planned'] = (cur['planned'] ?? 0) + planned;
+              cur['paid'] = (cur['paid'] ?? 0) + paid;
+              bTotal += planned;
+            }
+            if (bCats.isEmpty) {
+              err = lines.isEmpty
+                  ? 'June couldn’t find budget lines there.'
+                  : 'June found lines but couldn’t match them to vendor categories. Try naming each line by vendor type (Photographer, Florist…).';
+            }
+          });
+        }
+
+        Future<void> pickBudgetFile() async {
+          final FilePickerResult? res = await FilePicker.platform.pickFiles(
+              type: FileType.custom,
+              allowedExtensions: <String>['csv', 'txt', 'png', 'jpg', 'jpeg', 'webp'],
+              withData: true);
+          if (res == null || res.files.isEmpty || res.files.first.bytes == null) return;
+          final String ext = (res.files.first.extension ?? '').toLowerCase();
+          final Map<String, dynamic> args = <String, dynamic>{'kind': 'budget'};
+          if (ext == 'csv' || ext == 'txt') {
+            args['input'] = utf8.decode(res.files.first.bytes!, allowMalformed: true);
+          } else {
+            if (res.files.first.bytes!.lengthInBytes > 4500 * 1024) {
+              up(() => err = 'That image is too large. A screenshot of the budget page works best.');
+              return;
+            }
+            args['imageBase64'] = base64Encode(res.files.first.bytes!);
+            args['imageType'] =
+                ext == 'png' ? 'image/png' : (ext == 'webp' ? 'image/webp' : 'image/jpeg');
+          }
+          await readBudget(args);
+        }
+
+        Future<void> saveBudget() async {
+          up(() {
+            busy = true;
+            err = '';
+          });
+          try {
+            await _saveImportedBudget(bCats, bTotal);
+            finish('budget', '${bCats.length} lines', 'Budget imported',
+                '${bCats.length} line${bCats.length == 1 ? '' : 's'}, ${_railMoney(bTotal)} planned. Real local prices sit beside each one in Budget.');
+          } catch (e) {
+            up(() {
+              busy = false;
+              err = 'Couldn’t save the budget. Check your connection and try again.';
+            });
+          }
+        }
+
+        void back() => up(() {
+              view = 'home';
+              err = '';
+              busy = false;
+            });
+
+        // ---------- views ----------
+        Widget tile(String key, IconData ic, String title, String sub, VoidCallback onTap) {
+          final String? d = done[key];
+          return _Press(
+            scale: .985,
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+              decoration: BoxDecoration(
+                  color: _lzBg(cardBg),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: d != null ? vGreen.withOpacity(.55) : _lzLine(goldLine))),
+              child: Row(children: <Widget>[
+                Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                        color: d != null ? vGreen.withOpacity(.12) : plumDeep,
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Icon(d != null ? Icons.check_rounded : ic,
+                        color: d != null ? vGreen : gold, size: 20)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                    Text(title,
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _lzFg(plum))),
+                    const SizedBox(height: 2),
+                    Text(d ?? sub,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                            fontSize: 12.5,
+                            color: d != null ? vGreen : _lzFg(muted),
+                            fontWeight: d != null ? FontWeight.w600 : FontWeight.w400,
+                            height: 1.35)),
+                  ]),
+                ),
+                Icon(Icons.chevron_right_rounded, color: _lzFg(muted)),
+              ]),
+            ),
+          );
+        }
+
+        if (view == 'done') {
+          return _lzFrame(ctx, title: '', children: <Widget>[
+            const SizedBox(height: 8),
+            Center(
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: .6, end: 1),
+                duration: const Duration(milliseconds: 420),
+                curve: Curves.easeOutBack,
+                builder: (BuildContext c, double v, Widget? ch) => Transform.scale(scale: v, child: ch),
+                child: Container(
+                    width: 74,
+                    height: 74,
+                    decoration: BoxDecoration(color: vGreen.withOpacity(.12), shape: BoxShape.circle),
+                    child: const Icon(Icons.check_rounded, color: vGreen, size: 40)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(doneTitle, textAlign: TextAlign.center, style: _serif(size: 28)),
+            const SizedBox(height: 8),
+            Text(doneBody,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14.5, color: _lzFg(muted), height: 1.5)),
+            const SizedBox(height: 8),
+          ], footer: _lzActions(
+              secondary: 'Bring something else',
+              onSecondary: back,
+              primary: 'Done',
+              icon: Icons.check_rounded,
+              onPrimary: () => Navigator.pop(sheetCtx)));
+        }
+
+        if (view == 'guests') {
+          final int parties = gRows
+              .map((Map<String, dynamic> g) => (g['party'] ?? '').toString())
+              .where((String p) => p.isNotEmpty)
+              .toSet()
+              .length;
+          final int yes = gRows.where((Map<String, dynamic> g) => g['rsvp'] == 'yes').length;
+          return _lzFrame(ctx,
+              onBack: back,
+              icon: Icons.people_alt_rounded,
+              title: 'Guest list',
+              subtitle: gRows.isEmpty
+                  ? 'From ${_importFromName(src)}, in two steps.'
+                  : 'Here’s what’s in $gFile.',
+              children: gRows.isEmpty
+                  ? <Widget>[
+                      const SizedBox(height: 14),
+                      stepList(<String>[
+                        ..._guestExportSteps(src),
+                        'Choose the file below. You’ll see everyone before anything is saved.',
+                      ]),
+                      const SizedBox(height: 6),
+                      bigPick(Icons.upload_file_rounded, 'Choose your guest list file',
+                          'CSV or TXT. Names, parties, meals, RSVPs and addresses come across.', pickGuests),
+                      errBox(),
+                    ]
+                  : <Widget>[
+                      const SizedBox(height: 14),
+                      Row(children: <Widget>[
+                        stat('${gRows.length}', 'guests'),
+                        const SizedBox(width: 8),
+                        stat('$parties', 'parties'),
+                        const SizedBox(width: 8),
+                        stat('$yes', 'said yes'),
+                      ]),
+                      _lzSection('First few', trailing: gRows.length > 6 ? '+ ${gRows.length - 6} more' : null),
+                      for (final Map<String, dynamic> g in gRows.take(6))
+                        rowCard(
+                          child: Row(children: <Widget>[
+                            Expanded(
+                              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                                Text(g['name'].toString(),
+                                    style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: _lzFg(ink))),
+                                if (<String>[(g['party'] ?? '').toString(), (g['meal'] ?? '').toString()]
+                                    .any((String x) => x.isNotEmpty))
+                                  Text(
+                                      <String>[(g['party'] ?? '').toString(), (g['meal'] ?? '').toString()]
+                                          .where((String x) => x.isNotEmpty)
+                                          .join(' · '),
+                                      style: TextStyle(fontSize: 12.5, color: _lzFg(muted))),
+                              ]),
+                            ),
+                            Text(g['rsvp'] == 'yes' ? 'Yes' : (g['rsvp'] == 'no' ? 'No' : 'Waiting'),
+                                style: TextStyle(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: g['rsvp'] == 'yes'
+                                        ? vGreen
+                                        : (g['rsvp'] == 'no' ? const Color(0xFFB3261E) : _lzFg(muted)))),
+                          ]),
+                        ),
+                      const SizedBox(height: 6),
+                      _lzNote(Icons.verified_user_outlined,
+                          'Anyone already on your list by name is skipped, so importing twice is safe.'),
+                      errBox(),
+                    ],
+              footer: gRows.isEmpty
+                  ? null
+                  : _lzActions(
+                      secondary: 'Choose another file',
+                      onSecondary: pickGuests,
+                      primary: 'Add ${gRows.length} guest${gRows.length == 1 ? '' : 's'}',
+                      icon: Icons.person_add_alt_1_rounded,
+                      busy: busy,
+                      onPrimary: saveGuests));
+        }
+
+        if (view == 'vendors') {
+          final List<Map<String, dynamic>> ready = readyVendors();
+          final Set<String> seen = <String>{};
+          bool dupe = false;
+          for (final Map<String, dynamic> r in ready) {
+            if (!seen.add(r['category'] as String)) dupe = true;
+          }
+          final Widget modeSwitch = Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+                color: _lzBg(const Color(0xFFF1E8DA)), borderRadius: BorderRadius.circular(13)),
+            child: Row(children: <Widget>[
+              for (final List<String> m in const <List<String>>[
+                <String>['type', 'Type their names'],
+                <String>['email', 'Forward emails'],
+              ])
+                Expanded(
+                  child: _Press(
+                    onTap: () => up(() => vMode = m[0]),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: vMode == m[0] ? _lzBg(cardBg) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: vMode == m[0]
+                              ? <BoxShadow>[BoxShadow(color: plumDeep.withOpacity(.08), blurRadius: 6, offset: const Offset(0, 2))]
+                              : null),
+                      child: Text(m[1],
+                          style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: vMode == m[0] ? _lzFg(plum) : _lzFg(muted))),
+                    ),
+                  ),
+                ),
+            ]),
+          );
+          final List<Widget> body;
+          Widget? foot;
+          if (vRows.isNotEmpty) {
+            body = <Widget>[
+              _lzSection('Check what June found', trailing: '${vRows.length} vendor${vRows.length == 1 ? '' : 's'}'),
+              for (int i = 0; i < vRows.length; i++)
+                rowCard(
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                    Expanded(
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                        Row(children: <Widget>[
+                          Expanded(
+                            child: TextField(
+                              controller: vRows[i]['name'] as TextEditingController,
+                              onChanged: (_) => up(() {}),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _lzFg(ink)),
+                              decoration: InputDecoration(
+                                  isDense: true,
+                                  border: InputBorder.none,
+                                  hintText: 'Vendor name',
+                                  hintStyle: TextStyle(color: _lzFg(muted))),
+                            ),
+                          ),
+                          if ((vRows[i]['lazoVendorId'] as String).isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                  color: vGreen.withOpacity(.12), borderRadius: BorderRadius.circular(20)),
+                              child: const Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                                Icon(Icons.check_circle_rounded, size: 13, color: vGreen),
+                                SizedBox(width: 4),
+                                Text('On Lazo',
+                                    style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: vGreen)),
+                              ]),
+                            ),
+                        ]),
+                        const SizedBox(height: 6),
+                        Row(children: <Widget>[
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                  color: _lzBg(Colors.white),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                      color: (vRows[i]['category'] as String).isEmpty
+                                          ? gold
+                                          : _lzLine(goldLine))),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  isExpanded: true,
+                                  value: (vRows[i]['category'] as String).isEmpty
+                                      ? null
+                                      : vRows[i]['category'] as String,
+                                  hint: Text('What they do',
+                                      style: TextStyle(fontSize: 13.5, color: _lzFg(muted))),
+                                  dropdownColor: _lzBg(ivory),
+                                  style: TextStyle(fontSize: 13.5, color: _lzFg(ink)),
+                                  items: <DropdownMenuItem<String>>[
+                                    for (final Map<String, String> c in kCategories)
+                                      DropdownMenuItem<String>(value: c['slug'], child: Text(c['label']!)),
+                                  ],
+                                  onChanged: (String? v) => up(() => vRows[i]['category'] = v ?? ''),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 112,
+                            child: TextField(
+                              controller: vRows[i]['amount'] as TextEditingController,
+                              keyboardType: TextInputType.number,
+                              style: TextStyle(fontSize: 13.5, color: _lzFg(ink)),
+                              decoration: InputDecoration(
+                                  isDense: true,
+                                  prefixText: '\$ ',
+                                  hintText: 'Amount',
+                                  filled: true,
+                                  fillColor: _lzBg(Colors.white),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                                  enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: BorderSide(color: _lzLine(goldLine))),
+                                  focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: const BorderSide(color: gold, width: 1.4))),
+                            ),
+                          ),
+                        ]),
+                      ]),
+                    ),
+                    IconButton(
+                        tooltip: 'Remove',
+                        icon: Icon(Icons.close_rounded, size: 19, color: _lzFg(muted)),
+                        onPressed: _h(() => up(() => vRows.removeAt(i)))),
+                  ]),
+                ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                    style: TextButton.styleFrom(foregroundColor: _lzFg(plum)),
+                    onPressed: _h(() => up(() => vRows.add(vRow('', '', '', '')))),
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('Add another vendor',
+                        style: TextStyle(fontWeight: FontWeight.w700))),
+              ),
+              if (dupe)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: _lzNote(Icons.info_outline_rounded,
+                      'Your team keeps one vendor per category, so for two of the same kind the last one is kept.'),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: _lzNote(Icons.handshake_outlined,
+                    'They join your vendor team as booked. Change any of it later from Vendor team.'),
+              ),
+              errBox(),
+            ];
+            foot = _lzActions(
+                secondary: 'Start over',
+                onSecondary: () => up(() {
+                      vRows.clear();
+                      err = '';
+                    }),
+                primary: ready.isEmpty
+                    ? 'Pick what each one does'
+                    : 'Add ${ready.length} to my team',
+                icon: Icons.group_add_rounded,
+                busy: busy,
+                onPrimary: ready.isEmpty ? null : saveVendors);
+          } else if (vMode == 'email') {
+            body = <Widget>[
+              const SizedBox(height: 14),
+              modeSwitch,
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.fromLTRB(18, 16, 10, 16),
+                decoration: BoxDecoration(color: plumDeep, borderRadius: BorderRadius.circular(16)),
+                child: Row(children: <Widget>[
+                  const Icon(Icons.alternate_email_rounded, color: gold, size: 22),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: SelectableText('import@meetlazo.com',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                  ),
+                  TextButton.icon(
+                      style: TextButton.styleFrom(foregroundColor: gold),
+                      onPressed: _h(() async {
+                        await Clipboard.setData(const ClipboardData(text: 'import@meetlazo.com'));
+                        _toast('Copied.');
+                      }),
+                      icon: const Icon(Icons.copy_rounded, size: 17),
+                      label: const Text('Copy', style: TextStyle(fontWeight: FontWeight.w700))),
+                ]),
+              ),
+              const SizedBox(height: 18),
+              stepList(<String>[
+                'Find each vendor’s booking confirmation or contract email.',
+                'Forward it to the address above from the email you use for Lazo.',
+                'June adds them to your team as booked, with the amount and the contract when they’re in the email. Usually within a few minutes.',
+              ]),
+            ];
+            foot = _lzActions(primary: 'Done', icon: Icons.check_rounded, onPrimary: back);
+          } else {
+            body = <Widget>[
+              const SizedBox(height: 14),
+              modeSwitch,
+              const SizedBox(height: 16),
+              TextField(
+                controller: vText,
+                minLines: 5,
+                maxLines: 10,
+                enabled: !busy,
+                onChanged: (_) => up(() {}),
+                style: TextStyle(color: _lzFg(ink), fontSize: 14.5, height: 1.45),
+                decoration: _lightDeco('',
+                    hint: 'Atavia Weddings, photographer, \$2,400\nThe Farm at South Mountain, venue\nBloom & Vine'),
+              ),
+              const SizedBox(height: 8),
+              Text('One per line. Add what they do and the price if you know it. June fills in the rest and finds them on Lazo.',
+                  style: TextStyle(fontSize: 12.5, color: _lzFg(muted), height: 1.4)),
+              if (busy) ...<Widget>[const SizedBox(height: 14), _lzBusy(busyLabel)],
+              errBox(),
+            ];
+            foot = _lzActions(
+                primary: 'Read my list',
+                icon: Icons.auto_awesome_rounded,
+                busy: busy,
+                onPrimary: vText.text.trim().isEmpty ? null : readVendors);
+          }
+          return _lzFrame(ctx,
+              onBack: back,
+              icon: Icons.handshake_rounded,
+              title: 'Vendors you’ve booked',
+              subtitle: vRows.isEmpty
+                  ? 'Your team, without retyping it.'
+                  : 'Fix anything June got wrong, then add them.',
+              children: body,
+              footer: foot);
+        }
+
+        if (view == 'website') {
+          return _lzFrame(ctx,
+              onBack: back,
+              icon: Icons.language_rounded,
+              title: 'Wedding website',
+              subtitle: wKeep.isEmpty
+                  ? 'Your story, schedule and travel details, carried over.'
+                  : 'Keep what you want on your Lazo site.',
+              children: wKeep.isEmpty
+                  ? <Widget>[
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: wText,
+                        minLines: 2,
+                        maxLines: 8,
+                        enabled: !busy,
+                        onChanged: (_) => up(() {}),
+                        style: TextStyle(color: _lzFg(ink), fontSize: 14.5),
+                        decoration: _lightDeco('Link to your current website', hint: _siteHint(src)),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Password-protected? Paste the page text instead of the link.',
+                          style: TextStyle(fontSize: 12.5, color: _lzFg(muted), height: 1.4)),
+                      if (busy) ...<Widget>[const SizedBox(height: 14), _lzBusy(busyLabel)],
+                      errBox(),
+                    ]
+                  : <Widget>[
+                      _lzSection('What June found', trailing: '${wKeep.length} kept'),
+                      for (final List<String> f in siteFields)
+                        if ((wSite[f[0]] ?? '').toString().trim().isNotEmpty)
+                          _Press(
+                            scale: .99,
+                            onTap: () => up(() => wKeep.contains(f[0]) ? wKeep.remove(f[0]) : wKeep.add(f[0])),
+                            child: rowCard(
+                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                                Icon(wKeep.contains(f[0]) ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                                    size: 21, color: wKeep.contains(f[0]) ? gold2 : _lzFg(muted)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                                    Text(f[1].toUpperCase(),
+                                        style: TextStyle(
+                                            fontSize: 10.5,
+                                            letterSpacing: 1,
+                                            fontWeight: FontWeight.w700,
+                                            color: _lzFg(muted))),
+                                    const SizedBox(height: 3),
+                                    Text(f[0] == 'dateIso' ? _importNiceDate(wSite) : wSite[f[0]].toString().trim(),
+                                        maxLines: f[0] == 'story' ? 4 : 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(fontSize: 14, color: _lzFg(ink), height: 1.4)),
+                                  ]),
+                                ),
+                              ]),
+                            ),
+                          ),
+                      if (wRegs.isNotEmpty)
+                        _Press(
+                          scale: .99,
+                          onTap: () => up(() =>
+                              wKeep.contains('registries') ? wKeep.remove('registries') : wKeep.add('registries')),
+                          child: rowCard(
+                            child: Row(children: <Widget>[
+                              Icon(wKeep.contains('registries') ? Icons.check_box_rounded : Icons.check_box_outline_blank_rounded,
+                                  size: 21, color: wKeep.contains('registries') ? gold2 : _lzFg(muted)),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text('${wRegs.length} registry link${wRegs.length == 1 ? '' : 's'}',
+                                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: _lzFg(ink))),
+                              ),
+                            ]),
+                          ),
+                        ),
+                      const SizedBox(height: 6),
+                      _lzNote(Icons.photo_library_outlined,
+                          'Photos don’t come across - they’re yours, and we can’t copy them from another site. Add them in Website.'),
+                      errBox(),
+                    ],
+              footer: wKeep.isEmpty
+                  ? _lzActions(
+                      primary: 'Read my website',
+                      icon: Icons.auto_awesome_rounded,
+                      busy: busy,
+                      onPrimary: wText.text.trim().isEmpty ? null : readSite)
+                  : _lzActions(
+                      secondary: 'Try another link',
+                      onSecondary: () => up(() {
+                            wKeep.clear();
+                            wSite = <String, dynamic>{};
+                            wRegs = <dynamic>[];
+                          }),
+                      primary: 'Use ${wKeep.length} detail${wKeep.length == 1 ? '' : 's'}',
+                      icon: Icons.check_rounded,
+                      busy: busy,
+                      onPrimary: saveSite));
+        }
+
+        if (view == 'budget') {
+          final List<Widget> body;
+          Widget? foot;
+          if (bCats.isNotEmpty) {
+            body = <Widget>[
+              _lzSection('What June found', trailing: '${_railMoney(bTotal)} planned'),
+              for (final MapEntry<String, Map<String, num>> en in bCats.entries)
+                rowCard(
+                  child: Row(children: <Widget>[
+                    Expanded(
+                        child: Text(_catLabel(en.key),
+                            style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: _lzFg(ink)))),
+                    Column(crossAxisAlignment: CrossAxisAlignment.end, children: <Widget>[
+                      Text(_railMoney((en.value['planned'] ?? 0).toDouble()),
+                          style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w700, color: _lzFg(plum))),
+                      if ((en.value['paid'] ?? 0) > 0)
+                        Text('${_railMoney((en.value['paid'] ?? 0).toDouble())} paid',
+                            style: const TextStyle(fontSize: 12, color: vGreen, fontWeight: FontWeight.w600)),
+                    ]),
+                  ]),
+                ),
+              const SizedBox(height: 6),
+              _lzNote(Icons.savings_outlined, 'These replace the planned amounts for the same categories in your budget.'),
+              errBox(),
+            ];
+            foot = _lzActions(
+                secondary: 'Start over',
+                onSecondary: () => up(() {
+                      bCats = <String, Map<String, num>>{};
+                      bMode = '';
+                    }),
+                primary: 'Use ${bCats.length} line${bCats.length == 1 ? '' : 's'}',
+                icon: Icons.check_rounded,
+                busy: busy,
+                onPrimary: saveBudget);
+          } else if (bMode == 'paste') {
+            body = <Widget>[
+              const SizedBox(height: 14),
+              TextField(
+                controller: bText,
+                minLines: 6,
+                maxLines: 12,
+                enabled: !busy,
+                onChanged: (_) => up(() {}),
+                style: TextStyle(color: _lzFg(ink), fontSize: 14.5, height: 1.45),
+                decoration: _lightDeco('',
+                    hint: 'Photographer 2,400 planned, 2,400 paid\nFlorist 1,500 planned\nVenue 9,000'),
+              ),
+              if (busy) ...<Widget>[const SizedBox(height: 14), _lzBusy(busyLabel)],
+              errBox(),
+            ];
+            foot = _lzActions(
+                secondary: 'Upload instead',
+                onSecondary: () => up(() => bMode = ''),
+                primary: 'Read my budget',
+                icon: Icons.auto_awesome_rounded,
+                busy: busy,
+                onPrimary: bText.text.trim().isEmpty
+                    ? null
+                    : () => readBudget(<String, dynamic>{'kind': 'budget', 'input': bText.text.trim()}));
+          } else {
+            body = <Widget>[
+              const SizedBox(height: 14),
+              IntrinsicHeight(
+                  child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: <Widget>[
+                Expanded(
+                    child: bigPick(Icons.add_photo_alternate_outlined, 'Upload it',
+                        'A spreadsheet, or a screenshot of the budget page', pickBudgetFile)),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: bigPick(Icons.notes_rounded, 'Paste it', 'Copy the lines in as text',
+                        () => up(() => bMode = 'paste'))),
+              ])),
+              if (busy) ...<Widget>[const SizedBox(height: 14), _lzBusy(busyLabel)],
+              errBox(),
+            ];
+          }
+          return _lzFrame(ctx,
+              onBack: back,
+              icon: Icons.savings_rounded,
+              title: 'Budget',
+              subtitle: bCats.isEmpty
+                  ? 'Each line lands in your Lazo budget, with local prices beside it.'
+                  : 'Check the amounts, then use them.',
+              children: body,
+              footer: foot);
+        }
+
+        // home
+        return _lzFrame(ctx,
+            icon: Icons.move_down_rounded,
+            title: 'Bring your wedding to Lazo',
+            subtitle: 'Nothing changes on the other site, and you’ll see everything before it’s saved.',
+            headerExtra: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Text('Coming from',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _lzFg(muted))),
+              const SizedBox(height: 8),
+              fromChips(),
+            ]),
+            children: <Widget>[
+              const SizedBox(height: 14),
+              LayoutBuilder(builder: (BuildContext lc, BoxConstraints cons) {
+                final bool two = cons.maxWidth >= 500;
+                final double w = two ? (cons.maxWidth - 10) / 2 : cons.maxWidth;
+                final List<Widget> tiles = <Widget>[
+                  tile('guests', Icons.people_alt_rounded, 'Guest list', 'Names, parties, meals and RSVPs',
+                      () => up(() => view = 'guests')),
+                  tile('vendors', Icons.handshake_rounded, 'Booked vendors', 'Your team, with amounts and contracts',
+                      () => up(() => view = 'vendors')),
+                  tile('website', Icons.language_rounded, 'Wedding website', 'Story, schedule and travel details',
+                      () => up(() => view = 'website')),
+                  tile('budget', Icons.savings_rounded, 'Budget', 'From a spreadsheet or a screenshot',
+                      () => up(() => view = 'budget')),
+                  tile('registry', Icons.card_giftcard_rounded, 'Registry', 'Stays where it is - we link to it',
+                      () async {
+                    final DocumentSnapshot<Map<String, dynamic>> c = await _coupleRef.get();
+                    final List<Map<String, dynamic>> cur = <Map<String, dynamic>>[
+                      for (final dynamic e in (c.data()?['registryLinks'] as List?) ?? const <dynamic>[])
+                        if (e is Map) Map<String, dynamic>.from(e)
+                    ];
+                    final int before = cur.length;
+                    await _addRegistryLink(cur);
+                    final DocumentSnapshot<Map<String, dynamic>> c2 = await _coupleRef.get();
+                    final int after = ((c2.data()?['registryLinks'] as List?) ?? const <dynamic>[]).length;
+                    if (after > before) up(() => done['registry'] = 'Linked on your website');
+                  }),
+                ];
+                return Wrap(spacing: 10, runSpacing: 10, children: <Widget>[
+                  for (final Widget t in tiles) SizedBox(width: w, child: t),
+                ]);
+              }),
+            ],
+            footer: _lzActions(
+                primary: done.isEmpty ? 'Maybe later' : 'Done',
+                icon: done.isEmpty ? Icons.schedule_rounded : Icons.check_rounded,
+                onPrimary: () => Navigator.pop(sheetCtx)));
+      }),
+    );
+    open = false;
+  }
+
+  /// Reads a guest-list export (Knot, Zola, WeddingWire, Joy or any CSV).
+  List<Map<String, dynamic>> _parseGuestFile(Uint8List bytes, void Function(String) onErr) {
+    String text = String.fromCharCodes(bytes);
+    try {
+      text = utf8.decode(bytes, allowMalformed: true);
+    } catch (_) {}
+    if (text.contains('\t') && !text.contains(',')) text = text.replaceAll('\t', ',');
+    final List<List<String>> rows = _parseCsv(text);
+    if (rows.length < 2) {
+      onErr('That file has no guest rows.');
+      return <Map<String, dynamic>>[];
+    }
+    final List<String> h = rows.first;
+    final int iFirst = _colIndex(h, <String>['firstname', 'first']);
+    final int iLast = _colIndex(h, <String>['lastname', 'last', 'surname']);
+    final int iName = _colIndex(h, <String>['guestname', 'fullname', 'name', 'guest']);
+    final int iEmail = _colIndex(h, <String>['email', 'emailaddress']);
+    final int iPhone = _colIndex(h, <String>['phone', 'mobile', 'cell']);
+    final int iParty = _colIndex(h, <String>['partyname', 'party', 'household', 'group', 'family']);
+    final int iRsvp = _colIndex(h, <String>['rsvpstatus', 'rsvp', 'attending', 'response', 'status']);
+    final int iMeal = _colIndex(h, <String>['meal', 'mealchoice', 'entree', 'dinner']);
+    final int iPlus = _colIndex(h, <String>['plusones', 'plusone', 'additionalguests', 'guests', 'partysize']);
+    final int iAddr = _colIndex(h, <String>['address', 'street', 'mailingaddress']);
+    if (iName < 0 && iFirst < 0) {
+      onErr('Couldn’t find a name column. Check the file has headers like First Name and Last Name.');
+      return <Map<String, dynamic>>[];
+    }
+    String cell(List<String> r, int i) => (i >= 0 && i < r.length) ? r[i].trim() : '';
+    final List<Map<String, dynamic>> guests = <Map<String, dynamic>>[];
+    for (final List<String> r in rows.skip(1)) {
+      // v139: Knot and Zola exports carry First / Last; a column that only
+      // CONTAINS "name" (First Name) used to win and drop every surname
+      String name = (iFirst >= 0 || iLast >= 0) ? ('${cell(r, iFirst)} ${cell(r, iLast)}').trim() : '';
+      if (name.isEmpty && iName >= 0) name = cell(r, iName);
+      if (name.isEmpty) continue;
+      final String rsvpRaw = cell(r, iRsvp).toLowerCase();
+      final String rsvp = rsvpRaw.contains('accept') ||
+              rsvpRaw == 'yes' ||
+              rsvpRaw.contains('attending') && !rsvpRaw.contains('not')
+          ? 'yes'
+          : (rsvpRaw.contains('decline') || rsvpRaw == 'no' || rsvpRaw.contains('not attending')
+              ? 'no'
+              : 'pending');
+      int plus = 0;
+      final String pRaw = cell(r, iPlus).toLowerCase();
+      if (pRaw.isNotEmpty) {
+        final int? n = int.tryParse(pRaw.replaceAll(RegExp(r'[^0-9]'), ''));
+        if (n != null)
+          plus = iPlus >= 0 && h[iPlus].toLowerCase().contains('size') ? (n - 1).clamp(0, 20) : n.clamp(0, 20);
+        else if (pRaw == 'yes' || pRaw == 'true') plus = 1;
+      }
+      guests.add(<String, dynamic>{
+        'name': name,
+        'email': cell(r, iEmail),
+        'phone': cell(r, iPhone),
+        'party': cell(r, iParty),
+        'rsvp': rsvp,
+        'meal': cell(r, iMeal),
+        'plusOnes': plus,
+        'address': cell(r, iAddr),
+        'source': 'import',
+      });
+    }
+    if (guests.isEmpty) onErr('No guests found in that file.');
+    return guests;
+  }
+
+  /// Adds guests not already on the list (by name). Returns how many were added.
+  Future<int> _saveImportedGuests(List<Map<String, dynamic>> guests) async {
+    final QuerySnapshot<Map<String, dynamic>> existing = await _coupleRef.collection('guests').get();
+    final Set<String> have = existing.docs
+        .map((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
+            (d.data()['name'] ?? '').toString().trim().toLowerCase())
+        .toSet();
+    int added = 0;
+    WriteBatch b = FirebaseFirestore.instance.batch();
+    int inBatch = 0;
+    for (final Map<String, dynamic> g in guests) {
+      final String key = g['name'].toString().toLowerCase();
+      if (have.contains(key)) continue;
+      have.add(key); // v139: no dupes within the file
+      b.set(_coupleRef.collection('guests').doc(),
+          <String, dynamic>{...g, 'createdAt': FieldValue.serverTimestamp()});
+      added++;
+      inBatch++;
+      if (inBatch >= 400) {
+        await b.commit();
+        b = FirebaseFirestore.instance.batch();
+        inBatch = 0;
+      }
+    }
+    if (inBatch > 0) await b.commit();
+    await _coupleRef.set(<String, dynamic>{'importedAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+    if (added > 0) _logActivity('imported $added guest${added == 1 ? '' : 's'} to the list.', open: 'guests');
+    return added;
+  }
+
+  /// Saves the website details the couple kept. True when a live Lazo site was updated.
+  Future<bool> _saveImportedSite(
+      Map<String, dynamic> site, List<dynamic> regs, Map<String, dynamic> couple) async {
+    final Map<String, dynamic> clean = <String, dynamic>{
+      for (final MapEntry<String, dynamic> e in site.entries)
+        if ((e.value ?? '').toString().trim().isNotEmpty) e.key: e.value.toString().trim(),
+    };
+    final QuerySnapshot<Map<String, dynamic>> q = await FirebaseFirestore.instance
+        .collection('weddingSites')
+        .where('coupleUid', isEqualTo: _cid)
+        .limit(1)
+        .get();
+    if (clean.isNotEmpty) {
+      if (q.docs.isNotEmpty) {
+        await q.docs.first.reference
+            .set(<String, dynamic>{...clean, 'updatedAt': FieldValue.serverTimestamp()}, SetOptions(merge: true));
+      } else {
+        await _coupleRef.set(<String, dynamic>{'siteDraft': clean}, SetOptions(merge: true));
+      }
+    }
+    final Map<String, dynamic> cp = <String, dynamic>{'importedAt': FieldValue.serverTimestamp()};
+    if ((clean['names'] ?? '').toString().isNotEmpty && (couple['names'] ?? '').toString().trim().isEmpty)
+      cp['names'] = clean['names'];
+    if ((clean['dateIso'] ?? '').toString().isNotEmpty && couple['weddingDate'] == null) {
+      final DateTime? d = DateTime.tryParse(clean['dateIso'].toString());
+      if (d != null) cp['weddingDate'] = Timestamp.fromDate(d);
+    }
+    await _coupleRef.set(cp, SetOptions(merge: true));
+    if (regs.isNotEmpty) {
+      final DocumentSnapshot<Map<String, dynamic>> c = await _coupleRef.get();
+      final List<Map<String, dynamic>> cur = <Map<String, dynamic>>[
+        for (final dynamic e in (c.data()?['registryLinks'] as List?) ?? const <dynamic>[])
+          if (e is Map) Map<String, dynamic>.from(e)
+      ];
+      for (final dynamic e in regs) {
+        if (e is! Map) continue;
+        final String url = (e['url'] ?? '').toString();
+        if (!_urlOk(url) || cur.any((Map<String, dynamic> l) => l['url'] == url)) continue;
+        final List<String>? st = _storeFor(url);
+        cur.add(<String, dynamic>{
+          'label': (e['label'] ?? (st == null ? 'Registry' : st[1])).toString(),
+          'url': url,
+          'store': st == null ? '' : st[1]
+        });
+      }
+      await _saveRegistry(cur);
+    }
+    return q.docs.isNotEmpty;
+  }
+
+  Future<void> _saveImportedBudget(Map<String, Map<String, num>> byCat, double total) async {
+    final WriteBatch b = FirebaseFirestore.instance.batch();
+    for (final MapEntry<String, Map<String, num>> en in byCat.entries) {
+      b.set(
+          _planRef.doc(en.key),
+          <String, dynamic>{
+            'budgetPlanned': en.value['planned'],
+            if ((en.value['paid'] ?? 0) > 0) 'budgetActual': en.value['paid']
+          },
+          SetOptions(merge: true));
+    }
+    await b.commit();
+    final DocumentSnapshot<Map<String, dynamic>> c = await _coupleRef.get();
+    final num curTotal = c.data()?['budgetTotal'] is num ? c.data()!['budgetTotal'] as num : 0;
+    await _coupleRef.set(<String, dynamic>{
+      if (curTotal <= 0 && total > 0) 'budgetTotal': total,
+      'importedAt': FieldValue.serverTimestamp()
+    }, SetOptions(merge: true));
+  }
+

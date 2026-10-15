@@ -85,6 +85,13 @@ def _vendor_is_rich(v) -> bool:
             return True
         if (v.get("priceSheetUrl") or "").strip():
             return True
+        # JC-LAZO-SITEFACTS-1013/1014: enough facts from their own site to stand on. Submitted in batches, best
+        # first: LAZO_SITEFACTS_MIN=6 (2026-10-14, ~4,100 pages) needs 6+ facts including a price, founding year or
+        # venue capacity; lower it to 5 (~10,500) once Search Console shows the first batch being indexed.
+        import os as _os
+        if (_os.environ.get("LAZO_SITEFACTS_RICH") == "1" and v.get("site_strong")
+                and int(v.get("site_score") or 0) >= int(_os.environ.get("LAZO_SITEFACTS_MIN") or 6)):
+            return True
         if v.get("priceSheetPages") or v.get("addOns"):
             return True
     except Exception:
@@ -629,6 +636,11 @@ def build(vendors: list[dict]):
                 v["slug"] = f"{v['slug']}-{v['placeId'][-5:].lower()}"
             seen[v["slug"]] = True
     _writeback_slugs(by_metro)
+    # JC-LAZO-SITEFACTS-1013: facts read from each vendor's own website (generate/site_facts.py)
+    import os as _os
+    if _os.environ.get("LAZO_SITEFACTS") == "1":
+        import site_facts
+        site_facts.attach(by_metro)
     build_content(by_metro)
 
     static_src = ROOT / "generate" / "static"

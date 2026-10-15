@@ -26,5 +26,13 @@ build.DIST.mkdir(exist_ok=True)
 
 vendors = build.load_vendors_firestore(7)
 vendors = build.saturday_enrich(vendors)
-build.build(vendors)
+# build() rewrites vendor_paths.json from the pages it wrote; a one-metro preview would leave the nightly a
+# one-metro map and lose every other metro's 301 history. Put the real one back afterwards.
+_paths = ROOT / "generate" / "vendor_paths.json"
+_saved = _paths.read_bytes() if _paths.exists() else None
+try:
+    build.build(vendors)
+finally:
+    if _saved is not None:
+        _paths.write_bytes(_saved)
 print("preview written to", build.DIST / metro)
