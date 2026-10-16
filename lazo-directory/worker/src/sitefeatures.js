@@ -231,6 +231,91 @@ ul{list-style:none;padding:0;margin:0}li{background:#FFFDF9;border:1px solid #E6
   return new Response(html, { headers: { "content-type": "text/html;charset=utf-8", "cache-control": "public, max-age=60", "x-robots-tag": "noindex" } });
 }
 
+// ---------------------------------------------------------------- the DJ's set list
+// JC-LAZO-WORKER-1016-SETLIST: GET /w/{slug}/setlist - the couple's whole music
+// plan for their DJ, live: the moments (with times), must plays, the set list by
+// section (skipped sections marked, clean edits flagged, the couple's own picks
+// marked), do-not-play, avoid and vibe. Music widget v27 mirrors it to
+// weddingSites/{slug}/playlist/setlist on every save (notes stay out - they go
+// to the DJ in the thread). Print / Save as PDF and Copy as text.
+export async function setlistPage(slug) {
+  const site = await fsDoc("weddingSites/" + encodeURIComponent(slug));
+  if (!site) return new Response("Not found", { status: 404 });
+  const d = (await fsDoc(`weddingSites/${encodeURIComponent(slug)}/playlist/setlist`)) || {};
+  const arr = (v) => (Array.isArray(v) ? v : []);
+  const names = esc(d.names || site.names || "the couple");
+  const updated = d.updatedAt ? new Date(d.updatedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Phoenix" }) : "";
+  const tags = (s) => (s.m ? ' <span class="must">&#9733; must play</span>' : "") + (s.c ? ' <span class="cl">clean edit</span>' : "") + (s.y ? ' <span class="y">their pick</span>' : "");
+  const li = (s) => `<li><b>${esc(s.t)}</b>${s.a ? ` <span class="a">${esc(s.a)}</span>` : ""}${tags(s)}</li>`;
+  const line = (s) => [s.t, s.a].filter(Boolean).join(" - ");
+  const plain = [];
+  let h = "";
+  const moments = arr(d.moments), must = arr(d.must), dont = arr(d.dont), sections = arr(d.sections);
+  if (moments.length) {
+    h += `<h2>The moments</h2><table>${moments.map((m) => `<tr><td class="k">${m.time ? esc(m.time) + " &middot; " : ""}${esc(m.label)}</td><td><b>${esc(m.t)}</b> <span class="a">${esc(m.a)}</span>${tags(m)}</td></tr>`).join("")}</table>`;
+    plain.push("THE MOMENTS", ...moments.map((m) => `${m.time ? m.time + "  " : ""}${m.label}: ${line(m)}`), "");
+  }
+  if (must.length) {
+    h += `<h2>Must play (${must.length})</h2><ol class="sl">${must.map(li).join("")}</ol>`;
+    plain.push("MUST PLAY", ...must.map((s, i) => `${i + 1}. ${line(s)}`), "");
+  }
+  if (sections.length) {
+    const total = sections.filter((x) => !x.off).reduce((n, x) => n + arr(x.songs).length, 0);
+    h += `<h2>Set list (${total} songs)</h2>`;
+    plain.push(`SET LIST (${total} songs)`);
+    let group = null;
+    for (const x of sections) {
+      if (x.group && x.group !== group) { group = x.group; h += `<div class="grp">${esc(group)}</div>`; }
+      const songs = arr(x.songs);
+      if (x.off) {
+        h += `<h3>${esc(x.label)} <span class="skip">skip this section</span></h3>`;
+        plain.push(`${String(x.label || "").toUpperCase()}: skip this section`);
+        continue;
+      }
+      h += `<h3>${esc(x.label)} <span class="n">${songs.length}</span></h3><ol class="sl">${songs.map(li).join("")}</ol>`;
+      plain.push(`${String(x.label || "").toUpperCase()} (${songs.length})`, ...songs.map((s) => "- " + line(s) + (s.m ? " (must play)" : "") + (s.c ? " (clean edit)" : "")));
+    }
+    plain.push("");
+  }
+  if (dont.length || arr(d.avoid).length) {
+    h += `<h2>Do not play${dont.length ? ` (${dont.length})` : ""}</h2>`;
+    if (dont.length) h += `<ol class="sl no">${dont.map(li).join("")}</ol>`;
+    if (arr(d.avoid).length) h += `<p><b>Also avoid:</b> ${arr(d.avoid).map(esc).join(" &middot; ")}</p>`;
+    plain.push("DO NOT PLAY", ...dont.map(line), ...(arr(d.avoid).length ? ["Also avoid: " + arr(d.avoid).join(", ")] : []), "");
+  }
+  if (arr(d.vibe).length) {
+    h += `<h2>The vibe</h2><p>${arr(d.vibe).map(esc).join(" &middot; ")}</p>`;
+    plain.push("THE VIBE", arr(d.vibe).join(" · "), "");
+  }
+  if (!h) h = '<p class="empty">Nothing here yet. The list fills in as the couple plans their music on Lazo.</p>';
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Music plan — ${names}</title>
+<style>
+body{margin:0;background:#FAF6F0;color:#241E2B;font-family:Helvetica,Arial,sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding:36px 20px 60px}
+h1{font-family:Georgia,serif;font-weight:600;font-size:32px;color:#52284F;margin:0 0 4px;line-height:1.05}
+.sub{color:#6B5F72;font-size:14px;line-height:1.5;margin:0 0 18px}
+h2{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#52284F;margin:28px 0 8px;border-bottom:1px solid #E6D6B8;padding-bottom:4px}
+h3{font-family:Georgia,serif;font-size:17px;font-weight:600;color:#3D1C3B;margin:16px 0 4px}h3 .n{font-family:Helvetica,Arial,sans-serif;color:#6B5F72;font-size:12px;font-weight:400}
+.grp{margin:22px 0 0;font-size:10.5px;letter-spacing:2px;text-transform:uppercase;color:#8A6A2F;font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:14px}td{padding:7px 8px;border-bottom:1px solid #F0E8D8;vertical-align:top}td.k{color:#6B5F72;font-size:12px;white-space:nowrap;width:1%}
+.sl{font-size:14px;margin:0 0 6px;padding-left:26px;columns:2;column-gap:30px}.sl li{break-inside:avoid;padding:3px 0}.no li{color:#6B5F72}
+.a{color:#6B5F72}.must{color:#8A6A2F;font-size:11px;font-weight:700;white-space:nowrap}.cl{background:#FFF4E5;color:#8A6A2F;font-size:10px;padding:1px 5px;border-radius:3px;white-space:nowrap}.y{color:#2E8B6B;font-size:10px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.skip{font-family:Helvetica,Arial,sans-serif;color:#B04343;font-size:10.5px;text-transform:uppercase;letter-spacing:1px;font-weight:700}
+p{font-size:14px;line-height:1.5}.empty{color:#6B5F72}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 8px}.tools button{border:1px solid #D9B77C;background:#fff;color:#52284F;border-radius:999px;padding:8px 14px;font-size:13px;cursor:pointer}
+.foot{margin-top:34px;text-align:center;font-size:11px;color:#6B5F72}.foot a{color:#52284F}
+@media(max-width:600px){.sl{columns:1}}
+@media print{.tools{display:none}body{background:#fff}.wrap{padding:0}}
+</style></head><body><div class="wrap">
+<h1>Music for ${names}</h1><p class="sub">${d.date ? esc(d.date) + " · " : ""}The couple's plan for their DJ${updated ? " · updated " + esc(updated) : ""}. This page is always current.</p>
+<div class="tools"><button onclick="window.print()">Print / Save as PDF</button><button onclick="navigator.clipboard.writeText(document.getElementById('plain').textContent).then(function(){this.textContent='Copied ✓'}.bind(this))">Copy as text</button><button onclick="location.reload()">Refresh</button></div>
+${h}
+<pre id="plain" hidden>${esc(plain.join("\n"))}</pre>
+<div class="foot">Planned on <a href="https://meetlazo.com">Lazo</a> · guest requests are at meetlazo.com/w/${esc(slug)}/playlist</div></div></body></html>`;
+  return new Response(html, { headers: { "content-type": "text/html;charset=utf-8", "cache-control": "public, max-age=60", "x-robots-tag": "noindex" } });
+}
+
 // ---------------------------------------------------------------- the day-before note
 // JC-LAZO-WORKER-0929-DAYB4-001: POST /api/w/{slug}/day-before, signed with the
 // couple's Firebase ID token. Reads the RSVPs and the guest list AS the couple

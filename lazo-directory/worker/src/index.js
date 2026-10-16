@@ -56,7 +56,7 @@ import { printsRoute } from "./prints.js";
 // siteGalleryFocus) ride into the payload below.
 import { guestPhotosRoute } from "./guestphotos.js";
 // JC-LAZO-WORKER-0929-LIVE-001: weather, translation, table cards, the DJ page
-import { weatherRoute, translateRoute, cardsPage, playlistPage, dayBeforeRoute } from "./sitefeatures.js";
+import { weatherRoute, translateRoute, cardsPage, playlistPage, setlistPage, dayBeforeRoute } from "./sitefeatures.js";
 // JC-LAZO-WORKER-0930-FSAUTH
 import { setWorkerEnv, fsHeaders, workerToken, pcToken, cookieVal, siteLocked, lockedResponse } from "./fsauth.js";
 
@@ -1149,6 +1149,9 @@ export default {
     if (cardsMatch && req.method === "GET") return (await siteLocked(cardsMatch[1], req)) ? lockedResponse() : cardsPage(cardsMatch[1]);
     const plMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/playlist\/?$/);
     if (plMatch && req.method === "GET") return (await siteLocked(plMatch[1], req)) ? lockedResponse() : playlistPage(plMatch[1]);
+    // JC-LAZO-WORKER-1016-SETLIST: the couple's music plan + set list for the DJ (Music v27 mirrors it)
+    const slMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/setlist\/?$/);
+    if (slMatch && req.method === "GET") return (await siteLocked(slMatch[1], req)) ? lockedResponse() : setlistPage(slMatch[1]);
     // JC-LAZO-WORKER-0930-SITEFIX
     const unMatch = url.pathname.match(/^\/w\/([a-z0-9\-]{1,80})\/unlock\/?$/);
     if (unMatch && req.method === "POST") return unlockRoute(unMatch[1], req);
