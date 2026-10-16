@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "cois",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "expiresAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "listingRequests",
       "queryScope": "COLLECTION",
       "fields": [

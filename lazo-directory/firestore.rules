@@ -8,6 +8,10 @@ rules_version = '2';
 //   Meal counts card (couple writes counts, vendor sets only finalDue and
 //   vendorSeenAt). Deploy BEFORE the wedding-website templates from
 //   patch_meals_rsvp_1016.py go to R2, or RSVPs with meals are refused.
+// + JC-LAZO-RULES-1016-COI (DEPLOYED 2026-10-16 on top of live 1014-018): certificates of insurance on file. New
+//   cois/{id} (the vendor's team reads), vendors/{id}/coisOnFile/{id} (the venue's or
+//   planner's team reads) and coiRequests/{venueId__vendorId} (either side reads).
+//   All written only by the coi.js callables. Deploy with storage.rules 1016-COI.
 // Changes: a VERIFIED EMAIL to use Lazo. signedIn() now also needs the
 //   account's email confirmed (token.email_verified - the six-digit code in
 //   Auth v24, functions-dashboard verify.js), or the legacy claim
@@ -227,6 +231,24 @@ service cloud.firestore {
       match /contractTemplates/{templateId} {
         allow read, create, update, delete: if vendorAccess(vendorId);
       }
+
+      // JC-LAZO-RULES-1016-COI: the COIs vendors sent this venue or planner
+      match /coisOnFile/{coiId} {
+        allow read: if vendorAccess(vendorId);
+        allow write: if false;
+      }
+    }
+
+    // JC-LAZO-RULES-1016-COI: a vendor's certificates of insurance (coi.js writes)
+    match /cois/{coiId} {
+      allow read: if vendorAccess(resource.data.vendorId);
+      allow write: if false;
+    }
+    // a venue's or planner's ask for a vendor's COI (coi.js writes)
+    match /coiRequests/{reqId} {
+      allow read: if vendorAccess(resource.data.vendorId)
+        || vendorAccess(resource.data.venueId);
+      allow write: if false;
     }
 
     match /users/{uid} {

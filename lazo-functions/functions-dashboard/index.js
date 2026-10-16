@@ -952,5 +952,9 @@ Object.assign(exports, require('./team')(RESEND_API_KEY));
 // 027: verify.js - six-digit email code at signup + disposable/dead domain block (beforeUserCreated)
 Object.assign(exports, require('./verify')(RESEND_API_KEY));
 
+// JC-LAZO-FNDASH-1016-COI-001: certificates of insurance on file with Lazo venues and planners, expiry reminders, requests
+const coi = require('./coi')(RESEND_API_KEY, ANTHROPIC_API_KEY);
+for (const k of ['coiRead', 'coiSave', 'coiShare', 'coiUnshare', 'coiFileLink', 'coiRequest', 'coiPublic', 'coiSweep']) exports[k] = coi[k];
+
 // JC-LAZO-FNDASH-1016-MEALS: final meal counts - the couple is reminded 7 and 2 days before the vendor's date, the vendor the day after
 Object.assign(exports, require('./meals')(RESEND_API_KEY));

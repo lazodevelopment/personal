@@ -1,0 +1,177 @@
+rules_version = '2';
+// ============================================================
+// LAZO STORAGE RULES
+// Build ID: JC-LAZO-STORAGE-1016-COI (DEPLOYED 2026-10-16 17:35Z; the live copy's header still says NOT DEPLOYED)
+// Changes from JC-LAZO-STORAGE-0912-002 (live since 2026-09-12, copied verbatim
+// from the console into the repo on 2026-10-16; the console was the only copy):
+//   + vendors/{vendorId}/coi/{coiId}/{fileName}: certificates of insurance. The
+//     vendor's team writes a PDF or photo under 15MB and reads it; venues and
+//     planners never read it directly - coi.js hands them 10-minute signed URLs.
+//     Kept out of vendors/{id}/docs/ on purpose: that folder is public and
+//     priceSheetExtract reads every PDF in it.
+// Build ID: JC-LAZO-STORAGE-0912-002
+// Changes from JC-LAZO-STORAGE-0912-001:
+//   + support/{uid}/{fileName}: bug-report screenshots from the vendor
+//     dashboard (v158). The reporter writes images under 10MB; the reporter
+//     and admins read.
+// Build ID: JC-LAZO-STORAGE-0912-001
+// Changes from the prior (unlabelled) file:
+//   + coupleAccess(cid) / vendorAccess(vendorId) mirror Firestore rules
+//     JC-LAZO-RULES-0907-003: an invited partner (users.coupleUid) writes
+//     the couple's paths; an invited manager (users.vendorId + vendorRole
+//     'manager') writes the vendor's paths. Every claimedBy-only check is
+//     routed through these.
+//   + inquiries/{id}/attachments accepts text/html (the seating chart the
+//     couple sends to their planner - LazoSeatingChart v4 writes
+//     {ts}_seating-chart.html here). Everything else unchanged.
+// ============================================================
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() { return request.auth != null; }
+    function userDoc() {
+      return firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data;
+    }
+    function hasUserDoc() {
+      return firestore.exists(/databases/(default)/documents/users/$(request.auth.uid));
+    }
+    // Two people plan a wedding. The partner's users doc names the plan.
+    function coupleAccess(cid) {
+      return signedIn()
+        && (request.auth.uid == cid
+            || (hasUserDoc() && userDoc().coupleUid == cid));
+    }
+    // The claimant, or an invited manager.
+    function vendorAccess(vendorId) {
+      return signedIn()
+        && (firestore.get(/databases/(default)/documents/vendors/$(vendorId)).data.claimedBy == request.auth.uid
+            || (hasUserDoc()
+                && userDoc().vendorId == vendorId
+                && userDoc().vendorRole == 'manager'));
+    }
+
+    match /couples/{uid}/{fileName} {
+      allow read: if coupleAccess(uid);
+      allow write: if coupleAccess(uid)
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // ── WEDDING-SITE PHOTOS (v87 / templates v7.1) ────────────────────
+    // Gallery + chapter photos for the couple's public wedding website at
+    // meetlazo.com/w/{slug}. Public read by design (they render on a public
+    // page); only the owning couple can write. Uploaded by the couple
+    // dashboard to couples/{uid}/site/g*.jpg and couples/{uid}/site/ch*.jpg.
+    match /couples/{uid}/site/{fileName} {
+      allow read: if true;
+      allow write: if coupleAccess(uid)
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /users/{uid}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+    match /vendors/{vendorId}/media/{fileName} {
+      allow read: if true;
+      allow write: if vendorAccess(vendorId)
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+    match /vendors/{vendorId}/docs/{fileName} {
+      allow read: if true;
+      allow write: if vendorAccess(vendorId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType == 'application/pdf';
+    }
+
+    // ── CERTIFICATES OF INSURANCE (Vendor v201, JC-LAZO-STORAGE-1016-COI) ──
+    match /vendors/{vendorId}/coi/{coiId}/{fileName} {
+      allow read: if vendorAccess(vendorId);
+      allow write: if vendorAccess(vendorId)
+        && request.resource.size < 15 * 1024 * 1024
+        && (request.resource.contentType == 'application/pdf'
+            || request.resource.contentType.matches('image/.*'));
+      allow delete: if false;
+    }
+
+    // ── JUNE SNEAK PEEK (v57 / v146) ─────────────────────────────────
+    // The day-after take: the vendor uploads web-res frames here, June ranks
+    // them, and the couple receives the picks as signed URLs (which bypass
+    // these rules by design). Only the owning vendor can write or list.
+    match /vendors/{vendorId}/sneak/{inquiryId}/{fileName} {
+      allow read: if vendorAccess(vendorId);
+      allow write: if vendorAccess(vendorId)
+        && request.resource.size < 12 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if vendorAccess(vendorId);
+    }
+
+    // LAZO PRO STUDIO — Wave 1: contract template uploads (private to owner)
+    match /vendors/{vendorId}/templates/uploads/{fileName} {
+      allow read: if vendorAccess(vendorId);
+      allow write: if vendorAccess(vendorId)
+        && request.resource.size < 10 * 1024 * 1024
+        && (request.resource.contentType == 'application/pdf'
+            || request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            || request.resource.contentType == 'text/plain'
+            || request.resource.contentType == 'application/octet-stream');
+    }
+    // LAZO PRO STUDIO — Wave 1: generated contract PDFs (function-written; vendor reads)
+    match /vendors/{vendorId}/contracts/{fileName} {
+      allow read: if vendorAccess(vendorId);
+      allow write: if false;
+    }
+
+    // ── MESSAGE ATTACHMENTS (v67 / v123 / seating v4) ─────────────────
+    match /inquiries/{inquiryId}/attachments/{fileName} {
+      function inquiry() {
+        return firestore.get(/databases/(default)/documents/inquiries/$(inquiryId)).data;
+      }
+      function isCouple() { return coupleAccess(inquiry().coupleUid); }
+      function isVendor() { return vendorAccess(inquiry().vendorId); }
+      allow read: if isCouple() || isVendor();
+      allow write: if (isCouple() || isVendor())
+        && request.resource.size < 20 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType.matches('video/.*')
+            || request.resource.contentType == 'application/pdf'
+            || request.resource.contentType == 'application/msword'
+            || request.resource.contentType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            || request.resource.contentType == 'text/html'
+            || request.resource.contentType == 'application/octet-stream');
+      allow delete: if false;
+    }
+
+    // ── BUG-REPORT SCREENSHOTS (vendor dashboard v158) ───────────────
+    match /support/{uid}/{fileName} {
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow read: if request.auth != null
+        && (request.auth.uid == uid
+            || firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid)));
+      allow delete: if false;
+    }
+
+    match /verification/{uid}/{fileName} {
+      allow read: if request.auth != null
+        && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 15 * 1024 * 1024
+        && (request.resource.contentType.matches('image/.*')
+            || request.resource.contentType == 'application/pdf');
+    }
+    match /reports/{fileName} {
+      allow read: if request.auth != null
+        && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+      allow write: if false;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
