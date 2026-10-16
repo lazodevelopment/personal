@@ -916,6 +916,8 @@ exports.blockCouple = safety.blockCouple;
 Object.assign(exports, require('./safety-guard')(RESEND_API_KEY));
 // JC-LAZO-CALLS-1016-001: Lazo video calls - callJoin, callEvent (from the worker), phoneStart / phoneConfirm
 Object.assign(exports, require('./calls')());
+// JC-LAZO-CALLSCHED-1016-001: schedule a Lazo video call from the thread (Pro+), audio-only preference, reminders
+Object.assign(exports, require('./callsched')(RESEND_API_KEY));
 
 const deleteAccount = require('./deleteAccount')();
 exports.deleteMyAccount = deleteAccount.deleteMyAccount;

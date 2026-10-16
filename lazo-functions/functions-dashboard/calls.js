@@ -1,5 +1,5 @@
 // functions-dashboard/calls.js
-// Build ID: JC-LAZO-CALLS-1016-001
+// Build ID: JC-LAZO-CALLS-1016-002 (002: audio-only preference on join; base 001)
 //
 // LAZO VIDEO CALLS, PHASE 1 - the Firebase half.
 //
@@ -111,6 +111,14 @@ module.exports = function callsModule() {
     }
     if (role === 'couple' && !str(u.phoneVerified)) return { ok: false, needPhone: true };
 
+    // JC-LAZO-CALLS-1016-002: "Join with audio only" sets the couple's preference; the vendor
+    // then sees "Prefers audio only" and isn't prompted to allow their camera.
+    let audioOnly = inq.coupleAudioOnly === true;
+    if (role === 'couple' && typeof (request.data || {}).audioOnly === 'boolean') {
+      audioOnly = request.data.audioOnly === true;
+      await inqRef.set({ coupleAudioOnly: audioOnly }, { merge: true });
+    }
+
     // reuse the open call on this thread, or start one
     const now = Date.now();
     let callRef = null;
@@ -134,12 +142,14 @@ module.exports = function callsModule() {
       c: callRef.id, i: inquiryId, u: uid, r: role,
       n: role === 'vendor' ? vendorName : coupleName,
       o: role === 'vendor' ? coupleName : vendorName,
+      ao: audioOnly,
       exp: now + TOKEN_MINUTES * 60000,
     }, CALL_TOKEN_SECRET.value());
     return {
       ok: true, callId: callRef.id, token, role, workerBase: WORKER_BASE,
       myName: role === 'vendor' ? vendorName : coupleName,
       otherName: role === 'vendor' ? coupleName : vendorName,
+      coupleAudioOnly: audioOnly,
     };
   });
 

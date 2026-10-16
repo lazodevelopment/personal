@@ -1,0 +1,438 @@
+  // ------------------------------------------------------------------ v167/v207
+  // SCHEDULE A LAZO VIDEO CALL + AUDIO ONLY.  JC-LAZO-CALLSCHED-1016-APP
+  // (shared by the Couple and Vendor masters - app-patches/lazo_call_thread.dart.txt;
+  // __ROLE__ is filled in by patch_couple_v167.py / patch_vendor_v207.py)
+  // Video calls are free for everyone; scheduling one is Lazo Pro / Studio
+  // (checked on the server in callsched.js). The call card shows the time in
+  // your own time zone and, when we know it, in the other person's.
+  static const String _lzRole = '__ROLE__';
+  static const List<String> _kLzWd = <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const List<String> _kLzMo = <String>['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  String _lzClock(DateTime l) {
+    final int h = l.hour % 12 == 0 ? 12 : l.hour % 12;
+    return '$h:${l.minute.toString().padLeft(2, '0')} ${l.hour < 12 ? 'AM' : 'PM'}';
+  }
+
+  String _lzWhenLocal(DateTime d) {
+    final DateTime l = d.toLocal();
+    return '${_kLzWd[l.weekday - 1]}, ${_kLzMo[l.month - 1]} ${l.day} · ${_lzClock(l)}';
+  }
+
+  String _lzUtc(DateTime d) {
+    final DateTime u = d.toUtc();
+    String two(int x) => x.toString().padLeft(2, '0');
+    return '${u.year}${two(u.month)}${two(u.day)}T${two(u.hour)}${two(u.minute)}${two(u.second)}Z';
+  }
+
+  // Join with video / Join with audio only
+  Future<void> _lazoCallChooser(String inquiryId, Map<String, dynamic> inq) async {
+    if (!mounted) return;
+    await _lzSheet<void>(
+      context: context,
+      constraints: const BoxConstraints(maxWidth: 440),
+      builder: (BuildContext ctx) => _lzFrame(ctx,
+          icon: Icons.videocam_rounded,
+          title: 'Lazo video call',
+          subtitle: _lzRole == 'couple'
+              ? 'Your camera stays off until you turn it on - and until your vendor allows it.'
+              : 'Your camera starts off unless you join with video.',
+          children: <Widget>[
+            const SizedBox(height: 14),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _lzJoin(inquiryId, inq, video: true);
+              },
+              icon: const Icon(Icons.videocam_rounded),
+              label: const Text('Join with video'),
+              style: FilledButton.styleFrom(
+                  backgroundColor: plum,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: const StadiumBorder()),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _lzJoin(inquiryId, inq, video: false);
+              },
+              icon: Icon(Icons.headset_rounded, color: _lzFg(plum)),
+              label: Text('Join with audio only', style: TextStyle(color: _lzFg(plum))),
+              style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  side: BorderSide(color: _lzLine(gold.withOpacity(.8))),
+                  shape: const StadiumBorder()),
+            ),
+            const SizedBox(height: 6),
+          ]),
+    );
+  }
+
+  Widget _lzJoinButtons(String inquiryId, Map<String, dynamic> inq) => Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: <Widget>[
+          FilledButton.icon(
+            onPressed: _h(() => _lzJoin(inquiryId, inq, video: true)),
+            icon: const Icon(Icons.videocam_rounded, size: 16),
+            label: const Text('Join with video',
+                style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
+            style: FilledButton.styleFrom(backgroundColor: plum, shape: const StadiumBorder()),
+          ),
+          OutlinedButton.icon(
+            onPressed: _h(() => _lzJoin(inquiryId, inq, video: false)),
+            icon: Icon(Icons.headset_rounded, size: 16, color: _lzFg(plum)),
+            label: Text('Join with audio only',
+                style: TextStyle(color: _lzFg(plum), fontSize: 12.5, fontWeight: FontWeight.w800)),
+            style: OutlinedButton.styleFrom(
+                side: BorderSide(color: _lzLine(gold.withOpacity(.8))), shape: const StadiumBorder()),
+          ),
+        ],
+      );
+
+  Future<void> _scheduleCallSheet(String inquiryId, Map<String, dynamic> inq,
+      {String? consultId, DateTime? current, int currentMinutes = 30}) async {
+    DateTime day = (current ?? DateTime.now().add(const Duration(days: 1))).toLocal();
+    TimeOfDay time = current != null
+        ? TimeOfDay.fromDateTime(current.toLocal())
+        : const TimeOfDay(hour: 10, minute: 0);
+    int minutes = <int>[15, 30, 45, 60].contains(currentMinutes) ? currentMinutes : 30;
+    bool audio = _lzRole == 'couple' && inq['coupleAudioOnly'] == true;
+    bool busy = false;
+    bool open = true;
+    String err = '';
+    if (!mounted) return;
+    await _lzSheet<void>(
+      context: context,
+      constraints: const BoxConstraints(maxWidth: 480),
+      builder: (BuildContext ctx) => StatefulBuilder(
+        builder: (BuildContext ctx2, StateSetter setS) {
+          void up(VoidCallback f) {
+            if (open) setS(f);
+          }
+
+          Future<void> pickDay() async {
+            final DateTime? d = await showDatePicker(
+                context: ctx2,
+                initialDate: day.isBefore(DateTime.now()) ? DateTime.now() : day,
+                firstDate: DateTime.now(),
+                lastDate: DateTime.now().add(const Duration(days: 180)));
+            if (d != null) up(() => day = d);
+          }
+
+          Future<void> pickTime() async {
+            final TimeOfDay? t = await showTimePicker(context: ctx2, initialTime: time);
+            if (t != null) up(() => time = t);
+          }
+
+          Future<void> save() async {
+            final DateTime start = DateTime(day.year, day.month, day.day, time.hour, time.minute);
+            up(() {
+              busy = true;
+              err = '';
+            });
+            try {
+              final Map<String, dynamic> data = <String, dynamic>{
+                'startAt': start.toUtc().toIso8601String(),
+                'minutes': minutes,
+                'tzOffsetMin': start.timeZoneOffset.inMinutes,
+                'tzName': start.timeZoneName,
+              };
+              if (consultId == null) {
+                data['inquiryId'] = inquiryId;
+                if (_lzRole == 'couple') data['audioOnly'] = audio;
+              } else {
+                data['consultId'] = consultId;
+              }
+              await FirebaseFunctions.instance
+                  .httpsCallable(consultId == null ? 'scheduleCall' : 'rescheduleCall')
+                  .call(data);
+              if (ctx2.mounted) Navigator.pop(ctx2);
+              _toast(consultId == null
+                  ? 'Call scheduled ✓ You’ll both get reminders.'
+                  : 'Call moved ✓ They’ve been told.');
+            } catch (e) {
+              up(() {
+                busy = false;
+                err = _lzFnMsg(e, 'Could not schedule that. Try another time.');
+              });
+            }
+          }
+
+          Widget row(IconData i, String label, String value, VoidCallback onTap) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: InkWell(
+                  onTap: busy ? null : onTap,
+                  borderRadius: BorderRadius.circular(14),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _lzBg(Colors.white),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: _lzLine(gold.withOpacity(.6))),
+                    ),
+                    child: Row(children: <Widget>[
+                      Icon(i, color: _lzFg(plum), size: 20),
+                      const SizedBox(width: 12),
+                      Text(label, style: TextStyle(color: _lzFg(muted), fontSize: 12.5)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: Text(value,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(color: _lzFg(ink), fontSize: 14, fontWeight: FontWeight.w700))),
+                      Icon(Icons.chevron_right_rounded, color: _lzFg(muted)),
+                    ]),
+                  ),
+                ),
+              );
+
+          return _lzFrame(ctx2,
+              icon: Icons.event_rounded,
+              title: consultId == null ? 'Schedule a Lazo video call' : 'Move the call',
+              subtitle: 'You both get a reminder the day before and 15 minutes before.',
+              children: <Widget>[
+                const SizedBox(height: 14),
+                row(Icons.calendar_today_rounded, 'Day',
+                    '${_kLzWd[day.weekday - 1]}, ${_kLzMo[day.month - 1]} ${day.day}', pickDay),
+                row(Icons.schedule_rounded, 'Time',
+                    '${_lzClock(DateTime(2000, 1, 1, time.hour, time.minute))} (${DateTime.now().timeZoneName})',
+                    pickTime),
+                _lzSection('Length'),
+                Wrap(spacing: 8, runSpacing: 8, children: <Widget>[
+                  for (final int m in const <int>[15, 30, 45, 60])
+                    ChoiceChip(
+                      label: Text('$m min'),
+                      selected: minutes == m,
+                      onSelected: busy ? null : (_) => up(() => minutes = m),
+                    ),
+                ]),
+                if (_lzRole == 'couple' && consultId == null) ...<Widget>[
+                  const SizedBox(height: 12),
+                  CheckboxListTile(
+                    value: audio,
+                    onChanged: busy ? null : (bool? v) => up(() => audio = v == true),
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text('I prefer audio only',
+                        style: TextStyle(color: _lzFg(ink), fontSize: 14, fontWeight: FontWeight.w600)),
+                    subtitle: Text('Your camera stays off. You can still turn it on in the call.',
+                        style: TextStyle(color: _lzFg(muted), fontSize: 12)),
+                  ),
+                ],
+                if (err.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(err, style: const TextStyle(color: Color(0xFFB3261E), fontSize: 12.5)),
+                  ),
+              ],
+              footer: _lzActions(
+                  secondary: 'Cancel',
+                  onSecondary: () => Navigator.pop(ctx2),
+                  primary: consultId == null ? 'Schedule' : 'Move it',
+                  icon: Icons.event_available_rounded,
+                  busy: busy,
+                  onPrimary: save));
+        },
+      ),
+    ).whenComplete(() => open = false);
+  }
+
+  Future<void> _addToCalendarSheet(Map<String, dynamic> m, String consultId) async {
+    final DateTime? start = (m['startAt'] as Timestamp?)?.toDate();
+    if (start == null || !mounted) return;
+    final DateTime end = start.add(Duration(minutes: (m['minutes'] as num?)?.toInt() ?? 30));
+    final String title = 'Lazo video call: ${(m['vendorName'] ?? '').toString()} & ${(m['coupleName'] ?? '').toString()}';
+    const String details =
+        'Open your Lazo messages and tap Join (it opens 10 minutes before). Calls stay inside Lazo - never join an outside link.';
+    final Uri google = Uri.parse('https://calendar.google.com/calendar/render?action=TEMPLATE'
+        '&text=${Uri.encodeComponent(title)}&dates=${_lzUtc(start)}/${_lzUtc(end)}&details=${Uri.encodeComponent(details)}');
+    final Uri ics = Uri.parse('https://us-central1-lazo-513ec.cloudfunctions.net/callIcs'
+        '?id=$consultId&t=${(m['icsToken'] ?? '').toString()}');
+    await _lzSheet<void>(
+      context: context,
+      constraints: const BoxConstraints(maxWidth: 420),
+      builder: (BuildContext ctx) => _lzFrame(ctx,
+          icon: Icons.event_available_rounded,
+          title: 'Add to calendar',
+          children: <Widget>[
+            const SizedBox(height: 10),
+            ListTile(
+              leading: Icon(Icons.calendar_month_rounded, color: _lzFg(plum)),
+              title: const Text('Google Calendar'),
+              onTap: () {
+                Navigator.pop(ctx);
+                launchUrl(google, mode: LaunchMode.externalApplication);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.event_note_rounded, color: _lzFg(plum)),
+              title: const Text('Apple Calendar or Outlook (.ics)'),
+              onTap: () {
+                Navigator.pop(ctx);
+                launchUrl(ics, mode: LaunchMode.externalApplication);
+              },
+            ),
+          ]),
+    );
+  }
+
+  Future<void> _cancelCallConfirm(String consultId) async {
+    final bool? yes = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: const Text('Cancel this call?'),
+        content: const Text('We’ll let them know right away.'),
+        actions: <Widget>[
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Keep it')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cancel the call')),
+        ],
+      ),
+    );
+    if (yes != true) return;
+    try {
+      await FirebaseFunctions.instance.httpsCallable('cancelCall').call(<String, dynamic>{'consultId': consultId});
+      _toast('Call cancelled. They’ve been told.');
+    } catch (e) {
+      _toast(_lzFnMsg(e, 'Could not cancel just now. Try again.'));
+    }
+  }
+
+  Future<void> _setAudioPrefTo(String inquiryId, bool on) async {
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable('setCallPref')
+          .call(<String, dynamic>{'inquiryId': inquiryId, 'audioOnly': on});
+      _toast(on ? 'Noted: you prefer audio only.' : 'Noted: video is fine.');
+    } catch (e) {
+      _toast(_lzFnMsg(e, 'Could not save that just now.'));
+    }
+  }
+
+  // the call card in the thread (one per scheduled call)
+  Widget _callCard(String inquiryId, Map<String, dynamic> inq, String consultId) {
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance.collection('consults').doc(consultId).snapshots(),
+      builder: (BuildContext c, AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snap) {
+        final Map<String, dynamic> m = snap.data?.data() ?? <String, dynamic>{};
+        if (m.isEmpty) return const SizedBox.shrink();
+        return StreamBuilder<int>(
+          stream: Stream<int>.periodic(const Duration(seconds: 30), (int i) => i),
+          builder: (BuildContext c2, AsyncSnapshot<int> _) => _callCardBody(inquiryId, inq, consultId, m),
+        );
+      },
+    );
+  }
+
+  Widget _callCardBody(String inquiryId, Map<String, dynamic> inq, String consultId, Map<String, dynamic> m) {
+    final DateTime? start = (m['startAt'] as Timestamp?)?.toDate();
+    if (start == null) return const SizedBox.shrink();
+    final int minutes = (m['minutes'] as num?)?.toInt() ?? 30;
+    final DateTime end = start.add(Duration(minutes: minutes));
+    final DateTime now = DateTime.now();
+    final bool cancelled = (m['status'] ?? '') == 'cancelled';
+    final bool live = !cancelled &&
+        now.isAfter(start.subtract(const Duration(minutes: 10))) &&
+        now.isBefore(end.add(const Duration(minutes: 30)));
+    final bool over = !cancelled && now.isAfter(end.add(const Duration(minutes: 30)));
+    final Map<String, dynamic> wf = Map<String, dynamic>.from((m['whenFor'] as Map?) ?? <String, dynamic>{});
+    final String otherRole = _lzRole == 'vendor' ? 'couple' : 'vendor';
+    final String otherName = ((_lzRole == 'vendor' ? m['coupleName'] : m['vendorName']) ?? '').toString();
+    final String otherWhen = (wf[otherRole] ?? '').toString();
+    final bool prefersAudio = inq['coupleAudioOnly'] == true;
+    final bool lazoCall = m['lazoCall'] == true;
+    final Color accent = cancelled ? const Color(0xFFB3261E) : (live ? vGreen : plum);
+    final String pill = cancelled ? 'Cancelled' : (over ? 'Ended' : (live ? 'Open now' : '$minutes min'));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+            decoration: BoxDecoration(
+              color: _lzBg(Colors.white),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: _lzLine(gold.withOpacity(.7))),
+            ),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+              Row(children: <Widget>[
+                Icon(Icons.videocam_rounded, color: _lzFg(plum), size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: Text('Lazo video call',
+                        style: TextStyle(color: _lzFg(plum), fontSize: 14.5, fontWeight: FontWeight.w800))),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                  decoration: BoxDecoration(
+                      color: _lzBg(accent.withOpacity(.12)), borderRadius: BorderRadius.circular(999)),
+                  child: Text(pill,
+                      style: TextStyle(color: _lzFg(accent), fontSize: 11, fontWeight: FontWeight.w800)),
+                ),
+              ]),
+              const SizedBox(height: 8),
+              Text('${_lzWhenLocal(start)} (your time)',
+                  style: TextStyle(
+                      color: _lzFg(ink),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      decoration: cancelled ? TextDecoration.lineThrough : null)),
+              if (otherWhen.isNotEmpty && otherName.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text('That’s $otherWhen for $otherName',
+                      style: TextStyle(color: _lzFg(muted), fontSize: 12)),
+                ),
+              if (_lzRole == 'vendor' && prefersAudio)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Row(children: <Widget>[
+                    Icon(Icons.headset_rounded, size: 14, color: _lzFg(const Color(0xFF8A6A2F))),
+                    const SizedBox(width: 5),
+                    Text('Prefers audio only',
+                        style: TextStyle(color: _lzFg(const Color(0xFF8A6A2F)), fontSize: 12, fontWeight: FontWeight.w700)),
+                  ]),
+                ),
+              if (!cancelled && !over) ...<Widget>[
+                const SizedBox(height: 10),
+                if (live)
+                  _lzJoinButtons(inquiryId, inq)
+                else
+                  Text('Join opens 10 minutes before the call.',
+                      style: TextStyle(color: _lzFg(muted), fontSize: 12)),
+                const SizedBox(height: 4),
+                Wrap(spacing: 2, children: <Widget>[
+                  TextButton.icon(
+                    onPressed: () => _addToCalendarSheet(m, consultId),
+                    icon: Icon(Icons.event_available_rounded, size: 16, color: _lzFg(plum)),
+                    label: Text('Add to calendar', style: TextStyle(color: _lzFg(plum), fontSize: 12.5)),
+                  ),
+                  if (lazoCall)
+                    TextButton.icon(
+                      onPressed: () => _scheduleCallSheet(inquiryId, inq,
+                          consultId: consultId, current: start, currentMinutes: minutes),
+                      icon: Icon(Icons.edit_calendar_rounded, size: 16, color: _lzFg(plum)),
+                      label: Text('Reschedule', style: TextStyle(color: _lzFg(plum), fontSize: 12.5)),
+                    ),
+                  if (lazoCall)
+                    TextButton.icon(
+                      onPressed: () => _cancelCallConfirm(consultId),
+                      icon: Icon(Icons.event_busy_rounded, size: 16, color: _lzFg(muted)),
+                      label: Text('Cancel', style: TextStyle(color: _lzFg(muted), fontSize: 12.5)),
+                    ),
+                ]),
+                if (_lzRole == 'couple')
+                  FilterChip(
+                    avatar: Icon(Icons.headset_rounded, size: 16, color: _lzFg(plum)),
+                    label: const Text('I prefer audio only'),
+                    selected: prefersAudio,
+                    onSelected: (bool v) => _setAudioPrefTo(inquiryId, v),
+                  ),
+              ],
+            ]),
+          ),
+        ),
+      ),
+    );
+  }

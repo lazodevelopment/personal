@@ -1,5 +1,5 @@
 // worker/src/rt.js
-// Build ID: JC-LAZO-CALLS-1016-WORKER-002 (002: a send session and a receive session per side; base 001)
+// Build ID: JC-LAZO-CALLS-1016-WORKER-003 (003: the couple's audio-only preference - token ao + /rt/pref; 002: a send session and a receive session per side; base 001)
 //
 // LAZO VIDEO CALLS - the media half. A proxy in front of Cloudflare Realtime
 // (Serverless SFU app "lazo-video") plus one Durable Object per call.
@@ -29,6 +29,7 @@
 //   clash with the earlier video m-section (ERROR_CONTENT on mid 3).
 //   POST /rt/room                              -> room state (polled every ~2s)
 //   POST /rt/allow     {on}                    vendor only
+//   POST /rt/pref      {audioOnly}             couple only ("I prefer audio only")
 //   POST /rt/leave
 //   POST /rt/sessions/{sid}/tracks/new         (SFU passthrough, checked)
 //   PUT  /rt/sessions/{sid}/renegotiate        (SFU passthrough, checked)
@@ -140,6 +141,7 @@ export class CallRoom {
       ended: !!this.room.ended,
       camAllowed: role === "vendor" ? true : !!this.room.camAllowed,
       coupleCamAllowed: !!this.room.camAllowed,
+      coupleAudioOnly: !!this.room.coupleAudioOnly,
       me: me ? { sessionId: me.sessionId, subSessionId: me.subSessionId } : null,
       other: o && !o.left ? {
         name: o.name, role: o.role, sessionId: o.sessionId, present: now - (o.lastSeen || 0) < PRESENT_MS,
@@ -170,6 +172,10 @@ export class CallRoom {
       if (prev && !prev.left && prev.uid !== p.u) evs.push(this.ev("replaced", prev, `by ${p.u}`));
       this.room.members[role] = { uid: p.u, role, name: p.n, sessionId: s.data.sessionId, subSessionId: sub.data.sessionId, tracks: {}, joinedAt: Date.now(), lastSeen: Date.now(), left: false };
       evs.push(this.ev(prev ? "rejoin" : "join", this.room.members[role]));
+      if (role === "couple") {
+        this.room.coupleAudioOnly = p.ao === true;
+        if (p.ao === true) evs.push(this.ev("audio_only", this.room.members[role]));
+      }
       await this.save();
       await this.state.storage.setAlarm(Date.now() + 30000);
       await this.log(evs);
@@ -200,6 +206,15 @@ export class CallRoom {
       }
       await this.save();
       await this.log(evs);
+      return j(this.view(role));
+    }
+
+    // ---- the couple prefers audio only (or is happy to use video after all)
+    if (path === "/pref") {
+      if (role !== "couple") return j({ error: "couple-only" }, 403);
+      this.room.coupleAudioOnly = body.audioOnly === true;
+      await this.save();
+      await this.log([this.ev(this.room.coupleAudioOnly ? "audio_only" : "video_ok", me)]);
       return j(this.view(role));
     }
 

@@ -248,6 +248,15 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
         startAt: Timestamp.fromDate(start), endAt: Timestamp.fromDate(end), tz: sch.tz, status: 'booked',
         note: clip(b.note, 600), source: inquiryId && b.inquiryId ? 'thread' : 'page', cancelToken, createdAt: FieldValue.serverTimestamp(), reminded: {},
       };
+      // JC-LAZO-CALLSCHED-1016: a video consult with a Lazo couple is a Lazo video call - the thread
+      // shows the same call card (Join, Add to calendar, Reschedule, Cancel) and callReminderSweep reminds both.
+      if (consult.mode === 'video' && coupleUid && !str(coupleUid).startsWith('lead_')) {
+        consult.lazoCall = true;
+        consult.coupleName = name;
+        consult.vendorTz = sch.tz;
+        consult.icsToken = crypto.randomBytes(12).toString('base64url');
+        consult.whenFor = { vendor: whenText(sch.tz, start) };
+      }
       // JC-LAZO-SAFETY-1016-005: a booking note asking for Zoom / FaceTime / WhatsApp gets the scam flag
       { const sc = OP.scan(consult.note); if (sc.level === 'strong' || sc.level === 'weak') consult.safetyFlag = { level: sc.level, matches: [...sc.strong, ...sc.weak].slice(0, 5) }; }
       await cRef.set(consult);
@@ -259,7 +268,7 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
       const icsText = ics(consult, start, end, cRef.id);
 
       // thread note
-      await inqRef.collection('messages').add({ senderRole: 'couple', system: true, text: `Booked a ${type.label.toLowerCase()} for ${when}.`, at: FieldValue.serverTimestamp(), consult: { id: cRef.id, startAt: consult.startAt } });
+      await inqRef.collection('messages').add({ senderRole: 'couple', system: true, text: `Booked a ${type.label.toLowerCase()} for ${when}.`, at: FieldValue.serverTimestamp(), consult: { id: cRef.id, startAt: consult.startAt }, ...(consult.lazoCall ? { callSchedule: { consultId: cRef.id } } : {}) });
       await inqRef.set({ lastMessageAt: FieldValue.serverTimestamp(), lastMessageRole: 'couple', lastMessagePreview: `Booked a ${type.label.toLowerCase()} - ${fmtLocal(sch.tz, start, { month: 'short', day: 'numeric' })}`, nextConsultAt: consult.startAt }, { merge: true });
 
       // couple
@@ -316,6 +325,7 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
     let sent = 0;
     for (const d of snap.docs) {
       const c = d.data(); const start = toDate(c.startAt); if (!start) continue;
+      if (c.lazoCall === true) continue;   // JC-LAZO-CALLSCHED-1016: Lazo video calls get callReminderSweep (push + email, 24h and 15 min)
       const hrs = (start.getTime() - now) / 3600000;
       const rem = c.reminded || {};
       let key = null;

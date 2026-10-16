@@ -201,6 +201,31 @@ const offer = (mids) => ({ type: 'offer', sdp: ['v=0', ...mids.flatMap(([mid, ki
   x = await send(v.token, '/join', 'POST', {});
   ok(x.status === 410, 'ended room refuses joins');
 
+  // ---- audio only: the couple's join preference rides in the token; /rt/pref is couple-only
+  store.set('inquiries/t9', { coupleUid: 'c1', vendorId: 'vA', vendorName: 'Vendor A', coupleName: 'Avery & Jordan' });
+  const ca = await call(C.callJoin, 'c1', { inquiryId: 't9', audioOnly: true });
+  ok(ca.ok && ca.coupleAudioOnly === true && store.get('inquiries/t9').coupleAudioOnly === true, 'audio-only join saved');
+  const pa = await rt.verifyCallToken(ca.token, S);
+  ok(pa && pa.ao === true, 'token carries ao');
+  const va = await call(C.callJoin, 'ownerA', { inquiryId: 't9' });
+  ok(va.ok && va.coupleAudioOnly === true, 'vendor told the couple prefers audio');
+  const state2 = doState();
+  const room2 = new rt.CallRoom(state2, env);
+  const send2 = async (tok, p, method, body) => {
+    const pl = await rt.verifyCallToken(tok, S, p === '/join' ? 0 : 3600000);
+    const res = await room2.fetch(new Request('https://room' + p, { method, body: body ? JSON.stringify(body) : undefined, headers: { 'x-call': JSON.stringify(pl) } }));
+    return { status: res.status, data: await res.json() };
+  };
+  await send2(va.token, '/join', 'POST', {});
+  x = await send2(ca.token, '/join', 'POST', {});
+  ok(x.data.coupleAudioOnly === true, 'room knows the couple prefers audio');
+  x = await send2(va.token, '/pref', 'POST', { audioOnly: false });
+  ok(x.status === 403, 'vendor cannot change the couple preference');
+  x = await send2(ca.token, '/pref', 'POST', { audioOnly: false });
+  ok(x.status === 200 && x.data.coupleAudioOnly === false, 'couple switches to video OK');
+  x = await send2(va.token, '/room', 'POST', {});
+  ok(x.data.coupleAudioOnly === false, 'vendor sees the change');
+
   // ---- the log: every post signed, and callEvent accepts it
   const types = eventPosts.flatMap((e) => JSON.parse(e.body).events.map((ev) => `${ev.role}:${ev.type}`));
   for (const t of ['vendor:join', 'couple:join', 'couple:audio_on', 'vendor:video_on', 'vendor:camera_allowed', 'couple:video_on', 'vendor:camera_revoked', 'couple:video_off', 'couple:leave', 'vendor:leave', ':ended']) ok(types.includes(t), 'logged ' + t);
