@@ -24,12 +24,11 @@ crons = ["* * * * *", "*/5 * * * *", "0 * * * *"]
 
 [vars]
 ALLOWED_EMAILS = "jesse@briskhealth.com"
-ALERT_EMAIL = "jesse@briskhealth.com"
 TZ = "America/Chicago"
 BRIEF_HOURS = "5:morning,12:afternoon,18:evening"   # local hours and slots for the daily briefs
 TEAMS = "DAL,NE,TEX,COL,BOS,ARI"   # ESPN abbreviations: Cowboys, Patriots, Rangers, Rockies, Red Sox, Diamondbacks
 LEAGUES = "nfl,mlb"
-CHAT_MODEL = "sonnet"              # conversation on Sonnet 5.5 (no thinking step) for speed; briefs stay on Opus
-NTFY_TOPIC = "jarvis-a52b945267dd"
-# Secrets (npx wrangler secret put NAME): HUB_KEY, ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, GOOGLE_CLIENT_ID, PUSHOVER_USER, PUSHOVER_TOKEN, RESEND_API_KEY, CAL_ICS_URL (Google Calendar "secret address in iCal format")
-# Optional vars: ELEVENLABS_VOICE_ID, ALERT_FROM ("JARVIS <jarvis@yourdomain>" once the domain is verified in Resend)
+CHAT_MODEL = "opus"                # everything on Opus 5.5 (Jesse, 2026-10-16); "sonnet" switches chat back to Sonnet 5.5 for speed
+# Secrets (bash deploy.sh secret NAME): HUB_KEY (login key, .hub-login-key), FEED_KEY (feeders/bridges/executor, .hub-key), SESSION_SECRET,
+#   ANTHROPIC_API_KEY, ELEVENLABS_API_KEY, GOOGLE_CLIENT_ID, PUSHOVER_USER, PUSHOVER_TOKEN, TWILIO_* (optional), CAL_ICS_URL (optional)
+# Optional vars: ELEVENLABS_VOICE_ID

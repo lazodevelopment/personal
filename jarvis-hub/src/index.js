@@ -31,6 +31,8 @@ const kv = { get: (env, k) => env.HUB.get(k, "json"), put: (env, k, v) => env.HU
 const localTime = (env, d = new Date(), opts = { dateStyle: "full", timeStyle: "short" }) => d.toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", ...opts });
 const localHour = (env) => +new Date().toLocaleString("en-US", { timeZone: env.TZ || "America/Chicago", hour: "numeric", hourCycle: "h23" });
 const uid = () => Math.random().toString(36).slice(2, 10);
+// every outside call gets a deadline: one hung provider must not stall the minute cron (alarm path) or a whole tick
+const tfetch = (u, opts = {}, ms = 8000) => fetch(u, { ...opts, signal: opts.signal || AbortSignal.timeout(ms) });
 
 /* ---------------- cruise fleets tracked by name (AIS ship names are upper case, 20 chars max) ---------------- */
 const FLEETS = { ncl: { name: "Norwegian Cruise Line", ships: ["NORWEGIAN AQUA", "NORWEGIAN VIVA", "NORWEGIAN PRIMA", "NORWEGIAN LUNA", "NORWEGIAN ENCORE", "NORWEGIAN BLISS", "NORWEGIAN JOY", "NORWEGIAN ESCAPE", "NORWEGIAN GETAWAY", "NORWEGIAN BREAKAWAY", "NORWEGIAN EPIC", "NORWEGIAN GEM", "NORWEGIAN JADE", "NORWEGIAN PEARL", "NORWEGIAN JEWEL", "NORWEGIAN DAWN", "NORWEGIAN STAR", "NORWEGIAN SUN", "NORWEGIAN SKY", "NORWEGIAN SPIRIT", "PRIDE OF AMERICA"] } };
@@ -60,19 +62,31 @@ async function hmac(secret, msg) {
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(msg));
   return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
-async function makeSession(env, email) { const body = `${email}|${Date.now() + 30 * 86400e3}`; return `${btoa(body)}.${await hmac(env.HUB_KEY, body)}`; }
-async function readSession(env, token) {
-  if (!token || !env.HUB_KEY) return null;
-  const [b, sig] = token.split(".");
-  try { const body = atob(b); if ((await hmac(env.HUB_KEY, body)) !== sig) return null; const [email, exp] = body.split("|"); return Date.now() > +exp ? null : email; } catch { return null; }
+// Two keys (2026-10-16 audit): HUB_KEY is Jesse's login key (the lock page, or the x-hub-key header for full access);
+// FEED_KEY is what the feeders, the executor, the Gmail bridges and the intake scripts carry. A feed key reaches only
+// FEED_ROUTES, so a leaked script can post data but never send mail, confirm actions or read threads.
+// Browser sessions are signed with SESSION_SECRET (never with a key), carry a version (KV sess_ver; /logout?all=1 bumps it).
+async function sameSecret(a, b) {
+  if (!a || !b) return false;
+  const enc = new TextEncoder(); const [x, y] = await Promise.all([crypto.subtle.digest("SHA-256", enc.encode(a)), crypto.subtle.digest("SHA-256", enc.encode(b))]);
+  return crypto.subtle.timingSafeEqual(x, y);
 }
+const sessSecret = (env) => env.SESSION_SECRET || null;
+async function makeSession(env, who) { const ver = (await env.HUB.get("sess_ver")) || "1"; const body = `${who}|${Date.now() + 30 * 86400e3}|${ver}`; return `${btoa(body)}.${await hmac(sessSecret(env), body)}`; }
+async function readSession(env, token) {
+  if (!token || !sessSecret(env)) return null;
+  const [b, sig] = token.split(".");
+  try { const body = atob(b); if (!(await sameSecret(await hmac(sessSecret(env), body), sig))) return null; const [who, exp, ver] = body.split("|"); if (Date.now() > +exp) return null; if ((ver || "") !== ((await env.HUB.get("sess_ver")) || "1")) return null; return who; } catch { return null; }
+}
+// routes a feed key may use (method + path); everything else needs Jesse's session or the login key
+const FEED_ROUTES = new Set(["GET /api/config", "GET /api/health", "GET /api/world/want", "GET /api/apps/targets", "GET /api/queue", "POST /api/queue/claim", "POST /api/queue/result", "GET /api/alarm/due", "GET /api/inbox/bridges",
+  "POST /api/state", "POST /api/world/feed", "POST /api/world/globalfeed", "POST /api/world/camsfeed", "POST /api/world/placesfeed", "POST /api/world/shipsfeed", "POST /api/inbox", "POST /api/intake", "POST /api/social/posted"]);
+const FEED_STATE_KEYS = ["metrics", "traffic", "sports", "decisions", "watch", "brief"];   // the only /api/state keys a feeder may write
 async function authed(request, env) {
-  if (!env.HUB_KEY) return "dev";
+  if (!env.HUB_KEY) return env.DEV === "1" ? "dev" : null;   // fail closed: a missing secret locks the hub instead of opening it
   const hdr = request.headers.get("x-hub-key");
-  if (hdr && hdr === env.HUB_KEY) return "key";
-  const c = cookies(request);
-  if (c.hub === env.HUB_KEY) return "key";
-  return readSession(env, c.sess);
+  if (hdr) { if (await sameSecret(hdr, env.HUB_KEY)) return "key"; if (await sameSecret(hdr, env.FEED_KEY)) return "feed"; return null; }
+  return readSession(env, cookies(request).sess);
 }
 const setCookie = (name, value, maxAge = 31536000) => `${name}=${value}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
 
@@ -328,21 +342,14 @@ async function notify(env, title, body, { priority = "default", tags = "", url =
     const pr = priority === "alarm" ? "2" : priority === "urgent" || priority === "reminder" ? "1" : priority === "high" ? "0" : "-1";
     // the alarm plays a custom Pushover sound ("baroque" first, else any uploaded one; his is named "Alarm") (Vivaldi clip, jarvis-hub/sounds/baroque.mp3) once it's uploaded to Pushover; spacealarm until then
     let alarmSound = "spacealarm";
-    if (priority === "alarm" && !sound) { try { const s = await (await fetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); alarmSound = s?.sounds?.baroque ? "baroque" : Object.keys(s?.sounds || {}).find((k) => !PUSHOVER_BUILTIN.includes(k)) || alarmSound; } catch {} }
+    if (priority === "alarm" && !sound) { try { const s = await (await tfetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); alarmSound = s?.sounds?.baroque ? "baroque" : Object.keys(s?.sounds || {}).find((k) => !PUSHOVER_BUILTIN.includes(k)) || alarmSound; } catch {} }
     const form = new URLSearchParams({ token: env.PUSHOVER_TOKEN, user: env.PUSHOVER_USER, title: "JARVIS: " + title, message: body, priority: pr, sound: sound || (priority === "alarm" ? alarmSound :priority === "reminder" ? "incoming" : priority === "urgent" ? "siren" : "pushover"), ...(priority === "alarm" ? { retry: "60", expire: "1800" } : {}), ...(url ? { url, url_title: "Open JARVIS" } : {}) });
-    out.push(fetch("https://api.pushover.net/1/messages.json", { method: "POST", body: form }).then(async (r) => { const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {} return { pushover: r.status, receipt: j?.receipt, sound: form.get("sound"), detail: r.ok ? undefined : t.slice(0, 200) }; }).catch((e) => ({ pushover: "error", detail: String(e.message || e) })));
-  }
-  if (env.NTFY_TOPIC) {
-    out.push(fetch("https://ntfy.sh/" + env.NTFY_TOPIC, { method: "POST", body, headers: { "user-agent": UA, Title: title, Priority: priority, ...(tags ? { Tags: tags } : {}), ...(url ? { Click: url } : {}) } }).then((r) => ({ ntfy: r.status })).catch((e) => ({ ntfy: "error", detail: String(e.message || e) })));
+    out.push(tfetch("https://api.pushover.net/1/messages.json", { method: "POST", body: form }).then(async (r) => { const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {} return { pushover: r.status, receipt: j?.receipt, sound: form.get("sound"), detail: r.ok ? undefined : t.slice(0, 200) }; }).catch((e) => ({ pushover: "error", detail: String(e.message || e) })));
   }
   // the phone's own browser (Chrome on Android, etc.) once it has subscribed on the Radio panel: alarms, reminders and anything urgent/high
   // alarms go through Pushover alone when it's configured: the Chrome notification's beep competed with the Vivaldi alarm sound (2026-10-09)
   if (["reminder", "urgent", "high"].includes(priority) || (priority === "alarm" && !(env.PUSHOVER_TOKEN && env.PUSHOVER_USER))) {
     out.push(webPush(env, { title: "JARVIS: " + title, body, url, priority, kind: priority === "alarm" ? "alarm" : "", tag: priority === "alarm" ? "alarm" : "", at: new Date().toISOString() }, { ttl: priority === "alarm" ? 1800 : 3600, urgency: "high", topic: priority === "alarm" ? "alarm" : "" }).then((r) => ({ webpush: r })).catch((e) => ({ webpush: "error", detail: String(e.message || e) })));
-  }
-  if (env.RESEND_API_KEY && env.ALERT_EMAIL) {
-    out.push(fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_API_KEY, "content-type": "application/json" },
-      body: JSON.stringify({ from: env.ALERT_FROM || "JARVIS <onboarding@resend.dev>", to: [env.ALERT_EMAIL], subject: "JARVIS: " + title, text: body + (url ? "\n\n" + url : "") }) }).then((r) => ({ email: r.status })).catch((e) => ({ email: "error", detail: String(e.message || e) })));
   }
   const res = await Promise.all(out);
   // keep the last 40 answers so "did the alarm actually go out?" has an answer (/api/push/log, Radio panel)
@@ -398,7 +405,7 @@ async function loadCalendar(env, force) {
   const cached = await kv.get(env, "calendar");
   if (cached && !force && Date.now() - new Date(cached.at) < 30 * 60000) return cached;
   try {
-    const text = await (await fetch(env.CAL_ICS_URL, { headers: { "user-agent": UA } })).text();
+    const text = await (await tfetch(env.CAL_ICS_URL, { headers: { "user-agent": UA } }, 10000)).text();
     const from = Date.now() - 86400e3, to = Date.now() + 60 * 86400e3;
     const events = parseICS(text).filter((e) => !e.recurring && new Date(e.start) >= from && new Date(e.start) <= to).sort((a, b) => a.start.localeCompare(b.start)).slice(0, 60);
     const cal = { at: new Date().toISOString(), events }; await kv.put(env, "calendar", cal); return cal;
@@ -580,18 +587,30 @@ async function triage(env, items) {
   try { const arr = JSON.parse(text.slice(text.indexOf("["), text.lastIndexOf("]") + 1)); return Object.fromEntries(arr.map((x) => [items[x.n - 1]?.threadId, x]).filter(([k]) => k)); } catch { return {}; }
 }
 
+// the combined inbox (KV `inbox`, read by the panel, briefs and hooks) is rebuilt from every account's own key
+async function rebuildInbox(env, account, mine) {
+  const prev = (await kv.get(env, "inbox")) || { accounts: {} };
+  const names = [...new Set([...Object.keys(prev.accounts || {}), ...Object.keys((await kv.get(env, "inbox_hooks")) || {}), account])];
+  const accounts = {};
+  await Promise.all(names.map(async (a) => { const v = a === account ? mine : (await kv.get(env, "inbox_acct_" + a)) || prev.accounts?.[a]; if (v) accounts[a] = v; }));
+  const inbox = { accounts }; await kv.put(env, "inbox", inbox); return inbox;
+}
+
 async function ingestInbox(env, body, ctx) {
   const account = String(body.account || "").toLowerCase(); if (!account) return json({ error: "no account" }, 400);
-  const inbox = (await kv.get(env, "inbox")) || { accounts: {} };
-  const cache = (await kv.get(env, "inbox_class")) || {};
+  const classKey = "inbox_class_" + account;
+  const cache = (await kv.get(env, classKey)) || (await kv.get(env, "inbox_class")) || {};   // falls back to the old shared cache once
   const items = (body.items || []).slice(0, 60);
-  const fresh = items.filter((m) => !cache[m.threadId] || cache[m.threadId].date !== m.date);
+  // a failed triage is cached as {failed, retryAt} so a broken thread is retried every 30 min, not re-sent to Claude on every sync
+  const fresh = items.filter((m) => { const c = cache[m.threadId]; if (!c || c.date !== m.date) return true; return c.failed && Date.now() > (c.retryAt || 0); });
   let classes = {}; try { classes = await triage(env, fresh); } catch (e) { console.log("triage failed", e.message); }
-  for (const m of fresh) { const c = classes[m.threadId]; if (c) cache[m.threadId] = { date: m.date, needs_reply: !!c.needs_reply, summary: c.summary, priority: c.priority, kind: c.kind }; }
-  const keep = Object.fromEntries(Object.entries(cache).filter(([, v]) => Date.now() - new Date(v.date) < 14 * 86400e3)); await kv.put(env, "inbox_class", keep);
+  for (const m of fresh) { const c = classes[m.threadId]; cache[m.threadId] = c ? { date: m.date, needs_reply: !!c.needs_reply, summary: c.summary, priority: c.priority, kind: c.kind } : { date: m.date, failed: true, retryAt: Date.now() + 30 * 60e3 }; }
+  const keep = Object.fromEntries(Object.entries(cache).filter(([, v]) => Date.now() - new Date(v.date) < 14 * 86400e3)); await kv.put(env, classKey, keep);
+  for (const k of Object.keys(keep)) if (keep[k].failed) delete keep[k];   // placeholders carry no labels
   // marketplace inquiry notices (Zola, The Knot) are answered by the intake script: never NEEDS REPLY, flagged `intake` instead
-  inbox.accounts[account] = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}), ...(marketLead(m, body.business) ? { needs_reply: false, kind: "lead", intake: true, ...leadSummary(m) } : {}) })) };
-  await kv.put(env, "inbox", inbox);
+  const mine = { business: body.business || "other", at: new Date().toISOString(), items: items.map((m) => ({ ...m, ...(keep[m.threadId] ? { needs_reply: keep[m.threadId].needs_reply && !m.lastFromMe, summary: keep[m.threadId].summary, priority: keep[m.threadId].priority, kind: keep[m.threadId].kind } : {}), ...(marketLead(m, body.business) ? { needs_reply: false, kind: "lead", intake: true, ...leadSummary(m) } : {}) })) };
+  await kv.put(env, "inbox_acct_" + account, mine);
+  const inbox = await rebuildInbox(env, account, mine);
   const once = await onceStore(env);
   for (const m of fresh) {
     if (!/apple\.com|googleplay|play-console|google-play|android-developer/i.test(m.fromEmail || "") || !/review|submission|rejected|approved|ready for|status|policy|removed|suspend/i.test(m.subject || "")) continue;
@@ -602,9 +621,10 @@ async function ingestInbox(env, body, ctx) {
   await once.save();
   if (body.secret) {
     // Apps Script reports its signed-in test URL (/a/<domain>/macros/...); only a public /macros/s/.../exec deployment URL works for the hub.
+    // The URL is adopted only when the account has none yet: a sync can never re-point an inbox's actions somewhere else (2026-10-16 audit).
     const hooks = (await kv.get(env, "inbox_hooks")) || {}; const cur = hooks[account] || {};
     const reported = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(body.hookUrl || "") ? body.hookUrl : null;
-    hooks[account] = { ...cur, url: cur.pinned ? cur.url : (reported || cur.url || null), secret: body.secret, business: body.business || "other", at: new Date().toISOString() };
+    hooks[account] = { ...cur, url: cur.url || reported || null, secret: body.secret, business: body.business || "other", at: new Date().toISOString() };
     await kv.put(env, "inbox_hooks", hooks);
   }
   // the Inbox panel, the nudges and the briefs all read `brief`; rebuild it from every bridged account
@@ -614,20 +634,19 @@ async function ingestInbox(env, body, ctx) {
   await kv.put(env, "brief", { at: new Date().toISOString(), source: "bridge", accounts: Object.keys(inbox.accounts), note: all.length ? `${unread} unread across ${Object.keys(inbox.accounts).length} inbox${Object.keys(inbox.accounts).length > 1 ? "es" : ""}, ${needs} need${needs === 1 ? "s" : ""} a reply` : "All inboxes clear.", items: all.slice(0, 40) });
   // announce new mail from real people that matters (leads, clients, bookings, payments): push now, and any open page says it
   try {
-    const told = (await kv.get(env, "mail_told")) || {}; const outM = []; const bizName = BIZ_NAME[body.business] || BIZ_LABEL[body.business] || body.business || "";
+    const outM = []; const bizName = BIZ_NAME[body.business] || BIZ_LABEL[body.business] || body.business || "";
     for (const m of fresh) { const c = keep[m.threadId]; const key = m.threadId + "|" + m.date;
-      if (!c || told[key] || m.lastFromMe || isBot(m.fromEmail) || !["lead", "client", "booking", "payment"].includes(c.kind) || (c.priority || 3) > 2 || Date.now() - new Date(m.date) > 3 * 3600e3) continue;
-      told[key] = Date.now(); const who = String(m.from || "").replace(/<.*>/, "").trim() || m.fromEmail; const auto = marketLead(m, body.business);
+      if (!c || m.lastFromMe || isBot(m.fromEmail) || !["lead", "client", "booking", "payment"].includes(c.kind) || (c.priority || 3) > 2 || Date.now() - new Date(m.date) > 3 * 3600e3) continue;
+      if (await env.HUB.get("told_" + key)) continue; await env.HUB.put("told_" + key, "1", { expirationTtl: 7 * 86400 }); const who = String(m.from || "").replace(/<.*>/, "").trim() || m.fromEmail; const auto = marketLead(m, body.business);
       outM.push({ alert: { kind: "mail", text: `New ${c.kind === "lead" ? "lead" : "email"} for ${bizName} from ${who}: ${m.subject}. ${c.summary || ""}${auto ? " The intake script answers this one; I will confirm the reply went out." : ""}`.trim(), url: m.link }, push: { title: `${bizName}: new ${c.kind}`, body: `${who}: ${m.subject}
 ${c.summary || m.snippet || ""}`, opts: { priority: c.priority === 1 ? "high" : "default", tags: "email", url: HUB_ORIGIN + "/#mail" } } });
     }
-    for (const k of Object.keys(told)) if (Date.now() - told[k] > 7 * 86400e3) delete told[k];
-    if (outM.length) { await kv.put(env, "mail_told", told); await flushAlerts(env, outM); }
+    if (outM.length) await flushAlerts(env, outM);
   } catch (e) { console.log("mail announce", e.message); }
   const quick = fresh.filter((m) => { const c = keep[m.threadId]; return c?.needs_reply && !m.lastFromMe && ["lead", "client", "booking"].includes(c.kind) && !isBot(m.fromEmail) && !marketLead(m, body.business) && Date.now() - new Date(m.date) < 6 * 3600e3; }).map((m) => m.threadId);
   if (quick.length && ctx) ctx.waitUntil(makeFollowups(env, { minAgeH: 0, onlyThreads: quick, first: true }).catch((e) => console.log("first reply", e.message)));
-  if (ctx) ctx.waitUntil(prefetchThreads(env, account, inbox.accounts[account].items).catch((e) => console.log("prefetch", e.message)));
-  if (ctx && INTAKE[body.business]) ctx.waitUntil(verifyIntake(env, account, body.business, inbox.accounts[account].items).catch((e) => console.log("intake", e.message)));
+  if (ctx) ctx.waitUntil(prefetchThreads(env, account, mine.items).catch((e) => console.log("prefetch", e.message)));
+  if (ctx && INTAKE[body.business]) ctx.waitUntil(verifyIntake(env, account, body.business, mine.items).catch((e) => console.log("intake", e.message)));
   return json({ ok: true, account, items: items.length, triaged: fresh.length, hook: !!body.hookUrl, drafting: quick.length });
 }
 
@@ -638,7 +657,7 @@ async function bridgeCall(env, account, payload) {
   let out;
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt) await new Promise((r) => setTimeout(r, 1200 * attempt));
-    try { const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" }); const t = await r.text(); try { out = JSON.parse(t); } catch { out = { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : ""), transient: true }; } } catch (e) { out = { error: "bridge unreachable: " + e.message, transient: true }; }
+    try { const r = await tfetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, ...payload }), redirect: "follow" }, 25000); const t = await r.text(); try { out = JSON.parse(t); } catch { out = { error: "bridge returned " + r.status + (t.includes("<") ? " (update the bridge script and deploy a new version)" : ""), transient: true }; } } catch (e) { out = { error: "bridge unreachable: " + e.message, transient: true }; }
     if (!out.transient) break;
   }
   delete out.transient;
@@ -684,7 +703,7 @@ async function emailAction(env, item) {
   const sends = action === "reply" || action === "send";   // not idempotent: Apps Script may have sent the mail and then answered with an HTML/404 page, so one attempt only
   for (let attempt = 0; attempt < (sends ? 1 : 3); attempt++) {
     if (attempt) await new Promise((r) => setTimeout(r, 1500 * attempt));
-    try { const r = await fetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject, ...(attachments.length ? { attachments } : {}) }), redirect: "follow" }); status = r.status; const txt = await r.text(); j = {}; try { j = JSON.parse(txt); } catch {} } catch (e) { j = { error: "bridge unreachable: " + e.message }; }
+    try { const r = await tfetch(hook.url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ secret: hook.secret, action, threadId: p.threadId, body: p.body, to: p.to, subject: p.subject, ...(attachments.length ? { attachments } : {}) }), redirect: "follow" }, 25000); status = r.status; const txt = await r.text(); j = {}; try { j = JSON.parse(txt); } catch {} } catch (e) { j = { error: "bridge unreachable: " + e.message }; }
     if (j.ok || (j.error && !/^bridge /.test(j.error))) break;   // a real answer (success or a script-level error) ends the retries; 404/HTML pages do not
     if (!j.error) j = { error: "bridge " + status };
   }
@@ -913,26 +932,48 @@ const BRAIN_TOOLS = [
   { name: "request_action", description: "Queue a business-data change for Jesse's confirmation. kinds: roven_approve_job (params.jobId), roven_reject_job (params.jobId), roven_approve_employer (params.employerId), lazo_claim (params.claimId, params.decision 'approved'|'rejected'), lazo_listing (params.requestId, params.decision 'approved'|'denied': a new vendor asking to be listed), booking_note (params.business 'atavia'|'es', params.bookingId, params.note), lazo_inquiry_responded (params.inquiryId), email_reply (params.account, params.threadId, params.body), email_archive (params.account, params.threadId), email_read (params.account, params.threadId), email_send (params.account, params.to, params.subject, params.body).", input_schema: { type: "object", properties: { kind: { type: "string", enum: ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "lazo_listing", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"] }, params: { type: "object", properties: { jobId: { type: "string" }, employerId: { type: "string" }, claimId: { type: "string" }, requestId: { type: "string" }, decision: { type: "string" }, business: { type: "string" }, bookingId: { type: "string" }, note: { type: "string" }, inquiryId: { type: "string" }, account: { type: "string" }, threadId: { type: "string" }, body: { type: "string" }, to: { type: "string" }, subject: { type: "string" } } }, summary: { type: "string", description: "One line Jesse will confirm, e.g. 'Approve Roven job Senior RN at Mercy'" } }, required: ["kind", "params", "summary"], additionalProperties: false } },
 ];
 
-async function runTool(name, input, env, actions) {
+// what /api/act accepts: the executor's business kinds, email kinds (run now through the Gmail bridge) and local kinds (run here)
+const ACT_KINDS = ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "lazo_listing", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send", "memory_add", "alarm_off", "competitor_add"];
+const LOCAL_KINDS = ["memory_add", "alarm_off", "competitor_add"];
+const safeHttp = (u) => { try { return /^https?:$/.test(new URL(String(u)).protocol); } catch { return false; } };
+async function runLocalAction(env, item) {
+  const p = item.params || {};
+  if (item.kind === "memory_add") { const mem = (await kv.get(env, "memory")) || []; mem.unshift({ id: uid(), text: String(p.text || "").slice(0, 600), at: new Date().toISOString() }); await kv.put(env, "memory", mem.slice(0, 200)); return { ok: true, message: "remembered" }; }
+  if (item.kind === "alarm_off") { const cur = (await kv.get(env, "alarm")) || {}; await kv.put(env, "alarm", { ...cur, enabled: false, at: new Date().toISOString() }); return { ok: true, message: "alarm off" }; }
+  if (item.kind === "competitor_add") { if (!safeHttp(p.url)) return { ok: false, message: "not an http(s) page" }; return { ok: true, message: await runTool("watch_competitor_confirmed", p, env, []) }; }
+  return { ok: false, message: "unknown kind" };
+}
+// a reply goes to someone already in the thread; a new email only to an address Jesse has corresponded with, unless the card's second tap okays a new address
+async function knownCorrespondent(env, to) {
+  const want = String(to || "").toLowerCase().match(/[^\s<>"',;]+@[^\s<>"',;]+/g) || []; if (!want.length) return false;
+  const brief = (await kv.get(env, "brief")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} };
+  const seen = new Set([...(brief.items || []).map((m) => String(m.fromEmail || "").toLowerCase()), ...Object.values(inbox.accounts).flatMap((a) => (a.items || []).flatMap((m) => [String(m.fromEmail || "").toLowerCase(), ...String(m.to || "").toLowerCase().split(/[,;\s]+/)]))]);
+  return want.every((a) => seen.has(a));
+}
+
+async function runTool(name, input, env, actions, saidRemember = true) {
   switch (name) {
     case "track_flight": { const r = await trackFlight(env, input.flight); r.route = await flightRoute(env, r.callsign); actions.push({ type: "world", flight: r.callsign }); return JSON.stringify(r).slice(0, 3000); }
     case "fleet_status": return JSON.stringify(await fleetStatus(env, "ncl"));
     case "find_ship": { const g = JSON.parse((await env.HUB.get("ships_global")) || '{"ships":[]}'); const q = String(input.name || "").toUpperCase().replace(/\s+/g, " ").trim(); const hits = g.ships.filter((r) => String(r[1]).toUpperCase().includes(q)).slice(0, 5); if (!hits.length) { const last = (await kv.get(env, "fleet_last")) || {}; const k = Object.keys(last).find((n) => n.includes(q)); if (k) { const l = last[k]; actions.push({ type: "ship", mmsi: l.row[0], lat: l.row[2], lon: l.row[3] }); return `${k} is not in the live feed (no shore receiver in range: likely at sea). Last heard ${l.seen}: ${l.row[2]}, ${l.row[3]}${l.row[7] ? ", bound for " + l.row[7] : ""}.`; } } if (!hits.length) return "No vessel called " + input.name + " in the feed right now (it covers passenger ships: cruise ships and ferries; coverage depends on AIS receivers near the ship)."; actions.push({ type: "ship", mmsi: hits[0][0], lat: hits[0][2], lon: hits[0][3] }); return JSON.stringify(hits.map((r) => ({ name: r[1], mmsi: r[0], lat: r[2], lon: r[3], heading: r[4], speed_kt: r[5], destination: r[7], length_m: r[8], reported_s_ago: r[9] }))); }
     case "watch_ship": { let list = (await kv.get(env, "ship_watch")) || []; const q = String(input.name || "").trim(); if (input.action === "list") return list.length ? list.map((w) => `${w.name}${w.lastSeen ? " (last seen " + w.lastSeen.slice(0, 16) + ")" : " (not seen yet)"}`).join("; ") : "No ships on watch."; if (input.action === "remove") { list = list.filter((w) => w.name.toUpperCase() !== q.toUpperCase()); await kv.put(env, "ship_watch", list); return "Removed."; } if (!list.some((w) => w.name.toUpperCase() === q.toUpperCase())) list.push({ name: q, added: new Date().toISOString() }); await kv.put(env, "ship_watch", list); await shipWatch(env); return `Watching for ${q}. I'll push and say so when any receiver hears her.`; }
     case "flights_overhead": { const place = await kv.get(env, "place"); const ac = await flightsNear(env, +(place?.lat || 33.15), +(place?.lon || -96.82), input.nm || 25); actions.push({ type: "world" }); return JSON.stringify({ near: place?.name, count: ac.length, aircraft: ac.slice(0, 25) }); }
-    case "open_link": actions.push({ type: "open", url: input.url, label: input.label }); return "Opened " + input.label + ".";
+    case "open_link": { if (!safeHttp(input.url)) return "Only http(s) links can be opened."; actions.push({ type: "open", url: input.url, label: input.label }); return "Opened " + input.label + "."; }
     case "append_note": { const cur = (await kv.get(env, "notes")) || ""; const next = (cur ? cur.replace(/\s+$/, "") + "\n" : "") + "- " + input.text; await kv.put(env, "notes", next); actions.push({ type: "notes", value: next }); return "Added."; }
-    case "remember": { const mem = (await kv.get(env, "memory")) || []; const m = { id: uid(), text: input.text, at: new Date().toISOString() }; mem.unshift(m); await kv.put(env, "memory", mem.slice(0, 200)); actions.push({ type: "memory", value: mem }); return "Remembered [" + m.id + "]."; }
+    case "remember": if (!saidRemember) { actions.push({ type: "confirm", item: { id: uid(), kind: "memory_add", params: { text: input.text }, summary: "Remember: " + String(input.text).slice(0, 160), status: "awaiting confirmation", at: new Date().toISOString() } }); return "Shown to Jesse to confirm before it is stored."; }
+      { const mem = (await kv.get(env, "memory")) || []; const m = { id: uid(), text: input.text, at: new Date().toISOString() }; mem.unshift(m); await kv.put(env, "memory", mem.slice(0, 200)); actions.push({ type: "memory", value: mem }); return "Remembered [" + m.id + "]."; }
     case "forget": { const mem = ((await kv.get(env, "memory")) || []).filter((m) => m.id !== input.id); await kv.put(env, "memory", mem); actions.push({ type: "memory", value: mem }); return "Forgotten."; }
     case "add_trip": { const t = await addTrip(env, input); actions.push({ type: "trips" }); return JSON.stringify(t); }
     case "remove_trip": { const trips = ((await kv.get(env, "trips")) || []).filter((t) => t.id !== input.id); await kv.put(env, "trips", trips); actions.push({ type: "trips" }); return "Removed."; }
     case "watch_app": { const list = (await kv.get(env, "apps_watch")) || []; const key = (input.platform + "_" + input.id).toLowerCase(); if (!list.some((a) => a.key === key)) list.push({ key, name: input.name, ...(input.platform === "ios" ? { ios: /^\d+$/.test(input.id) ? { id: input.id } : { bundle: input.id } } : { android: input.id }) }); await kv.put(env, "apps_watch", list); return "Watching " + input.name + ". The first check lands within 15 minutes."; }
     case "set_reminder": { const r = await addReminder(env, input); actions.push({ type: "reminders" }); return r.error ? r.error : `Reminder [${r.id}] set for ${r.local}${r.repeat !== "none" ? ", repeating " + r.repeat : ""}.`; }
     case "cancel_reminder": { await kv.put(env, "reminders", ((await kv.get(env, "reminders")) || []).filter((r) => r.id !== input.id)); actions.push({ type: "reminders" }); return "Cancelled."; }
-    case "set_alarm": { const tm = String(input.time || "").match(/^(\d{1,2}):(\d{2})$/); if (!tm || +tm[1] > 23 || +tm[2] > 59) return JSON.stringify({ error: "time must be HH:MM 24h" }); const time = tm[1].padStart(2, "0") + ":" + tm[2]; const cur = (await kv.get(env, "alarm")) || {}; const days = input.days === "weekdays" ? [1, 2, 3, 4, 5] : input.days === "weekends" ? [0, 6] : []; const next = alarmToday(env, { ...cur, enabled: !!input.enabled, time, days, at: new Date().toISOString() }); await kv.put(env, "alarm", next); actions.push({ type: "alarm" }); return `Alarm ${next.enabled ? "set for " + next.time + " " + (input.days === "all" ? "every day" : input.days) : "off"}.`; }
-    case "watch_competitor": { const list = (await kv.get(env, "competitors")) || []; if (!list.some((c) => c.url === input.url)) list.push({ url: input.url, label: input.label, business: input.business, added: new Date().toISOString() }); await kv.put(env, "competitors", list); actions.push({ type: "competitors" }); return "Watching " + input.label + ". First scan Sunday evening, or say 'scan competitors now'."; }
+    case "set_alarm": if (!input.enabled) { actions.push({ type: "confirm", item: { id: uid(), kind: "alarm_off", params: {}, summary: "Turn the wake-up alarm off", status: "awaiting confirmation", at: new Date().toISOString() } }); return "Shown to Jesse to confirm turning the alarm off."; }
+    { const tm = String(input.time || "").match(/^(\d{1,2}):(\d{2})$/); if (!tm || +tm[1] > 23 || +tm[2] > 59) return JSON.stringify({ error: "time must be HH:MM 24h" }); const time = tm[1].padStart(2, "0") + ":" + tm[2]; const cur = (await kv.get(env, "alarm")) || {}; const days = input.days === "weekdays" ? [1, 2, 3, 4, 5] : input.days === "weekends" ? [0, 6] : []; const next = alarmToday(env, { ...cur, enabled: !!input.enabled, time, days, at: new Date().toISOString() }); await kv.put(env, "alarm", next); actions.push({ type: "alarm" }); return `Alarm ${next.enabled ? "set for " + next.time + " " + (input.days === "all" ? "every day" : input.days) : "off"}.`; }
+    case "watch_competitor": { if (!safeHttp(input.url)) return "Only http(s) pages can be watched."; actions.push({ type: "confirm", item: { id: uid(), kind: "competitor_add", params: { url: input.url, label: input.label, business: input.business }, summary: `Watch ${input.label} (${input.url}) for price changes`, status: "awaiting confirmation", at: new Date().toISOString() } }); return "Shown to Jesse to confirm."; }
+    case "watch_competitor_confirmed": { const list = (await kv.get(env, "competitors")) || []; if (!list.some((c) => c.url === input.url)) list.push({ url: input.url, label: input.label, business: input.business, added: new Date().toISOString() }); await kv.put(env, "competitors", list); actions.push({ type: "competitors" }); return "Watching " + input.label + ". First scan Sunday evening, or say 'scan competitors now'."; }
     case "draft_reply": { actions.push({ type: "draft", ...input }); return "Draft shown to Jesse with an Open in Gmail button."; }
-    case "request_action": { const KINDS = ["roven_approve_job", "roven_reject_job", "roven_approve_employer", "lazo_claim", "lazo_listing", "booking_note", "lazo_inquiry_responded", "email_reply", "email_archive", "email_read", "email_send"]; if (!KINDS.includes(input.kind) || typeof input.params !== "object" || !input.summary) return "Invalid action: kind must be one of " + KINDS.join(", ") + " with params and summary.";
+    case "request_action": { const KINDS = ACT_KINDS.filter((k) => !LOCAL_KINDS.includes(k)); if (!KINDS.includes(input.kind) || typeof input.params !== "object" || !input.summary) return "Invalid action: kind must be one of " + KINDS.join(", ") + " with params and summary.";
       const item = { id: uid(), kind: input.kind, params: input.params, summary: input.summary, status: "awaiting confirmation", at: new Date().toISOString() }; actions.push({ type: "confirm", item }); return "Queued for confirmation: " + input.summary; }
     default: return "Unknown tool";
   }
@@ -952,12 +993,13 @@ async function chat(request, env, ctx) {
       const context = await buildContext(env, request); timing.context = Date.now() - T0;
       const messages = [...history.slice(-12), { role: "user", content: text }];
       const actions = []; let reply = "";
+      const saidRemember = /\b(remember|note that|from now on|don'?t forget|keep in mind)\b/i.test(String(text || ""));   // only Jesse's own words store a memory directly; anything else goes to a confirm card
       for (let i = 0; i < 4; i++) {
         const stream = client.beta.messages.stream({
           model: (modelPick || env.CHAT_MODEL) === "sonnet" ? "claude-sonnet-5-5" : MODEL, ...((modelPick || env.CHAT_MODEL) === "sonnet" ? { thinking: { type: "between_tools" } } : {}),
           max_tokens: 4000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
-          system: [{ type: "text", text: BRAIN_SYSTEM + "\nKnown links: " + JSON.stringify(LINKS), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context }],
-          ...(noTools ? {} : { tools: [...BRAIN_TOOLS, { type: "web_search_20250305", name: "web_search", max_uses: 3 }] }), messages,
+          system: [{ type: "text", text: BRAIN_SYSTEM + "\nKnown links: " + JSON.stringify(LINKS), cache_control: { type: "ephemeral" } }, { type: "text", text: "LIVE CONTEXT:\n" + context, cache_control: { type: "ephemeral" } }],
+          ...(noTools ? {} : { tools: [...BRAIN_TOOLS, { type: "web_search_20260209", name: "web_search", max_uses: 3 }] }), messages,
         });
         let turnText = "";
         stream.on("text", (d) => { if (timing.firstText == null) timing.firstText = Date.now() - T0; turnText += d; send("delta", { text: d }); });
@@ -969,7 +1011,7 @@ async function chat(request, env, ctx) {
         const results = [];
         if (!msg.content.some((b) => b.type === "tool_use")) break;
         for (const b of msg.content.filter((b) => b.type === "tool_use")) {
-          let out; try { out = await runTool(b.name, b.input, env, actions); } catch (e) { out = "Tool failed: " + e.message; }
+          let out; try { out = await runTool(b.name, b.input, env, actions, saidRemember); } catch (e) { out = "Tool failed: " + e.message; }
           results.push({ type: "tool_result", tool_use_id: b.id, content: String(out) });
         }
         messages.push({ role: "user", content: results });
@@ -995,6 +1037,15 @@ const SLOT_PROMPTS = {
 const SLOT_HOURS = (env) => Object.fromEntries((env.BRIEF_HOURS || "5:morning,12:afternoon,18:evening").split(",").map((x) => { const [h, slot] = x.split(":"); return [+h, slot || "morning"]; }));
 const slotNow = (env) => { const h = localHour(env); return h < 11 ? "morning" : h < 17 ? "afternoon" : "evening"; };
 
+// the slot's brief, once: the hourly tick runs it, and the 5-minute cron catches up if that tick was skipped or failed
+async function briefIfDue(env) {
+  const slot = SLOT_HOURS(env)[localHour(env)]; if (!slot) return;
+  const recent = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === slot && Date.now() - new Date(b.at) < 3 * 3600e3); // never two of the same brief in one morning
+  if (recent || (await env.HUB.get("brief_lock_" + slot))) return;
+  await env.HUB.put("brief_lock_" + slot, new Date().toISOString(), { expirationTtl: 1800 });
+  const fake = new Request(HUB_ORIGIN + "/", { cf: {} });
+  await makeMorning(env, fake, slot).catch(async (e) => { await healthNote(env, "brief", { slot, error: String(e.message).slice(0, 120) }); await pushAlert(env, { kind: "watch", text: slot + " brief failed: " + e.message }); });
+}
 async function makeMorning(env, request, slot) {
   if (!env.ANTHROPIC_API_KEY) return { error: "no brain" };
   slot = slot || slotNow(env);
@@ -1213,7 +1264,7 @@ async function makeFollowups(env, { minAgeH = 24, dry = false, onlyThreads = nul
     const last = t.messages[t.messages.length - 1];
     const thread = t.messages.slice(-6).map((x) => `FROM: ${x.from}\nDATE: ${x.date}\n${String(x.body || "").slice(0, 3000)}`).join("\n---\n");
     const r = await client.beta.messages.create({
-      model: "claude-sonnet-5-5", max_tokens: 1500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
+      model: MODEL, max_tokens: 1500, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "low" },
       system: `You write email replies for ${BIZ_NAME[m.business] || BIZ_LABEL[m.business] || "the business"}, owned by Jesse Clark.
 HOW THIS BUSINESS REPLIES (Jesse's playbook; follow it, it may include prices and packages you are allowed to quote):
 ${playbook[m.business] || DEFAULT_PLAYBOOK[m.business] || DEFAULT_PLAYBOOK.brisk}
@@ -1462,7 +1513,7 @@ async function observe(env, request, { force = false } = {}) {
   const context = await buildContext(env, request);
   const said = prev.filter((o) => Date.now() - new Date(o.at) < 36 * 3600e3).map((o) => `${o.at.slice(5, 16)}: ${o.text}`).join("\n");
   const r = await client.beta.messages.create({
-    model: "claude-sonnet-5-5", max_tokens: 2000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
+    model: MODEL, max_tokens: 2000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },
     system: BRAIN_SYSTEM + `\nYou are keeping an eye on things between conversations. Decide whether there is ONE thing worth saying to Jesse right now that he has not been told (see ALREADY SAID). Worth saying: a lead or client email that arrived and is still unanswered; a payment that failed or came in; a site down or slow; a feed that stopped; weather turning bad before this week's wedding; a final score for one of his teams; a competitor change; a reminder of something he said he would do (NOTES, MEMORY); an app review result; a search traffic jump or drop; the Cox or any balance retry outcome. Not worth saying: routine numbers, anything in ALREADY SAID or the latest brief, generic encouragement, weather small talk. If nothing qualifies reply with exactly NOTHING. Otherwise reply with one or two spoken sentences, specific, with the number or name, no preamble.`,
     messages: [{ role: "user", content: `ALREADY SAID (last 36 h):\n${said || "(nothing yet today)"}\n\nLIVE CONTEXT:\n${context}` }],
   });
@@ -1611,20 +1662,29 @@ async function alarmCall(env, text) {
   if (!callConfigured(env)) return { call: "unconfigured" };
   const say = `<Say voice="Polly.Brian">${xmlEsc(text)}</Say>`; const twiml = `<Response>${say}<Pause length="1"/>${say}<Pause length="1"/>${say}</Response>`;
   try {
-    const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_SID}/Calls.json`, { method: "POST", headers: { authorization: "Basic " + btoa(env.TWILIO_SID + ":" + env.TWILIO_TOKEN) }, body: new URLSearchParams({ To: env.ALARM_PHONE, From: env.TWILIO_FROM, Twiml: twiml, Timeout: "45" }) });
+    const r = await tfetch(`https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_SID}/Calls.json`, { method: "POST", headers: { authorization: "Basic " + btoa(env.TWILIO_SID + ":" + env.TWILIO_TOKEN) }, body: new URLSearchParams({ To: env.ALARM_PHONE, From: env.TWILIO_FROM, Twiml: twiml, Timeout: "45" }) });
     const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {}
     const out = { call: r.status, sid: j?.sid, detail: r.ok ? undefined : t.slice(0, 200) };
     try { const log = (await kv.get(env, "push_log")) || []; log.unshift({ at: new Date().toISOString(), title: "Phone call: " + text.slice(0, 40), priority: "alarm", res: [out] }); await kv.put(env, "push_log", log.slice(0, 40)); } catch {}
     return out;
   } catch (e) { return { call: "error", detail: String(e.message || e) }; }
 }
+// "I'm up" / snooze live in their own key (alarm_ack, written only by /api/alarm/ack), so alarmWatch's read-modify-write of
+// `alarm` can never wipe a tap that landed while it was waiting on Pushover
+async function applyAck(env, al, lp) {
+  const a = await kv.get(env, "alarm_ack");
+  if (a?.date !== lp.date) return al;
+  if (a.action === "snooze") { if (!al.snooze || new Date(a.snooze) > new Date(al.snooze)) { al.snooze = a.snooze; delete al.acked; } }
+  else { al.acked = lp.date; al.ackedAt = a.at; al.ackedBy = a.by; delete al.snooze; }
+  return al;
+}
 async function alarmWatch(env, lp) {
   if (!env.PUSHOVER_TOKEN) return;
-  const al = (await kv.get(env, "alarm")) || {}; const now = Date.now();
+  const al = await applyAck(env, (await kv.get(env, "alarm")) || {}, lp); const now = Date.now();
   if (!(al.enabled && al.lastFired === lp.date && al.firedAt && al.acked !== lp.date && now - new Date(al.firedAt) < 40 * 60e3)) return;
   const mins = Math.round((now - new Date(al.firedAt)) / 60e3); if (mins < 1) return;
   const rc = al.firedReceipt || al.receipt; let d = null;
-  if (rc) { try { const r = await (await fetch(`https://api.pushover.net/1/receipts/${rc}.json?token=${env.PUSHOVER_TOKEN}`)).json(); if (r.status === 1) d = { receipt: rc, acknowledged: !!r.acknowledged, acknowledgedAt: r.acknowledged_at ? new Date(r.acknowledged_at * 1000).toISOString() : null, delivered: !!r.last_delivered_at, deliveredAt: r.last_delivered_at ? new Date(r.last_delivered_at * 1000).toISOString() : null, expired: !!r.expired, device: r.acknowledged_by_device || "", checkedAt: new Date().toISOString() }; } catch {} }
+  if (rc) { try { const r = await (await tfetch(`https://api.pushover.net/1/receipts/${rc}.json?token=${env.PUSHOVER_TOKEN}`)).json(); if (r.status === 1) d = { receipt: rc, acknowledged: !!r.acknowledged, acknowledgedAt: r.acknowledged_at ? new Date(r.acknowledged_at * 1000).toISOString() : null, delivered: !!r.last_delivered_at, deliveredAt: r.last_delivered_at ? new Date(r.last_delivered_at * 1000).toISOString() : null, expired: !!r.expired, device: r.acknowledged_by_device || "", checkedAt: new Date().toISOString() }; } catch {} }
   if (d) { al.delivery = d; if (!al.firedReceipt) al.firedReceipt = rc; }
   if (d?.acknowledged) { al.acked = lp.date; al.ackedAt = d.acknowledgedAt || new Date().toISOString(); al.ackedBy = "pushover"; delete al.snooze; await kv.put(env, "alarm", al); return; }
   if (al.snooze && now < new Date(al.snooze)) { await kv.put(env, "alarm", al); return; }
@@ -1639,7 +1699,7 @@ async function alarmWatch(env, lp) {
       const po = res.find?.((r) => r.pushover != null); if (po?.receipt) al.receipt = po.receipt;
     }
   }
-  await kv.put(env, "alarm", al);
+  await kv.put(env, "alarm", await applyAck(env, al, lp));
 }
 
 /* ---------------- competitors: weekly price/package scan ---------------- */
@@ -1682,10 +1742,12 @@ export default {
     await applyHome(env);
     const cron = event.cron || ""; ctx.waitUntil(healthNote(env, "cron", cron));
     if (cron === "* * * * *") { ctx.waitUntil(tickMinute(env, true).catch((e) => console.log("minute", e.message))); return; }
+    if (cron.startsWith("*/5") && new Date().getUTCMinutes() >= 10) ctx.waitUntil(briefIfDue(env).catch((e) => console.log("brief catch-up", e.message)));   // a skipped hourly tick still gets its brief
     if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(async () => { const t = await kv.get(env, "tick_at"); if (!t || Date.now() - new Date(t) > 90e3) await tickMinute(env); }).then(() => shipWatch(env)).then(() => socialFromLog(env)).then(() => watchMerged(env)).then((w) => w && watchWatch(env, { social: w.social, at: w.at })).catch((e) => console.log("5-min cron", e.message)));   // tickMinute here is only a backstop for a skipped minute cron
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
       await weddingWeather(env).catch(() => null);
+      await briefIfDue(env);   // the brief goes before the slower jobs, so a long follow-up or observer run can't push it out of the tick
       await appStores(env).catch((e) => console.log("app stores", e.message));
       if (localHour(env) === 4) { await dailyReadings(env).catch((e) => console.log("readings", e.message)); await saintOfDay(env).catch((e) => console.log("saint", e.message)); const dowF = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }); if (dowF === "Sat") { const sun = new Date(Date.now() + 86400e3).toLocaleDateString("en-CA", { timeZone: env.TZ || "America/Chicago" }); await dailyReadings(env, { date: sun }).catch((e) => console.log("vigil readings", e.message)); } }   // ready before the morning brief; Sunday's for the vigil
       await makeFollowups(env).catch((e) => console.log("follow-ups", e.message));
@@ -1693,12 +1755,6 @@ export default {
       const dow = new Date().toLocaleDateString("en-US", { timeZone: env.TZ || "America/Chicago", weekday: "short" }), hr = localHour(env);
       if (dow === "Sun" && hr === 20) await scanCompetitors(env).catch((e) => console.log("competitors", e.message));
       if (dow === "Mon" && hr === 6) { const hadWeekly = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === "weekly" && Date.now() - new Date(b.at) < 3 * 86400e3); if (!hadWeekly) { const fake = new Request(HUB_ORIGIN + "/", { cf: {} }); await makeMorning(env, fake, "weekly").catch((e) => pushAlert(env, { kind: "watch", text: "weekly review failed: " + e.message })); } }
-      const slot = SLOT_HOURS(env)[localHour(env)];
-      const recent = ((await kv.get(env, "briefs")) || []).some((b) => b.slot === slot && Date.now() - new Date(b.at) < 3 * 3600e3); // never two of the same brief in one morning
-      if (slot && !recent) {
-        const fake = new Request(HUB_ORIGIN + "/", { cf: {} });
-        await makeMorning(env, fake, slot).catch(async (e) => { await healthNote(env, "brief", { slot, error: String(e.message).slice(0, 120) }); await pushAlert(env, { kind: "watch", text: slot + " brief failed: " + e.message }); });
-      }
     })());
   },
 
@@ -1707,10 +1763,11 @@ export default {
     const url = new URL(request.url); const p = url.pathname;
     if (p === "/auth" && request.method === "POST") {
       const form = await request.formData(); const key = String(form.get("key") || "");
-      if (env.HUB_KEY && key !== env.HUB_KEY) return new Response(lockPage(env, "Wrong key."), { status: 403, headers: { "content-type": "text/html; charset=utf-8" } });
-      return new Response(null, { status: 303, headers: { location: "/", "set-cookie": setCookie("hub", key) } });
+      if (!env.HUB_KEY || !sessSecret(env) || !(await sameSecret(key, env.HUB_KEY))) return new Response(lockPage(env, "Wrong key."), { status: 403, headers: { "content-type": "text/html; charset=utf-8" } });
+      return new Response(null, { status: 303, headers: [["location", "/"], ["set-cookie", setCookie("sess", await makeSession(env, "key"), 30 * 86400)], ["set-cookie", setCookie("hub", "", 0)]] });
     }
     if (p === "/auth/google" && request.method === "POST") return googleLogin(request, env);
+    if (p === "/logout" && url.searchParams.get("all") && (await authed(request, env)) && (await authed(request, env)) !== "feed") await env.HUB.put("sess_ver", String(Date.now()));   // sign every device out
     if (p === "/logout") return new Response(null, { status: 303, headers: [["location", "/"], ["set-cookie", setCookie("hub", "", 0)], ["set-cookie", setCookie("sess", "", 0)]] });
     if (p === "/manifest.webmanifest") return new Response(manifest, { headers: { "content-type": "application/manifest+json" } });
     if (p === "/sw.js") return new Response(SW_JS, { headers: { "content-type": "application/javascript; charset=utf-8", "cache-control": "no-cache", "service-worker-allowed": "/" } });
@@ -1723,9 +1780,10 @@ export default {
       if (p.startsWith("/api/")) return json({ error: "unauthorized" }, 401);
       return new Response(lockPage(env), { status: 401, headers: { "content-type": "text/html; charset=utf-8" } });
     }
+    if (who === "feed" && !FEED_ROUTES.has(request.method + " " + p)) return json({ error: "this key can only post feeds" }, 403);
     if (p === "/" || p === "/index.html" || p === "/wall") return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 
-    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), call: callConfigured(env) ? (env.ALARM_CALL === "always" ? "always" : "fallback") : false, ntfy: env.NTFY_TOPIC || null, email: !!(env.RESEND_API_KEY && env.ALERT_EMAIL), calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago", briefHours: SLOT_HOURS(env), build: BUILD });
+    if (p === "/api/config") return json({ user: who, google: !!env.GOOGLE_CLIENT_ID, brain: !!env.ANTHROPIC_API_KEY, tts: !!env.ELEVENLABS_API_KEY, windy: !!env.WINDY_KEY, pushover: !!(env.PUSHOVER_TOKEN && env.PUSHOVER_USER), call: callConfigured(env) ? (env.ALARM_CALL === "always" ? "always" : "fallback") : false, calendar: !!env.CAL_ICS_URL, home: (await kv.get(env, "home")) || { mode: "auto", key: "tx", tz: env.TZ || "America/Chicago", label: "Texas" }, teams: env.TEAMS || "DAL,NE,TEX,COL,BOS,ARI", tz: env.TZ || "America/Chicago", briefHours: SLOT_HOURS(env), build: BUILD });
     if (p === "/api/status") {
       const cached = url.searchParams.get("fresh") ? null : await kv.get(env, "status");
       if (cached && Date.now() - new Date(cached.checkedAt) < 6 * 60000) return json({ ...cached, uptime: await kv.get(env, "uptime"), history: await kv.get(env, "rt_history") });
@@ -1741,7 +1799,7 @@ export default {
     if (p === "/api/wxdays") return json(url.searchParams.get("fresh") ? { days: await weddingWeather(env) } : ((await kv.get(env, "wxdays")) || { days: {} }));
     if (p === "/api/calendar") return json((await loadCalendar(env, !!url.searchParams.get("fresh"))) || { events: [], off: true });
     if (p === "/api/chat" && request.method === "POST") return chat(request, env, ctx);
-    if (p === "/api/tts" && (request.method === "POST" || request.method === "GET")) return tts(request, env);
+    if (p === "/api/tts" && (request.method === "POST" || (request.method === "GET" && request.headers.get("sec-fetch-site") === "same-origin"))) return tts(request, env);   // GET streams into the page's <audio>; a link from another site must not spend ElevenLabs credit
     if (p === "/api/morning") return json({ latest: (await kv.get(env, "morning")) || null, history: (await kv.get(env, "briefs")) || [], stale: (await kv.get(env, "stale")) || {} });
     if (p === "/api/morning/audio") { const id = url.searchParams.get("id"); const a = await env.HUB.get(id ? "brief_audio_" + id : "brief_audio_" + ((await kv.get(env, "morning"))?.id || ""), "arrayBuffer"); return a ? new Response(a, { headers: { "content-type": "audio/mpeg", "cache-control": "no-store" } }) : new Response("no audio", { status: 404 }); }
     if (p === "/api/morning/run" && request.method === "POST") { const slotQ = url.searchParams.get("slot") || undefined; if (slotQ && !SLOT_PROMPTS[slotQ]) return json({ error: "slot must be one of " + Object.keys(SLOT_PROMPTS).join(", ") }, 400); return json(await makeMorning(env, request, slotQ)); }
@@ -1793,7 +1851,8 @@ export default {
     if (p === "/api/alarm/ack" && request.method === "POST") {
       const b = await request.json().catch(() => ({})); const al = (await kv.get(env, "alarm")) || {}; const lp = localParts(env);
       if (b.action === "snooze") { al.snooze = new Date(Date.now() + 5 * 60e3).toISOString(); delete al.acked; }
-      else { al.acked = lp.date; al.ackedAt = new Date().toISOString(); al.ackedBy = b.action === "wake" ? "page" : b.action || "page"; delete al.snooze; for (const rc of new Set([al.receipt, al.firedReceipt].filter(Boolean))) if (env.PUSHOVER_TOKEN) ctx.waitUntil(fetch(`https://api.pushover.net/1/receipts/${rc}/cancel.json`, { method: "POST", body: new URLSearchParams({ token: env.PUSHOVER_TOKEN }) }).catch(() => null)); delete al.receipt; }
+      else { al.acked = lp.date; al.ackedAt = new Date().toISOString(); al.ackedBy = b.action === "wake" ? "page" : b.action || "page"; delete al.snooze; for (const rc of new Set([al.receipt, al.firedReceipt].filter(Boolean))) if (env.PUSHOVER_TOKEN) ctx.waitUntil(tfetch(`https://api.pushover.net/1/receipts/${rc}/cancel.json`, { method: "POST", body: new URLSearchParams({ token: env.PUSHOVER_TOKEN }) }).catch(() => null)); delete al.receipt; }
+      await kv.put(env, "alarm_ack", { date: lp.date, action: b.action === "snooze" ? "snooze" : "ack", snooze: al.snooze || null, at: new Date().toISOString(), by: al.ackedBy || null });
       await kv.put(env, "alarm", al); return json({ ok: true, acked: al.acked || null, snooze: al.snooze || null });
     }
     if (p === "/api/push/vapid") return json({ key: (await vapidKeys(env)).pub, subs: (await listSubs(env)).map((s) => ({ ua: s.ua, label: s.label, at: s.at, endpoint: s.endpoint.slice(0, 48) })) });
@@ -1801,12 +1860,12 @@ export default {
     if (p === "/api/push/unsubscribe" && request.method === "POST") { const b = await request.json(); return json({ ok: true, subs: await dropSub(env, b.endpoint) }); }
     if (p === "/api/push/log") return json((await kv.get(env, "push_log")) || []);
     if (p === "/api/alarm/call" && request.method === "POST") { const r = await alarmCall(env, "This is JARVIS. This is a test of the wake-up call. Good morning, sir."); return json(r, r.call === "unconfigured" ? 404 : 200); }
-    if (p === "/api/alarm/receipt") { const al = (await kv.get(env, "alarm")) || {}; const id = url.searchParams.get("id") || al.firedReceipt || al.receipt; if (!id || !env.PUSHOVER_TOKEN) return json({ error: "no receipt" }, 404); try { const r = await (await fetch(`https://api.pushover.net/1/receipts/${id}.json?token=${env.PUSHOVER_TOKEN}`)).json(); const t = (s) => s ? new Date(s * 1000).toISOString() : null; return json({ id, ...r, acknowledged_at: t(r.acknowledged_at), last_delivered_at: t(r.last_delivered_at), expires_at: t(r.expires_at), delivery: al.delivery || null }); } catch (e) { return json({ error: e.message }, 502); } }
-    if (p === "/api/push/sounds") { try { const s = await (await fetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); return json({ baroque: !!s?.sounds?.baroque, custom: Object.keys(s?.sounds || {}).filter((k) => !PUSHOVER_BUILTIN.includes(k)) }); } catch (e) { return json({ error: String(e.message || e) }, 502); } }
+    if (p === "/api/alarm/receipt") { const al = (await kv.get(env, "alarm")) || {}; const id = url.searchParams.get("id") || al.firedReceipt || al.receipt; if (!id || !/^[a-z0-9]{10,40}$/i.test(id) || !env.PUSHOVER_TOKEN) return json({ error: "no receipt" }, 404); try { const r = await (await tfetch(`https://api.pushover.net/1/receipts/${id}.json?token=${env.PUSHOVER_TOKEN}`)).json(); const t = (s) => s ? new Date(s * 1000).toISOString() : null; return json({ id, ...r, acknowledged_at: t(r.acknowledged_at), last_delivered_at: t(r.last_delivered_at), expires_at: t(r.expires_at), delivery: al.delivery || null }); } catch (e) { return json({ error: e.message }, 502); } }
+    if (p === "/api/push/sounds") { try { const s = await (await tfetch("https://api.pushover.net/1/sounds.json?token=" + env.PUSHOVER_TOKEN)).json(); return json({ baroque: !!s?.sounds?.baroque, custom: Object.keys(s?.sounds || {}).filter((k) => !PUSHOVER_BUILTIN.includes(k)) }); } catch (e) { return json({ error: String(e.message || e) }, 502); } }
     if (p === "/api/push/test" && request.method === "POST") {
       // what each channel says right now: Pushover's registered devices, and a real test push to every channel
       const b = await request.json().catch(() => ({})); const out = {};
-      if (env.PUSHOVER_TOKEN && env.PUSHOVER_USER) { try { const r = await fetch("https://api.pushover.net/1/users/validate.json", { method: "POST", body: new URLSearchParams({ token: env.PUSHOVER_TOKEN, user: env.PUSHOVER_USER }) }); out.pushoverDevices = await r.json(); } catch (e) { out.pushoverDevices = { error: e.message }; } }
+      if (env.PUSHOVER_TOKEN && env.PUSHOVER_USER) { try { const r = await tfetch("https://api.pushover.net/1/users/validate.json", { method: "POST", body: new URLSearchParams({ token: env.PUSHOVER_TOKEN, user: env.PUSHOVER_USER }) }); out.pushoverDevices = await r.json(); } catch (e) { out.pushoverDevices = { error: e.message }; } }
       out.subs = (await listSubs(env)).map((s) => ({ ua: s.ua, label: s.label, at: s.at }));
       out.sent = await notify(env, b.alarm ? "test alarm" : "test", b.alarm ? "This is how the wake-up alarm arrives. Tap I'm up to stop it." : "Test push from the Radio panel at " + localParts(env).hm + ".", { priority: b.alarm ? "alarm" : "high", tags: "bell", url: HUB_ORIGIN + (b.alarm ? "/#wake" : "/") });
       if (b.alarm) { const al = (await kv.get(env, "alarm")) || {}; const po = out.sent.find((r) => r.pushover != null); if (po?.receipt) { al.receipt = po.receipt; await kv.put(env, "alarm", al); } }
@@ -1859,7 +1918,11 @@ export default {
     if (p === "/api/inbox/bridges") { const hooks = (await kv.get(env, "inbox_hooks")) || {}; const inbox = (await kv.get(env, "inbox")) || { accounts: {} }; return json(Object.entries(inbox.accounts).map(([a, v]) => ({ account: a, business: v.business, at: v.at, items: v.items.length, actions: !!hooks[a]?.url }))); }
     // action queue: confirmed by Jesse on the page. Email kinds run right now through the Gmail bridge; the rest wait for the hands script on his PC
     if (p === "/api/act" && request.method === "POST") {
-      const raw = await request.json(); const q = (await kv.get(env, "queue")) || [];
+      const raw = await request.json();
+      if (!ACT_KINDS.includes(raw.kind)) return json({ ok: false, error: "unknown action kind" }, 400);
+      if (raw.kind === "email_send" && !raw.newRecipientOk && !(await knownCorrespondent(env, raw.params?.to))) return json({ ok: false, needsNewOk: true, to: raw.params?.to || "", result: "new address: confirm the recipient" });
+      if (LOCAL_KINDS.includes(raw.kind)) { const res = await runLocalAction(env, raw); const q = (await kv.get(env, "queue")) || []; q.unshift({ ...raw, status: res.ok ? "done" : "failed", result: res.message, confirmedAt: new Date().toISOString(), doneAt: new Date().toISOString() }); await kv.put(env, "queue", q.slice(0, 50)); return json({ ok: res.ok, id: raw.id, executed: true, result: res.message }); }
+      const q = (await kv.get(env, "queue")) || [];
       // the queue (KV) keeps only the attachment names, never the bytes
       const item = Array.isArray(raw.params?.attachments) ? { ...raw, params: { ...raw.params, attachments: raw.params.attachments.map((a) => ({ name: a?.name, size: a?.size || Math.round(String(a?.data || "").length * 0.75) })) } } : raw;
       if (String(item.kind || "").startsWith("email_")) {
@@ -1873,6 +1936,7 @@ export default {
       await kv.put(env, "queue", q.slice(0, 50)); return json({ ok: true, id: item.id });
     }
     if (p === "/api/queue" && request.method === "GET") return json(((await kv.get(env, "queue")) || []).filter((q) => q.status === "pending"));
+    if (p === "/api/queue/claim" && request.method === "POST") { const { id } = await request.json(); const q = (await kv.get(env, "queue")) || []; const it = q.find((x) => x.id === id); if (!it || it.status !== "pending") return json({ ok: false, status: it?.status || "missing" }); it.status = "running"; it.claimedAt = new Date().toISOString(); await kv.put(env, "queue", q); return json({ ok: true }); }
     if (p === "/api/queue/result" && request.method === "POST") {
       const { id, ok, message } = await request.json(); const q = (await kv.get(env, "queue")) || [];
       const it = q.find((x) => x.id === id); if (it) { it.status = ok ? "done" : "failed"; it.result = message; it.doneAt = new Date().toISOString(); }
@@ -1885,6 +1949,7 @@ export default {
       if (request.method === "GET") { const out = {}; await Promise.all(STATE_KEYS.map(async (k) => { const v = k === "watch" ? await watchMerged(env) : await kv.get(env, k); if (v != null) out[k] = v; })); return json(out); }
       if (request.method === "POST" || request.method === "PUT") {
         const body = await request.json(); const saved = [];
+        if (who === "feed") for (const k of Object.keys(body)) if (!FEED_STATE_KEYS.includes(k)) delete body[k];
         // two feeders (PC and cloud) may post the same snapshot; a feeder that cannot read a business must not wipe the other's good numbers
         if (body.metrics?.businesses) { const cur = await kv.get(env, "metrics"); for (const [id, b] of Object.entries(body.metrics.businesses)) { const prev = cur?.businesses?.[id]; if (b?.error && prev && !prev.error && Date.now() - new Date(cur.collectedAt) < 6 * 3600e3) body.metrics.businesses[id] = prev; } }
         if (body.traffic?.sites) { const cur = await kv.get(env, "traffic"); for (const [id, t] of Object.entries(body.traffic.sites)) { const prev = cur?.sites?.[id]; if (t?.error && prev && !prev.error && Date.now() - new Date(cur.at) < 30 * 60e3) body.traffic.sites[id] = prev; } }

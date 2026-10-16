@@ -13,3 +13,7 @@ collect_cams.log
 cams_cache.json
 .gsc_cache.json
 wrangler.remote.toml
+hands_done.json
+.ais-key
+.hub-login-key
+.session-secret.tmp

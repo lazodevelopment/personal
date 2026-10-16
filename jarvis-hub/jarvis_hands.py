@@ -25,18 +25,49 @@ KEY = open(os.path.join(HERE, ".hub-key")).read().strip()
 BY = "JARVIS · jesse@briskhealth.com"
 
 
+DONE = os.path.join(HERE, "hands_done.json")   # ids already executed here, so a lost result post never runs a write twice
+
+
+class HubError(Exception):
+    pass
+
+
 def api(path, body=None):
-    args = ["curl", "-s", "-H", f"x-hub-key: {KEY}", HUB + path]
+    args = ["curl", "-s", "-m", "30", "-w", "\n%{http_code}", "-A", "Mozilla/5.0 (JARVIS hands)", "-H", f"x-hub-key: {KEY}", HUB + path]
     if body is not None:
         args += ["-X", "POST", "-H", "content-type: application/json", "--data-binary", json.dumps(body)]
     r = subprocess.run(args, capture_output=True, text=True, timeout=60)
-    return json.loads(r.stdout) if r.stdout.strip() else None
+    out, _, code = r.stdout.rpartition("\n")
+    if r.returncode != 0 or not code.startswith("2"):
+        raise HubError(f"{path}: curl {r.returncode}, HTTP {code or '?'} {out[:120]}")
+    return json.loads(out) if out.strip() else None
+
+
+def load_done():
+    try:
+        with open(DONE, encoding="utf-8") as f: return json.load(f)
+    except Exception: return {}
+
+
+def save_done(done):
+    cutoff = time.time() - 30 * 86400
+    done = {k: v for k, v in done.items() if v.get("t", 0) > cutoff}
+    tmp = DONE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f: json.dump(done, f)
+    os.replace(tmp, DONE)
+
+
+def db_for(biz):
+    db = client_for(biz)
+    if db is None: raise RuntimeError(f"no Firestore credentials for {biz} on this machine")
+    return db
 
 
 def roven_job(p, status):
-    db = client_for("roven")
+    db = db_for("roven")
     ref = db.collection("jobs").document(p["jobId"]); doc = ref.get()
     if not doc.exists: return False, "job not found"
+    if doc.to_dict().get("status") == status: return True, f"already {status}"
     ref.update({"status": status})
     return True, f"{doc.to_dict().get('title', p['jobId'])} → {status}"
 
@@ -45,7 +76,7 @@ def roven_approve_employer(p):
     from google.cloud import firestore
     import firebase_admin
     from firebase_admin import auth
-    db = client_for("roven")
+    db = db_for("roven")
     app_ref = db.collection("employerApplications").document(p["employerId"]); app_doc = app_ref.get()
     if not app_doc.exists: return False, "application not found"
     a = app_doc.to_dict()
@@ -67,11 +98,12 @@ def roven_approve_employer(p):
 
 
 def lazo_claim(p):
-    db = client_for("lazo")
+    db = db_for("lazo")
     decision = p.get("decision", "approved"); now = datetime.now(timezone.utc)
     req_ref = db.collection("claimRequests").document(p["claimId"]); req = req_ref.get()
     if not req.exists: return False, "claim request not found"
     r = req.to_dict()
+    if r.get("status") not in (None, "", "pending", "needs_review"): return True, f"already {r.get('status')}"   # never re-decide an old claim
     if decision != "approved":
         req_ref.update({"status": "rejected", "reviewedAt": now, "reviewedBy": BY})
         return True, f"claim by {r.get('email') or r.get('uid')} rejected"
@@ -95,7 +127,7 @@ def lazo_listing(p):
     manual-<metroId>-<slug(businessName)>, created claimed + verified, and the claimant's users doc gets vendorId.
     The Cloud Function onListingDecided emails the vendor on the status change."""
     import re
-    db = client_for("lazo")
+    db = db_for("lazo")
     ref = db.collection("listingRequests").document(p["requestId"]); doc = ref.get()
     if not doc.exists: return False, "listing request not found"
     r = doc.to_dict(); now = datetime.now(timezone.utc)
@@ -123,7 +155,9 @@ def lazo_listing(p):
 
 def booking_note(p):
     from google.cloud import firestore
-    db = client_for(p.get("business", "atavia"))
+    if p.get("business", "atavia") not in ("atavia", "es"): return False, "booking notes are for atavia or es only"
+    if not str(p.get("note") or "").strip(): return False, "empty note"
+    db = db_for(p.get("business", "atavia"))
     ref = db.collection("bookings").document(p["bookingId"]); doc = ref.get()
     if not doc.exists: return False, "booking not found"
     ref.update({"admin_notes": firestore.ArrayUnion([{"at": datetime.now(timezone.utc), "text": p["note"], "by": BY}])})
@@ -131,7 +165,7 @@ def booking_note(p):
 
 
 def lazo_inquiry_responded(p):
-    db = client_for("lazo")
+    db = db_for("lazo")
     ref = db.collection("inquiries").document(p["inquiryId"])
     if not ref.get().exists: return False, "inquiry not found"
     ref.update({"status": "responded", "respondedAt": datetime.now(timezone.utc)})
@@ -149,16 +183,41 @@ HANDLERS = {
 }
 
 
+def report(done, item_id):
+    d = done[item_id]
+    try:
+        api("/api/queue/result", {"id": item_id, "ok": d["ok"], "message": d["msg"]})
+        d["reported"] = True
+    except HubError as e:
+        print("result not recorded yet (will retry):", e, flush=True)
+
+
 def once():
+    done = load_done()
+    for item_id, d in done.items():   # results the hub never acknowledged
+        if not d.get("reported"): report(done, item_id)
     pending = api("/api/queue") or []
     for item in pending:
+        item_id = item.get("id")
+        if not item_id: continue
+        if item_id in done:   # ran here already; only the result post was lost
+            if not done[item_id].get("reported"): report(done, item_id)
+            continue
+        try:
+            claim = api("/api/queue/claim", {"id": item_id}) or {}
+        except HubError as e:
+            print("claim failed:", e, flush=True); continue
+        if not claim.get("ok"): continue   # cancelled or already taken
         fn = HANDLERS.get(item.get("kind"))
         try:
             ok, msg = (False, "unknown action kind") if not fn else fn(item.get("params") or {})
         except Exception as e:
             ok, msg = False, f"{type(e).__name__}: {str(e)[:160]}"; traceback.print_exc()
         print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), item.get("summary"), "→", "ok" if ok else "FAILED", msg, flush=True)
-        api("/api/queue/result", {"id": item["id"], "ok": ok, "message": msg})
+        done[item_id] = {"ok": ok, "msg": msg, "t": time.time(), "reported": False}
+        save_done(done)   # recorded before the result post, so a failed post can't cause a second run
+        report(done, item_id)
+    save_done(done)
     return len(pending)
 
 

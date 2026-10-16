@@ -4,4 +4,7 @@
 7 * * * * cd __HOME__/jarvis && .venv/bin/python collect_metrics.py >> metrics.log 2>&1
 30 9 * * * cd __HOME__/jarvis && .venv/bin/python collect_cams.py >> cams.log 2>&1
 */15 * * * * cd __HOME__/jarvis && .venv/bin/python collect_watch.py --only payments,search,ios >> watch.log 2>&1
-0 4 * * 0 cd __HOME__/jarvis && for f in *.log; do tail -n 3000 "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done
+* * * * * cd __HOME__/jarvis && flock -n /tmp/jarvis_hands.lock .venv/bin/python jarvis_hands.py --once >> hands.log 2>&1
+* * * * * cd __HOME__/jarvis && flock -n /tmp/jarvis_ships.lock .venv/bin/python collect_ships.py >> ships.log 2>&1
+# weekly trim: rewrite each log IN PLACE (cat >), never mv; collect_ships runs for days and keeps writing to the inode it opened
+0 4 * * 0 cd __HOME__/jarvis && for f in *.log; do tail -n 3000 "$f" > "$f.tmp" && cat "$f.tmp" > "$f" && rm -f "$f.tmp"; done
