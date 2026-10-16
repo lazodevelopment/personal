@@ -158,7 +158,7 @@ export class CallRoom {
     // ---- join
     if (path === "/join") {
       const prev = this.room.members[role];
-      const s = await this.sfu("POST", "/sessions/new", {});
+      const s = await this.sfu("POST", "/sessions/new");   // no body: the SFU rejects {} ("sessionDescription")
       if (s.status >= 300 || !s.data.sessionId) return j({ error: "sfu", detail: s.data.errorDescription || s.status }, 502);
       const evs = [];
       if (prev && !prev.left && prev.uid !== p.u) evs.push(this.ev("replaced", prev, `by ${p.u}`));
