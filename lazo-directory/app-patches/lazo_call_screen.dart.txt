@@ -16,12 +16,37 @@
 //   - every tile carries "Lazo - from <name> - <time> - call <id>", so a
 //     screenshot names whose feed it was and when;
 //   - one tap to leave, and for vendors one tap to leave and report.
+//   - (v3, JC-LAZO-CALLS-1016-APP-003: phone header on two rows, five buttons on
+//     one row, Show/Hide video only once there is video, the couple's locked-
+//     camera hint, timeouts on every request + a queue that can't stall,
+//     a bigger watermark on wide tiles)
 //   - (v2, JC-LAZO-CALLSCHED-1016) audio only made obvious: with no camera on,
 //     both people show as avatars with a speaking ring; the couple can mark
 //     "Audio only" and the vendor sees "Prefers audio only" instead of the
 //     camera prompt; "Join with video" turns the vendor's camera on at join.
 // Pub dependency: flutter_webrtc. App permissions: camera + microphone.
 // ==========================================================================
+/// One-at-a-time queue for the call's media steps (JC-LAZO-CALLS-1016-APP-003).
+/// A step that never finishes - a request the network swallowed - is given up
+/// after [limit], so the steps behind it (later video, a reconnect) still run.
+class LzCallQueue {
+  LzCallQueue({this.limit = const Duration(seconds: 20)});
+  final Duration limit;
+  Future<void> _chain = Future<void>.value();
+
+  Future<T> run<T>(Future<T> Function() step) {
+    final Completer<T> c = Completer<T>();
+    _chain = _chain.then((_) async {
+      try {
+        c.complete(await step().timeout(limit));
+      } catch (e, st) {
+        c.completeError(e, st);
+      }
+    });
+    return c.future;
+  }
+}
+
 class _LazoCallScreen extends StatefulWidget {
   const _LazoCallScreen({
     required this.callId,
@@ -64,7 +89,10 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
   final Map<String, String> _pulled = <String, String>{}; // trackName -> mid
   final Map<String, String> _pulledKind = <String, String>{};
   Timer? _poll;
-  Future<void> _chain = Future<void>.value();
+  final LzCallQueue _queue = LzCallQueue();
+  bool _wasAllowed = false;
+  String _notice = '';
+  Timer? _noticeT;
   bool _ready = false;
   bool _camOn = false;
   bool _micOn = true;
@@ -93,6 +121,7 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
   void dispose() {
     _poll?.cancel();
     _lvl?.cancel();
+    _noticeT?.cancel();
     _teardown();
     _localR.dispose();
     _remoteR.dispose();
@@ -103,17 +132,7 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
     if (mounted) setState(f);
   }
 
-  Future<T> _serial<T>(Future<T> Function() f) {
-    final Completer<T> c = Completer<T>();
-    _chain = _chain.then((_) async {
-      try {
-        c.complete(await f());
-      } catch (e, st) {
-        c.completeError(e, st);
-      }
-    });
-    return c.future;
-  }
+  Future<T> _serial<T>(Future<T> Function() f) => _queue.run<T>(f);
 
   Future<Map<String, dynamic>> _rt(String method, String path,
       [Map<String, dynamic>? body]) async {
@@ -123,9 +142,15 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
       'Content-Type': 'application/json',
     };
     final String b = jsonEncode(body ?? <String, dynamic>{});
-    final httpc.Response r = method == 'PUT'
-        ? await httpc.put(u, headers: h, body: b)
-        : await httpc.post(u, headers: h, body: b);
+    final httpc.Response r;
+    try {
+      r = await (method == 'PUT'
+              ? httpc.put(u, headers: h, body: b)
+              : httpc.post(u, headers: h, body: b))
+          .timeout(const Duration(seconds: 12));
+    } catch (_) {
+      return <String, dynamic>{'_status': 0, 'error': 'timeout'}; // no answer: callers treat it as a failure and retry
+    }
     Map<String, dynamic> data = <String, dynamic>{};
     try {
       data = Map<String, dynamic>.from(jsonDecode(r.body) as Map);
@@ -233,6 +258,12 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
     }
     if (v['_status'] != 200) return;
     final bool allowed = v['camAllowed'] == true;
+    if (!_isVendor && allowed && !_wasAllowed && !_camOn) {
+      _noticeT?.cancel();
+      _set(() => _notice = 'You can turn your camera on now.');
+      _noticeT = Timer(const Duration(seconds: 6), () => _set(() => _notice = ''));
+    }
+    _wasAllowed = allowed;
     if (!_isVendor && !allowed && _camOn) await _cameraOff(serverClosed: true);
     final Map<String, dynamic>? o =
         v['other'] is Map ? Map<String, dynamic>.from(v['other'] as Map) : null;
@@ -250,7 +281,9 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
     final List<Map<String, dynamic>> tracks = ((o['tracks'] as List?) ?? <dynamic>[])
         .map((dynamic t) => Map<String, dynamic>.from(t as Map))
         .toList();
-    await _serial(() => _sync(osid, tracks));
+    try {
+      await _serial(() => _sync(osid, tracks));
+    } catch (_) {} // a stuck step was given up; the next tick tries again
   }
 
   // pull the other side's new tracks, drop the ones they closed
@@ -335,7 +368,9 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
       return;
     }
     _localR.srcObject = _video;
-    final bool ok = await _serial(() async {
+    bool ok = false;
+    try {
+      ok = await _serial(() async {
       _videoTx = await _pc!.addTransceiver(
           track: _video!.getVideoTracks().first,
           kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
@@ -358,6 +393,9 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
           RTCSessionDescription(sd['sdp'] as String, sd['type'] as String));
       return true;
     });
+    } catch (_) {
+      ok = false;
+    }
     if (!ok) {
       await _dropLocalVideo();
       _set(() => _status = 'Your camera isn’t on yet: ${widget.otherName} turns it on when they’re ready.');
@@ -392,7 +430,7 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
               <String, dynamic>{'mid': mid},
             ],
             'force': true,
-          }));
+          })).catchError((Object _) => <String, dynamic>{});
     }
     _videoMid = null;
     _videoTx = null;
@@ -482,20 +520,22 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
         'Lazo · from $who · ${n.year}-${two(n.month)}-${two(n.day)} ${two(n.hour)}:${two(n.minute)} · call ${widget.callId.length > 6 ? widget.callId.substring(0, 6) : widget.callId}';
     return IgnorePointer(
       child: LayoutBuilder(builder: (BuildContext c, BoxConstraints b) {
-        final int rows = (b.maxHeight / 70).ceil().clamp(1, 24);
+        final bool big = b.maxWidth > 520;
+        final double gap = big ? 120 : 70;
+        final int rows = (b.maxHeight / gap).ceil().clamp(1, 24);
         return ClipRect(
           child: Stack(children: <Widget>[
             for (int i = 0; i < rows; i++)
               Positioned(
-                top: i * 70.0 + 16,
-                left: i.isEven ? 0 : -70,
+                top: i * gap + 16,
+                left: i.isEven ? 0 : (big ? -140 : -70),
                 child: Transform.rotate(
                   angle: -0.18,
-                  child: Text('$line      $line',
+                  child: Text(big ? '$line            $line' : '$line      $line',
                       softWrap: false,
                       style: TextStyle(
                           color: Colors.white.withOpacity(0.30),
-                          fontSize: 12,
+                          fontSize: big ? 16 : 12,
                           fontWeight: FontWeight.w700,
                           shadows: const <Shadow>[Shadow(blurRadius: 2, color: Colors.black54)])),
                 ),
@@ -635,10 +675,51 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
     );
   }
 
+  Widget _header(bool wide) {
+    final Widget title = Row(children: <Widget>[
+      const Icon(Icons.verified_user_rounded, color: Color(0xFFD4B37A), size: 18),
+      const SizedBox(width: 8),
+      Expanded(
+        child: Text(wide ? 'Lazo video call \u00b7 ${widget.otherName}' : widget.otherName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+      ),
+    ]);
+    Widget? control;
+    if (_isVendor && _coupleAudioOnly && !_coupleCamAllowed) {
+      control = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+            color: Colors.white.withOpacity(.08), borderRadius: BorderRadius.circular(999)),
+        child: const Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+          Icon(Icons.headset_rounded, color: Color(0xFFD4B37A), size: 16),
+          SizedBox(width: 6),
+          Text('Prefers audio only', style: TextStyle(color: Color(0xFFD4B37A), fontSize: 12.5)),
+        ]),
+      );
+    } else if (_isVendor) {
+      control = TextButton.icon(
+        onPressed: () => _allowCouple(!_coupleCamAllowed),
+        style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
+        icon: Icon(_coupleCamAllowed ? Icons.videocam_rounded : Icons.videocam_off_rounded,
+            color: const Color(0xFFD4B37A), size: 18),
+        label: Text(_coupleCamAllowed ? 'Their camera: allowed' : 'Let them use camera',
+            style: const TextStyle(color: Color(0xFFD4B37A), fontSize: 12.5)),
+      );
+    }
+    if (control == null) return title;
+    if (wide) return Row(children: <Widget>[Expanded(child: title), control]);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+      title,
+      Padding(padding: const EdgeInsets.only(top: 4, left: 18), child: control),
+    ]);
+  }
+
   Widget _btn(IconData icon, String label, VoidCallback? onTap,
       {Color? bg, Color fg = Colors.white}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 3),
       child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
         Material(
           color: bg ?? Colors.white.withOpacity(onTap == null ? .06 : .14),
@@ -653,8 +734,12 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
           ),
         ),
         const SizedBox(height: 5),
-        Text(label,
-            style: TextStyle(color: Colors.white.withOpacity(.85), fontSize: 11)),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(label,
+              maxLines: 1,
+              style: TextStyle(color: Colors.white.withOpacity(.85), fontSize: 11)),
+        ),
       ]),
     );
   }
@@ -673,36 +758,24 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(children: <Widget>[
-            Row(children: <Widget>[
-              const Icon(Icons.verified_user_rounded, color: Color(0xFFD4B37A), size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('Lazo video call · ${widget.otherName}',
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-              ),
-              if (_isVendor && _coupleAudioOnly && !_coupleCamAllowed)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            _header(wide),
+            if (_notice.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(.08), borderRadius: BorderRadius.circular(999)),
-                  child: const Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-                    Icon(Icons.headset_rounded, color: Color(0xFFD4B37A), size: 16),
-                    SizedBox(width: 6),
-                    Text('Prefers audio only', style: TextStyle(color: Color(0xFFD4B37A), fontSize: 12.5)),
-                  ]),
-                )
-              else if (_isVendor)
-                TextButton.icon(
-                  onPressed: () => _allowCouple(!_coupleCamAllowed),
-                  icon: Icon(
-                      _coupleCamAllowed ? Icons.videocam_rounded : Icons.videocam_off_rounded,
-                      color: const Color(0xFFD4B37A), size: 18),
-                  label: Text(
-                      _coupleCamAllowed ? 'Their camera: allowed' : 'Let them use camera',
-                      style: const TextStyle(color: Color(0xFFD4B37A), fontSize: 12.5)),
+                      color: const Color(0xFFD4B37A), borderRadius: BorderRadius.circular(999)),
+                  child: Text(_notice,
+                      style: const TextStyle(color: Color(0xFF241E2B), fontSize: 13, fontWeight: FontWeight.w700)),
                 ),
-            ]),
+              ),
+            if (_status.isEmpty && !_isVendor && !_camAllowed && !_camOn && !_coupleAudioOnly)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text('${widget.otherName} turns your camera on when they\u2019re ready.',
+                    style: TextStyle(color: Colors.white.withOpacity(.75), fontSize: 12.5)),
+              ),
             if (_status.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -715,34 +788,37 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
                     ? _audioPanel()
                     : (wide ? Row(children: tiles) : Column(children: tiles))),
             const SizedBox(height: 12),
-            Wrap(alignment: WrapAlignment.center, runSpacing: 8, children: <Widget>[
-              _btn(_micOn ? Icons.mic_rounded : Icons.mic_off_rounded,
-                  _micOn ? 'Mute' : 'Unmute', _toggleMic),
-              _btn(_camOn ? Icons.videocam_rounded : Icons.videocam_off_rounded,
-                  _camOn ? 'Camera off' : (!_isVendor && !_camAllowed ? 'Camera locked' : 'Camera on'),
-                  (!_isVendor && !_camAllowed && !_camOn)
-                      ? null
-                      : () => _camOn ? _cameraOff() : _cameraOn()),
-              if (!_isVendor)
-                _btn(Icons.headset_rounded, _coupleAudioOnly ? 'Audio only \u2713' : 'Audio only',
-                    () => _setAudioPref(!_coupleAudioOnly),
-                    bg: _coupleAudioOnly ? const Color(0xFF52284F) : null),
-              if (_isVendor)
-                _btn(_hidden || !_revealed ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                    _hidden || !_revealed ? 'Their video hidden' : 'Hide their video',
-                    () => _set(() {
-                          if (!_revealed) {
-                            _revealed = true;
-                            _hidden = false;
-                          } else {
-                            _hidden = !_hidden;
-                          }
-                        })),
-              _btn(Icons.call_end_rounded, 'Leave', () => _leave(),
-                  bg: const Color(0xFFB3261E)),
-              if (_isVendor && widget.onReport != null)
-                _btn(Icons.flag_rounded, 'Leave + report', () => _leave(report: true),
-                    bg: const Color(0xFF6E1A14)),
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+              for (final Widget b in <Widget>[
+                _btn(_micOn ? Icons.mic_rounded : Icons.mic_off_rounded,
+                    _micOn ? 'Mute' : 'Unmute', _toggleMic),
+                _btn(_camOn ? Icons.videocam_rounded : Icons.videocam_off_rounded,
+                    _camOn ? 'Stop video' : (!_isVendor && !_camAllowed ? 'Locked' : 'Start video'),
+                    (!_isVendor && !_camAllowed && !_camOn)
+                        ? null
+                        : () => _camOn ? _cameraOff() : _cameraOn()),
+                if (!_isVendor)
+                  _btn(Icons.headset_rounded, _coupleAudioOnly ? 'Audio only \u2713' : 'Audio only',
+                      () => _setAudioPref(!_coupleAudioOnly),
+                      bg: _coupleAudioOnly ? const Color(0xFF52284F) : null),
+                if (_isVendor && _remoteVideo)
+                  _btn(_hidden || !_revealed ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                      _hidden || !_revealed ? 'Show video' : 'Hide video',
+                      () => _set(() {
+                            if (!_revealed) {
+                              _revealed = true;
+                              _hidden = false;
+                            } else {
+                              _hidden = !_hidden;
+                            }
+                          })),
+                _btn(Icons.call_end_rounded, 'Leave', () => _leave(),
+                    bg: const Color(0xFFB3261E)),
+                if (_isVendor && widget.onReport != null)
+                  _btn(Icons.flag_rounded, 'Report', () => _leave(report: true),
+                      bg: const Color(0xFF6E1A14)),
+              ])
+                Flexible(child: b),
             ]),
           ]),
         ),

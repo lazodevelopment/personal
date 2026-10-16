@@ -1,5 +1,6 @@
   // ------------------------------------------------------------------ v167/v207
-  // SCHEDULE A LAZO VIDEO CALL + AUDIO ONLY.  JC-LAZO-CALLSCHED-1016-APP
+  // SCHEDULE A LAZO VIDEO CALL + AUDIO ONLY.  JC-LAZO-CALLSCHED-1016-APP-002
+  // (002: gold Join buttons in dark mode; Reschedule / Cancel under More on phones)
   // (shared by the Couple and Vendor masters - app-patches/lazo_call_thread.dart.txt;
   // __ROLE__ is filled in by patch_couple_v167.py / patch_vendor_v207.py)
   // Video calls are free for everyone; scheduling one is Lazo Pro / Studio
@@ -47,7 +48,8 @@
               icon: const Icon(Icons.videocam_rounded),
               label: const Text('Join with video'),
               style: FilledButton.styleFrom(
-                  backgroundColor: plum,
+                  backgroundColor: _lzDark ? gold : plum,
+                  foregroundColor: _lzDark ? const Color(0xFF241E2B) : Colors.white,
                   minimumSize: const Size.fromHeight(48),
                   shape: const StadiumBorder()),
             ),
@@ -78,7 +80,10 @@
             icon: const Icon(Icons.videocam_rounded, size: 16),
             label: const Text('Join with video',
                 style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800)),
-            style: FilledButton.styleFrom(backgroundColor: plum, shape: const StadiumBorder()),
+            style: FilledButton.styleFrom(
+                backgroundColor: _lzDark ? gold : plum,
+                foregroundColor: _lzDark ? const Color(0xFF241E2B) : Colors.white,
+                shape: const StadiumBorder()),
           ),
           OutlinedButton.icon(
             onPressed: _h(() => _lzJoin(inquiryId, inq, video: false)),
@@ -402,20 +407,44 @@
                   Text('Join opens 10 minutes before the call.',
                       style: TextStyle(color: _lzFg(muted), fontSize: 12)),
                 const SizedBox(height: 4),
-                Wrap(spacing: 2, children: <Widget>[
+                Wrap(spacing: 2, crossAxisAlignment: WrapCrossAlignment.center, children: <Widget>[
                   TextButton.icon(
                     onPressed: () => _addToCalendarSheet(m, consultId),
                     icon: Icon(Icons.event_available_rounded, size: 16, color: _lzFg(plum)),
                     label: Text('Add to calendar', style: TextStyle(color: _lzFg(plum), fontSize: 12.5)),
                   ),
-                  if (lazoCall)
+                  if (lazoCall && MediaQuery.of(context).size.width < 520)
+                    PopupMenuButton<String>(
+                      tooltip: 'More',
+                      onSelected: (String v) {
+                        if (v == 'move') {
+                          _scheduleCallSheet(inquiryId, inq,
+                              consultId: consultId, current: start, currentMinutes: minutes);
+                        } else if (v == 'cancel') {
+                          _cancelCallConfirm(consultId);
+                        }
+                      },
+                      itemBuilder: (BuildContext c) => const <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(value: 'move', child: Text('Reschedule')),
+                        PopupMenuItem<String>(value: 'cancel', child: Text('Cancel the call')),
+                      ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                          Icon(Icons.more_horiz_rounded, size: 18, color: _lzFg(plum)),
+                          const SizedBox(width: 4),
+                          Text('More', style: TextStyle(color: _lzFg(plum), fontSize: 12.5)),
+                        ]),
+                      ),
+                    ),
+                  if (lazoCall && MediaQuery.of(context).size.width >= 520)
                     TextButton.icon(
                       onPressed: () => _scheduleCallSheet(inquiryId, inq,
                           consultId: consultId, current: start, currentMinutes: minutes),
                       icon: Icon(Icons.edit_calendar_rounded, size: 16, color: _lzFg(plum)),
                       label: Text('Reschedule', style: TextStyle(color: _lzFg(plum), fontSize: 12.5)),
                     ),
-                  if (lazoCall)
+                  if (lazoCall && MediaQuery.of(context).size.width >= 520)
                     TextButton.icon(
                       onPressed: () => _cancelCallConfirm(consultId),
                       icon: Icon(Icons.event_busy_rounded, size: 16, color: _lzFg(muted)),
@@ -436,3 +465,4 @@
       ),
     );
   }
+  // END LAZO CALL THREAD (JC-LAZO-CALLSCHED-1016-APP)

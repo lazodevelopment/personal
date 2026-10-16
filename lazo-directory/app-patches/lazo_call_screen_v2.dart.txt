@@ -1,0 +1,752 @@
+
+// ==========================================================================
+// LAZO VIDEO CALL SCREEN  (JC-LAZO-CALLS-1016-APP-001, shared by Couple v165
+// and Vendor v205 - app-patches/lazo_call_screen.dart.txt, inserted by
+// patch_couple_v165.py / patch_vendor_v205.py).
+//
+// Media goes through Cloudflare Realtime via the lazo-site worker's /rt/*
+// proxy, with the call token from the callJoin callable. Built against the
+// sextortion scam hitting wedding vendors:
+//   - everyone joins with the camera OFF;
+//   - the couple's camera is locked until the vendor taps "Let them use
+//     camera" (the worker refuses the couple's video until then, and
+//     force-closes it if the vendor takes it back);
+//   - the vendor sees the couple's video blurred until they tap to see it,
+//     and can hide it again in one tap;
+//   - every tile carries "Lazo - from <name> - <time> - call <id>", so a
+//     screenshot names whose feed it was and when;
+//   - one tap to leave, and for vendors one tap to leave and report.
+//   - (v2, JC-LAZO-CALLSCHED-1016) audio only made obvious: with no camera on,
+//     both people show as avatars with a speaking ring; the couple can mark
+//     "Audio only" and the vendor sees "Prefers audio only" instead of the
+//     camera prompt; "Join with video" turns the vendor's camera on at join.
+// Pub dependency: flutter_webrtc. App permissions: camera + microphone.
+// ==========================================================================
+class _LazoCallScreen extends StatefulWidget {
+  const _LazoCallScreen({
+    required this.callId,
+    required this.token,
+    required this.role,
+    required this.myName,
+    required this.otherName,
+    required this.workerBase,
+    // ignore: unused_element_parameter
+    this.onReport, // the couple app doesn't pass it
+    // ignore: unused_element_parameter
+    this.startCamera = false, // only the vendor app passes it
+  });
+  final String callId;
+  final String token;
+  final String role; // 'vendor' | 'couple'
+  final String myName;
+  final String otherName;
+  final String workerBase;
+  final VoidCallback? onReport;
+  final bool startCamera; // "Join with video" (the couple's camera still waits for the vendor)
+
+  @override
+  State<_LazoCallScreen> createState() => _LazoCallScreenState();
+}
+
+class _LazoCallScreenState extends State<_LazoCallScreen> {
+  final RTCVideoRenderer _localR = RTCVideoRenderer();
+  final RTCVideoRenderer _remoteR = RTCVideoRenderer();
+  RTCPeerConnection? _pc; // sends my mic / camera (session _sid)
+  RTCPeerConnection? _pcSub; // receives the other side (session _subSid)
+  String? _subSid;
+  MediaStream? _audio;
+  MediaStream? _video;
+  MediaStream? _remote;
+  RTCRtpTransceiver? _videoTx;
+  String? _videoMid;
+  String? _sid;
+  String? _otherSid;
+  final Map<String, String> _pulled = <String, String>{}; // trackName -> mid
+  final Map<String, String> _pulledKind = <String, String>{};
+  Timer? _poll;
+  Future<void> _chain = Future<void>.value();
+  bool _ready = false;
+  bool _camOn = false;
+  bool _micOn = true;
+  bool _camAllowed = false; // for the couple: has the vendor allowed it
+  bool _coupleCamAllowed = false; // for the vendor
+  bool _revealed = false;
+  bool _hidden = false;
+  bool _remoteVideo = false;
+  bool _otherPresent = false;
+  bool _leaving = false;
+  String _status = 'Connecting…';
+  bool _coupleAudioOnly = false;
+  double _meLevel = 0;
+  double _otherLevel = 0;
+  Timer? _lvl;
+
+  bool get _isVendor => widget.role == 'vendor';
+
+  @override
+  void initState() {
+    super.initState();
+    _start();
+  }
+
+  @override
+  void dispose() {
+    _poll?.cancel();
+    _lvl?.cancel();
+    _teardown();
+    _localR.dispose();
+    _remoteR.dispose();
+    super.dispose();
+  }
+
+  void _set(VoidCallback f) {
+    if (mounted) setState(f);
+  }
+
+  Future<T> _serial<T>(Future<T> Function() f) {
+    final Completer<T> c = Completer<T>();
+    _chain = _chain.then((_) async {
+      try {
+        c.complete(await f());
+      } catch (e, st) {
+        c.completeError(e, st);
+      }
+    });
+    return c.future;
+  }
+
+  Future<Map<String, dynamic>> _rt(String method, String path,
+      [Map<String, dynamic>? body]) async {
+    final Uri u = Uri.parse('${widget.workerBase}/rt/$path');
+    final Map<String, String> h = <String, String>{
+      'Authorization': 'Bearer ${widget.token}',
+      'Content-Type': 'application/json',
+    };
+    final String b = jsonEncode(body ?? <String, dynamic>{});
+    final httpc.Response r = method == 'PUT'
+        ? await httpc.put(u, headers: h, body: b)
+        : await httpc.post(u, headers: h, body: b);
+    Map<String, dynamic> data = <String, dynamic>{};
+    try {
+      data = Map<String, dynamic>.from(jsonDecode(r.body) as Map);
+    } catch (_) {}
+    data['_status'] = r.statusCode;
+    return data;
+  }
+
+  Map<String, dynamic> get _ice => <String, dynamic>{
+        'iceServers': <Map<String, dynamic>>[
+          <String, dynamic>{'urls': 'stun:stun.cloudflare.com:3478'},
+        ],
+        'bundlePolicy': 'max-bundle',
+        'sdpSemantics': 'unified-plan',
+      };
+
+  Future<void> _start() async {
+    try {
+      await _localR.initialize();
+      await _remoteR.initialize();
+      _ready = true;
+      final Map<String, dynamic> j = await _rt('POST', 'join');
+      if (j['_status'] != 200) {
+        _set(() => _status = j['_status'] == 410
+            ? 'This call has ended.'
+            : 'Could not join the call (${j['error'] ?? j['_status']}).');
+        return;
+      }
+      _sid = (j['sessionId'] ?? '').toString();
+      _subSid = (j['subSessionId'] ?? '').toString();
+      _camAllowed = j['camAllowed'] == true;
+      _coupleCamAllowed = j['coupleCamAllowed'] == true;
+      // two connections: one sends, one receives. One doing both broke in Chrome
+      // when your camera was added after the other side's video.
+      void watch(RTCPeerConnection pc) {
+        pc.onIceConnectionState = (RTCIceConnectionState s) {
+          if (s == RTCIceConnectionState.RTCIceConnectionStateFailed) {
+            _set(() => _status = 'Connection lost. Leave and join again.');
+          }
+        };
+      }
+
+      _pc = await createPeerConnection(_ice);
+      watch(_pc!);
+      _pcSub = await createPeerConnection(_ice);
+      _pcSub!.onTrack = _onTrack;
+      watch(_pcSub!);
+      _remote = await createLocalMediaStream('lazo-remote');
+      _remoteR.srcObject = _remote;
+      // audio first; the camera is off until someone turns it on
+      _audio = await navigator.mediaDevices
+          .getUserMedia(<String, dynamic>{'audio': true, 'video': false});
+      await _serial(() async {
+        final RTCRtpTransceiver tx = await _pc!.addTransceiver(
+            track: _audio!.getAudioTracks().first,
+            kind: RTCRtpMediaType.RTCRtpMediaTypeAudio,
+            init: RTCRtpTransceiverInit(
+                direction: TransceiverDirection.SendOnly,
+                streams: <MediaStream>[_audio!]));
+        final RTCSessionDescription offer = await _pc!.createOffer();
+        await _pc!.setLocalDescription(offer);
+        final Map<String, dynamic> r =
+            await _rt('POST', 'sessions/$_sid/tracks/new', <String, dynamic>{
+          'sessionDescription': <String, dynamic>{'type': 'offer', 'sdp': offer.sdp},
+          'tracks': <Map<String, dynamic>>[
+            <String, dynamic>{'location': 'local', 'mid': tx.mid},
+          ],
+        });
+        final Map? sd = r['sessionDescription'] as Map?;
+        if (sd != null) {
+          await _pc!.setRemoteDescription(
+              RTCSessionDescription(sd['sdp'] as String, sd['type'] as String));
+        }
+      });
+      _set(() => _status = 'Waiting for ${widget.otherName}…');
+      _poll = Timer.periodic(const Duration(seconds: 2), (_) => _tick());
+      _lvl = Timer.periodic(const Duration(milliseconds: 500), (_) => _levels());
+      _tick();
+      if (widget.startCamera && _isVendor) await _cameraOn();
+    } catch (e) {
+      _set(() => _status = 'Microphone or connection unavailable: $e');
+    }
+  }
+
+  void _onTrack(RTCTrackEvent e) {
+    final MediaStream? rs = _remote;
+    if (rs == null) return;
+    rs.addTrack(e.track);
+    if (_ready) _remoteR.srcObject = rs;
+    if (e.track.kind == 'video') _set(() => _remoteVideo = true);
+  }
+
+  Future<void> _tick() async {
+    if (_leaving || _sid == null) return;
+    Map<String, dynamic> v;
+    try {
+      v = await _rt('POST', 'room');
+    } catch (_) {
+      return;
+    }
+    if (v['_status'] == 410 || v['ended'] == true) {
+      _poll?.cancel();
+      _set(() => _status = 'The call has ended.');
+      return;
+    }
+    if (v['_status'] != 200) return;
+    final bool allowed = v['camAllowed'] == true;
+    if (!_isVendor && !allowed && _camOn) await _cameraOff(serverClosed: true);
+    final Map<String, dynamic>? o =
+        v['other'] is Map ? Map<String, dynamic>.from(v['other'] as Map) : null;
+    _set(() {
+      _camAllowed = allowed;
+      _coupleCamAllowed = v['coupleCamAllowed'] == true;
+      _coupleAudioOnly = v['coupleAudioOnly'] == true;
+      _otherPresent = o != null && o['present'] == true;
+      _status = o == null
+          ? 'Waiting for ${widget.otherName}…'
+          : (_otherPresent ? '' : '${widget.otherName} is reconnecting…');
+    });
+    if (o == null) return;
+    final String osid = (o['sessionId'] ?? '').toString();
+    final List<Map<String, dynamic>> tracks = ((o['tracks'] as List?) ?? <dynamic>[])
+        .map((dynamic t) => Map<String, dynamic>.from(t as Map))
+        .toList();
+    await _serial(() => _sync(osid, tracks));
+  }
+
+  // pull the other side's new tracks, drop the ones they closed
+  Future<void> _sync(String osid, List<Map<String, dynamic>> tracks) async {
+    if (_pcSub == null) return;
+    if (_otherSid != null && osid != _otherSid && _pulled.isNotEmpty) {
+      await _rt('PUT', 'sessions/$_subSid/tracks/close', <String, dynamic>{
+        'tracks': _pulled.values.map((String m) => <String, dynamic>{'mid': m}).toList(),
+        'force': true,
+      });
+      _pulled.clear();
+      _pulledKind.clear();
+    }
+    _otherSid = osid;
+    final Set<String> names = tracks.map((Map<String, dynamic> t) => (t['trackName'] ?? '').toString()).toSet();
+    final List<String> gone = _pulled.keys.where((String n) => !names.contains(n)).toList();
+    if (gone.isNotEmpty) {
+      await _rt('PUT', 'sessions/$_subSid/tracks/close', <String, dynamic>{
+        'tracks': gone.map((String n) => <String, dynamic>{'mid': _pulled[n]}).toList(),
+        'force': true,
+      });
+      for (final String n in gone) {
+        if (_pulledKind[n] == 'video') _set(() => _remoteVideo = false);
+        _pulled.remove(n);
+        _pulledKind.remove(n);
+      }
+    }
+    final List<Map<String, dynamic>> fresh = tracks
+        .where((Map<String, dynamic> t) => !_pulled.containsKey((t['trackName'] ?? '').toString()))
+        .toList();
+    if (fresh.isEmpty) return;
+    final Map<String, dynamic> r =
+        await _rt('POST', 'sessions/$_subSid/tracks/new', <String, dynamic>{
+      'tracks': fresh
+          .map((Map<String, dynamic> t) => <String, dynamic>{
+                'location': 'remote',
+                'sessionId': osid,
+                'trackName': t['trackName'],
+              })
+          .toList(),
+    });
+    if (r['_status'] != 200) return;
+    for (final dynamic t in (r['tracks'] as List?) ?? <dynamic>[]) {
+      final Map<String, dynamic> m = Map<String, dynamic>.from(t as Map);
+      if (m['errorCode'] != null) continue;
+      final String n = (m['trackName'] ?? '').toString();
+      _pulled[n] = (m['mid'] ?? '').toString();
+      _pulledKind[n] = fresh
+          .firstWhere((Map<String, dynamic> x) => x['trackName'] == n,
+              orElse: () => <String, dynamic>{})['kind']
+          ?.toString() ?? '';
+    }
+    if (r['requiresImmediateRenegotiation'] == true && r['sessionDescription'] is Map) {
+      final Map sd = r['sessionDescription'] as Map;
+      await _pcSub!.setRemoteDescription(
+          RTCSessionDescription(sd['sdp'] as String, sd['type'] as String));
+      final RTCSessionDescription ans = await _pcSub!.createAnswer();
+      await _pcSub!.setLocalDescription(ans);
+      await _rt('PUT', 'sessions/$_subSid/renegotiate', <String, dynamic>{
+        'sessionDescription': <String, dynamic>{'type': 'answer', 'sdp': ans.sdp},
+      });
+    }
+  }
+
+  Future<void> _cameraOn() async {
+    if (_camOn || _pc == null) return;
+    if (!_isVendor && !_camAllowed) {
+      _set(() => _status = '${widget.otherName} turns your camera on when they’re ready.');
+      return;
+    }
+    try {
+      _video = await navigator.mediaDevices.getUserMedia(<String, dynamic>{
+        'audio': false,
+        'video': <String, dynamic>{
+          'facingMode': 'user',
+          'width': <String, dynamic>{'ideal': 1280},
+          'height': <String, dynamic>{'ideal': 720},
+        },
+      });
+    } catch (e) {
+      _set(() => _status = 'Camera unavailable: $e');
+      return;
+    }
+    _localR.srcObject = _video;
+    final bool ok = await _serial(() async {
+      _videoTx = await _pc!.addTransceiver(
+          track: _video!.getVideoTracks().first,
+          kind: RTCRtpMediaType.RTCRtpMediaTypeVideo,
+          init: RTCRtpTransceiverInit(
+              direction: TransceiverDirection.SendOnly,
+              streams: <MediaStream>[_video!]));
+      final RTCSessionDescription offer = await _pc!.createOffer();
+      await _pc!.setLocalDescription(offer);
+      _videoMid = _videoTx!.mid;
+      final Map<String, dynamic> r =
+          await _rt('POST', 'sessions/$_sid/tracks/new', <String, dynamic>{
+        'sessionDescription': <String, dynamic>{'type': 'offer', 'sdp': offer.sdp},
+        'tracks': <Map<String, dynamic>>[
+          <String, dynamic>{'location': 'local', 'mid': _videoMid},
+        ],
+      });
+      final Map? sd = r['sessionDescription'] as Map?;
+      if (r['_status'] != 200 || sd == null) return false;
+      await _pc!.setRemoteDescription(
+          RTCSessionDescription(sd['sdp'] as String, sd['type'] as String));
+      return true;
+    });
+    if (!ok) {
+      await _dropLocalVideo();
+      _set(() => _status = 'Your camera isn’t on yet: ${widget.otherName} turns it on when they’re ready.');
+      return;
+    }
+    _set(() => _camOn = true);
+  }
+
+  Future<void> _dropLocalVideo() async {
+    try {
+      await _videoTx?.sender.replaceTrack(null);
+    } catch (_) {}
+    for (final MediaStreamTrack t in _video?.getTracks() ?? <MediaStreamTrack>[]) {
+      try {
+        await t.stop();
+      } catch (_) {}
+    }
+    try {
+      await _video?.dispose();
+    } catch (_) {}
+    _video = null;
+    if (_ready) _localR.srcObject = null;
+  }
+
+  Future<void> _cameraOff({bool serverClosed = false}) async {
+    if (!_camOn) return;
+    final String? mid = _videoMid;
+    await _dropLocalVideo();
+    if (!serverClosed && mid != null) {
+      await _serial(() => _rt('PUT', 'sessions/$_sid/tracks/close', <String, dynamic>{
+            'tracks': <Map<String, dynamic>>[
+              <String, dynamic>{'mid': mid},
+            ],
+            'force': true,
+          }));
+    }
+    _videoMid = null;
+    _videoTx = null;
+    _set(() => _camOn = false);
+  }
+
+  void _toggleMic() {
+    _set(() => _micOn = !_micOn);
+    for (final MediaStreamTrack t in _audio?.getAudioTracks() ?? <MediaStreamTrack>[]) {
+      t.enabled = _micOn;
+    }
+  }
+
+  // who is speaking: audio levels from the connection stats, twice a second
+  Future<void> _levels() async {
+    double read(List<StatsReport> rs, String type) {
+      double best = 0;
+      for (final StatsReport r in rs) {
+        if (r.type != type) continue;
+        final Map<dynamic, dynamic> v = r.values;
+        if ((v['kind'] ?? v['mediaType'] ?? '').toString() != 'audio') continue;
+        final dynamic a = v['audioLevel'];
+        final double x = a is num ? a.toDouble() : double.tryParse('$a') ?? 0;
+        if (x > best) best = x;
+      }
+      return best;
+    }
+
+    try {
+      final double o = _pcSub == null ? 0 : read(await _pcSub!.getStats(), 'inbound-rtp');
+      final double me = _pc == null || !_micOn ? 0 : read(await _pc!.getStats(), 'media-source');
+      final bool changed = (o > .02) != (_otherLevel > .02) || (me > .02) != (_meLevel > .02);
+      _otherLevel = o;
+      _meLevel = me;
+      if (changed) _set(() {});
+    } catch (_) {}
+  }
+
+  Future<void> _setAudioPref(bool on) async {
+    final Map<String, dynamic> r = await _rt('POST', 'pref', <String, dynamic>{'audioOnly': on});
+    if (r['_status'] == 200) {
+      _set(() => _coupleAudioOnly = r['coupleAudioOnly'] == true);
+      if (on && _camOn) await _cameraOff();
+    }
+  }
+
+  Future<void> _allowCouple(bool on) async {
+    final Map<String, dynamic> r = await _rt('POST', 'allow', <String, dynamic>{'on': on});
+    if (r['_status'] == 200) _set(() => _coupleCamAllowed = r['coupleCamAllowed'] == true);
+  }
+
+  Future<void> _teardown() async {
+    _poll?.cancel();
+    for (final MediaStream? s in <MediaStream?>[_audio, _video]) {
+      for (final MediaStreamTrack t in s?.getTracks() ?? <MediaStreamTrack>[]) {
+        try {
+          await t.stop();
+        } catch (_) {}
+      }
+    }
+    for (final RTCPeerConnection? pc in <RTCPeerConnection?>[_pc, _pcSub]) {
+      try {
+        await pc?.close();
+      } catch (_) {}
+    }
+    _pc = null;
+    _pcSub = null;
+  }
+
+  Future<void> _leave({bool report = false}) async {
+    if (_leaving) return;
+    _leaving = true;
+    _poll?.cancel();
+    try {
+      await _rt('POST', 'leave', <String, dynamic>{'report': report});
+    } catch (_) {}
+    await _teardown();
+    if (mounted) Navigator.of(context).pop();
+    if (report && widget.onReport != null) widget.onReport!();
+  }
+
+  // ---------------------------------------------------------------- ui ----
+  Widget _watermark(String who) {
+    final DateTime n = DateTime.now();
+    String two(int x) => x.toString().padLeft(2, '0');
+    final String line =
+        'Lazo · from $who · ${n.year}-${two(n.month)}-${two(n.day)} ${two(n.hour)}:${two(n.minute)} · call ${widget.callId.length > 6 ? widget.callId.substring(0, 6) : widget.callId}';
+    return IgnorePointer(
+      child: LayoutBuilder(builder: (BuildContext c, BoxConstraints b) {
+        final int rows = (b.maxHeight / 70).ceil().clamp(1, 24);
+        return ClipRect(
+          child: Stack(children: <Widget>[
+            for (int i = 0; i < rows; i++)
+              Positioned(
+                top: i * 70.0 + 16,
+                left: i.isEven ? 0 : -70,
+                child: Transform.rotate(
+                  angle: -0.18,
+                  child: Text('$line      $line',
+                      softWrap: false,
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.30),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          shadows: const <Shadow>[Shadow(blurRadius: 2, color: Colors.black54)])),
+                ),
+              ),
+          ]),
+        );
+      }),
+    );
+  }
+
+  Widget _tile({required bool remote}) {
+    final String who = remote ? widget.otherName : widget.myName;
+    final bool hasVideo = remote ? _remoteVideo : _camOn;
+    final bool guarded = remote && _isVendor && (!_revealed || _hidden);
+    Widget v = hasVideo
+        ? RTCVideoView(remote ? _remoteR : _localR,
+            mirror: !remote,
+            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover)
+        : Center(
+            child: Icon(Icons.videocam_off_rounded,
+                color: Colors.white.withOpacity(.35), size: 40));
+    if (guarded && hasVideo) {
+      v = ClipRect(
+          child: ImageFiltered(
+              imageFilter: rtcui.ImageFilter.blur(sigmaX: 40, sigmaY: 40), child: v));
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        color: const Color(0xFF241E2B),
+        child: Stack(fit: StackFit.expand, children: <Widget>[
+          // remote audio plays through this renderer even with no video
+          if (remote && !hasVideo)
+            Opacity(opacity: 0, child: RTCVideoView(_remoteR)),
+          v,
+          if (hasVideo) _watermark(who),
+          if (guarded && hasVideo)
+            Center(
+              child: FilledButton.tonal(
+                onPressed: () => _set(() {
+                  _revealed = true;
+                  _hidden = false;
+                }),
+                child: Text('Show ${widget.otherName}’s video'),
+              ),
+            ),
+          Positioned(
+            left: 10,
+            bottom: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                  color: Colors.black54, borderRadius: BorderRadius.circular(8)),
+              child: Text(remote ? who : '$who (you)',
+                  style: const TextStyle(color: Colors.white, fontSize: 12)),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _avatar(String name, bool speaking, bool me) {
+    final List<String> parts = name.replaceAll('&', ' ').split(RegExp(r'\s+')).where((String w) => w.isNotEmpty).toList();
+    final String ini = parts.isEmpty ? '?' : parts.take(2).map((String w) => w[0].toUpperCase()).join();
+    return Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+      AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        width: 112,
+        height: 112,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: me ? const Color(0xFF3A2B44) : const Color(0xFF52284F),
+          border: Border.all(
+              color: speaking ? const Color(0xFFD4B37A) : Colors.white.withOpacity(.12),
+              width: speaking ? 5 : 2),
+          boxShadow: speaking
+              ? <BoxShadow>[BoxShadow(color: const Color(0xFFD4B37A).withOpacity(.45), blurRadius: 24, spreadRadius: 2)]
+              : const <BoxShadow>[],
+        ),
+        child: Text(ini,
+            style: const TextStyle(color: Colors.white, fontSize: 34, fontWeight: FontWeight.w700)),
+      ),
+      const SizedBox(height: 10),
+      Text(me ? '$name (you)' : name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 4),
+      Text(speaking ? 'Speaking' : (me && !_micOn ? 'Muted' : ' '),
+          style: TextStyle(color: const Color(0xFFD4B37A).withOpacity(.9), fontSize: 12)),
+    ]);
+  }
+
+  // nobody on camera: both people as avatars, a speaking ring, and why
+  Widget _audioPanel() {
+    final String note = _coupleAudioOnly
+        ? (_isVendor
+            ? '${widget.otherName} prefer audio only. Their camera stays off.'
+            : 'You chose audio only. You can turn your camera on any time${_camAllowed ? '' : ' once ${widget.otherName} allows it'}.')
+        : 'Audio only for now. Cameras stay off until someone turns theirs on.';
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        color: const Color(0xFF241E2B),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Stack(children: <Widget>[
+          // remote audio plays through this renderer
+          Positioned(left: 0, top: 0, width: 2, height: 2, child: Opacity(opacity: 0, child: RTCVideoView(_remoteR))),
+          Center(
+            child: SingleChildScrollView(
+              child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(.08), borderRadius: BorderRadius.circular(999)),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                    Icon(Icons.graphic_eq_rounded, color: Color(0xFFD4B37A), size: 16),
+                    SizedBox(width: 6),
+                    Text('Audio only', style: TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w700)),
+                  ]),
+                ),
+                const SizedBox(height: 28),
+                Wrap(alignment: WrapAlignment.center, spacing: 36, runSpacing: 24, children: <Widget>[
+                  _avatar(widget.otherName, _otherPresent && _otherLevel > .02, false),
+                  _avatar(widget.myName, _meLevel > .02, true),
+                ]),
+                const SizedBox(height: 26),
+                Text(note,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white.withOpacity(.7), fontSize: 12.5, height: 1.4)),
+              ]),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+
+  Widget _btn(IconData icon, String label, VoidCallback? onTap,
+      {Color? bg, Color fg = Colors.white}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      child: Column(mainAxisSize: MainAxisSize.min, children: <Widget>[
+        Material(
+          color: bg ?? Colors.white.withOpacity(onTap == null ? .06 : .14),
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Icon(icon, color: onTap == null ? fg.withOpacity(.4) : fg, size: 24),
+            ),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(label,
+            style: TextStyle(color: Colors.white.withOpacity(.85), fontSize: 11)),
+      ]),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool wide = MediaQuery.of(context).size.width > 720;
+    final List<Widget> tiles = <Widget>[
+      Expanded(child: _tile(remote: true)),
+      SizedBox(width: wide ? 10 : 0, height: wide ? 0 : 10),
+      Expanded(child: _tile(remote: false)),
+    ];
+    return Scaffold(
+      backgroundColor: const Color(0xFF14101A),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(children: <Widget>[
+            Row(children: <Widget>[
+              const Icon(Icons.verified_user_rounded, color: Color(0xFFD4B37A), size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text('Lazo video call · ${widget.otherName}',
+                    style: const TextStyle(
+                        color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+              ),
+              if (_isVendor && _coupleAudioOnly && !_coupleCamAllowed)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(.08), borderRadius: BorderRadius.circular(999)),
+                  child: const Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
+                    Icon(Icons.headset_rounded, color: Color(0xFFD4B37A), size: 16),
+                    SizedBox(width: 6),
+                    Text('Prefers audio only', style: TextStyle(color: Color(0xFFD4B37A), fontSize: 12.5)),
+                  ]),
+                )
+              else if (_isVendor)
+                TextButton.icon(
+                  onPressed: () => _allowCouple(!_coupleCamAllowed),
+                  icon: Icon(
+                      _coupleCamAllowed ? Icons.videocam_rounded : Icons.videocam_off_rounded,
+                      color: const Color(0xFFD4B37A), size: 18),
+                  label: Text(
+                      _coupleCamAllowed ? 'Their camera: allowed' : 'Let them use camera',
+                      style: const TextStyle(color: Color(0xFFD4B37A), fontSize: 12.5)),
+                ),
+            ]),
+            if (_status.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(_status,
+                    style: TextStyle(color: Colors.white.withOpacity(.75), fontSize: 12.5)),
+              ),
+            const SizedBox(height: 10),
+            Expanded(
+                child: (!_remoteVideo && !_camOn)
+                    ? _audioPanel()
+                    : (wide ? Row(children: tiles) : Column(children: tiles))),
+            const SizedBox(height: 12),
+            Wrap(alignment: WrapAlignment.center, runSpacing: 8, children: <Widget>[
+              _btn(_micOn ? Icons.mic_rounded : Icons.mic_off_rounded,
+                  _micOn ? 'Mute' : 'Unmute', _toggleMic),
+              _btn(_camOn ? Icons.videocam_rounded : Icons.videocam_off_rounded,
+                  _camOn ? 'Camera off' : (!_isVendor && !_camAllowed ? 'Camera locked' : 'Camera on'),
+                  (!_isVendor && !_camAllowed && !_camOn)
+                      ? null
+                      : () => _camOn ? _cameraOff() : _cameraOn()),
+              if (!_isVendor)
+                _btn(Icons.headset_rounded, _coupleAudioOnly ? 'Audio only \u2713' : 'Audio only',
+                    () => _setAudioPref(!_coupleAudioOnly),
+                    bg: _coupleAudioOnly ? const Color(0xFF52284F) : null),
+              if (_isVendor)
+                _btn(_hidden || !_revealed ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    _hidden || !_revealed ? 'Their video hidden' : 'Hide their video',
+                    () => _set(() {
+                          if (!_revealed) {
+                            _revealed = true;
+                            _hidden = false;
+                          } else {
+                            _hidden = !_hidden;
+                          }
+                        })),
+              _btn(Icons.call_end_rounded, 'Leave', () => _leave(),
+                  bg: const Color(0xFFB3261E)),
+              if (_isVendor && widget.onReport != null)
+                _btn(Icons.flag_rounded, 'Leave + report', () => _leave(report: true),
+                    bg: const Color(0xFF6E1A14)),
+            ]),
+          ]),
+        ),
+      ),
+    );
+  }
+}
