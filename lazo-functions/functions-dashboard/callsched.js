@@ -222,6 +222,7 @@ module.exports = function callSchedModule(RESEND_API_KEY) {
     const c = {
       vendorId: str(inq.vendorId), vendorName: str(inq.vendorName) || str(v.name), inquiryId: ref.id, coupleUid: str(inq.coupleUid),
       coupleName: str(inq.coupleName) || 'The couple',
+      contact: { name: str(inq.coupleName) || 'The couple' },   // the vendor's Upcoming consults card reads contact.name
       typeKey: 'lazo_call', typeLabel: 'Lazo video call', mode: 'video', minutes, lazoCall: true,
       startAt: TS().fromDate(start), endAt: TS().fromDate(end), tz: str(v.scheduler && v.scheduler.tz) || 'America/Phoenix',
       vendorTz: str(v.scheduler && v.scheduler.tz) || str(v.tz) || 'America/Phoenix',
