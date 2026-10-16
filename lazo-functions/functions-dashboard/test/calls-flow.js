@@ -155,6 +155,8 @@ const offer = (mids) => ({ type: 'offer', sdp: ['v=0', ...mids.flatMap(([mid, ki
   const vs = x.data.sessionId;
   x = await send(c.token, '/join', 'POST', {});
   const cs = x.data.sessionId;
+  const csub = x.data.subSessionId;
+  ok(csub && csub !== cs, 'couple gets a separate receive session');
   ok(x.status === 200 && x.data.camAllowed === false && x.data.other && x.data.other.name === 'Vendor A', 'couple joins, camera locked');
   // couple publishes audio: fine. Video: refused until allowed.
   x = await send(c.token, `/sessions/${cs}/tracks/new`, 'POST', { sessionDescription: offer([['0', 'audio']]), tracks: [{ location: 'local', mid: '0', trackName: 'whatever' }] });
@@ -174,8 +176,12 @@ const offer = (mids) => ({ type: 'offer', sdp: ['v=0', ...mids.flatMap(([mid, ki
   const names = x.data.other.tracks.map((t) => t.trackName);
   ok(names.length === 2 && x.data.other.present, 'couple sees vendor tracks');
   x = await send(c.token, `/sessions/${cs}/tracks/new`, 'POST', { tracks: names.map((n) => ({ location: 'remote', sessionId: vs, trackName: n })) });
+  ok(x.status === 400, 'no pulling on the send session');
+  x = await send(c.token, `/sessions/${csub}/tracks/new`, 'POST', { sessionDescription: offer([['0', 'audio']]), tracks: [{ location: 'local', mid: '0' }] });
+  ok(x.status === 400, 'no publishing on the receive session');
+  x = await send(c.token, `/sessions/${csub}/tracks/new`, 'POST', { tracks: names.map((n) => ({ location: 'remote', sessionId: vs, trackName: n })) });
   ok(x.status === 200 && x.data.requiresImmediateRenegotiation, 'couple pulls vendor tracks');
-  x = await send(c.token, `/sessions/${cs}/tracks/new`, 'POST', { tracks: [{ location: 'remote', sessionId: 'sfu-other', trackName: names[0] }] });
+  x = await send(c.token, `/sessions/${csub}/tracks/new`, 'POST', { tracks: [{ location: 'remote', sessionId: 'sfu-other', trackName: names[0] }] });
   ok(x.status === 403, 'cannot pull from outside the room');
   // vendor allows the camera; couple video goes through
   x = await send(v.token, '/allow', 'POST', { on: true });

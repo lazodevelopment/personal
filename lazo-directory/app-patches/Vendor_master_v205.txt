@@ -36111,7 +36111,9 @@ class _LazoCallScreen extends StatefulWidget {
 class _LazoCallScreenState extends State<_LazoCallScreen> {
   final RTCVideoRenderer _localR = RTCVideoRenderer();
   final RTCVideoRenderer _remoteR = RTCVideoRenderer();
-  RTCPeerConnection? _pc;
+  RTCPeerConnection? _pc; // sends my mic / camera (session _sid)
+  RTCPeerConnection? _pcSub; // receives the other side (session _subSid)
+  String? _subSid;
   MediaStream? _audio;
   MediaStream? _video;
   MediaStream? _remote;
@@ -36208,15 +36210,24 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
         return;
       }
       _sid = (j['sessionId'] ?? '').toString();
+      _subSid = (j['subSessionId'] ?? '').toString();
       _camAllowed = j['camAllowed'] == true;
       _coupleCamAllowed = j['coupleCamAllowed'] == true;
+      // two connections: one sends, one receives. One doing both broke in Chrome
+      // when your camera was added after the other side's video.
+      void watch(RTCPeerConnection pc) {
+        pc.onIceConnectionState = (RTCIceConnectionState s) {
+          if (s == RTCIceConnectionState.RTCIceConnectionStateFailed) {
+            _set(() => _status = 'Connection lost. Leave and join again.');
+          }
+        };
+      }
+
       _pc = await createPeerConnection(_ice);
-      _pc!.onTrack = _onTrack;
-      _pc!.onIceConnectionState = (RTCIceConnectionState s) {
-        if (s == RTCIceConnectionState.RTCIceConnectionStateFailed) {
-          _set(() => _status = 'Connection lost. Leave and join again.');
-        }
-      };
+      watch(_pc!);
+      _pcSub = await createPeerConnection(_ice);
+      _pcSub!.onTrack = _onTrack;
+      watch(_pcSub!);
       _remote = await createLocalMediaStream('lazo-remote');
       _remoteR.srcObject = _remote;
       // audio first; the camera is off until someone turns it on
@@ -36296,9 +36307,9 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
 
   // pull the other side's new tracks, drop the ones they closed
   Future<void> _sync(String osid, List<Map<String, dynamic>> tracks) async {
-    if (_pc == null) return;
+    if (_pcSub == null) return;
     if (_otherSid != null && osid != _otherSid && _pulled.isNotEmpty) {
-      await _rt('PUT', 'sessions/$_sid/tracks/close', <String, dynamic>{
+      await _rt('PUT', 'sessions/$_subSid/tracks/close', <String, dynamic>{
         'tracks': _pulled.values.map((String m) => <String, dynamic>{'mid': m}).toList(),
         'force': true,
       });
@@ -36309,7 +36320,7 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
     final Set<String> names = tracks.map((Map<String, dynamic> t) => (t['trackName'] ?? '').toString()).toSet();
     final List<String> gone = _pulled.keys.where((String n) => !names.contains(n)).toList();
     if (gone.isNotEmpty) {
-      await _rt('PUT', 'sessions/$_sid/tracks/close', <String, dynamic>{
+      await _rt('PUT', 'sessions/$_subSid/tracks/close', <String, dynamic>{
         'tracks': gone.map((String n) => <String, dynamic>{'mid': _pulled[n]}).toList(),
         'force': true,
       });
@@ -36324,7 +36335,7 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
         .toList();
     if (fresh.isEmpty) return;
     final Map<String, dynamic> r =
-        await _rt('POST', 'sessions/$_sid/tracks/new', <String, dynamic>{
+        await _rt('POST', 'sessions/$_subSid/tracks/new', <String, dynamic>{
       'tracks': fresh
           .map((Map<String, dynamic> t) => <String, dynamic>{
                 'location': 'remote',
@@ -36346,11 +36357,11 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
     }
     if (r['requiresImmediateRenegotiation'] == true && r['sessionDescription'] is Map) {
       final Map sd = r['sessionDescription'] as Map;
-      await _pc!.setRemoteDescription(
+      await _pcSub!.setRemoteDescription(
           RTCSessionDescription(sd['sdp'] as String, sd['type'] as String));
-      final RTCSessionDescription ans = await _pc!.createAnswer();
-      await _pc!.setLocalDescription(ans);
-      await _rt('PUT', 'sessions/$_sid/renegotiate', <String, dynamic>{
+      final RTCSessionDescription ans = await _pcSub!.createAnswer();
+      await _pcSub!.setLocalDescription(ans);
+      await _rt('PUT', 'sessions/$_subSid/renegotiate', <String, dynamic>{
         'sessionDescription': <String, dynamic>{'type': 'answer', 'sdp': ans.sdp},
       });
     }
@@ -36461,10 +36472,13 @@ class _LazoCallScreenState extends State<_LazoCallScreen> {
         } catch (_) {}
       }
     }
-    try {
-      await _pc?.close();
-    } catch (_) {}
+    for (final RTCPeerConnection? pc in <RTCPeerConnection?>[_pc, _pcSub]) {
+      try {
+        await pc?.close();
+      } catch (_) {}
+    }
     _pc = null;
+    _pcSub = null;
   }
 
   Future<void> _leave({bool report = false}) async {

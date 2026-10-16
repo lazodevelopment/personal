@@ -1,5 +1,5 @@
 // worker/src/rt.js
-// Build ID: JC-LAZO-CALLS-1016-WORKER-001
+// Build ID: JC-LAZO-CALLS-1016-WORKER-002 (002: a send session and a receive session per side; base 001)
 //
 // LAZO VIDEO CALLS - the media half. A proxy in front of Cloudflare Realtime
 // (Serverless SFU app "lazo-video") plus one Durable Object per call.
@@ -22,7 +22,11 @@
 // ended) go to callEvent, which appends them to calls/{id}.
 //
 // Routes (all POST/PUT with Authorization: Bearer <call token>):
-//   POST /rt/join                              -> {sessionId, role, camAllowed, other}
+//   POST /rt/join                              -> {sessionId, subSessionId, role, camAllowed, other}
+//   Each side gets TWO SFU sessions: sessionId publishes (its own mic/camera), subSessionId
+//   only receives (the other side's tracks). One peer connection doing both broke in Chrome:
+//   pulling the other side's video and then adding your own camera made the SFU's answer
+//   clash with the earlier video m-section (ERROR_CONTENT on mid 3).
 //   POST /rt/room                              -> room state (polled every ~2s)
 //   POST /rt/allow     {on}                    vendor only
 //   POST /rt/leave
@@ -136,7 +140,7 @@ export class CallRoom {
       ended: !!this.room.ended,
       camAllowed: role === "vendor" ? true : !!this.room.camAllowed,
       coupleCamAllowed: !!this.room.camAllowed,
-      me: me ? { sessionId: me.sessionId } : null,
+      me: me ? { sessionId: me.sessionId, subSessionId: me.subSessionId } : null,
       other: o && !o.left ? {
         name: o.name, role: o.role, sessionId: o.sessionId, present: now - (o.lastSeen || 0) < PRESENT_MS,
         tracks: Object.values(o.tracks || {}).map((t) => ({ trackName: t.name, kind: t.kind })),
@@ -160,14 +164,16 @@ export class CallRoom {
       const prev = this.room.members[role];
       const s = await this.sfu("POST", "/sessions/new");   // no body: the SFU rejects {} ("sessionDescription")
       if (s.status >= 300 || !s.data.sessionId) return j({ error: "sfu", detail: s.data.errorDescription || s.status }, 502);
+      const sub = await this.sfu("POST", "/sessions/new");
+      if (sub.status >= 300 || !sub.data.sessionId) return j({ error: "sfu", detail: sub.data.errorDescription || sub.status }, 502);
       const evs = [];
       if (prev && !prev.left && prev.uid !== p.u) evs.push(this.ev("replaced", prev, `by ${p.u}`));
-      this.room.members[role] = { uid: p.u, role, name: p.n, sessionId: s.data.sessionId, tracks: {}, joinedAt: Date.now(), lastSeen: Date.now(), left: false };
+      this.room.members[role] = { uid: p.u, role, name: p.n, sessionId: s.data.sessionId, subSessionId: sub.data.sessionId, tracks: {}, joinedAt: Date.now(), lastSeen: Date.now(), left: false };
       evs.push(this.ev(prev ? "rejoin" : "join", this.room.members[role]));
       await this.save();
       await this.state.storage.setAlarm(Date.now() + 30000);
       await this.log(evs);
-      return j({ ok: true, sessionId: s.data.sessionId, role, ...this.view(role) });
+      return j({ ok: true, sessionId: s.data.sessionId, subSessionId: sub.data.sessionId, role, ...this.view(role) });
     }
 
     const me = this.room.members[role];
@@ -211,7 +217,9 @@ export class CallRoom {
     // ---- SFU passthrough, own session only
     const m = path.match(/^\/sessions\/([^/]+)\/(tracks\/new|renegotiate|tracks\/close)$/);
     if (!m) return j({ error: "not-found" }, 404);
-    if (m[1] !== me.sessionId) return j({ error: "not-your-session" }, 403);
+    const sid = m[1];
+    if (sid !== me.sessionId && sid !== me.subSessionId) return j({ error: "not-your-session" }, 403);
+    const isSub = sid === me.subSessionId;
     const op = m[2];
 
     if (op === "tracks/new") {
@@ -223,6 +231,7 @@ export class CallRoom {
       const added = [];
       for (const t of tracks) {
         if (t.location === "local") {
+          if (isSub) return j({ error: "publish-on-your-main-session" }, 400);
           const kind = kinds[String(t.mid)];
           if (kind !== "audio" && kind !== "video") return j({ error: "unknown-track" }, 400);
           if (role === "couple" && kind === "video" && !this.room.camAllowed) return j({ error: "camera-not-allowed" }, 403);
@@ -230,12 +239,13 @@ export class CallRoom {
           out.push({ location: "local", mid: String(t.mid), trackName: name });
           added.push({ mid: String(t.mid), name, kind });
         } else if (t.location === "remote") {
+          if (!isSub) return j({ error: "pull-on-your-receive-session" }, 400);
           if (!o || o.left || t.sessionId !== o.sessionId) return j({ error: "not-in-room" }, 403);
           if (!Object.values(o.tracks).some((x) => x.name === t.trackName)) return j({ error: "no-such-track" }, 404);
           out.push({ location: "remote", sessionId: o.sessionId, trackName: t.trackName });
         } else return j({ error: "bad-track" }, 400);
       }
-      const r = await this.sfu("POST", `/sessions/${me.sessionId}/tracks/new`, { ...(body.sessionDescription ? { sessionDescription: body.sessionDescription } : {}), tracks: out });
+      const r = await this.sfu("POST", `/sessions/${sid}/tracks/new`, { ...(body.sessionDescription ? { sessionDescription: body.sessionDescription } : {}), tracks: out });
       if (r.status < 300 && !r.data.errorCode) {
         const failed = new Set((r.data.tracks || []).filter((x) => x.errorCode).map((x) => String(x.mid)));
         const evs = [];
@@ -247,15 +257,15 @@ export class CallRoom {
     }
 
     if (op === "renegotiate") {
-      const r = await this.sfu("PUT", `/sessions/${me.sessionId}/renegotiate`, { sessionDescription: body.sessionDescription });
+      const r = await this.sfu("PUT", `/sessions/${sid}/renegotiate`, { sessionDescription: body.sessionDescription });
       return j(r.data, r.status);
     }
 
     // tracks/close: own mids only
     const mids = (Array.isArray(body.tracks) ? body.tracks : []).map((t) => String(t.mid));
     if (!mids.length) return j({ error: "no-tracks" }, 400);
-    const r = await this.sfu("PUT", `/sessions/${me.sessionId}/tracks/close`, { tracks: mids.map((mid) => ({ mid })), force: body.force === true, ...(body.sessionDescription ? { sessionDescription: body.sessionDescription } : {}) });
-    if (r.status < 300) {
+    const r = await this.sfu("PUT", `/sessions/${sid}/tracks/close`, { tracks: mids.map((mid) => ({ mid })), force: body.force === true, ...(body.sessionDescription ? { sessionDescription: body.sessionDescription } : {}) });
+    if (r.status < 300 && !isSub) {
       const evs = [];
       for (const mid of mids) {
         const t = me.tracks[mid];
