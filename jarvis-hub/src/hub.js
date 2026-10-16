@@ -1,0 +1,1858 @@
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// links and sources from feeds, mail and the model: only http(s), mailto and same-site paths reach an href/src (no javascript: or data:)
+const safeUrl = (u) => { const v = String(u ?? "").trim(); return esc(/^(https?:|mailto:|\/(?!\/))/i.test(v) ? v : "#"); };
+const state = { decisions: null, briefs: [], stale: {}, sports: null, markets: null, news: null, wxdays: null, tickers: [], traffic: null, sites: [], uptime: {}, history: {}, wx: null, brief: null, webcams: [], notes: "", place: null, metrics: null, alerts: [], memory: [], queue: [], calendar: null, morning: null, cfg: {}, chat: [] };
+const fmtAgo = (iso) => { const m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m/60) + " h ago" : new Date(iso).toLocaleDateString(); };
+const money = (n) => "$" + (n >= 10000 ? Math.round(n/1000) + "k" : n >= 1000 ? (n/1000).toFixed(1) + "k" : Math.round(n));
+const moneyFull = (n) => "$" + Math.round(n || 0).toLocaleString();
+const BIZ = [
+  { id:"atavia", name:"Atavia", kind:"Wedding films", site:"https://ataviaweddings.com", color:"#39f0a8", links:{ Admin:"https://atavia-admin.pages.dev", Firebase:"https://console.firebase.google.com/project/atavia-c29cd/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Aataviaweddings.com" } },
+  { id:"es", name:"Elizabeth Scott", kind:"Wedding films", site:"https://elizabethscottweddings.com", color:"#7be8ff", links:{ Admin:"https://admin.elizabethscottweddings.com", Firebase:"https://console.firebase.google.com/project/elizabeth-scott-738e5/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Aelizabethscottweddings.com" } },
+  { id:"lazo", name:"Lazo", kind:"Planner app + directory", site:"https://meetlazo.com", color:"#19d3ff", links:{ "App Store":"https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675", ASC:"https://appstoreconnect.apple.com/apps", Play:"https://play.google.com/console/", Firebase:"https://console.firebase.google.com/project/lazo-513ec/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Ameetlazo.com" } },
+  { id:"roven", name:"Roven HR", kind:"Hiring platform", site:"https://rovenhr.com", color:"#ffb340", links:{ App:"https://app.rovenhr.com", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Arovenhr.com" } },
+  { id:"lr", name:"LeaseReputation", kind:"Apartment reviews", site:"https://leasereputation.com", color:"#a78bfa", links:{ App:"https://app.leasereputation.com", Firebase:"https://console.firebase.google.com/project/lease-reputation/overview", GSC:"https://search.google.com/search-console?resource_id=sc-domain%3Aleasereputation.com" } },
+];
+const bizOf = (id) => BIZ.find(b => b.id === id) || { name: id, color: "#6f96b4" };
+const LAUNCH = [["Cloudflare","https://dash.cloudflare.com/"],["Firebase","https://console.firebase.google.com/"],["Search Console","https://search.google.com/search-console"],["Analytics","https://analytics.google.com/"],["App Store Connect","https://appstoreconnect.apple.com/"],["Play Console","https://play.google.com/console/"],["Stripe","https://dashboard.stripe.com/"],["Zoho","https://payments.zoho.com/"],["Resend","https://resend.com/emails"],["FlutterFlow","https://app.flutterflow.io/"],["Calendar","https://calendar.google.com/"],["Drive","https://drive.google.com/"],["Claude","https://claude.ai/"]];
+
+/* ---------- boot ---------- */
+(function boot(){
+  const lines = ["INITIALISING CORE", "LINKING FIVE OPERATIONS", "WEATHER + RADAR UPLINK", "INBOX + CALENDAR", "VOICE INTERFACE", "ONLINE"];
+  lines.forEach((l, i) => { const d = document.createElement("div"); d.textContent = "» " + l; d.style.animationDelay = (i * 120) + "ms"; $("#bootlines").appendChild(d); });
+  setTimeout(() => $("#boot").classList.add("done"), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 1000);
+})();
+
+/* ---------- motion helpers ---------- */
+const prevNums = new Map();
+function tick(el, key, target, fmt) {
+  const from = prevNums.has(key) ? prevNums.get(key) : target; prevNums.set(key, target);
+  if (from === target || matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = fmt(target); return; }
+  const t0 = performance.now(); const dur = 700;
+  const step = (t) => { const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = fmt(from + (target - from) * e); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+const pulse = (el) => { if (!el) return; el.classList.remove("pulse"); void el.offsetWidth; el.classList.add("pulse"); };
+
+/* ---------- lighting: time of day + weather ---------- */
+function setLighting() {
+  const h = new Date().getHours(); const code = state.wx?.current?.weather_code ?? 0;
+  let glow = "25,211,255", glow2 = "123,232,255";
+  if (h >= 5 && h < 8) { glow = "255,170,90"; glow2 = "255,210,150"; }
+  else if (h >= 17 && h < 20) { glow = "255,150,60"; glow2 = "255,200,120"; }
+  else if (h >= 20 || h < 5) { glow = "60,120,255"; glow2 = "140,180,255"; }
+  if (code >= 95) { glow = "167,139,250"; glow2 = "200,180,255"; }
+  else if (code >= 51) { glow = "80,150,220"; glow2 = "150,200,240"; }
+  const down = state.sites.some(s => !s.ok);
+  if (down) { glow = "255,77,94"; glow2 = "255,150,160"; }
+  document.documentElement.style.setProperty("--glow", glow); document.documentElement.style.setProperty("--glow2", glow2);
+}
+
+/* ---------- attention strip ---------- */
+function renderAttention() {
+  const chips = []; const m = state.metrics?.businesses || {};
+  const down = state.sites.filter(s => !s.ok); if (down.length) chips.push({ cls: "crit", n: down.length, t: "site" + (down.length > 1 ? "s" : "") + " down", go: "#opsPanel" });
+  const slow = Object.entries(state.uptime || {}).filter(([, u]) => u.slow); if (slow.length) chips.push({ cls: "warn", n: slow.length, t: "slow", go: "#opsPanel" });
+  const needs = (state.brief?.items || []).filter(i => i.needs_reply).length; if (needs) chips.push({ cls: "warn", n: needs, t: "emails need reply", go: "#mail" });
+  const unans = m.lazo?.counts?.inquiries_unanswered; if (unans) chips.push({ cls: "warn", n: unans, t: "Lazo inquiries unanswered", go: "lazo" });
+  const decs = state.decisions?.items || []; const claims = decs.filter(d => d.kind === "lazo_claim" || d.kind === "lazo_listing").length, rjobs = decs.filter(d => d.kind !== "lazo_claim" && d.kind !== "lazo_listing").length;
+  if (claims) chips.push({ cls: "warn", n: claims, t: "Lazo claim" + (claims > 1 ? "s" : "") + " to review", go: "#decisionsPanel" });
+  if (rjobs) chips.push({ cls: "warn", n: rjobs, t: "Roven review" + (rjobs > 1 ? "s" : ""), go: "#decisionsPanel" });
+  for (const id of ["atavia", "es"]) { const k = m[id]?.headline?.find(x => x.label === "Leads 7d"); if (k?.value) chips.push({ cls: "good", n: k.value, t: bizOf(id).name + " leads this week", go: id }); const b = m[id]?.headline?.find(x => x.label === "Balances due"); if (b?.value) chips.push({ cls: "", n: money(b.value), t: bizOf(id).name + " balances due", go: id }); }
+  const ver = m.lr?.headline?.find(x => /Verifications/.test(x.label)); if (ver?.value) chips.push({ cls: "warn", n: ver.value, t: "LR verifications", go: "lr" });
+  for (const [id, t] of Object.entries(state.traffic?.sites || {})) if (t.online) chips.push({ cls: "good", n: t.online, t: `on ${bizOf(id).name} now`, go: id });
+  for (const g of (state.sports?.games || []).filter(x => x.fav && x.state === "in")) { const [a, b] = g.teams; chips.push({ cls: "good", n: `${a.score}-${b.score}`, t: `${a.abbr} @ ${b.abbr} live`, go: "#sportsPanel" }); }
+  for (const a of state.wx?.nws || []) chips.push({ cls: /Extreme|Severe/.test(a.severity) ? "crit" : "warn", n: "!", t: a.event, go: "#wxPanel" });
+  for (const k of Object.keys(state.stale || {})) chips.push({ cls: "crit", n: "!", t: `${k} feed stopped`, go: "#opsPanel" });
+  const pays = Array.isArray(state.watch?.payments) ? state.watch.payments : [];
+  const failed = pays.filter(x => x.state === "failed"); if (failed.length) chips.push({ cls: "crit", n: failed.length, t: "balance charge" + (failed.length > 1 ? "s" : "") + " declined", go: "#watchPanel" });
+  const fups = (state.followups || []).filter(f => f.status === "ready").length; if (fups) chips.push({ cls: "warn", n: fups, t: "follow-up" + (fups > 1 ? "s" : "") + " ready to send", go: "#decisionsPanel" });
+  const missed = (state.watch?.social?.brands || []).filter(b => !b.today); if (missed.length && new Date().getHours() >= 19) chips.push({ cls: "warn", n: missed.length, t: "brands not posted today", go: "#watchPanel" });
+  for (const t of (state.trips || []).filter(t => t.phase === "airborne")) chips.push({ cls: "good", n: "✈", t: t.flight + " in the air", go: "#events" });
+  const pend = (state.queue || []).filter(q => q.status === "pending").length; if (pend) chips.push({ cls: "", n: pend, t: "actions queued", go: "#brainPanel" });
+  const cal = (state.calendar?.events || []).filter(e => e.start.slice(0, 10) === new Date().toISOString().slice(0, 10)); if (cal.length) chips.push({ cls: "", n: cal.length, t: "on the calendar today", go: "#events" });
+  const hadFocus = document.activeElement?.closest?.("#attn") ? document.activeElement.dataset.go : null;   // keyboard focus survives the rebuild
+  $("#attn").innerHTML = chips.length ? chips.map(c => `<button class="chip ${c.cls}" data-go="${esc(c.go)}"><b>${esc(c.n)}</b>${esc(c.t)}</button>`).join("") : `<span class="quiet">NOTHING NEEDS YOU RIGHT NOW</span>`;
+  if (hadFocus) $("#attn").querySelector(`.chip[data-go="${CSS.escape(hadFocus)}"]`)?.focus();
+  $("#attn").querySelectorAll(".chip").forEach(el => el.onclick = () => { const g = el.dataset.go; if (g.startsWith("#")) { showView(viewOf(g)); const sec = $(g)?.closest(".panel"); if (sec?.id && folded.has(sec.id)) { folded.delete(sec.id); saveFold(); applyFold(); } $(g).scrollIntoView({ behavior: "smooth", block: "center" }); } else openDrill(g); });
+  try { renderJump(); hudHeight(); } catch {}
+}
+const viewOf = (sel) => ({ "#scannerPanel": "ops", "#decisionsPanel": "ops", "#sportsPanel": "ops", "#newsPanel": "ops", "#opsPanel": "ops", "#mail": "ops", "#events": "ops", "#wxPanel": "weather", "#brainPanel": "jarvis" })[sel] || "ops";
+
+/* ---------- business tiles ---------- */
+function hourBars(hours) {
+  if (!hours) return ""; const max = Math.max(1, ...hours); const h = new Date().getHours();
+  return `<svg viewBox="0 0 96 26" preserveAspectRatio="none">${hours.map((v, i) => `<rect x="${i * 4}" y="${(26 - v / max * 24).toFixed(1)}" width="3" height="${(v / max * 24).toFixed(1)}" fill="${i === h ? "#39f0a8" : "#19d3ff"}" opacity="${i > h ? .15 : .8}"/>`).join("")}</svg>`;
+}
+function sparkline(vals, color = "#19d3ff") {
+  if (!vals || vals.length < 2) return "";
+  const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1, n = vals.length;
+  const pts = vals.map((v, i) => [i * 100/(n-1), 26 - (v-min)/span*22]);
+  const d = pts.map((p,i) => (i?"L":"M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" "); const last = pts[n-1];
+  return `<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none"><path d="${d} L100 28 L0 28 Z" fill="${color}" opacity=".12"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.5" vector-effect="non-scaling-stroke"/><circle cx="${last[0]}" cy="${last[1]}" r="1.8" fill="#fff"/></svg>`;
+}
+const fmtDelta = (k) => `${k.delta > 0 ? "▲" : k.delta < 0 ? "▼" : "•"} ${k.deltaUnit === "$" ? "$" + Math.abs(k.delta).toLocaleString() : Math.abs(k.delta) + (k.deltaUnit || "")} ${esc(k.deltaLabel ?? "vs prior")}`;
+function renderBiz() {
+  const m = state.metrics?.businesses || {};
+  $("#biz").innerHTML = BIZ.map(b => {
+    const s = state.sites.find(x => x.id === b.id), u = state.uptime?.[b.id]; const accent = `style="--bc:${b.color}"`;
+    const cls = !s ? "wait" : s.ok ? "ok" : "bad";
+    const txt = !s ? "checking" : s.ok ? `UP · ${s.ms} ms${u?.slow ? " · SLOW" : ""}${u?.since ? " · " + fmtAgo(u.since) : ""}` : `DOWN · ${esc(s.status || s.error || "no response")}`;
+    const mb = m[b.id];
+    const kpis = mb?.headline?.length ? `<div class="kpis">${mb.headline.slice(0,4).map((k, i) => `<div class="kpi">${esc(k.label)}<b data-tick="${b.id}:${i}" data-v="${typeof k.value === "number" ? k.value : ""}" data-money="${k.money ? 1 : ""}">${k.money ? money(k.value) : esc(k.value)}</b>${k.delta != null ? `<i class="${k.delta > 0 ? "up" : k.delta < 0 ? "down" : ""}">${fmtDelta(k)}</i>` : ""}</div>`).join("")}</div>` : `<div class="nodata">${mb?.error ? esc(mb.error) : "metrics pending"}</div>`;
+    const spark = mb?.series?.values ? sparkline(mb.series.values, mb.series.color) : "";
+    const tr = state.traffic?.sites?.[b.id];
+    const traffic = tr && !tr.error ? `<div class="traffic"><div class="live">ONLINE NOW<b data-tick="${b.id}:online" data-v="${tr.online}">${tr.online}</b></div><div>TODAY<b data-tick="${b.id}:today" data-v="${tr.today}">${tr.today}</b><small>${tr.views} page views</small></div><div>${hourBars(tr.hourly)}<small>visitors by hour · ${fmtAgo(state.traffic.at)}</small></div></div>` : (tr?.error ? `<div class="nodata">traffic: ${esc(tr.error)}</div>` : "");
+    const links = Object.entries(b.links).map(([k,v]) => `<a href="${v}" target="_blank" rel="noopener">${k}</a>`).join("");
+    return `<div class="tile" data-id="${b.id}" ${accent}><div><div class="name">${b.name}</div><div class="kind">${b.kind}</div></div>
+      <div class="stat"><span class="dot ${cls}"></span>${txt}</div>${kpis}${spark}${traffic}
+      <div class="links"><a href="${b.site}" target="_blank" rel="noopener">Site</a>${links}</div><div class="more">TAP FOR DETAIL ›</div></div>`;
+  }).join("");
+  $("#biz").querySelectorAll("[data-tick]").forEach(el => { if (el.dataset.v !== "") tick(el, el.dataset.tick, +el.dataset.v, v => el.dataset.money ? money(v) : Math.round(v).toLocaleString()); });
+  $("#biz").querySelectorAll(".tile").forEach(t => { t.onclick = (e) => { if (e.target.closest("a")) return; openDrill(t.dataset.id); }; });
+  const down = state.sites.filter(s => !s.ok);
+  $("#greet").textContent = !state.sites.length ? "ONLINE · CHECKING SYSTEMS" : down.length ? `ALERT · ${down.map(d=>d.name).join(", ")} DOWN` : "ONLINE · ALL SYSTEMS NOMINAL";
+  $("#greet").style.color = down.length ? "var(--red)" : "";
+  $("#core").classList.toggle("alert", down.length > 0); $("#opsPanel").classList.toggle("alarm", down.length > 0);
+  setLighting();
+}
+async function checkStatus(fresh) {
+  $("#statusAt").textContent = "checking…";
+  try {
+    const r = await fetch("/api/status" + (fresh ? "?fresh=1" : ""), { cache:"no-store" }); const d = await r.json();
+    state.sites = d.sites; state.uptime = d.uptime || {}; state.history = d.history || {}; renderBiz(); renderAttention(); renderSys();
+    $("#statusAt").textContent = "checked " + new Date(d.checkedAt).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+    if (fresh) $("#biz").querySelectorAll(".tile").forEach(pulse);
+  } catch { $("#statusAt").textContent = "status check failed"; }
+}
+
+/* ---------- drill-down ---------- */
+function barsSvg(series, colors, labels) {
+  // series: [{ym, a, b, ...}] stacked by business
+  const keys = Object.keys(colors); const max = Math.max(1, ...series.map(m => keys.reduce((a, k) => a + (m[k] || 0), 0)));
+  const w = 100 / series.length;
+  let out = "";
+  series.forEach((m, i) => { let y = 100; keys.forEach(k => { const h = (m[k] || 0) / max * 88; y -= h; if (h > 0) out += `<rect x="${(i * w + w * 0.15).toFixed(2)}" y="${y.toFixed(2)}" width="${(w * 0.7).toFixed(2)}" height="${h.toFixed(2)}" fill="${colors[k]}" opacity=".9"><title>${m.ym} ${labels?.[k] || k}: ${moneyFull(m[k])}</title></rect>`; }); });
+  const lab = series.map((m, i) => `<text x="${(i * w + w / 2).toFixed(2)}" y="99" font-size="4" fill="#6f96b4" text-anchor="middle" font-family="monospace">${m.ym.slice(2).replace("-", "/")}</text>`).join("");
+  return `<svg class="bars" viewBox="0 0 100 100" preserveAspectRatio="none">${out}${lab}</svg>`;
+}
+function rtSvg(hist) {
+  if (!hist || hist.length < 2) return `<div class="empty">Response-time history builds up over the day.</div>`;
+  const vals = hist.map(h => h[1]); const max = Math.max(...vals, 500); const n = vals.length;
+  const pts = vals.map((v, i) => [i * 300 / (n - 1), 60 - v / max * 56]);
+  const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  return `<svg viewBox="0 0 300 64" preserveAspectRatio="none" style="width:100%;height:80px;display:block"><path d="${d} L300 64 L0 64 Z" fill="rgba(25,211,255,.12)"/><path d="${d}" fill="none" stroke="#19d3ff" stroke-width="1.2" vector-effect="non-scaling-stroke"/><text x="2" y="10" font-size="9" fill="#6f96b4" font-family="monospace">${max} ms</text><text x="298" y="62" font-size="8" fill="#6f96b4" font-family="monospace" text-anchor="end">last 24h</text></svg>`;
+}
+function signupSvg(s) {
+  const n = s.days.length, max = Math.max(1, ...s.users, ...s.couples, ...s.inquiries), W = 300, bw = W / n, w = (bw / 3 - 1).toFixed(1);
+  const bars = (arr, off, col) => arr.map((v, i) => v ? `<rect x="${(i * bw + off).toFixed(1)}" y="${(60 - v / max * 56).toFixed(1)}" width="${w}" height="${(v / max * 56).toFixed(1)}" fill="${col}"><title>${s.days[i]}: ${v}</title></rect>` : "").join("");
+  return `<svg viewBox="0 0 ${W} 70" preserveAspectRatio="none" style="width:100%;height:96px;display:block">${bars(s.inquiries, 1, "rgba(111,150,180,.45)")}${bars(s.couples, bw / 3, "rgba(25,211,255,.4)")}${bars(s.users, 2 * bw / 3, "#19d3ff")}<text x="2" y="10" font-size="9" fill="#6f96b4" font-family="monospace">${max}/day</text>${s.days.map((d, i) => i % 2 ? "" : `<text x="${(i * bw + bw / 2).toFixed(1)}" y="69" font-size="7" fill="#6f96b4" font-family="monospace" text-anchor="middle">${d.slice(5)}</text>`).join("")}</svg>`;
+}
+function openDrill(id) {
+  const b = bizOf(id), mb = state.metrics?.businesses?.[id] || {}, d = mb.detail || {};
+  $("#dTitle").textContent = b.name; $("#dKind").textContent = (b.kind || "").toUpperCase() + " · " + (state.metrics ? "metrics " + fmtAgo(state.metrics.collectedAt) : "no metrics");
+  const monthly = Object.entries(d.monthly || {}).map(([ym, v]) => ({ ym, v }));
+  const kpis = (mb.headline || []).map(k => `<div class="kpi">${esc(k.label)}<b>${k.money ? moneyFull(k.value) : esc(k.value)}</b>${k.delta != null ? `<i class="${k.delta > 0 ? "up" : k.delta < 0 ? "down" : ""}">${fmtDelta(k)}</i>` : ""}</div>`).join("");
+  const counts = Object.entries(mb.counts || {}).map(([k, v]) => `<div class="kpi">${esc(k.replace(/_/g, " "))}<b>${esc(typeof v === "number" ? v.toLocaleString() : v)}</b></div>`).join("");
+  const recent = d.recent?.length ? `<div class="tblwrap"><table><tr><th>${id === "roven" ? "Job" : "Client"}</th><th>Date</th><th>${id === "roven" ? "" : "Package"}</th><th class="num">${id === "roven" ? "" : "Total"}</th><th>Status</th><th></th></tr>${d.recent.map(r => `<tr><td>${esc(r.names)}</td><td class="mono">${esc(r.date || "")}</td><td>${esc(r.package || "")}</td><td class="num">${r.total != null ? moneyFull(r.total) : ""}${r.balance && !r.balance_paid ? `<br><small style="color:var(--amber)">${moneyFull(r.balance)} due</small>` : ""}</td><td class="mono">${esc(r.status || "")}</td><td>${["atavia", "es"].includes(id) ? `<button class="btn sm" data-note="${esc(r.id)}" data-name="${esc(r.names)}">NOTE</button>` : ""}</td></tr>`).join("")}</table></div>` : `<div class="empty">No recent items.</div>`;
+  const src = d.leadsBySource ? Object.entries(d.leadsBySource).map(([k, v], i, arr) => { const max = Math.max(...arr.map(x => x[1])); return `<div class="hbar"><span>${esc(k)}</span><i style="width:${(v / max * 100).toFixed(0)}%"></i><span>${v}</span></div>`; }).join("") : `<div class="empty">No lead-source data.</div>`;
+  const pend = d.pending?.length ? `<div class="pend">${d.pending.map(p => `<div><span>${esc(p.label)}</span><span>${actionButtons(p)}</span></div>`).join("")}</div>` : `<div class="empty">Nothing pending.</div>`;
+  const upc = mb.upcoming?.length ? `<ul class="events">${mb.upcoming.map(e => `<li><span class="bz">${esc(e.date)}</span><span>${esc(e.title)}</span><span class="in">in ${Math.ceil((new Date(e.date + "T12:00") - Date.now()) / 86400e3)} d</span></li>`).join("")}</ul>` : `<div class="empty">No upcoming dates.</div>`;
+  const tr = state.traffic?.sites?.[id];
+  const hb = (arr) => (arr || []).map(([p, n], i, a) => `<div class="hbar"><span title="${esc(p)}">${esc(p)}</span><i style="width:${(n / a[0][1] * 100).toFixed(0)}%"></i><span>${n}</span></div>`).join("") || '<div class="empty">–</div>';
+  const trafficSec = tr && !tr.error ? `<section class="panel"><h2>Web traffic today <span class="sub">${fmtAgo(state.traffic.at)} · refreshed every 5 min</span></h2><div class="dkpis"><div class="kpi">Online now<b style="color:var(--green)">${tr.online}</b></div><div class="kpi">Visitors today<b>${tr.today}</b></div><div class="kpi">Page views<b>${tr.views}</b></div><div class="kpi">Bots filtered<b>${tr.bots_today}</b></div></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:12px"><div><h2>By hour</h2><div class="traffic" style="border:0;padding:0;display:block">${hourBars(tr.hourly)}</div></div><div><h2>Top pages</h2>${hb(tr.pages)}</div><div><h2>Sources</h2>${hb(tr.sources)}</div><div><h2>On the site now</h2>${(tr.now_pages || []).map(p => `<div class="mono" style="font-size:12px">${esc(p)}</div>`).join("") || '<div class="empty">nobody right now</div>'}<h2 style="margin-top:10px">Devices</h2><div class="mono" style="font-size:12px">${Object.entries(tr.devices || {}).map(([k, v]) => `${esc(k)} ${v}`).join(" · ") || "–"}</div></div></div></section>` : "";
+  $("#dBody").innerHTML = `${trafficSec}
+    <section class="panel"><h2>Headline</h2><div class="dkpis">${kpis || '<div class="empty">' + esc(mb.error || "metrics pending") + '</div>'}</div></section>
+    ${d.signups ? `<section class="panel d6"><h2>Sign-ups · 14 days <span class="sub">users · couples · inquiries per day</span></h2>${signupSvg(d.signups)}<div class="legend"><span>last sign-up <b style="color:${mb.counts?.hours_since_signup >= 24 ? "var(--amber)" : "#fff"}">${d.signups.lastUserAt ? fmtAgo(d.signups.lastUserAt) : "never"}</b></span><span>avg <b style="color:#fff">${mb.counts?.signup_avg_day ?? "–"}/day</b></span>${Object.entries(d.signups.sources || {}).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `<span>${esc(k)} <b style="color:#fff">${v}</b></span>`).join("")}</div></section>` : ""}
+    <section class="panel d6"><h2>Cash in by month</h2>${monthly.length ? barsSvg(monthly.map(m => ({ ym: m.ym, [id]: m.v })), { [id]: b.color }) + `<div class="legend">${monthly.slice(-3).map(m => `<span>${m.ym} <b style="color:#fff">${moneyFull(m.v)}</b></span>`).join("")}</div>` : '<div class="empty">No revenue history for this business.</div>'}</section>
+    <section class="panel d6"><h2>Response time</h2>${rtSvg(state.history?.[id])}<div class="legend"><span>now <b style="color:#fff">${state.sites.find(s => s.id === id)?.ms ?? "–"} ms</b></span><span>status <b style="color:#fff">${state.uptime?.[id]?.ok === false ? "DOWN" : "up"}${state.uptime?.[id]?.slow ? " · slow" : ""}</b></span></div></section>
+    <section class="panel d8"><h2>${id === "roven" ? "Recent jobs" : "Recent bookings"}</h2>${recent}</section>
+    <section class="panel d4"><h2>Leads by source · 90d</h2>${src}</section>
+    <section class="panel d6"><h2>Needs a decision</h2>${pend}</section>
+    <section class="panel d6"><h2>Upcoming</h2>${upc}</section>
+    <section class="panel"><h2>All counts</h2><div class="dkpis">${counts || '<div class="empty">–</div>'}</div></section>`;
+  wireActionButtons($("#dBody"));
+  $("#dBody").querySelectorAll("[data-note]").forEach(btn => btn.onclick = () => { const note = prompt("Note for " + btn.dataset.name); if (note) proposeAction({ kind: "booking_note", params: { business: id, bookingId: btn.dataset.note, note }, summary: `Add note to ${btn.dataset.name} (${b.name}): "${note.slice(0, 60)}"` }); });
+  $("#drill").classList.add("open"); document.body.style.overflow = "hidden";
+}
+function closeDrill() { $("#drill").classList.remove("open"); document.body.style.overflow = ""; }
+$("#dClose").onclick = closeDrill; $("#drill").onclick = (e) => { if (e.target === $("#drill")) closeDrill(); };
+function actionButtons(p) {
+  if (p.kind === "roven_approve_job") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "roven_approve_job", params: { jobId: p.id }, summary: "Approve " + p.label }))}'>APPROVE</button> <button class="btn sm" data-act='${esc(JSON.stringify({ kind: "roven_reject_job", params: { jobId: p.id }, summary: "Reject " + p.label }))}'>REJECT</button>`;
+  if (p.kind === "roven_approve_employer") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "roven_approve_employer", params: { employerId: p.id }, summary: "Approve " + p.label }))}'>APPROVE</button>`;
+  if (p.kind === "lazo_claim") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_claim", params: { claimId: p.id, decision: "approved" }, summary: "Approve " + p.label }))}'>APPROVE</button> <button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_claim", params: { claimId: p.id, decision: "rejected" }, summary: "Reject " + p.label }))}'>REJECT</button>`;
+  if (p.kind === "lazo_listing") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_listing", params: { requestId: p.id, decision: "approved" }, summary: "Approve " + p.label }))}'>APPROVE</button> <button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_listing", params: { requestId: p.id, decision: "denied" }, summary: "Deny " + p.label }))}'>DENY</button>`;
+  if (p.kind === "lazo_inquiry_responded") return `<button class="btn sm" data-act='${esc(JSON.stringify({ kind: "lazo_inquiry_responded", params: { inquiryId: p.id }, summary: "Mark responded: " + p.label }))}'>MARK RESPONDED</button>`;
+  return "";
+}
+function wireActionButtons(root) { root.querySelectorAll("[data-act]").forEach(btn => btn.onclick = () => proposeAction(JSON.parse(btn.dataset.act))); }
+
+/* ---------- email attachments: an ATTACH button + file chips on any button row; files go up base64 inside the action ---------- */
+const fmtSize = (n) => n < 1024 ? n + " B" : n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB";
+const ATTACH_MAX = 20 * 1048576;   // Gmail allows 25 MB per message; keep headroom for the base64 wrapper
+function attachUI(row, initial = [], onMsg) {
+  const files = initial; const note = (m) => (onMsg || ((t) => addMsg("sys", t)))(m);
+  const inp = document.createElement("input"); inp.type = "file"; inp.multiple = true; inp.hidden = true;
+  const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn sm"; btn.textContent = "ATTACH"; btn.title = "Attach files to this email";
+  const list = document.createElement("span"); list.className = "atts";
+  row.appendChild(btn); row.appendChild(inp); row.appendChild(list);
+  const draw = () => { list.innerHTML = files.map((f, i) => `<span class="achip" title="${esc(f.name)}${f.type ? " · " + esc(f.type) : ""}">📎 <span class="fn">${esc(f.name)}</span> <i>${fmtSize(f.size)}</i><button type="button" data-rm="${i}" aria-label="Remove attachment">✕</button></span>`).join(""); list.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { files.splice(+b.dataset.rm, 1); draw(); }); };
+  btn.onclick = () => inp.click();
+  inp.onchange = () => { for (const f of inp.files) { if (files.reduce((a, x) => a + x.size, 0) + f.size > ATTACH_MAX) { note(`${f.name} would take the attachments past 20 MB; Gmail stops at 25 MB.`); continue; } files.push(f); } inp.value = ""; draw(); };
+  if (files.length) draw();
+  const read = (f) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res({ name: f.name, type: f.type || "application/octet-stream", size: f.size, data: String(r.result).split(",")[1] || "" }); r.onerror = () => rej(new Error("could not read " + f.name)); r.readAsDataURL(f); });
+  return { count: () => files.length, get: () => Promise.all(files.map(read)), clear: () => { files.length = 0; draw(); } };
+}
+
+/* ---------- actions: confirm cards ---------- */
+function proposeAction(item) {
+  item.id = item.id || Math.random().toString(36).slice(2, 10);
+  closeDrill(); showView("jarvis");
+  const el = document.createElement("div"); el.className = "card"; el.dataset.id = item.id;
+  const isMail = item.kind === "email_reply" || item.kind === "email_send", p = item.params || {};
+  // the card always says where a mail goes: the summary is the model's words, the recipient line is the request itself
+  const th = p.threadId ? (state.brief?.items || []).find(m => m.threadId === p.threadId) : null;
+  const meta = isMail ? `<div class="cmeta"><span>FROM</span><b>${esc(p.account || th?.account || p.business || "the matching inbox")}</b><span>TO</span><b class="${item.kind === "email_send" ? "warn" : ""}">${esc(item.kind === "email_reply" ? (th ? th.from + " <" + th.fromEmail + ">" : "everyone on the thread") : (p.to || "(no recipient)"))}</b><span>SUBJECT</span><b>${esc(item.kind === "email_reply" ? "Re: " + (th?.subject || "the thread") : (p.subject || "(none)"))}</b></div>` : "";
+  const preview = isMail ? `<textarea style="min-height:120px;font:14px var(--display);line-height:1.45">${esc(p.body || "")}</textarea>` : "";
+  el.innerHTML = `<div class="k">${isMail ? "CONFIRM EMAIL" : "CONFIRM ACTION"}</div><div>${esc(item.summary)}</div>${meta}${preview}<div class="row"><button class="btn primary" data-ok>CONFIRM</button><button class="btn sm" data-no>CANCEL</button><span class="st"></span></div>`;
+  const att = preview ? attachUI(el.querySelector(".row")) : null;
+  const ok = el.querySelector("[data-ok]"), st = el.querySelector(".st");
+  ok.onclick = async () => { const ta = el.querySelector("textarea"); if (ta) item.params.body = ta.value; ok.disabled = true; st.textContent = "working…";
+    if (att && att.count()) { try { item.params.attachments = await att.get(); } catch (e) { st.textContent = "attachment problem: " + e.message; ok.disabled = false; return; } }
+    const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+    if (r.needsNewOk) { item.newRecipientOk = true; ok.disabled = false; ok.textContent = "YES, SEND TO " + String(r.to || "").toUpperCase().slice(0, 40); st.textContent = "You haven't emailed this address before. Check it, then tap again."; return; }
+    el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove());
+    if (r.executed) { st.textContent = (r.ok ? "done · " : "failed · ") + (r.result || ""); speak(r.ok ? "Done. " + (r.result || "") : "That didn't go through: " + (r.result || "")); setTimeout(loadState, 4000); }
+    else if (r.ok) { st.textContent = "queued · the executor runs it within a minute"; state.queue.unshift({ ...item, status: "pending" }); renderAttention(); speak("Queued. I'll confirm when it's done."); }
+    else st.textContent = "not sent · " + (r.error || r.result || "the hub didn't answer"); };
+  el.querySelector("[data-no]").onclick = () => { st.textContent = "cancelled"; el.querySelector(".row").querySelectorAll("button").forEach(b => b.remove()); };
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; $("#brainPanel").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function draftCard(d) {
+  const el = document.createElement("div"); el.className = "card draft";
+  const acct = d.business === "es" ? "hello@elizabethscottweddings.com" : d.business === "atavia" ? "info@ataviaweddings.com" : "";
+  el.innerHTML = `<div class="k">DRAFT REPLY · ${esc(d.business.toUpperCase())}</div><div class="mono" style="font-size:12px;color:var(--dim)">To: ${esc(d.to)} · Subject: ${esc(d.subject)}</div><textarea>${esc(d.body)}</textarea><div class="row"><a class="btn primary" target="_blank" rel="noopener">OPEN IN GMAIL</a><button class="btn sm" data-copy>COPY</button><span class="st">nothing is sent until you press Send in Gmail</span></div>`;
+  const link = () => { const body = el.querySelector("textarea").value; el.querySelector("a").href = `https://mail.google.com/mail/?view=cm&fs=1${acct ? "&authuser=" + encodeURIComponent(acct) : ""}&to=${encodeURIComponent(d.to)}&su=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(body)}`; };
+  link(); el.querySelector("textarea").oninput = link;
+  el.querySelector("[data-copy]").onclick = () => navigator.clipboard.writeText(el.querySelector("textarea").value).then(() => el.querySelector(".st").textContent = "copied").catch(() => {});
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9;
+}
+function syncQueueCards() {
+  for (const q of state.queue || []) { const el = $("#chat").querySelector(`.card[data-id="${q.id}"] .st`); if (el && q.status !== "pending") el.textContent = q.status + (q.result ? " · " + q.result : ""); }
+}
+
+/* ---------- weather ---------- */
+const WMO = {0:["Clear","☀️"],1:["Mostly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Rime fog","🌫️"],51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],61:["Light rain","🌧️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],66:["Freezing rain","🌨️"],67:["Freezing rain","🌨️"],71:["Light snow","🌨️"],73:["Snow","❄️"],75:["Heavy snow","❄️"],77:["Snow grains","❄️"],80:["Showers","🌦️"],81:["Showers","🌧️"],82:["Violent showers","⛈️"],85:["Snow showers","🌨️"],86:["Snow showers","❄️"],95:["Thunderstorm","⛈️"],96:["Thunderstorm, hail","⛈️"],99:["Thunderstorm, hail","⛈️"]};
+const wmo = (c) => WMO[c] || ["Unknown","•"];
+const compass = (d) => ["N","NE","E","SE","S","SW","W","NW"][Math.round((d||0)/45) % 8];
+const aqiLabel = (a) => a == null ? "" : a <= 50 ? "Good" : a <= 100 ? "Moderate" : a <= 150 ? "Unhealthy (sensitive)" : a <= 200 ? "Unhealthy" : "Hazardous";
+let selDay = 0;
+async function loadWeather() {
+  const q = state.place?.lat ? `?lat=${state.place.lat}&lon=${state.place.lon}&place=${encodeURIComponent(state.place.name||"")}` : "";
+  try { const w = await fetch("/api/weather" + q).then(r => r.json()); if (w.error) throw new Error(w.error); state.wx = w; renderWeather(); initMap(w.lat, w.lon); renderAttention(); setLighting(); }
+  catch (e) { $("#wx").innerHTML = `<div class="empty">Weather unavailable (${esc(e.message)}).</div>`; }
+}
+function renderWeather() {
+  const d = state.wx, c = d.current, [desc, icon] = wmo(c.weather_code);
+  $("#wxPlace").textContent = d.place;
+  const ht = $("#hdrTemp"); ht.innerHTML = `<i>${icon}</i>${Math.round(c.temperature_2m)}°`; ht.title = `${d.place}: ${Math.round(c.temperature_2m)}°F ${desc}, feels ${Math.round(c.apparent_temperature)}°`;
+  const nws = d.nws?.length ? `<div class="nws">${d.nws.map(f => `<div class="${esc(f.severity)}"><b>${esc(f.event)}${f.ends ? " · until " + new Date(f.ends).toLocaleString([], {weekday:"short",hour:"numeric"}) : ""}</b>${esc(f.headline)}</div>`).join("")}</div>` : "";
+  const days = d.daily.time.map((t,i) => { const [, ic] = wmo(d.daily.weather_code[i]); const name = i === 0 ? "Today" : new Date(t + "T12:00").toLocaleDateString([], {weekday:"short"}); return `<div class="day ${i===selDay?"sel":""}" data-i="${i}">${name}<i>${ic}</i><b>${Math.round(d.daily.temperature_2m_max[i])}°</b>${Math.round(d.daily.temperature_2m_min[i])}° · ${d.daily.precipitation_probability_max[i] ?? 0}%</div>`; }).join("");
+  const sr = d.daily.sunrise[0].slice(11), ss = d.daily.sunset[0].slice(11);
+  $("#wx").innerHTML = `${nws}<div class="wx"><div class="big">${Math.round(c.temperature_2m)}<sup>°F</sup></div><div><div class="desc">${icon} ${desc}</div>
+    <div class="meta"><span>Feels <b>${Math.round(c.apparent_temperature)}°</b></span><span>Wind <b>${Math.round(c.wind_speed_10m)} mph ${compass(c.wind_direction_10m)}</b>${c.wind_gusts_10m > c.wind_speed_10m + 8 ? ` gusts <b>${Math.round(c.wind_gusts_10m)}</b>` : ""}</span>
+    <span>Humidity <b>${c.relative_humidity_2m}%</b></span><span>UV <b>${c.uv_index ?? "–"}</b>${d.daily.uv_index_max?.[0] ? ` (max ${Math.round(d.daily.uv_index_max[0])})` : ""}</span>
+    <span>Pressure <b>${(c.pressure_msl * 0.02953).toFixed(2)} in</b></span><span>Visibility <b>${Math.round((c.visibility||0)/1609)} mi</b></span>
+    <span>Air <b>${d.aqi?.us_aqi ?? "–"} ${aqiLabel(d.aqi?.us_aqi)}</b></span><span>☀ <b>${sr}</b> · ☾ <b>${ss}</b></span></div></div></div>
+    <div class="hlabel"><span id="hTitle"></span><span id="hRain"></span></div>
+    <svg class="hourly" id="hourly" viewBox="0 0 300 70" preserveAspectRatio="none" aria-label="Hourly temperature"></svg>
+    <div class="days">${days}</div>`;
+  $("#wx").querySelectorAll(".day").forEach(el => el.onclick = () => { selDay = +el.dataset.i; $("#wx").querySelectorAll(".day").forEach(x => x.classList.toggle("sel", +x.dataset.i === selDay)); drawHourly(); });
+  drawHourly();
+}
+function drawHourly() {
+  const d = state.wx; const day = d.daily.time[selDay];
+  let idx = d.hourly.time.map((t,i) => i).filter(i => d.hourly.time[i].startsWith(day));
+  if (selDay === 0) { const now = new Date(d.current.time); const s = Math.max(0, d.hourly.time.findIndex(t => new Date(t) >= now)); idx = d.hourly.time.map((t,i)=>i).slice(Math.max(0,s-1), s + 24); }
+  const temps = idx.map(i => d.hourly.temperature_2m[i]), rain = idx.map(i => d.hourly.precipitation_probability[i] || 0);
+  if (temps.length < 2) return;
+  const min = Math.min(...temps), max = Math.max(...temps), span = (max - min) || 1, n = temps.length;
+  const pts = temps.map((t,i) => [i * 300/(n-1), 56 - (t-min)/span*40]);
+  const path = pts.map((p,i) => (i?"L":"M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+  const bars = rain.map((r,i) => `<rect x="${(i*300/(n-1) - 2).toFixed(1)}" y="${(70 - r*0.28).toFixed(1)}" width="4" height="${(r*0.28).toFixed(1)}" fill="#19d3ff" opacity=".25"/>`).join("");
+  const step = Math.ceil(n/6);
+  const labels = idx.map((i, k) => k % step === 0 ? `<text x="${(k*300/(n-1)).toFixed(1)}" y="68" font-size="8" fill="#6f96b4" font-family="monospace">${new Date(d.hourly.time[i]).toLocaleTimeString([], {hour:"numeric"}).replace(" ","")}</text>` : "").join("");
+  $("#hourly").innerHTML = `${bars}<path d="${path} L300 70 L0 70 Z" fill="rgba(25,211,255,.12)"/><path d="${path}" fill="none" stroke="#19d3ff" stroke-width="1.5" vector-effect="non-scaling-stroke"/><text x="2" y="10" font-size="9" fill="#6f96b4" font-family="monospace">${Math.round(max)}°</text><text x="2" y="56" font-size="9" fill="#6f96b4" font-family="monospace">${Math.round(min)}°</text>${labels}`;
+  $("#hTitle").textContent = selDay === 0 ? "Next 24 hours" : new Date(day + "T12:00").toLocaleDateString([], {weekday:"long", month:"short", day:"numeric"}) + " · " + wmo(d.daily.weather_code[selDay])[0];
+  $("#hRain").textContent = `rain ${Math.max(...rain)}% · ${d.daily.precipitation_sum?.[selDay] ?? 0} in · wind to ${Math.round(d.daily.wind_speed_10m_max?.[selDay] || 0)} mph`;
+}
+$("#wxLoc").onclick = async () => {
+  const name = prompt("City for weather (blank = auto by IP)", state.place?.name || ""); if (name === null) return;
+  if (!name.trim()) { state.place = null; await save({ place: null }); return loadWeather(); }
+  const g = await fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&name=" + encodeURIComponent(name)).then(r => r.json());
+  if (!g.results?.length) return speak("I couldn't find that place.");
+  const hit = g.results[0]; state.place = { name: [hit.name, hit.admin1].filter(Boolean).join(", "), lat: hit.latitude, lon: hit.longitude };
+  await save({ place: state.place }); loadWeather();
+};
+
+/* ---------- radar map ---------- */
+let map, radarFrames = [], radarIdx = 0, radarTimer = null;
+function initMap(lat, lon) {
+  if (!window.L) return;
+  if (!map) {
+    const phone = innerWidth < 900;
+    map = L.map("map", { zoomControl: true, attributionControl: true, dragging: !phone, touchZoom: !phone, scrollWheelZoom: false, tap: !phone }).setView([lat, lon], 7);
+    // the wheel scrolls the page until the map is clicked or focused; it zooms the map only while the pointer stays on it
+    if (!phone) { const mapEl = $("#map"); mapEl.tabIndex = 0; const wheelOn = () => map.scrollWheelZoom.enable(); mapEl.addEventListener("click", wheelOn); mapEl.addEventListener("focus", wheelOn); mapEl.addEventListener("mouseleave", () => map.scrollWheelZoom.disable()); }
+    if (phone) { const gate = document.createElement("div"); gate.className = "mapgate"; gate.textContent = "TAP TO USE THE MAP"; $("#map").appendChild(gate); gate.onclick = () => { gate.remove(); map.dragging.enable(); map.touchZoom.enable(); $("#map").style.touchAction = "none"; }; }
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { attribution: "Esri, HERE, Garmin · radar © RainViewer", maxZoom: 16 }).addTo(map);
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom: 16, opacity: .7, zIndex: 9 }).addTo(map);
+    L.circleMarker([lat, lon], { radius: 6, color: "#19d3ff", fillColor: "#fff", fillOpacity: 1, weight: 2 }).addTo(map);
+    loadRadar(); setInterval(loadRadar, 5 * 60000);
+    setTimeout(() => map.invalidateSize(), 500);
+  } else map.setView([lat, lon], map.getZoom());
+}
+async function loadRadar() {
+  try {
+    const d = await fetch("https://api.rainviewer.com/public/weather-maps.json").then(r => r.json());
+    const past = d.radar?.past || [], frames = [...past, ...(d.radar?.nowcast || [])];
+    radarFrames.forEach(f => map.removeLayer(f.layer));
+    radarFrames = frames.map(f => ({ time: f.time, layer: L.tileLayer(`${d.host}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, { opacity: 0, zIndex: 5 }).addTo(map) }));
+    $("#radarPos").max = Math.max(0, radarFrames.length - 1); showRadar(Math.max(0, past.length - 1));
+  } catch { $("#radarTime").textContent = "radar unavailable"; }
+}
+function showRadar(i) {
+  if (!radarFrames.length) return;
+  radarIdx = i; radarFrames.forEach((f, k) => f.layer.setOpacity(k === i ? .75 : 0)); $("#radarPos").value = i;
+  const f = radarFrames[i]; $("#radarTime").textContent = (f.time * 1000 > Date.now() ? "forecast " : "") + new Date(f.time * 1000).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+}
+$("#radarPos").oninput = (e) => showRadar(+e.target.value);
+$("#radarPlay").onclick = () => {
+  if (radarTimer) { clearInterval(radarTimer); radarTimer = null; $("#radarPlay").textContent = "▶ PLAY"; return; }
+  $("#radarPlay").textContent = "❚❚"; radarTimer = setInterval(() => showRadar((radarIdx + 1) % radarFrames.length), 500);
+};
+
+/* ---------- decisions ---------- */
+// Drafts are reviewed in place. The minute refresh used to rebuild this panel (and the Inbox) while he was editing,
+// which threw the draft away; now the panel is left alone while a draft is being edited or confirmed, edits survive
+// re-renders, and sending is a two-click confirm right here instead of a card up in the chat.
+const fuEdits = {};   // follow-up id -> text as he has changed it
+const fuFiles = {};   // follow-up id -> File[] attached to the draft; survives re-renders like fuEdits
+let decisionsDeferred = false;
+function renderDecisions(force) {
+  const dec = $("#decisions");
+  if (!force && (dec.contains(document.activeElement) || dec.querySelector(".fu.confirm, .fu.sending"))) { decisionsDeferred = true; return; }
+  decisionsDeferred = false;
+  const items = state.decisions?.items || [];
+  const fups = (state.followups || []).filter(f => f.status === "ready");
+  for (const id of Object.keys(fuEdits)) if (!fups.some(f => f.id === id)) delete fuEdits[id];
+  for (const id of Object.keys(fuFiles)) if (!fups.some(f => f.id === id)) delete fuFiles[id];
+  $("#decSub").textContent = items.length ? `${items.length} pending · ${fmtAgo(state.decisions.at)}` : (state.decisions?.at ? "clear · " + fmtAgo(state.decisions.at) : "");
+  $("#decisionsPanel").classList.toggle("alarm", items.length + fups.length > 0);
+  if (fups.length) $("#decSub").textContent = `${items.length + fups.length} pending`;
+  const fuHtml = fups.map(f => `<div class="fu" data-fu="${esc(f.id)}"><span class="dl"><b>${esc(bizOf(f.business).name.toUpperCase())} · ${f.first ? "FIRST REPLY" : "FOLLOW-UP"}</b>${esc(f.from)}: ${esc(f.subject)}<small>to ${esc(f.to)} · waited since ${fmtAgo(f.received)} · drafted ${fmtAgo(f.at)}${fuEdits[f.id] != null ? " · edited" : ""}</small></span><textarea>${esc(fuEdits[f.id] ?? f.body)}</textarea><div class="row"><button class="btn sm primary" data-fusend>REVIEW & SEND</button><button class="btn sm" data-fucancel hidden>CANCEL</button><button class="btn sm" data-fuskip>SKIP</button><a class="btn sm" data-fugmail target="_blank" rel="noopener" href="${safeUrl(state.brief?.items?.find(m => m.threadId === f.threadId)?.url || "https://mail.google.com/")}">GMAIL</a><span class="fst"></span></div></div>`).join("");
+  dec.innerHTML = fuHtml + (items.length ? items.map(d => `<div><span class="dl"><b>${esc(bizOf(d.business).name.toUpperCase())}</b>${esc(d.label)}<small>${esc(Object.entries(d.detail || {}).map(([k, v]) => k + ": " + v).join(" · "))} · ${fmtAgo(d.at)}</small></span><span>${actionButtons({ id: d.id, kind: d.kind, label: d.label })}</span></div>`).join("") : (fups.length ? "" : `<div class="empty">Nothing waiting on you.</div>`));
+  wireActionButtons(dec);
+  dec.querySelectorAll("[data-fu]").forEach(el => {
+    const f = fups.find(x => x.id === el.dataset.fu); const ta = el.querySelector("textarea"), st = el.querySelector(".fst");
+    ta.oninput = () => { fuEdits[f.id] = ta.value; };
+    const att = attachUI(el.querySelector(".row"), fuFiles[f.id] ||= [], (m) => { st.textContent = m; });
+    const reset = () => { el.classList.remove("confirm"); el.querySelector("[data-fusend]").textContent = "REVIEW & SEND"; el.querySelector("[data-fucancel]").hidden = true; st.textContent = ""; };
+    el.querySelector("[data-fucancel]").onclick = reset;
+    el.querySelector("[data-fusend]").onclick = async () => {
+      const btn = el.querySelector("[data-fusend]"); const body = ta.value.trim(); if (!body) { st.textContent = "The reply is empty."; return; }
+      if (!el.classList.contains("confirm")) { el.classList.add("confirm"); btn.textContent = "CONFIRM SEND"; el.querySelector("[data-fucancel]").hidden = false; st.textContent = `Sends this to ${f.to} from ${f.account}${att.count() ? ` with ${att.count()} attachment${att.count() > 1 ? "s" : ""}` : ""}.`; return; }
+      el.classList.add("sending"); btn.disabled = true; st.textContent = "sending…";
+      let attachments = []; if (att.count()) { try { attachments = await att.get(); } catch (e) { st.textContent = "attachment problem: " + e.message; btn.disabled = false; el.classList.remove("sending"); return; } }
+      const item = { id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: f.account, threadId: f.threadId, body, followupId: f.id, ...(attachments.length ? { attachments } : {}) }, summary: `Send ${f.first ? "reply" : "follow-up"} to ${f.from} (${bizOf(f.business).name}): ${f.subject}${attachments.length ? ` (+${attachments.length} attachment${attachments.length > 1 ? "s" : ""})` : ""}` };
+      const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+      el.classList.remove("sending", "confirm");
+      if (r.ok) { st.textContent = "Sent."; btn.textContent = "SENT"; btn.blur(); delete fuEdits[f.id]; delete fuFiles[f.id]; state.followups = state.followups.filter(x => x.id !== f.id); setTimeout(() => { renderDecisions(true); renderAttention(); loadState(); }, 1500); }
+      else { st.textContent = "Not sent: " + (r.result || r.error || "error"); btn.disabled = false; btn.textContent = "REVIEW & SEND"; el.querySelector("[data-fucancel]").hidden = true; }
+    };
+    el.querySelector("[data-fuskip]").onclick = async (e) => { e.currentTarget.blur(); await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: f.id }) }).catch(() => {}); delete fuEdits[f.id]; delete fuFiles[f.id]; state.followups = state.followups.filter(x => x.id !== f.id); renderDecisions(true); renderAttention(); };
+  });
+}
+$("#decisions").addEventListener("focusout", () => setTimeout(() => { if (decisionsDeferred && !$("#decisions").contains(document.activeElement)) renderDecisions(); }, 250));
+/* ---------- scores, markets, news, wedding-day weather ---------- */
+async function loadSports() {
+  try { state.sports = await fetch("/api/sports").then(r => r.json()); } catch { return; }
+  const g = state.sports.games || []; const fav = g.filter(x => x.fav), others = g.filter(x => !x.fav && x.state !== "post").slice(0, 6);
+  const live = fav.filter(x => x.state === "in");
+  $("#sportsSub").textContent = live.length ? `${live.length} live` : fav.length ? `${fav.length} for your teams` : "";
+  const row = (x) => { const [a, b] = x.teams; const when = x.state === "pre" ? new Date(x.date).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) + (x.tv ? " · " + x.tv : "") : x.detail;
+    return `<div class="game ${x.fav ? "fav" : ""} ${x.state === "in" ? "live" : ""}"><span class="lg">${x.league.toUpperCase()}</span><div class="t"><span class="${x.state === "post" && a.winner ? "w" : ""}">${esc(a.name)} <small style="color:var(--dim)">${esc(a.record)}</small></span><b>${x.state === "pre" ? "" : esc(a.score)}</b><span class="${x.state === "post" && b.winner ? "w" : ""}">${b.home ? "@ " : ""}${esc(b.name)} <small style="color:var(--dim)">${esc(b.record)}</small></span><b>${x.state === "pre" ? "" : esc(b.score)}</b></div><span class="st">${esc(when)}</span></div>`; };
+  const fmtWhen = (d) => new Date(d).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  const teamCard = (t) => { const n = t.next, l = t.last;
+    const nextTxt = n ? (n.state === "in" ? `<b style="color:var(--green)">LIVE</b> ${n.home ? "vs" : "@"} ${esc(n.opp)} ${esc(n.my ?? "")}-${esc(n.their ?? "")} · ${esc(n.detail)}` : `Next: ${n.home ? "vs" : "@"} ${esc(n.opp)} · ${fmtWhen(n.date)}${n.tv ? " · " + esc(n.tv) : ""}`) : (t.note ? esc(t.note) : "no game scheduled");
+    const lastTxt = l ? `Last: ${l.won ? "W" : "L"} ${esc(l.my ?? "")}-${esc(l.their ?? "")} ${l.home ? "vs" : "@"} ${esc(l.opp)}` : "";
+    const ord = (n) => n + (["th","st","nd","rd"][((n % 100) - 20) % 10] || ["th","st","nd","rd"][n % 100] || "th");
+    const then = (t.upcoming || []).slice(1, 3).map(g => `${g.home ? "vs" : "@"} ${esc(g.opp)} ${new Date(g.date).toLocaleDateString([], { month: "short", day: "numeric" })}`).join(" · ");
+    const thenTxt = then ? `<div class="tl dim">Then: ${then}</div>` : "";
+    const div = t.division ? `<div class="tl dim">${ord(t.rank)} in ${esc(t.division)} · tap for schedule + standings</div>` : "";
+    return `<div class="team ${n?.state === "in" ? "live" : ""}" data-abbr="${esc(t.abbr)}">${t.logo ? `<img src="${safeUrl(t.logo)}" alt="">` : ""}<div><div class="tn">${esc(t.name)} <small>${esc(t.record || "")}</small></div><div class="tl">${nextTxt}</div>${thenTxt}<div class="tl dim">${lastTxt}</div>${div}</div></div>`; };
+  const stTable = (abbr) => { const d = state.sports.standings?.[abbr]; const t = (state.sports.teams || []).find(x => x.abbr === abbr); if (!d && !t) return "";
+    const sched = t ? `<div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(t.name.toUpperCase())} · SCHEDULE</div><table><tr><th>Date</th><th>Opponent</th><th>Result / Time</th><th>TV</th></tr>${[...(t.recent || []).map(g => `<tr><td class="mono">${new Date(g.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</td><td>${g.home ? "vs" : "@"} ${esc(g.opp)}</td><td class="mono" style="color:${g.won ? "var(--green)" : "var(--red)"}">${g.won ? "W" : "L"} ${esc(g.my ?? "")}-${esc(g.their ?? "")}</td><td></td></tr>`), ...(t.upcoming || []).map(g => `<tr class="${g.state === "in" ? "fav" : ""}"><td class="mono">${new Date(g.date).toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" })}</td><td>${g.home ? "vs" : "@"} ${esc(g.opp)}</td><td class="mono">${g.state === "in" ? "LIVE " + esc(g.my ?? "") + "-" + esc(g.their ?? "") : new Date(g.date).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</td><td class="mono">${esc(g.tv || "")}</td></tr>`)].join("") || '<tr><td colspan="4" class="empty">no games scheduled</td></tr>'}</table>` : "";
+    if (!d) return `<div class="stand" data-for="${esc(abbr)}">${sched}</div>`;
+    return `<div class="stand" data-for="${esc(abbr)}">${sched}<div class="empty" style="letter-spacing:.2em;margin:8px 0 4px">${esc(d.division.toUpperCase())}</div><table><tr><th></th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">PCT</th><th class="num">GB</th><th>Strk</th></tr>${d.rows.map(r => `<tr class="${r.fav ? "fav" : ""}"><td class="num">${r.rank}</td><td>${esc(r.name)}${r.clinch ? ` <small style="color:var(--green)">${esc(r.clinch)}</small>` : ""}</td><td class="num">${esc(r.w)}</td><td class="num">${esc(r.l)}</td><td class="num">${esc(r.pct)}</td><td class="num">${esc(r.gb)}</td><td class="mono">${esc(r.streak || "")}</td></tr>`).join("")}</table></div>`; };
+  const teams = (state.sports.teams || []);
+  $("#scores").innerHTML = (teams.length ? `<div class="teams">${teams.map(teamCard).join("")}</div><div id="standWrap"></div>` : "") + (fav.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">YOUR GAMES</div>` + fav.map(row).join("") : "") + (others.length ? `<div class="empty" style="margin-top:8px;letter-spacing:.2em">AROUND THE LEAGUES</div>` + others.map(row).join("") : "");
+  $("#scores").querySelectorAll(".team[data-abbr]").forEach(el => el.onclick = () => { const w = $("#standWrap"); const open = w.querySelector(`.stand[data-for="${el.dataset.abbr}"]`); w.innerHTML = open ? "" : stTable(el.dataset.abbr); $("#scores").querySelectorAll(".team").forEach(x => x.classList.toggle("sel", !open && x === el)); });
+  renderAttention();
+}
+async function loadMarkets() {
+  try { state.markets = await fetch("/api/markets").then(r => r.json()); } catch { return; }
+  const rows = (state.markets.rows || []).filter(r => !r.error);
+  const tHtml = rows.map(r => `<span>${esc(r.name)}<b>${r.price >= 1000 ? Math.round(r.price).toLocaleString() : r.price.toFixed(2)}</b><i class="${r.change >= 0 ? "up" : "down"}">${r.change >= 0 ? "▲" : "▼"}${Math.abs(r.pct).toFixed(2)}%</i></span>`).join("");
+  $("#ticker").innerHTML = tHtml + `<button id="tickAdd" title="Add or remove stocks">±</button>`; const t2 = $("#ticker2"); if (t2) t2.innerHTML = tHtml;
+  $("#tickAdd").onclick = async () => { const cur = (state.tickers || []).join(", "); const v = prompt("Stocks to show, comma separated (e.g. AAPL, MSFT, NVDA). The indexes, oil and bitcoin are always shown.", cur); if (v === null) return; state.tickers = v.split(/[,\s]+/).map(x => x.trim().toUpperCase()).filter(Boolean); await save({ tickers: state.tickers }); loadMarkets(); };
+}
+async function loadNews() {
+  try { state.news = await fetch("/api/news").then(r => r.json()); } catch { return; }
+  $("#newsSub").textContent = fmtAgo(state.news.at);
+  $("#news").innerHTML = (state.news.cities || []).map(c => `<div><h3>${esc(c.city.toUpperCase())}<small>${esc(c.station)}</small></h3><ul>${c.items.slice(0, 6).map(i => `<li><a href="${safeUrl(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>${i.at ? `<small>${fmtAgo(i.at)}</small>` : ""}</li>`).join("") || '<li class="empty">feed unavailable</li>'}</ul></div>`).join("");
+}
+async function loadWxDays() { try { state.wxdays = await fetch("/api/wxdays").then(r => r.json()); renderEvents(); } catch {} }
+/* ---------- inbox, upcoming, money, memory, alerts, morning ---------- */
+let briefDeferred = false;
+function renderBrief() {
+  // an open thread or a reply being typed must survive the minute refresh: redraw once it is closed
+  if ((openThreadId && $("#mail").querySelector(".thread")) || $("#mail").contains(document.activeElement)) { briefDeferred = true; return; }
+  briefDeferred = false;
+  const b = state.brief; const live = b?.source === "bridge";
+  if (!b || !b.items?.length) { $("#mail").innerHTML = `<li class="empty">${esc(b?.note || "No inbox connected yet. Press CONNECT INBOX.")}</li>`; $("#briefAt").textContent = b?.at ? (live ? "live · " : "snapshot · ") + fmtAgo(b.at) : ""; return; }
+  $("#briefAt").textContent = `${live ? "live" : "snapshot"} · ${b.accounts?.length || 1} inbox${(b.accounts?.length || 1) > 1 ? "es" : ""} · ${b.items.filter(m => m.needs_reply).length} need reply · ${fmtAgo(b.at)}`;
+  const allGroups = {}; for (const m of b.items) (allGroups[m.business || m.account || "inbox"] ||= []).push(m);
+  const keys = Object.keys(allGroups).sort((x, y) => (bizOf(x).name || x).localeCompare(bizOf(y).name || y));
+  if (!keys.includes(mailTab) && mailTab !== "all") mailTab = keys[0] || "all";
+  $("#mailTabs").innerHTML = keys.length > 1 ? keys.map(k => { const n = allGroups[k].filter(m => m.needs_reply).length; return `<button data-tab="${esc(k)}" class="${mailTab === k ? "sel" : ""}">${esc((bizOf(k).name || k).toUpperCase())}${n ? ` · ${n}` : ""}</button>`; }).join("") + `<button data-tab="all" class="${mailTab === "all" ? "sel" : ""}">ALL</button>` : "";
+  $("#mailTabs").querySelectorAll("[data-tab]").forEach(btn => btn.onclick = () => { mailTab = btn.dataset.tab; try { localStorage.setItem("mailTab", mailTab); } catch {} renderBrief(); });
+  const groups = mailTab === "all" ? allGroups : { [mailTab]: allGroups[mailTab] || [] };
+  const acts = (m) => live && m.threadId ? `<span class="acts">${m.needs_reply ? `<button data-mail="reply">REPLY</button>` : ""}${m.unread ? `<button data-mail="read">READ</button>` : ""}<button data-mail="archive">ARCHIVE</button></span>` : "";
+  $("#mail").innerHTML = Object.entries(groups).map(([g, items]) => (mailTab === "all" ? `<li class="grp" style="border:0;padding:0">${esc(bizOf(g).name || g).toUpperCase()}</li>` : "") + (items.length ? "" : `<li class="empty">Nothing in the last two days.</li>`) + items.map((m, i) => `<li class="${m.needs_reply ? "needs" : ""} ${m.priority === 1 ? "p1" : ""}" data-d="${esc(m.received || "")}" data-t="${esc(m.threadId || "")}" data-a="${esc(m.account || "")}" data-from="${esc(m.from)}" data-subj="${esc(m.subject)}"><span class="from">${esc(m.from)}${m.needs_reply ? '<span class="tag">REPLY</span>' : ""}${m.intake ? '<span class="tag auto" title="Answered by the Gmail intake script; JARVIS checks the reply went out">AUTO-REPLY</span>' : ""}${m.kind && m.kind !== "other" ? `<span class="kind">${esc(m.kind.toUpperCase())}</span>` : ""}</span><span class="when">${esc(m.when||"")}</span>${acts(m)}<span class="subj" data-open="1" title="${live ? "Open the full email" : ""}">${esc(m.subject)} ${m.snippet ? `<span>— ${esc(m.snippet)}</span>` : ""}</span></li>`).join("")).join("");
+  $("#mail").querySelectorAll("[data-open]").forEach(el => el.onclick = () => { const li = el.closest("li"); if (live && li.dataset.t) openThread(li); else window.open(b.items.find(m => m.threadId === li.dataset.t)?.url || "https://mail.google.com/", "_blank"); });
+  $("#mail").querySelectorAll("[data-mail]").forEach(btn => btn.onclick = () => { const li = btn.closest("li"); const act = btn.dataset.mail; const who = li.dataset.from, subj = li.dataset.subj, a = li.dataset.a, t = li.dataset.t;
+    if (act === "reply") { openThread(li, true); return; }
+    proposeAction({ kind: "email_" + act, params: { account: a, threadId: t }, summary: `${act === "archive" ? "Archive" : "Mark read"}: ${who} — ${subj}` }); });
+}
+let mailTab = ""; try { mailTab = localStorage.getItem("mailTab") || mailTab; } catch {}   // empty = first business tab until he picks one
+let openThreadId = null;
+async function openThread(li, focusReply) {
+  const t = li.dataset.t, a = li.dataset.a;
+  const prev = $("#mail").querySelector(".thread"); if (prev) { const pli = prev.closest("li"); if (pli === li && focusReply && prev.querySelector("textarea")) { prev.querySelector("textarea").focus(); return; } prev.remove(); pli.classList.remove("open"); if (pli === li) { openThreadId = null; if (briefDeferred) renderBrief(); return; } }
+  openThreadId = t; li.classList.add("open");
+  const box = document.createElement("div"); box.className = "thread"; box.innerHTML = `<div class="empty">Opening…</div>`; li.appendChild(box);
+  let d; try { d = await fetch(`/api/inbox/thread?account=${encodeURIComponent(a)}&t=${encodeURIComponent(t)}&d=${encodeURIComponent(li.dataset.d || "")}`).then(r => r.json()); } catch (e) { d = { error: e.message }; }
+  if (openThreadId !== t) return;
+  if (d.error) { const quota = /too many times for one day/i.test(d.error); const gm = state.brief?.items?.find(m => m.threadId === t)?.url || "https://mail.google.com/"; box.innerHTML = `<div class="empty">${quota ? "Google has cut this account's Gmail script off for the day (daily limit). It resets at midnight Pacific; the new bridge script keeps it well under the limit from now on." : esc(d.error)}</div><div class="rrow" style="margin-top:6px"><a class="btn sm" target="_blank" rel="noopener" href="${safeUrl(gm)}">OPEN IN GMAIL</a><button class="btn sm" data-r="close">CLOSE</button></div>`; box.querySelector('[data-r="close"]').onclick = () => { box.remove(); li.classList.remove("open"); if (openThreadId === t) openThreadId = null; if (briefDeferred) renderBrief(); }; return; }
+  const strip = (txt) => { const i = txt.search(/\n(On .{5,120}wrote:|-{2,}\s*Original Message|From: .+\nSent: )/); return i > 40 ? [txt.slice(0, i).trim(), txt.slice(i).trim()] : [txt.trim(), ""]; };
+  const msgs = d.messages || []; const last = msgs[msgs.length - 1] || {};
+  box.innerHTML = msgs.map((m, i) => { const [main, quoted] = strip(m.body || ""); return `<div class="m"><div class="mh"><span><b>${esc((m.from || "").replace(/<.*>/, "").trim() || m.from)}</b> → ${esc((m.to || "").slice(0, 80))}</span><span>${new Date(m.date).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span></div><div class="mb">${esc(main)}</div>${quoted && i === msgs.length - 1 ? `<details><summary class="empty" style="cursor:pointer">show quoted text</summary><div class="mb q">${esc(quoted)}</div></details>` : ""}${m.attachments?.length ? `<div class="att">📎 ${m.attachments.map(esc).join(" · ")}</div>` : ""}</div>`; }).join("") +
+    `<div class="rbox"><textarea id="rb_${esc(t)}" placeholder="Write a reply to ${esc((last.from || "").replace(/<.*>/, "").trim())}…"></textarea>
+      <div class="rrow"><button class="btn primary" data-r="send">SEND REPLY</button><button class="btn" data-r="draft">DRAFT WITH JARVIS</button><a class="btn sm" href="${safeUrl(d.link)}" target="_blank" rel="noopener">OPEN IN GMAIL</a><button class="btn sm" data-r="close">CLOSE</button><span class="empty" data-r="st"></span></div></div>`;
+  const ta = box.querySelector("textarea"), st = box.querySelector('[data-r="st"]');
+  const closeBox = () => { box.remove(); li.classList.remove("open"); if (openThreadId === t) openThreadId = null; if (briefDeferred) renderBrief(); };
+  box.querySelector('[data-r="close"]').onclick = closeBox;
+  const att = attachUI(box.querySelector(".rrow"), [], (m) => { st.textContent = m; });
+  if (focusReply) ta.focus();
+  box.querySelector('[data-r="draft"]').onclick = async () => {
+    st.textContent = "JARVIS is drafting…"; ta.disabled = true;
+    const convo = msgs.map(m => `From: ${m.from}\nDate: ${m.date}\n\n${strip(m.body || "")[0].slice(0, 3000)}`).join("\n\n---\n\n");
+    let draft = "";
+    try {
+      const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ noTools: true, text: `Write ONLY the body of my email reply to this thread (no subject line, no commentary, no tools). Warm, brief and professional, signed appropriately for ${bizOf(state.brief.items.find(x => x.threadId === t)?.business || "").name || "my business"}. ${ta.value.trim() ? "Use these notes: " + ta.value.trim() : ""}\n\nTHREAD:\n${convo}`, messages: [] }) });
+      const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "";
+      while (true) { const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf("\n\n")) >= 0) { const fr = buf.slice(0, i); buf = buf.slice(i + 2); if (/^event: delta/m.test(fr)) { draft += JSON.parse((fr.match(/^data: (.*)$/m) || [])[1] || "{}").text || ""; ta.value = draft.trimStart(); } } }
+      st.textContent = "Draft ready. Edit it, then SEND REPLY.";
+    } catch (e) { st.textContent = "Couldn't draft: " + e.message; }
+    ta.disabled = false; ta.focus();
+  };
+  box.querySelector('[data-r="send"]').onclick = async () => {
+    const body = ta.value.trim(); if (!body) { st.textContent = "Write something first."; return; }
+    const btn = box.querySelector('[data-r="send"]'); btn.disabled = true; st.textContent = "sending…";
+    let attachments = []; if (att.count()) { try { attachments = await att.get(); } catch (e) { st.textContent = "attachment problem: " + e.message; btn.disabled = false; return; } }
+    const item = { id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: a, threadId: t, body, ...(attachments.length ? { attachments } : {}) }, summary: `Reply to ${(last.from || "").replace(/<.*>/, "").trim()} — ${d.subject}${attachments.length ? ` (+${attachments.length} attachment${attachments.length > 1 ? "s" : ""})` : ""}` };
+    const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(item) }).then(x => x.json()).catch(() => ({}));
+    if (r.ok) { st.textContent = "Sent."; ta.value = ""; setTimeout(() => { closeBox(); loadState(); }, 2500); } else { st.textContent = "Not sent: " + (r.result || "error"); btn.disabled = false; }
+  };
+}
+$("#inboxConnect").onclick = async () => { const el = $("#inboxHow"); el.hidden = !el.hidden; if (!el.hidden) { try { const br = await fetch("/api/inbox/bridges").then(r => r.json()); $("#bridges").innerHTML = br.length ? "Connected: " + br.map(x => `<b style="color:#fff">${esc(x.account)}</b> (${esc(bizOf(x.business).name || x.business)}, ${x.items} threads, ${fmtAgo(x.at)}${x.actions ? ", actions on" : ", read-only until the web app is deployed"})`).join(" · ") : "No accounts connected yet."; } catch {} } };
+function renderEvents() {
+  const wd = state.wxdays?.days || {};
+  const ev = Object.entries(state.metrics?.businesses || {}).flatMap(([id, b]) => (b.upcoming || []).map(e => ({ date: e.date, title: e.title + (e.where ? " · " + e.where : ""), biz: bizOf(id).name, cls: "", wx: wd[`${id}:${e.id || e.date}`] })))
+    .concat((state.trips || []).map(t => ({ date: t.date, title: `✈ ${t.flight}${t.route?.from ? " · " + (t.route.from.city || t.route.from.iata) + " → " + (t.route.to?.city || t.route.to?.iata) : ""}${t.phase && t.phase !== "scheduled" ? " · " + t.phase : ""}`, biz: "TRIP", cls: "cal", trip: t.id })))
+    .concat((state.calendar?.events || []).map(e => ({ date: e.start, title: e.title + (e.location ? " · " + e.location : ""), biz: e.allDay ? "CAL" : new Date(e.start).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }), cls: "cal" })))
+    .filter(e => e.date && new Date(e.date.length === 10 ? e.date + "T12:00" : e.date) >= new Date(Date.now() - 86400e3)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12);
+  $("#evSub").textContent = ev.length ? `next ${ev.length}` : "";
+  $("#events").innerHTML = ev.length ? ev.map(e => { const d = new Date(e.date.length === 10 ? e.date + "T12:00" : e.date); const days = Math.ceil((d - Date.now()) / 86400e3); const w = e.wx ? `<span class="wxd ${e.wx.rain >= 40 ? "wet" : ""}" title="${esc(e.wx.where)} · wind ${e.wx.wind} mph · sunset ${esc(e.wx.sunset)}">${wmo(e.wx.code)[1]} <b>${e.wx.hi}°</b>/${e.wx.lo}° ${e.wx.rain}%</span>` : ""; return `<li style="${w ? "grid-template-columns:auto 1fr auto auto" : ""}"><span class="bz ${e.cls}">${esc(e.biz)}</span><span>${esc(e.title)}</span>${w}<span class="in">${d.toLocaleDateString([], {month:"short", day:"numeric"})} · ${days <= 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + " d"}${e.trip ? ` <button class="btn sm" data-deltrip="${esc(e.trip)}" title="Remove trip">✕</button>` : ""}</span></li>`; }).join("") : `<li class="empty">Bookings and calendar items appear here.</li>`;
+  $("#calHint").textContent = "";
+  $("#events").querySelectorAll("[data-deltrip]").forEach(b => b.onclick = async () => { await fetch("/api/trips/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: b.dataset.deltrip }) }).catch(() => {}); state.trips = state.trips.filter(t => t.id !== b.dataset.deltrip); renderEvents(); });
+}
+$("#tripAdd").onclick = () => { const f = $("#tripForm"); f.hidden = !f.hidden; if (!f.hidden) { $("#tripDate").value = new Date().toLocaleDateString("en-CA"); $("#tripFl").focus(); } };
+$("#tripForm").onsubmit = async (e) => { e.preventDefault(); const t = await fetch("/api/trips", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ flight: $("#tripFl").value, date: $("#tripDate").value, home: $("#tripHome").value }) }).then(r => r.json()).catch(() => ({ error: "offline" })); if (t.error) return addMsg("sys", "Trip not added: " + t.error); $("#tripForm").hidden = true; $("#tripFl").value = ""; await loadState(); };
+
+/* ---------- faith: rosary led aloud, readings in plain words ---------- */
+var faith = null, rosSet = null, ros = null, rdPlay = null, rdDay = "today", rdCache = {};
+const homeDate = (offset = 0) => new Date(Date.now() + offset * 86400e3).toLocaleDateString("en-CA", { timeZone: state.cfg?.home?.tz || state.cfg?.tz || undefined });
+const sundayOffset = () => (7 - new Date(homeDate() + "T12:00:00").getDay()) % 7;   // 0 on Sunday itself
+async function loadFaith(fresh) {
+  const q = new URLSearchParams(); if (fresh) q.set("fresh", "1"); if (rosSet) q.set("set", rosSet); if (rdDay === "sunday" && sundayOffset()) q.set("date", homeDate(sundayOffset()));
+  try { const f = await fetch("/api/faith?" + q).then(r => r.json()); if (f.readings) rdCache[f.readings.date] = f.readings; faith = f; } catch { return; }
+  renderFaith();
+}
+function renderFaith() {
+  if (!faith) return; const m = faith.mysteries, R = faith.rosary; rosSet = rosSet || m.key;
+  $("#faithSub").textContent = `${m.season} · ${new Date().toLocaleDateString([], { weekday: "long" })}`;
+  $("#rosWhich").textContent = R.name + (R.key === m.key ? " · today" : "");
+  $("#rosSets").innerHTML = ["joyful", "sorrowful", "glorious", "luminous"].map(k => `<button data-set="${k}" class="${k === R.key ? "sel" : ""}">${k.toUpperCase()}${k === m.key ? " ·TODAY" : ""}</button>`).join("");
+  $("#rosSets").querySelectorAll("[data-set]").forEach(b => b.onclick = () => { if (ros) return; rosSet = b.dataset.set; loadFaith(); });
+  $("#rosList").innerHTML = R.segments.filter(x => x.ref).map((x, i) => `<li data-seg="${x.id}"><b>${esc(x.label.replace(/^\d\.\s*/, ""))}</b><small>${esc(x.ref)} · for ${esc(x.fruit)}</small><span class="med">${esc(x.med || "")}</span></li>`).join("");
+  const sat = new Date(homeDate() + "T12:00:00").getDay() === 6, off = sundayOffset();
+  $("#rdDays").innerHTML = `<button data-day="today" class="${rdDay === "today" ? "sel" : ""}">TODAY</button>` + (off ? `<button data-day="sunday" class="${rdDay === "sunday" ? "sel" : ""}">${sat ? "SATURDAY VIGIL · SUNDAY" : "SUNDAY"}</button>` : "");
+  $("#rdDays").querySelectorAll("[data-day]").forEach(b => b.onclick = () => { if (rdPlay) return; rdDay = b.dataset.day; const want = rdDay === "sunday" ? homeDate(off) : homeDate(); if (rdCache[want]) { faith.readings = rdCache[want]; renderFaith(); } else { $("#rdParts").innerHTML = `<div class="empty">Loading…</div>`; loadFaith(); } });
+  const st = faith.saint;
+  $("#saint").innerHTML = st ? `${st.image ? `<img src="${safeUrl(st.image)}" alt="">` : "<span></span>"}<div><b>${esc(st.name)}</b>${st.plain?.title ? `<div class="st">${esc(st.plain.title.toUpperCase())}</div>` : ""}<p>${esc(st.plain?.life || st.blurb || "")}</p>${st.plain?.why ? `<p class="why">${esc(st.plain.why)}</p>` : ""}${st.plain?.today ? `<p class="tdy">${esc(st.plain.today)}</p>` : ""}<div class="rctl"><button class="btn sm" id="stListen">▶ LISTEN</button><a class="btn sm" href="${safeUrl(st.link)}" target="_blank" rel="noopener">VATICAN NEWS</a></div>${st.others?.length ? `<small>Also today: ${st.others.map(o => esc(o.name)).join(" · ")}</small>` : ""}</div>` : `<div class="empty">${esc(faith.saintError || "No saint listed today.")}</div>`;
+  const sl = $("#stListen"); if (sl) sl.onclick = () => { const t = [`Saint of the day: ${st.name}.` + (st.plain?.title ? ` ${st.plain.title}.` : ""), st.plain?.life || st.blurb || "", st.plain?.why || "", st.plain?.today || ""].filter(Boolean); playTexts(t); };
+  const rd = faith.readings;
+  if (!rd) { $("#rdTitle").textContent = ""; $("#rdTheme").textContent = ""; $("#rdParts").innerHTML = `<div class="empty">${esc(faith.error || "Readings not available yet.")}</div>`; $("#rdConc").innerHTML = ""; return; }
+  $("#rdTitle").textContent = rd.title; $("#rdLink").href = rd.link || $("#rdLink").href;
+  const refl = rd.reflection || { parts: [] }; $("#rdTheme").textContent = refl.theme || "";
+  $("#rdParts").innerHTML = rd.parts.map((p, i) => { const pl = (refl.parts || []).find(x => x.kind === p.kind) || refl.parts?.[i]; return `<div class="rd"><div class="k">${esc(p.kind.toUpperCase())}<span>${esc(p.ref)}</span></div>${pl ? `<p class="plain">${esc(pl.plain)}</p>` : ""}<details><summary>READ THE TEXT</summary><div class="txt">${esc(p.text)}</div></details></div>`; }).join("");
+  $("#rdConc").innerHTML = refl.conclusion ? `<span class="k">WHAT IT MEANS TODAY</span>${esc(refl.conclusion)}` : "";
+}
+$("#faithRefresh").onclick = () => { $("#rdParts").innerHTML = `<div class="empty">Loading today's readings…</div>`; loadFaith(true); };
+// the rosary: segment audio from the hub (cached there after the first time), played through the one player
+function rosaryUI(msg) { const on = !!ros; $("#rosPlay").hidden = on; $("#rosPause").hidden = !on; $("#rosNext").hidden = !on; $("#rosStop").hidden = !on; if (msg) $("#rosState").textContent = msg; $("#rosList").querySelectorAll("li").forEach(li => { const idx = ros ? ros.segs.findIndex(x => x.id === li.dataset.seg) : -1; li.classList.toggle("now", !!ros && idx === ros.i); li.classList.toggle("done", !!ros && idx >= 0 && idx < ros.i); }); }
+function rosaryStart() {
+  if (!faith) return; stopSpeaking(); unlockPlayer(); if (typeof radioDuck === "function") radioDuck(true);
+  ros = { key: faith.rosary.key, segs: faith.rosary.segments, i: 0, paused: false }; rosaryUI("Beginning the " + faith.rosary.name + ".");
+  rosaryPlaySeg();
+}
+function rosaryPlaySeg() {
+  if (!ros) return; if (ros.i >= ros.segs.length) { const n = faith.rosary.name; ros = null; rosaryUI("Finished the " + n + ". Amen."); radioDuck(false); setViz("idle"); return; }
+  const seg = ros.segs[ros.i]; rosaryUI(`${seg.label}${seg.ref ? " · " + seg.ref : ""}`);
+  player.src = `/api/faith/rosary/audio?set=${ros.key}&seg=${seg.id}`; setViz("speaking", playerViz());
+  player.onended = () => { if (!ros) return; ros.i++; setTimeout(rosaryPlaySeg, 900); };
+  player.onerror = () => { if (!ros) return; rosaryUI("The voice stumbled on that part; moving on."); ros.i++; setTimeout(rosaryPlaySeg, 1200); };
+  player.play().catch(() => rosaryUI("Tap ▶ once more to allow audio."));
+  // the next part streams while this one plays, so there is no gap
+  const nxt = ros.segs[ros.i + 1]; if (nxt) fetch(`/api/faith/rosary/audio?set=${ros.key}&seg=${nxt.id}`).catch(() => {});
+}
+$("#rosPlay").onclick = rosaryStart;
+$("#rosPause").onclick = () => { if (!ros) return; ros.paused = !ros.paused; if (ros.paused) { player.pause(); $("#rosPause").textContent = "RESUME"; } else { $("#rosPause").textContent = "PAUSE"; if (player.src.includes("/api/faith/rosary/audio")) { setViz("speaking", playerViz()); player.play().catch(() => {}); } else rosaryPlaySeg(); } };
+$("#rosNext").onclick = () => { if (!ros) return; player.onended = null; ros.i++; rosaryPlaySeg(); };
+$("#rosStop").onclick = () => { if (!ros) return; ros = null; player.pause(); player.onended = null; rosaryUI("Stopped."); $("#rosPause").textContent = "PAUSE"; radioDuck(false); setViz("idle"); };
+// the readings, read aloud in order, then the plain-words conclusion
+function chunks(t, n = 1400) { const out = []; let cur = ""; for (const s of String(t).split(/(?<=[.!?])\s+/)) { if ((cur + " " + s).length > n && cur) { out.push(cur); cur = s; } else cur = cur ? cur + " " + s : s; } if (cur) out.push(cur); return out; }
+function playTexts(texts, onDone) {
+  stopSpeaking(); unlockPlayer(); radioDuck(true); rdPlay = { texts: texts.flatMap(t => chunks(t)), i: 0 }; $("#rdListen").hidden = true; $("#rdStop").hidden = false;
+  const next = () => { if (!rdPlay) return; if (rdPlay.i >= rdPlay.texts.length) { rdPlay = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; radioDuck(false); setViz("idle"); onDone && onDone(); return; } player.src = "/api/tts?t=" + encodeURIComponent(rdPlay.texts[rdPlay.i]); setViz("speaking", playerViz()); player.onended = () => { if (!rdPlay) return; rdPlay.i++; next(); }; player.onerror = player.onended; player.play().catch(() => {}); };
+  next();
+}
+function readingsListen() {
+  const rd = faith?.readings; if (!rd) return; stopSpeaking(); unlockPlayer(); radioDuck(true);
+  const refl = rd.reflection || {}; const texts = [`Today's readings. ${rd.title}.`];
+  rd.parts.forEach((p, i) => { texts.push(`${p.kind}, ${p.ref}.`); texts.push(...chunks(p.text.replace(/\n+/g, " "))); const pl = (refl.parts || []).find(x => x.kind === p.kind) || refl.parts?.[i]; if (pl?.plain) texts.push("In plain words: " + pl.plain); });
+  if (refl.conclusion) texts.push("What it means today. " + refl.conclusion);
+  rdPlay = { texts, i: 0 }; $("#rdListen").hidden = true; $("#rdStop").hidden = false;
+  const next = () => { if (!rdPlay) return; if (rdPlay.i >= rdPlay.texts.length) { rdPlay = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; radioDuck(false); setViz("idle"); return; } player.src = "/api/tts?t=" + encodeURIComponent(rdPlay.texts[rdPlay.i]); setViz("speaking", playerViz()); player.onended = () => { if (!rdPlay) return; rdPlay.i++; next(); }; player.onerror = player.onended; player.play().catch(() => {}); const n = rdPlay.texts[rdPlay.i + 1]; if (n) fetch("/api/tts?t=" + encodeURIComponent(n), { method: "HEAD" }).catch(() => {}); };
+  next();
+}
+$("#rdListen").onclick = readingsListen;
+$("#rdStop").onclick = () => { rdPlay = null; player.pause(); player.onended = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; radioDuck(false); setViz("idle"); };
+setTimeout(() => loadFaith(), 2500); setInterval(() => { if (!ros && !rdPlay) loadFaith(); }, 6 * 3600e3);
+
+/* ---------- reply playbook ---------- */
+let pbBiz = "atavia";
+function renderPlaybook() { $("#pbTabs").innerHTML = BIZ.map(b => `<button type="button" data-pb="${b.id}" class="${b.id === pbBiz ? "sel" : ""}">${esc(b.name.toUpperCase())}</button>`).join(""); $("#pbText").value = state.playbook?.[pbBiz] || ""; $("#pbText").placeholder = "e.g. Packages: Highlight film $3,500, Feature film $5,500, add-ons … Availability: Saturdays book first; never promise a date without checking. Tone: warm, first names, one question at a time."; $("#pbTabs").querySelectorAll("[data-pb]").forEach(b => b.onclick = () => { pbBiz = b.dataset.pb; renderPlaybook(); }); }
+$("#pbToggle").onclick = () => { const box = $("#pbBox"); box.hidden = !box.hidden; if (!box.hidden) renderPlaybook(); };
+$("#pbSave").onclick = async () => { state.playbook = { ...(state.playbook || {}), [pbBiz]: $("#pbText").value.trim() }; await save({ playbook: state.playbook }); $("#pbState").textContent = "saved · used for the next draft"; setTimeout(() => $("#pbState").textContent = "", 3000); };
+
+/* ---------- competitors ---------- */
+function renderCompetitors() {
+  const list = state.competitors || [], ch = state.competitorChanges || [];
+  $("#comps").innerHTML = list.length ? list.map(c => { const last = ch.find(x => x.url === c.url); return `<div class="comp"><span><b>${esc(c.label)}</b> <small>${esc(bizOf(c.business || "atavia").name)} · ${c.lastScan ? "scanned " + fmtAgo(c.lastScan) + " · " + (c.priceCount || 0) + " prices" : "not scanned yet"}${c.lastError ? " · " + esc(c.lastError) : ""}</small></span><small><a href="${safeUrl(c.url)}" target="_blank" rel="noopener">${esc(c.url.replace(/^https?:\/\//, "").slice(0, 60))}</a></small>${last ? `<div class="ch">${esc(last.at.slice(0, 10))}: ${esc(last.summary)}</div>` : ""}<button class="btn sm" data-uncomp="${esc(c.url)}" style="justify-self:start">STOP WATCHING</button></div>`; }).join("") : `<div class="empty">Add a competitor's pricing page. JARVIS checks it every Sunday and tells you what moved, in the Monday review and by push.</div>`;
+  $("#comps").querySelectorAll("[data-uncomp]").forEach(b => b.onclick = async () => { state.competitors = state.competitors.filter(c => c.url !== b.dataset.uncomp); await save({ competitors: state.competitors }); renderCompetitors(); });
+}
+$("#compAdd").onsubmit = async (e) => { e.preventDefault(); let url = $("#compUrl").value.trim(); if (!url) return; if (!/^https?:/i.test(url)) url = "https://" + url; const label = $("#compLabel").value.trim() || url.replace(/^https?:\/\//, "").split("/")[0]; state.competitors = [...(state.competitors || []), { url, label, business: $("#compBiz").value, added: new Date().toISOString() }]; await save({ competitors: state.competitors }); $("#compUrl").value = ""; $("#compLabel").value = ""; renderCompetitors(); $("#compMsg").textContent = `Watching ${label}. Scanning now to take the first snapshot…`; await fetch("/api/competitors/scan", { method: "POST" }).catch(() => {}); await loadState(); $("#compMsg").textContent = `Watching ${label}. First snapshot taken; changes show from the next scan.`; };
+$("#compScan").onclick = async () => { $("#compMsg").textContent = "Scanning…"; const r = await fetch("/api/competitors/scan", { method: "POST" }).then(x => x.json()).catch(() => ({})); await loadState(); $("#compMsg").textContent = r.changes?.length ? `${r.changes.length} change${r.changes.length > 1 ? "s" : ""} found.` : "Scanned. No price changes since last time."; };
+
+/* ---------- watch: balance charges, app stores, social, search ---------- */
+function spark(days) {
+  if (!days?.length) return ""; const v = days.map(d => d[2]); const max = Math.max(1, ...v); const w = 200, h = 28;
+  const pts = v.map((x, i) => `${(i / Math.max(1, v.length - 1) * w).toFixed(1)},${(h - 2 - x / max * (h - 4)).toFixed(1)}`).join(" ");
+  return `<svg class="wspark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="rgb(var(--glow))" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function renderWatch() {
+  const w = state.watch || {};
+  $("#watchSub").textContent = w.at ? "updated " + fmtAgo(w.at) : "waiting for the PC collector";
+  const pays = Array.isArray(w.payments) ? w.payments : [];
+  const tag = { charged: ["ok", "CHARGED"], failed: ["bad", "DECLINED"], link_sent: ["warn", "LINK SENT"], due_now: ["warn", "DUE"], upcoming: ["", "UPCOMING"] };
+  $("#wPay").innerHTML = pays.filter(x => x.id).map(x => { const [c, t] = tag[x.state] || ["", x.state]; const why = x.state === "failed" ? ((x.error.match(/"message":"([^"]+)"/) || [])[1] || "declined") + ` · try ${x.attempts}/3` : ""; return `<div class="wrow" title="${esc(why)}"><span class="wtag ${c}">${t}</span><span>${esc(x.names)} <small>${esc(bizOf(x.business).name)}${why ? " · " + esc(why) : ""}</small></span><span>${money(x.amount)} <small>${new Date(x.paid || x.due).toLocaleDateString([], { month: "short", day: "numeric" })}</small></span></div>`; }).join("")
+    + pays.filter(x => !x.id).map(x => `<div class="wfix">${esc(bizOf(x.business).name)}: ${esc(x.error)}</div>`).join("") || `<div class="empty">No balances due in the last or next 7 days.</div>`;
+  const apps = Object.values(state.apps || {});
+  $("#wApps").innerHTML = apps.map(a => `<div class="wrow"><span class="wtag ${a.listed ? "ok" : ""}">${a.listed ? "LIVE" : "NOT YET"}</span><span>${a.url ? `<a href="${safeUrl(a.url)}" target="_blank" rel="noopener" style="color:inherit">${esc(a.name)}</a>` : esc(a.name)}</span><span><small>${a.version ? "v" + esc(a.version) : ""}${a.released ? " · " + esc(/^\d{4}-/.test(a.released) ? new Date(a.released).toLocaleDateString([], { month: "short", day: "numeric" }) : a.released) : ""}</small></span></div>`).join("") || `<div class="empty">Checking the stores hourly.</div>`;
+  const brands = w.social?.brands || [];
+  $("#wSocial").innerHTML = brands.map(b => `<div class="wrow"><span class="wtag ${b.today ? "ok" : new Date().getHours() >= 19 ? "bad" : ""}">${b.today ? "POSTED" : "NOT YET"}</span><span>${esc(b.name)}${b.error ? ` <small>${esc(b.error)}</small>` : ""}</span><span><small>${b.total} posts</small></span></div>`).join("") || `<div class="empty">No posting logs yet.</div>`;
+  const sc = w.search || {};
+  $("#wSearch").innerHTML = (sc.sites || []).map(x => { const d = x.days || []; const sum = (r, i) => r.reduce((a, q) => a + q[i], 0); const c7 = sum(d.slice(-7), 1), i7 = sum(d.slice(-7), 2), cp = sum(d.slice(-14, -7), 1), ip = sum(d.slice(-14, -7), 2); const up = i7 >= ip; return `<div style="margin-bottom:8px"><div class="wrow" style="border:0"><span class="wtag ${up ? "ok" : "warn"}">${up ? "▲" : "▼"} ${ip ? Math.abs(Math.round((i7 - ip) / ip * 100)) + "%" : "–"}</span><span>${esc(x.site.replace(/^sc-domain:|^https?:\/\/|\/$/g, ""))}</span><span><small>${c7} clicks · ${i7.toLocaleString()} impr</small></span></div>${spark(d.slice(-28))}</div>`; }).join("")
+    || (sc.fix || sc.error ? `<div class="wfix">${esc(sc.fix || sc.error).replace(/(https:\/\/\S+)/g, '<a href="$1" target="_blank" rel="noopener">open</a>')}</div>` : `<div class="empty">Waiting for the first Search Console pull.</div>`);
+}
+function renderMoney() {
+  const mo = state.metrics?.money; if (!mo?.months?.length) return;
+  const colors = Object.fromEntries(BIZ.map(b => [b.id, b.color])); const labels = Object.fromEntries(BIZ.map(b => [b.id, b.name]));
+  const diff = mo.thisMonth - mo.lastMonth; const pct = mo.lastMonth ? Math.round(diff / mo.lastMonth * 100) : null;
+  $("#moneySub").textContent = "cash in, all businesses";
+  $("#money").innerHTML = `<div class="money"><div><div class="big"><small>THIS MONTH</small><span id="moneyNow">${moneyFull(mo.thisMonth)}</span></div><div class="cmp">last month ${moneyFull(mo.lastMonth)} · <b class="${diff >= 0 ? "up" : "down"}">${diff >= 0 ? "▲" : "▼"} ${moneyFull(Math.abs(diff))}${pct != null ? " (" + Math.abs(pct) + "%)" : ""}</b></div></div><div>${barsSvg(mo.months, colors, labels)}<div class="legend">${BIZ.map(b => `<span><i style="background:${b.color}"></i>${b.name}</span>`).join("")}<span style="margin-left:auto">12 months · ${moneyFull(mo.months.reduce((a, m) => a + m.total, 0))}</span></div></div></div>`;
+  tick($("#moneyNow"), "moneyNow", mo.thisMonth, moneyFull);
+  if (mo.forecast) {
+    const weeks = mo.forecast.map(w => ({ ym: w.week.slice(5), atavia: w.atavia || 0, es: w.es || 0, lazo: w.lazo || 0, roven: w.roven || 0, lr: w.lr || 0, total: w.total }));
+    const thin = weeks.filter(w => !w.total).length;
+    const pd = (mo.pastDue || []).map(x => `${esc(x.who)} ${moneyFull(x.amount)} · due ${x.due}${x.attempts ? " · " + x.attempts + " failed" : ""}`).join("<br>");
+    $("#money").insertAdjacentHTML("beforeend", `<div class="fc"><div><div class="big"><small>NEXT 90 DAYS</small>${moneyFull(mo.forecast90 || 0)}</div><div class="cmp">${weeks.filter(w => w.total).length} of 13 weeks have balances due${thin ? ` · <b class="down">${thin} thin</b>` : ""}</div>${mo.pastDue?.length ? `<div class="pd">PAST DUE ${moneyFull(mo.pastDueTotal)}<br>${pd}</div>` : ""}</div><div>${barsSvg(weeks, colors, labels)}<div class="legend"><span>13 weeks from Monday · hover a bar for who</span></div></div></div>`);
+  }
+}
+function renderMemory() {
+  const m = state.memory || []; $("#memSub").textContent = m.length ? `${m.length} facts` : "";
+  $("#mem").innerHTML = m.length ? m.map(x => `<li><span>${esc(x.text)}<small>${new Date(x.at).toLocaleDateString()}</small></span><button data-forget="${esc(x.id)}" title="Forget">✕</button></li>`).join("") : `<li class="empty">Tell JARVIS "remember that…" and it lands here.</li>`;
+  $("#mem").querySelectorAll("[data-forget]").forEach(b => b.onclick = async () => { state.memory = state.memory.filter(x => x.id !== b.dataset.forget); await save({ memory: state.memory }); renderMemory(); });
+}
+$("#memadd").onsubmit = async (e) => { e.preventDefault(); const t = $("#memText").value.trim(); if (!t) return; state.memory.unshift({ id: Math.random().toString(36).slice(2, 10), text: t, at: new Date().toISOString() }); $("#memText").value = ""; await save({ memory: state.memory }); renderMemory(); };
+let lastAlertAt = null;
+function renderAlerts() {
+  const a = state.alerts || []; $("#alertCount").textContent = a.length ? `${a.length}` : "";
+  $("#alerts").innerHTML = a.length ? a.slice(0, 25).map(x => `<li class="${esc(x.kind)}"><span class="when">${new Date(x.at).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"})}</span><span>${x.url ? `<a href="${safeUrl(x.url)}" target="_blank" rel="noopener">${esc(x.text)}</a>` : esc(x.text)}</span></li>`).join("") : `<li class="empty">Nothing yet. Sites are checked every 5 minutes; leads are flagged after 2 hours; JARVIS also reports what it notices.</li>`;
+  if (a[0] && lastAlertAt && a[0].at > lastAlertAt) { const fresh = a.filter(x => x.at > lastAlertAt).reverse(); for (const x of fresh.slice(-3)) { if (x.kind === "obs" || x.kind === "mail") addMsg("ai", x.text); } blip(a[0].kind === "down" ? 220 : 880); speak(fresh.slice(-2).map(x => x.text).join(" ")); }
+  lastAlertAt = a[0]?.at || lastAlertAt || new Date(0).toISOString();
+}
+let briefSel = null;
+let closeOffered = ""; try { closeOffered = localStorage.getItem("closeOffered") || ""; } catch {}
+function renderMorning() {
+  const list = state.briefs?.length ? state.briefs : (state.morning?.text ? [state.morning] : []);
+  const ev = list.find(b => b.slot === "evening" && Date.now() - new Date(b.at) < 2 * 3600e3);
+  if (ev && closeOffered !== ev.id && window.__stateLoaded && closeItems().length) { closeOffered = ev.id; try { localStorage.setItem("closeOffered", ev.id); } catch {} setTimeout(() => { const t = `Evening brief is in, and ${closeItems().length} item${closeItems().length > 1 ? "s are" : " is"} still open. Say "close the day" when you're ready.`; addMsg("ai", t); speak(t); }, 4000); }
+  const m = list.find(b => b.id === briefSel) || list[0];
+  const pick = $("#briefPick"); pick.style.display = list.length > 1 ? "" : "none";
+  pick.innerHTML = list.map(b => `<option value="${esc(b.id)}" ${b === m ? "selected" : ""}>${esc((b.slot || "morning").toUpperCase())} · ${new Date(b.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</option>`).join("");
+  pick.onchange = () => { briefSel = pick.value; renderMorning(); };
+  if (!m?.text) { $("#morning").innerHTML = `<div class="empty">Briefs land here at 5 AM, noon and 6 PM. Press GENERATE for one now.</div>`; $("#morningAt").textContent = ""; return; }
+  $("#morningAt").textContent = `${(m.slot || "morning")} · ${fmtAgo(m.at)}`;
+  $("#morning").innerHTML = `<div class="row">${m.audio ? `<button class="btn primary" id="morningPlay">▶ PLAY</button>` : `<button class="btn" id="morningSpeak">▶ READ ALOUD</button>`}<span class="empty">${Math.round(m.text.split(/\s+/).length / 150 * 60)} s · ${esc(m.slot || "morning")}</span></div><p>${esc(m.text)}</p>`;
+  const btn = $("#morningPlay"); if (btn) btn.onclick = () => playUrl("/api/morning/audio?id=" + encodeURIComponent(m.id || ""), btn);
+  const sp = $("#morningSpeak"); if (sp) sp.onclick = () => speak(m.text);
+}
+$("#morningRun").onclick = async () => { $("#morningRun").textContent = "…"; try { const b = await fetch("/api/morning/run", { method: "POST" }).then(r => r.json()); if (b?.text) { state.morning = b; state.briefs = [b, ...(state.briefs || []).filter(x => x.id !== b.id)].slice(0, 7); briefSel = b.id; } renderMorning(); } finally { $("#morningRun").textContent = "GENERATE"; } };
+$("#testPush").onclick = async () => { const r = await fetch("/api/test-alert", { method: "POST" }).then(r => r.json()); const ok = (r.results || []).some(x => x.pushover === 200); speak(ok ? "Test alert sent to your phone." : "Push isn't configured yet."); };
+let actx;
+function blip(freq) { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = freq; o.type = "sine"; g.gain.value = .0001; o.connect(g); g.connect(actx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.15, actx.currentTime + .02); g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime + .5); o.stop(actx.currentTime + .5); } catch {} }
+
+/* ---------- webcams ---------- */
+function toEmbed(u) {
+  u = String(u || "").trim();
+  if (/^[\w-]{11}$/.test(u)) return `https://www.youtube.com/embed/${u}?autoplay=1&mute=1`;           // a bare video id
+  if (!/^[a-z]+:\/\//i.test(u)) u = "https://" + u;                                                  // pasted without https://
+  try { const url = new URL(u); const yt = (id) => `https://www.youtube.com/embed/${id}?autoplay=1&mute=1`;
+    if (/(^|\.)angelcam\.com$/.test(url.hostname)) { const v = url.searchParams.get("v") || (url.pathname.match(/\/(?:iframe|embed|player)\/([\w-]+)/) || [])[1]; if (v) return `https://v.angelcam.com/iframe?v=${v}&autoplay=1`; }
+    if (/(^|\.)(player\.vimeo\.com)$/.test(url.hostname)) return url.href;
+    if (/(^|\.)vimeo\.com$/.test(url.hostname)) { const v = (url.pathname.match(/\/(\d+)/) || [])[1]; if (v) return `https://player.vimeo.com/video/${v}?autoplay=1&muted=1`; }
+    if (/(^|\.)(ipcamlive\.com|earthcam\.com|skylinewebcams\.com|windy\.com)$/.test(url.hostname) && /player|embed|webcam/.test(url.pathname + url.search)) return url.href;
+    if (url.hostname.includes("youtu.be")) return yt(url.pathname.split("/")[1]);
+    if (/(^|\.)youtube(-nocookie)?\.com$/.test(url.hostname)) {
+      if (url.pathname.startsWith("/embed/")) return url.href;
+      const v = url.searchParams.get("v"); if (v) return yt(v);
+      const m = url.pathname.match(/\/(?:live|shorts|v)\/([\w-]{11})/); if (m) return yt(m[1]);
+      const ch = url.pathname.match(/\/channel\/(UC[\w-]+)/); if (ch) return `https://www.youtube.com/embed/live_stream?channel=${ch[1]}&autoplay=1&mute=1`;
+      if (/^\/@/.test(url.pathname)) return { ask: "That's a channel page. Open the channel's live video and paste that link (it contains /live/ or watch?v=)." };
+      return { ask: "I couldn't find a video id in that YouTube link. Use the Share button on the video and paste that link." };
+    }
+    if (!/\.[a-z]{2,}$/i.test(url.hostname)) return { ask: "That doesn't look like a web address." };
+    return null; } catch { return { ask: "That doesn't look like a web address." }; }
+}
+// YouTube refuses embeds that arrive without the page's origin (Error 153): send it explicitly
+function ytSrc(u) { try { const x = new URL(u); if (/youtube(-nocookie)?\.com$/.test(x.hostname)) { x.searchParams.set("origin", location.origin); x.searchParams.set("playsinline", "1"); x.searchParams.set("enablejsapi", "1"); } return x.href; } catch { return u; } }
+const IFR = 'allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen';
+let camsKeyR = "";
+function renderCams() {
+  const cams = state.webcams || []; const k = JSON.stringify(cams); if (k === camsKeyR) return; camsKeyR = k; // redrawing restarts every stream
+  $("#camCount").textContent = cams.length ? `${cams.length} feeds` : "";
+  $("#cams").innerHTML = cams.length ? cams.map((c,i) => `<div class="cam" draggable="true" data-i="${i}" style="order:${i}">${c.embed ? `<span class="ph" aria-hidden="true"><i class="spin"></i><small>LOADING</small></span><iframe src="${safeUrl(ytSrc(c.embed))}" title="${esc(c.name)}" ${IFR} loading="lazy"></iframe>` : `<a class="camlink" href="${safeUrl(c.url)}" target="_blank" rel="noopener"><span>▶ OPEN</span><small>${esc(c.url.replace(/^https?:\/\//,""))}</small></a>`}<span class="lbl">${esc(c.name)}</span><span class="mv"><button data-mv="-1" title="Move left" ${i ? "" : "disabled"}>◀</button><button data-mv="1" title="Move right" ${i < cams.length - 1 ? "" : "disabled"}>▶</button></span><button class="x" data-i="${i}" title="Remove">✕</button></div>`).join("") : `<div class="empty">No feeds yet.</div>`;
+  // lazy tiles show a play glyph until their iframe has actually loaded (autoplay-blocked or not-yet-visible embeds were plain black boxes)
+  // YouTube reports "load" long before the first frame shows (about 10 s on a cold tile), so the LOADING mark stays a little longer
+  $("#cams").querySelectorAll("iframe").forEach(f => f.addEventListener("load", () => setTimeout(() => f.closest(".cam")?.classList.add("live"), 9000), { once: true }));
+}
+const camMsg = (t, bad) => { const el = $("#camMsg"); el.textContent = t; el.style.color = bad ? "var(--amber)" : "var(--green)"; };
+$("#addcam").onsubmit = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };
+$("#camAdd").onclick = (e) => { e.preventDefault(); addFeed($("#camUrl").value, $("#camName").value); };   // belt and braces: some browsers swallow the form submit
+async function addFeed(rawIn, nameIn) { const raw = String(rawIn || "").trim(); if (!raw) return camMsg("Paste a link first.", true); if (nameIn) $("#camName").value = nameIn; let embed = toEmbed(raw);
+  if (embed === null) { camMsg("Looking for a video player on that page…"); const r = await fetch("/api/yt/resolve?u=" + encodeURIComponent(raw)).then(x => x.json()).catch(() => ({})); if (r.embed) { embed = r.embed; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); } else if (r.videoId) { embed = `https://www.youtube.com/embed/${r.videoId}?autoplay=1&mute=1`; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); } else camMsg("No player found inside that page; added as a link that opens in a tab.", true); }
+  if (embed && embed.ask && /youtu/i.test(raw)) { camMsg("Looking up the live stream on that page…"); const r = await fetch("/api/yt/resolve?u=" + encodeURIComponent(raw)).then(x => x.json()).catch(() => ({ error: "lookup failed" })); if (r.videoId) { embed = `https://www.youtube.com/embed/${r.videoId}?autoplay=1&mute=1`; if (!$("#camName").value.trim() && r.title) $("#camName").value = r.title.slice(0, 40); if (!r.live) camMsg("That channel isn't live right now; added its latest video instead.", true); } else { camMsg((embed.ask || "") + " (" + (r.error || "no live video found") + ")", true); return; } }
+  if (embed && embed.ask) return camMsg(embed.ask, true);
+  const name = $("#camName").value.trim() || "Feed " + ((state.webcams?.length||0) + 1); state.webcams = [...(state.webcams||[]), embed ? { name, embed } : { name, url: raw }]; $("#camUrl").value = ""; $("#camName").value = ""; renderCams(); await save({ webcams: state.webcams }); if (!/isn't live/.test($("#camMsg").textContent)) camMsg(`Added ${name}.`); $("#cams").lastElementChild?.scrollIntoView({ block: "nearest" }); };
+$("#cams").onclick = async (e) => { const m = e.target.closest("[data-mv]"); if (m) { const i = +m.closest(".cam").dataset.i; return moveCam(i, i + +m.dataset.mv); } const b = e.target.closest(".x"); if (!b) return; state.webcams.splice(+b.dataset.i, 1); renderCams(); await save({ webcams: state.webcams }); };
+// reorder by CSS `order` and re-index in place: moving the tiles in the DOM would reload every iframe
+async function moveCam(from, to) { const cams = state.webcams || []; if (to < 0 || to >= cams.length || from === to) return; const [c] = cams.splice(from, 1); cams.splice(to, 0, c); camsKeyR = JSON.stringify(cams);
+  const tiles = [...$("#cams").querySelectorAll(".cam")]; tiles.sort((a, b) => +a.style.order - +b.style.order); const [t] = tiles.splice(from, 1); tiles.splice(to, 0, t);
+  tiles.forEach((el, i) => { el.style.order = i; el.dataset.i = i; el.querySelector(".x").dataset.i = i; el.querySelector("[data-mv='-1']").disabled = !i; el.querySelector("[data-mv='1']").disabled = i === tiles.length - 1; });
+  await save({ webcams: cams }); }
+let camDrag = null;
+$("#cams").addEventListener("dragstart", (e) => { const t = e.target.closest(".cam"); if (!t) return; camDrag = +t.dataset.i; t.classList.add("drag"); $("#cams").classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", String(camDrag)); } catch {} });
+$("#cams").addEventListener("dragover", (e) => { const t = e.target.closest(".cam"); if (camDrag === null || !t) return; e.preventDefault(); e.dataTransfer.dropEffect = "move"; $("#cams").querySelectorAll(".over").forEach(x => x !== t && x.classList.remove("over")); t.classList.add("over"); });
+$("#cams").addEventListener("drop", (e) => { const t = e.target.closest(".cam"); if (camDrag === null || !t) return; e.preventDefault(); const to = +t.dataset.i, from = camDrag; camDrag = null; cleanDrag(); if (to !== from) moveCam(from, to); });
+$("#cams").addEventListener("dragend", () => { camDrag = null; cleanDrag(); });
+function cleanDrag() { $("#cams").classList.remove("dragging"); $("#cams").querySelectorAll(".drag,.over").forEach(x => x.classList.remove("drag", "over")); }
+
+/* ---------- notes, state, system, clock ---------- */
+let notesTimer;
+$("#notes").oninput = () => { $("#notesState").textContent = "unsaved"; clearTimeout(notesTimer); notesTimer = setTimeout(saveNotes, 1500); };
+$("#notesSave").onclick = saveNotes;
+async function saveNotes() { state.notes = $("#notes").value; await save({ notes: state.notes }); $("#notesState").textContent = "saved " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}); }
+// script errors on any device land in the hub (System panel shows the build; /api/err lists them)
+const reportErr = (kind, msg, src, line) => { try { fetch("/api/err", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind, msg: String(msg).slice(0, 300), src: String(src || "").slice(0, 120), line, build: state.cfg?.build || "", view: document.querySelector("#main")?.dataset.view || "", w: innerWidth }) }); } catch {} };
+addEventListener("error", (e) => reportErr("error", e.message, e.filename, e.lineno));
+addEventListener("unhandledrejection", (e) => reportErr("promise", e.reason?.message || e.reason, "", 0));
+// a newer page was deployed: reload when nothing is in progress, so no one runs stale code for days
+let pageBuild = null;
+async function checkBuild() { try { const c = await fetch("/api/config", { cache: "no-store" }).then(r => r.json()); if (!c.build) return; if (pageBuild === null) { pageBuild = c.build; return; } if (c.build !== pageBuild && document.body.classList.contains("wall") && !ringing && new Date().getHours() === 3) { location.reload(); return; } if (c.build !== pageBuild && !speaking && !listening && !askCtl && !ringing && !radioOn && !document.body.classList.contains("wall") && !/input|textarea/i.test(document.activeElement?.tagName || "") && !document.querySelector("#decisions .fu.confirm, #decisions .fu.sending") && !Array.from(document.querySelectorAll("#mail .thread textarea")).some(t => t.value.trim()) && !Object.keys(fuEdits).length) { addMsg("sys", "JARVIS was updated. Reloading…"); setTimeout(() => location.reload(), 1200); } } catch {} }
+setInterval(checkBuild, 5 * 60000); setTimeout(checkBuild, 15000);
+async function loadHealth() { try { state.health = await fetch("/api/health").then(r => r.json()); renderSys(); } catch {} }
+setTimeout(loadHealth, 6000); setInterval(loadHealth, 10 * 60000);
+async function loadState() {
+  try {
+    const d = await fetch("/api/state", { cache:"no-store" }).then(r => r.json());
+    const metricsChanged = JSON.stringify(d.metrics?.collectedAt) !== JSON.stringify(state.metrics?.collectedAt);
+    state.decisions = d.decisions || null; state.briefs = d.briefs || []; state.stale = d.stale || {}; state.tickers = d.tickers || []; state.wxdays = d.wxdays || state.wxdays; state.traffic = d.traffic || null; state.brief = d.brief || null; state.webcams = d.webcams || []; state.place = d.place || null; state.metrics = d.metrics || null; state.alerts = d.alerts || []; state.memory = d.memory || []; state.queue = d.queue || []; state.calendar = d.calendar || null; state.morning = d.morning || null; state.watch = d.watch || null; state.followups = d.followups || []; state.trips = d.trips || []; state.apps = d.apps || null; state.playbook = d.playbook || {}; state.competitors = d.competitors || []; state.competitorChanges = d.competitor_changes || [];
+    if (document.activeElement !== $("#notes")) { state.notes = d.notes || ""; $("#notes").value = state.notes; }
+    if (metricsChanged && state.metrics) $("#biz").querySelectorAll(".tile").forEach(pulse);
+  } catch {}
+  renderBrief(); renderCams(); renderBiz(); renderEvents(); renderMoney(); renderMemory(); renderAlerts(); renderMorning(); renderDecisions(); renderWatch(); renderCompetitors(); renderAttention(); renderSys(); syncQueueCards();
+  window.__stateLoaded = true;
+}
+async function save(patch) { try { await fetch("/api/state", { method:"POST", headers:{ "content-type":"application/json" }, body: JSON.stringify(patch) }); } catch { addMsg("sys", "Couldn't save to the hub."); } }
+function renderSys() {
+  const up = state.sites.filter(s => s.ok).length, avg = state.sites.length ? Math.round(state.sites.reduce((a,s)=>a+s.ms,0)/state.sites.length) : 0, c = state.cfg;
+  $("#sys").innerHTML = `<span>sites <b>${up}/${state.sites.length||BIZ.length}</b></span><span>avg <b>${avg} ms</b></span><span>metrics <b class="${state.stale?.metrics ? "off" : state.metrics ? "on" : "off"}">${state.metrics ? fmtAgo(state.metrics.collectedAt) : "none"}${state.stale?.metrics ? " · STALE" : ""}</b></span><span>traffic <b class="${state.stale?.traffic ? "off" : "on"}">${state.traffic ? fmtAgo(state.traffic.at) : "none"}${state.stale?.traffic ? " · STALE" : ""}</b></span><span>brain <b class="${c.brain ? "on" : "off"}">${c.brain ? "online" : "offline"}</b></span><span>voice <b class="${c.tts ? "on" : ""}">${c.tts ? "ElevenLabs" : "browser"}</b></span><span>push <b class="${c.pushover ? "on" : "off"}">${c.pushover ? "Pushover" : "off"}</b></span><span>calendar <b class="${c.calendar ? "on" : "off"}">${c.calendar ? "on" : "off"}</b></span><span>hands <b class="${(state.queue||[]).some(q => q.status === "done") ? "on" : "off"}">${(state.queue||[]).filter(q => q.status === "pending").length} queued</b></span><span>build <b>${esc(state.cfg?.build || "?")}</b></span><span>health <b class="${state.health ? (state.health.issues ? "off" : "on") : ""}" title="${esc(state.health ? `crons ${state.health.cron.map(c => (c.pct ?? "?") + "%").join(" / ")} · stalls ${state.health.stale.length} · bridge errors ${Object.values(state.health.bridgeErrors).reduce((a, b) => a + b, 0)} · page errors ${state.health.clientErrors}` : "")}">${state.health ? (state.health.issues ? state.health.issues + " issue" + (state.health.issues > 1 ? "s" : "") + " · 7d" : "clean · 7d") : "…"}</b></span>`;
+}
+function clockTick() {
+  const n = new Date(), phone = innerWidth < 900;
+  const here = state.cfg?.home?.tz || Intl.DateTimeFormat().resolvedOptions().timeZone;   // the big clock shows home time (TX or AZ), wherever the device is
+  const o = { timeZone: here };
+  $("#clock").textContent = phone ? n.toLocaleTimeString([], {...o, hour:"numeric",minute:"2-digit"}) : n.toLocaleTimeString([], {...o, hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("#date").textContent = phone ? n.toLocaleDateString([], {...o, weekday:"short",month:"short",day:"numeric"}) : n.toLocaleDateString([], {...o, weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  $("#wallClock").textContent = n.toLocaleTimeString([], {...o, hour:"2-digit",minute:"2-digit"});
+  const zones = [["ET", "America/New_York"], ["CT", "America/Chicago"], ["MT", "America/Denver"], ["AZ", "America/Phoenix"], ["PT", "America/Los_Angeles"], ["AK", "America/Anchorage"], ["HI", "Pacific/Honolulu"]];
+  const zHtml = zones.map(([k, tz]) => `<span class="${tz === here ? "here" : ""}"><b>${k}</b>${n.toLocaleTimeString("en-US", { timeZone: tz, hour: "numeric", minute: "2-digit" }).replace(" ", "").toLowerCase()}</span>`).join("");
+  $("#zones").innerHTML = zHtml; const z2 = $("#zones2"); if (z2) z2.innerHTML = zHtml;
+}
+setInterval(clockTick, 1000); clockTick(); setInterval(setLighting, 60000);
+
+/* ---------- visualizer: the living core ----------
+   A sphere of points, drawn on the 2D canvas with a hand-rolled 3D projection (no extra library).
+   Bass swells the whole sphere, higher bands ripple its surface by latitude, a waveform halo runs round
+   the outside while sound plays. Each state has its own motion: idle drifts, listening tightens and turns
+   amber, thinking churns, speaking and radio follow the audio. Values ease frame to frame; the gain adapts to
+   the source so the radio doesn't peg it; phones use fewer points and half the frame rate. */
+const viz = $("#viz"), vctx = viz.getContext("2d"); const VIZ_PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+let analyser = null, vizMode = "idle", vizRaf = null, fakePhase = 0;
+/* The core is a circular spectrum analyser: 2 x NB bars around a ring (bass at the bottom, treble at the top, mirrored
+   left/right), real analyser ballistics (instant attack, timed release, peak caps that hold then fall), a waveform ring
+   inside, and a nucleus that swells with the low end. Everything is drawn in a handful of batched paths, so it holds
+   60 fps on a phone. The analyser's own smoothing is turned down: the ballistics here are what make it read like a meter. */
+const CORE = (() => {
+  const NB = VIZ_PHONE ? 40 : 56;
+  return { NB, lvl: new Float32Array(NB), cap: new Float32Array(NB), capT: new Float32Array(NB), raw: new Float32Array(NB), wave: new Float32Array(128), edges: null, an: null, rot: 0, swell: 0, bass: 0, level: 0, kick: 0, tint: [25, 211, 255], last: 0, glowKey: "", glow: null, nuc: null, fps: 60 };
+})();
+const STATE_TINT = { idle: [25, 211, 255], listening: [255, 179, 64], thinking: [167, 139, 250], speaking: [160, 236, 255], radio: [57, 240, 168] };
+let freqBuf = new Uint8Array(1024), timeBuf = new Uint8Array(2048);
+function sprite(size, stops) { const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d"); const g = x.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2); stops(g); x.fillStyle = g; x.fillRect(0, 0, size, size); return c; }
+function sizeViz() { const r = viz.getBoundingClientRect(); const px = Math.round(Math.max(120, r.width || 180) * Math.min(VIZ_PHONE ? 1.5 : 2, devicePixelRatio || 1)); if (viz.width !== px) viz.width = viz.height = px; }
+sizeViz(); addEventListener("resize", sizeViz);
+function tuneAnalyser(an) {
+  // called once per analyser: more bins for the low end, little built-in smoothing, a dB window that suits speech and music
+  try { an.fftSize = VIZ_PHONE ? 1024 : 2048; an.smoothingTimeConstant = 0.05; an.minDecibels = -82; an.maxDecibels = -14; } catch {}
+  const sr = an.context?.sampleRate || 44100, bins = an.frequencyBinCount, hz = sr / 2 / bins;
+  freqBuf = new Uint8Array(bins); timeBuf = new Uint8Array(an.fftSize);
+  const NB = CORE.NB, lo = 55, hi = Math.min(11000, sr / 2 - 100); const edges = new Int32Array(NB + 1);
+  for (let b = 0; b <= NB; b++) edges[b] = Math.max(1, Math.round(lo * Math.pow(hi / lo, b / NB) / hz));   // log-spaced bands, 55 Hz → 11 kHz
+  for (let b = 1; b <= NB; b++) if (edges[b] <= edges[b - 1]) edges[b] = edges[b - 1] + 1;
+  CORE.edges = edges; CORE.an = an;
+}
+function readAudio(dt) {
+  const C = CORE, NB = C.NB;
+  if (analyser) {
+    if (C.an !== analyser) tuneAnalyser(analyser);
+    analyser.getByteFrequencyData(freqBuf); analyser.getByteTimeDomainData(timeBuf);
+    // band energy = peak bin in the band (what a real analyser shows), with a gentle tilt so consonants and sibilance register
+    let bassSum = 0;
+    for (let b = 0; b < NB; b++) { let m = 0; for (let i = C.edges[b]; i < C.edges[b + 1]; i++) if (freqBuf[i] > m) m = freqBuf[i]; const tilt = 0.9 + 0.35 * (b / NB); C.raw[b] = Math.min(1, Math.pow(m / 255, 1.1) * tilt * 1.25); if (b < NB / 6) bassSum += C.raw[b]; }
+    // ballistics: attack in ~2 frames, release at a fixed rate, caps hold 350 ms then fall
+    const atk = 1 - Math.exp(-dt * 60), rel = 4.2 * dt, capFall = 2.2 * dt;   // ~16 ms attack regardless of frame rate, full fall in ~240 ms
+    for (let b = 0; b < NB; b++) {
+      const v = C.raw[b];
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * atk; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.25; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+    }
+    let sq = 0, N = timeBuf.length; for (let i = 0; i < N; i++) { const v = (timeBuf[i] - 128) / 128; sq += v * v; }
+    const rms = Math.sqrt(sq / N); C.rmsPeak = Math.max(rms, (C.rmsPeak || 0) * 0.995, 0.04);
+    const env = Math.min(1, rms / C.rmsPeak);
+    const up = 1 - Math.exp(-dt * 50), down = 1 - Math.exp(-dt * 9);
+    C.swell += (env - C.swell) * (env > C.swell ? up : down);
+    C.kick = Math.max(C.kick * Math.exp(-dt * 12), env - (C.prevEnv || 0) > 0.3 ? 1 : 0); C.prevEnv = env;
+    const bass = Math.min(1, bassSum / (NB / 6)); C.bass += (bass - C.bass) * (bass > C.bass ? up : down);
+    const step = N / 128; for (let i = 0; i < 128; i++) { const v = (timeBuf[Math.floor(i * step)] - 128) / 128; C.wave[i] = v; }
+    let sum = 0; for (let b = 0; b < NB; b++) sum += C.lvl[b]; C.level += (sum / NB - C.level) * up;
+  } else {
+    // no analyser (browser voice, thinking, phone listening): a synthetic but plausible spectrum
+    const t = fakePhase; let target = 0;
+    if (vizMode === "thinking") target = 0.3 + 0.2 * Math.sin(t * 6); else if (vizMode === "listening") target = 0.12 + 0.05 * Math.sin(t * 3); else if (vizMode === "speaking") { const syl = Math.max(0, Math.sin(t * 11) * 0.6 + Math.sin(t * 4.3) * 0.4 + 0.2); target = 0.25 + 0.55 * syl; }
+    const rel = 2.6 * dt, capFall = 1.6 * dt;
+    for (let b = 0; b < NB; b++) {
+      const shape = vizMode === "speaking" ? Math.exp(-Math.pow((b - NB * 0.3) / (NB * 0.28), 2)) * (0.6 + 0.4 * Math.abs(Math.sin(t * 9 + b * 0.7))) : vizMode === "thinking" ? 0.5 + 0.5 * Math.sin(t * 5 - b * 0.35) : 0.4 + 0.3 * Math.sin(t * 2 + b);
+      const v = vizMode === "idle" ? 0.03 + 0.025 * Math.sin(t * 1.3 + b * 0.5) : target * shape;
+      if (v > C.lvl[b]) C.lvl[b] += (v - C.lvl[b]) * 0.5; else C.lvl[b] = Math.max(v, C.lvl[b] - rel);
+      if (C.lvl[b] >= C.cap[b]) { C.cap[b] = C.lvl[b]; C.capT[b] = 0.35; } else { C.capT[b] -= dt; if (C.capT[b] <= 0) C.cap[b] = Math.max(C.lvl[b], C.cap[b] - capFall); }
+    }
+    C.swell += (target - C.swell) * 0.15; C.level += (target * 0.6 - C.level) * 0.1; C.kick *= 0.85; C.bass += (target * 0.5 - C.bass) * 0.1;
+    for (let i = 0; i < 128; i++) C.wave[i] *= 0.9;
+  }
+}
+function drawViz(now = 0) {
+  const C = CORE; vizRaf = null;
+  if (document.hidden) return;
+  const want = vizMode === "idle" ? 1000 / 20 : 1000 / 60;
+  if (now - C.last < want - 2) { vizRaf = requestAnimationFrame(drawViz); return; }
+  const dt = Math.min(0.1, (now - C.last) / 1000 || 0.016); C.last = now; fakePhase += dt;
+  readAudio(dt);
+  const W = viz.width, H = viz.height, cx = W / 2, cy = H / 2, NB = C.NB;
+  const tint = STATE_TINT[vizMode] || STATE_TINT.idle; for (let i = 0; i < 3; i++) C.tint[i] += (tint[i] - C.tint[i]) * 0.08;
+  const [tr, tg, tb] = C.tint.map(Math.round), key = tr + "," + tg + "," + tb;
+  if (C.glowKey !== key) { C.glowKey = key; C.glow = sprite(128, (g) => { g.addColorStop(0, `rgba(${key},.28)`); g.addColorStop(0.5, `rgba(${key},.08)`); g.addColorStop(1, `rgba(${key},0)`); }); C.nuc = sprite(96, (g) => { g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, `rgba(${key},.9)`); g.addColorStop(0.55, `rgba(${key},.25)`); g.addColorStop(1, `rgba(${key},0)`); }); }
+  C.rot += dt * (vizMode === "thinking" ? 1.4 : vizMode === "idle" ? 0.12 : 0.25 + C.swell * 0.6);
+  vctx.clearRect(0, 0, W, H);
+  const R0 = W * 0.21 * (1 + C.bass * 0.05 + C.kick * 0.03), LEN = W * 0.25, live = vizMode !== "idle";
+  // glow behind everything, scaled by loudness
+  const gr = R0 * (1.9 + C.swell * 0.5); vctx.globalAlpha = live ? 0.55 + C.swell * 0.45 : 0.35; vctx.drawImage(C.glow, cx - gr, cy - gr, gr * 2, gr * 2); vctx.globalAlpha = 1;
+  // the bars: band 0 at the bottom, climbing both sides to the treble at the top; one path for bars, one for caps
+  const bw = Math.max(1.5, (Math.PI * R0) / NB * 0.62);
+  vctx.lineCap = "butt"; vctx.lineWidth = bw;
+  const barsA = `rgba(${key},${live ? 0.92 : 0.5})`;
+  vctx.beginPath();
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) {
+    const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + Math.max(1, C.lvl[b] * LEN);
+    const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (R0 + 1), cy + si * (R0 + 1)); vctx.lineTo(cx + c * l, cy + si * l);
+  }
+  vctx.strokeStyle = barsA; vctx.stroke();
+  // bright tips on the loud bars (desktop only: one path less on phones)
+  if (!VIZ_PHONE) { vctx.beginPath();
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.lvl[b] < 0.55) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.lvl[b] * LEN; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * (l - LEN * 0.12), cy + si * (l - LEN * 0.12)); vctx.lineTo(cx + c * l, cy + si * l); }
+  vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.swell * 0.35})`; vctx.stroke(); }
+  // peak caps
+  vctx.beginPath(); vctx.lineWidth = Math.max(1, bw * 0.9);
+  for (let s = -1; s <= 1; s += 2) for (let b = 0; b < NB; b++) { if (C.cap[b] < 0.06) continue; const a = Math.PI / 2 + s * ((b + 0.5) / NB) * Math.PI; const l = R0 + C.cap[b] * LEN + bw * 1.2; const c = Math.cos(a), si = Math.sin(a); vctx.moveTo(cx + c * l, cy + si * l); vctx.lineTo(cx + c * (l + bw * 0.9), cy + si * (l + bw * 0.9)); }
+  vctx.strokeStyle = `rgba(255,255,255,${live ? 0.85 : 0.35})`; vctx.stroke();
+  // the ring the bars grow from, with a slowly turning dashed outer orbit
+  vctx.lineWidth = 1.4; vctx.strokeStyle = `rgba(${key},${live ? 0.75 : 0.45})`; vctx.beginPath(); vctx.arc(cx, cy, R0, 0, Math.PI * 2); vctx.stroke();
+  vctx.save(); vctx.translate(cx, cy); vctx.rotate(C.rot); vctx.setLineDash([R0 * 0.5, R0 * 0.22, R0 * 0.12, R0 * 0.3]); vctx.lineWidth = 1; vctx.strokeStyle = `rgba(${key},${0.25 + C.level * 0.5})`; vctx.beginPath(); vctx.arc(0, 0, R0 + LEN + bw * 2.2, 0, Math.PI * 2); vctx.stroke(); vctx.setLineDash([]); vctx.restore();
+  // waveform ring inside: the voice itself
+  if (live && C.level > 0.015) {
+    vctx.beginPath(); const rw = R0 * 0.72, amp = R0 * 0.26, WN = VIZ_PHONE ? 64 : 128, ws = 128 / WN;
+    for (let i = 0; i <= WN; i++) { const ang = (i / WN) * Math.PI * 2 - Math.PI / 2, r = rw + C.wave[Math.floor((i % WN) * ws)] * amp; const x = cx + Math.cos(ang) * r, y = cy + Math.sin(ang) * r; i ? vctx.lineTo(x, y) : vctx.moveTo(x, y); }
+    vctx.closePath(); vctx.lineWidth = 4; vctx.strokeStyle = `rgba(${key},${0.1 + C.level * 0.2})`; vctx.stroke(); vctx.lineWidth = 1.2; vctx.strokeStyle = `rgba(255,255,255,${0.35 + C.level * 0.5})`; vctx.stroke();
+  }
+  // nucleus swells with the low end
+  const nr = R0 * (0.34 + C.bass * 0.3 + C.kick * 0.12) * (live ? 1 : 0.85 + 0.05 * Math.sin(fakePhase * 1.6)); vctx.globalAlpha = live ? Math.min(1, 0.7 + C.level * 0.4) : 0.55; vctx.drawImage(C.nuc, cx - nr, cy - nr, nr * 2, nr * 2); vctx.globalAlpha = 1;
+  vizRaf = requestAnimationFrame(drawViz);
+}
+function setViz(mode, node) { if (mode === "idle" && typeof radioOn !== "undefined" && radioOn) { mode = "radio"; node = radioViz(); } vizMode = mode; analyser = node || null; $("#coreState").textContent = mode === "idle" ? "idle" : mode === "radio" ? "♪ " + RADIO[radioIdx].n.toLowerCase() : mode; $("#core").classList.toggle("talking", mode === "speaking"); $("#core").classList.toggle("listening", mode === "listening"); $("#core").classList.toggle("thinking", mode === "thinking"); if (!vizRaf) vizRaf = requestAnimationFrame(drawViz); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !vizRaf) vizRaf = requestAnimationFrame(drawViz); });
+vizRaf = requestAnimationFrame(drawViz);
+function attachAudio(el) {
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(el); const an = actx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = .8; src.connect(an); an.connect(actx.destination); return an; } catch { return null; }
+}
+
+/* ---------- voice output: sentence-streamed ElevenLabs, browser fallback ---------- */
+let VOICE = null, VOICES = [], speakQueue = [], speaking = false, speakGen = 0, currentSpeech = "";
+const PHONE = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+let pendingReply = false, replyOpen = null, settleMic = async () => {};
+const soundsLikeSelf = (t) => { const said = new Set(currentSpeech.toLowerCase().split(/\W+/).filter(w => w.length > 3)); const words = t.toLowerCase().split(/\W+/).filter(w => w.length > 3); return words.length > 0 && words.filter(w => said.has(w)).length / words.length >= 0.5; };
+// One persistent <audio> element. Phones only allow playback on an element that was started by a user
+// gesture, so we unlock it on the first tap and then reuse it for every segment (no gaps, no blocked plays).
+const player = new Audio(); player.preload = "auto"; let playerAnalyser = null, playerUnlocked = false;
+function unlockPlayer() {
+  if (playerUnlocked) return; playerUnlocked = true;
+  try { player.src = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQxAADB8AhSmxhIIEVCSiJrDCQBTcu3UrAIwUdkRgQbFAZC1CQEwTJ9mjRvBA4UOLD8nKVOWfh+UlK3z/177OXrfOdKl7pyn3Xf//WreyTRUoAWgBgkOAGbZHBgG1OF6zM82DWbZaUmMBptgQhGjsyYqc9ae9XFz280948NMBWInluyfr1yq7Ny//TcCQBAEWzP8bzE3A+MWgHOOyphGxMfR7oPp3G7A8MPCbNu5Cz0MC5KmoRMuUsBA8nnb6oN1LlDzPT7X23wvGPMaKmqCJAWAAAA=="; const p = player.play(); if (p) p.catch(() => {}); } catch {}
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); } catch {}
+}
+["pointerdown", "keydown", "touchstart"].forEach(ev => document.addEventListener(ev, unlockPlayer, { once: true, passive: true }));
+function playerViz() {
+  if (playerAnalyser) return playerAnalyser;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaElementSource(player); playerAnalyser = actx.createAnalyser(); playerAnalyser.fftSize = 512; playerAnalyser.smoothingTimeConstant = .8; src.connect(playerAnalyser); playerAnalyser.connect(actx.destination); } catch { playerAnalyser = null; }
+  return playerAnalyser;
+}
+const clean = (n) => n.replace(/Microsoft |Online |\(Natural\)|Google |English \(United Kingdom\)|- /g, "").trim();
+function pickVoices() {
+  let all = []; try { all = speechSynthesis.getVoices(); } catch {}
+  const gb = all.filter(v => /en[-_]GB/i.test(v.lang));
+  const rank = v => (/natural/i.test(v.name) ? 0 : /google/i.test(v.name) ? 1 : /online/i.test(v.name) ? 2 : 3) + (/ryan|george|daniel|thomas|oliver|arthur|alfie|male/i.test(v.name) ? 0 : .5);
+  VOICES = (gb.length ? gb : all.filter(v => /^en/i.test(v.lang))).sort((a,b) => rank(a) - rank(b));
+  let saved = null; try { saved = localStorage.getItem("jarvisVoice"); } catch {}
+  VOICE = VOICES.find(v => v.name === saved) || VOICES[0] || null;
+  $("#voiceName").textContent = state.cfg.tts ? "ElevenLabs" : VOICE ? clean(VOICE.name) : "no voice";
+}
+try { speechSynthesis.onvoiceschanged = pickVoices; } catch {}
+$("#voiceNext").onclick = () => { if (state.cfg.tts) return speak("I'm using the ElevenLabs voice."); if (!VOICES.length) return; VOICE = VOICES[(VOICES.indexOf(VOICE) + 1) % VOICES.length]; try { localStorage.setItem("jarvisVoice", VOICE.name); } catch {} pickVoices(); speak("This is the " + clean(VOICE.name) + " voice."); };
+function stopSpeaking() { if (typeof ros !== "undefined" && ros && !ros.paused) { /* a question interrupts the rosary: pause it, resume after */ ros.paused = true; try { player.pause(); } catch {} $("#rosPause").textContent = "RESUME"; } if (typeof rdPlay !== "undefined" && rdPlay) { rdPlay = null; $("#rdListen").hidden = false; $("#rdStop").hidden = true; }
+  const was = speaking || speakQueue.length > 0; speakGen++; speakQueue = []; speaking = false; radioDuck(false); try { player.pause(); player.onended = null; } catch {} try { speechSynthesis.cancel(); } catch {} setViz("idle"); if (was) onSpeechEnd(); }
+function speak(text) { if (!$("#speakOn").checked || !text?.trim()) return; enqueueSpeech(text); }
+function enqueueSpeech(segment) {
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
+  const gen = speakGen;
+  const streamIt = state.cfg.tts && !speaking && !speakQueue.length && segment.length < 1500;
+  const item = { text: segment, gen, stream: streamIt, blob: !state.cfg.tts || streamIt ? Promise.resolve(null) : fetch("/api/tts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: segment }) }).then(r => r.ok ? r.blob() : null).catch(() => null) };
+  speakQueue.push(item); if (!speaking) pumpSpeech();
+}
+async function pumpSpeech() {
+  speaking = true; radioDuck(true);
+  if (listening && typeof closeMicQuietly === "function") closeMicQuietly();
+  while (speakQueue.length) {
+    const item = speakQueue.shift(); if (item.gen !== speakGen) continue;
+    const blob = await item.blob; if (item.gen !== speakGen) continue;
+    currentSpeech = item.text;
+    if (item.stream) {
+      if (PHONE) await settleMic();
+      const ok = await new Promise(res => { player.src = "/api/tts?t=" + encodeURIComponent(item.text); setViz("speaking", playerViz()); player.onended = () => res(true); player.onerror = () => res(false); player.play().catch(() => res(false)); });
+      if (ok || item.gen !== speakGen) continue;
+      item.blob = Promise.resolve(null); // streaming failed: fall through to the browser voice below
+    }
+    if (blob) {
+      if (PHONE) await settleMic();
+      await new Promise(res => { const url = URL.createObjectURL(blob); player.src = url; setViz("speaking", playerViz()); player.onended = () => { URL.revokeObjectURL(url); res(); }; player.onerror = () => res(); player.play().catch(() => res()); });
+    } else {
+      await new Promise(res => { try { const u = new SpeechSynthesisUtterance(item.text); u.rate = .96; u.pitch = 1; u.lang = "en-GB"; if (VOICE) u.voice = VOICE; u.onend = u.onerror = res; setViz("speaking", null); speechSynthesis.speak(u); setTimeout(res, 1500 + item.text.length * 80); } catch { res(); } });
+    }
+  }
+  speaking = false; radioDuck(false); setViz("idle"); onSpeechEnd();
+  if (worldDirty && worldVisible) setTimeout(() => { if (!speaking) { worldDirty = false; renderWorld(); } }, 300);
+}
+function playUrl(url, btn) { stopSpeaking(); unlockPlayer(); radioDuck(true); player.src = url; setViz("speaking", playerViz()); if (btn) btn.textContent = "❚❚ PLAYING"; player.onended = player.onerror = () => { radioDuck(false); setViz("idle"); if (btn) btn.textContent = "▶ PLAY BRIEF"; }; player.play().catch(() => setViz("idle")); }
+
+/* ---------- the brain: streaming chat ---------- */
+function addMsg(role, text) { const el = document.createElement("div"); el.className = "msg " + role; el.textContent = text; $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; return el; }
+function localAnswer(t) {
+  const rawText = t.trim(); t = t.toLowerCase().trim();
+  // "add cam <link>", "add feed called Lake Louise <link>", "add <link> as Lake Louise": the link keeps its case (YouTube ids are case-sensitive)
+  if (/^(add|save)\s/.test(t) && /(cam|camera|feed|webcam|stream|youtu|http)/.test(t)) { const um = rawText.match(/(https?:\/\/\S+|\b[\w.-]+\.[a-z]{2,}\/\S*|\byoutu\S+)/i); if (um) { const url = um[1]; const rest = rawText.replace(url, " ").replace(/^(add|save)\s+(a\s+|this\s+|the\s+)?(cam|camera|feed|webcam|live feed|stream)?\s*/i, "").replace(/\b(called|named|as)\b/i, " ").replace(/[\s:]+/g, " ").trim(); if (PHONE) showView("feeds"); addFeed(url, rest ? rest.replace(/\b\w/g, (c) => c.toUpperCase()) : ""); return "Adding it to Live Feeds."; } }
+  if (/^(what('s| is) the )?time\??$/.test(t)) return "It's " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}) + ".";
+  if (/^(recheck|refresh)/.test(t)) { checkStatus(true); return "Rechecking all systems."; }
+  const cv = typeof calcVoice === "function" ? calcVoice(rawText) : null; if (cv) return cv;
+  if (/^wall( mode)?$/.test(t)) { enterWall(); return "Wall mode."; }
+  if (/^(play|read) (the )?(morning )?brief/.test(t)) { if (state.morning?.audio) { playUrl("/api/morning/audio?id=" + encodeURIComponent(state.morning.id || "")); return ""; } if (state.morning?.text) return state.morning.text; return "There's no morning brief yet. Press generate and I'll write one."; }
+  const rm = t.replace(/^jarvis,?\s*/, "").replace(/[.!?]+$/, "");
+  if (/^(stop|pause|turn off|kill|mute) (the )?(radio|music|classic fm)$|^radio off$/.test(rm)) { radioStop(); return "Radio off."; }
+  if (/^(what('s| is) playing|what('s| is) (this|that) (song|track|tune)|what('s| is) on the radio|who('s| is) (this|that|singing|playing)|what song is (this|that|on|playing)|name (this|that) (song|tune)|now playing)$/.test(rm)) {
+    if (!radioOn) return "The radio is off, sir.";
+    if (!songText) return `${RADIO[radioIdx].n} hasn't sent a title for this track yet.`;
+    const { artist, title } = songParts(songText); return artist ? `This is ${title} by ${artist}, on ${RADIO[radioIdx].n}.` : `${RADIO[radioIdx].n} says this is ${title}.`;
+  }
+  const rp = rm.match(/^(?:play|put on|turn on|start)\s+(?:the\s+)?(radio|music|some music|.+?)(?:\s+radio)?$/);
+  if (rp) { const want = /^(radio|music|some music)$/.test(rp[1]) ? "" : rp[1].replace(/\s+/g, ""); const i = want ? (RADIO_MATCH.find(j => RADIO[j].k.some(k => want.includes(k))) ?? -1) : radioIdx; if (i >= 0) { radioPlay(i); return ""; } }
+  if (/^(stop|quiet|shut up|enough)$/.test(t)) { stopSpeaking(); return ""; }
+  if (/^(pray|start|lead|say) (the )?rosary$|^rosary$/.test(rm)) { if (PHONE) showView("jarvis"); $("#faithPanel").scrollIntoView({ block: "start" }); rosaryStart(); return ""; }
+  if (/^(stop|pause) (the )?rosary$/.test(rm)) { if (ros) { if (/pause/.test(rm)) $("#rosPause").click(); else $("#rosStop").click(); } return ""; }
+  if (/^(read|play|listen to) (me )?(today's |the )?(mass )?(readings|gospel)( for today)?$|^today'?s (readings|gospel)$/.test(rm)) { if (PHONE) showView("jarvis"); $("#faithPanel").scrollIntoView({ block: "start" }); readingsListen(); return ""; }
+  if (/^what (do|does) (today's |the )?(readings|gospel) mean( today)?\??$/.test(rm) && faith?.readings?.reflection?.conclusion) return faith.readings.reflection.conclusion;
+  if (/^(who( is|'s) )?(the )?saint of the day\??$|^who is today's saint\??$/.test(rm) && faith?.saint) { const st = faith.saint; return `${st.name}${st.plain?.title ? ", " + st.plain.title : ""}. ${st.plain?.life || st.blurb || ""} ${st.plain?.today || ""}`.trim(); }
+  const qr = quickReminder(rawText.replace(/^jarvis,?\s*/i, "")); if (qr) { fetch("/api/reminders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: qr.text, when: qr.when, repeat: "none" }) }).then(r => r.json()).then(r => { if (!r.error) loadReminders(); }).catch(() => {}); return `Reminder set for ${qr.say}: ${qr.text}.`; }
+  if (/^scan (the )?competitors( now)?$/.test(t)) { $("#compScan").click(); return "Scanning the competitor pages now."; }
+  return null;
+}
+/* ---------- close the day: one open item at a time, by voice or buttons ---------- */
+let closeMode = null;
+function closeItems() {
+  const items = [];
+  for (const f of (state.followups || []).filter(f => f.status === "ready")) items.push({ kind: "followup", f, say: `${f.first ? "New lead" : "Follow-up"}: ${f.from}, about ${f.subject}. I've drafted a reply. Send, skip, or next?`, actions: ["send", "skip", "next"] });
+  for (const d of (state.decisions?.items || [])) items.push({ kind: "decision", d, say: `${bizOf(d.business).name}: ${d.label}. Approve, reject, or next?`, actions: d.kind === "roven_approve_employer" ? ["approve", "next"] : ["approve", "reject", "next"] });
+  const drafted = new Set((state.followups || []).map(f => f.threadId));
+  for (const m of (state.brief?.items || []).filter(m => m.needs_reply && m.threadId && !drafted.has(m.threadId))) items.push({ kind: "email", m, say: `${bizOf(m.business).name} email from ${m.from}: ${m.subject}. Shall I draft a reply, or next?`, actions: ["draft", "next"] });
+  for (const p of (state.watch?.payments || []).filter(p => p.state === "failed")) items.push({ kind: "info", say: `${bizOf(p.business).name}: ${p.names}' balance of ${money(p.amount)} was declined, attempt ${p.attempts} of three. Nothing to do until the retry. Next.`, actions: ["next"] });
+  for (const q of (state.queue || []).filter(q => q.status === "pending")) items.push({ kind: "info", say: `Still queued for the PC: ${q.summary}. Next.`, actions: ["next"] });
+  return items;
+}
+async function closeDay() {
+  const items = closeItems(); if (closeMode) return;
+  if (!items.length) { const t = "Nothing is open. The day is closed."; addMsg("ai", t); speak(t); return; }
+  closeMode = { items, i: 0 };
+  const intro = `Closing the day. ${items.length} item${items.length > 1 ? "s" : ""}.`; addMsg("ai", intro); speak(intro);
+  setTimeout(closeStep, 300);
+}
+function closeStep() {
+  const cm = closeMode; if (!cm) return;
+  if (cm.i >= cm.items.length) { closeMode = null; const t = "That's everything. Day closed."; addMsg("ai", t); speak(t); return; }
+  const it = cm.items[cm.i];
+  const el = document.createElement("div"); el.className = "closecard"; el.dataset.close = "1";
+  el.innerHTML = `<div class="k">CLOSE THE DAY · ${cm.i + 1} OF ${cm.items.length}</div><div>${esc(it.say)}</div>${it.kind === "followup" ? `<textarea>${esc(fuEdits[it.f.id] ?? it.f.body)}</textarea>` : ""}<div class="row">${it.actions.map(a => `<button class="btn sm ${a === "send" || a === "approve" || a === "draft" ? "primary" : ""}" data-ca="${a}">${a.toUpperCase()}</button>`).join("")}<button class="btn sm" data-ca="stop">STOP</button></div>`;
+  el.querySelectorAll("[data-ca]").forEach(b => b.onclick = () => closeAct(b.dataset.ca, el));
+  $("#chat").appendChild(el); $("#chat").scrollTop = 1e9; cm.el = el; speak(it.say);
+}
+async function closeAct(a, el) {
+  const cm = closeMode; if (!cm) return; const it = cm.items[cm.i];
+  el.querySelectorAll("button").forEach(b => b.disabled = true);
+  if (a === "stop") { closeMode = null; const t = "Stopped. The rest keeps for later."; addMsg("ai", t); speak(t); return; }
+  if (a === "send" && it.kind === "followup") { const body = el.querySelector("textarea")?.value || (fuEdits[it.f.id] ?? it.f.body); const r = await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), kind: "email_reply", params: { account: it.f.account, threadId: it.f.threadId, body, followupId: it.f.id }, summary: "Send reply to " + it.f.from }) }).then(x => x.json()).catch(() => ({})); addMsg("sys", r.ok ? "Sent." : "Send failed: " + (r.result || "")); state.followups = state.followups.filter(f => f.id !== it.f.id); }
+  if (a === "skip" && it.kind === "followup") { await fetch("/api/followups/skip", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: it.f.id }) }).catch(() => {}); state.followups = state.followups.filter(f => f.id !== it.f.id); }
+  if ((a === "approve" || a === "reject") && it.kind === "decision") { const d = it.d; const item = d.kind === "lazo_claim" ? { kind: "lazo_claim", params: { claimId: d.id, decision: a === "approve" ? "approved" : "rejected" } } : d.kind === "lazo_listing" ? { kind: "lazo_listing", params: { requestId: d.id, decision: a === "approve" ? "approved" : "denied" } } : d.kind === "roven_approve_employer" ? { kind: "roven_approve_employer", params: { employerId: d.id } } : { kind: a === "approve" ? "roven_approve_job" : "roven_reject_job", params: { jobId: d.id } }; await fetch("/api/act", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: Math.random().toString(36).slice(2, 10), ...item, summary: (a === "approve" ? "Approve " : "Reject ") + d.label }) }).catch(() => {}); addMsg("sys", (a === "approve" ? "Approved" : "Rejected") + " · queued for the PC."); state.decisions.items = state.decisions.items.filter(x => x.id !== d.id); }
+  if (a === "draft" && it.kind === "email") { addMsg("sys", "Drafting…"); const r = await fetch("/api/followups/run?dry=0&minAge=0", { method: "POST" }).then(x => x.json()).catch(() => []); const f = (Array.isArray(r) ? r : []).find(x => x.threadId === it.m.threadId && x.status === "ready"); if (f) { state.followups = [f, ...(state.followups || []).filter(x => x.id !== f.id)]; cm.items.splice(cm.i + 1, 0, { kind: "followup", f, say: `Draft ready for ${f.from}. Send, skip, or next?`, actions: ["send", "skip", "next"] }); } else addMsg("sys", "Couldn't draft that one; it stays in the inbox."); }
+  renderDecisions(); renderAttention(); cm.i++; setTimeout(closeStep, 400);
+}
+$("#closeDay").onclick = closeDay;
+function closeVoice(t) {
+  const cm = closeMode; if (!cm) return false; const w = t.toLowerCase().replace(/[^a-z ]/g, " ").trim();
+  const map = [["stop", /^(stop|that's enough|enough|cancel|quit)$/], ["send", /\b(send|send it|yes send|go ahead|approve and send)\b/], ["approve", /\b(approve|approved|yes|accept)\b/], ["reject", /\b(reject|decline|no)\b/], ["draft", /\b(draft|draft it|write it|reply)\b/], ["skip", /\b(skip|later|not now|remind me)\b/], ["next", /\b(next|pass|move on|continue)\b/]];
+  const it = cm.items[cm.i]; const hit = map.find(([a, re]) => re.test(w) && (a === "stop" || it.actions.includes(a)));
+  if (!hit) { speak("Say " + it.actions.join(", ") + ", or stop."); return true; }
+  closeAct(hit[0], cm.el); return true;
+}
+let askCtl = null;   // the in-flight /api/chat stream; a new question aborts it so two answers never speak over each other
+async function ask(text) {
+  text = text.trim(); if (!text) return;
+  if (closeMode) { addMsg("me", text); if (closeVoice(text)) return; }
+  if (/^(close|let's close|lets close|close out|wrap up) (the |my )?day$/i.test(text.trim())) { addMsg("me", text); closeDay(); return; }
+  pendingReply = true; stopSpeaking(); if (PHONE) await settleMic(); addMsg("me", text); $("#q").value = "";
+  const quick = localAnswer(text); if (quick !== null) { if (quick) { addMsg("ai", quick); speak(quick); } return; }
+  const myReply = {}; replyOpen = myReply;
+  const el = addMsg("ai", ""); $("#brainState").textContent = "thinking"; setViz("thinking");
+  askCtl?.abort(); askCtl = new AbortController(); const ctl = askCtl;
+  let full = "", spoken = 0, firstSent = false; const gen = ++speakGen; speakQueue = [];
+  const flushSentences = (final) => {
+    if (gen !== speakGen) return; // a newer question (or a stop) took over: nothing more from this reply is spoken
+    if (!final && firstSent) return; // after the opening sentence, wait for the whole reply and send it as one segment
+    const rest = full.slice(spoken); const m = final ? [rest] : rest.match(/^[\s\S]*?[.!?](?=\s|$)/);
+    if (!m) return; const chunk = (final ? rest : m[0]).trim(); if (!chunk) return;
+    spoken += final ? rest.length : m[0].length; firstSent = true; if ($("#speakOn").checked) enqueueSpeech(chunk);
+  };
+  try {
+    const r = await fetch("/api/chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text, messages: state.chat }), signal: ctl.signal });
+    if (!r.ok || !r.body) throw new Error(r.status === 401 ? "(signed out: reload and sign in again)" : "(the hub answered " + r.status + ")");
+    const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = "";
+    while (true) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx; while ((idx = buf.indexOf("\n\n")) >= 0) {
+        const frame = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        const ev = (frame.match(/^event: (.*)$/m) || [])[1]; const data = (frame.match(/^data: (.*)$/m) || [])[1]; if (!ev || !data) continue;
+        let d; try { d = JSON.parse(data); } catch { continue; }
+        if (ev === "delta") { full += d.text; el.textContent = full; $("#chat").scrollTop = 1e9; if (vizMode === "thinking" && !speaking) $("#brainState").textContent = "speaking"; flushSentences(false); }
+        else if (ev === "done") { full = full.trim(); el.textContent = full || "…"; flushSentences(true); state.chat = d.messages || state.chat; for (const a of d.actions || []) handleAction(a); }
+        else if (ev === "error") { el.textContent = full + "\n[" + d.message + "]"; }
+      }
+    }
+  } catch (e) { if (e.name === "AbortError") { if (!full) el.remove(); return; } el.textContent = (full || "") + " I lost the connection to my reasoning core. " + e.message; }
+  if (askCtl === ctl) askCtl = null;
+  if (replyOpen === myReply) replyOpen = false; else return; // a newer question took over
+  $("#brainState").textContent = ""; if (!speaking && !speakQueue.length) { pendingReply = false; setViz("idle"); onSpeechEnd(); }
+}
+function handleAction(a) {
+  if (a.type === "open") { if (!/^https?:\/\//i.test(String(a.url || ""))) { addMsg("sys", "Blocked a link that wasn't http(s)."); return; } const w = window.open(a.url, "_blank"); if (w) w.opener = null; else addMsg("sys", "Popup blocked: " + a.url); }
+  if (a.type === "notes") { state.notes = a.value; $("#notes").value = a.value; }
+  if (a.type === "memory") { state.memory = a.value; renderMemory(); }
+  if (a.type === "trips" || a.type === "competitors") setTimeout(loadState, 800);
+  if (a.type === "ship") { if (PHONE) showView("world"); initGlobe(); setTimeout(() => { const sh = ships.find(x => x[0] === a.mmsi); if (sh) openShip(sh); else if (globe) globe.pointOfView({ lat: a.lat, lng: a.lon, altitude: 0.6 }, 900); }, 400); }
+  if (a.type === "reminders") setTimeout(loadReminders, 600); if (a.type === "alarm") setTimeout(loadAlarm, 600);
+  if (a.type === "draft") draftCard(a);
+  if (a.type === "confirm") proposeAction(a.item);
+  if (a.type === "world") { if (PHONE) showView("world"); initGlobe(); if (a.flight) { $("#trackQ").value = a.flight; trackIt(a.flight); } else loadFlights(); }
+}
+$("#ask").onsubmit = (e) => { e.preventDefault(); ask($("#q").value); };
+$("#clearChat").onclick = () => { stopSpeaking(); state.chat = []; $("#chat").innerHTML = ""; addMsg("sys", "Conversation cleared."); };
+["what needs me today?", "status report", "how are the Cowboys doing?", "weather for the next wedding", "what's in the news?", "how are the markets?", "remember that…"].forEach(c => { const b = document.createElement("button"); b.type = "button"; b.textContent = c; b.onclick = () => { if (c.endsWith("…")) { $("#q").value = "remember that "; $("#q").focus(); } else ask(c); }; $("#chips").appendChild(b); });
+document.addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); showView("jarvis"); $("#q").focus(); $("#brainPanel").scrollIntoView({behavior:"smooth", block:"center"}); } if (e.key === "Escape") { if ($("#drill").classList.contains("open")) closeDrill(); else if (document.body.classList.contains("wall")) exitWall(); else stopSpeaking(); } });
+
+/* ---------- voice input: hold-to-talk, wake word, conversation mode, interruption ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const mic = $("#mic"); let rec, wake, listening = false, hasMic = false, micAnalyser = null, micStream = null;
+async function detectMic() {
+  try { const devs = await navigator.mediaDevices.enumerateDevices(); hasMic = devs.some(d => d.kind === "audioinput"); } catch { hasMic = false; }
+  if (PHONE && SR) hasMic = true; // phones always have one; enumeration can't be trusted before permission is granted
+  if (SR && hasMic) { mic.hidden = false; $("#wakeWrap").hidden = false; $("#convWrap").hidden = false; setupVoice(); }
+  else if (!SR) addMsg("sys", "Voice input needs Chrome, Edge or Safari. Typing works everywhere.");
+}
+function onSpeechEnd() {
+  if (replyOpen) return; // the rest of the reply is still on its way; keep the mic closed
+  pendingReply = false;
+  if (!hasMic || speaking || listening) return;
+  if ($("#convOn")?.checked && !radioOn) setTimeout(() => { if (!speaking && !listening && !replyOpen && !radioOn && $("#convOn").checked) startListen(); }, 400);
+  else if ($("#wakeOn")?.checked && typeof startWakeAgain === "function") setTimeout(() => { if (!speaking && !listening) startWakeAgain(); }, 400);
+}
+let startListen = () => {};
+function setupVoice() {
+  rec = new SR(); rec.lang = "en-US"; rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
+  let recIgnore = false;
+  rec.onresult = (e) => { if (recIgnore) return; const r = e.results[e.results.length-1]; const t = r[0].transcript; if (speaking && soundsLikeSelf(t)) return; $("#coreState").textContent = "» " + t.slice(-40); if (r.isFinal) ask(t); };
+  window.closeMicQuietly = () => { recIgnore = true; try { rec.abort(); } catch {} setTimeout(() => { recIgnore = false; }, 600); };
+  rec.onend = () => { listening = false; mic.classList.remove("on"); releaseMic(); if (!speaking) { radioDuck(false); setViz("idle"); } if ($("#wakeOn").checked && !(PHONE && pendingReply)) startWake(); };
+  rec.onerror = (e) => { const why = { "not-allowed": "Microphone blocked. In Chrome: tap the lock icon in the address bar → Permissions → Microphone → Allow, then reload.", "service-not-allowed": "Speech recognition is disabled in this browser.", "audio-capture": "No microphone could be opened. Close other apps using the mic and try again.", "network": "Speech recognition needs an internet connection (Google's service).", "language-not-supported": "Speech language not supported." }[e.error]; if (why) addMsg("sys", why); else if (e.error !== "no-speech" && e.error !== "aborted") addMsg("sys", "Mic: " + e.error); };
+  startListen = async () => { if (listening) return; stopWake(); if (speaking) stopSpeaking(); radioDuck(true); if (PHONE) await settleMic(); listening = true; mic.classList.add("on"); if (!PHONE) await grabMic(); setViz("listening", PHONE ? null : micAnalyser); $("#coreState").textContent = "listening…"; try { rec.start(); } catch (e) { listening = false; mic.classList.remove("on"); addMsg("sys", "Couldn't start the microphone: " + e.message); } };
+  const stop = () => { try { rec.stop(); } catch {} };
+  mic.onclick = () => listening ? stop() : startListen();
+  document.addEventListener("keydown", (e) => { if (e.key.toLowerCase() === "j" && !e.repeat && !/input|textarea/i.test(e.target.tagName)) startListen(); });
+  document.addEventListener("keyup", (e) => { if (e.key.toLowerCase() === "j" && listening) stop(); });
+  $("#wakeOn").onchange = () => { try { localStorage.setItem("jarvisWake", $("#wakeOn").checked ? "1" : ""); } catch {} $("#wakeOn").checked ? startWake() : stopWake(); };
+  $("#convOn").onchange = () => { try { localStorage.setItem("jarvisConv", $("#convOn").checked ? "1" : ""); } catch {} if ($("#convOn").checked) { addMsg("sys", "Conversation mode: I'll listen after each reply. Speak over me to interrupt."); startListen(); } };
+  try { if (localStorage.getItem("jarvisWake")) { $("#wakeOn").checked = true; startWake(); } if (localStorage.getItem("jarvisConv")) $("#convOn").checked = true; } catch {}
+  function startWake() {
+    if (wake || listening || (PHONE && radioOn)) return;
+    wake = new SR(); wake.continuous = true; wake.interimResults = true; wake.lang = "en-US";
+    wake.onresult = (e) => {
+      const r = e.results[e.results.length-1]; const t = r[0].transcript.toLowerCase();
+      // interruption: any sustained speech while JARVIS talks stops him and takes the question
+      if (speaking && r.isFinal && t.trim().split(/\s+/).length >= 2) { if (soundsLikeSelf(t)) return; stopSpeaking(); ask(t.replace(/^jarvis[,.]?\s*/, "")); return; }
+      if (!r.isFinal) return;
+      const m = t.match(/jarvis[,.]?\s*(.*)/); if (m) { blip(1200); if (m[1].trim().length > 2) ask(m[1]); else { stopWake(); startListen(); } }
+    };
+    wake.onend = () => { if (wake && ($("#wakeOn").checked || $("#convOn").checked) && !listening) { try { wake.start(); } catch {} } };
+    wake.onerror = () => {};
+    try { wake.start(); } catch {}
+  }
+  function stopWake() { if (!wake) return; const w = wake; wake = null; try { w.onend = null; w.stop(); } catch {} }
+  window.stopWakeForSpeech = stopWake; window.startWakeAgain = startWake;
+  // phones: Chrome pauses audio whenever a recognizer is active, so stop them all and wait for the mic to actually close
+  settleMic = () => new Promise(res => { let pending = 0, done = false; const fin = () => { if (!done) { done = true; res(); } };
+    if (wake) { const w = wake; wake = null; pending++; w.onend = () => { pending--; if (!pending) fin(); }; try { w.abort(); } catch { pending--; } }
+    if (listening) { pending++; const prev = rec.onend; rec.onend = (e) => { rec.onend = prev; prev && prev(e); pending--; if (!pending) fin(); }; try { rec.abort(); } catch { pending--; } }
+    if (!pending) fin(); else setTimeout(fin, 700); });
+  // keep a wake recognizer alive during speech in conversation mode so he can be interrupted
+  const _pump = pumpSpeech; window.__origPump = _pump;
+  if (!PHONE) setInterval(() => { if (speaking && ($("#convOn").checked || $("#wakeOn").checked) && !wake && !listening) startWake(); }, 800);
+  // phones: the mic must stay closed while JARVIS talks, otherwise Chrome pauses his audio; tap the core to interrupt
+  $("#core").onclick = () => { if (speaking) { stopSpeaking(); if (hasMic && ($("#convOn").checked || $("#wakeOn").checked)) startListen(); } };
+}
+async function grabMic() { try { if (!micStream) { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); actx = actx || new (window.AudioContext || window.webkitAudioContext)(); const src = actx.createMediaStreamSource(micStream); micAnalyser = actx.createAnalyser(); micAnalyser.fftSize = 512; src.connect(micAnalyser); } } catch { micAnalyser = null; } }
+function releaseMic() { /* keep the stream for quick restarts; browsers show the indicator only while active */ }
+
+/* ---------- wall mode ---------- */
+let wallTimer;
+function enterWall() {
+  const cams = (state.webcams || []).filter(c => c.embed); if (!cams.length) return speak("No embeddable feeds for wall mode yet.");
+  document.body.classList.add("wall"); history.replaceState(null, "", "/wall");
+  $("#cams").innerHTML = ""; camsKeyR = ""; clearInterval(wallTimer);
+  const g = $("#wallGrid"); g.style.setProperty("--cols", Math.ceil(Math.sqrt(cams.length)));
+  g.innerHTML = cams.map(c => `<div class="cell"><iframe src="${safeUrl(ytSrc(c.embed))}" ${IFR} title="${esc(c.name)}"></iframe><span class="lbl">${esc(c.name)}</span></div>`).join("");
+  g.querySelectorAll(".cell").forEach(cell => { const hit = document.createElement("div"); hit.style.cssText = "position:absolute;inset:0;cursor:pointer"; hit.onclick = () => { const solo = cell.classList.contains("solo"); g.querySelectorAll(".cell").forEach(x => x.classList.remove("solo")); if (!solo) cell.classList.add("solo"); }; hit.ondblclick = (e) => { e.stopPropagation(); hit.remove(); }; cell.appendChild(hit); });
+  $("#wallName").textContent = `${cams.length} LIVE FEEDS · click to enlarge · double-click for controls`; wallInfo(); wallTimer = setInterval(wallInfo, 60000);
+  document.documentElement.requestFullscreen?.().catch(() => {});
+}
+function wallInfo() { const c = state.wx?.current; const down = state.sites.filter(s => !s.ok); $("#wallInfo").innerHTML = `${c ? `${Math.round(c.temperature_2m)}°F ${wmo(c.weather_code)[0]} · ${esc(state.wx.place)}<br>` : ""}${down.length ? `<span style="color:var(--red)">${esc(down.map(d=>d.name).join(", "))} DOWN</span>` : "ALL SYSTEMS NOMINAL"}${state.brief?.items?.length ? `<br>${state.brief.items.length} inbox items` : ""}`; }
+function exitWall() { document.body.classList.remove("wall"); clearInterval(wallTimer); $("#wallGrid").innerHTML = ""; renderCams(); history.replaceState(null, "", "/"); if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {}); }
+$("#wallBtn").onclick = (e) => { e.preventDefault(); enterWall(); }; $("#wallExit").onclick = exitWall;
+
+/* ---------- phone navigation ---------- */
+function showView(v) { $("#main").dataset.view = v; if (v === "world") setTimeout(() => { initGlobe(); globe && globe.width($("#globe").clientWidth).height($("#globe").clientHeight || 360); }, 60); $("#nav").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.view === v)); if (v === "weather" && map) setTimeout(() => map.invalidateSize(), 50); try { localStorage.setItem("jarvisView", v); } catch {} }
+$("#nav").querySelectorAll("button").forEach(b => b.onclick = () => showView(b.dataset.view));
+addEventListener("resize", () => { if (map) map.invalidateSize(); if (typeof hudCondense === "function") hudCondense(); hudHeight(); });
+
+/* ---------- desktop: jump bar (one shortcut per panel) + folding panels ---------- */
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+const JUMP_GROUPS = [["JARVIS", ["brainPanel", "alertPanel"]], ["OPS", ["opsPanel", "inboxPanel", "decisionsPanel", "scannerPanel", "upcomingPanel", "watchPanel", "sportsPanel", "newsPanel"]], ["WORLD", ["worldPanel", "wxPanel"]], ["MORE", ["radioPanel", "calcPanel", "faithPanel", "moneyPanel", "memPanel", "feedsPanel", "launchPanel", "notesPanel"]]];
+let folded = new Set(); try { folded = new Set(JSON.parse(localStorage.getItem("jarvisFolded") || "[]")); } catch {}
+const panelLabel = (sec) => { const h = sec.querySelector("h2"); return h ? Array.from(h.childNodes).filter(n => n.nodeType === 3).map(n => n.textContent).join("").trim() : sec.id; };
+function hudHeight() { document.documentElement.style.setProperty("--hudh", ($(".hud")?.offsetHeight || 130) + "px"); }
+function jumpCounts() {   // small badges: what is waiting inside a panel
+  const c = {};
+  const needs = (state.brief?.items || []).filter(i => i.needs_reply).length; if (needs) c.inboxPanel = needs;
+  const decs = (state.decisions?.items || []).length + (state.followups || []).filter(f => f.status === "ready").length; if (decs) c.decisionsPanel = decs;
+  const down = state.sites.filter(s => !s.ok).length; if (down) c.opsPanel = { n: down, crit: true };
+  const al = (state.alerts || []).filter(a => Date.now() - new Date(a.at) < 3 * 3600e3).length; if (al) c.alertPanel = al;
+  const live = (state.sports?.games || []).filter(x => x.fav && x.state === "in").length; if (live) c.sportsPanel = live;
+  const failed = (Array.isArray(state.watch?.payments) ? state.watch.payments : []).filter(x => x.state === "failed").length; if (failed) c.watchPanel = { n: failed, crit: true };
+  const nws = (state.wx?.nws || []).length; if (nws) c.wxPanel = { n: nws, crit: true };
+  const rem = (state.reminders || []).length; if (rem) c.upcomingPanel = rem;
+  return c;
+}
+function renderJump() {
+  const counts = jumpCounts();
+  const hadFocus = document.activeElement?.closest?.("#jump") ? document.activeElement.dataset.jump : null;   // keyboard focus survives the rebuild
+  $("#jump").innerHTML = JUMP_GROUPS.map(([g, ids]) => `<span class="g">${g}</span>` + ids.map(id => { const sec = $("#" + id); if (!sec) return ""; const c = counts[id]; const n = c == null ? "" : (typeof c === "object" ? c.n : c); const crit = typeof c === "object" && c.crit; const f = folded.has(id); return `<button data-jump="${id}" class="${f ? "fold" : ""}" title="${f ? "Folded: click to open it" : "Jump to " + esc(panelLabel(sec))}">${esc(panelLabel(sec))}<b class="${crit ? "crit" : ""}">${esc(String(n))}</b></button>`; }).join("")).join("") + `<span class="sp"></span><button class="all" id="jumpAll" title="Open every folded panel">OPEN ALL</button>`;
+  $("#jump").querySelectorAll("[data-jump]").forEach(b => b.onclick = () => jumpTo(b.dataset.jump));
+  $("#jumpAll").onclick = () => { folded.clear(); saveFold(); applyFold(); };
+  if (hadFocus) $("#jump").querySelector(`[data-jump="${CSS.escape(hadFocus)}"]`)?.focus();
+  jumpSpot();
+}
+function jumpTo(id) { const sec = $("#" + id); if (!sec) return; if (folded.has(id)) { folded.delete(id); saveFold(); applyFold(); } sec.scrollIntoView({ behavior: "smooth", block: "start" }); sec.classList.remove("pulse"); void sec.offsetWidth; sec.classList.add("pulse"); }
+function saveFold() { try { localStorage.setItem("jarvisFolded", JSON.stringify([...folded])); } catch {} }
+function applyFold() {
+  $$("#main > .panel[id]").forEach(sec => {
+    const f = folded.has(sec.id), was = sec.classList.contains("folded"); sec.classList.toggle("folded", f);
+    const btn = sec.querySelector(".foldb"); if (btn) { btn.textContent = f ? "+" : "–"; btn.title = f ? "Open this panel" : "Fold this panel down to its header"; btn.setAttribute("aria-expanded", f ? "false" : "true"); }
+    if (was && !f) {   // the globe and the radar map need a nudge after being hidden
+      if (sec.id === "worldPanel") setTimeout(() => { initGlobe(); globe && globe.width($("#globe").clientWidth).height($("#globe").clientHeight || 360); }, 60);
+      if (sec.id === "wxPanel" && map) setTimeout(() => map.invalidateSize(), 50);
+    }
+  });
+  renderJump();
+}
+function jumpSpot() {   // light the shortcut for the panel under the header
+  if (innerWidth < 900) return;
+  const hh = ($(".hud")?.offsetHeight || 130) + 20; let best = null;
+  for (const sec of $$("#main > .panel[id]")) { const r = sec.getBoundingClientRect(); if (r.height && r.bottom > hh + 40 && r.top < innerHeight * .6) { best = sec.id; break; } }
+  $("#jump").querySelectorAll("[data-jump]").forEach(b => b.classList.toggle("on", b.dataset.jump === best));
+}
+function hudCondense() {   // desktop: once scrolled past the top the header shrinks to one line of chips + one line of shortcuts
+  const hud = $(".hud"); if (!hud) return; const on = hud.classList.contains("condensed");
+  const want = innerWidth >= 900 && (scrollY > 120 || (on && scrollY >= 40));
+  if (want !== on) { hud.classList.toggle("condensed", want); setTimeout(hudHeight, 220); hudHeight(); }
+}
+let jumpRaf = 0; addEventListener("scroll", () => { if (!jumpRaf) jumpRaf = requestAnimationFrame(() => { jumpRaf = 0; hudCondense(); jumpSpot(); }); }, { passive: true });
+function initFold() {
+  $$("#main > .panel[id]").forEach(sec => {
+    if (sec.id === "brainPanel" || sec.id === "phoneInfo") return;
+    const h = sec.querySelector("h2"); if (!h || h.querySelector(".foldb")) return;
+    const b = document.createElement("button"); b.className = "foldb"; b.type = "button"; b.setAttribute("aria-label", "Fold panel"); b.setAttribute("aria-expanded", "true");
+    b.onclick = (e) => { e.stopPropagation(); if (folded.has(sec.id)) folded.delete(sec.id); else folded.add(sec.id); saveFold(); applyFold(); };
+    h.appendChild(b);
+  });
+  applyFold(); hudHeight(); setTimeout(hudHeight, 800);
+}
+
+/* ---------- home location ---------- */
+function renderHome() { try { renderScanner(); clockTick(); } catch {} const hm = state.cfg.home || {}; $("#homeBtn").textContent = (hm.key === "az" ? "AZ" : "TX") + (hm.mode === "auto" ? " · AUTO" : ""); }
+async function setHome(body) { try { state.cfg.home = await fetch("/api/home", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()); renderHome(); await loadState(); loadWeather(); if (globe) { globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200); loadFlights(); } } catch {} }
+$("#homeBtn").onclick = () => { const hm = state.cfg.home || {}; const order = hm.mode === "auto" ? { key: hm.key === "az" ? "tx" : "az", mode: "manual" } : hm.key === "tx" ? { key: "az", mode: "manual" } : { mode: "auto", deviceTz: Intl.DateTimeFormat().resolvedOptions().timeZone }; setHome(order); };
+
+/* ---------- World (OSIRIS-style) ---------- */
+let globalAc = [], globalAt = 0, routeCache = {};
+let ships = [], shipsAt = 0, shipEls = new Map(), shipSel = null;
+const SHIP_SVG = `<svg viewBox="0 0 24 24"><path d="M12 2 L17 10 L17 19 L12 22 L7 19 L7 10 Z" fill="#39f0a8" stroke="#04070d" stroke-width="1"/><circle cx="12" cy="12" r="2" fill="#04070d"/></svg>`;
+/* Norwegian Cruise Line fleet: every ship live or last known (/api/world/fleet), listed beside the globe and lit amber on it */
+let fleet = null, fleetSet = new Set();
+const fleetTitle = (s) => String(s).toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+async function loadFleet() { try { fleet = await fetch("/api/world/fleet").then(r => r.json()); fleetSet = new Set((fleet.ships || []).map(s => s.name)); } catch { return; } renderFleet(); }
+function renderFleet() {
+  if (!fleet?.ships) return; const live = fleet.ships.filter(s => s.live).length; $("#fleetSub").textContent = `${live} of ${fleet.ships.length} live`;
+  const age = (m) => m == null ? "never heard" : m < 3 ? "now" : m < 90 ? m + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " d";
+  const order = fleet.ships.map((s, i) => i).sort((a, b) => (fleet.ships[a].ageMin ?? 1e9) - (fleet.ships[b].ageMin ?? 1e9));
+  $("#fleetRows").innerHTML = order.map(i => { const s = fleet.ships[i]; return `<button class="${s.live ? "" : "off"}" data-i="${i}"><span>${esc(fleetTitle(s.name))}${s.destination ? ` <small>→ ${esc(s.destination)}</small>` : ""}</span><small>${s.live && s.speed_kt != null ? Math.round(s.speed_kt * 1.15) + " mph · " : ""}${age(s.ageMin)}</small></button>`; }).join("");
+  $("#fleetRows").querySelectorAll("button").forEach(b => b.onclick = () => openFleetShip(fleet.ships[+b.dataset.i]));
+}
+function openFleetShip(s) {
+  if (s.lat == null) { $("#placeHits").innerHTML = `<div class="empty">${esc(fleetTitle(s.name))} has not been heard by any receiver since tracking began.</div>`; return; }
+  initGlobe(); const live = ships.find(r => r[0] === s.mmsi); if (live) return openShip(live);
+  openShip([s.mmsi, s.name, s.lat, s.lon, s.heading, s.speed_kt, 60, s.destination, s.length_m, (s.ageMin || 0) * 60]);
+  $("#flightCard").insertAdjacentHTML("beforeend", `<div class="empty">Not in the live feed: last heard ${esc(new Date(s.seen).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}. Mid-ocean legs have no shore receivers.</div>`);
+}
+setTimeout(loadFleet, 2500);
+async function loadShips() { try { const d = await fetch("/api/world/ships").then(r => r.json()); ships = d.ships || []; shipsAt = d.at ? new Date(d.at).getTime() : 0; } catch {} renderWorld(); }
+function shipMarker(r) {
+  const key = r[0]; let el = shipEls.get(key);
+  if (!el) { el = document.createElement("div"); el.className = "ship"; el.innerHTML = SHIP_SVG + `<span class="cs"></span>`; el.onclick = (e) => { e.stopPropagation(); openShip(r); }; shipEls.set(key, el); }
+  el.querySelector("svg").style.transform = `rotate(${r[4] || 0}deg)`; el.querySelector(".cs").textContent = r[1] || ""; el.classList.toggle("sel", shipSel === key); el.classList.toggle("fleet", fleetSet.has(String(r[1] || "").toUpperCase().trim())); el.classList.toggle("big", (r[8] || 0) >= 200); el.title = `${r[1] || r[0]} · ${r[5] ?? "?"} kt · to ${r[7] || "?"}`;
+  return el;
+}
+function openShip(r) {
+  shipSel = r[0]; if (PHONE) showView("world");
+  $("#camView").hidden = true; $("#flightCard").hidden = false;
+  $("#flightCard").innerHTML = `<div class="route"><div><b>${esc(r[1] || "Unnamed")}</b><small>${(r[8] || 0) >= 200 ? "cruise ship" : "passenger vessel"} · ${r[8] ? r[8] + " m" : "length unknown"}</small></div><span class="arrow">⚓</span><div><b>${esc(r[7] || "—")}</b><small>destination</small></div></div><div class="facts"><span>speed <b>${r[5] != null ? Math.round(r[5] * 1.15) + " mph" : "?"}</b></span><span>heading <b>${r[4] != null ? Math.round(r[4]) + "°" : "?"}</b></span><span>reported <b>${r[9] < 120 ? "just now" : Math.round(r[9] / 60) + " min ago"}</b></span><span>MMSI <b>${r[0]}</b></span></div>`;
+  globe && globe.pointOfView({ lat: r[2], lng: r[3], altitude: Math.min(globe.pointOfView().altitude, 0.6) }, 900); renderWorld();
+}
+let globe = null, worldTimers = [], worldData = { flights: [], sats: [], quakes: [], fires: [], iss: null, tracked: null, cams: [] }, satRecs = [], worldLayers = { flights: true, sats: true, quakes: true, fires: true, cams: true, webcams: true, ships: true };
+const KT_MPH = 1.15078;
+function worldHome() { const p = state.place || state.wx || {}; return { lat: +(p.lat || 33.15), lng: +(p.lon || -96.82) }; }
+let globeLib = null;
+const loadScript = (src) => new Promise((ok, fail) => { const t = document.createElement("script"); t.src = src; t.onload = ok; t.onerror = fail; document.head.appendChild(t); });
+function initGlobe() {
+  if (globe || !$("#globe")) return;
+  if (!window.Globe || !window.satellite) { (globeLib ||= Promise.all([loadScript("https://cdn.jsdelivr.net/npm/globe.gl@2.46.2/dist/globe.gl.min.js"), loadScript("https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js")]).catch((e) => { globeLib = null; throw e; })).then(initGlobe, () => {}); return; }
+  const el = $("#globe");
+  globe = Globe({ animateIn: false })(el).width(el.clientWidth).height(el.clientHeight || 520)
+    // crisp dark map tiles at every zoom level, matching the radar map
+    .globeTileEngineUrl((x, y, l) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/${l}/${y}/${x}`)
+    .backgroundColor("rgba(0,0,0,0)").showAtmosphere(true).atmosphereColor("#19d3ff").atmosphereAltitude(0.12)
+    // aircraft, fires and the home pin are HTML markers: crisp icons, no 3D columns
+    .htmlElementsData([]).htmlLat("lat").htmlLng("lng").htmlAltitude("alt").htmlTransitionDuration(0).htmlElement((d) => d.el)
+    // satellites float at their real altitude as small glowing particles
+    .particlesData([]).particlesList((d) => d.pts).particleLat("lat").particleLng("lng").particleAltitude("alt").particlesSize(3).particlesSizeAttenuation(false).particlesColor((d) => d.color);
+  globe.ringsData([]).ringColor(() => (t) => `rgba(255,110,90,${1 - t})`).ringMaxRadius("maxR").ringPropagationSpeed(1.2).ringRepeatPeriod(1600).ringAltitude(0.0015);
+  globe.labelsData([]).labelText("text").labelSize(0.45).labelDotRadius(0.18).labelColor(() => "rgba(255,140,120,.9)").labelResolution(2).labelAltitude(0.002);
+  globe.arcsData([]).arcStartLat("a").arcStartLng("b").arcEndLat("c").arcEndLng("d").arcColor(() => ["rgba(255,179,64,.9)", "rgba(25,211,255,.9)"]).arcStroke(0.6).arcDashLength(0.4).arcDashGap(0.2).arcDashAnimateTime(2500).arcAltitudeAutoScale(0.35);
+  if (!worldVisible) { try { globe.pauseAnimation(); } catch {} }
+  globe.controls().autoRotate = false; globe.controls().enableZoom = true; globe.controls().minDistance = 101; globe.controls().zoomSpeed = 1.2;
+  globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 0);
+  const zoomBy = (f) => { const v = globe.pointOfView(); globe.pointOfView({ ...v, altitude: Math.max(0.01, Math.min(4, v.altitude * f)) }, 400); };
+  $("#zIn").onclick = () => zoomBy(0.55); $("#zOut").onclick = () => zoomBy(1.8);
+  if (PHONE && matchMedia("(pointer: coarse)").matches) { const g = $("#globeGate"); g.hidden = false; globe.controls().enabled = false; g.onclick = () => { g.hidden = true; globe.controls().enabled = true; }; }
+  let viewT = null; const onView = () => { clearTimeout(viewT); viewT = setTimeout(() => { loadCamsInView(); loadPlacesInView(); loadWebcamsInView(); renderWorld(false); }, 350); };
+  globe.controls().addEventListener("change", onView);
+  const onScreen = (fn) => () => { if (worldVisible && !document.hidden) fn(); else worldStale = true; };
+  loadGlobal(); worldTimers.push(setInterval(onScreen(loadGlobal), 2 * 60000)); loadShips(); worldTimers.push(setInterval(onScreen(loadShips), 90000)); loadFleet(); worldTimers.push(setInterval(onScreen(loadFleet), 90000));
+  new ResizeObserver(() => globe && globe.width(el.clientWidth).height(el.clientHeight || 520)).observe(el);
+  if (PHONE) el.style.touchAction = "pan-y";
+  loadWorld(); loadSats(); loadCams(); loadPlacesInView(); loadWebcamsInView();
+  if (!state.cfg.windy) { const w = $("#windyWrap"); w.title = "Add a free Windy API key to show scenic webcams worldwide"; w.style.opacity = .45; }
+  globe.onZoom && globe.onZoom(() => { onView(); clearTimeout(window.__camT); window.__camT = setTimeout(() => renderWorld(false), 200); });
+  worldTimers.push(setInterval(onScreen(loadFlights), 30000), setInterval(onScreen(moveFlights), 2000), setInterval(onScreen(loadEvents), 5 * 60000), setInterval(onScreen(tickSats), 2000));
+}
+const PLANE = '<svg viewBox="0 0 24 24"><path fill="COLOR" d="M12 2c.6 0 1 .5 1 1.2v6.1l7.6 4.4c.3.2.4.5.4.8v1.1c0 .4-.4.7-.8.6L13 14.2v4.3l2.3 1.7c.2.1.3.3.3.6v.8c0 .3-.3.5-.6.4L12 21l-3 1c-.3.1-.6-.1-.6-.4v-.8c0-.2.1-.4.3-.6l2.3-1.7v-4.3l-7.2 2c-.4.1-.8-.2-.8-.6v-1.1c0-.3.1-.6.4-.8l7.6-4.4V3.2C11 2.5 11.4 2 12 2z"/></svg>';
+const markerCache = new Map();
+function acMarker(a, tracked) {
+  const key = a.hex || a.flight; let el = markerCache.get(key);
+  if (!el) { el = document.createElement("div"); el.className = "ac"; markerCache.set(key, el); }
+  el.onclick = (e) => { e.stopPropagation(); showFlight(a); };
+  const color = a.emergency ? "#ff4d5e" : tracked ? "#ffb340" : "#7be8ff";
+  el.className = "ac" + (tracked ? " tracked" : "") + (a.emergency ? " emerg" : "");
+  const look = color + "|" + (tracked ? a.flight || a.reg : "");   // rebuild the SVG only when it changes; the 2 s move only turns it
+  if (el.dataset.look !== look) { el.dataset.look = look; el.innerHTML = PLANE.replace("COLOR", color) + (tracked ? `<span class="cs">${esc(a.flight || a.reg)}</span>` : ""); }
+  el.firstChild.style.transform = `rotate(${a.track || 0}deg)`;
+  el.title = `${a.flight || a.reg || a.hex} ${a.type || ""} · ${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "on ground"}${a.gs ? " · " + Math.round(a.gs * KT_MPH) + " mph" : ""}${a.ownOp ? " · " + a.ownOp : ""}`;
+  return el;
+}
+const fireEls = new Map();
+function fireMarker(f) {
+  let el = fireEls.get(f.name + f.lat); if (!el) { el = document.createElement("div"); el.className = "fire"; fireEls.set(f.name + f.lat, el); }
+  const px = Math.max(8, Math.min(26, 6 + Math.sqrt(f.acres) / 12)); el.style.width = el.style.height = px + "px";
+  el.title = `${f.name} fire (${f.state}) · ${f.acres.toLocaleString()} acres · ${f.contained ?? "?"}% contained`;
+  el.onclick = () => globe.pointOfView({ lat: f.lat, lng: f.lon, altitude: 0.15 }, 1200);
+  return el;
+}
+let homeEl = null;
+const CAM_SVG = '<svg viewBox="0 0 24 24"><rect x="2" y="7" width="14" height="10" rx="2" fill="#39f0a8"/><path d="M16 10l6-3v10l-6-3z" fill="#39f0a8"/><circle cx="9" cy="12" r="2.5" fill="#04070d"/></svg>';
+const camEls = new Map();
+let camsTotal = 0, camsKey = "", places = [], placesKey = "";
+const placeEls = new Map();
+async function loadPlacesInView() {
+  if (!globe) return; const v = globe.pointOfView();
+  const r = Math.max(0.25, Math.min(60, v.altitude * 35)), n = v.altitude > 1.5 ? 40 : v.altitude > 0.4 ? 60 : 80;
+  const key = [v.lat.toFixed(1), v.lng.toFixed(1), r.toFixed(2)].join(","); if (key === placesKey) return; placesKey = key;
+  try { places = await fetch(`/api/world/places?lat=${v.lat.toFixed(3)}&lon=${v.lng.toFixed(3)}&r=${r.toFixed(2)}&n=${n}`).then(x => x.json()); } catch { places = []; }
+  renderWorld(false);
+}
+function placeMarker(p, i) {
+  let el = placeEls.get(p[0] + p[1]); if (!el) { el = document.createElement("div"); el.textContent = p[0].replace(/, [A-Z]{2}$/, ""); placeEls.set(p[0] + p[1], el); }
+  el.className = "plabel" + (i < 6 ? " huge" : i < 20 ? " big" : ""); return el;
+}
+async function loadCams() { loadCamsInView(); }
+async function loadCamsInView() {
+  if (!globe || !worldLayers.cams) { worldData.cams = []; return; }
+  const v = globe.pointOfView(); if (v.altitude > 0.8) { worldData.cams = []; renderWorld(false); return; }
+  const r = Math.max(0.3, Math.min(25, v.altitude * 30)); const key = [v.lat.toFixed(1), v.lng.toFixed(1), r.toFixed(1)].join(",");
+  if (key === camsKey) return; camsKey = key;
+  try { const d = await fetch(`/api/world/cams?lat=${v.lat.toFixed(3)}&lon=${v.lng.toFixed(3)}&r=${r.toFixed(2)}`).then(x => x.json()); camsTotal = d.total || camsTotal; worldData.cams = (d.cams || []).map(c => ({ lat: c[0], lon: c[1], n: c[2], src: c[3], img: c[4] })); } catch {}
+  renderWorld(false);
+}
+let webcams = [], webcamsKey = "";
+const WCAM_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#a78bfa"/><circle cx="12" cy="12" r="5" fill="#04070d"/><circle cx="12" cy="12" r="2.2" fill="#fff"/></svg>';
+const wcamEls = new Map();
+async function loadWebcamsInView() {
+  if (!globe || !worldLayers.webcams || !state.cfg.windy) { webcams = []; return; }
+  const v = globe.pointOfView(); if (v.altitude > 1.2) { webcams = []; renderWorld(false); return; }
+  const km = Math.max(5, Math.min(250, v.altitude * 1000)); const key = [v.lat.toFixed(1), v.lng.toFixed(1), Math.round(km)].join(",");
+  if (key === webcamsKey) return; webcamsKey = key;
+  try { const d = await fetch(`/api/world/windy?lat=${v.lat.toFixed(3)}&lon=${v.lng.toFixed(3)}&km=${Math.round(km)}`).then(x => x.json()); webcams = d.cams || []; if (d.error) console.warn(d.error); } catch { webcams = []; }
+  renderWorld(false);
+}
+function wcamMarker(w) {
+  let el = wcamEls.get(w.id); if (!el) { el = document.createElement("div"); el.className = "wcam"; el.innerHTML = WCAM_SVG; el.title = w.n; wcamEls.set(w.id, el); }
+  el.onclick = () => openWebcam(w); return el;
+}
+function openWebcam(w) {
+  clearInterval(camTimer);
+  $("#camTitle").textContent = w.n; $("#camView").hidden = false; $("#camImg").src = w.img || w.thumb;
+  $("#camMeta").innerHTML = `${esc(w.city)} · Windy webcam${w.live || w.page ? ` · <a href="${safeUrl(w.live || w.page)}" target="_blank" rel="noopener">watch live / timelapse</a>` : ""}`;
+}
+async function loadGlobal() { try { const d = await fetch("/api/world/global").then(r => r.json()); globalAc = d.ac || []; globalAt = d.at ? new Date(d.at).getTime() : Date.now(); } catch {} renderWorld(false); }
+function camMarker(c) {
+  const key = c.img; let el = camEls.get(key);
+  if (!el) { el = document.createElement("div"); el.className = "gcam"; el.innerHTML = CAM_SVG; el.title = c.n; el.onclick = () => openCam(c); camEls.set(key, el); }
+  return el;
+}
+let camTimer = null;
+function camSrc(c) { if (c.img.startsWith("tx:")) { const [, d, ...id] = c.img.split(":"); return `/api/world/cam?d=${d}&id=${encodeURIComponent(id.join(":"))}`; } return c.img; }
+function openCam(c) {
+  const show = () => { const u = camSrc(c); $("#camImg").src = u + (u.includes("?") ? "&" : "?") + "t=" + Date.now(); $("#camMeta").textContent = `${c.src} · updated ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })} · refreshes every 30 s`; };
+  $("#camTitle").textContent = c.n; $("#camView").hidden = false; show(); clearInterval(camTimer); camTimer = setInterval(show, 30000);
+}
+$("#camClose").onclick = () => { $("#camView").hidden = true; clearInterval(camTimer); $("#camImg").removeAttribute("src"); };
+// only draw cameras near the current view so thousands of markers don't bog down the page
+function visibleCams() { return worldLayers.cams && globe && globe.pointOfView().altitude <= 0.8 ? worldData.cams : []; }
+async function loadWorld() { await Promise.all([loadFlights(), loadEvents()]); }
+let flightsAt = 0, flightsBase = [];
+async function loadFlights() {
+  try { const d = await fetch("/api/world/flights").then(r => r.json()); flightsBase = d.ac || []; flightsAt = d.at ? new Date(d.at).getTime() : Date.now(); worldData.feedAt = d.at;
+    if (worldData.tracked) { const t = d.tracks?.[worldData.tracked.q] || flightsBase.filter(a => a.flight === worldData.tracked.q || a.reg === worldData.tracked.q); worldData.tracked.ac = t?.[0] || worldData.tracked.ac; worldData.tracked.base = worldData.tracked.ac; renderTracked(); } } catch {}
+  moveFlights();
+}
+// dead reckoning: advance each aircraft along its heading at its ground speed since the feed time
+function project(a, secs) { if (!a || a.gs == null || a.track == null || !a.alt) return a; const nm = a.gs * secs / 3600, br = a.track * Math.PI / 180, R = 3440.065, la = a.lat * Math.PI / 180, lo = a.lon * Math.PI / 180, d = nm / R;
+  const la2 = Math.asin(Math.sin(la) * Math.cos(d) + Math.cos(la) * Math.sin(d) * Math.cos(br)), lo2 = lo + Math.atan2(Math.sin(br) * Math.sin(d) * Math.cos(la), Math.cos(d) - Math.sin(la) * Math.sin(la2));
+  return { ...a, lat: la2 * 180 / Math.PI, lon: lo2 * 180 / Math.PI }; }
+function moveFlights() { if (!worldVisible || worldBusy()) { worldDirty = true; return; } const secs = Math.min(180, (Date.now() - flightsAt) / 1000); worldData.flights = worldLayers.flights ? flightsBase.map(a => project(a, secs)) : []; if (worldData.tracked?.base) worldData.tracked.ac = project(worldData.tracked.base, secs); renderWorld(); }
+async function loadEvents() { try { const d = await fetch("/api/world/events").then(r => r.json()); worldData.quakes = d.quakes || []; worldData.fires = d.fires || []; worldData.iss = d.iss; } catch {} renderWorld(); }
+async function loadSats() {
+  if (!window.satellite) { setTimeout(loadSats, 800); return; }
+  try { const tles = await fetch("/api/world/sats").then(r => r.json()); satRecs = tles.map(([name, l1, l2]) => { try { return { name, rec: satellite.twoline2satrec(l1, l2) }; } catch { return null; } }).filter(Boolean); } catch {}
+  tickSats();
+}
+function tickSats() {
+  if (!globe || !window.satellite || !satRecs.length) return;
+  if (!worldVisible || worldBusy()) { worldDirty = true; return; }
+  const now = new Date(), gmst = satellite.gstime(now);
+  worldData.sats = satRecs.map(s => { try { const pv = satellite.propagate(s.rec, now); if (!pv.position) return null; const g = satellite.eciToGeodetic(pv.position, gmst); return { name: s.name, lat: satellite.degreesLat(g.latitude), lng: satellite.degreesLong(g.longitude), altKm: g.height }; } catch { return null; } }).filter(Boolean);
+  renderWorld(true);
+}
+let lastWorldRender = 0;
+/* The globe only works while it is on screen: its WebGL loop and the 2-second flight/satellite re-projection
+   (thousands of markers rebuilt each time) were stalling the whole page, which showed up as a stuttering core that
+   lagged the voice. Off screen (another phone view, scrolled past on desktop) it pauses; it also holds still while
+   JARVIS is speaking or listening so the analyser gets every frame. */
+let worldVisible = false, worldDirty = false, worldStale = false;
+const worldIO = new IntersectionObserver((es) => { worldVisible = es.some(e => e.isIntersecting); if (!globe) return; try { worldVisible ? globe.resumeAnimation() : globe.pauseAnimation(); } catch {} if (worldVisible && worldStale) { worldStale = false; loadFlights(); loadGlobal(); loadShips(); loadFleet(); } if (worldVisible && worldDirty) { worldDirty = false; renderWorld(); } }, { threshold: 0.02 });
+if ($("#worldPanel")) worldIO.observe($("#worldPanel"));
+const worldBusy = () => typeof speaking !== "undefined" && (speaking || listening);
+function pruneMarkers() { for (const m of [markerCache, fireEls, camEls, wcamEls, shipEls, placeEls]) if (m.size > 1500) for (const [k, el] of m) if (!el.isConnected) m.delete(k); }
+function renderWorld(satsOnly) {
+  if (!satsOnly) setTimeout(pruneMarkers, 0);
+  if (!globe) return;
+  if (!worldVisible || worldBusy()) { worldDirty = true; return; }
+  const html = [];
+  const tHex = worldData.tracked?.ac?.hex;
+  const pov = globe.pointOfView(), secsG = Math.min(900, (Date.now() - globalAt) / 1000);
+  const localHex = new Set(worldData.flights.map(a => a.hex));
+  const gProj = worldLayers.flights ? globalAc.filter(g => !g[7]).map(g => project({ hex: g[0], flight: g[1], lat: g[2], lon: g[3], alt: g[4], track: g[5], gs: g[6] }, secsG)) : [];
+  if (worldLayers.flights) for (const a of worldData.flights) html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) });
+  if (worldLayers.flights && pov.altitude < 0.5) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0;
+    for (const a of gProj) { if (localHex.has(a.hex) || Math.abs(a.lat - pov.lat) > r || Math.abs(a.lon - pov.lng) * kx > r * 1.6) continue; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, a.hex === tHex) }); if (++n > 350) break; } }
+  if (worldData.tracked?.ac && !worldData.flights.some(a => a.hex === tHex)) { const a = worldData.tracked.ac; html.push({ lat: a.lat, lng: a.lon, alt: 0.001, el: acMarker(a, true) }); }
+  if (worldLayers.ships) { const r = pov.altitude * 45, kx = Math.max(0.2, Math.cos(pov.lat * Math.PI / 180)); let n = 0; const near = pov.altitude < 0.7;
+    for (const sh of ships) { const fl = fleetSet.has(String(sh[1] || "").toUpperCase().trim()); if (!fl && (!near || (sh[0] !== shipSel && (Math.abs(sh[2] - pov.lat) > r || Math.abs(sh[3] - pov.lng) * kx > r * 1.6)))) continue; html.push({ lat: sh[2], lng: sh[3], alt: 0.0008, el: shipMarker(sh) }); if (++n > 400) break; } }
+  if (worldLayers.fires) for (const f of worldData.fires) html.push({ lat: f.lat, lng: f.lon, alt: 0, el: fireMarker(f) });
+  for (const c of visibleCams()) html.push({ lat: c.lat, lng: c.lon, alt: 0, el: camMarker(c) });
+  places.forEach((p, i) => html.push({ lat: p[1], lng: p[2], alt: 0.0005, el: placeMarker(p, i) }));
+  if (worldLayers.webcams && pov.altitude <= 1.2) for (const w of webcams) html.push({ lat: w.lat, lng: w.lon, alt: 0, el: wcamMarker(w) });
+  if (!homeEl) { homeEl = document.createElement("div"); homeEl.className = "homepin"; }
+  homeEl.textContent = (state.place?.name || "Home").split(",")[0].toUpperCase(); html.push({ ...worldHome(), alt: 0, el: homeEl });
+  globe.htmlElementsData(html);
+  const satPts = worldLayers.sats ? worldData.sats.filter(s => !/ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: Math.min(0.5, s.altKm / 6371) })) : [];
+  const issPts = worldLayers.sats ? worldData.sats.filter(s => /ISS/.test(s.name)).map(s => ({ lat: s.lat, lng: s.lng, alt: s.altKm / 6371 })) : [];
+  const acPts = worldLayers.flights && pov.altitude >= 0.5 ? gProj.map(a => ({ lat: a.lat, lng: a.lon, alt: 0.004 })) : [];
+  const shipPts = worldLayers.ships && pov.altitude >= 0.7 ? ships.map(sh => ({ lat: sh[2], lng: sh[3], alt: 0.003 })) : [];
+  globe.particlesData([{ pts: acPts, color: "#7be8ff" }, { pts: satPts, color: "#b9a6ff" }, { pts: issPts, color: "#ffffff" }, { pts: shipPts, color: "#39f0a8" }]);
+  if (!satsOnly) {
+    globe.ringsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 3).map(q => ({ lat: q.lat, lng: q.lon, maxR: Math.max(0.6, (q.mag - 2.5) * 1.2) })) : []);
+    globe.labelsData(worldLayers.quakes ? worldData.quakes.filter(q => q.mag >= 4.5).map(q => ({ lat: q.lat, lng: q.lon, text: "M" + q.mag.toFixed(1) })) : []);
+  }
+  const now = Date.now(); if (satsOnly && now - lastWorldRender < 10000) return; lastWorldRender = now;
+  $("#worldSub").textContent = `${globalAc.length.toLocaleString()} aircraft · ${ships.length ? ships.length.toLocaleString() + " ships · " : ""}${camsTotal ? camsTotal.toLocaleString() + " cameras (zoom in) · " : ""}${worldData.flights.length} near ${(state.place?.name || "home").split(",")[0]} · ${worldData.sats.length} satellites · ${worldData.quakes.length} quakes 24h · ${worldData.fires.length} wildfires`;
+  const big = [...worldData.quakes].sort((a, b) => b.mag - a.mag).slice(0, 5), fires = worldData.fires.slice(0, 5);
+  const nearest = [...worldData.flights].filter(a => a.alt > 0).sort((a, b) => (b.alt || 0) - (a.alt || 0)).slice(0, 6);
+  $("#worldInfo").innerHTML = `${worldData.iss ? `<h3>SPACE STATION</h3><div class="row" data-go="${worldData.iss.lat},${worldData.iss.lon}"><span>ISS over ${worldData.iss.lat.toFixed(1)}°, ${worldData.iss.lon.toFixed(1)}°</span><small>${worldData.iss.alt} km · ${Math.round(worldData.iss.vel * 0.621)} mph</small></div>` : ""}
+    <h3>OVERHEAD</h3>${nearest.map(a => `<div class="row" data-go="${a.lat},${a.lon}" data-fl="${esc(a.flight || a.reg)}"><span>${esc(a.flight || a.reg || a.hex)} <small>${esc(a.type)}</small></span><small>${Math.round(a.alt).toLocaleString()} ft</small></div>`).join("") || '<div class="empty">no aircraft reported</div>'}
+    <h3>EARTHQUAKES · 24H</h3>${big.map(q => `<div class="row" data-go="${q.lat},${q.lon}"><span>M${q.mag.toFixed(1)} ${esc(q.place || "")}</span><small>${fmtAgo(new Date(q.time).toISOString())}</small></div>`).join("") || '<div class="empty">none</div>'}
+    <h3>LARGEST WILDFIRES</h3>${fires.map(f => `<div class="row" data-go="${f.lat},${f.lon}"><span>${esc(f.name)} <small>${esc(f.state)}</small></span><small>${f.acres.toLocaleString()} ac · ${f.contained ?? "?"}%</small></div>`).join("") || '<div class="empty">none</div>'}`;
+  $("#worldInfo").querySelectorAll("[data-go]").forEach(r => r.onclick = () => { const [lat, lng] = r.dataset.go.split(",").map(Number); globe.pointOfView({ lat, lng, altitude: 0.6 }, 1200); if (r.dataset.fl) { $("#trackQ").value = r.dataset.fl; trackIt(r.dataset.fl); } });
+}
+async function showFlight(a) {
+  const cs = (a.flight || "").trim(); const card = $("#flightCard"); card.hidden = false;
+  const facts = `<div class="facts"><span>alt <b>${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "ground"}</b></span><span>speed <b>${a.gs ? Math.round(a.gs * KT_MPH) + " mph" : "–"}</b></span><span>heading <b>${a.track != null ? Math.round(a.track) + "°" : "–"}</b></span>${a.type ? `<span>type <b>${esc(a.type)}</b></span>` : ""}${a.reg ? `<span>reg <b>${esc(a.reg)}</b></span>` : ""}</div>`;
+  card.innerHTML = `<div class="k" style="font-family:var(--mono);font-size:10px;letter-spacing:.25em;color:#ffb340">FLIGHT ${esc(cs || a.reg || a.hex)}</div><div class="empty">looking up the route…</div>${facts}<div class="rrow" style="display:flex;gap:6px"><button class="btn sm" id="fcTrack">FOLLOW</button><button class="btn sm" id="fcClose">CLOSE</button></div>`;
+  $("#fcClose").onclick = () => { card.hidden = true; globe.arcsData([]); };
+  $("#fcTrack").onclick = () => { $("#trackQ").value = cs || a.reg; trackIt(cs || a.reg); };
+  if (!cs) { card.querySelector(".empty").textContent = "No callsign broadcast, so the route is unknown."; return; }
+  let r = routeCache[cs]; if (r === undefined) { try { r = await fetch("/api/world/route?cs=" + encodeURIComponent(cs)).then(x => x.json()); } catch { r = null; } routeCache[cs] = r; }
+  const box = card.querySelector(".empty");
+  if (!r || r.none || !r.from) { box.textContent = "Route not on file for " + cs + "."; globe.arcsData([]); return; }
+  box.outerHTML = `<div style="font-size:12px;color:var(--dim)">${esc(r.airline || "")} ${esc(r.flight || cs)}</div><div class="route"><div><b>${esc(r.from.iata || r.from.icao)}</b><small>${esc(r.from.city || r.from.name)}</small></div><span class="arrow">✈</span><div><b>${esc(r.to?.iata || r.to?.icao || "?")}</b><small>${esc(r.to?.city || r.to?.name || "")}</small></div></div>`;
+  const arcs = [{ a: r.from.lat, b: r.from.lon, c: a.lat, d: a.lon }]; if (r.to) arcs.push({ a: a.lat, b: a.lon, c: r.to.lat, d: r.to.lon });
+  globe.arcsData(arcs);
+}
+function renderTracked() {
+  const t = worldData.tracked; if (!t) { $("#trackOut").textContent = ""; return; }
+  const a = t.ac;
+  $("#trackOut").innerHTML = a ? `<b style="color:#ffb340">${esc(a.flight || t.q)}</b> ${esc(a.type)} ${esc(a.reg)} · ${a.alt ? Math.round(a.alt).toLocaleString() + " ft" : "on the ground"} · ${a.gs ? Math.round(a.gs * KT_MPH) + " mph" : ""} · heading ${a.track != null ? Math.round(a.track) + "°" : "–"} <button class="btn sm" id="trackStop">STOP</button>` : `Tracking ${esc(t.q)}. It appears here within a minute once it's airborne and in receiver range. <button class="btn sm" id="trackStop">STOP</button>`;
+  const st = $("#trackStop"); if (st) st.onclick = () => { fetch("/api/world/untrack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ q: t.q }) }); worldData.tracked = null; renderTracked(); renderWorld(); };
+}
+async function trackIt(q) {
+  q = String(q || "").trim(); if (!q) return; worldData.tracked = { q, ac: null }; $("#trackOut").textContent = "looking…";
+  try { const t = await fetch("/api/world/track?q=" + encodeURIComponent(q)).then(r => r.json()); worldData.tracked.ac = t.aircraft?.[0] || null; worldData.tracked.base = worldData.tracked.ac; worldData.tracked.q = t.callsign || q; } catch {}
+  renderTracked(); renderWorld(); const a = worldData.tracked.ac; if (a && globe) globe.pointOfView({ lat: a.lat, lng: a.lon, altitude: 0.5 }, 1500);
+}
+function flyTo(lat, lon, label) {
+  if (!globe) return; globe.pointOfView({ lat, lng: lon, altitude: 0.06 }, 1600);
+  setTimeout(() => { camsKey = ""; placesKey = ""; loadCamsInView(); loadPlacesInView(); }, 1700);
+  $("#placeHits").innerHTML = label ? `<div class="empty">${esc(label)} · cameras load as the map arrives</div>` : "";
+}
+const shipByName = (q) => { const u = q.toUpperCase().trim(); return u.length > 2 ? ships.find(sh => String(sh[1]).toUpperCase().includes(u)) : null; };
+$("#placeForm").onsubmit = async (e) => {
+  e.preventDefault(); const q = $("#placeQ").value.trim(); if (!q) return;
+  const sh = shipByName(q); if (sh) { $("#placeHits").innerHTML = `<div class="empty">ship: ${esc(sh[1])}</div>`; openShip(sh); return; }   // a ship name finds the ship
+  const [name, region] = q.split(",").map(x => x.trim());
+  $("#placeHits").innerHTML = `<div class="empty">searching…</div>`;
+  let res = [];
+  try { res = (await fetch("https://geocoding-api.open-meteo.com/v1/search?count=8&name=" + encodeURIComponent(name)).then(r => r.json())).results || []; } catch {}
+  if (region) { const rg = region.toLowerCase(); const f = res.filter(r => [r.admin1, r.country, r.country_code].some(x => String(x || "").toLowerCase().startsWith(rg)) || (rg.length === 2 && String(r.admin1 || "").toLowerCase().startsWith(rg))); if (f.length) res = f; }
+  if (!res.length) { $("#placeHits").innerHTML = `<div class="empty">No place called "${esc(q)}" found.</div>`; return; }
+  if (res.length === 1 || res[0].population > 20 * (res[1]?.population || 0)) { const r = res[0]; flyTo(r.latitude, r.longitude, [r.name, r.admin1, r.country_code].filter(Boolean).join(", ")); return; }
+  $("#placeHits").innerHTML = res.slice(0, 6).map((r, i) => `<button data-i="${i}">${esc(r.name)}<small>${esc([r.admin1, r.country_code].filter(Boolean).join(", "))}${r.population ? " · " + r.population.toLocaleString() : ""}</small></button>`).join("");
+  $("#placeHits").querySelectorAll("button").forEach(b => b.onclick = () => { const r = res[+b.dataset.i]; flyTo(r.latitude, r.longitude, [r.name, r.admin1, r.country_code].filter(Boolean).join(", ")); });
+};
+$("#trackForm").onsubmit = (e) => { e.preventDefault(); trackIt($("#trackQ").value); };
+$("#worldHome").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 0.22 }, 1200);
+$("#worldGlobe").onclick = () => globe && globe.pointOfView({ ...worldHome(), altitude: 2.4 }, 1500);
+document.querySelectorAll("[data-layer]").forEach(cb => cb.onchange = () => { worldLayers[cb.dataset.layer] = cb.checked; if (cb.dataset.layer === "flights") loadFlights(); if (cb.dataset.layer === "webcams") { webcamsKey = ""; loadWebcamsInView(); } if (cb.dataset.layer === "cams") { camsKey = ""; loadCamsInView(); } renderWorld(); });
+(function waitGlobe() { if (window.__stateLoaded) { if ($("#worldPanel").offsetParent !== null || !PHONE) initGlobe(); else setTimeout(waitGlobe, 1500); } else setTimeout(waitGlobe, 500); })();
+
+/* ---------- radio: Global's public live streams, played in the browser for personal listening ---------- */
+const RADIO = [
+  { n: "Classic FM", s: "ClassicFM", k: ["classicfm", "classical", "classic"] },
+  { n: "Classic FM Calm", s: "ClassicFMCalm", k: ["calm", "relax"] },
+  { n: "Classic FM Movies", s: "ClassicFMMoviesMP3", k: ["movie", "film", "soundtrack"] },
+  { n: "Smooth", s: "SmoothUK", k: ["smooth"] },
+  { n: "Smooth Chill", s: "SmoothChill", k: ["chill"] },
+  { n: "LBC News", s: "LBCUK", k: ["lbc", "news", "talk"] },
+  { n: "Heart", s: "HeartUK", k: ["heart"] },
+  { n: "Capital", s: "CapitalUK", k: ["capital"] },
+  // WAAF (Boston's rock station) lives on Audacy as the WWBX 93.7 HD2 stream; AmperWave sends CORS for the hub's origin
+  // np = Audacy station id for its song-history feed (WAAF publishes none as of 2026-10-06, so the line stays blank)
+  { n: "WAAF", u: "https://live.amperwave.net/direct/audacy-wwbxhd2aac-imc", from: "Audacy · Boston's rock station", np: "101-935", k: ["waaf", "rock", "boston"] },
+  // NOAA Weather Radio: the nearest live wxradio.org stream to where he is (device location if allowed, else the TX/AZ home); u is filled by wxLoad()
+  { n: "Weather Radio", u: "", wx: true, from: "NOAA Weather Radio · finding the nearest station…", k: ["weather", "noaa", "nws"] },
+  // rest and recovery (2026-10-13, the same four Jovi plays): appended so saved alarm/station indexes keep their meaning
+  { n: "Spa · Drone Zone", u: "https://ice1.somafm.com/dronezone-128-mp3", from: "SomaFM · deep ambient, listener-supported, San Francisco", k: ["spa", "ambient", "drone", "meditat", "zone"] },
+  { n: "Sleep · Ambient Sleeping Pill", u: "https://radio.stereoscenic.com/asp-s", from: "Ambient Sleeping Pill · for falling asleep", k: ["sleep", "sleeping", "bed", "pill"] },
+  { n: "Chill · Groove Salad", u: "https://ice1.somafm.com/groovesalad-128-mp3", from: "SomaFM · downtempo and chilled beats", k: ["groove", "salad", "downtempo", "lounge"] },
+  { n: "Paradise Mellow", u: "https://stream.radioparadise.com/mellow-128", from: "Radio Paradise · the mellow mix", k: ["mellow", "paradise", "acoustic"] },
+];
+// order matters for keyword matching: "classicfmcalm" must hit Calm before Classic FM; the rest-and-recovery four come before the Global stations
+const RADIO_MATCH = [9, 1, 10, 11, 12, 13, 2, 0, 4, 3, 5, 6, 7, 8];
+const radio = new Audio(); radio.crossOrigin = "anonymous"; radio.preload = "none";
+var radioOn = false, radioIdx = 0, radioAn = null, radioRetry = 0;
+try { const i = +localStorage.getItem("radioIdx"); if (RADIO[i]) radioIdx = i; const v = localStorage.getItem("radioVol"); if (v !== null) $("#radioVol").value = v; } catch {}
+wxLoad(); setInterval(wxLoad, 30 * 60e3);
+const radioLevel = () => +$("#radioVol").value / 100;
+function radioViz() {
+  if (radioAn) return radioAn;
+  try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const src = actx.createMediaElementSource(radio); radioAn = actx.createAnalyser(); radioAn.fftSize = 512; radioAn.smoothingTimeConstant = .8; src.connect(radioAn); radioAn.connect(actx.destination); } catch { radioAn = null; }
+  return radioAn;
+}
+function radioUI(msg) {
+  const r = RADIO[radioIdx];
+  $("#radioName").textContent = r.n; $("#radioSub").textContent = r.from || "Global · live from London"; $("#radioPanel").classList.toggle("on", radioOn && !radio.paused); $("#radioPlay").textContent = radioOn ? "❚❚" : "▶"; $("#radioPlay").classList.toggle("on", radioOn);
+  $("#radioState").textContent = msg || (radioOn ? "live" : "off · tap play or say \"Jarvis, play " + r.n + "\"");
+  $("#radioStations").innerHTML = RADIO.map((x, i) => `<button data-ri="${i}" class="${i === radioIdx ? "sel" : ""}">${esc(x.n.toUpperCase())}</button>`).join("");
+}
+// nearest NOAA Weather Radio stream; loaded up front so a tap on WEATHER RADIO plays straight away (phones need the tap's gesture)
+var wxNear = [];
+// ask = he tapped the station: may show the browser's location prompt once (travel: the nearest station to where he is, not home)
+async function wxLoad(ask) {
+  const r = RADIO.find((x) => x.wx); let q = "";
+  try { const st = (await navigator.permissions?.query({ name: "geolocation" }))?.state; if (st === "granted" || (ask && st !== "denied" && navigator.geolocation)) { const pos = await new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no, { maximumAge: 15 * 60e3, timeout: 8000 })); q = `?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`; } } catch {}
+  try {
+    const d = await fetch("/api/radio/wx" + q).then((x) => x.json()); wxNear = d.stations || [];
+    const s = wxNear[0];
+    if (s) { const changed = r.u && r.u !== s.url; r.u = s.url; r.from = `NOAA ${s.call} · ${s.freq} MHz · ${s.city}, ${s.st} · ${s.miles} mi` + (q ? "" : " from home · allow location for where you are") + (s.miles > 80 ? " · nearest online stream" : ""); if (changed && radioOn && RADIO[radioIdx] === r) radioPlay(radioIdx); }
+    else r.from = "NOAA Weather Radio · no live stream near you right now";
+  } catch { r.from = "NOAA Weather Radio · station list unavailable"; }
+  if (RADIO[radioIdx] === r) radioUI();
+}
+function radioPlay(i = radioIdx) {
+  if (RADIO[i].wx && RADIO[i].u && !radioOn) wxLoad(true);   // play now; switch if he's somewhere else
+  if (RADIO[i].wx && !RADIO[i].u) { radioIdx = i; radioUI("finding the nearest station…"); wxLoad(true).then(() => { if (RADIO[i].u) radioPlay(i); else radioUI("no weather radio stream nearby"); }); return; }
+  radioIdx = i; try { localStorage.setItem("radioIdx", i); } catch {}
+  radioOn = true; unlockPlayer(); radioViz();
+  radio.src = RADIO[i].u || "https://media-ssl.musicradio.com/" + RADIO[i].s; radio.volume = speaking ? radioLevel() * 0.15 : radioLevel();
+  radioUI("tuning…");
+  // the lock screen shows the station straight away, before (or without) any track titles from the stream
+  if ("mediaSession" in navigator) { try { navigator.mediaSession.metadata = new MediaMetadata({ title: RADIO[i].n, artist: RADIO[i].from || "Global", album: RADIO[i].n }); } catch {} }
+  if (PHONE && typeof stopWakeForSpeech === "function") stopWakeForSpeech();
+  songText = ""; $("#radioSong").textContent = ""; clearInterval(songTimer); songTimer = setInterval(radioSong, 20000);
+  radio.play().then(() => { radioRetry = 0; radioUI(); if (!speaking && !listening) setViz("idle"); setTimeout(radioSong, 1500); })
+    .catch(e => { if (e.name === "AbortError") return; radioOn = false; radioUI("couldn't start: " + (e.name === "NotAllowedError" ? "tap play once to allow audio" : e.message)); });
+}
+// what the station says is playing (worker reads the stream's ICY metadata); also feeds the lock-screen / media keys
+var songText = "", songTimer = 0;
+const songParts = (t) => { const i = t.indexOf(" - "); return i > 0 ? { artist: t.slice(0, i).trim(), title: t.slice(i + 3).trim() } : { artist: "", title: t }; };
+async function radioSong() {
+  if (!radioOn) return;
+  const r = RADIO[radioIdx]; const u = r.u || "https://media-ssl.musicradio.com/" + r.s;
+  if (r.wx) return;   // weather radio streams carry no titles
+  try {
+    const d = await fetch("/api/radio/now?" + (r.np ? "audacy=" + encodeURIComponent(r.np) : "u=" + encodeURIComponent(u))).then(x => x.json()); if (!radioOn || RADIO[radioIdx] !== r) return;
+    const t = (d.title || "").trim(); if (t === songText) return; songText = t;
+    $("#radioSong").textContent = t ? "♪ " + t : "";
+    if ("mediaSession" in navigator) { const { artist, title } = songParts(t || r.n); try { navigator.mediaSession.metadata = new MediaMetadata({ title: title || r.n, artist: artist || r.n, album: r.n }); } catch {} }
+  } catch {}
+}
+function radioStop() { radioOn = false; clearInterval(songTimer); songText = ""; $("#radioSong").textContent = ""; try { radio.pause(); radio.removeAttribute("src"); radio.load(); } catch {} radioUI(); if (vizMode === "radio") setViz("idle"); if (PHONE && $("#wakeOn")?.checked && !listening && typeof startWakeAgain === "function") setTimeout(() => startWakeAgain(), 300); }
+function radioDuck(on) { if (!radioOn) return; radio.volume = on ? radioLevel() * 0.15 : radioLevel(); if (!on && radio.paused && radio.getAttribute("src")) radio.play().catch(() => {}); }
+radio.onerror = () => { if (!radioOn) return; if (radioRetry++ < 5) { radioUI("reconnecting…"); setTimeout(() => radioOn && radioPlay(radioIdx), 2000 * radioRetry); } else { radioOn = false; radioUI("stream unavailable right now"); } };
+radio.onpause = () => { if (radioOn && radio.getAttribute("src")) radioUI("paused by the device · tap ▶"); };
+radio.onplaying = () => { if (radioOn) radioUI(); };
+$("#radioPlay").onclick = () => { if (radioOn && !radio.paused) radioStop(); else radioPlay(); };
+$("#radioStations").onclick = (e) => { const b = e.target.closest("[data-ri]"); if (b) radioPlay(+b.dataset.ri); };
+$("#radioVol").oninput = () => { try { localStorage.setItem("radioVol", $("#radioVol").value); } catch {} radioDuck(speaking); };
+radioUI();
+
+/* ---------- wake-up: morning brief, then the radio fades in (this device, page open) ---------- */
+/* ---------- calculator: a small parser (no eval), keypad, history, and spoken questions ---------- */
+let calcAns = 0, calcHist = [];
+function calcEval(src) {
+  // normalise spoken and typed forms into one grammar
+  let e = String(src).toLowerCase().replace(/,/g, "")
+    .replace(/×|\bx\b|\btimes\b|multiplied by/g, "*").replace(/÷|\bdivided by\b|\bover\b/g, "/").replace(/−|–|\bminus\b|\bless\b|\btake away\b/g, "-").replace(/\bplus\b|\badd(ed)?\b/g, "+")
+    .replace(/\bto the power of\b|\bpower\b|\*\*/g, "^").replace(/\bsquared\b/g, "^2").replace(/\bcubed\b/g, "^3").replace(/\bsquare root of\b|√/g, "sqrt").replace(/\bcube root of\b/g, "cbrt")
+    .replace(/\bpercent\b/g, "%").replace(/\bpi\b|π/g, "(3.141592653589793)").replace(/\bans(wer)?\b/g, "(" + calcAns + ")").replace(/\bhalf of\b/g, "0.5*").replace(/\bdouble\b/g, "2*").replace(/\btwice\b/g, "2*")
+    .replace(/(\d+(?:\.\d+)?)%\s*off\s*(\d+(?:\.\d+)?)/g, "($2*(1-$1/100))")                          // 20% off 80 = 64
+    .replace(/(\d+(?:\.\d+)?)\s*([+-])\s*(\d+(?:\.\d+)?)%(?!\s*(?:of|on))/g, "($1*(1$2$3/100))")      // 240 + 20% = 288
+    .replace(/(\d+(?:\.\d+)?)%\s*(?:of|on)\s*/g, "($1/100)*").replace(/(\d+(?:\.\d+)?)%/g, "($1/100)")   // 15% of 240, bare 7%
+    .replace(/\s+/g, "");
+  // tokenise
+  const toks = []; let i = 0;
+  while (i < e.length) { const c = e[i]; if (/\d|\./.test(c)) { let j = i; while (j < e.length && /[\d.]/.test(e[j])) j++; toks.push({ n: parseFloat(e.slice(i, j)) }); i = j; } else if (/[a-z]/.test(c)) { let j = i; while (j < e.length && /[a-z]/.test(e[j])) j++; toks.push({ f: e.slice(i, j) }); i = j; } else if ("+-*/^()".includes(c)) { toks.push({ o: c }); i++; } else throw new Error("unexpected " + c); }
+  // recursive descent: expr = term (('+'|'-') term)* ; term = pow (('*'|'/') pow)* ; pow = unary ('^' pow)? ; unary = '-' unary | func '(' expr ')' | '(' expr ')' | number
+  let p = 0; const peek = () => toks[p], take = () => toks[p++];
+  const FN = { sqrt: Math.sqrt, cbrt: Math.cbrt, sin: (x) => Math.sin(x * Math.PI / 180), cos: (x) => Math.cos(x * Math.PI / 180), tan: (x) => Math.tan(x * Math.PI / 180), ln: Math.log, log: Math.log10, abs: Math.abs, round: Math.round, floor: Math.floor, ceil: Math.ceil };
+  function unary() { const t = peek(); if (!t) throw new Error("incomplete"); if (t.o === "-") { take(); return -unary(); } if (t.o === "+") { take(); return unary(); } if (t.f) { take(); const fn = FN[t.f]; if (!fn) throw new Error("unknown " + t.f); const arg = peek()?.o === "(" ? group() : unary(); return fn(arg); } if (t.o === "(") return group(); if (t.n != null) { take(); if (peek()?.o === "(") return t.n * group(); return t.n; } throw new Error("unexpected " + (t.o || t.f)); }
+  function group() { take(); const v = expr(); if (peek()?.o !== ")") throw new Error("missing )"); take(); return v; }
+  function pow() { const b = unary(); if (peek()?.o === "^") { take(); return Math.pow(b, pow()); } return b; }
+  function term() { let v = pow(); while (peek() && (peek().o === "*" || peek().o === "/" || peek().o === "(" || peek().f)) { const t = peek(); if (t.o === "*" || t.o === "/") { take(); const r = pow(); v = t.o === "*" ? v * r : v / r; } else v = v * pow(); } return v; }
+  function expr() { let v = term(); while (peek() && (peek().o === "+" || peek().o === "-")) { const t = take(); const r = term(); v = t.o === "+" ? v + r : v - r; } return v; }
+  if (!toks.length) throw new Error("empty");
+  const v = expr(); if (p < toks.length) throw new Error("unexpected " + (toks[p].o || toks[p].f || toks[p].n)); if (!isFinite(v)) throw new Error("not a number");
+  return v;
+}
+const calcFmt = (v) => { const r = Math.abs(v) >= 1e15 || (Math.abs(v) < 1e-6 && v !== 0) ? v.toExponential(6) : parseFloat(v.toPrecision(12)); return typeof r === "number" ? r.toLocaleString("en-US", { maximumFractionDigits: 10 }) : r; };
+const calcSay = (v) => { const r = parseFloat(v.toPrecision(10)); return Math.abs(r) >= 1e15 ? r.toExponential(4) : r.toLocaleString("en-US", { maximumFractionDigits: 6 }); };
+function calcRun(fromVoice) {
+  const src = $("#calcIn").value.trim(); if (!src) return null;
+  try { const v = calcEval(src); calcAns = v; $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); calcHist.unshift({ q: src, a: calcFmt(v) }); calcHist = calcHist.slice(0, 12); renderCalcHist(); try { localStorage.setItem("jarvisCalc", JSON.stringify(calcHist)); } catch {} return v; }
+  catch (e) { $("#calcOut").className = "calcout err"; $("#calcOut").textContent = e.message; return null; }
+}
+function renderCalcHist() { $("#calcHist").innerHTML = calcHist.map((h, i) => `<div data-i="${i}"><span>${esc(h.q)}</span><b>${esc(h.a)}</b></div>`).join(""); }
+$("#calcHist").onclick = (e) => { const d = e.target.closest("[data-i]"); if (!d) return; const h = calcHist[+d.dataset.i]; $("#calcIn").value = h.q; $("#calcOut").textContent = h.a; $("#calcOut").className = "calcout"; };
+$("#calcKeys").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return; const k = b.dataset.k, inp = $("#calcIn");
+  if (k === "C") { inp.value = ""; $("#calcOut").innerHTML = "&nbsp;"; $("#calcOut").className = "calcout"; }
+  else if (k === "⌫") inp.value = inp.value.slice(0, -1);
+  else if (k === "=") calcRun();
+  else if (k === "ANS") inp.value += calcAns;
+  else if (k === "√") inp.value += "√(";
+  else { if ($("#calcOut").textContent.trim() && !inp.value && /[+\-×÷^%]/.test(k) && k !== "−" ) inp.value = String(calcAns); inp.value += k; }
+  if (k !== "=") { $("#calcOut").className = "calcout"; try { const v = calcEval(inp.value); $("#calcOut").textContent = calcFmt(v); } catch { if (!inp.value) $("#calcOut").innerHTML = "&nbsp;"; } }
+  if (!PHONE) inp.focus();
+};
+$("#calcIn").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); calcRun(); } if (e.key === "Escape") { $("#calcIn").value = ""; $("#calcOut").innerHTML = "&nbsp;"; } });
+$("#calcIn").addEventListener("input", () => { try { const v = calcEval($("#calcIn").value); $("#calcOut").className = "calcout"; $("#calcOut").textContent = calcFmt(v); } catch { if (!$("#calcIn").value) $("#calcOut").innerHTML = "&nbsp;"; } });
+try { calcHist = JSON.parse(localStorage.getItem("jarvisCalc") || "[]"); renderCalcHist(); } catch {}
+// check + tip: type the check, tap 10/15/20% for the total
+let tipPct = 0;
+const tipMoney = (v) => "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+function renderTip() {
+  const amt = parseFloat($("#tipIn").value.replace(/[$,\s]/g, "")), out = $("#tipOut");
+  document.querySelectorAll("#tipBtns button").forEach((b) => b.classList.toggle("on", +b.dataset.p === tipPct));
+  if (!tipPct || !(amt > 0)) { out.innerHTML = "&nbsp;"; return; }
+  const tip = Math.round(amt * tipPct) / 100;
+  out.innerHTML = `<b>${tipMoney(amt + tip)}</b>${tipPct}% tip ${tipMoney(tip)} on ${tipMoney(amt)}`;
+}
+$("#tipBtns").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; tipPct = +b.dataset.p; renderTip(); };
+$("#tipIn").addEventListener("input", renderTip);
+// spoken: "what's 15% of 240", "calculate 12 times 8", "square root of 81", "20 percent tip on 86", "how much is 1200 divided by 7"
+function calcVoice(raw) {
+  let t = raw.toLowerCase().replace(/^jarvis,?\s*/, "").replace(/[?!.]+$/, "").trim();
+  const tip = t.match(/^(?:what(?:'s| is) )?(?:a )?(\d+(?:\.\d+)?)\s*(?:%|percent) tip on (?:\$)?(\d+(?:\.\d+)?)$/); if (tip) { const tv = +tip[2] * +tip[1] / 100; $("#calcIn").value = `${tip[1]}% of ${tip[2]}`; calcRun(); return `A ${tip[1]} percent tip on ${calcSay(+tip[2])} is ${calcSay(tv)}, making ${calcSay(+tip[2] + tv)} in all.`; }
+  const m = t.match(/^(?:calculate|compute|work out|what(?:'s| is| does)|how much is|how many is|tell me)\s+(.+?)(?:\s+(?:equal|equals|come to|make|is))?$/) || (/^[\d\s.,+\-×÷*\/^%()√]+$/.test(t) && /\d\s*[+\-×÷*\/^%]|√/.test(t) ? [t, t] : null);
+  if (!m) return null;
+  const expr = m[1].replace(/^(?:the )?(?:answer to|result of|value of)\s+/, "");
+  if (!/\d/.test(expr) || !/[+\-×÷*\/^%]|times|plus|minus|divided|over|percent|squared|cubed|root|power|half|double|twice|of/.test(expr)) return null;
+  try { const v = calcEval(expr); calcAns = v; $("#calcIn").value = expr; calcRun(); if (PHONE) showView("jarvis"); $("#calcPanel").scrollIntoView({ block: "nearest" }); return `That's ${calcSay(v)}.`; } catch { return null; }
+}
+/* alarm settings live on the server; the minute cron fires the phone push and flags the PC */
+let alarmCfg = null;
+async function loadAlarm() { try { alarmCfg = await fetch("/api/alarm").then(r => r.json()); } catch { return; } try { alarmRingCheck(); } catch {} $("#alarmOn").checked = !!alarmCfg.enabled; $("#alarmTime").value = alarmCfg.time || "05:00"; $("#alarmDays").value = !alarmCfg.days?.length ? "all" : alarmCfg.days.includes(1) ? "weekdays" : "weekends"; alarmNote(); alarmStatusLine(); }
+// what happened to today's alarm, from the server record and Pushover's receipt (fired / reached the phone / acknowledged / fallback)
+function alarmStatusLine() {
+  const al = alarmCfg, el = $("#alarmStatus"); if (!al?.enabled || !al.firedAt) { el.textContent = ""; return; }
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: state.cfg?.home?.tz || state.cfg?.tz }); if (al.lastFired !== today) { el.textContent = ""; return; }
+  const t = (s) => s ? new Date(s).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "?"; const d = al.delivery; const parts = [`fired ${t(al.firedAt)}`];
+  if (d) parts.push(d.delivered ? `reached the phone ${t(d.deliveredAt)}` : "Pushover has NOT reached the phone");
+  if (al.acked === today) parts.push(`acknowledged ${t(al.ackedAt)}${al.ackedBy === "pushover" ? " in Pushover" : " on the page"}`); else if (d?.expired) parts.push("never acknowledged (expired after 30 min)");
+  if (al.fallbackAt) parts.push(`fallback rang ${t(al.fallbackAt)}`);
+  if (al.called) parts.push(`phone call ${t(al.called)}${al.callRes?.call === 201 ? "" : " (" + (al.callRes?.call ?? "?") + ")"}`);
+  el.textContent = "Today: " + parts.join(" · ");
+}
+// the phone call needs Twilio secrets on the worker (config.call); the Clock backup sets Android's own alarm for the same time
+// through the SET_ALARM intent, which rings with the phone offline and asleep
+function alarmExtras() {
+  $("#callTest").hidden = !state.cfg?.call;
+  $("#clockBackup").hidden = !/Android/i.test(navigator.userAgent);
+}
+$("#callTest").onclick = async () => { $("#pushNote").textContent = "Calling…"; try { const r = await fetch("/api/alarm/call", { method: "POST" }).then(r => r.json()); $("#pushNote").textContent = r.call === 201 ? "Twilio accepted the call: the phone should ring in a few seconds." : "Call failed: " + (r.detail || r.call); } catch (e) { $("#pushNote").textContent = "Call failed: " + e.message; } };
+$("#clockBackup").onclick = () => { const [h, m] = ($("#alarmTime").value || alarmCfg?.time || "05:00").split(":").map(Number); location.href = `intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${h};i.android.intent.extra.alarm.MINUTES=${m};S.android.intent.extra.alarm.MESSAGE=JARVIS%20backup;B.android.intent.extra.alarm.SKIP_UI=false;end`; };
+setTimeout(alarmExtras, 3500);
+function alarmNote() { $("#alarmNote").textContent = $("#alarmOn").checked ? "Fires on the server: your phone gets an alarm that repeats until you acknowledge it, and the PC opens JARVIS and plays the brief, then this station, if the JARVIS wake task is installed." : ""; }
+$("#alarmSave").onclick = async () => { const days = $("#alarmDays").value; const body = { enabled: $("#alarmOn").checked, time: $("#alarmTime").value, days: days === "weekdays" ? [1, 2, 3, 4, 5] : days === "weekends" ? [0, 6] : [], station: radioIdx }; alarmCfg = await fetch("/api/alarm", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json()).catch(() => alarmCfg); alarmNote(); $("#alarmNote").textContent = (alarmCfg?.enabled ? `Saved: ${alarmCfg.time}, ${days}. ` : "Alarm off. ") + $("#alarmNote").textContent; };
+$("#alarmOn").onchange = alarmNote;
+function fadeInRadio(sec = 60) { radioPlay(radioIdx); const target = radioLevel(); radio.volume = 0; const t0 = Date.now(); const iv = setInterval(() => { const k = Math.min(1, (Date.now() - t0) / (sec * 1000)); if (!radioOn) return clearInterval(iv); if (!speaking) radio.volume = target * k; if (k >= 1) clearInterval(iv); }, 500); }
+async function wakeSequence() {
+  let brief = state.morning; try { const d = await fetch("/api/morning").then(r => r.json()); brief = d.latest || brief; } catch {}
+  const fresh = brief?.slot === "morning" && brief.audio && (Date.now() - new Date(brief.at)) < 6 * 3600e3;
+  if (fresh) { playUrl("/api/morning/audio?id=" + encodeURIComponent(brief.id)); const prevEnd = player.onended; player.onended = player.onerror = (e) => { try { prevEnd && prevEnd(e); } catch {} setTimeout(() => fadeInRadio(60), 1500); }; }
+  else { speak("Good morning, Mr. Clark. The brief isn't ready yet; here is the radio."); setTimeout(() => fadeInRadio(60), 4000); }
+}
+if (location.hash === "#wake") {
+  $("#wake").hidden = false; history.replaceState(null, "", "/");
+  const go = () => { $("#wake").hidden = true; unlockPlayer(); fetch("/api/alarm/ack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "wake" }) }).catch(() => {}); if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); };
+  $("#wakeGo").onclick = go;
+  // the PC kiosk allows autoplay: try at once, keep the button for phones
+  setTimeout(async () => { try { await player.play(); player.pause(); go(); } catch {} }, 2500);
+}
+setTimeout(loadAlarm, 3000); setInterval(loadAlarm, 60000);
+/* phone alarm through the browser itself: a service worker receives Web Push from the hub (no app needed).
+   Subscribing needs a tap (notification permission), then the hub keeps the subscription in KV push_subs. */
+let swReg = null, pushSub = null;
+async function pushInit() {
+  const note = $("#pushNote"); if (!("serviceWorker" in navigator) || !("PushManager" in window)) { note.innerHTML = "This browser can't receive pushes. Use Chrome (Android) or add JARVIS to the home screen on iPhone."; $("#pushEnable").hidden = true; return; }
+  try { swReg = await navigator.serviceWorker.register("/sw.js", { scope: "/" }); pushSub = await swReg.pushManager.getSubscription(); } catch (e) { note.textContent = "Service worker failed: " + e.message; return; }
+  pushStatus();
+}
+async function pushStatus() {
+  const note = $("#pushNote"); let v = null; try { v = await fetch("/api/push/vapid").then(r => r.json()); } catch {}
+  const here = pushSub && v?.subs?.some(s => pushSub.endpoint.startsWith(s.endpoint)) ? pushSub : null;
+  const n = v?.subs?.length || 0;
+  const perm = typeof Notification !== "undefined" ? Notification.permission : "default";
+  note.innerHTML = (here ? "<b>This device rings.</b> " : perm === "denied" ? "<i>Notifications are blocked for this site in the browser settings.</i> " : "<i>This device isn't subscribed yet.</i> ")
+    + (n ? `${n} device${n > 1 ? "s" : ""} subscribed: ${v.subs.map(s => esc(s.label || (s.ua || "").match(/Android|iPhone|iPad|Windows|Mac/)?.[0] || "device")).join(", ")}. ` : "No device subscribed. ")
+    + "Pushover (if the app is installed) rings too.";
+  $("#pushEnable").textContent = here ? "STOP RINGING THIS PHONE" : "RING THIS PHONE";
+}
+async function urlB64ToU8(s) { s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "="; return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
+$("#pushEnable").onclick = async () => {
+  const note = $("#pushNote"); unlockPlayer();
+  if (!swReg) { await pushInit(); if (!swReg) return; }
+  if (pushSub && $("#pushEnable").textContent.startsWith("STOP")) { try { await fetch("/api/push/unsubscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ endpoint: pushSub.endpoint }) }); await pushSub.unsubscribe(); } catch {} pushSub = null; pushStatus(); return; }
+  try {
+    const perm = await Notification.requestPermission(); if (perm !== "granted") { note.innerHTML = "<i>Permission not granted.</i> Allow notifications for this site and try again."; return; }
+    const v = await fetch("/api/push/vapid").then(r => r.json());
+    pushSub = (await swReg.pushManager.getSubscription()) || await swReg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: await urlB64ToU8(v.key) });
+    const label = (navigator.userAgent.match(/Android|iPhone|iPad|Windows|Mac/) || ["device"])[0] + (PHONE ? " phone" : " desktop");
+    const r = await fetch("/api/push/subscribe", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ subscription: pushSub.toJSON(), label }) }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    note.innerHTML = "<b>Subscribed.</b> Press TEST ALARM to hear it."; setTimeout(pushStatus, 800);
+  } catch (e) { note.textContent = "Couldn't subscribe: " + e.message; }
+};
+$("#pushTest").onclick = async () => {
+  const note = $("#pushNote"); note.textContent = "Sending a test alarm to every channel…"; $("#pushTest").disabled = true;
+  try {
+    const r = await fetch("/api/push/test", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ alarm: true }) }).then(r => r.json());
+    const po = r.sent?.find(x => x.pushover != null), wp = r.sent?.find(x => x.webpush != null)?.webpush;
+    const dev = r.pushoverDevices?.devices;
+    const parts = [];
+    if (po) parts.push(po.pushover === 200 ? `<b>Pushover accepted</b> (devices: ${dev?.length ? esc(dev.join(", ")) : "<i>none registered: install the Pushover app and sign in</i>"})` : `<i>Pushover ${esc(String(po.pushover))}: ${esc(po.detail || "")}</i>`);
+    if (Array.isArray(wp)) parts.push(wp.length ? wp.map(x => (x.status === 201 || x.status === 200 ? "<b>browser push sent</b>" : `<i>browser push ${esc(String(x.status))} ${esc(x.detail || "")}</i>`) + " → " + esc((x.ua || "").match(/Android|iPhone|iPad|Windows|Mac/)?.[0] || "device")).join("; ") : "<i>no browser subscribed</i>");
+    note.innerHTML = parts.join(" · ") || "No channel answered.";
+  } catch (e) { note.textContent = "Test failed: " + e.message; }
+  $("#pushTest").disabled = false;
+};
+$("#pushLogBtn").onclick = async () => {
+  const log = await fetch("/api/push/log").then(r => r.json()).catch(() => []);
+  const rows = log.slice(0, 15).map(l => { const po = l.res?.find(x => x.pushover != null), wp = l.res?.find(x => x.webpush != null)?.webpush; return `<div class="row"><b>${esc(new Date(l.at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }))}</b> ${esc(l.title)} <span class="sub">${esc(l.priority)}</span> · Pushover ${po ? esc(String(po.pushover)) : "–"} · browser ${Array.isArray(wp) ? (wp.length ? wp.map(x => x.status).join("/") : "no device") : "–"}</div>`; }).join("") || "<div class='empty'>No pushes logged yet.</div>";
+  $("#dTitle").textContent = "Push log"; $("#dKind").textContent = "WHAT EACH CHANNEL ANSWERED, NEWEST FIRST"; $("#dBody").innerHTML = `<section class="panel">${rows}</section>`; $("#drill").classList.add("open"); document.body.style.overflow = "hidden";
+};
+// if the page is open when the alarm fires (phone on the nightstand, PC), or is opened while it is still unacknowledged, it rings
+// here too: the Vivaldi clip on loop (the same mp3 uploaded to Pushover), overlay, vibration. Square-wave beeps only until the
+// browser lets audio play (autoplay blocked: the first touch anywhere starts the clip). 2026-10-10: he heard the beeps, not the mp3.
+let ringing = false, ringOsc = null, ringTimer = null, ringAudio = null, ringBeeping = false;
+function ringStart(time) {
+  if (ringing) return; ringing = true; $("#ringing").hidden = false; $("#ringTime").textContent = time || "";
+  try { if (navigator.vibrate) navigator.vibrate([800, 300, 800, 300, 800]); } catch {}
+  const beep = () => { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume(); const o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = 880; g.gain.value = 0; o.connect(g); g.connect(actx.destination); const t = actx.currentTime; for (let i = 0; i < 4; i++) { g.gain.setValueAtTime(0.25, t + i * 0.25); g.gain.setValueAtTime(0, t + i * 0.25 + 0.12); } o.start(t); o.stop(t + 1.1); } catch {} };
+  const beeps = () => { if (ringBeeping) return; ringBeeping = true; beep(); ringTimer = setInterval(() => { if (!ringing) return; beep(); try { if (navigator.vibrate) navigator.vibrate([500, 200, 500]); } catch {} }, 2000); };
+  const stopBeeps = () => { ringBeeping = false; clearInterval(ringTimer); };
+  if (!ringAudio) { ringAudio = new Audio("/sounds/baroque.mp3"); ringAudio.loop = true; ringAudio.preload = "auto"; }
+  ringAudio.volume = 1; try { ringAudio.currentTime = 0; } catch {}
+  if (radioOn) { try { radio.pause(); } catch {} }
+  const tryClip = () => ringAudio.play().then(() => { stopBeeps(); return true; }).catch(() => false);
+  tryClip().then((ok) => { if (ok || !ringing) return; beeps(); const once = () => { if (ringing) tryClip(); }; document.addEventListener("pointerdown", once, { once: true }); document.addEventListener("keydown", once, { once: true }); });
+}
+function ringStop(action) {
+  if (!ringing) return; ringing = false; ringBeeping = false; clearInterval(ringTimer); $("#ringing").hidden = true; try { navigator.vibrate && navigator.vibrate(0); } catch {}
+  try { ringAudio && ringAudio.pause(); } catch {}
+  fetch("/api/alarm/ack", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) }).then(() => loadAlarm()).catch(() => {});
+  if (action === "wake") { if (alarmCfg?.station != null && RADIO[alarmCfg.station]) radioIdx = alarmCfg.station; wakeSequence(); }
+}
+$("#ringUp").onclick = () => ringStop("wake"); $("#ringSnooze").onclick = () => ringStop("snooze");
+function alarmRingCheck() {
+  const al = alarmCfg; if (!al?.enabled || !al.firedAt) return;
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: state.cfg?.home?.tz || state.cfg?.tz });
+  const age = Date.now() - new Date(al.firedAt);
+  if (al.lastFired === today && al.acked !== today && age < 45 * 60e3 && (!al.snooze || Date.now() >= new Date(al.snooze))) ringStart(al.time); else if (ringing && al.acked === today) ringStop("wake");
+}
+pushInit();
+
+/* reminders: the server pushes them; an open page also says them aloud */
+let remSpoken = new Set(); try { remSpoken = new Set(JSON.parse(localStorage.getItem("remSpoken") || "[]")); } catch {}
+async function loadReminders() { try { state.reminders = await fetch("/api/reminders").then(r => r.json()); } catch { return; } renderReminders(); }
+function renderReminders() {
+  const list = (state.reminders || []).slice().sort((a, b) => a.at.localeCompare(b.at));
+  $("#remHead").textContent = `REMINDERS${list.length ? " · " + list.length : ""}`;
+  $("#reminders").innerHTML = list.length ? list.map(r => { const d = new Date(r.at); const soon = d - Date.now() < 3600e3; return `<li><span class="bz ${soon ? "" : "cal"}">${d.toLocaleDateString([], { weekday: "short" })}</span><span>${esc(r.text)}${r.repeat !== "none" ? ` <small class="empty" style="display:inline">${esc(r.repeat)}</small>` : ""}</span><span class="in">${d.toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} <button class="btn sm" data-delrem="${esc(r.id)}" title="Cancel">✕</button></span></li>`; }).join("") : `<li class="empty">Say "remind me at 3 to call the venue", or add one below.</li>`;
+  $("#reminders").querySelectorAll("[data-delrem]").forEach(b => b.onclick = async () => { await fetch("/api/reminders/delete", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: b.dataset.delrem }) }).catch(() => {}); state.reminders = state.reminders.filter(r => r.id !== b.dataset.delrem); renderReminders(); });
+  // say any that just came due (the server already pushed them)
+  for (const r of list) { const age = Date.now() - new Date(r.at); if (age >= 0 && age < 10 * 60e3 && !remSpoken.has(r.id + r.at)) { remSpoken.add(r.id + r.at); try { localStorage.setItem("remSpoken", JSON.stringify([...remSpoken].slice(-50))); } catch {} blip(1000); addMsg("ai", "Reminder: " + r.text); speak("Reminder, sir: " + r.text); } }
+}
+$("#remForm").onsubmit = async (e) => { e.preventDefault(); const when = $("#remWhen").value; const r = await fetch("/api/reminders", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text: $("#remText").value, when, repeat: $("#remRepeat").value }) }).then(x => x.json()).catch(() => ({ error: "offline" })); if (r.error) return addMsg("sys", "Reminder not set: " + r.error); $("#remText").value = ""; await loadReminders(); };
+setTimeout(loadReminders, 3500); setInterval(loadReminders, 60000);
+// quick phrases without the brain: "remind me in 20 minutes to call Sam", "remind me at 3pm to ..."
+function quickReminder(t) {
+  const m = t.match(/^remind me (?:(?:in (\d+)\s*(min(?:ute)?s?|hours?|hrs?))|(?:at (\d{1,2})(?::(\d{2}))?\s*(am|pm)?)|(tomorrow(?: morning| at (\d{1,2})(?::(\d{2}))?\s*(am|pm)?)?))?\s*(?:to\s+)?(.+)$/i);
+  if (!m) return null; const text = m[10].trim(); if (!text) return null;
+  const tz = state.cfg?.home?.tz || state.cfg?.tz; const nowLocal = new Date(new Date().toLocaleString("en-US", { timeZone: tz }));
+  let d = new Date(nowLocal);
+  if (m[1]) d = new Date(+nowLocal + (+m[1]) * (/h/i.test(m[2]) ? 3600e3 : 60e3));
+  else if (m[3]) { let h = +m[3]; const ap = (m[5] || "").toLowerCase(); if (ap === "pm" && h < 12) h += 12; if (ap === "am" && h === 12) h = 0; if (!ap && h <= 7) h += 12; d.setHours(h, +(m[4] || 0), 0, 0); if (d <= nowLocal) d = new Date(+d + 86400e3); }
+  else if (m[6]) { d = new Date(+nowLocal + 86400e3); let h = 8, mi = 0; if (m[7]) { h = +m[7]; mi = +(m[8] || 0); const ap = (m[9] || "").toLowerCase(); if (ap === "pm" && h < 12) h += 12; if (ap === "am" && h === 12) h = 0; } d.setHours(h, mi, 0, 0); }
+  else return null;
+  const pad = (n) => String(n).padStart(2, "0"); const when = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return { text, when, say: d.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) };
+}
+
+/* ---------- scanner (Broadcastify; opened in their player, not re-streamed) ---------- */
+const SCANNER = {
+  tx: { label: "Frisco / Collin County", note: "Frisco runs its own P25 system; dispatch talkgroups that are still in the clear are on these feeds.", feeds: [
+    { n: "Frisco Police, Fire & EMS", d: "Calls playlist · law dispatch, fire dispatch, traffic", k: "CALLS", u: "https://www.broadcastify.com/calls/playlists/?a=view&uuid=8bf99044-c41f-11ee-a225-0e676e2c8629" },
+    { n: "Frisco Area Fire", d: "Live stream", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/39916" },
+    { n: "Collin County Police, Fire & EMS", d: "Live stream · county-wide", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/22147" },
+    { n: "All Collin County feeds", d: "Broadcastify directory", k: "LIST", u: "https://www.broadcastify.com/listen/ctid/2565" } ] },
+  az: { label: "Phoenix / Scottsdale", note: "Scottsdale, Mesa and Tempe police are fully encrypted, so nothing of theirs can be heard. Phoenix PD, DPS and valley fire still have dispatch in the clear.", feeds: [
+    { n: "Phoenix Police", d: "Live stream · all precincts (RWC)", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/12145" },
+    { n: "Arizona DPS – Metro Phoenix", d: "Live stream · highway patrol", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/20741" },
+    { n: "Phoenix Fire + Chandler PD/Fire", d: "Live stream", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/14875" },
+    { n: "Mesa, Gilbert & Queen Creek Fire", d: "Live stream · East Valley fire", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/43570" },
+    { n: "Maricopa County Sheriff – West", d: "Live stream", k: "LIVE", u: "https://www.broadcastify.com/listen/feed/10232" },
+    { n: "All Maricopa County feeds", d: "Broadcastify directory", k: "LIST", u: "https://www.broadcastify.com/listen/ctid/100" } ] },
+};
+let scanOverride = null;
+function renderScanner() {
+  const home = state.cfg.home?.key === "az" ? "az" : "tx"; const which = scanOverride || home; const s = SCANNER[which];
+  $("#scanSub").textContent = s.label + (scanOverride ? "" : " · follows home");
+  $("#scanSwap").textContent = which === "az" ? "SHOW TX" : "SHOW AZ";
+  $("#scanner").innerHTML = s.feeds.map(f => `<a href="${f.u}" target="_blank" rel="noopener"><span class="ic">${f.k === "LIST" ? "☰" : f.k === "CALLS" ? "▶▶" : "▶"}</span><span><b>${esc(f.n)}</b><small>${esc(f.d)}</small></span><span class="kind">${f.k}</span></a>`).join("");
+  $("#scanNote").textContent = s.note + " Feeds open in Broadcastify's player; keep that tab open to keep listening.";
+}
+$("#scanSwap").onclick = () => { const home = state.cfg.home?.key === "az" ? "az" : "tx"; const cur = scanOverride || home; scanOverride = cur === "az" ? "tx" : "az"; if (scanOverride === home) scanOverride = null; renderScanner(); };
+/* ---------- start ---------- */
+$("#launch").innerHTML = LAUNCH.map(([n,u]) => `<a href="${u}" target="_blank" rel="noopener">${n}</a>`).join("");
+$("#recheck").onclick = () => checkStatus(true);
+renderBiz(); renderSys(); addMsg("sys", "Good " + (new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening") + ". Ask me anything, or tell me what needs doing.");
+(async () => {
+  try { state.cfg = await fetch("/api/config").then(r => r.json()); } catch {}
+  $("#who").textContent = state.cfg.user && state.cfg.user.includes("@") ? " · " + state.cfg.user.split("@")[0] : "";   // a key sign-in shows nothing (it used to print "key")
+  pickVoices(); renderHome();
+  const devTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if ((state.cfg.home?.mode || "auto") === "auto" && devTz !== state.cfg.home?.tz && ["America/Chicago", "America/Phoenix", "America/Denver"].includes(devTz)) await setHome({ deviceTz: devTz });
+  let v = "jarvis"; try { v = localStorage.getItem("jarvisView") || v; } catch {} showView(v);
+  initFold();
+  await loadState(); loadWeather(); checkStatus(); detectMic(); loadSports(); loadMarkets(); loadNews(); loadWxDays();
+  if (location.pathname === "/wall") setTimeout(enterWall, 500);
+  if (location.hash === "#reminders") { showView("ops"); setTimeout(() => $("#reminders").scrollIntoView({ block: "center" }), 600); }
+  if (location.hash === "#morning") { showView("jarvis"); $("#alertPanel").scrollIntoView(); }
+  if (location.hash === "#decisions") { showView("ops"); setTimeout(() => $("#decisionsPanel").scrollIntoView({ block: "center" }), 600); }
+})();
+setInterval(checkStatus, 5 * 60000); setInterval(loadWeather, 15 * 60000); setInterval(() => { if (!document.hidden) loadSports(); }, 60000); setInterval(loadMarkets, 2 * 60000); setInterval(loadNews, 15 * 60000); setInterval(loadWxDays, 30 * 60000); setInterval(() => { if (!document.hidden) loadState(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadState(); loadSports(); } });

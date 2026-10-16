@@ -7,7 +7,7 @@ compatibility_date = "2026-07-01"
 
 [[rules]]
 type = "Text"
-globs = ["**/*.html", "**/*.json"]
+globs = ["**/*.html", "**/*.json", "**/*.css", "**/hub.js"]   # hub.js is the page script (text), not a worker module
 fallthrough = true
 
 [[rules]]
