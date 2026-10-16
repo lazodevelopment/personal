@@ -31,6 +31,7 @@ const ZOHO_CLIENT_ID = defineSecret('ZOHO_CLIENT_ID');
 const ZOHO_CLIENT_SECRET = defineSecret('ZOHO_CLIENT_SECRET');
 const ZOHO_REFRESH_TOKEN = defineSecret('ZOHO_REFRESH_TOKEN');
 const JUNE_PUSH_KEY = defineSecret('JUNE_PUSH_KEY'); // 026: shared with the June worker (wrangler secret JUNE_PUSH_KEY)
+const PLACES_API_KEY = defineSecret('PLACES_API_KEY'); // 1016-ENGAGE: the worker's Google Places key, for June's engagement-spot checks
 const FROM = 'Lazo <hello@meetlazo.com>';
 const APP = 'https://app.meetlazo.com/dashboard';
 
@@ -955,6 +956,9 @@ Object.assign(exports, require('./verify')(RESEND_API_KEY));
 // JC-LAZO-FNDASH-1016-COI-001: certificates of insurance on file with Lazo venues and planners, expiry reminders, requests
 const coi = require('./coi')(RESEND_API_KEY, ANTHROPIC_API_KEY);
 for (const k of ['coiRead', 'coiSave', 'coiShare', 'coiUnshare', 'coiFileLink', 'coiRequest', 'coiPublic', 'coiSweep']) exports[k] = coi[k];
+
+// JC-LAZO-FNDASH-1016-ENGAGE-001: June finds engagement-shoot spots near the couple (web search + Places check), auto when the engagement questionnaire comes back
+Object.assign(exports, require('./june-engagement')(ANTHROPIC_API_KEY, PLACES_API_KEY));
 
 // JC-LAZO-FNDASH-1016-MEALS: final meal counts - the couple is reminded 7 and 2 days before the vendor's date, the vendor the day after
 Object.assign(exports, require('./meals')(RESEND_API_KEY));

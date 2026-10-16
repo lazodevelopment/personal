@@ -8,6 +8,13 @@ rules_version = '2';
 //   Meal counts card (couple writes counts, vendor sets only finalDue and
 //   vendorSeenAt). Deploy BEFORE the wedding-website templates from
 //   patch_meals_rsvp_1016.py go to R2, or RSVPs with meals are refused.
+// + JC-LAZO-RULES-1016-ENGAGE (DEPLOYED 2026-10-16 on top of live 1014-018 + 1016-COI only;
+//   live copy: side-session notes lazo-live-firestore-rules-1016-ENGAGE.rules): questionnaires may carry spec (each
+//   question's answer type, Vendor v203 / Couple v163); new
+//   inquiries/{id}/engagementIdeas (vendor reads, may set hidden/shared only)
+//   and engagementSpots/** (functions only, caught by the default deny);
+//   vendors/{id}/questionnaireTemplates (the vendor's team; it had no rule, so
+//   "Save questionnaire" was refused).
 // + JC-LAZO-RULES-1016-COI (DEPLOYED 2026-10-16 on top of live 1014-018): certificates of insurance on file. New
 //   cois/{id} (the vendor's team reads), vendors/{id}/coisOnFile/{id} (the venue's or
 //   planner's team reads) and coiRequests/{venueId__vendorId} (either side reads).
@@ -229,6 +236,12 @@ service cloud.firestore {
 
       // LAZO PRO STUDIO — Wave 1: contract templates (owner or manager)
       match /contractTemplates/{templateId} {
+        allow read, create, update, delete: if vendorAccess(vendorId);
+      }
+
+      // JC-LAZO-RULES-1016-ENGAGE: the vendor's saved questionnaires. The
+      // editor has written here since Vendor v125, but no rule allowed it.
+      match /questionnaireTemplates/{templateId} {
         allow read, create, update, delete: if vendorAccess(vendorId);
       }
 
@@ -488,8 +501,9 @@ service cloud.firestore {
         allow create: if vendorAccess(inqVendorId(inquiryId))
           && request.resource.data.keys().hasOnly(
                ['type','title','questions','answers','status','createdAt',
-                'vendorName'])
-          && request.resource.data.status == 'sent';
+                'vendorName','spec'])
+          && request.resource.data.status == 'sent'
+          && (!('spec' in request.resource.data) || request.resource.data.spec is list);
         allow read: if coupleAccess(inqCoupleUid(inquiryId))
           || vendorAccess(inqVendorId(inquiryId));
         allow update: if coupleAccess(inqCoupleUid(inquiryId))
@@ -497,6 +511,17 @@ service cloud.firestore {
                .hasOnly(['answers','status','completedAt'])
           && request.resource.data.status in ['completed'];
         allow delete: if vendorAccess(inqVendorId(inquiryId));
+      }
+
+      // JC-LAZO-RULES-1016-ENGAGE: June's engagement-shoot spots for the
+      // photographer (functions-dashboard june-engagement.js writes them).
+      // The couple never reads these; the vendor can only hide or mark shared.
+      match /engagementIdeas/{setId} {
+        allow read: if vendorAccess(inqVendorId(inquiryId));
+        allow update: if vendorAccess(inqVendorId(inquiryId))
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['hidden','shared']);
+        allow create, delete: if false;
       }
 
       // JC-LAZO-RULES-1016-MEALS: the couple's meal counts, structured, for the
