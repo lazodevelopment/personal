@@ -655,6 +655,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     String vMode = 'type';
     final TextEditingController vText = TextEditingController();
     final List<Map<String, dynamic>> vRows = <Map<String, dynamic>>[];
+    Map<String, String> vBooked = <String, String>{}; // category -> vendor already booked there
     // website
     final TextEditingController wText = TextEditingController();
     Map<String, dynamic> wSite = <String, dynamic>{};
@@ -877,8 +878,18 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             'metroId': (couple['metroId'] ?? '').toString()
           }, onError: (String m) => why = m);
           final List<dynamic> vs = r != null && r['vendors'] is List ? r['vendors'] as List : <dynamic>[];
+          // who is already booked, so the review can say what an import would replace
+          final Map<String, String> booked = <String, String>{};
+          try {
+            final QuerySnapshot<Map<String, dynamic>> pq = await _planRef.get();
+            for (final QueryDocumentSnapshot<Map<String, dynamic>> d in pq.docs) {
+              final String n = (d.data()['vendorName'] ?? '').toString().trim();
+              if ((d.data()['status'] ?? '').toString() == 'booked' && n.isNotEmpty) booked[d.id] = n;
+            }
+          } catch (_) {}
           up(() {
             busy = false;
+            vBooked = booked;
             if (r == null) {
               err = why.isEmpty ? 'June couldn’t read that. Try again in a moment.' : why;
               return;
@@ -1397,6 +1408,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   child: _lzNote(Icons.info_outline_rounded,
                       'Your team keeps one vendor per category, so for two of the same kind the last one is kept.'),
                 ),
+              for (final Map<String, dynamic> r in ready)
+                if ((vBooked[r['category'] as String] ?? '').isNotEmpty &&
+                    vBooked[r['category'] as String]!.toLowerCase() !=
+                        (r['name'] as TextEditingController).text.trim().toLowerCase())
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: _lzNote(Icons.swap_horiz_rounded,
+                        'Saving replaces ${vBooked[r['category'] as String]} as your ${_catLabel(r['category'] as String).toLowerCase()} with ${(r['name'] as TextEditingController).text.trim()}. Remove that row to keep them.'),
+                  ),
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: _lzNote(Icons.handshake_outlined,
@@ -1873,13 +1893,22 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   }
 
   Future<void> _saveImportedBudget(Map<String, Map<String, num>> byCat, double total) async {
+    // an import never lowers what is already recorded as spent (paid invoices, typed amounts)
+    final Map<String, num> spent = <String, num>{};
+    try {
+      final QuerySnapshot<Map<String, dynamic>> pq = await _planRef.get();
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> d in pq.docs) {
+        if (d.data()['budgetActual'] is num) spent[d.id] = d.data()['budgetActual'] as num;
+      }
+    } catch (_) {}
     final WriteBatch b = FirebaseFirestore.instance.batch();
     for (final MapEntry<String, Map<String, num>> en in byCat.entries) {
+      final num paid = en.value['paid'] ?? 0;
       b.set(
           _planRef.doc(en.key),
           <String, dynamic>{
             'budgetPlanned': en.value['planned'],
-            if ((en.value['paid'] ?? 0) > 0) 'budgetActual': en.value['paid']
+            if (paid > 0 && paid > (spent[en.key] ?? 0)) 'budgetActual': paid
           },
           SetOptions(merge: true));
     }
@@ -2714,10 +2743,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     final Size size = MediaQuery.of(context).size;
     final Color bg = backgroundColor ?? _lzBg(ivory);
     final bool clear = bg.opacity == 0;
+    _lzBeforeOpen();
     if (size.width >= _lzWideAt) {
       final double wantW = constraints?.maxWidth ?? 620;
       final double maxW = wantW > 760 ? 760 : wantW;
-      return showGeneralDialog<T>(
+      return _lzTrack<T>(showGeneralDialog<T>(
         context: context,
         barrierDismissible: isDismissible,
         barrierLabel: 'Close',
@@ -2751,9 +2781,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         transitionBuilder: (BuildContext ctx, Animation<double> a1,
                 Animation<double> a2, Widget child) =>
             _lzRise(a1, child),
-      );
+      ));
     }
-    return showModalBottomSheet<T>(
+    return _lzTrack<T>(showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
@@ -2780,7 +2810,96 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
               ),
               Flexible(child: builder(ctx)),
             ]),
+    ));
+  }
+
+  // While a popup is open, toasts are drawn on the root overlay so they show ON the popup (a SnackBar
+  // paints under modal routes: an "Undo" behind a sheet could not be reached and surfaced minutes later).
+  int _lzOpen = 0;
+  OverlayEntry? _lzToastEntry;
+  Timer? _lzToastTimer;
+
+  void _lzBeforeOpen() {
+    // a popup takes the focus with it; closing it must not hand the keyboard (and the scroll) to a field
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (mounted) ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
+  }
+
+  Future<T?> _lzTrack<T>(Future<T?> shown) {
+    _lzOpen++;
+    return shown.whenComplete(() {
+      if (_lzOpen > 0) _lzOpen--;
+    });
+  }
+
+  void _lzToastDrop() {
+    _lzToastTimer?.cancel();
+    final OverlayEntry? e = _lzToastEntry;
+    _lzToastEntry = null;
+    if (e != null && e.mounted) e.remove();
+  }
+
+  /// Shows [message] above any open popup. False when no popup is open (the caller uses its SnackBar).
+  bool _lzToastOver(String message,
+      {String? action, Future<void> Function()? onAction, Duration duration = const Duration(seconds: 4)}) {
+    if (_lzOpen <= 0 || !mounted) return false;
+    final OverlayState? ov = Overlay.maybeOf(context, rootOverlay: true);
+    if (ov == null) return false;
+    _lzToastDrop();
+    final OverlayEntry e = OverlayEntry(
+      builder: (BuildContext c) => Positioned(
+        left: 16,
+        right: 16,
+        bottom: 20 + MediaQuery.of(c).viewInsets.bottom + MediaQuery.of(c).padding.bottom,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Material(
+              color: plumDeep,
+              elevation: 14,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, action == null ? 14 : 6, action == null ? 16 : 6, action == null ? 14 : 6),
+                child: Row(children: <Widget>[
+                  Expanded(
+                      child: Text(message,
+                          style: const TextStyle(color: ivory, fontSize: 14, height: 1.35))),
+                  if (action != null)
+                    TextButton(
+                        style: TextButton.styleFrom(foregroundColor: gold),
+                        onPressed: () async {
+                          _lzToastDrop();
+                          if (onAction != null) await onAction();
+                        },
+                        child: Text(action, style: const TextStyle(fontWeight: FontWeight.w800))),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+    // inserted after the current frame: a toast raised while a popup is closing must not touch the tree mid-layout
+    _lzToastEntry = e;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_lzToastEntry == e && !e.mounted) ov.insert(e);
+    });
+    _lzToastTimer = Timer(duration, () {
+      if (_lzToastEntry == e) _lzToastDrop();
+    });
+    return true;
+  }
+
+  /// A Cloud Function error as a sentence a person can read. A server-side failure arrives as a bare
+  /// code ("internal", "unavailable") for a message; those get [fallback].
+  String _lzFnMsg(Object e, String fallback) {
+    if (e is FirebaseException) {
+      const List<String> raw = <String>['internal', 'unknown', 'unavailable', 'deadline-exceeded', 'cancelled', 'resource-exhausted'];
+      final String m = (e.message ?? '').trim();
+      if (raw.contains(e.code) || m.length < 16 || m.toLowerCase() == e.code.toLowerCase()) return fallback;
+      return m;
+    }
+    return fallback;
   }
 
   Future<T?> _lzDialog<T>({
@@ -2789,7 +2908,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     bool barrierDismissible = true,
     Color? barrierColor,
   }) {
-    return showGeneralDialog<T>(
+    _lzBeforeOpen();
+    return _lzTrack<T>(showGeneralDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Close',
@@ -2834,7 +2954,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       transitionBuilder: (BuildContext ctx, Animation<double> a1,
               Animation<double> a2, Widget child) =>
           _lzRise(a1, child, veil: barrierColor),
-    );
+    ));
   }
 
   /// The standard popup layout: an icon, a serif title and one line under it,
@@ -2951,7 +3071,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     bool danger = false,
     IconData? icon,
   }) {
-    return Row(children: <Widget>[
+    // OverflowBar: one row while it fits; on a narrow phone the two buttons stack (main button on top)
+    // instead of overflowing.
+    return OverflowBar(
+        alignment: secondary == null ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+        overflowAlignment: OverflowBarAlignment.end,
+        overflowDirection: VerticalDirection.up,
+        spacing: 8,
+        overflowSpacing: 4,
+        children: <Widget>[
       if (secondary != null)
         TextButton(
             style: TextButton.styleFrom(
@@ -2962,7 +3090,6 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             child: Text(secondary,
                 style: const TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w600))),
-      const Spacer(),
       FilledButton.icon(
         style: FilledButton.styleFrom(
             backgroundColor: danger ? const Color(0xFFB3261E) : gold,
@@ -3076,6 +3203,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
 
   void _toast(String message) {
     if (!mounted) return;
+    if (_lzToastOver(message)) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: plumDeep,
       behavior: SnackBarBehavior.floating,
@@ -3225,6 +3353,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
 
   void _toastC(String message) {
     if (!mounted) return;
+    if (_lzToastOver(message)) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: _lzBg(ivory),
       behavior: SnackBarBehavior.floating,
@@ -3239,6 +3368,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   // people to dismiss it, so the delete stays instant and becomes reversible.
   void _toastUndo(String message, Future<void> Function() undo) {
     if (!mounted) return;
+    if (_lzToastOver(message, action: 'Undo', duration: const Duration(seconds: 6), onAction: () async {
+      try {
+        await undo();
+      } catch (_) {
+        _toastC('Could not undo that.');
+      }
+    })) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
@@ -4360,7 +4496,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     bool open = true;
     bool busyAll = false;
     final Set<String> working = <String>{};
-    String err = '';
+    String err = j['photos'] is List
+        ? ''
+        : 'Couldn\u2019t load the photos waiting. Check your connection, then close this and try again.';
     await _lzSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -4418,7 +4556,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   : '${list.length} photo${list.length == 1 ? '' : 's'} from guests. Tap a photo to see it full size.',
               children: <Widget>[
                 const SizedBox(height: 14),
-                if (list.isEmpty)
+                if (list.isEmpty && err.isEmpty)
                   _pcA_empty(Icons.check_circle_outline_rounded,
                       'Nothing waiting. You’re all caught up.')
                 else
@@ -5707,7 +5845,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         if (f[3] == 'bool') f[0]: cur == null ? true : c[f[0]] != false
     };
     bool busy = false;
-    final String firstKey = fields.isEmpty ? '' : fields.first[0];
+    final String firstKey = fields.any((List<String> f) => f[0] == 'title')
+        ? 'title'
+        : (fields.isEmpty ? '' : fields.first[0]);
     final String? act = await _lzSheet<String>(
       context: ctx,
       constraints: const BoxConstraints(maxWidth: 560),
@@ -5870,7 +6010,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     if (act == 'delete') {
       return <String, dynamic>{'_delete': true};
     }
-    final String first = tc[fields.first[0]]?.text.trim() ?? '';
+    final String first = tc[firstKey]?.text.trim() ?? '';
     if (act != 'save' || first.isEmpty) {
       return null;
     }
@@ -6515,8 +6655,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   onSecondary: () => Navigator.pop(ctx2, false),
                   primary: id == null ? 'Add guest' : 'Save',
                   icon: Icons.check_rounded,
-                  busy: deleting,
-                  onPrimary: valid ? () => Navigator.pop(ctx2, true) : null));
+                  onPrimary: valid && !deleting ? () => Navigator.pop(ctx2, true) : null));
         },
       ),
     );
@@ -6930,7 +7069,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       final Map<String, dynamic> p =
           plan[c['slug']] ?? const <String, dynamic>{};
       final num s = _spentOf(p); // v140: typed or paid on Lazo
-      final num pl = (p['budgetPlanned'] as num?) ?? 0;
+      final num pl = (p['status'] ?? '') == 'skipped' ? 0 : ((p['budgetPlanned'] as num?) ?? 0);
       spent += s;
       planned += pl;
       if (s > 0) {
@@ -7083,7 +7222,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             for (final Map<String, String> c in kCategories) {
               final Map<String, dynamic> p =
                   plan[c['slug']] ?? const <String, dynamic>{};
-              final num pl = (p['budgetPlanned'] as num?) ?? 0;
+              final num pl = (p['status'] ?? '') == 'skipped' ? 0 : ((p['budgetPlanned'] as num?) ?? 0);
               final num sp = _spentOf(p); // v140
               if (pl > 0 || sp > 0) rows.add(<dynamic>[c['label'], pl, sp]);
               final dynamic ua = p['updatedAt'];
@@ -7306,8 +7445,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     if (ok != true) return;
     await _planRef.doc(slug).set({
       'vendorName': nameC.text.trim(),
-      'budgetPlanned': double.tryParse(planC.text.trim()),
-      'budgetActual': double.tryParse(spentC.text.trim()),
+      'budgetPlanned': double.tryParse(planC.text.replaceAll(RegExp(r'[^0-9.]'), '')),
+      'budgetActual': double.tryParse(spentC.text.replaceAll(RegExp(r'[^0-9.]'), '')),
       'updatedAt': FieldValue.serverTimestamp(),
       'updatedBy': _bdMe()[1], // v135: the last-change line on the budget card
     }, SetOptions(merge: true));
@@ -7680,7 +7819,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     // 'blocked' means they said yes to us and the OS said no - asking again
     // can't help, only a trip to system settings can.
     await _stampPushAsk(ok ? 'yes' : 'blocked');
-    if (ok) _toast('Done - we’ll let you know.');
+    if (ok) {
+      _toast('Done - we’ll let you know.');
+    } else {
+      _toast('Notifications are off for Lazo on this device. Turn them on in your settings, then try again from Account.');
+    }
   }
 
   Future<void> _stampPushAsk(String answer) async {
@@ -8625,9 +8768,11 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   primary: c.text.trim().isEmpty
                       ? 'Name the date'
                       : (picked == null ? 'Pick the day' : 'Add date'),
-                  icon: Icons.add_rounded,
+                  icon: picked == null && c.text.trim().isNotEmpty ? Icons.event_rounded : Icons.add_rounded,
                   busy: busy,
-                  onPrimary: valid ? save : null));
+                  onPrimary: valid
+                      ? save
+                      : (c.text.trim().isNotEmpty && picked == null ? pickDay : null)));
         },
       ),
     );
@@ -10285,6 +10430,26 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     return _crTitle(id)[1];
   }
 
+  BuildContext? _crSheetCtx;
+
+  Widget _crSheetHold(BuildContext c, Widget child) {
+    _crSheetCtx = c;
+    return child;
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    final _View before = _view;
+    super.setState(fn);
+    final BuildContext? sc = _crSheetCtx;
+    if (_view != before && sc != null) {
+      _crSheetCtx = null;
+      Future<void>.microtask(() {
+        if (sc.mounted) Navigator.of(sc).maybePop();
+      });
+    }
+  }
+
   Widget _crStrip(Map<String, dynamic> couple, Map<String, Map<String, dynamic>> plan, List<QueryDocumentSnapshot<Map<String, dynamic>>> inqs, DateTime? wed, int? daysOut) {
     final List<String> ids = _cr.where(_crKnown).toList();
     void open(String? id) {
@@ -10292,7 +10457,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         _lzSheet<void>(
           context: context,
           constraints: const BoxConstraints(maxWidth: 720),
-          builder: (BuildContext c) => ConstrainedBox(
+          builder: (BuildContext c) => _crSheetHold(c, ConstrainedBox(
             constraints: BoxConstraints(maxHeight: MediaQuery.of(c).size.height * .88),
             child: _lzFrame(c,
                 icon: Icons.dashboard_customize_rounded,
@@ -10300,15 +10465,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 subtitle: 'Press and hold a widget to move it.',
                 bodyPadding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
                 children: <Widget>[_crStack(couple, plan, inqs, wed, daysOut)]),
-          ),
-        );
+          )),
+        ).whenComplete(() => _crSheetCtx = null);
         return;
       }
       // One widget opens on its own card, which already carries its title.
       _lzSheet<void>(
         context: context,
         constraints: const BoxConstraints(maxWidth: 640),
-        builder: (BuildContext c) => SafeArea(
+        builder: (BuildContext c) => _crSheetHold(c, SafeArea(
           top: false,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxHeight: MediaQuery.of(c).size.height * .88),
@@ -10317,8 +10482,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
               child: _crBody(id, couple, plan, inqs, wed, daysOut),
             ),
           ),
-        ),
-      );
+        )),
+      ).whenComplete(() => _crSheetCtx = null);
     }
 
     const Map<String, IconData> icons = <String, IconData>{
@@ -10686,7 +10851,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     final num total = couple['budgetTotal'] is num ? couple['budgetTotal'] as num : 0;
     num planned = 0, committed = 0;
     for (final Map<String, dynamic> p in plan.values) {
-      if (p['budgetPlanned'] is num) planned += p['budgetPlanned'] as num;
+      if (p['budgetPlanned'] is num && (p['status'] ?? '') != 'skipped') planned += p['budgetPlanned'] as num;
       if (p['budgetActual'] is num) committed += p['budgetActual'] as num;
     }
     num paid = 0;
@@ -11615,7 +11780,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       final DateTime latest = wd.subtract(Duration(days: w));
       if (v > 0) {
         final DateTime earliest = wd.subtract(Duration(days: v));
-        window = 'Apply between ${_licDate(earliest)} and ${_licDate(latest)}';
+        window = earliest.isBefore(DateTime.now())
+            ? 'Apply any time before ${_licDate(latest)}, ${latest.year}'
+            : 'Apply between ${_licDate(earliest)}${earliest.year != latest.year ? ', ${earliest.year}' : ''} and ${_licDate(latest)}, ${latest.year}';
       } else {
         window = 'Apply by ${_licDate(latest)} - it does not expire';
       }
@@ -12042,9 +12209,14 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Row(children: <Widget>[
-              Expanded(child: Text('Weather', style: _serif(size: 22))),
-              Text('$title \u00b7 ${_longDate(wedding)}',
-                  style: const TextStyle(fontSize: 11.5, color: muted)),
+              Text('Weather', maxLines: 1, softWrap: false, style: _serif(size: 22)),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Text('$title \u00b7 ${_longDate(wedding)}',
+                      textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11.5, color: muted))),
               if (selKd != null)
                 IconButton(
                     tooltip: 'Remove this date',
@@ -12459,7 +12631,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       final String path =
           'inquiries/$inquiryId/attachments/${DateTime.now().millisecondsSinceEpoch}_$safe';
       final Reference r = FirebaseStorage.instance.ref(path);
-      await r.putData(bytes, SettableMetadata(contentType: 'text/html'));
+      await r.putData(bytes, SettableMetadata(contentType: 'text/html')).timeout(const Duration(seconds: 20));
       final String url = await r.getDownloadURL();
       att = <String, dynamic>{
         'url': url,
@@ -13639,7 +13811,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                           onPressed: _h(() async {
                             // Snapshot first: after the delete
                             // there is nothing left to read.
-                            final Map<String, dynamic> gone = evs[i].data();
+                            final Map<String, dynamic> gone = Map<String, dynamic>.from(evs[i].data());
                             final DocumentReference<Map<String, dynamic>> ref =
                                 evs[i].reference;
                             await ref.delete();
@@ -13898,7 +14070,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             } on FirebaseFunctionsException catch (e) {
               upd(() {
                 busy = false;
-                err = e.message ?? 'We could not delete your account just now.';
+                err = _lzFnMsg(e, 'We could not delete your account just now. Check your connection and try again.');
               });
             } on FirebaseAuthException catch (e) {
               if (!needPass && e.code == 'requires-recent-login') {
@@ -13911,7 +14083,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                   busy = false;
                   err = needPass
                       ? 'Password didn\u2019t match - account not deleted.'
-                      : (e.message ?? 'We could not delete your account just now.');
+                      : _lzFnMsg(e, 'We could not delete your account just now. Check your connection and try again.');
                 });
               }
             } catch (_) {
@@ -14159,7 +14331,6 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       right: 0,
       bottom: 14,
       child: Center(
-        key: _kTourJune,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Padding(
@@ -14859,7 +15030,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         couple['budgetTotal'] is num ? couple['budgetTotal'] as num : 0;
     double planned = 0;
     for (final Map<String, dynamic> p in plan.values) {
-      planned += ((p['budgetPlanned'] ?? 0) as num).toDouble();
+      if ((p['status'] ?? '') != 'skipped') planned += ((p['budgetPlanned'] ?? 0) as num).toDouble();
     }
     if (budgetTotal <= 0) {
       out.add(<dynamic>[
@@ -15969,7 +16140,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                             ? const Color(0xFFB04343)
                             : (isNow ? const Color(0xFF8A6A2F) : muted)))),
             const SizedBox(height: 4),
-            for (final Map<String, String> c in cats.take(4))
+            for (final Map<String, String> c in cats.take(cats.length > 3 ? 2 : 3))
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),
                 child: Row(children: <Widget>[
@@ -15987,8 +16158,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                               fontSize: 10, color: _lzFg(isWedding ? ivory : ink)))),
                 ]),
               ),
-            if (cats.length > 4)
-              Text('+${cats.length - 4}',
+            if (cats.length > 3)
+              Text('+${cats.length - 2} more',
                   style:  TextStyle(fontSize: 9.5, color: _lzFg(muted))),
           ]),
     );
@@ -16319,7 +16490,15 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                             <QueryDocumentSnapshot<Map<String, dynamic>>>[])
                       d.id: d.data()
                   };
-                  return _budgetCard(couple, livePlan);
+                  return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                    stream: _liveDoc('couple:$_cid', () => _coupleRef),
+                    builder: (BuildContext c3,
+                        AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> cs) {
+                      final Map<String, dynamic> liveCouple =
+                          cs.data?.data() ?? couple;
+                      return _budgetCard(liveCouple, livePlan);
+                    },
+                  );
                 },
               ),
             ]),
@@ -16401,6 +16580,20 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     int step = 0;
     bool saving = false;
     String err = '';
+    try {
+      final QuerySnapshot<Map<String, dynamic>> pq0 = await _planRef.get();
+      final Set<String> fromPlan = <String>{
+        for (final QueryDocumentSnapshot<Map<String, dynamic>> pd in pq0.docs)
+          if ((pd.data()['status'] ?? '').toString().isNotEmpty &&
+              (pd.data()['status'] ?? '').toString() != 'skipped')
+            pd.id
+      };
+      if (pq0.docs.isNotEmpty) {
+        wanted
+          ..clear()
+          ..addAll(fromPlan);
+      }
+    } catch (_) {}
     if (!mounted) return;
     await _lzSheet<void>(
       context: context,
@@ -16452,7 +16645,8 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     await _planRef.get();
                 for (final QueryDocumentSnapshot<Map<String, dynamic>> pd
                     in pq.docs) {
-                  if ((pd.data()['status'] ?? '').toString().isNotEmpty) {
+                  if (const <String>['booked', 'researching']
+                      .contains((pd.data()['status'] ?? '').toString())) {
                     hasPlan.add(pd.id);
                   }
                 }
@@ -16723,7 +16917,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             } on FirebaseFunctionsException catch (e) {
               upd(() {
                 joining = false;
-                joinErr = e.message ?? 'That code did not work.';
+                joinErr = _lzFnMsg(e, 'That code did not work. Check it and try again.');
               });
             } catch (_) {
               upd(() {
@@ -16795,9 +16989,13 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                               icon: Icon(Icons.copy_rounded,
                                   color: _lzFg(plum), size: 18),
                               onPressed: _h(() async {
-                                await Clipboard.setData(ClipboardData(
-                                    text: (d.data()['code'] ?? '').toString()));
-                                _toast('Code copied \u2713');
+                                final String code = (d.data()['code'] ?? '').toString();
+                                try {
+                                  await Clipboard.setData(ClipboardData(text: code));
+                                  _toast('Code copied');
+                                } catch (_) {
+                                  _toast('Couldn\u2019t copy it here. The code is $code - send it to your partner.');
+                                }
                               }),
                             ),
                         ]),
@@ -17149,7 +17347,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                 'createdAt': FieldValue.serverTimestamp(),
                 'context': <String, dynamic>{
                   'source': 'couple_dashboard',
-                  'build': 'v90',
+                  'build': 'v158',
                 },
               });
               if (ctx.mounted) Navigator.pop(ctx);
@@ -17414,6 +17612,12 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             title: 'Notifications',
             value: 'Know the moment a vendor writes back',
             onTap: () => _maybeAskPush(force: true),
+          ),
+          _accountRow(
+            icon: Icons.description_outlined,
+            title: 'Contracts',
+            value: 'Every agreement your vendors sent, signed or waiting, in one place',
+            onTap: () => _contractsVaultSheet(),
           ),
         ]),
         _accountGroup(label: 'MORE', rows: <Widget>[
@@ -18094,6 +18298,36 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       children: [
         _subHeader('Vendor team'),
         _teamCard(couple, plan, _inqDocs, teamWedding),
+        const SizedBox(height: 12),
+        _Press(
+          scale: .985,
+          onTap: () => _contractsVaultSheet(),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+            decoration: BoxDecoration(
+                color: _lzBg(cardBg),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _lzLine(goldLine))),
+            child: Row(children: <Widget>[
+              Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(color: plumDeep, borderRadius: BorderRadius.circular(11)),
+                  child: const Icon(Icons.description_outlined, color: gold, size: 19)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                  Text('Your contracts',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: _lzFg(plum))),
+                  const SizedBox(height: 2),
+                  Text('Signed and waiting, with the PDFs',
+                      style: TextStyle(fontSize: 12.5, color: _lzFg(muted))),
+                ]),
+              ),
+              Icon(Icons.chevron_right_rounded, color: _lzFg(muted)),
+            ]),
+          ),
+        ),
         const SizedBox(height: 14),
          Padding(
           padding: EdgeInsets.only(left: 6, bottom: 8),
@@ -19633,7 +19867,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             : <String, dynamic>{});
     final String _joined = ((w['names'] ?? defNames) as String).trim();
     final List<String> _parts =
-        _joined.split(RegExp(r'\s*(?:&|\+|and)\s*', caseSensitive: false));
+        _joined.split(RegExp(r'\s*(?:&|\+|\band\b)\s*', caseSensitive: false));
     final TextEditingController name1C =
         TextEditingController(text: _parts.isNotEmpty ? _parts[0].trim() : '');
     final TextEditingController name2C = TextEditingController(
@@ -22395,7 +22629,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         'blocked': !unblocking,
       });
     } on FirebaseFunctionsException catch (e) {
-      _toast(e.message ?? 'Could not update that just now.');
+      _toast(_lzFnMsg(e, 'Could not update that just now. Try again in a moment.'));
       return;
     } catch (_) {
       _toast('Could not update that just now.');
@@ -24620,7 +24854,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
       }
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 32),
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 110),
       children: <Widget>[
         _subHeader('Your wedding day'),
         if (weddingDate != null)
@@ -27507,10 +27741,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: _h(() => _editGuest()),
-              icon:  Icon(Icons.person_add_alt_1_rounded,
-                  size: 19, color: _lzFg(plum)),
-              label:  Text('Add guest',
-                  style: TextStyle(color: _lzFg(plum), fontWeight: FontWeight.w600)),
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 19, color: gold),
+              label: const Text('Add guest',
+                  style: TextStyle(color: gold, fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(color: gold.withOpacity(.7)),
                 shape: RoundedRectangleBorder(
@@ -27519,6 +27752,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               ),
             ),
+            const SizedBox(height: 96), // clears the floating Ask June bar
           ],
         );
       },
@@ -28971,8 +29205,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         'cat': cat,
         'qty': int.tryParse(qtyC.text.trim()) ?? 1,
         'est':
-            int.tryParse(estC.text.trim().replaceAll(RegExp(r'[^0-9]'), '')) ??
-                0,
+            (double.tryParse(estC.text.trim().replaceAll(RegExp(r'[^0-9.]'), '')) ??
+                    0)
+                .round(),
         'link': link,
         'note': noteC.text.trim(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -29344,7 +29579,7 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     return _Press(
       onTap: () => _editShopItem(d),
       onLongPress: () async {
-        final Map<String, dynamic> gone = d.data();
+        final Map<String, dynamic> gone = Map<String, dynamic>.from(d.data());
         final DocumentReference<Map<String, dynamic>> ref = d.reference;
         await ref.delete();
         _toastUndo('Removed.', () => ref.set(gone));

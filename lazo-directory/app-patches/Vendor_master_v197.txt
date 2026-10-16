@@ -732,7 +732,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
   String _railStage(Map<String, dynamic> m) {
     final String st = (m['status'] ?? '').toString();
     if (st == 'booked' || st == 'delivered') return 'booked';
-    if (st == 'lost') return 'lost';
+    if (st == 'lost' || st == 'closed') return 'lost';
     if (st.isEmpty || st == 'new') return 'new';
     return 'talking';
   }
@@ -1787,6 +1787,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
         final Map<String, dynamic> h = _helloCache ?? <String, dynamic>{};
         if (_helloCacheFor != vendorId) return 'Finding couples…';
         final int count = (h['count'] is num) ? (h['count'] as num).toInt() : 0;
+        if (h['error'] != null) return 'Couldn\u2019t load couples - try again soon';
         return count == 0
             ? 'Nobody to greet right now'
             : '$count couple${count == 1 ? '' : 's'} need you';
@@ -2427,10 +2428,11 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     final Size size = MediaQuery.of(context).size;
     final Color bg = backgroundColor ?? _lzBg(ivory);
     final bool clear = bg.opacity == 0;
+    _lzBeforeOpen();
     if (size.width >= _lzWideAt) {
       final double wantW = constraints?.maxWidth ?? 620;
       final double maxW = wantW > 760 ? 760 : wantW;
-      return showGeneralDialog<T>(
+      return _lzTrack<T>(showGeneralDialog<T>(
         context: context,
         barrierDismissible: isDismissible,
         barrierLabel: 'Close',
@@ -2464,9 +2466,9 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
         transitionBuilder: (BuildContext ctx, Animation<double> a1,
                 Animation<double> a2, Widget child) =>
             _lzRise(a1, child),
-      );
+      ));
     }
-    return showModalBottomSheet<T>(
+    return _lzTrack<T>(showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
@@ -2493,7 +2495,96 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               ),
               Flexible(child: builder(ctx)),
             ]),
+    ));
+  }
+
+  // While a popup is open, toasts are drawn on the root overlay so they show ON the popup (a SnackBar
+  // paints under modal routes: an "Undo" behind a sheet could not be reached and surfaced minutes later).
+  int _lzOpen = 0;
+  OverlayEntry? _lzToastEntry;
+  Timer? _lzToastTimer;
+
+  void _lzBeforeOpen() {
+    // a popup takes the focus with it; closing it must not hand the keyboard (and the scroll) to a field
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (mounted) ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
+  }
+
+  Future<T?> _lzTrack<T>(Future<T?> shown) {
+    _lzOpen++;
+    return shown.whenComplete(() {
+      if (_lzOpen > 0) _lzOpen--;
+    });
+  }
+
+  void _lzToastDrop() {
+    _lzToastTimer?.cancel();
+    final OverlayEntry? e = _lzToastEntry;
+    _lzToastEntry = null;
+    if (e != null && e.mounted) e.remove();
+  }
+
+  /// Shows [message] above any open popup. False when no popup is open (the caller uses its SnackBar).
+  bool _lzToastOver(String message,
+      {String? action, Future<void> Function()? onAction, Duration duration = const Duration(seconds: 4)}) {
+    if (_lzOpen <= 0 || !mounted) return false;
+    final OverlayState? ov = Overlay.maybeOf(context, rootOverlay: true);
+    if (ov == null) return false;
+    _lzToastDrop();
+    final OverlayEntry e = OverlayEntry(
+      builder: (BuildContext c) => Positioned(
+        left: 16,
+        right: 16,
+        bottom: 20 + MediaQuery.of(c).viewInsets.bottom + MediaQuery.of(c).padding.bottom,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Material(
+              color: plumDeep,
+              elevation: 14,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, action == null ? 14 : 6, action == null ? 16 : 6, action == null ? 14 : 6),
+                child: Row(children: <Widget>[
+                  Expanded(
+                      child: Text(message,
+                          style: const TextStyle(color: ivory, fontSize: 14, height: 1.35))),
+                  if (action != null)
+                    TextButton(
+                        style: TextButton.styleFrom(foregroundColor: gold),
+                        onPressed: () async {
+                          _lzToastDrop();
+                          if (onAction != null) await onAction();
+                        },
+                        child: Text(action, style: const TextStyle(fontWeight: FontWeight.w800))),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+    // inserted after the current frame: a toast raised while a popup is closing must not touch the tree mid-layout
+    _lzToastEntry = e;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_lzToastEntry == e && !e.mounted) ov.insert(e);
+    });
+    _lzToastTimer = Timer(duration, () {
+      if (_lzToastEntry == e) _lzToastDrop();
+    });
+    return true;
+  }
+
+  /// A Cloud Function error as a sentence a person can read. A server-side failure arrives as a bare
+  /// code ("internal", "unavailable") for a message; those get [fallback].
+  String _lzFnMsg(Object e, String fallback) {
+    if (e is FirebaseException) {
+      const List<String> raw = <String>['internal', 'unknown', 'unavailable', 'deadline-exceeded', 'cancelled', 'resource-exhausted'];
+      final String m = (e.message ?? '').trim();
+      if (raw.contains(e.code) || m.length < 16 || m.toLowerCase() == e.code.toLowerCase()) return fallback;
+      return m;
+    }
+    return fallback;
   }
 
   Future<T?> _lzDialog<T>({
@@ -2502,7 +2593,8 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     bool barrierDismissible = true,
     Color? barrierColor,
   }) {
-    return showGeneralDialog<T>(
+    _lzBeforeOpen();
+    return _lzTrack<T>(showGeneralDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Close',
@@ -2547,7 +2639,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
       transitionBuilder: (BuildContext ctx, Animation<double> a1,
               Animation<double> a2, Widget child) =>
           _lzRise(a1, child, veil: barrierColor),
-    );
+    ));
   }
 
   /// The standard popup layout: an icon, a serif title and one line under it,
@@ -2664,7 +2756,15 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     bool danger = false,
     IconData? icon,
   }) {
-    return Row(children: <Widget>[
+    // OverflowBar: one row while it fits; on a narrow phone the two buttons stack (main button on top)
+    // instead of overflowing.
+    return OverflowBar(
+        alignment: secondary == null ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+        overflowAlignment: OverflowBarAlignment.end,
+        overflowDirection: VerticalDirection.up,
+        spacing: 8,
+        overflowSpacing: 4,
+        children: <Widget>[
       if (secondary != null)
         TextButton(
             style: TextButton.styleFrom(
@@ -2675,7 +2775,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
             child: Text(secondary,
                 style: const TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w600))),
-      const Spacer(),
       FilledButton.icon(
         style: FilledButton.styleFrom(
             backgroundColor: danger ? const Color(0xFFB3261E) : gold,
@@ -2791,6 +2890,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     if (!mounted) {
       return;
     }
+    if (_lzToastOver(message)) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       backgroundColor: plumDeep,
       behavior: SnackBarBehavior.floating,
@@ -3592,12 +3692,14 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     }
   }
 
-  Future<void> _setStatus(String id, String status) async {
+  Future<bool> _setStatus(String id, String status) async {
     try {
       await _setStatusInner(id, status);
+      return true;
     } catch (e) {
       _toast('Could not update: ' + _errText(e));
       debugPrint('LAZO setStatus: ' + e.toString());
+      return false;
     }
   }
 
@@ -4119,7 +4221,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
             _confettiOverlay(),
             if (_jwFor.isEmpty) _bookingBannerOverlay(), // v196: June's card announces bookings
             // v167: the desk, one thumb away, on phones
-            if (_uid != null && MediaQuery.of(context).size.width < 1100)
+            if (_uid != null && MediaQuery.of(context).size.width < 1100 && !_showInbox && !_editingProfile)
               _vendorFab(),
             // v193: June's notices
             _juneNoticeOverlay(),
@@ -6521,7 +6623,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     if (remaining <= 0) {
       _toast(_isAdminUser
           ? 'Gallery is at its $cap-photo limit.'
-          : 'Free profiles include 10 photos. Unlimited gallery is coming with Lazo Pro.');
+          : 'Your gallery holds $cap photos. Remove one to add another.');
       return;
     }
     try {
@@ -7024,16 +7126,20 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
 
         Widget resultRow(Map<String, dynamic> r) {
           final String metro = _metroLabel(r['metroId'].toString());
+          final bool already = _epPreferred.any((Map<String, dynamic> p) =>
+              (p['placeId'] ?? '').toString() == (r['placeId'] ?? '').toString());
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: _Press(
               scale: .985,
-              onTap: () {
-                setState(() {
-                  _epPreferred.add(r);
-                });
-                Navigator.pop(ctx);
-              },
+              onTap: already
+                  ? () => _toast('${r['name']} is already on your list.')
+                  : () {
+                      setState(() {
+                        _epPreferred.add(r);
+                      });
+                      Navigator.pop(ctx);
+                    },
               child: Container(
                 padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
                 decoration: BoxDecoration(
@@ -7050,7 +7156,9 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                           style: TextStyle(fontSize: 12, color: _lzFg(muted))),
                     ]),
                   ),
-                  const Icon(Icons.add_circle_outline_rounded, color: gold, size: 22),
+                  already
+                      ? Text('Added', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: _lzFg(vGreen)))
+                      : const Icon(Icons.add_circle_outline_rounded, color: gold, size: 22),
                 ]),
               ),
             ),
@@ -8317,7 +8425,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                   }).toList(),
                 ),
                 const SizedBox(height: 8),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8329,7 +8437,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                     setState(() => _epAttrCatering = v2);
                   }),
                 ),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8341,7 +8449,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                     setState(() => _epAttrByo = v2);
                   }),
                 ),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8353,7 +8461,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                     setState(() => _epAttrCerRec = v2);
                   }),
                 ),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8365,7 +8473,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                     setState(() => _epAttrLodging = v2);
                   }),
                 ),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8417,7 +8525,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                   }).toList(),
                 ),
                 const SizedBox(height: 14),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8429,7 +8537,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                     setState(() => _epAttrSde = v2);
                   }),
                 ),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8441,7 +8549,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                     setState(() => _epAttrDrone = v2);
                   }),
                 ),
-                SwitchListTile(
+                _LzSwitchTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
                   activeColor: plum,
@@ -8454,7 +8562,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                   }),
                 ),
               ],
-              SwitchListTile(
+              _LzSwitchTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
                 activeColor: plum,
@@ -8844,7 +8952,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
             ]),
         _epCard(
             'Your FAQs',
-            'The questions couples always ask - answered once, shown on your profile. Up to 6.',
+            'The questions couples always ask - answered once, shown on your profile. Up to 15.',
             <Widget>[
               if (_epFaqs.isNotEmpty)
                 Column(
@@ -9291,7 +9399,12 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
   }
 
   String _errText(Object e) {
-    String s = e.toString();
+    if (e is FirebaseFunctionsException) {
+      return _lzFnMsg(e, 'Something went wrong on our side. Try again in a moment.');
+    }
+    if (e is String) return e;
+    if (e is TimeoutException) return 'That took too long. Check your connection and try again.';
+    String s = e.toString().replaceFirst(RegExp(r'^\[[a-z_/\-]+\]\s*'), '');
     if (s.contains('unauthorized') ||
         s.contains('permission') ||
         s.contains('403')) {
@@ -9363,7 +9476,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
   // mark Planned / Building / Shipped, so "you asked, we built" is visible
   // to every vendor, not just the one who asked.
 
-  static const String kBuildId = 'JC-LAZO-VDASH-0915-177';
+  static const String kBuildId = 'JC-LAZO-VDASH-1014-197';
   static const List<String> kBugAreas = <String>[
     'Inbox & messages',
     'Profile & photos',
@@ -9559,6 +9672,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               busy = false;
               err = 'Couldn\u2019t send that. Check your connection and try again.';
             });
+            _toast(err);
           }
         }
 
@@ -10160,6 +10274,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               busy = false;
               err = 'Couldn\u2019t send the ticket. Check your connection and try again.';
             });
+            _toast(err);
           }
         }
 
@@ -10652,7 +10767,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
             done = true;
             if (open) Navigator.pop(sc);
           } on FirebaseFunctionsException catch (e) {
-            fail(e.message ?? 'Could not delete the account. Try again.');
+            fail(_lzFnMsg(e, 'Could not delete the account. Try again.'));
           } catch (_) {
             fail('Could not delete the account. Try again.');
           }
@@ -15200,7 +15315,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       _toast('Finish in the Stripe tab \u2014 this card updates itself.');
     } on FirebaseFunctionsException catch (e) {
       _popJuneVeil();
-      _toast(e.message ?? 'Could not start Stripe onboarding.');
+      _toast(_lzFnMsg(e, 'Could not start Stripe onboarding.'));
     } catch (_) {
       _popJuneVeil();
       _toast('Could not start Stripe onboarding.');
@@ -15229,7 +15344,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       _toast('Approve in the Square tab \u2014 this card updates itself.');
     } on FirebaseFunctionsException catch (e) {
       _popJuneVeil();
-      _toast(e.message ?? 'Could not start Square connect.');
+      _toast(_lzFnMsg(e, 'Could not start Square connect.'));
     } catch (_) {
       _popJuneVeil();
       _toast('Could not start Square connect.');
@@ -15274,7 +15389,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
             done = true;
             if (open) Navigator.pop(sc);
           } on FirebaseFunctionsException catch (e) {
-            fail(e.message ?? 'Could not disconnect Square.');
+            fail(_lzFnMsg(e, 'Could not disconnect Square.'));
           } catch (_) {
             fail('Could not disconnect Square.');
           }
@@ -15483,7 +15598,11 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         }
 
         Future<void> save() async {
-          final num flat = num.tryParse(flatC.text.trim()) ?? 0;
+          final num flat = num.tryParse(flatC.text.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 0;
+          if (mode == 'flat' && flat <= 0) {
+            up(() => err = 'Enter the retainer amount, or pick another option.');
+            return;
+          }
           up(() {
             busy = true;
             err = '';
@@ -16140,7 +16259,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                             }
                           } on FirebaseFunctionsException catch (e) {
                             setU(() => onBusy(false));
-                            _toast(e.message ?? 'Could not start checkout.');
+                            _toast(_lzFnMsg(e, 'Could not start checkout.'));
                           } catch (_) {
                             setU(() => onBusy(false));
                             _toast('Could not start checkout.');
@@ -16231,7 +16350,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       _toast(
           'Add your new card in the secure tab - renewals use it automatically.');
     } on FirebaseFunctionsException catch (e) {
-      _toast(e.message ?? 'Could not start the card update.');
+      _toast(_lzFnMsg(e, 'Could not start the card update.'));
     } catch (_) {
       _toast('Could not start the card update.');
     }
@@ -16627,7 +16746,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       if (mounted) {
         setState(() => _tplBusy = false);
       }
-      _toast(e.message ?? 'Template analysis failed - try again.');
+      _toast(_lzFnMsg(e, 'Template analysis failed - try again.'));
     } catch (e) {
       if (mounted) {
         setState(() => _tplBusy = false);
@@ -17177,8 +17296,12 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       'text': text,
       'at': FieldValue.serverTimestamp(),
     });
+    String cur = '';
+    try {
+      cur = ((await ref.get()).data()?['status'] ?? '').toString();
+    } catch (_) {}
     await ref.update(<String, dynamic>{
-      'status': status,
+      if (!const <String>['booked', 'delivered', 'lost', 'closed'].contains(cur)) 'status': status,
       'vendorReply': text,
       'respondedAt': FieldValue.serverTimestamp(),
     });
@@ -17531,7 +17654,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         _toast('June for Studio is a Pro Studio feature.');
         _upgradeSheet(vendorId);
       } else {
-        _toast(e.message ?? 'June could not write that one.');
+        _toast(_lzFnMsg(e, 'June could not write that one.'));
       }
       return null;
     } catch (_) {
@@ -18315,7 +18438,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
               ? 'Contract rescinded'
               : 'Removed');
     } on FirebaseFunctionsException catch (e) {
-      _toast(e.message ?? 'Could not complete - try again.');
+      _toast(_lzFnMsg(e, 'Could not complete - try again.'));
     } catch (_) {
       _toast('Could not complete - try again.');
     }
@@ -18422,12 +18545,18 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     }
     _showJuneVeil('Opening your contract studio…',
         'June is gathering what she already knows - names, dates, venue, pricing.');
-    final QuerySnapshot<Map<String, dynamic>> allT = await FirebaseFirestore
-        .instance
-        .collection('vendors')
-        .doc(vendorId)
-        .collection('contractTemplates')
-        .get();
+    final QuerySnapshot<Map<String, dynamic>> allT;
+    try {
+      allT = await FirebaseFirestore.instance
+          .collection('vendors')
+          .doc(vendorId)
+          .collection('contractTemplates')
+          .get();
+    } catch (e) {
+      _popJuneVeil();
+      _toast('Couldn\u2019t open your contract templates: ' + _errText(e));
+      return;
+    }
     final List<QueryDocumentSnapshot<Map<String, dynamic>>> actives = allT.docs
         .where((QueryDocumentSnapshot<Map<String, dynamic>> d) =>
             (d.data()['status'] ?? 'draft') == 'active')
@@ -19194,8 +19323,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                                         if (ctx2.mounted) {
                                           setSheet(() {
                                             generating = false;
-                                            genErr = e.message ??
-                                                'Could not generate - try again.';
+                                            genErr = _lzFnMsg(e, 'Could not generate - try again.');
                                           });
                                         }
                                       } catch (_) {
@@ -19245,7 +19373,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
       });
       _toast('Sent. The couple can now review and sign.');
     } on FirebaseFunctionsException catch (e) {
-      _toast(e.message ?? 'Could not send - try again.');
+      _toast(_lzFnMsg(e, 'Could not send - try again.'));
     } catch (_) {
       _toast('Could not send - try again.');
     }
@@ -19853,7 +19981,29 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     );
   }
 
+  /// The thread's invoiceStatus from ALL its invoices: anything still open wins, then paid, then void.
+  Future<void> _rollupInvoiceStatus(String inquiryId) async {
+    final DocumentReference<Map<String, dynamic>> iq =
+        FirebaseFirestore.instance.collection('inquiries').doc(inquiryId);
+    final QuerySnapshot<Map<String, dynamic>> all = await iq.collection('invoices').get();
+    final List<String> st = <String>[
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> d in all.docs) (d.data()['status'] ?? '').toString()
+    ];
+    final String roll = st.any((String x) => x == 'sent' || x == 'due' || x == 'overdue')
+        ? 'sent'
+        : (st.contains('paid') ? 'paid' : (st.isEmpty ? '' : 'void'));
+    await iq.set(<String, dynamic>{
+      'invoiceStatus': roll,
+      'invoiceUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   String _invMoney(num v) {
+    final int cents = (v * 100).round();
+    if (cents % 100 != 0) {
+      final String whole = _invMoney(cents ~/ 100);
+      return '$whole.${(cents % 100).toString().padLeft(2, '0')}';
+    }
     final String s = v.round().toString();
     final StringBuffer b = StringBuffer();
     for (int i = 0; i < s.length; i++) {
@@ -20471,8 +20621,11 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
               final String lb = it['label']!.text.trim();
               final num? am = num.tryParse(
                   it['amount']!.text.replaceAll(',', '').trim());
-              if (lb.isEmpty || am == null) continue;
-              lines.add(<String, dynamic>{'label': lb, 'amount': am});
+              if (am == null || am <= 0) continue;
+              lines.add(<String, dynamic>{
+                'label': lb.isNotEmpty ? lb : (titleC.text.trim().isEmpty ? 'Services' : titleC.text.trim()),
+                'amount': am
+              });
               t2 += am;
             }
             if (lines.isEmpty || t2 <= 0) {
@@ -20499,7 +20652,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                     : titleC.text.trim(),
                 'lineItems': lines,
                 'total': t2,
-                'dueDate': due == null ? null : Timestamp.fromDate(due!),
+                'dueDate': due == null ? null : Timestamp.fromDate(DateTime(due!.year, due!.month, due!.day, 12)),
                 'status': 'sent',
                 'createdAt': FieldValue.serverTimestamp(),
                 'sentAt': FieldValue.serverTimestamp(),
@@ -20765,13 +20918,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                 'paidAt': FieldValue.serverTimestamp(),
                 'paidVia': method,
               }, SetOptions(merge: true));
-              await FirebaseFirestore.instance
-                  .collection('inquiries')
-                  .doc(inquiryId)
-                  .set(<String, dynamic>{
-                'invoiceStatus': 'paid',
-                'invoiceUpdatedAt': FieldValue.serverTimestamp(),
-              }, SetOptions(merge: true));
+              await _rollupInvoiceStatus(inquiryId);
               if (ctx.mounted) Navigator.of(ctx).pop();
               _toast('Marked paid \u2713');
             } catch (e) {
@@ -20961,7 +21108,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
             } on FirebaseFunctionsException catch (e) {
               setSheet(() {
                 busy = false;
-                err = e.message ?? 'Whop did not confirm the install.';
+                err = _lzFnMsg(e, 'Whop did not confirm the install.');
               });
             } catch (e) {
               setSheet(() {
@@ -21347,7 +21494,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
             } on FirebaseFunctionsException catch (e) {
               setSheet(() {
                 sending = false;
-                err = e.message ?? 'Could not create the plan.';
+                err = _lzFnMsg(e, 'Could not create the plan.');
               });
             } catch (e) {
               setSheet(() {
@@ -21938,7 +22085,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
 
   String _stageOf(Map<String, dynamic> inq, List<List<String>> stages) {
     final String st = (inq['status'] ?? '').toString();
-    if (st == 'lost') return 'lost';
+    if (st == 'lost' || st == 'closed') return 'lost';
     if (st == 'booked') {
       return inq['deliveredAt'] is Timestamp ? 'delivered' : 'booked';
     }
@@ -22344,6 +22491,27 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
           .doc(inquiryId)
           .get();
       if (!s.exists || !mounted) return;
+      final String cur = (s.data()!['status'] ?? '').toString();
+      if (key == 'lost') {
+        if (cur == 'lost' || cur == 'closed') return;
+        if (cur == 'booked') {
+          await _bookingStatusSheet(inquiryId, s.data()!); // releasing a booking asks why
+          return;
+        }
+        final bool go = await _lzConfirm('Mark this lead lost?',
+            'It moves to Lost. You can still message them, and a reply from them brings it back.',
+            confirm: 'Mark lost', cancel: 'Keep it', danger: true, icon: Icons.do_not_disturb_on_outlined);
+        if (go) await _setStatus(inquiryId, 'lost');
+        return;
+      }
+      if (key == 'delivered') {
+        if (cur != 'booked') {
+          _toast('Mark them booked first - delivery comes after the booking.');
+          return;
+        }
+        await _markDelivered(inquiryId);
+        return;
+      }
       await _bookingStatusSheet(inquiryId, s.data()!);
       return;
     }
@@ -22617,7 +22785,8 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     final TextEditingController c = TextEditingController();
     Future<void> apply(String t) async {
       final String tag = t.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
-      if (tag.isEmpty || tag.length > 24) return;
+      if (tag.isEmpty) return;
+      if (tag.length > 24) throw 'Tags can be up to 24 characters - try a shorter one.';
       await FirebaseFirestore.instance
           .collection('inquiries')
           .doc(inquiryId)
@@ -22856,7 +23025,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
           final Map<String, dynamic> data = <String, dynamic>{
             'title': title,
             'note': noteC.text.trim(),
-            'dueAt': due == null ? null : Timestamp.fromDate(due!),
+            'dueAt': due == null ? null : Timestamp.fromDate(DateTime(due!.year, due!.month, due!.day, 12)),
             'assignedTo': who,
             'vendorId': vendorId,
             'coupleUid': (inq['coupleUid'] ?? '').toString(),
@@ -23059,12 +23228,12 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                     width: 30,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: _lzBg(_hexColor(w[0], plum)),
+                      color: _hexColor(w[0], plum),
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: _lzLine(cur.toUpperCase() == w[0].toUpperCase()
-                              ? ink
-                              : Colors.white),
+                          color: cur.toUpperCase() == w[0].toUpperCase()
+                              ? (_lzDark ? gold : ink)
+                              : (_lzDark ? Colors.white.withOpacity(.35) : Colors.white),
                           width: cur.toUpperCase() == w[0].toUpperCase()
                               ? 2.5
                               : 1.5),
@@ -23138,7 +23307,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  color: _lzBg(pCol),
+                  color: pCol,
                   padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
                   child: Column(children: <Widget>[
                     if (logo.isNotEmpty)
@@ -23148,13 +23317,13 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                            color: _lzBg(Colors.white),
+                            color: Colors.white,
                             borderRadius: BorderRadius.circular(13)),
                         child: Image.network(logo, fit: BoxFit.contain),
                       ),
                     Text(name.toUpperCase(),
                         style: TextStyle(
-                            color: _lzFg(aCol),
+                            color: aCol,
                             fontSize: 10,
                             letterSpacing: 2,
                             fontWeight: FontWeight.w800)),
@@ -23177,11 +23346,11 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 9),
                       decoration: BoxDecoration(
-                          color: _lzBg(aCol),
+                          color: aCol,
                           borderRadius: BorderRadius.circular(10)),
                       child: Text('Pay \$500',
                           style: TextStyle(
-                              color: _lzFg(pCol),
+                              color: pCol,
                               fontSize: 13,
                               fontWeight: FontWeight.w800)),
                     ),
@@ -23498,10 +23667,13 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                   <dynamic>['09:00', '17:00']
                 ]
               : <dynamic>[]);
-      hours[d[0]] = w
-          .whereType<List>()
-          .map((List x) => <String>[x[0].toString(), x[1].toString()])
-          .toList();
+      hours[d[0]] = <List<String>>[
+        for (final dynamic x in w)
+          if (x is List && x.length >= 2)
+            <String>[x[0].toString(), x[1].toString()]
+          else if (x is Map && x['0'] != null && x['1'] != null)
+            <String>[x['0'].toString(), x['1'].toString()]
+      ];
     }
     final List<Map<String, dynamic>> types =
         ((sch['types'] as List?) ?? const <dynamic>[])
@@ -23649,7 +23821,12 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                 'minNoticeHours': notice,
                 'maxDaysOut': 60,
                 'videoLink': videoC.text.trim(),
-                'hours': hours,
+                'hours': <String, dynamic>{
+                  for (final MapEntry<String, List<List<String>>> e in hours.entries)
+                    e.key: <Map<String, String>>[
+                      for (final List<String> w in e.value) <String, String>{'0': w[0], '1': w[1]}
+                    ]
+                },
                 'types': cleanTypes.isEmpty
                     ? <Map<String, dynamic>>[
                         <String, dynamic>{
@@ -23673,6 +23850,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
               saving = false;
               err = 'Could not save: ' + _errText(e);
             });
+            _toast(err);
           }
         }
 
@@ -24304,7 +24482,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
             setSheet(() {
               turns.add(<String, dynamic>{
                 'role': 'assistant',
-                'content': e.message ?? 'June could not answer right now.',
+                'content': _lzFnMsg(e, 'June could not answer right now.'),
                 'error': true
               });
               busy = false;
@@ -25977,8 +26155,14 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                 'minBudget':
                     num.tryParse(minC.text.replaceAll(RegExp(r'[^\d.]'), '')) ??
                         0,
-                'guestMin': int.tryParse(gMinC.text.trim()) ?? 0,
-                'guestMax': int.tryParse(gMaxC.text.trim()) ?? 0,
+                'guestMin': () {
+                  final int a = int.tryParse(gMinC.text.trim()) ?? 0, b = int.tryParse(gMaxC.text.trim()) ?? 0;
+                  return a > 0 && b > 0 && a > b ? b : a;
+                }(),
+                'guestMax': () {
+                  final int a = int.tryParse(gMinC.text.trim()) ?? 0, b = int.tryParse(gMaxC.text.trim()) ?? 0;
+                  return a > 0 && b > 0 && a > b ? a : b;
+                }(),
                 'travelMiles': int.tryParse(travelC.text.trim()) ?? 0,
                 'eventTypes': types.toList(),
                 'daysOff': daysOff.toList(),
@@ -26232,7 +26416,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         });
         return null;
       } on FirebaseFunctionsException catch (e) {
-        return e.message ?? 'Could not update.';
+        return _lzFnMsg(e, 'Could not update.');
       } catch (e) {
         return _errText(e);
       }
@@ -26400,7 +26584,9 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         .join(' ');
     final String headline = _helloCache == null
         ? 'Finding couples who still need you\u2026'
-        : count == 0
+        : h['error'] != null
+            ? 'Couldn\u2019t load couples right now. Check your connection and try again soon.'
+            : count == 0
             ? 'No couples in $metroName need ${cat.isEmpty ? 'you' : 'a ' + cat.replaceFirst(RegExp(r's$'), '')} right now'
             : '$count couple${count == 1 ? '' : 's'} in $metroName still need${count == 1 ? 's' : ''} ${cat.isEmpty ? 'you' : 'a ' + cat.replaceFirst(RegExp(r's$'), '')}';
     return Padding(
@@ -26544,7 +26730,9 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
             children: matches.isEmpty
                 ? <Widget>[
                     _v4Empty(Icons.event_available_rounded,
-                        'Nobody to greet right now. New couples set their date every week - check back.'),
+                        h['error'] != null
+                            ? 'Couldn\u2019t load couples right now. Check your connection and try again soon.'
+                            : 'Nobody to greet right now. New couples set their date every week - check back.'),
                   ]
                 : <Widget>[
                     const SizedBox(height: 12),
@@ -26768,7 +26956,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
           } on FirebaseFunctionsException catch (e) {
             up(() {
               busy = false;
-              err = e.message ?? 'Couldn\u2019t send. Try again.';
+              err = _lzFnMsg(e, 'Couldn\u2019t send. Try again.');
             });
           } catch (e) {
             up(() {
@@ -27336,7 +27524,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
           } on FirebaseFunctionsException catch (e) {
             up(() {
               busy = false;
-              err = e.message ?? 'Couldn\u2019t send. Try again.';
+              err = _lzFnMsg(e, 'Couldn\u2019t send. Try again.');
             });
           } catch (e) {
             up(() {
@@ -27523,18 +27711,20 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                   ),
                   InkWell(
                     onTap: () async {
-                      await d.reference.set(<String, dynamic>{
-                        'status': 'void',
-                        'voidedAt': FieldValue.serverTimestamp(),
-                      }, SetOptions(merge: true));
-                      await FirebaseFirestore.instance
-                          .collection('inquiries')
-                          .doc(inquiryId)
-                          .set(<String, dynamic>{
-                        'invoiceStatus': 'void',
-                        'invoiceUpdatedAt': FieldValue.serverTimestamp(),
-                      }, SetOptions(merge: true));
-                      _toast('Invoice voided.');
+                      final bool go = await _lzConfirm('Void this invoice?',
+                          'The couple can no longer pay it. This can\u2019t be undone - send a new invoice if you need one.',
+                          confirm: 'Void invoice', cancel: 'Keep it', danger: true);
+                      if (!go) return;
+                      try {
+                        await d.reference.set(<String, dynamic>{
+                          'status': 'void',
+                          'voidedAt': FieldValue.serverTimestamp(),
+                        }, SetOptions(merge: true));
+                        await _rollupInvoiceStatus(inquiryId);
+                        _toast('Invoice voided.');
+                      } catch (e) {
+                        _toast('Could not void it: ' + _errText(e));
+                      }
                     },
                     child:  Padding(
                       padding: EdgeInsets.all(6),
@@ -27603,7 +27793,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700)),
                       Text(
-                          '\$${((p['price'] ?? 0) as num).toStringAsFixed(0)} \u00b7 ${st == 'sent' ? 'Awaiting reply' : st == 'accepted' ? 'ACCEPTED' : 'Declined'}',
+                          '${_invMoney((p['price'] ?? 0) as num)} \u00b7 ${st == 'sent' ? 'Awaiting reply' : st == 'accepted' ? 'ACCEPTED' : 'Declined'}',
                           style: TextStyle(
                               fontSize: 11.5,
                               color: _lzFg(sc == gold ? const Color(0xFF8A6A2F) : sc),
@@ -27898,8 +28088,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         confirm: 'Mark booked',
         cancel: 'Not yet',
         icon: Icons.celebration_rounded);
-    if (go) {
-      await _setStatus(inquiryId, 'booked');
+    if (go && await _setStatus(inquiryId, 'booked')) {
       _toast('Booked. Delivery tools are open for this thread.');
     }
   }
@@ -27987,7 +28176,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
                 thinking = false;
                 err = (e.message ?? '').contains('studio-required')
                     ? 'Teasers are a Pro Studio feature.'
-                    : (e.message ?? 'June couldn\u2019t write that one.');
+                    : (_lzFnMsg(e, 'June couldn\u2019t write that one.'));
               });
             } catch (e) {
               up(() {
@@ -28557,7 +28746,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         _toast('Sneak Peek is a Pro Studio feature.');
         _upgradeSheet(vendorId);
       } else {
-        _toast(e.message ?? 'June could not finish that one.');
+        _toast(_lzFnMsg(e, 'June could not finish that one.'));
       }
       return null;
     } catch (e) {
@@ -31145,7 +31334,7 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
           } on FirebaseFunctionsException catch (e) {
             up(() {
               busy = false;
-              err = e.message ?? 'That code didn\u2019t work.';
+              err = _lzFnMsg(e, 'That code didn\u2019t work.');
             });
           } catch (_) {
             up(() {
@@ -32822,4 +33011,38 @@ class _SkyCard extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// SwitchListTile with a transparent Material behind it, so its ink draws on coloured cards (JC-LAZO-POPUP-1014).
+class _LzSwitchTile extends StatelessWidget {
+  const _LzSwitchTile({
+    required this.value,
+    required this.title,
+    required this.onChanged,
+    this.dense,
+    this.contentPadding,
+    this.activeTrackColor,
+    this.activeColor,
+  });
+  final bool value;
+  final Widget title;
+  final ValueChanged<bool>? onChanged;
+  final bool? dense;
+  final EdgeInsetsGeometry? contentPadding;
+  final Color? activeTrackColor;
+  final Color? activeColor;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        type: MaterialType.transparency,
+        child: SwitchListTile(
+          value: value,
+          title: title,
+          onChanged: onChanged,
+          dense: dense,
+          contentPadding: contentPadding,
+          activeTrackColor: activeTrackColor,
+          activeColor: activeColor,
+        ),
+      );
 }

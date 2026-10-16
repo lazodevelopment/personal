@@ -89,6 +89,7 @@
     String vMode = 'type';
     final TextEditingController vText = TextEditingController();
     final List<Map<String, dynamic>> vRows = <Map<String, dynamic>>[];
+    Map<String, String> vBooked = <String, String>{}; // category -> vendor already booked there
     // website
     final TextEditingController wText = TextEditingController();
     Map<String, dynamic> wSite = <String, dynamic>{};
@@ -311,8 +312,18 @@
             'metroId': (couple['metroId'] ?? '').toString()
           }, onError: (String m) => why = m);
           final List<dynamic> vs = r != null && r['vendors'] is List ? r['vendors'] as List : <dynamic>[];
+          // who is already booked, so the review can say what an import would replace
+          final Map<String, String> booked = <String, String>{};
+          try {
+            final QuerySnapshot<Map<String, dynamic>> pq = await _planRef.get();
+            for (final QueryDocumentSnapshot<Map<String, dynamic>> d in pq.docs) {
+              final String n = (d.data()['vendorName'] ?? '').toString().trim();
+              if ((d.data()['status'] ?? '').toString() == 'booked' && n.isNotEmpty) booked[d.id] = n;
+            }
+          } catch (_) {}
           up(() {
             busy = false;
+            vBooked = booked;
             if (r == null) {
               err = why.isEmpty ? 'June couldn’t read that. Try again in a moment.' : why;
               return;
@@ -831,6 +842,15 @@
                   child: _lzNote(Icons.info_outline_rounded,
                       'Your team keeps one vendor per category, so for two of the same kind the last one is kept.'),
                 ),
+              for (final Map<String, dynamic> r in ready)
+                if ((vBooked[r['category'] as String] ?? '').isNotEmpty &&
+                    vBooked[r['category'] as String]!.toLowerCase() !=
+                        (r['name'] as TextEditingController).text.trim().toLowerCase())
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: _lzNote(Icons.swap_horiz_rounded,
+                        'Saving replaces ${vBooked[r['category'] as String]} as your ${_catLabel(r['category'] as String).toLowerCase()} with ${(r['name'] as TextEditingController).text.trim()}. Remove that row to keep them.'),
+                  ),
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: _lzNote(Icons.handshake_outlined,
@@ -1307,13 +1327,22 @@
   }
 
   Future<void> _saveImportedBudget(Map<String, Map<String, num>> byCat, double total) async {
+    // an import never lowers what is already recorded as spent (paid invoices, typed amounts)
+    final Map<String, num> spent = <String, num>{};
+    try {
+      final QuerySnapshot<Map<String, dynamic>> pq = await _planRef.get();
+      for (final QueryDocumentSnapshot<Map<String, dynamic>> d in pq.docs) {
+        if (d.data()['budgetActual'] is num) spent[d.id] = d.data()['budgetActual'] as num;
+      }
+    } catch (_) {}
     final WriteBatch b = FirebaseFirestore.instance.batch();
     for (final MapEntry<String, Map<String, num>> en in byCat.entries) {
+      final num paid = en.value['paid'] ?? 0;
       b.set(
           _planRef.doc(en.key),
           <String, dynamic>{
             'budgetPlanned': en.value['planned'],
-            if ((en.value['paid'] ?? 0) > 0) 'budgetActual': en.value['paid']
+            if (paid > 0 && paid > (spent[en.key] ?? 0)) 'budgetActual': paid
           },
           SetOptions(merge: true));
     }

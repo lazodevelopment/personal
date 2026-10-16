@@ -46,10 +46,11 @@
     final Size size = MediaQuery.of(context).size;
     final Color bg = backgroundColor ?? _lzBg(ivory);
     final bool clear = bg.opacity == 0;
+    _lzBeforeOpen();
     if (size.width >= _lzWideAt) {
       final double wantW = constraints?.maxWidth ?? 620;
       final double maxW = wantW > 760 ? 760 : wantW;
-      return showGeneralDialog<T>(
+      return _lzTrack<T>(showGeneralDialog<T>(
         context: context,
         barrierDismissible: isDismissible,
         barrierLabel: 'Close',
@@ -83,9 +84,9 @@
         transitionBuilder: (BuildContext ctx, Animation<double> a1,
                 Animation<double> a2, Widget child) =>
             _lzRise(a1, child),
-      );
+      ));
     }
-    return showModalBottomSheet<T>(
+    return _lzTrack<T>(showModalBottomSheet<T>(
       context: context,
       isScrollControlled: isScrollControlled,
       isDismissible: isDismissible,
@@ -112,7 +113,96 @@
               ),
               Flexible(child: builder(ctx)),
             ]),
+    ));
+  }
+
+  // While a popup is open, toasts are drawn on the root overlay so they show ON the popup (a SnackBar
+  // paints under modal routes: an "Undo" behind a sheet could not be reached and surfaced minutes later).
+  int _lzOpen = 0;
+  OverlayEntry? _lzToastEntry;
+  Timer? _lzToastTimer;
+
+  void _lzBeforeOpen() {
+    // a popup takes the focus with it; closing it must not hand the keyboard (and the scroll) to a field
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (mounted) ScaffoldMessenger.maybeOf(context)?.hideCurrentSnackBar();
+  }
+
+  Future<T?> _lzTrack<T>(Future<T?> shown) {
+    _lzOpen++;
+    return shown.whenComplete(() {
+      if (_lzOpen > 0) _lzOpen--;
+    });
+  }
+
+  void _lzToastDrop() {
+    _lzToastTimer?.cancel();
+    final OverlayEntry? e = _lzToastEntry;
+    _lzToastEntry = null;
+    if (e != null && e.mounted) e.remove();
+  }
+
+  /// Shows [message] above any open popup. False when no popup is open (the caller uses its SnackBar).
+  bool _lzToastOver(String message,
+      {String? action, Future<void> Function()? onAction, Duration duration = const Duration(seconds: 4)}) {
+    if (_lzOpen <= 0 || !mounted) return false;
+    final OverlayState? ov = Overlay.maybeOf(context, rootOverlay: true);
+    if (ov == null) return false;
+    _lzToastDrop();
+    final OverlayEntry e = OverlayEntry(
+      builder: (BuildContext c) => Positioned(
+        left: 16,
+        right: 16,
+        bottom: 20 + MediaQuery.of(c).viewInsets.bottom + MediaQuery.of(c).padding.bottom,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Material(
+              color: plumDeep,
+              elevation: 14,
+              borderRadius: BorderRadius.circular(14),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(16, action == null ? 14 : 6, action == null ? 16 : 6, action == null ? 14 : 6),
+                child: Row(children: <Widget>[
+                  Expanded(
+                      child: Text(message,
+                          style: const TextStyle(color: ivory, fontSize: 14, height: 1.35))),
+                  if (action != null)
+                    TextButton(
+                        style: TextButton.styleFrom(foregroundColor: gold),
+                        onPressed: () async {
+                          _lzToastDrop();
+                          if (onAction != null) await onAction();
+                        },
+                        child: Text(action, style: const TextStyle(fontWeight: FontWeight.w800))),
+                ]),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
+    // inserted after the current frame: a toast raised while a popup is closing must not touch the tree mid-layout
+    _lzToastEntry = e;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_lzToastEntry == e && !e.mounted) ov.insert(e);
+    });
+    _lzToastTimer = Timer(duration, () {
+      if (_lzToastEntry == e) _lzToastDrop();
+    });
+    return true;
+  }
+
+  /// A Cloud Function error as a sentence a person can read. A server-side failure arrives as a bare
+  /// code ("internal", "unavailable") for a message; those get [fallback].
+  String _lzFnMsg(Object e, String fallback) {
+    if (e is FirebaseException) {
+      const List<String> raw = <String>['internal', 'unknown', 'unavailable', 'deadline-exceeded', 'cancelled', 'resource-exhausted'];
+      final String m = (e.message ?? '').trim();
+      if (raw.contains(e.code) || m.length < 16 || m.toLowerCase() == e.code.toLowerCase()) return fallback;
+      return m;
+    }
+    return fallback;
   }
 
   Future<T?> _lzDialog<T>({
@@ -121,7 +211,8 @@
     bool barrierDismissible = true,
     Color? barrierColor,
   }) {
-    return showGeneralDialog<T>(
+    _lzBeforeOpen();
+    return _lzTrack<T>(showGeneralDialog<T>(
       context: context,
       barrierDismissible: barrierDismissible,
       barrierLabel: 'Close',
@@ -166,7 +257,7 @@
       transitionBuilder: (BuildContext ctx, Animation<double> a1,
               Animation<double> a2, Widget child) =>
           _lzRise(a1, child, veil: barrierColor),
-    );
+    ));
   }
 
   /// The standard popup layout: an icon, a serif title and one line under it,
@@ -283,7 +374,15 @@
     bool danger = false,
     IconData? icon,
   }) {
-    return Row(children: <Widget>[
+    // OverflowBar: one row while it fits; on a narrow phone the two buttons stack (main button on top)
+    // instead of overflowing.
+    return OverflowBar(
+        alignment: secondary == null ? MainAxisAlignment.end : MainAxisAlignment.spaceBetween,
+        overflowAlignment: OverflowBarAlignment.end,
+        overflowDirection: VerticalDirection.up,
+        spacing: 8,
+        overflowSpacing: 4,
+        children: <Widget>[
       if (secondary != null)
         TextButton(
             style: TextButton.styleFrom(
@@ -294,7 +393,6 @@
             child: Text(secondary,
                 style: const TextStyle(
                     fontSize: 14, fontWeight: FontWeight.w600))),
-      const Spacer(),
       FilledButton.icon(
         style: FilledButton.styleFrom(
             backgroundColor: danger ? const Color(0xFFB3261E) : gold,

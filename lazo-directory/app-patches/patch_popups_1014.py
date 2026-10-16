@@ -108,6 +108,15 @@ def parts(text, base_name, names):
 
 s = parts(s, "base_couple.txt", ("cA", "cB", "cC"))
 v = parts(v, "base_vendor.txt", ("v1", "v2", "v3", "v4"))
+
+# QA pass 2 fixes, on top of the parts (popup_parts/fix_qa.py, popup_parts/qa_*.md)
+import importlib.util as _ilu
+_sp = _ilu.spec_from_file_location("fix_qa", HERE / "popup_parts" / "fix_qa.py")
+_fx = _ilu.module_from_spec(_sp)
+_sp.loader.exec_module(_fx)
+s = _fx.apply_couple(s)
+v = _fx.apply_vendor(v)
+print("  fix_qa: applied")
 (HERE / "Couple_master_v158.txt").write_text(s, encoding="utf-8")
 (HERE / "Vendor_master_v197.txt").write_text(v, encoding="utf-8")
 print("wrote Couple_master_v158.txt and Vendor_master_v197.txt")
