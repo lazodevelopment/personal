@@ -1,5 +1,5 @@
 // functions-dashboard/safety.js
-// Build ID: JC-LAZO-SAFETY-0918-001
+// Build ID: JC-LAZO-SAFETY-1016-004 (004: reportCouple / blockCouple, the vendor side; base 0918-001)
 //
 // REPORT AND BLOCK A VENDOR, FROM THE THREAD.
 //
@@ -202,7 +202,93 @@ module.exports = () => {
     return { ok: true, reportId: report.id };
   });
 
-  return { blockVendor, reportVendor };
+  // ---------------------------------------------------------------------
+  // JC-LAZO-SAFETY-1016-004: THE OTHER DIRECTION. A vendor can report and
+  // block a couple. Until now only couples could, and the scam that prompted
+  // this (a fake couple pulls a vendor onto an outside video call, plays porn
+  // on camera, screenshots it and demands money) targets vendors.
+  //
+  // Blocking is per thread: the rules refuse couple messages once
+  // blockedByVendor is set, and sendThreadMessage refuses them too. Reporting
+  // also blocks the thread and queues for review. An account-wide block is
+  // left to review (or to the automatic rules in safety-guard.js), so one
+  // vendor's report can't lock a real couple out of every other vendor.
+  async function assertVendorOnThread(inquiryId, uid) {
+    const snap = await db().collection('inquiries').doc(inquiryId).get();
+    if (!snap.exists) throw new HttpsError('not-found', 'Conversation not found.');
+    const inq = snap.data() || {};
+    const vendorId = String(inq.vendorId || '');
+    const v = vendorId ? await db().collection('vendors').doc(vendorId).get() : null;
+    let ok = !!(v && v.exists && v.get('claimedBy') === uid);
+    if (!ok) {
+      const u = await db().collection('users').doc(uid).get();
+      ok = u.exists && u.get('vendorId') === vendorId && u.get('vendorRole') === 'manager';
+    }
+    if (!ok) throw new HttpsError('permission-denied', 'Not your conversation.');
+    return inq;
+  }
+  const COUPLE_REASONS = ['offplatform_call', 'extortion', 'harassment', 'inappropriate', 'spam', 'scam', 'other'];
+
+  // blockCouple  callable {inquiryId, blocked}
+  const blockCouple = onCall({ memory: '256MiB' }, async (request) => {
+    const uid = request.auth && request.auth.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+    const inquiryId = String((request.data || {}).inquiryId || '');
+    const blocked = (request.data || {}).blocked !== false;
+    if (!inquiryId) throw new HttpsError('invalid-argument', 'inquiryId required.');
+    await assertVendorOnThread(inquiryId, uid);
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    await db().collection('inquiries').doc(inquiryId).set({
+      blockedByVendor: blocked,
+      blockedByVendorAt: blocked ? now : admin.firestore.FieldValue.delete(),
+    }, { merge: true });
+    console.log(`[blockCouple] ${uid} ${blocked ? 'blocked' : 'unblocked'} thread ${inquiryId}`);
+    return { ok: true, blocked };
+  });
+
+  // reportCouple  callable {inquiryId, reason, detail}
+  const reportCouple = onCall({ memory: '256MiB', secrets: [RESEND_API_KEY] }, async (request) => {
+    const uid = request.auth && request.auth.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+    const d = request.data || {};
+    const inquiryId = String(d.inquiryId || '');
+    const reason = COUPLE_REASONS.includes(String(d.reason)) ? String(d.reason) : 'other';
+    const detail = String(d.detail || '').slice(0, 4000);
+    if (!inquiryId) throw new HttpsError('invalid-argument', 'inquiryId required.');
+    const inq = await assertVendorOnThread(inquiryId, uid);
+    const coupleUid = String(inq.coupleUid || '');
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const urgent = reason === 'extortion' || reason === 'offplatform_call';
+
+    const report = await db().collection('reports').add({
+      type: 'couple', status: 'open', reason, detail, urgent,
+      inquiryId, vendorId: String(inq.vendorId || ''), vendorName: inq.vendorName || '',
+      coupleUid, coupleName: inq.coupleName || '', reportedByUid: uid, createdAt: now,
+    });
+    await db().collection('inquiries').doc(inquiryId).set({
+      blockedByVendor: true, blockedByVendorAt: now, vendorReportedAt: now, vendorReportId: report.id,
+    }, { merge: true });
+
+    // How many vendors have reported this couple account?
+    let distinct = 0;
+    if (coupleUid) {
+      const prior = await db().collection('reports').where('coupleUid', '==', coupleUid).get();
+      distinct = new Set(prior.docs.filter((x) => x.get('type') === 'couple').map((x) => x.get('vendorId'))).size;
+    }
+    await sendMail(
+      RESEND_API_KEY.value(), ALERT_TO,
+      `[lazo/report]${urgent ? ' URGENT' : ''} couple ${reason} - ${inq.coupleName || coupleUid}${distinct > 1 ? ` (${distinct} vendors)` : ''}`,
+      `Reason:  ${reason}\nCouple:  ${inq.coupleName || ''} (${coupleUid})\nVendor:  ${inq.vendorName || ''} (${inq.vendorId || ''})\n` +
+      `Thread:  ${inquiryId}\nReport:  ${report.id}\nDistinct vendors who have reported this couple: ${distinct}\n\n` +
+      `${detail || '(no detail given)'}\n\n` +
+      `The thread is blocked for this vendor and preserved. To block the account everywhere, use safetyReview in God Mode.` +
+      (urgent ? `\n\nExtortion / outside-call report: check calls/ for this thread's call record and tell the vendor not to pay. IC3: https://www.ic3.gov` : '')
+    );
+    console.log(`[reportCouple] ${uid} reported ${coupleUid} (${reason}), ${distinct} distinct vendors`);
+    return { ok: true, reportId: report.id };
+  });
+
+  return { blockVendor, reportVendor, blockCouple, reportCouple };
 };
 
-// END OF FILE - JC-LAZO-SAFETY-0918-001
+// END OF FILE - JC-LAZO-SAFETY-1016-004

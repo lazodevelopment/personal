@@ -46,6 +46,7 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const { wrap: brandWrap } = require('./brand');
+const OP = require('./offplatform');
 
 const TELNYX_API_KEY = defineSecret('TELNYX_API_KEY');
 const TELNYX_FROM = defineSecret('TELNYX_FROM');
@@ -135,9 +136,19 @@ module.exports = function leadsModule(RESEND_API_KEY) {
     return emailOk(v.email) ? str(v.email) : '';
   }
 
+  // JC-LAZO-SAFETY-1016-005: a lead (website form, text reply) asking to move
+  // to Zoom / Meet / FaceTime / WhatsApp. We can't hold what arrives from
+  // outside Lazo, so the message and thread carry a flag and the vendor app
+  // shows the scam warning next to it.
+  function safetyFlagFor(text) {
+    const sc = OP.scan(text);
+    return sc.level === 'strong' || sc.level === 'weak' ? { level: sc.level, matches: [...sc.strong, ...sc.weak].slice(0, 5) } : null;
+  }
   async function addMessage(inquiryId, senderRole, text, extra) {
     const inqRef = db().collection('inquiries').doc(inquiryId);
-    await inqRef.collection('messages').add({ senderRole, text: clip(text, 2900), at: FieldValue.serverTimestamp(), ...(extra || {}) });
+    const flag = senderRole === 'couple' ? safetyFlagFor(text) : null;
+    await inqRef.collection('messages').add({ senderRole, text: clip(text, 2900), at: FieldValue.serverTimestamp(), ...(extra || {}), ...(flag ? { safetyFlag: flag } : {}) });
+    if (flag) await inqRef.set({ safetyFlag: { ...flag, at: FieldValue.serverTimestamp() } }, { merge: true });
     await inqRef.set({
       lastMessageAt: FieldValue.serverTimestamp(), lastMessageRole: senderRole,
       lastMessagePreview: clip(text, 140),
@@ -208,7 +219,9 @@ module.exports = function leadsModule(RESEND_API_KEY) {
         lastMessageAt: FieldValue.serverTimestamp(), lastMessageRole: 'couple', lastMessagePreview: clip(intro || 'New inquiry from your website', 140),
         fileToken: crypto.randomBytes(18).toString('base64url'), fileTokenAt: FieldValue.serverTimestamp(),
       });
-      await ref.collection('messages').add({ senderRole: 'couple', text: intro || `Hi! I found you through your website and would love to hear more.`, at: FieldValue.serverTimestamp(), via: 'embed' });
+      const flag = safetyFlagFor(intro);
+      await ref.collection('messages').add({ senderRole: 'couple', text: intro || `Hi! I found you through your website and would love to hear more.`, at: FieldValue.serverTimestamp(), via: 'embed', ...(flag ? { safetyFlag: flag } : {}) });
+      if (flag) await ref.set({ safetyFlag: { ...flag, at: FieldValue.serverTimestamp() } }, { merge: true });
     }
 
     // tell the vendor - email always, text when they have a number

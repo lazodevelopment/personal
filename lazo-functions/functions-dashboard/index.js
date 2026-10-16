@@ -907,6 +907,12 @@ Object.assign(exports, scheduler);
 const safety = require('./safety')();
 exports.blockVendor = safety.blockVendor;
 exports.reportVendor = safety.reportVendor;
+// JC-LAZO-SAFETY-1016-004: vendors can report and block a couple from a thread.
+exports.reportCouple = safety.reportCouple;
+exports.blockCouple = safety.blockCouple;
+// JC-LAZO-SAFETY-1016-003: hold "let's get on a Zoom call" before the vendor sees it
+// (sendThreadMessage, safetyPrecheck, safetyReview, safetyDigest).
+Object.assign(exports, require('./safety-guard')(RESEND_API_KEY));
 
 const deleteAccount = require('./deleteAccount')();
 exports.deleteMyAccount = deleteAccount.deleteMyAccount;

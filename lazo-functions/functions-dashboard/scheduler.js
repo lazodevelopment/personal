@@ -32,6 +32,7 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const { wrap: brandWrap } = require('./brand');
+const OP = require('./offplatform');
 
 const TELNYX_API_KEY = defineSecret('TELNYX_API_KEY');
 const TELNYX_FROM = defineSecret('TELNYX_FROM');
@@ -246,7 +247,10 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
         startAt: Timestamp.fromDate(start), endAt: Timestamp.fromDate(end), tz: sch.tz, status: 'booked',
         note: clip(b.note, 600), source: inquiryId && b.inquiryId ? 'thread' : 'page', cancelToken, createdAt: FieldValue.serverTimestamp(), reminded: {},
       };
+      // JC-LAZO-SAFETY-1016-005: a booking note asking for Zoom / FaceTime / WhatsApp gets the scam flag
+      { const sc = OP.scan(consult.note); if (sc.level === 'strong' || sc.level === 'weak') consult.safetyFlag = { level: sc.level, matches: [...sc.strong, ...sc.weak].slice(0, 5) }; }
       await cRef.set(consult);
+      if (consult.safetyFlag) await inqRef.set({ safetyFlag: { ...consult.safetyFlag, at: FieldValue.serverTimestamp() } }, { merge: true });
       const when = whenText(sch.tz, start);
       const cancelUrl = `https://us-central1-lazo-513ec.cloudfunctions.net/consultCancel?id=${cRef.id}&t=${cancelToken}`;
       const bookUrl = `https://meetlazo.com/book/${vendorId}?inq=${inquiryId}`;
