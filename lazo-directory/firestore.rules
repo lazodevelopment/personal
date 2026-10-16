@@ -237,8 +237,9 @@ service cloud.firestore {
           && request.resource.data.diff(resource.data).affectedKeys()
                .hasOnly(['vendorId','vendorRole','coupleUid']))
         || (isOwner(uid)
+        // JC-LAZO-RULES-1016-020: referredBy (the vendor who brought a couple in, set by leads.js) is server-only
         && !request.resource.data.diff(resource.data).affectedKeys()
-             .hasAny(['vendorId','vendorRole','coupleUid'])
+             .hasAny(['vendorId','vendorRole','coupleUid','referredBy'])
         // v016: signupSource is written once, never rewritten
         && (!request.resource.data.diff(resource.data).affectedKeys()
               .hasAny(['signupSource'])

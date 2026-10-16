@@ -1,5 +1,5 @@
 // functions-dashboard/payments.js
-// Build ID: JC-LAZO-FNDASH-0913-018 (018: the reminder sweep skips practice-couple invoices; 014: couple emails carry the vendor brand; 011: fileLink + fileView - the login-free booking page at meetlazo.com/f/{inquiry}?t=; base 010)
+// Build ID: JC-LAZO-FNDASH-1016-019 (019: payCheckout needs the /f/ token or a signed-in party on off-platform threads; fileView returns the contract's signingUrl; off-platform clients get plan/reminder mail at contact.email with the /f/ link; base 018) (018: the reminder sweep skips practice-couple invoices; 014: couple emails carry the vendor brand; 011: fileLink + fileView - the login-free booking page at meetlazo.com/f/{inquiry}?t=; base 010)
 //
 // PAYMENT PLANS + THE WHOP VENDOR RAIL (Build A of the HoneyBook gap list).
 //
@@ -106,8 +106,19 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
     return str(ud.vendorId) === vendorId && str(ud.vendorRole) === 'manager';
   }
 
+  // where the client opens their thread: the app for a Lazo couple, the
+  // login-free /f/ page for an off-platform client (website lead, added by hand)
+  function clientLink(inquiryId, inq) {
+    if (inq && inq.offPlatform === true && str(inq.fileToken)) return `https://meetlazo.com/f/${inquiryId}?t=${inq.fileToken}`;
+    return `${APP}?thread=${inquiryId}`;
+  }
+
   async function coupleContact(inq) {
     const cid = str(inq.coupleUid);
+    if (inq.offPlatform === true || cid.startsWith('lead_')) {
+      const c = inq.contact || {};
+      return { email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(str(c.email)) ? str(c.email) : '', name: str(c.name) || str(inq.coupleName) || 'there' };
+    }
     if (!cid) return { email: '', name: str(inq.coupleName) || 'there' };
     const u = await db().collection('users').doc(cid).get();
     const ud = u.exists ? u.data() : {};
@@ -160,7 +171,7 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
         vendorId: str(inv.vendorId), coupleUid: str(inq.coupleUid),
         tip: String(round2(num(tip))),
       },
-      redirect_url: `${APP}?thread=${encodeURIComponent(inquiryId)}&paid=${encodeURIComponent(invoiceId)}`,
+      redirect_url: inq.offPlatform === true && str(inq.fileToken) ? `${clientLink(inquiryId, inq)}&paid=${encodeURIComponent(invoiceId)}` : `${APP}?thread=${encodeURIComponent(inquiryId)}&paid=${encodeURIComponent(invoiceId)}`,
     });
     const url = str(cfg.purchase_url || cfg.url || (cfg.data && cfg.data.purchase_url));
     if (!url) throw new Error('whop returned no purchase_url');
@@ -316,8 +327,8 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
       if (c.email) {
         const vS = await db().collection('vendors').doc(vendorId).get();
         await sendEmail(c.email, `Your payment plan from ${str(inq.vendorName) || 'your vendor'} is ready`,
-          brandWrap(vS.exists ? vS.data() : null, `<p>Hi ${c.name},</p><p>${str(inq.vendorName) || 'Your vendor'} set up a payment plan on Lazo: <b>${money(total)}</b> in ${rows.length} payment${rows.length === 1 ? '' : 's'}.</p><ul>${rows.map((r) => `<li>${r.label}: ${money(r.amount)} - due ${fmtDate(r.due)}</li>`).join('')}</ul><p>The first one is due ${fmtDate(first.due)} and the last ${fmtDate(last.due)}. Pay each one from your thread: <a href="${APP}?thread=${inquiryId}">open Lazo</a>.</p>`),
-          `Your payment plan: ${money(total)} in ${rows.length} payments. ${lines}. Pay from ${APP}?thread=${inquiryId}`);
+          brandWrap(vS.exists ? vS.data() : null, `<p>Hi ${c.name},</p><p>${str(inq.vendorName) || 'Your vendor'} set up a payment plan on Lazo: <b>${money(total)}</b> in ${rows.length} payment${rows.length === 1 ? '' : 's'}.</p><ul>${rows.map((r) => `<li>${r.label}: ${money(r.amount)} - due ${fmtDate(r.due)}</li>`).join('')}</ul><p>The first one is due ${fmtDate(first.due)} and the last ${fmtDate(last.due)}. Pay each one from ${inq.offPlatform === true ? 'your booking page' : 'your thread'}: <a href="${clientLink(inquiryId, inq)}">${inq.offPlatform === true ? 'open it here' : 'open Lazo'}</a>.</p>`),
+          `Your payment plan: ${money(total)} in ${rows.length} payments. ${lines}. Pay from ${clientLink(inquiryId, inq)}`);
       }
     } catch (e) { console.warn('planCreate email', e.message); }
 
@@ -351,7 +362,29 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
     return { voided };
   });
 
-  // GET ?inquiry=&invoice=&tip=   -> { url }
+  // payCheckout used to trust anyone holding the two ids. Now: the /f/ token
+  // (?t=) or a Firebase ID token (Authorization: Bearer) for the couple or the
+  // vendor. Off-platform threads require one today. Lazo couples' app calls
+  // carry neither yet (Couple v159), so for them it only logs until a Couple
+  // master sends the ID token - then flip PAY_REQUIRE_AUTH to true.
+  const PAY_REQUIRE_AUTH = false;
+  async function checkoutCaller(req, inq) {
+    const t = str(req.query.t), want = str(inq.fileToken);
+    if (t && want && t.length === want.length && crypto.timingSafeEqual(Buffer.from(t), Buffer.from(want))) return 'token';
+    const m = /^Bearer\s+(.+)$/i.exec(str(req.get('authorization')));
+    if (!m) return '';
+    try {
+      const uid = (await admin.auth().verifyIdToken(m[1])).uid;
+      const cid = str(inq.coupleUid);
+      if (uid === cid) return 'couple';
+      const u = await db().collection('users').doc(uid).get();
+      if (u.exists && cid && str(u.get('coupleUid')) === cid) return 'couple';
+      if (await vendorAccess(uid, str(inq.vendorId))) return 'vendor';
+    } catch (e) { console.warn('payCheckout id token', e.message); }
+    return '';
+  }
+
+  // GET ?inquiry=&invoice=&tip=&t=   -> { url }
   // Whop vendors get a Whop checkout on their own company. Everyone else is
   // passed through to the legacy invoiceCheckout (Stripe / Square) untouched.
   const payCheckout = onRequest({ cors: true, invoker: 'public', memory: '256MiB', secrets: [WHOP_API_KEY] }, async (req, res) => {
@@ -363,6 +396,10 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
       const [inqS, invS] = await Promise.all([inqRef.get(), inqRef.collection('invoices').doc(invoiceId).get()]);
       if (!inqS.exists || !invS.exists) return res.status(404).json({ error: 'not found' });
       const inq = inqS.data(), inv = invS.data();
+      // who is asking: the /f/ token holder, or a signed-in couple/vendor on this thread
+      const who = await checkoutCaller(req, inq);
+      if (!who && (inq.offPlatform === true || PAY_REQUIRE_AUTH)) return res.status(403).json({ error: 'not allowed' });
+      if (!who) console.warn('payCheckout without token or sign-in', inquiryId);
       if (str(inv.status) === 'paid') return res.status(409).json({ error: 'already paid' });
       if (str(inv.status) === 'void') return res.status(410).json({ error: 'cancelled' });
       const vS = await db().collection('vendors').doc(str(inv.vendorId || inq.vendorId)).get();
@@ -519,7 +556,7 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
       if (!inq) continue;
       const c = await coupleContact(inq);
       const vendorName = str(inq.vendorName) || 'your vendor';
-      const link = `${APP}?thread=${inquiryId}`;
+      const link = clientLink(inquiryId, inq);
       const text = kind === 'soon'
         ? `Heads up - "${str(inv.title)}" (${money(inv.total)}) is due ${fmtDate(due)}.`
         : kind === 'due'
@@ -530,7 +567,7 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
         if (c.email) {
           const vS = await db().collection('vendors').doc(str(inv.vendorId || inq.vendorId)).get();
           await sendEmail(c.email, `${vendorName}: ${kind === 'overdue' ? 'payment past due' : 'payment ' + (kind === 'soon' ? 'due in 3 days' : 'due today')}`,
-            brandWrap(vS.exists ? vS.data() : null, `<p>Hi ${c.name},</p><p>${text}</p><p><a href="${link}">Open the thread on Lazo</a> and tap Pay.</p>`),
+            brandWrap(vS.exists ? vS.data() : null, `<p>Hi ${c.name},</p><p>${text}</p><p><a href="${link}">${inq.offPlatform === true ? 'Open your booking page' : 'Open the thread on Lazo'}</a> and tap Pay.</p>`),
             `${text} Pay at ${link}`);
         }
         const patch = { reminders: { ...marks } };
@@ -593,7 +630,8 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
         tipAllowed: m.tipAllowed === true, autopay: str(m.autopay) || 'off', lateFee: m.lateFee || null,
       }; }).filter((i) => i.status !== 'void');
       const prop = propS.empty ? null : (() => { const m = propS.docs[0].data(); return { title: str(m.title), price: round2(num(m.price)), includes: m.includes || [], note: str(m.note), status: str(m.status) }; })();
-      const con = conS.empty ? null : (() => { const m = conS.docs[0].data(); return { status: str(m.status), signedAt: ts(m.signedAt), title: str(m.title) || 'Service agreement' }; })();
+      // the token holder IS the signer, so the embedded SignWell link comes along while it is out for signature
+      const con = conS.empty ? null : (() => { const m = conS.docs[0].data(); const st = str(m.status); return { status: st, signedAt: ts(m.signedAt), title: str(m.title) || str(m.templateName) || 'Service agreement', signingUrl: st === 'sent' && /^https:\/\/([a-z0-9-]+\.)*signwell\.com\//i.test(str(m.signingUrl)) ? str(m.signingUrl) : '' }; })();
       const paid = invoices.filter((i) => i.status === 'paid').reduce((a, i) => a + i.total, 0);
       const open = invoices.filter((i) => i.status === 'sent').reduce((a, i) => a + i.total, 0);
       const brand = v.brand && typeof v.brand === 'object' ? v.brand : {};
@@ -601,7 +639,7 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
         inquiryId,
         vendor: { id: str(inq.vendorId), name: str(v.name), logoUrl: str(v.logoUrl), coverUrl: str(v.coverUrl), category: str(v.category || (Array.isArray(v.categories) && v.categories[0])), phone: str(v.phone), email: str(v.email), primary: str(brand.primary), accent: str(brand.accent) },
         couple: { name: str(inq.coupleName), weddingDate: str(inq.structuredIntent && inq.structuredIntent.weddingDate), venue: str(inq.structuredIntent && inq.structuredIntent.venue) },
-        status: str(inq.status), contractStatus: str(inq.contractStatus), proposal: prop, contract: con,
+        status: str(inq.status), contractStatus: str(inq.contractStatus), proposal: prop, contract: con, offPlatform: inq.offPlatform === true,
         invoices, totals: { paid: round2(paid), open: round2(open) }, paymentPlan: inq.paymentPlan || null,
         processor: str(v.payments && v.payments.processor) || (v.stripeChargesEnabled ? 'stripe' : (v.squareConnected ? 'square' : 'links')),
         paymentLinks: Array.isArray(v.paymentLinks) ? v.paymentLinks : [],

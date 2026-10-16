@@ -1109,6 +1109,21 @@ export default {
     // JC-LAZO-WORKER-0913-PAY-001: the couple's booking page, no login
     const fMatch = url.pathname.match(/^\/f\/([A-Za-z0-9_-]{6,80})\/?$/);
     if (fMatch && req.method === "GET") return bookingPage(fMatch[1], url.searchParams.get("t") || "");
+    // JC-LAZO-WORKER-1016-JOIN: the "make your free account" link in an off-platform client's emails.
+    // joinGo logs the click and answers with a 302 to the pre-filled signup; joinStop ends the emails;
+    // joinDone is where the "confirm your email" link lands and finishes the claim.
+    const jMatch = url.pathname.match(/^\/join\/([A-Za-z0-9_-]{6,80})(\/stop|\/done)?\/?$/);
+    if (jMatch && req.method === "GET") {
+      const fn = jMatch[2] === "/stop" ? "joinStop" : jMatch[2] === "/done" ? "joinDone" : "joinGo";
+      const q = new URLSearchParams({ i: jMatch[1], t: url.searchParams.get("t") || "", s: url.searchParams.get("s") || "" });
+      try {
+        const up = await fetch(`https://us-central1-lazo-513ec.cloudfunctions.net/${fn}?${q}`, { redirect: "manual" });
+        const h = { "cache-control": "no-store", "x-robots-tag": "noindex" };
+        const loc = up.headers.get("location");
+        if (loc) return new Response(null, { status: 302, headers: { ...h, location: loc } });
+        return new Response(await up.text(), { status: up.status, headers: { ...h, "content-type": up.headers.get("content-type") || TYPES.html } });
+      } catch (e) { return Response.redirect("https://app.meetlazo.com/", 302); }
+    }
     // JC-LAZO-WORKER-0913-LEAD-001: embeddable lead form + hosted lead page
     if (url.pathname === "/embed/lead.js") return new Response(LEAD_JS, { headers: { "content-type": TYPES.js, "cache-control": "public, max-age=3600, s-maxage=86400", "access-control-allow-origin": "*" } });
     const leadMatch = url.pathname.match(/^\/lead\/([A-Za-z0-9_-]{3,120})\/?$/);
@@ -1704,7 +1719,7 @@ async function songRequest(req) {
   return json({ ok: true });
 }
 
-// JC-LAZO-WORKER-0913-PAY-001 ---------------------------------------------
+// JC-LAZO-WORKER-0913-PAY-001 (1016-OFFPLATFORM: Sign button from fileView's signingUrl, token sent to payCheckout, no app links for off-platform clients) ---------------------------------------------
 const FILE_VIEW = "https://us-central1-lazo-513ec.cloudfunctions.net/fileView";
 const PAY_CHECKOUT = "https://us-central1-lazo-513ec.cloudfunctions.net/payCheckout";
 const escF = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -1727,6 +1742,19 @@ async function bookingPage(inquiryId, token) {
   const open = invoices.filter((i) => i.status === "sent");
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const plan = d.paymentPlan;
+  // JC-LAZO-WORKER-1016-OFFPLATFORM: a client with no Lazo account signs and talks here, not in the app
+  const off = d.offPlatform === true;
+  const threadHref = `https://app.meetlazo.com/dashboard?thread=${escF(inquiryId)}`;
+  // JC-LAZO-WORKER-1016-JOIN: once she has signed or paid, offer the free account (her thread moves into it)
+  const done = (d.contract && d.contract.status === "signed") || invoices.some((i) => i.status === "paid");
+  const joinCard = off && done ? `
+  <section class="card">
+    <div class="eyebrow">Your free Lazo account</div>
+    <h2>Keep it all in one place</h2>
+    <p class="note">Save this booking to a free Lazo account: your agreement, payments and messages with ${escF(v.name || "your vendor")}, plus a free wedding website with RSVPs, June your planning assistant, and verified vendors for the rest of your day. Your name and date are filled in.</p>
+    <a class="btn" href="https://meetlazo.com/join/${escF(inquiryId)}?t=${encodeURIComponent(token)}&amp;s=fpage">Create my free account</a>
+  </section>` : "";
+  const signHref = /^https:\/\/([a-z0-9-]+\.)*signwell\.com\//i.test((d.contract && d.contract.signingUrl) || "") ? d.contract.signingUrl : "";
 
   const proposal = d.proposal ? `
   <section class="card">
@@ -1735,7 +1763,7 @@ async function bookingPage(inquiryId, token) {
     <div class="big">${moneyF(d.proposal.price)}</div>
     ${Array.isArray(d.proposal.includes) && d.proposal.includes.length ? `<ul class="inc">${d.proposal.includes.map((x) => `<li>${escF(typeof x === "string" ? x : (x && x.label) || "")}</li>`).join("")}</ul>` : ""}
     ${d.proposal.note ? `<p class="note">${escF(d.proposal.note)}</p>` : ""}
-    <div class="pill ${d.proposal.status === "accepted" ? "ok" : ""}">${d.proposal.status === "accepted" ? "Accepted" : d.proposal.status === "declined" ? "Declined" : "Awaiting your answer - reply in Lazo"}</div>
+    <div class="pill ${d.proposal.status === "accepted" ? "ok" : ""}">${d.proposal.status === "accepted" ? "Accepted" : d.proposal.status === "declined" ? "Declined" : off ? "Awaiting your answer - reply to their email" : "Awaiting your answer - reply in Lazo"}</div>
   </section>` : "";
 
   const contract = d.contract ? `
@@ -1744,7 +1772,11 @@ async function bookingPage(inquiryId, token) {
     <h2>${escF(d.contract.title)}</h2>
     ${d.contract.status === "signed"
       ? `<div class="pill ok">Signed ${escF(dateF(d.contract.signedAt))}</div>`
-      : `<p class="note">Your agreement is ready to sign. Signing happens inside Lazo so it's stored with your booking.</p><a class="btn ghost" href="https://app.meetlazo.com/dashboard?thread=${escF(inquiryId)}">Review &amp; sign in Lazo</a>`}
+      : signHref
+        ? `<p class="note">Your agreement is ready. Read it through and sign - it takes a minute and it's stored with your booking.</p><a class="btn" href="${escF(signHref)}" rel="noopener">Review &amp; sign</a>`
+        : d.contract.status === "sent" && !off
+          ? `<p class="note">Your agreement is ready to sign. Signing happens inside Lazo so it's stored with your booking.</p><a class="btn ghost" href="${threadHref}">Review &amp; sign in Lazo</a>`
+          : `<p class="note">${escF(v.name || "Your vendor")} is preparing your agreement. It will be here to sign as soon as it's sent.</p>`}
   </section>` : "";
 
   const invRows = invoices.map((i) => {
@@ -1783,14 +1815,16 @@ async function bookingPage(inquiryId, token) {
     <h1>${escF(v.name || "Your vendor")}</h1>
     <p class="light">${escF(c.name ? `For ${c.name}` : "Your booking")}${c.weddingDate ? ` · ${escF(dateF(c.weddingDate))}` : ""}${c.venue ? ` · ${escF(c.venue)}` : ""}</p>
   </header>
-  <main>${proposal}${contract}${money}
-  <p class="foot">Questions? <a href="https://app.meetlazo.com/dashboard?thread=${escF(inquiryId)}">Message ${escF(v.name || "your vendor")} on Lazo</a>${v.email ? ` or email <a href="mailto:${escF(v.email)}">${escF(v.email)}</a>` : ""}.</p>
+  <main>${joinCard}${proposal}${contract}${money}
+  <p class="foot">${off
+    ? `Questions? Reply to any email from ${escF(v.name || "your vendor")}${v.email ? `, or write to <a href="mailto:${escF(v.email)}">${escF(v.email)}</a>` : ""}.`
+    : `Questions? <a href="${threadHref}">Message ${escF(v.name || "your vendor")} on Lazo</a>${v.email ? ` or email <a href="mailto:${escF(v.email)}">${escF(v.email)}</a>` : ""}.`}</p>
   </main>
   <script>
-  const INQ=${JSON.stringify(inquiryId)};
+  const INQ=${JSON.stringify(inquiryId)},TOK=${JSON.stringify(token).replace(/</g, "\\u003c")};
   document.querySelectorAll("form.pay").forEach(f=>{f.addEventListener("submit",async e=>{e.preventDefault();const b=f.querySelector("button");b.disabled=true;const t=b.textContent;b.textContent="Opening checkout…";
     const tip=f.dataset.tip==="1"?Math.max(0,Number((f.querySelector("input[name=tip]")||{}).value||0)):0;
-    try{const r=await fetch(PAY+"?inquiry="+encodeURIComponent(INQ)+"&invoice="+encodeURIComponent(f.dataset.inv)+"&tip="+tip);const j=await r.json();if(j&&j.url){location.href=j.url;return;}throw new Error(j&&j.error||"x");}
+    try{const r=await fetch(PAY+"?inquiry="+encodeURIComponent(INQ)+"&invoice="+encodeURIComponent(f.dataset.inv)+"&tip="+tip+"&t="+encodeURIComponent(TOK));const j=await r.json();if(j&&j.url){location.href=j.url;return;}throw new Error(j&&j.error||"x");}
     catch(err){b.disabled=false;b.textContent=t;alert("Couldn't open checkout - try again in a moment.");}});});
   </script>`;
   return new Response(shell(`${v.name || "Your booking"} - Lazo`, body, primary, accent, true), { headers: noindex });

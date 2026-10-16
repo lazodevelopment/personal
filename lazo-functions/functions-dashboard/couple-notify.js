@@ -1,5 +1,5 @@
 // functions-dashboard/couple-notify.js
-// Build ID: JC-LAZO-FNDASH-1007-025 (025: preview couples skipped; base 024)
+// Build ID: JC-LAZO-FNDASH-1016-027 (027: an off-platform client's first signed or receipt email is the join-copy.js day 0 and starts join.js follow-ups; base 026) (026: 026: off-platform clients get the invoice, receipt and signed mail at contact.email with the /f/ link, plus a 'ready to sign' mail when a contract goes out; base 025) (025: preview couples skipped; base 024)
 //
 // THE COUPLE HEARS ABOUT EVERYTHING THAT MATTERS. Until now a Lazo couple (one
 // with an account, not an off-platform lead) got email only for a contract to
@@ -29,7 +29,8 @@
 // Recipients: the couple's own login plus any partner on the shared plan
 // (users.coupleUid). couples.emailOk === false mutes everything here. Each
 // trigger marks what it sent on the document so retries never double-send.
-// Practice couples (demo) and off-platform leads are skipped.
+// Practice couples (demo) are skipped. Off-platform leads get only the invoice,
+// receipt and contract mail (coupleOf {leads:true}); leads.js carries their messages.
 
 'use strict';
 
@@ -37,6 +38,7 @@ const { onDocumentCreated, onDocumentWritten, onDocumentUpdated } = require('fir
 const admin = require('firebase-admin');
 const { wrap: brandWrap } = require('./brand');
 const F = require('./email-frame');
+const J = require('./join-copy');
 
 module.exports = function coupleNotify(RESEND_API_KEY) {
   const db = () => admin.firestore();
@@ -61,10 +63,19 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
     if (!r.ok) throw new Error(`resend ${r.status}: ${await r.text()}`);
   }
 
-  // the couple behind an inquiry: who to write to, what to call them, whether they want mail
-  async function coupleOf(inq) {
+  // the couple behind an inquiry: who to write to, what to call them, whether they want mail.
+  // {leads:true}: an off-platform client (website lead, added by hand) is written to at
+  // inquiries.contact.email and sent to the login-free /f/ page instead of the app.
+  async function coupleOf(inq, opts) {
     const cid = str(inq.coupleUid);
-    if (!cid || inq.offPlatform === true || inq.demo === true || cid.startsWith('demo_')) return null;
+    if (inq.demo === true || cid.startsWith('demo_')) return null;
+    if (inq.offPlatform === true || cid.startsWith('lead_')) {
+      const c = inq.contact || {};
+      if (!(opts && opts.leads) || !emailOk(c.email) || !str(inq.fileToken)) return null;
+      const names = str(c.name) || str(inq.coupleName) || 'there';
+      return { cid: '', lead: true, to: [str(c.email).trim()], names, first: firstName(names) || 'there', couple: {} };
+    }
+    if (!cid) return null;
     const [cs, us, partners] = await Promise.all([
       db().collection('couples').doc(cid).get().catch(() => null),
       db().collection('users').doc(cid).get().catch(() => null),
@@ -86,6 +97,18 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
   const vendorEmail = (v) => { const e = str(v && (v.notifyEmail || v.publicEmail || v.email)).trim(); return emailOk(e) ? e : undefined; };
   const vendorKind = (inq, v) => CAT[str(inq.vendorCategory || (v && v.category) || (v && Array.isArray(v.categories) && v.categories[0]))] || 'vendor';
 
+  // an off-platform client's first signed / paid moment: that email becomes the
+  // "make your free account" one (join-copy.js day 0) and the follow-ups start
+  // (join.js). Once per thread; false = send the ordinary email.
+  async function startJoin(inqRef, inq, kind) {
+    if (!(inq.offPlatform === true && str(inq.coupleUid).startsWith('lead_')) || (inq.joinNudge && inq.joinNudge.stopped)) return false;
+    if (!(await once(inqRef, 'joinStartedAt'))) return false;
+    const c = inq.contact || {};
+    await inqRef.set({ joinNudge: { day0At: FieldValue.serverTimestamp(), day0Kind: kind, sent: { day0: FieldValue.serverTimestamp() }, next: 'day3', nextAt: admin.firestore.Timestamp.fromDate(new Date(Date.now() + 3 * 86400e3)), sms: c.smsOk === true && str(c.phone) ? 'pending' : 'none' } }, { merge: true });
+    db().collection('joinEvents').add({ type: 'send', step: 'day0', kind, inquiryId: inqRef.id, vendorId: str(inq.vendorId), at: FieldValue.serverTimestamp() }).catch(() => {});
+    return true;
+  }
+
   // claim a flag on a document inside a transaction: true the first time only
   async function once(ref, flag) {
     return db().runTransaction(async (tx) => { const s = await tx.get(ref); if (!s.exists || s.get(flag)) return false; tx.update(ref, { [flag]: FieldValue.serverTimestamp() }); return true; });
@@ -94,6 +117,9 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
   const vp = (t) => `<p style="margin:0 0 12px">${t}</p>`;
   const vbtn = (label, href, v) => { const b = require('./brand').brandOf(v); return `<p style="margin:20px 0 6px"><a href="${href}" style="display:inline-block;background:${b.accent};color:${b.primary};text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:bold;font-size:14px">${esc(label)}</a></p>`; };
   const vfoot = `<p style="margin:16px 0 0;color:#8A7F90;font-size:12px">Reply in the Lazo app, where this conversation, proposals, agreements and payments live together.</p>`;
+  // where the email's button goes: the app thread, or an off-platform client's booking page
+  const pageOf = (id, inq) => `https://meetlazo.com/f/${encodeURIComponent(id)}?t=${encodeURIComponent(str(inq.fileToken))}`;
+  const linkFor = (id, inq, who) => (who && who.lead ? pageOf(id, inq) : thread(id));
 
   /* ---------------- a vendor's message ---------------- */
   const coupleOnMessage = onDocumentCreated({ document: 'inquiries/{inquiryId}/messages/{messageId}', region: 'us-central1', memory: '256MiB', secrets: [RESEND_API_KEY] }, async (event) => {
@@ -157,7 +183,7 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
     const inv = after.data(); const before = event.data.before && event.data.before.exists ? event.data.before.data() : {};
     if (inv.demo === true) return;
     const is = await db().collection('inquiries').doc(event.params.inquiryId).get(); if (!is.exists) return; const inq = is.data();
-    const who = await coupleOf(inq); if (!who) return;
+    const who = await coupleOf(inq, { leads: true }); if (!who) return;
     const v = await vendorOf(inq); const name = vendorName(inq, v); const total = +inv.total || 0;
     // issued: a standalone invoice sent by the vendor (plan instalments announce themselves in payments.js)
     if (str(inv.status) === 'sent' && str(before.status) !== 'sent' && !str(inv.planId) && !inv.coupleNotifiedAt) {
@@ -166,8 +192,8 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
       const items = Array.isArray(inv.lineItems) ? inv.lineItems.filter((x) => x && (x.label || x.name)).slice(0, 8) : [];
       const inner = vp(`Hi ${esc(who.first)},`) + vp(`${esc(name)} sent an invoice${inv.title ? ` for <b>${esc(inv.title)}</b>` : ''}: <b>${money(total)}</b>${due ? `, due ${esc(due)}` : ''}.`)
         + (items.length ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 12px;font-size:14px">${items.map((x) => `<tr><td style="padding:5px 0;border-bottom:1px solid #EADFCB">${esc(x.label || x.name)}${x.qty > 1 ? ` <span style="color:#8A7F90">x${esc(x.qty)}</span>` : ''}</td><td align="right" style="padding:5px 0;border-bottom:1px solid #EADFCB">${money(x.amount != null ? x.amount : (x.price || 0) * (x.qty || 1))}</td></tr>`).join('')}</table>` : '')
-        + vbtn('View and pay', thread(is.id), v) + vp(`<span style="color:#8A7F90;font-size:13px">Pay by card in the app; the receipt lands in the same thread. If something looks off, reply there first.</span>`);
-      try { await sendEmail(who.to, `Invoice from ${name}: ${money(total)}${due ? ', due ' + fmtShort(inv.dueDate) : ''}`, brandWrap(v, inner), `${name} sent an invoice${inv.title ? ' for ' + inv.title : ''}: ${money(total)}${due ? ', due ' + due : ''}.\n\nView and pay: ${thread(is.id)}`, `${name} via Lazo <hello@meetlazo.com>`, vendorEmail(v)); } catch (e) { console.warn('coupleOnInvoice sent', is.id, e.message); }
+        + vbtn('View and pay', linkFor(is.id, inq, who), v) + vp(`<span style="color:#8A7F90;font-size:13px">${who.lead ? `Pay by card on your booking page - no account needed. If something looks off, reply to this email and it goes to ${esc(name)}.` : 'Pay by card in the app; the receipt lands in the same thread. If something looks off, reply there first.'}</span>`);
+      try { await sendEmail(who.to, `Invoice from ${name}: ${money(total)}${due ? ', due ' + fmtShort(inv.dueDate) : ''}`, brandWrap(v, inner), `${name} sent an invoice${inv.title ? ' for ' + inv.title : ''}: ${money(total)}${due ? ', due ' + due : ''}.\n\nView and pay: ${linkFor(is.id, inq, who)}`, `${name} via Lazo <hello@meetlazo.com>`, vendorEmail(v)); } catch (e) { console.warn('coupleOnInvoice sent', is.id, e.message); }
       return;
     }
     // paid: Lazo's receipt, with what's left on this vendor
@@ -176,25 +202,49 @@ module.exports = function coupleNotify(RESEND_API_KEY) {
       const all = await after.ref.parent.get().catch(() => null);
       let paidSum = 0, openSum = 0; if (all) all.forEach((d) => { const x = d.data(); if (x.demo === true || str(x.status) === 'void') return; if (str(x.status) === 'paid') paidSum += +x.total || 0; else if (str(x.status) === 'sent') openSum += +x.total || 0; });
       const via = str(inv.paidVia); const viaTxt = via === 'card' || via === 'whop' ? 'by card' : via === 'ach' ? 'by bank transfer' : via === 'cash' || via === 'check' || via === 'manual' ? 'recorded by ' + name : '';
-      const body = facts([['Paid', money(total)], ['To', name], [openSum ? 'Still open' : 'Paid to date', money(openSum || paidSum)]]) + `<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.6;color:#5B5363">${esc(inv.title || 'Invoice')}${viaTxt ? ', ' + viaTxt : ''}${inv.paidAt ? ', ' + esc(fmtDay(inv.paidAt)) : ''}. ${openSum ? `${money(openSum)} remains on your ${esc(vendorKind(inq, v))}; each payment shows up in the thread when it's due.` : `That settles everything with ${esc(name)}.`}</p>`;
-      const html = frame({ preheader: `${money(total)} to ${name}, received.`, kicker: 'Receipt', title: 'Payment received.', lede: `Thank you, ${esc(who.first)}. Your payment to ${esc(name)} went through and is recorded in your thread.`, body, cta: 'Open the thread', ctaHref: thread(is.id), signoff: 'Keep this for your records. Reply if anything about it looks wrong.', footerWhy: 'You’re getting this because you made a payment through Lazo.' });
-      try { await sendEmail(who.to, `Receipt: ${money(total)} to ${name}`, html, `Payment received: ${money(total)} to ${name} (${inv.title || 'Invoice'})${viaTxt ? ', ' + viaTxt : ''}.${openSum ? ' ' + money(openSum) + ' remains.' : ' That settles everything with ' + name + '.'}\n\n${thread(is.id)}`); } catch (e) { console.warn('coupleOnInvoice paid', is.id, e.message); }
+      if (who.lead && await startJoin(is.ref, inq, 'paid')) {
+        const m = J.day0Paid(is.id, inq, v, inv, openSum, viaTxt);
+        try { await sendEmail(who.to, m.subject, m.html, m.text, undefined, vendorEmail(v)); } catch (e) { console.warn('coupleOnInvoice paid day0', is.id, e.message); }
+        return;
+      }
+      const body = facts([['Paid', money(total)], ['To', name], [openSum ? 'Still open' : 'Paid to date', money(openSum || paidSum)]]) + `<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.6;color:#5B5363">${esc(inv.title || 'Invoice')}${viaTxt ? ', ' + viaTxt : ''}${inv.paidAt ? ', ' + esc(fmtDay(inv.paidAt)) : ''}. ${openSum ? `${money(openSum)} remains on your ${esc(vendorKind(inq, v))}; each payment shows up ${who.lead ? 'on your booking page' : 'in the thread'} when it's due.` : `That settles everything with ${esc(name)}.`}</p>`;
+      const html = frame({ preheader: `${money(total)} to ${name}, received.`, kicker: 'Receipt', title: 'Payment received.', lede: `Thank you, ${esc(who.first)}. Your payment to ${esc(name)} went through and is recorded in your ${who.lead ? 'booking page' : 'thread'}.`, body, cta: who.lead ? 'Open your booking page' : 'Open the thread', ctaHref: linkFor(is.id, inq, who), signoff: 'Keep this for your records. Reply if anything about it looks wrong.', footerWhy: 'You’re getting this because you made a payment through Lazo.' });
+      try { await sendEmail(who.to, `Receipt: ${money(total)} to ${name}`, html, `Payment received: ${money(total)} to ${name} (${inv.title || 'Invoice'})${viaTxt ? ', ' + viaTxt : ''}.${openSum ? ' ' + money(openSum) + ' remains.' : ' That settles everything with ' + name + '.'}\n\n${linkFor(is.id, inq, who)}`); } catch (e) { console.warn('coupleOnInvoice paid', is.id, e.message); }
     }
   });
 
-  /* ---------------- a contract, fully signed ---------------- */
+  /* ---------------- a contract: out for signature (off-platform clients), then fully signed ---------------- */
   const coupleOnContract = onDocumentWritten({ document: 'inquiries/{inquiryId}/contracts/{contractId}', region: 'us-central1', memory: '256MiB', secrets: [RESEND_API_KEY] }, async (event) => {
     const after = event.data && event.data.after; if (!after || !after.exists) return;
     const c = after.data(); const before = event.data.before && event.data.before.exists ? event.data.before.data() : {};
-    if (str(c.status) !== 'signed' || str(before.status) === 'signed' || c.demo === true) return;
+    if (c.demo === true) return;
+    // sent: SignWell sends no email of its own under embedded signing, and an
+    // off-platform client has no app to see it in - this is their one link.
+    if (str(c.status) === 'sent' && str(before.status) !== 'sent') {
+      const is = await db().collection('inquiries').doc(event.params.inquiryId).get(); if (!is.exists) return; const inq = is.data();
+      const who = await coupleOf(inq, { leads: true }); if (!who || !who.lead) return;
+      if (!(await once(after.ref, 'leadSentEmailAt'))) return;
+      const v = await vendorOf(inq); const name = vendorName(inq, v); const page = pageOf(is.id, inq);
+      const title = str(c.title) || str(c.templateName) || 'your agreement';
+      const inner = vp(`Hi ${esc(who.first)},`) + vp(`${esc(name)} sent <b>${esc(title)}</b> for you to review and sign. It takes a minute, and you don't need an account - everything for your booking is on one page.`) + vbtn('Review and sign', page, v) + vp(`<span style="color:#8A7F90;font-size:13px">Any retainer or invoice shows up on the same page. Questions? Reply to this email and it goes straight to ${esc(name)}.</span>`);
+      try { await sendEmail(who.to, `${name} sent your agreement to sign`, brandWrap(v, inner), `${name} sent ${title} for you to review and sign. No account needed: ${page}`, `${name} via Lazo <hello@meetlazo.com>`, vendorEmail(v)); } catch (e) { console.warn('coupleOnContract sent', is.id, e.message); }
+      return;
+    }
+    if (str(c.status) !== 'signed' || str(before.status) === 'signed') return;
     const is = await db().collection('inquiries').doc(event.params.inquiryId).get(); if (!is.exists) return; const inq = is.data();
-    const who = await coupleOf(inq); if (!who) return;
+    const who = await coupleOf(inq, { leads: true }); if (!who) return;
     if (!(await once(after.ref, 'coupleNotifiedAt'))) return;
     const v = await vendorOf(inq); const name = vendorName(inq, v); const total = c.values && c.values.total_price != null ? money(c.values.total_price) : '';
     const wd = inq.structuredIntent && inq.structuredIntent.weddingDate ? str(inq.structuredIntent.weddingDate) : '';
-    const body = facts([['Agreement', str(c.title) || 'Service agreement'], ['With', name], total ? ['Total', total] : ['Date', wd ? fmtShort(wd + 'T12:00:00Z') : 'In the thread']]) + `<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.6;color:#5B5363">The signed copy is in your thread with ${esc(name)}, where any retainer or payment plan will appear next. Nothing else to do today.</p>`;
-    const html = frame({ preheader: `Your agreement with ${name} is signed by both of you.`, kicker: 'Signed', title: 'It’s signed.', lede: `${esc(who.names)}, your agreement with ${esc(name)} is complete and signed by both sides. One more piece of your day, settled.`, body, cta: 'See the agreement', ctaHref: thread(is.id), secondary: 'Ask June what comes next', secondaryHref: JUNE, footerWhy: 'You’re getting this because you signed an agreement through Lazo.' });
-    try { await sendEmail(who.to, `Signed: your agreement with ${name}`, html, `Your agreement with ${name} (${c.title || 'service agreement'}) is signed by both sides.${total ? ' Total ' + total + '.' : ''} The copy is in your thread: ${thread(is.id)}`); } catch (e) { console.warn('coupleOnContract', is.id, e.message); }
+    if (who.lead && await startJoin(is.ref, inq, 'signed')) {
+      const m = J.day0Signed(is.id, inq, v, c);
+      try { await sendEmail(who.to, m.subject, m.html, m.text, undefined, vendorEmail(v)); } catch (e) { console.warn('coupleOnContract day0', is.id, e.message); }
+      return;
+    }
+    const where = who.lead ? 'booking page' : 'thread';
+    const body = facts([['Agreement', str(c.title) || 'Service agreement'], ['With', name], total ? ['Total', total] : ['Date', wd ? fmtShort(wd + 'T12:00:00Z') : 'In the ' + where]]) + `<p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:14.5px;line-height:1.6;color:#5B5363">The signed copy is in your ${where} with ${esc(name)}, where any retainer or payment plan will appear next. Nothing else to do today.</p>`;
+    const html = frame({ preheader: `Your agreement with ${name} is signed by both of you.`, kicker: 'Signed', title: 'It’s signed.', lede: `${esc(who.names)}, your agreement with ${esc(name)} is complete and signed by both sides. One more piece of your day, settled.`, body, cta: 'See the agreement', ctaHref: linkFor(is.id, inq, who), ...(who.lead ? {} : { secondary: 'Ask June what comes next', secondaryHref: JUNE }), footerWhy: 'You’re getting this because you signed an agreement through Lazo.' });
+    try { await sendEmail(who.to, `Signed: your agreement with ${name}`, html, `Your agreement with ${name} (${c.title || 'service agreement'}) is signed by both sides.${total ? ' Total ' + total + '.' : ''} The copy is in your ${where}: ${linkFor(is.id, inq, who)}`); } catch (e) { console.warn('coupleOnContract', is.id, e.message); }
   });
 
   /* ---------------- the inquiry itself: booked, delivered, released ---------------- */

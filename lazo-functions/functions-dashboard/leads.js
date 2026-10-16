@@ -1,5 +1,5 @@
 // functions-dashboard/leads.js
-// Build ID: JC-LAZO-FNDASH-0913-014 (014: couple-facing emails wrapped in the vendor brand via brand.js; 012a (012a: inbound ignores texts to other numbers on the shared Telnyx profile)
+// Build ID: JC-LAZO-FNDASH-1016-015 (015: addClient - a vendor adds an outside client by hand; claiming moved to join.js; base 014) (014: 014: couple-facing emails wrapped in the vendor brand via brand.js; 012a (012a: inbound ignores texts to other numbers on the shared Telnyx profile)
 //
 // BUILD B: LEADS FROM ANYWHERE + TWO-WAY SMS.
 //
@@ -41,7 +41,7 @@
 'use strict';
 
 const crypto = require('crypto');
-const { onRequest } = require('firebase-functions/v2/https');
+const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
@@ -353,7 +353,73 @@ module.exports = function leadsModule(RESEND_API_KEY) {
     }
   });
 
-  return { leadIngest, onLeadMessage, telnyxInbound };
+  // =========================================================== BY HAND ==
+  // addClient {vendorId, name, email, phone?, weddingDate?, venue?, note?, sendLink?}
+  // A vendor adds a client who found them somewhere else (Google, a referral,
+  // a phone call). Same off-platform thread leadIngest makes, so contracts,
+  // invoices and the /f/ page all work without the client having an account.
+  // Texts stay off (smsOk false) until the client texts the Lazo number
+  // themselves: the vendor typing a number in is not the client's consent.
+  const addClient = onCall({ memory: '256MiB', secrets: [RESEND_API_KEY] }, async (request) => {
+    const uid = request.auth && request.auth.uid;
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+    const d = request.data || {};
+    const vendorId = clip(d.vendorId, 120);
+    const [vs, us] = await Promise.all([db().collection('vendors').doc(vendorId || '_').get(), db().collection('users').doc(uid).get()]);
+    if (!vendorId || !vs.exists) throw new HttpsError('not-found', 'Vendor not found.');
+    const own = str(vs.get('claimedBy')) === uid || (us.exists && str(us.get('vendorId')) === vendorId && str(us.get('vendorRole')) === 'manager');
+    if (!own) throw new HttpsError('permission-denied', 'Not your vendor.');
+    const v = { id: vs.id, ...vs.data() };
+
+    const name = clip(d.name, 120), email = clip(d.email, 160).toLowerCase(), phone = e164(d.phone);
+    if (!name) throw new HttpsError('invalid-argument', 'Add their name.');
+    if (!emailOk(email)) throw new HttpsError('invalid-argument', 'Add a working email - the agreement and invoices go there.');
+    const weddingDate = /^\d{4}-\d{2}-\d{2}$/.test(str(d.weddingDate)) ? str(d.weddingDate) : '';
+    const venue = clip(d.venue, 160), note = clip(d.note, 1000);
+
+    // one thread per client per vendor: reuse an open off-platform thread for the same email
+    const q = await db().collection('inquiries').where('vendorId', '==', vendorId).where('contact.email', '==', email).limit(5).get();
+    const prior = q.docs.find((x) => x.get('offPlatform') === true && str(x.get('status')) !== 'lost');
+    let inquiryId, token, existing = false;
+    if (prior) {
+      existing = true; inquiryId = prior.id; token = str(prior.get('fileToken'));
+      const patch = { contact: { name, email, ...(phone ? { phone } : {}) } };
+      if (weddingDate || venue) patch.structuredIntent = { ...(weddingDate ? { weddingDate } : {}), ...(venue ? { venue } : {}) };
+      if (!token) { token = crypto.randomBytes(18).toString('base64url'); patch.fileToken = token; patch.fileTokenAt = FieldValue.serverTimestamp(); }
+      await prior.ref.set(patch, { merge: true });
+    } else {
+      const ref = db().collection('inquiries').doc();
+      inquiryId = ref.id; token = crypto.randomBytes(18).toString('base64url');
+      await ref.set({
+        vendorId, vendorName: str(v.name), coupleUid: `lead_${inquiryId}`, coupleName: name,
+        contact: { name, email, phone, smsOk: false },
+        offPlatform: true, source: 'manual', sourceRef: { addedBy: uid },
+        structuredIntent: { weddingDate, venue, guests: '', budget: '', message: note, category: str(v.category || (Array.isArray(v.categories) && v.categories[0])) },
+        status: 'responded', createdAt: FieldValue.serverTimestamp(), vendorLastReadAt: FieldValue.serverTimestamp(),
+        lastMessageAt: FieldValue.serverTimestamp(), lastMessageRole: 'vendor', lastMessagePreview: `You added ${name} as a client`,
+        fileToken: token, fileTokenAt: FieldValue.serverTimestamp(),
+      });
+      // system: true so onLeadMessage does not mail it to the client
+      await ref.collection('messages').add({ senderRole: 'vendor', system: true, text: `You added ${name} as a client.${note ? '\n' + note : ''} Agreements, invoices and messages you send here reach them at ${email} - no Lazo account needed.`, at: FieldValue.serverTimestamp() });
+    }
+    const url = `https://meetlazo.com/f/${inquiryId}?t=${token}`;
+
+    let emailed = false;
+    if (d.sendLink === true) {
+      try {
+        const replyTo = emailOk(v.notifyEmail || v.publicEmail || v.email) ? str(v.notifyEmail || v.publicEmail || v.email) : undefined;
+        await sendEmail(email, `Your booking page with ${str(v.name)}`,
+          brandWrap(v, `<p>Hi ${name.split(' ')[0].replace(/</g, '&lt;')},</p><p>${str(v.name).replace(/</g, '&lt;')} set up a page for your booking. Your agreement, invoices and payments will all be here, and you don't need an account to use it.</p><p><a href="${url}">Open your booking page</a></p><p style="color:#6B5F72;font-size:12px">Reply to this email and it goes straight to ${str(v.name).replace(/</g, '&lt;')}.</p>`),
+          `${str(v.name)} set up a page for your booking - agreement, invoices and payments, no account needed: ${url}`, replyTo);
+        emailed = true;
+      } catch (e) { console.warn('addClient email', e.message); }
+    }
+    return { inquiryId, url, existing, emailed };
+  });
+
+  // Claiming a thread when the client joins Lazo lives in join.js (onUserClaimLeads, claimMyLeadThreads).
+
+  return { leadIngest, onLeadMessage, telnyxInbound, addClient };
 };
 
 // END OF FILE - JC-LAZO-FNDASH-0913-012

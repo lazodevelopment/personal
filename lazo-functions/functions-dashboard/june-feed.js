@@ -102,7 +102,7 @@ async function vendorPeople(vendorId) {
 }
 
 async function couplePeople(cid) {
-  if (!cid) return [];
+  if (!cid || cid.startsWith('lead_')) return [];   // off-platform clients have no account to feed
   const snap = await db().collection('users').where('coupleUid', '==', cid).get();
   return [cid, ...snap.docs.map((d) => d.id)];
 }

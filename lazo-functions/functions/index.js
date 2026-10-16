@@ -1600,6 +1600,12 @@ exports.generateContract = onCall(
         coupleName = (uSnap.data().display_name || "").toString();
       }
     }
+    // JC-LAZO-FN-1016-OFFPLATFORM: an off-platform client (website lead, or
+    // added by hand) has no users doc - their name is on the thread
+    if (!coupleName && inquiry.offPlatform === true) {
+      coupleName = ((inquiry.contact && inquiry.contact.name) ||
+        inquiry.coupleName || "").toString();
+    }
     if (coupleName) {
       values["couple_names"] = coupleName;
       values["partner1_name"] = coupleName;
@@ -1859,6 +1865,23 @@ exports.sendContractForSignature = onCall(
         const cSnap = await db.collection("couples").doc(contract.coupleUid).get();
         if (cSnap.exists) {
           coupleName = (cSnap.data().coupleName || cSnap.data().partner1Name || "").toString();
+        }
+      }
+    }
+    // JC-LAZO-FN-1016-OFFPLATFORM: an off-platform client signs as the
+    // contact on the thread. SignWell sends them nothing under embedded
+    // signing; couple-notify's coupleOnContract mails them the /f/ page,
+    // which carries the signing link (fileView).
+    if (!coupleEmail) {
+      const iSnap = await db.collection("inquiries").doc(inquiryId).get();
+      const inq = iSnap.exists ? iSnap.data() : {};
+      const ct = inq.contact || {};
+      if (inq.offPlatform === true || String(inq.coupleUid || "").startsWith("lead_")) {
+        coupleEmail = (ct.email || "").toString().trim();
+        if (!coupleName) coupleName = (ct.name || inq.coupleName || "").toString();
+        if (!coupleEmail) {
+          throw new HttpsError("failed-precondition",
+            "Add your client's email to the thread before sending the agreement.");
         }
       }
     }
@@ -2150,6 +2173,15 @@ exports.contractPrefill = onCall(
           console.log("couple venue lookup skipped", e.message);
         }
       }
+    }
+    // JC-LAZO-FN-1016-OFFPLATFORM: off-platform client - name and venue from the thread
+    if (!displayName && inquiry.offPlatform === true) {
+      displayName = ((inquiry.contact && inquiry.contact.name) ||
+        inquiry.coupleName || "").toString();
+    }
+    if (!values["venue_name"] && inquiry.structuredIntent &&
+        inquiry.structuredIntent.venue) {
+      values["venue_name"] = inquiry.structuredIntent.venue.toString();
     }
     if (!values["couple_names"] && displayName) {
       values["couple_names"] = displayName;
@@ -2666,7 +2698,8 @@ async function autofillBudgetFromContract(inquiryId, contract) {
     const coupleUid = (inq.coupleUid || "").toString();
     const intent = inq.structuredIntent || {};
     const slug = (intent.category || "").toString();
-    if (!coupleUid || !slug) return;
+    // off-platform clients have no couples doc to fill (JC-LAZO-FN-1016-OFFPLATFORM)
+    if (!coupleUid || !slug || coupleUid.startsWith("lead_")) return;
     const raw = ((contract.values || {}).total_price || "").toString();
     const m = raw.replace(/,/g, "").match(/(\d+(?:\.\d{1,2})?)/);
     if (!m) return;
