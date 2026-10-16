@@ -1,6 +1,16 @@
 rules_version = '2';
 // ============================================================
 // LAZO CANONICAL RULES
+// Build ID: JC-LAZO-RULES-1016-021
+// Changes: a VERIFIED EMAIL to use Lazo. signedIn() now also needs the
+//   account's email confirmed (token.email_verified - the six-digit code in
+//   Auth v24, functions-dashboard verify.js), or the legacy claim
+//   (scripts/mark_legacy_users.js, every account made before Auth v24), or
+//   the worker claim. The only things an unverified account can do are its
+//   own users doc and juneFeed (isOwner uses authed(), not signedIn()), so the
+//   signup screen can still write the role before the code step.
+//   Deploy order: verify.js, then Auth v24 published, then the legacy script,
+//   then wait an hour (tokens refresh hourly), then these rules.
 // Build ID: JC-LAZO-RULES-1014-018
 // Changes from JC-LAZO-RULES-1009-017:
 //   + listingRequests create allows heardAbout / heardAboutDetail. Vendor
@@ -108,8 +118,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function signedIn() { return request.auth != null; }
-    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    // JC-LAZO-RULES-1016-021: signed in AND the email is confirmed (or the account predates confirmation)
+    function authed() { return request.auth != null; }
+    function verifiedEmail() {
+      return request.auth.token.get('email_verified', false) == true
+        || request.auth.token.get('legacy', false) == true
+        || request.auth.token.get('worker', false) == true;
+    }
+    function signedIn() { return authed() && verifiedEmail(); }
+    function isOwner(uid) { return authed() && request.auth.uid == uid; }
     // JC-LAZO-WORKER-0930-FSAUTH: the Cloudflare worker, signed in through the
     // workerToken function as uid lazo-worker with the worker claim. It renders
     // couple sites and answers the page's guest-facing reads, so nothing under

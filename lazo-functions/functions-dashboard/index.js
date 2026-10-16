@@ -939,3 +939,6 @@ Object.assign(exports, require('./hello')(RESEND_API_KEY));
 
 // JC-LAZO-FNDASH-0913-021: the vendor team graph
 Object.assign(exports, require('./team')(RESEND_API_KEY));
+
+// 027: verify.js - six-digit email code at signup + disposable/dead domain block (beforeUserCreated)
+Object.assign(exports, require('./verify')(RESEND_API_KEY));
