@@ -2,6 +2,12 @@ rules_version = '2';
 // ============================================================
 // LAZO CANONICAL RULES
 // Build ID: JC-LAZO-RULES-1016-021
+// + JC-LAZO-RULES-1016-MEALS (NOT DEPLOYED): RSVPs may carry meals[] (a meal,
+//   kid's meal and allergies per person, max 10) and an allergies line; new
+//   inquiries/{id}/shared/meals - the couple's meal counts for the vendor's
+//   Meal counts card (couple writes counts, vendor sets only finalDue and
+//   vendorSeenAt). Deploy BEFORE the wedding-website templates from
+//   patch_meals_rsvp_1016.py go to R2, or RSVPs with meals are refused.
 // Changes: a VERIFIED EMAIL to use Lazo. signedIn() now also needs the
 //   account's email confirmed (token.email_verified - the six-digit code in
 //   Auth v24, functions-dashboard verify.js), or the legacy claim
@@ -470,6 +476,38 @@ service cloud.firestore {
           && request.resource.data.status in ['completed'];
         allow delete: if vendorAccess(inqVendorId(inquiryId));
       }
+
+      // JC-LAZO-RULES-1016-MEALS: the couple's meal counts, structured, for the
+      // vendor's Meal counts card (Couple v161 Send meal choices, Vendor v202).
+      // The couple writes the counts; the vendor sets only the final-count date
+      // and when they last looked; remind*/lateAt are the reminder job's (admin).
+      match /shared/{docId} {
+        allow read: if coupleAccess(inqCoupleUid(inquiryId))
+          || vendorAccess(inqVendorId(inquiryId));
+        allow create: if signedIn() && docId == 'meals'
+          && coupleAccess(inqCoupleUid(inquiryId))
+          && request.resource.data.keys().hasOnly(
+               ['kind','totals','heads','awaiting','noChoice','kids','allergies',
+                'allergyCount','tables','vendorMeals','vendorCount','sentAt',
+                'sentBy','fileUrl','prev','prevAt','weddingDate','coupleName']);
+        allow update: if signedIn() && docId == 'meals'
+          && ((coupleAccess(inqCoupleUid(inquiryId))
+               && request.resource.data.keys().hasOnly(
+                    ['kind','totals','heads','awaiting','noChoice','kids','allergies',
+                     'allergyCount','tables','vendorMeals','vendorCount','sentAt',
+                     'sentBy','fileUrl','prev','prevAt','weddingDate','coupleName',
+                     'finalDue','finalDueSetAt','vendorSeenAt',
+                     'remind7At','remind2At','lateAt'])
+               && !request.resource.data.diff(resource.data).affectedKeys()
+                    .hasAny(['finalDue','finalDueSetAt','vendorSeenAt',
+                             'remind7At','remind2At','lateAt']))
+              || (vendorAccess(inqVendorId(inquiryId))
+               && request.resource.data.diff(resource.data).affectedKeys()
+                    .hasOnly(['finalDue','finalDueSetAt','vendorSeenAt'])
+               && (!('finalDue' in request.resource.data)
+                   || request.resource.data.finalDue is timestamp)));
+        allow delete: if false;
+      }
     }
 
     match /weddingSites/{slug} {
@@ -479,7 +517,15 @@ service cloud.firestore {
 
       match /rsvps/{rsvpId} {
         allow create: if request.resource.data.keys().hasOnly(
-              ['name','email','attending','plusOnes','meal','note','song','createdAt','invite','events'])
+              ['name','email','attending','plusOnes','meal','note','song','createdAt','invite','events',
+               'meals','allergies'])
+          // JC-LAZO-RULES-1016-MEALS: a meal per person coming
+          && (!('meals' in request.resource.data)
+              || (request.resource.data.meals is list
+                  && request.resource.data.meals.size() <= 10))
+          && (!('allergies' in request.resource.data)
+              || (request.resource.data.allergies is string
+                  && request.resource.data.allergies.size() < 300))
           && request.resource.data.name is string
           && request.resource.data.name.size() > 0
           && request.resource.data.name.size() < 120

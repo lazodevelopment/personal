@@ -1118,13 +1118,34 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
  if(rform&&LS.rsvpOpen!==false){
   var token=q.get("i")||"";try{if(token)sessionStorage.setItem("lzinv",token);else token=sessionStorage.getItem("lzinv")||"";}catch(_){}
   if(!/^[A-Za-z0-9_-]{6,64}$/.test(token))token="";
-  var mealRow=function(opts){
-   if(!opts.length||rform.querySelector(".meals"))return;
-   var wrap=document.createElement("div");wrap.className="meals";wrap.innerHTML='<span class="mealk">Dinner</span>';
-   opts.forEach(function(o,i){var l=document.createElement("label");var r=document.createElement("input");r.type="radio";r.name="meal";r.value=o;if(i===0)r.checked=true;var s=document.createElement("span");s.textContent=o;l.appendChild(r);l.appendChild(s);wrap.appendChild(l)});
-   var song=rform.querySelector("[data-song]");rform.insertBefore(wrap,song||rform.querySelector("textarea"));
+  /* JC-LAZO-WWS-1016-MEALS: a meal, kid's meal and allergies for every person coming; nothing pre-picked */
+  var MO=[];
+  var mealBox=function(){
+   var w=rform.querySelector(".meals");
+   if(!w){w=document.createElement("div");w.className="meals";var song=rform.querySelector("[data-song]");rform.insertBefore(w,song||rform.querySelector("textarea"));}
+   if(!document.getElementById("lzmp")){var st=document.createElement("style");st.id="lzmp";st.textContent=".meals .mp{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0 10px;border-top:1px solid var(--line)}.meals .mealk+.mp{border-top:0}.meals .mp .mpk{flex:0 0 100%;font-size:12px;opacity:.8}.meals .mp select,.meals .mp input[type=text]{display:block;flex:1 1 200px;min-width:0;margin:0}.meals .mp select{padding:12px 10px;border:1px solid var(--line);border-radius:0;background:transparent;color:inherit;font:inherit;font-size:13px}.meals .mp [data-a]{flex:1 1 100%}.meals .mp label{display:inline-flex;gap:6px;align-items:center;border:0;padding:4px 2px;font-size:13px}.meals .mp label input{display:inline-block;width:auto;margin:0}";document.head.appendChild(st);}
+   return w;
   };
+  var drawMeals=function(){
+   var w=mealBox();
+   var prev=[].slice.call(w.querySelectorAll(".mp")).map(function(b){return{n:(b.querySelector("[data-n]")||{}).value||"",m:(b.querySelector("select")||{}).value||"",k:!!(b.querySelector("[data-k]")||{}).checked,a:(b.querySelector("[data-a]")||{}).value||""}});
+   var pn=rform.querySelector("#plusn");var n=1+(pn?(parseInt(pn.value,10)||0):0);
+   w.innerHTML='<span class="mealk">'+(MO.length?'Dinner':'Dietary needs')+'</span>';
+   for(var p=0;p<n;p++){
+    var pv=prev[p]||{n:"",m:"",k:false,a:""};
+    var b=document.createElement("div");b.className="mp";
+    var k=document.createElement("span");k.className="mpk";k.textContent=p===0?(n>1?"You":"For you"):"Your guest"+(n>2?" "+p:"");b.appendChild(k);
+    if(p>0){var ni=document.createElement("input");ni.type="text";ni.setAttribute("data-n","");ni.setAttribute("aria-label","Guest name");ni.placeholder="Their name (optional)";ni.maxLength=80;ni.value=pv.n;b.appendChild(ni);}
+    if(MO.length){var s=document.createElement("select");s.setAttribute("aria-label","Meal");var o0=document.createElement("option");o0.value="";o0.textContent="Choose a meal\u2026";s.appendChild(o0);MO.forEach(function(o){var op=document.createElement("option");op.value=o;op.textContent=o;s.appendChild(op)});s.value=pv.m;b.appendChild(s);}
+    var kl=document.createElement("label");var kc=document.createElement("input");kc.type="checkbox";kc.setAttribute("data-k","");kc.checked=pv.k;var ks=document.createElement("span");ks.textContent="Kid\u2019s meal";kl.appendChild(kc);kl.appendChild(ks);b.appendChild(kl);
+    var ai=document.createElement("input");ai.type="text";ai.setAttribute("data-a","");ai.setAttribute("aria-label","Allergies or dietary needs");ai.placeholder="Allergies / dietary (optional)";ai.maxLength=120;ai.value=pv.a;b.appendChild(ai);
+    w.appendChild(b);
+   }
+   var yes=rform.querySelector(".radio label:first-child input");w.style.display=!yes||yes.checked?"":"none";
+  };
+  var mealRow=function(opts){if(opts.length)MO=opts.slice(0,8);drawMeals();};
   mealRow((LS.mealOptions||[]).filter(Boolean));
+  [].slice.call(rform.querySelectorAll(".radio input")).forEach(function(r){r.addEventListener("change",drawMeals)});
   if(token){
    fetch(FSB+"/invite/"+encodeURIComponent(token)).then(function(r){return r.ok?r.json():null}).then(function(j){
     var f=j&&j.fields;if(!f)return;
@@ -1136,6 +1157,7 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
      var pr=document.createElement("div");pr.className="plusrow";var opts="";for(var i=0;i<=inv.plus;i++)opts+='<option value="'+i+'">'+i+'</option>';
      pr.innerHTML='<span class="mealk">Guests</span><label>You may bring '+inv.plus+' guest'+(inv.plus===1?'':'s')+' — how many are coming with you? <select id="plusn">'+opts+'</select></label>';
      rform.insertBefore(pr,rform.querySelector(".meals")||rform.querySelector("[data-song]")||rform.querySelector("textarea"));
+     pr.querySelector("select").addEventListener("change",drawMeals);
     }
     var hello=document.querySelector("#rsvpSec .lede");if(hello&&inv.name)hello.textContent="Hi "+inv.name.split(" ")[0]+" — "+hello.textContent.charAt(0).toLowerCase()+hello.textContent.slice(1);
    }).catch(function(){});
@@ -1145,7 +1167,14 @@ setTimeout(()=>els.forEach(e=>e.classList.add("in")),1500);})();
    try{
     if(typeof u==="string"&&u.indexOf("/rsvps")>0&&o&&o.method==="POST"){
      var b=JSON.parse(o.body);
-     var meal=rform.querySelector("input[name=meal]:checked");if(meal)b.fields.meal={stringValue:meal.value.slice(0,80)};
+     var mps=[].slice.call(rform.querySelectorAll(".meals .mp"));
+     if(mps.length&&b.fields.attending&&b.fields.attending.stringValue==="yes"){
+      var ppl=mps.slice(0,10).map(function(m,i){var nn=i===0?((b.fields.name||{}).stringValue||""):((m.querySelector("[data-n]")||{}).value||"").trim();return{mapValue:{fields:{name:{stringValue:nn.slice(0,80)},meal:{stringValue:((m.querySelector("select")||{}).value||"").slice(0,80)},kid:{booleanValue:!!(m.querySelector("[data-k]")||{}).checked},allergies:{stringValue:((m.querySelector("[data-a]")||{}).value||"").trim().slice(0,120)}}}}});
+      b.fields.meals={arrayValue:{values:ppl}};
+      var m0=ppl[0].mapValue.fields.meal.stringValue;if(m0)b.fields.meal={stringValue:m0};
+      var al=ppl.map(function(p,i){var f=p.mapValue.fields,a=f.allergies.stringValue;return a?(f.name.stringValue||(i?"Guest "+i:"Guest"))+": "+a:""}).filter(Boolean).join("; ");
+      if(al)b.fields.allergies={stringValue:al.slice(0,290)};
+     }
      var pn=rform.querySelector("#plusn");if(pn)b.fields.plusOnes={integerValue:String(parseInt(pn.value,10)||0)};
      if(token)b.fields.invite={stringValue:token};
      o.body=JSON.stringify(b);

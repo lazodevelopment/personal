@@ -211,5 +211,9 @@ module.exports = () => {
 };
 
 module.exports.feedTo = feedTo;
+// 1016-MEALS: meals.js sends its reminders through the same feed + push
+module.exports.notify = notify;
+module.exports.couplePeople = couplePeople;
+module.exports.vendorPeople = vendorPeople;
 
 // END OF FILE - JC-LAZO-FNDASH-1014-027
