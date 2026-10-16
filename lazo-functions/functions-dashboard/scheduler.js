@@ -77,7 +77,7 @@ function whenText(tz, start) {
 }
 function ics(c, start, end, uid) {
   const f = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const loc = c.mode === 'video' ? str(c.videoLink) : c.mode === 'in_person' ? str(c.location) : 'Phone call';
+  const loc = c.mode === 'video' ? 'Lazo video call (open your Lazo messages and tap Join)' : c.mode === 'in_person' ? str(c.location) : 'Phone call';
   return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Lazo//Consults//EN', 'METHOD:REQUEST', 'BEGIN:VEVENT',
     `UID:${uid}@meetlazo.com`, `DTSTAMP:${f(new Date())}`, `DTSTART:${f(start)}`, `DTEND:${f(end)}`,
     `SUMMARY:${str(c.typeLabel)} with ${str(c.vendorName)}`, `DESCRIPTION:${str(c.contact && c.contact.name)}${c.note ? ' - ' + str(c.note).replace(/\n/g, ' ') : ''}`,
@@ -124,7 +124,7 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
       bufferMinutes: Math.max(0, Math.min(120, +s.bufferMinutes || 15)),
       minNoticeHours: Math.max(1, Math.min(168, +s.minNoticeHours || 24)),
       maxDaysOut: Math.max(7, Math.min(180, +s.maxDaysOut || 60)),
-      videoLink: str(s.videoLink),
+      videoLink: '',   // JC-LAZO-CALLS-1016: no outside video links; video consults are Lazo video calls
       hours: s.hours && typeof s.hours === 'object' ? s.hours : { mon: [['09:00', '17:00']], tue: [['09:00', '17:00']], wed: [['09:00', '17:00']], thu: [['09:00', '17:00']], fri: [['09:00', '17:00']] },
       types: types.map((t) => ({ key: str(t.key) || 'intro', label: str(t.label) || 'Intro call', minutes: Math.max(10, Math.min(240, +t.minutes || 30)), mode: ['video', 'phone', 'in_person'].includes(str(t.mode)) ? str(t.mode) : 'video', location: str(t.location) })),
     };
@@ -242,7 +242,8 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
       const consult = {
         vendorId, vendorName: str(v.name), inquiryId, coupleUid,
         contact: { name, email, phone, smsOk: b.smsOk !== false && !!phone },
-        typeKey: type.key, typeLabel: type.label, mode: type.mode, minutes: type.minutes,
+        // JC-LAZO-CALLS-1016: no Lazo account (a /book lead) means no Lazo video - the vendor calls instead
+        typeKey: type.key, typeLabel: type.label, mode: type.mode === 'video' && str(coupleUid).startsWith('lead_') ? 'phone' : type.mode, minutes: type.minutes,
         location: type.mode === 'in_person' ? (type.location || str(v.address) || '') : '', videoLink: type.mode === 'video' ? sch.videoLink : '',
         startAt: Timestamp.fromDate(start), endAt: Timestamp.fromDate(end), tz: sch.tz, status: 'booked',
         note: clip(b.note, 600), source: inquiryId && b.inquiryId ? 'thread' : 'page', cancelToken, createdAt: FieldValue.serverTimestamp(), reminded: {},
@@ -254,7 +255,7 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
       const when = whenText(sch.tz, start);
       const cancelUrl = `https://us-central1-lazo-513ec.cloudfunctions.net/consultCancel?id=${cRef.id}&t=${cancelToken}`;
       const bookUrl = `https://meetlazo.com/book/${vendorId}?inq=${inquiryId}`;
-      const howText = type.mode === 'video' ? (sch.videoLink ? `Video link: ${sch.videoLink}` : 'Video link to follow') : type.mode === 'phone' ? `${str(v.name)} will call ${phone || 'you'}` : `At ${consult.location || 'a location to be confirmed'}`;
+      const howText = consult.mode === 'video' ? 'A Lazo video call: open your Lazo messages at the time and tap Join' : consult.mode === 'phone' ? `${str(v.name)} will call ${phone || 'you'}` : `At ${consult.location || 'a location to be confirmed'}`;
       const icsText = ics(consult, start, end, cRef.id);
 
       // thread note
@@ -321,7 +322,7 @@ module.exports = function schedulerModule(RESEND_API_KEY) {
       if (hrs <= 1.5 && !rem.h1) key = 'h1'; else if (hrs <= 24.5 && hrs > 1.5 && !rem.h24) key = 'h24';
       if (!key) continue;
       const when = whenText(str(c.tz), start);
-      const how = c.mode === 'video' ? (c.videoLink ? `Join: ${c.videoLink}` : 'Video call') : c.mode === 'phone' ? 'Phone call' : `At ${str(c.location)}`;
+      const how = c.mode === 'video' ? 'Lazo video call: open your Lazo messages and tap Join' : c.mode === 'phone' ? 'Phone call' : `At ${str(c.location)}`;
       const cancelUrl = `https://us-central1-lazo-513ec.cloudfunctions.net/consultCancel?id=${d.id}&t=${c.cancelToken}`;
       try {
         const vs = await db().collection('vendors').doc(str(c.vendorId)).get();

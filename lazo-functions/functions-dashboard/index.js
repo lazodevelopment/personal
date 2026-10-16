@@ -914,6 +914,8 @@ exports.blockCouple = safety.blockCouple;
 // JC-LAZO-SAFETY-1016-003: hold "let's get on a Zoom call" before the vendor sees it
 // (sendThreadMessage, safetyPrecheck, safetyReview, safetyDigest).
 Object.assign(exports, require('./safety-guard')(RESEND_API_KEY));
+// JC-LAZO-CALLS-1016-001: Lazo video calls - callJoin, callEvent (from the worker), phoneStart / phoneConfirm
+Object.assign(exports, require('./calls')());
 
 const deleteAccount = require('./deleteAccount')();
 exports.deleteMyAccount = deleteAccount.deleteMyAccount;

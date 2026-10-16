@@ -24,6 +24,7 @@ bucket_name = "lazo-galleries"
 #   WHCC_EDITOR_KEY WHCC_EDITOR_SECRET WHCC_OS_KEY WHCC_OS_SECRET
 #   STRIPE_SECRET_KEY STRIPE_WEBHOOK_SECRET PRINTS_ADMIN_KEY (and GALLERY_SECRET, already set)
 [vars]
+CALL_EVENT_URL = "https://us-central1-lazo-513ec.cloudfunctions.net/callEvent"   # JC-LAZO-CALLS-1016: the call log
 # JC-LAZO-WORKER-0930-FSAUTH: the worker signs in to Firestore (see src/fsauth.js); WORKER_TOKEN_KEY is a secret
 FIREBASE_API_KEY = "AIzaSyD2EdP1wD-DaaZdS9Cdc4rXv_QeL3XdxbU"
 WORKER_TOKEN_URL = "https://us-central1-lazo-513ec.cloudfunctions.net/workerToken"
@@ -35,3 +36,14 @@ PRINT_FROM_ADDR2 = ""
 PRINT_FROM_CITY = ""
 PRINT_FROM_STATE = ""
 PRINT_FROM_ZIP = ""
+
+# JC-LAZO-CALLS-1016-WORKER-001: Lazo video calls. One CallRoom Durable Object per call (src/rt.js).
+# Secrets (wrangler secret put): CF_REALTIME_APP_ID, CF_REALTIME_APP_SECRET (the "lazo-video" SFU app),
+# CALL_TOKEN_SECRET (the same value as the Firebase secret CALL_TOKEN_SECRET; callJoin signs, the worker checks).
+[[durable_objects.bindings]]
+name = "CALL_ROOM"
+class_name = "CallRoom"
+
+[[migrations]]
+tag = "v1-callroom"
+new_sqlite_classes = ["CallRoom"]

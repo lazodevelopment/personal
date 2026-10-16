@@ -51,6 +51,9 @@ import { withGeo, withRegion } from "./geo.js";
 import { geoResponse, trackerResponse, withTracker } from "./track.js";
 // JC-LAZO-PRINTS-0920-001: the print store (WHCC editor + Stripe)
 import { printsRoute } from "./prints.js";
+// JC-LAZO-CALLS-1016-WORKER-001: Lazo video calls - /rt/* proxy to Cloudflare Realtime + the CallRoom Durable Object
+import { rtRoute } from "./rt.js";
+export { CallRoom } from "./rt.js";
 // JC-LAZO-WORKER-0929-GUESTPHOTOS-001: guests' photos from the day, into the
 // lazo-galleries bucket; couple's positioned photos (heroPhoto / storyPhoto /
 // siteGalleryFocus) ride into the payload below.
@@ -866,6 +869,9 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     setWorkerEnv(env);  // JC-LAZO-WORKER-0930-FSAUTH
+
+    // JC-LAZO-CALLS-1016-WORKER-001: video calls (token-checked, never redirected or cached)
+    if (url.pathname.startsWith("/rt/")) return rtRoute(req, env);
 
     // JC-LAZO-LAUNCH-0921-001: one canonical host. Plain http and www both 301 to
     // https://meetlazo.com so search engines see a single origin, and /favicon.ico
