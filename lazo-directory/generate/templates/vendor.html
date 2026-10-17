@@ -82,21 +82,35 @@
 {% endif %}
 {% endblock %}
 {% block main %}
-{#- JC-LAZO-VPAGE-1016-007: the premium profile. A full-bleed hero (the cover as a real <img> so it is the LCP,
+{#- JC-LAZO-VPAGE-1017-008 + JC-LAZO-LOCAL-1017-001 (the local facts block, generate/local_facts.py): photos and films apart (the gallery is photos only; films get their own section and
+    player), the about text opens with a lead line instead of a pull-quote, the vendor's links are icon buttons,
+    the price sheet shows its pages again, and the vendor's FAQs and the planning FAQs sit together mid-page.
+    JC-LAZO-VPAGE-1016-007: the premium profile. A full-bleed hero (the cover as a real <img> so it is the LCP,
     resized through wsrv at build time), the logo and name integrated, the starting price and the vendor's own
     offer in one glass pill, a gallery-first bento right under it, honest trust lines above the fold even with
     no reviews, an owner pull-quote instead of a wall of text, package cards in a row, and one primary action.
     Nothing here is invented: every line hides when the vendor has no data for it. Styles: lazo.vendor.css. -#}
 {%- macro th(u, w) -%}{%- if u and u[:4] == 'http' and 'wsrv.nl' not in u -%}https://wsrv.nl/?url={{ u|urlencode }}&amp;w={{ w }}&amp;q=78&amp;output=webp&amp;we{%- else -%}{{ u }}{%- endif -%}{%- endmacro -%}
+{%- macro ico(k) -%}<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+{%- if k == 'web' -%}<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/>
+{%- elif k == 'instagram' -%}<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".9" fill="currentColor" stroke="none"/>
+{%- elif k == 'facebook' -%}<path d="M14 21v-7.5h2.6l.4-3H14V8.6c0-.9.3-1.5 1.5-1.5H17V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.7 1.4-3.7 3.9v2.3H8.5v3H11V21"/>
+{%- elif k == 'tiktok' -%}<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5M14 3c.4 2.6 2.2 4.4 5 4.7"/>
+{%- elif k == 'youtube' -%}<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.2 9.3v5.4l4.6-2.7z" fill="currentColor"/>
+{%- elif k == 'pinterest' -%}<circle cx="12" cy="12" r="9"/><path d="M10.6 20.5l1.6-7M12.2 13.5c2.9.6 5-1.4 5-4.1 0-2.6-2.2-4.4-5.1-4.4-3.2 0-5.1 2.2-5.1 4.6 0 1.1.5 2.2 1.3 2.6"/>
+{%- elif k == 'vimeo' -%}<path d="M3 8.5l1.2 1.5c1-.7 1.6-1.1 2-.4.6 1.1 2 7.4 3.4 7.4 1.5 0 5.8-5.6 6.4-8.6.6-3-1.8-3.8-4.3-2.1 1.4-.8 2.8.3 1.1 3.2-1.3 2.2-2.4 3.4-2.9 1.4C9.4 9 9.2 4.8 6.6 5.7 5.4 6.1 3 8.5 3 8.5z"/>
+{%- elif k == 'threads' -%}<path d="M16.5 11.2c-.3-2.4-1.9-3.7-4.3-3.7-2.5 0-4 1.6-4.1 1.8M15.8 12.3c0 2.3-1.3 3.7-3.4 3.7-1.5 0-2.6-.8-2.6-2s1.1-2.1 3-2.1c3.3 0 5.7 1.3 5.7 4 0 2.6-2.5 5.1-6.4 5.1-4.6 0-7.6-3.2-7.6-9S7.4 3 12 3c3.6 0 6 1.8 7 4.6"/>
+{%- elif k == 'x' -%}<path d="M4 4l16 16M20 4L4 20"/>
+{%- elif k == 'film' -%}<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>
+{%- else -%}<path d="M10 14l4-4M8.5 11.5l-2 2a3 3 0 0 0 4 4l2-2M15.5 12.5l2-2a3 3 0 0 0-4-4l-2 2"/>
+{%- endif -%}</svg>{%- endmacro -%}
 {%- set films = (v.videoEmbeds or ([v.videoEmbed] if v.videoEmbed else [])) -%}
 {%- set gal = v.gallery or [] -%}
 {%- set galf = v.galleryFull or gal -%}
 {%- set tiles = namespace(list=[]) -%}
 {%- for g in gal -%}
   {%- set tiles.list = tiles.list + [{'k': 'img', 'src': g, 'full': galf[loop.index0] if galf|length > loop.index0 else g}] -%}
-  {%- if loop.first and films -%}{%- set tiles.list = tiles.list + [{'k': 'film', 'src': films[0]}] -%}{%- endif -%}
 {%- endfor -%}
-{%- if not gal and films -%}{%- set tiles.list = [{'k': 'film', 'src': films[0]}] -%}{%- endif -%}
 {%- set tn = tiles.list|length -%}
 {%- set shown = 9 if tn >= 9 else (5 if tn >= 5 else tn) -%}
 {%- set ann_t = v.announcement.title if (v.announcement and v.announcement.title) else '' -%}
@@ -127,7 +141,7 @@
         </div>
         <div class="vx-cta">
           <a class="vx-btn vx-btn-gold" href="https://app.meetlazo.com/?vendor={{ v.placeId }}"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 9.5h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Check your date</a>
-          <button class="vx-btn vx-btn-ghost" type="button" id="hy-hero-2" data-open="{{ 'film' if films else 'photos' }}" {% if not tiles.list %}style="display:none"{% endif %}>{% if films %}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg><span>Watch the highlight film</span>{% else %}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 16l5-5 4 4 3-3 4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>View all {{ gal|length }} photo{{ '' if gal|length == 1 else 's' }}</span>{% endif %}</button>
+          <button class="vx-btn vx-btn-ghost" type="button" id="hy-hero-2" data-open="{{ 'film' if films else 'photos' }}" {% if not (tiles.list or films) %}style="display:none"{% endif %}>{% if films %}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg><span>Watch the highlight film</span>{% else %}<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4 16l5-5 4 4 3-3 4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>View all {{ gal|length }} photo{{ '' if gal|length == 1 else 's' }}</span>{% endif %}</button>
         </div>
       </div>
     </div>
@@ -152,18 +166,13 @@
     <section class="vx-work" id="hy-gal-wrap" {% if not tiles.list %}style="display:none"{% endif %}>
       <div class="vx-sec-h">
         <h2 class="vx-h2" id="gallery">Portfolio</h2>
-        <p class="vx-sec-sub" id="hy-gal-sub">{% set gs = namespace(p=[]) %}{% if gal %}{% set gs.p = gs.p + [(gal|length) ~ ' photo' ~ ('' if gal|length == 1 else 's')] %}{% endif %}{% if films %}{% set gs.p = gs.p + [(films|length) ~ ' film' ~ ('' if films|length == 1 else 's')] %}{% endif %}{{ gs.p|join(' &middot; ')|safe }}</p>
-        <button class="vx-link" type="button" id="hy-gal-all" {% if tn < 2 %}style="display:none"{% endif %}>View all galleries <span aria-hidden="true">&rarr;</span></button>
+        <p class="vx-sec-sub" id="hy-gal-sub">{% set gs = namespace(p=[]) %}{% if gal %}{% set gs.p = gs.p + [(gal|length) ~ ' photo' ~ ('' if gal|length == 1 else 's')] %}{% endif %}{{ gs.p|join(' &middot; ')|safe }}</p>
+        <button class="vx-link" type="button" id="hy-gal-all" {% if tn < 2 %}style="display:none"{% endif %}>View all photos <span aria-hidden="true">&rarr;</span></button>
       </div>
       <div class="vx-bento c{{ shown }}" id="hy-gal" data-n="{{ tn }}">
         {%- for t in tiles.list -%}
         {%- set i = loop.index0 -%}
-        {%- if t.k == 'film' -%}
-        {%- set yid = t.src.split('/embed/')[1].split('?')[0] if '/embed/' in t.src else '' -%}
-        <a class="vx-t vx-t-film{% if i >= shown %} vx-hide{% endif %}" href="{{ t.src }}" data-kind="film" data-src="{{ t.src }}" target="_blank" rel="noopener">{% if yid %}<img src="https://i.ytimg.com/vi/{{ yid }}/hqdefault.jpg" alt="{{ v.name }} highlight film" loading="lazy" decoding="async" width="480" height="360">{% endif %}<span class="vx-play" aria-hidden="true"><i></i></span><span class="vx-t-label">Watch the film</span></a>
-        {%- else -%}
         <a class="vx-t{% if i >= shown %} vx-hide{% endif %}" href="{{ t.full }}" data-kind="img" target="_blank" rel="noopener"><img src="{{ th(t.src, 1200 if i == 0 else 700) }}" data-orig="{{ t.src }}" onerror="this.onerror=null;this.src=this.dataset.orig" alt="{{ v.name }} &mdash; {{ cat.singular|lower }} in {{ metro.display }}" width="{{ 1200 if i == 0 else 700 }}" height="{{ 900 if i == 0 else 525 }}" loading="{{ 'eager' if i == 0 else 'lazy' }}" decoding="async"><span class="vx-t-label">View gallery</span>{% if i == shown - 1 and tn > shown %}<span class="vx-more">+{{ tn - shown }} more</span>{% endif %}</a>
-        {%- endif -%}
         {%- endfor -%}
       </div>
     </section>
@@ -193,6 +202,17 @@
 
     <div class="vx-main">
 
+      <!-- ---------- films: their own section and player ---------- -->
+      <section class="vx-films-sec" id="hy-films-wrap" {% if not films %}style="display:none"{% endif %}>
+        <div class="vx-sec-h">
+          <h2 class="vx-h2" id="films">Films</h2>
+          <p class="vx-sec-sub" id="hy-films-sub">{{ films|length }} film{{ '' if films|length == 1 else 's' }}</p>
+        </div>
+        <div class="vx-films n{{ films|length if films|length < 5 else 5 }}" id="hy-films">
+          {%- for e in films %}{% set yid = e.split('/embed/')[1].split('?')[0] if '/embed/' in e else '' %}<a class="vx-film" href="{{ e }}" data-kind="film" data-src="{{ e }}" target="_blank" rel="noopener" aria-label="Play {{ v.name }} film {{ loop.index }}">{% if yid %}<img src="https://i.ytimg.com/vi/{{ yid }}/{{ 'maxresdefault' if loop.first else 'hqdefault' }}.jpg" data-alt="https://i.ytimg.com/vi/{{ yid }}/hqdefault.jpg" onerror="if(this.dataset.alt&&this.src!==this.dataset.alt){this.src=this.dataset.alt}else{this.style.display='none'}" alt="{{ v.name }} film {{ loop.index }}" loading="lazy" decoding="async" width="1280" height="720">{% endif %}<span class="vx-play" aria-hidden="true"><i></i></span><span class="vx-film-l">{{ 'Highlight film' if loop.first else 'Film ' ~ loop.index }}</span></a>{% endfor -%}
+        </div>
+      </section>
+
       <div class="v-ann vx-ann" id="hy-ann" {% if not (v.announcement and v.announcement.text) %}style="display:none"{% endif %}><b id="hy-ann-t">{{ ann_t }}</b><p id="hy-ann-x">{{ v.announcement.text if v.announcement else '' }}</p></div>
 
       <!-- ---------- about: a face and a line, then the rest on request ---------- -->
@@ -204,7 +224,7 @@
             <figcaption><b id="hy-owner-n">{{ v.ownerName or '' }}</b><span id="hy-owner-t">{{ v.ownerTitle or 'Owner' }}</span></figcaption>
           </figure>
           <div class="vx-about-txt">
-            <blockquote class="vx-quote" id="hy-quote" {% if not q1 %}style="display:none"{% endif %}>{{ q1 }}</blockquote>
+            <p class="vx-lead" id="hy-quote" {% if not q1 %}style="display:none"{% endif %}>{{ q1 }}</p>
             {%- set rest = bio_src[q1|length:]|trim if (q1 and bio_src[:q1|length] == q1) else bio_src -%}
             {%- set extra_bio = v.bio if (v.ownerBio and v.bio and not same_bio) else '' -%}
             <div class="vx-bio" id="hy-bio-wrap" {% if not (rest or extra_bio or (not bio_src and v.intro)) %}style="display:none"{% endif %}>
@@ -213,12 +233,14 @@
             </div>
             <button class="vx-link vx-more-btn" type="button" id="hy-bio-more" hidden>Read more</button>
             <div class="vx-chips" id="hy-attrs" {% if not chips.list %}style="display:none"{% endif %}>{% for c in chips.list %}<span>{{ c }}</span>{% endfor %}</div>
-            <p class="vx-links">
-              <a id="hy-owner-ig" href="{{ v.instagramUrl or '#' }}" rel="noopener nofollow" target="_blank" {% if not v.instagramUrl %}style="display:none"{% endif %}>Instagram</a>
-              <a id="hy-owner-web" href="{{ v.website or '#' }}" rel="noopener nofollow" target="_blank" {% if not v.website %}style="display:none"{% endif %}>Website</a>
+            {#- JC-LAZO-SOCIALS-1014-001: the profiles the vendor saved as handles (generate/socials.py), plus the
+                website and the older instagramUrl field when no Instagram handle covers it -#}
+            {%- set sl_ids = (v.social_links or [])|map(attribute='id')|list -%}
+            <p class="vx-social" id="hy-soc" {% if not (v.website or v.instagramUrl or v.social_links) %}style="display:none"{% endif %} aria-label="{{ v.name }} online">
+              {%- if v.website %}<a class="vx-sbtn vx-s-web" id="hy-owner-web" href="{{ v.website }}" rel="noopener nofollow" target="_blank">{{ ico('web') }}<span>Website</span></a>{% endif -%}
+              {%- if v.instagramUrl and 'instagram' not in sl_ids %}<a class="vx-sbtn vx-s-instagram" id="hy-owner-ig" href="{{ v.instagramUrl }}" rel="noopener nofollow" target="_blank">{{ ico('instagram') }}<span>Instagram</span></a>{% endif -%}
+              {%- for sl in v.social_links or [] %}<a class="vx-sbtn vx-s-{{ sl.id }}" href="{{ sl.url }}" rel="noopener nofollow" target="_blank">{{ ico(sl.id) }}<span>{{ sl.label }}</span></a>{% endfor -%}
             </p>
-            {#- JC-LAZO-SOCIALS-1014-001: the profiles the vendor saved as handles (generate/socials.py) -#}
-            <p class="v-socials" id="hy-soc" {% if not v.social_links %}style="display:none"{% endif %}><span id="hy-soc-l">Find {{ v.name }} on</span>{% for sl in v.social_links or [] %}<a class="v-soc v-soc-{{ sl.id }}" href="{{ sl.url }}" rel="noopener nofollow" target="_blank">{{ sl.label }}</a>{% endfor %}</p>
           </div>
         </div>
       </section>
@@ -245,23 +267,18 @@
 
       {#- pricing without package cards: the starting price and the sheet; with cards, the sheet is a quiet link -#}
       <section class="vx-pricing" id="hy-sheet-wrap" {% if not (v.priceSheetUrl or v.priceSheetPages or (v.startingPrice and not v.packages)) %}style="display:none"{% endif %}>
-        <h2 class="vx-h2" id="price-sheet" {% if v.packages %}hidden{% endif %}>Pricing</h2>
+        <h2 class="vx-h2" id="price-sheet">{{ 'Price sheet' if v.packages else 'Pricing' }}</h2>
         <div class="vx-pricing-in">
           <p class="vx-pricing-from" id="hy-price-from" {% if not v.startingPrice or v.packages %}style="display:none"{% endif %}><small>Packages from</small><b id="hy-price-val">{{ (v.startingPrice or '')|money }}</b></p>
           {% if v.priceRangeDisplay and v.priceRangeDisplay|length > 1 and not v.startingPrice %}<p class="vx-pricing-from" id="hy-price-typ"><small>Typical</small><b>{{ v.priceRangeDisplay }}</b></p>{% endif %}
-          <div class="vx-sheet-pages" id="hy-sheet-pages" {% if not v.priceSheetPages %}style="display:none"{% endif %}>
-            {%- for pg_url in (v.priceSheetPages or []) %}<a href="{{ pg_url }}" target="_blank" rel="noopener"><img src="{{ th(pg_url, 360) }}" data-orig="{{ pg_url }}" onerror="this.onerror=null;this.src=this.dataset.orig" alt="{{ v.name }} price sheet, page {{ loop.index }}" loading="lazy" decoding="async"></a>{% endfor -%}
-          </div>
+
           <p class="vx-sheet" id="hy-sheet" {% if not v.priceSheetUrl %}style="display:none"{% endif %}><a id="hy-sheet-a" href="{{ v.priceSheetUrl or '#' }}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19.5h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Download the full price sheet (PDF)</a></p>
+        </div>
+        <div class="vx-pages" id="hy-sheet-pages" {% if not v.priceSheetPages %}style="display:none"{% endif %}>
+          {%- for pg_url in (v.priceSheetPages or []) %}<a class="vx-page" href="{{ pg_url }}" data-kind="img" target="_blank" rel="noopener"><img src="{{ th(pg_url, 640) }}" data-orig="{{ pg_url }}" onerror="this.onerror=null;this.src=this.dataset.orig" alt="{{ v.name }} price sheet, page {{ loop.index }}" loading="lazy" decoding="async" width="640" height="828"><span>Page {{ loop.index }}</span></a>{% endfor -%}
         </div>
       </section>
 
-      <section id="hy-films-wrap" {% if films|length < 2 %}style="display:none"{% endif %}>
-        <h2 class="vx-h2">Films</h2>
-        <div class="v-films" id="hy-films">
-          {% for e in films %}<div class="v-film" data-src="{{ e }}"><img src="" alt="{{ v.name }} film {{ loop.index }}" loading="lazy" decoding="async"><span class="play"><i></i></span></div>{% endfor %}
-        </div>
-      </section>
 
       <!-- lz-hotels -->
       {% if hotels %}
@@ -292,6 +309,25 @@
         {% endif %}
       </section>
 
+      <!-- ---------- questions: the vendor's own answers, then the planning questions ---------- -->
+      <section class="vx-faq" id="faq" {% if not (faqs or v.vendorFaqs) %}style="display:none"{% endif %}>
+        <h2 class="vx-h2">Frequently asked questions</h2>
+        <div class="vx-faq-g" id="hy-vfaq-wrap" {% if not v.vendorFaqs %}style="display:none"{% endif %}>
+          <p class="vx-faq-k">Answered by {{ v.name }}</p>
+          <div class="vx-acc" id="hy-vfaq">
+            {%- for f in (v.vendorFaqs or []) %}<details class="vx-q"{% if loop.first %} open{% endif %}><summary>{{ f.q }}<i aria-hidden="true"></i></summary><p>{{ f.a }}</p></details>{% endfor -%}
+          </div>
+        </div>
+        {%- if faqs %}
+        <div class="vx-faq-g">
+          <p class="vx-faq-k">Planning a {{ cat.singular|lower }} in {{ metro.name }}</p>
+          <div class="vx-acc">
+            {%- for q, a in faqs %}<details class="vx-q"><summary>{{ q }}<i aria-hidden="true"></i></summary><p>{{ a }}</p></details>{% endfor -%}
+          </div>
+        </div>
+        {%- endif %}
+      </section>
+
       {% if claimed %}
       <section class="vx-avail" id="availability">
         <div class="vx-sec-h">
@@ -302,6 +338,95 @@
         <p class="vx-cal-legend"><span class="lg-open">Open</span><span class="lg-bk">Booked</span><span class="lg-sat">Saturday</span><a href="https://app.meetlazo.com/?vendor={{ v.placeId }}">Ask about your date &rarr;</a></p>
       </section>
       {% endif %}
+
+      {#- JC-LAZO-LOCAL-1017-001: the local facts, as tables (generate/local_facts.py). Each block shows only with real data. -#}
+      {%- set L = local_for(metro.id) if local_for is defined else {} -%}
+      {%- set LP = local_prices(metro.id, cat.slug) if local_prices is defined else none -%}
+      {%- set LD = local_demand(metro.id) if local_demand is defined else none -%}
+      {%- set L_built = (foot_metros or [])|map(attribute='id')|list -%}
+      {%- set nv = v.near_venues if (v.near_venues and cat.slug != 'wedding-venues') else [] -%}
+      {%- if L or LP or LD or nv or v.recommended_by %}
+      <div class="vx-local" id="local">
+
+        {%- if LP %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">What {{ cat.label|lower }} cost in {{ metro.name }}</h2>
+          <div class="vx-stats">
+            <p><small>Most start between</small><b>${{ '{:,}'.format(LP.lo) }}&ndash;${{ '{:,}'.format(LP.hi) }}</b></p>
+            {% if LP.mid %}<p><small>Middle starting price</small><b>${{ '{:,}'.format(LP.mid) }}</b></p>{% endif %}
+          </div>
+          <p class="vx-fn">Starting prices of {{ LP.n }} {{ cat.label|lower }} in {{ metro.name }} on Lazo; the middle half of them start in this range.</p>
+        </section>
+        {%- endif %}
+
+        {%- if nv %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">Wedding venues near {{ v.name }}</h2>
+          <table class="vx-tbl vx-tbl-2">
+            <thead><tr><th scope="col">Venue</th><th scope="col">Distance</th></tr></thead>
+            <tbody>{% for x in nv[:8] %}<tr><td><a href="/{{ metro.id }}/wedding-venues/{{ x.slug }}/">{{ x.name }}</a></td><td>{{ x.mi }} mi</td></tr>{% endfor %}</tbody>
+          </table>
+          <p class="vx-fn">Straight-line distance from {{ v.name }} to each venue listed on Lazo.</p>
+        </section>
+        {%- endif %}
+
+        {%- if v.recommended_by %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">Venues that recommend {{ v.name }}</h2>
+          <div class="vx-recs">{% for r in v.recommended_by %}<a href="{{ r.path }}"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 21h18M5 21V10l7-5 7 5v11M10 21v-5h4v5"/></svg>{{ r.name }}</a>{% endfor %}</div>
+          <p class="vx-fn">Each venue links to {{ v.name }} on its own preferred-vendor page.</p>
+        </section>
+        {%- endif %}
+
+        {%- if L.months %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">{{ metro.name }} weddings, month by month</h2>
+          {%- if L.has_weather and (L.mild or L.driest) %}
+          <p class="vx-lead-s">{% if L.mild %}Days typically top out between 65&deg; and 85&deg; in {{ L.mild|join(', ') }}.{% endif %}{% if L.driest %} The driest months are {{ L.driest|join(', ') }}.{% endif %}</p>
+          {%- endif %}
+          <div class="vx-tbl-wrap">
+          <table class="vx-tbl vx-tbl-m">
+            <thead><tr><th scope="col">Month</th>{% if L.has_weather %}<th scope="col">High</th><th scope="col">Low</th><th scope="col"><abbr title="Share of days with 0.1 inch of rain or more">Rain</abbr></th>{% endif %}{% if L.has_sun %}<th scope="col">Golden hour</th><th scope="col">Sunset</th>{% endif %}</tr></thead>
+            <tbody>{% for r in L.months %}<tr{% if r.now %} class="is-now"{% endif %}><th scope="row">{{ r.m }}</th>{% if L.has_weather %}<td>{{ r.hi }}&deg;</td><td>{{ r.lo }}&deg;</td><td>{{ r.rain }}%</td>{% endif %}{% if L.has_sun %}<td>{{ r.golden or '' }}</td><td>{{ r.sunset or '' }}</td>{% endif %}</tr>{% endfor %}</tbody>
+          </table>
+          </div>
+          <p class="vx-fn">{% if L.has_weather %}Average highs, lows and the share of days with 0.1&Prime; of rain or more, from NOAA&rsquo;s 1991&ndash;2020 climate normals at {{ L.station.name }} ({{ L.station.mi }} mi from {{ metro.name }}). {% endif %}{% if L.has_sun %}Golden hour begins when the sun is 6&deg; above the horizon; both times are for the 15th of each month in {{ metro.name }}.{% endif %}</p>
+        </section>
+        {%- endif %}
+
+        {%- if LD %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">When couples marry in {{ metro.name }}</h2>
+          <div class="vx-stats">{% for mname, pct in LD.top %}<p><small>{{ mname }}</small><b>{{ pct }}%</b></p>{% endfor %}</div>
+          <p class="vx-fn">The share of {{ LD.n }} Lazo couples in {{ metro.name }} marrying in each of the three busiest months.</p>
+        </section>
+        {%- endif %}
+
+        {%- if L.airports or L.cities %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">Getting to {{ metro.name }}</h2>
+          <div class="vx-travel">
+            {%- if L.airports %}
+            <table class="vx-tbl">
+              <caption>Airports</caption>
+              <thead><tr><th scope="col">Airport</th><th scope="col">Distance</th><th scope="col">Est. drive</th></tr></thead>
+              <tbody>{% for a in L.airports %}<tr><td><b>{{ a.code }}</b> {{ a.name }}</td><td>{{ a.mi }} mi</td><td>{{ a.drive }}</td></tr>{% endfor %}</tbody>
+            </table>
+            {%- endif %}
+            {%- if L.cities %}
+            <table class="vx-tbl">
+              <caption>Nearby cities</caption>
+              <thead><tr><th scope="col">City</th><th scope="col">Distance</th><th scope="col">Est. drive</th></tr></thead>
+              <tbody>{% for c in L.cities %}<tr><td>{% if c.id in L_built %}<a href="/{{ c.id }}/">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</td><td>{{ c.mi }} mi</td><td>{{ c.drive }}</td></tr>{% endfor %}</tbody>
+            </table>
+            {%- endif %}
+          </div>
+          <p class="vx-fn">Straight-line distance from central {{ metro.name }}; drive times are estimates, not routes. Airports with scheduled passenger service, from OurAirports.</p>
+        </section>
+        {%- endif %}
+
+      </div>
+      {%- endif %}
 
       <h2 class="vx-h2">Details</h2>
       <dl class="v-facts">
@@ -356,20 +481,7 @@
       <div class="v-pref">{% for p in v.preferredResolved %}<a href="{{ p.path }}">{{ p.name }}</a>{% endfor %}</div>
       {% endif %}
 
-      <div id="hy-vfaq-wrap" {% if not v.vendorFaqs %}style="display:none"{% endif %}>
-        <h2 class="vx-h2">Questions, answered by {{ v.name }}</h2>
-        <div class="faq-block faq-vendor" id="hy-vfaq">
-          {% for f in (v.vendorFaqs or []) %}<details class="faq"><summary>{{ f.q }}</summary><p>{{ f.a }}</p></details>{% endfor %}
-        </div>
-      </div>
 
-      {% if v.near_venues and cat.slug != 'wedding-venues' %}
-      <h2 class="vx-h2">Close to these venues</h2>
-      <div class="geo-list">
-        {% for nv in v.near_venues %}<a href="/{{ metro.id }}/wedding-venues/{{ nv.slug }}/">{{ nv.name }}<span>{{ nv.mi }} mi</span></a>{% endfor %}
-      </div>
-      <p class="geo-note">Distances are straight-line from {{ v.name }} to each venue.</p>
-      {% endif %}
       {%- set near_pros = (v.near_vendors or [])|rejectattr('cat', 'equalto', 'wedding-venues')|list %}
       {% if near_pros %}
       <h2 class="vx-h2">Nearby vendors</h2>
@@ -388,12 +500,6 @@
         {% endfor %}
       </div>
       <p class="geo-note">Other {{ cat.singular|lower }}s in {{ metro.name }} who proved they're real. Nobody paid to be here.</p>
-      {% endif %}
-      {% if faqs %}
-      <h2 class="vx-h2">Planning questions, answered</h2>
-      <div class="faq-block">
-        {% for q, a in faqs %}<details class="faq"><summary>{{ q }}</summary><p>{{ a }}</p></details>{% endfor %}
-      </div>
       {% endif %}
 
       {#- JC-LAZO-VENDORLINK-0917-001: the guides for this category.
@@ -435,6 +541,7 @@
   </div><!-- /vx-wrap -->
 </section>
 
+<template id="vx-ico">{% for k in ['web','instagram','facebook','tiktok','youtube','pinterest','vimeo','threads','x','link'] %}<span data-k="{{ k }}" style="display:contents">{{ ico(k) }}</span>{% endfor %}</template>
 <div class="v-lb vx-lb" id="hy-lb" aria-hidden="true" role="dialog" aria-label="{{ v.name }} gallery">
   <button class="lb-x" type="button" aria-label="Close">&times;</button>
   <button class="lb-p" type="button" aria-label="Previous">&#8249;</button>
@@ -491,25 +598,28 @@ window.__lazoLogo=function(img){
   // ---- the bento: the same markup the template writes, for live hydration ----
   function esc(t){var d=document.createElement('div');d.textContent=t==null?'':String(t);return d.innerHTML;}
   function ytId(u){var m=/(?:embed\/|v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(u||'');return m?m[1]:'';}
-  window.__vxBento=function(gal,films,name,alt){
-    var tiles=[];gal.forEach(function(u,i){tiles.push({k:'img',src:u});if(i===0&&films.length)tiles.push({k:'film',src:films[0]});});
-    if(!gal.length&&films.length)tiles.push({k:'film',src:films[0]});
+  window.__vxBento=function(gal,name,alt){
+    var tiles=gal.map(function(u){return {k:'img',src:u};});
     var n=tiles.length,shown=n>=9?9:(n>=5?5:n);
     var html=tiles.map(function(t,i){
       var hide=i>=shown?' vx-hide':'';
-      if(t.k==='film'){var y=ytId(t.src);return '<a class="vx-t vx-t-film'+hide+'" href="'+esc(t.src)+'" data-kind="film" data-src="'+esc(t.src)+'" target="_blank" rel="noopener">'+(y?'<img src="https://i.ytimg.com/vi/'+y+'/hqdefault.jpg" alt="'+esc(name)+' highlight film" loading="lazy" decoding="async">':'')+'<span class="vx-play" aria-hidden="true"><i></i></span><span class="vx-t-label">Watch the film</span></a>';}
       return '<a class="vx-t'+hide+'" href="'+esc(t.src)+'" data-kind="img" target="_blank" rel="noopener"><img src="'+esc(window.__lazoThumb(t.src,i===0?1200:700))+'" data-orig="'+esc(t.src)+'" onerror="this.onerror=null;this.src=this.dataset.orig" alt="'+esc(alt)+'" loading="'+(i===0?'eager':'lazy')+'" decoding="async"><span class="vx-t-label">View gallery</span>'+(i===shown-1&&n>shown?'<span class="vx-more">+'+(n-shown)+' more</span>':'')+'</a>';
     }).join('');
     return {html:html,n:n,shown:shown};
   };
+  // films: the same markup the template writes
+  window.__vxFilms=function(films,name){
+    return films.map(function(e,i){var y=ytId(e);return '<a class="vx-film" href="'+esc(e)+'" data-kind="film" data-src="'+esc(e)+'" target="_blank" rel="noopener" aria-label="Play '+esc(name)+' film '+(i+1)+'">'+(y?'<img src="https://i.ytimg.com/vi/'+y+'/'+(i===0?'maxresdefault':'hqdefault')+'.jpg" data-alt="https://i.ytimg.com/vi/'+y+'/hqdefault.jpg" onerror="if(this.dataset.alt&&this.src!==this.dataset.alt){this.src=this.dataset.alt}else{this.style.display=\'none\'}" alt="'+esc(name)+' film '+(i+1)+'" loading="lazy" decoding="async">':'')+'<span class="vx-play" aria-hidden="true"><i></i></span><span class="vx-film-l">'+(i===0?'Highlight film':'Film '+(i+1))+'</span></a>';}).join('');
+  };
 
   // ---- the lightbox: photos and films, keyboard and swipe ----
-  var gal=document.getElementById('hy-gal'),lb=document.getElementById('hy-lb');
-  if(!gal||!lb)return;
-  var lbImg=lb.querySelector('img'),lbFilm=lb.querySelector('.lb-film'),lbCap=lb.querySelector('.lb-c'),idx=0,last=null;
-  function shots(){return Array.prototype.slice.call(gal.querySelectorAll('a.vx-t'));}
-  function open(i){
-    var list=shots(),a=list[i];if(!a)return;idx=i;
+  var lb=document.getElementById('hy-lb');
+  if(!lb)return;
+  var lbImg=lb.querySelector('img'),lbFilm=lb.querySelector('.lb-film'),lbCap=lb.querySelector('.lb-c'),idx=0,last=null,grp=null;
+  var GROUPS=['hy-gal','hy-films','hy-sheet-pages'];
+  function shots(){return grp?Array.prototype.slice.call(grp.querySelectorAll('a[data-kind]')):[];}
+  function open(i,g){
+    if(g)grp=g;var list=shots(),a=list[i];if(!a)return;idx=i;
     if(!lb.classList.contains('on'))last=document.activeElement;
     lbFilm.innerHTML='';
     if(a.getAttribute('data-kind')==='film'){
@@ -527,10 +637,11 @@ window.__lazoLogo=function(img){
   }
   function close(){lb.classList.remove('on');lb.setAttribute('aria-hidden','true');document.body.style.overflow='';lbImg.removeAttribute('src');lbFilm.innerHTML='';if(last&&last.focus)last.focus({preventScroll:true});}
   function step(d){var n=shots().length;if(n)open((idx+d+n)%n);}
-  gal.addEventListener('click',function(e){var a=e.target.closest('a.vx-t');if(!a)return;e.preventDefault();open(shots().indexOf(a));});
-  function openKind(k){var l=shots(),i=0;if(k==='film'){l.forEach(function(a,j){if(i===0&&a.getAttribute('data-kind')==='film')i=j;});}open(i);}
-  var all=document.getElementById('hy-gal-all');if(all)all.addEventListener('click',function(){openKind('img');});
-  var h2=document.getElementById('hy-hero-2');if(h2)h2.addEventListener('click',function(){openKind(h2.getAttribute('data-open'));});
+  GROUPS.forEach(function(id){var g=document.getElementById(id);if(!g)return;
+    g.addEventListener('click',function(e){var a=e.target.closest('a[data-kind]');if(!a)return;e.preventDefault();grp=g;open(shots().indexOf(a),g);});});
+  function openGroup(id){var g=document.getElementById(id);if(g&&g.querySelector('a[data-kind]'))open(0,g);}
+  var all=document.getElementById('hy-gal-all');if(all)all.addEventListener('click',function(){openGroup('hy-gal');});
+  var h2=document.getElementById('hy-hero-2');if(h2)h2.addEventListener('click',function(){openGroup(h2.getAttribute('data-open')==='film'?'hy-films':'hy-gal');});
   lb.querySelector('.lb-x').addEventListener('click',close);
   lb.querySelector('.lb-p').addEventListener('click',function(e){e.stopPropagation();step(-1);});
   lb.querySelector('.lb-n').addEventListener('click',function(e){e.stopPropagation();step(1);});
@@ -539,17 +650,6 @@ window.__lazoLogo=function(img){
   var sx=null;lb.addEventListener('touchstart',function(e){sx=e.touches[0].clientX;},{passive:true});
   lb.addEventListener('touchend',function(e){if(sx===null)return;var dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>50)step(dx<0?1:-1);},{passive:true});
 
-  // ---- films section (two or more): a poster and a play button; the player loads when asked ----
-  function mountFilms(){
-    var wrap=document.getElementById('hy-films');if(!wrap)return;
-    Array.prototype.slice.call(wrap.querySelectorAll('.v-film')).forEach(function(f){
-      if(f.dataset.ready)return;f.dataset.ready='1';
-      var src=f.getAttribute('data-src')||'',id=ytId(src),img=f.querySelector('img');
-      if(img&&id){img.src='https://i.ytimg.com/vi/'+id+'/hqdefault.jpg';img.onerror=function(){this.style.display='none';};}
-      f.addEventListener('click',function(){var sep=src.indexOf('?')<0?'?':'&';f.innerHTML='<iframe src="'+src+sep+'autoplay=1" title="film" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';},{once:true});
-    });
-  }
-  window.__lazoFilms=mountFilms;mountFilms();
 
   // ---- about: the bio folds to a few lines with "Read more" when it runs long ----
   window.__vxBioFold=function(){
@@ -674,13 +774,12 @@ window.__lazoLogo=function(img){
     var v1=embed(s(f.videoUrl));if(v1&&vids.indexOf(v1)<0)vids.unshift(v1);vids=vids.slice(0,4);
     var gw=document.getElementById('hy-gal-wrap'),g=document.getElementById('hy-gal');
     if(gw&&g){
-      var sig=JSON.stringify([gal,vids[0]||'']);
-      var cur=JSON.stringify([Array.prototype.slice.call(g.querySelectorAll('a.vx-t[data-kind=img]')).map(function(a){return a.querySelector('img').getAttribute('data-orig');}),(g.querySelector('a.vx-t-film')||{getAttribute:function(){return '';}}).getAttribute('data-src')||'']);
-      if(gal.length||vids.length){gw.style.display='';
-        if(sig!==cur){var r=window.__vxBento(gal,vids,NAME,ALT);g.innerHTML=r.html;g.className='vx-bento c'+r.shown;}
-        var parts=[];if(gal.length)parts.push(gal.length+' photo'+(gal.length===1?'':'s'));if(vids.length)parts.push(vids.length+' film'+(vids.length===1?'':'s'));
-        var gs=document.getElementById('hy-gal-sub');if(gs)gs.innerHTML=parts.join(' &middot; ');
-        show('hy-gal-all',gal.length+vids.length>1);
+      var sig=JSON.stringify(gal);
+      var cur=JSON.stringify(Array.prototype.slice.call(g.querySelectorAll('a.vx-t[data-kind=img]')).map(function(a){return a.querySelector('img').getAttribute('data-orig');}));
+      if(gal.length){gw.style.display='';
+        if(sig!==cur){var r=window.__vxBento(gal,NAME,ALT);g.innerHTML=r.html;g.className='vx-bento c'+r.shown;}
+        txt('hy-gal-sub',gal.length+' photo'+(gal.length===1?'':'s'));
+        show('hy-gal-all',gal.length>1);
       }else{gw.style.display='none';}
     }
     var h2b=document.getElementById('hy-hero-2');
@@ -710,20 +809,23 @@ window.__lazoLogo=function(img){
     var sheet=s(f.priceSheetUrl),pages=arr(f.priceSheetPages).map(function(x){return s(x);}).filter(Boolean);
     var noCards=!packs.length;
     show('hy-sheet-wrap',!!(sheet||pages.length||(sp&&noCards)));
-    var ph2=document.getElementById('price-sheet');if(ph2)ph2.hidden=!noCards;
+    var ph2=document.getElementById('price-sheet');if(ph2)ph2.textContent=noCards?'Pricing':'Price sheet';
     show('hy-price-from',!!sp&&noCards);txt('hy-price-val',sp);show('hy-price-typ',!sp);
     show('hy-rail-price',!!sp);txt('hy-rail-price-v',sp);
     var bs=document.getElementById('hy-bar-sub');if(bs)bs.textContent=sp?'Packages from '+sp:'Free to inquire';
     show('hy-sheet',!!sheet);var sa=document.getElementById('hy-sheet-a');if(sa&&sheet)sa.href=sheet;
     var spg=document.getElementById('hy-sheet-pages');
-    if(spg){show('hy-sheet-pages',pages.length>0);spg.innerHTML=pages.map(function(u,i){return '<a href="'+esc(u)+'" target="_blank" rel="noopener"><img src="'+esc(th(u,360))+'" loading="lazy" decoding="async" alt="'+esc(NAME)+' price sheet, page '+(i+1)+'" onerror="this.onerror=null;this.src=\''+esc(u)+'\'"></a>';}).join('');}
-    // films (two or more get their own row; the first is always in the bento)
+    if(spg){show('hy-sheet-pages',pages.length>0);var pcur=Array.prototype.slice.call(spg.querySelectorAll('a.vx-page')).map(function(a){return a.getAttribute('href');});
+      if(JSON.stringify(pcur)!==JSON.stringify(pages))spg.innerHTML=pages.map(function(u,i){return '<a class="vx-page" href="'+esc(u)+'" data-kind="img" target="_blank" rel="noopener"><img src="'+esc(th(u,640))+'" data-orig="'+esc(u)+'" loading="lazy" decoding="async" alt="'+esc(NAME)+' price sheet, page '+(i+1)+'" onerror="this.onerror=null;this.src=this.dataset.orig"><span>Page '+(i+1)+'</span></a>';}).join('');}
+    // films: their own section
     var fw=document.getElementById('hy-films-wrap'),fl=document.getElementById('hy-films');
     if(fw&&fl){
-      if(vids.length>1){fw.style.display='';fl.innerHTML=vids.map(function(e,i){return '<div class="v-film" data-src="'+esc(e)+'"><img src="" alt="'+esc(NAME)+' film '+(i+1)+'" loading="lazy" decoding="async"><span class="play"><i></i></span></div>';}).join('');}
+      var fcur=Array.prototype.slice.call(fl.querySelectorAll('a.vx-film')).map(function(a){return a.getAttribute('data-src');});
+      if(vids.length){fw.style.display='';
+        if(JSON.stringify(fcur)!==JSON.stringify(vids)){fl.innerHTML=window.__vxFilms(vids,NAME);}
+        fl.className='vx-films n'+Math.min(vids.length,5);txt('hy-films-sub',vids.length+' film'+(vids.length===1?'':'s'));}
       else{fw.style.display='none';}
     }
-    if(window.__lazoFilms)window.__lazoFilms();
     // logo
     var lg=s(f.logoUrl),lgImg=document.getElementById('hy-logo-img');
     if(lgImg&&lg&&lgImg.getAttribute('data-orig')!==lg){lgImg.setAttribute('data-orig',lg);lgImg.src=th(lg,320);}
@@ -742,8 +844,6 @@ window.__lazoLogo=function(img){
       if(window.__vxBioFold)window.__vxBioFold();
     }
     if(ab)ab.style.display=(on||src||document.getElementById('hy-intro')||chipsAny(f))?'':'none';
-    var ig=s(f.instagramUrl),ige=document.getElementById('hy-owner-ig');if(ige){ige.style.display=ig?'':'none';if(ig)ige.href=ig;}
-    var web=s(f.website),we=document.getElementById('hy-owner-web');if(we){we.style.display=web?'':'none';if(web)we.href=web;}
     // JC-LAZO-SOCIALS-1014-001: social profiles saved as handles; same rules as generate/socials.py
     (function(){
       var P=[['instagram','Instagram','https://www.instagram.com/'],['tiktok','TikTok','https://www.tiktok.com/@'],['facebook','Facebook','https://www.facebook.com/'],['pinterest','Pinterest','https://www.pinterest.com/'],['youtube','YouTube','https://www.youtube.com/@'],['vimeo','Vimeo','https://vimeo.com/'],['threads','Threads','https://www.threads.net/@'],['x','X','https://x.com/']];
@@ -753,9 +853,15 @@ window.__lazoLogo=function(img){
         else if(p[0]==='facebook'&&/^profile\.php\?id=\d{5,25}$/.test(h))u='https://www.facebook.com/'+h;
         else if(/^[A-Za-z0-9._-]{1,80}$/.test(h))u=p[2]+h;
         if(u)out.push([p[0],p[1],u]);});
+      var web=s(f.website),ig=s(f.instagramUrl);
+      if(ig&&!out.some(function(x){return x[0]==='instagram';}))out.unshift(['instagram','Instagram',ig,'hy-owner-ig']);
+      if(web)out.unshift(['web','Website',web,'hy-owner-web']);
       if(!out.length){el.style.display='none';return;}
-      el.textContent='';var l=document.createElement('span');l.id='hy-soc-l';l.textContent='Find '+(s(f.name)||'them')+' on';el.appendChild(l);
-      out.forEach(function(x){var a=document.createElement('a');a.className='v-soc v-soc-'+x[0];a.href=x[2];a.rel='noopener nofollow';a.target='_blank';a.textContent=x[1];el.appendChild(a);});
+      var tpl=document.getElementById('vx-ico');
+      el.textContent='';
+      out.forEach(function(x){var a=document.createElement('a');a.className='vx-sbtn vx-s-'+x[0];if(x[3])a.id=x[3];a.href=x[2];a.rel='noopener nofollow';a.target='_blank';
+        var ic=tpl&&tpl.content.querySelector('[data-k="'+x[0]+'"]')||tpl&&tpl.content.querySelector('[data-k="link"]');if(ic)a.appendChild(ic.cloneNode(true));
+        var sp=document.createElement('span');sp.textContent=x[1];a.appendChild(sp);el.appendChild(a);});
       el.style.display='';
     })();
     // style chips
@@ -774,8 +880,10 @@ window.__lazoLogo=function(img){
     var wb=s(f.website);show('hy-web',!!wb);var wa=document.getElementById('hy-web-a');if(wa&&wb)wa.href=wb;
     var em=s(f.publicEmail);show('hy-email',!!em);var ea=document.getElementById('hy-email-a');if(ea&&em){ea.href='mailto:'+em;ea.textContent=em;}
     // vendor faqs
-    var vf=arr(f.vendorFaqs);show('hy-vfaq-wrap',vf.length>0);var fe=document.getElementById('hy-vfaq');
-    if(fe&&vf.length)fe.innerHTML=vf.map(function(x){var q=m(x)||{};return '<details class="faq"><summary>'+esc(s(q.q))+'</summary><p>'+esc(s(q.a))+'</p></details>';}).join('');
+    var vf=arr(f.vendorFaqs).map(function(x){var q=m(x)||{};return [s(q.q),s(q.a)];}).filter(function(x){return x[0]&&x[1];});
+    show('hy-vfaq-wrap',vf.length>0);var fe=document.getElementById('hy-vfaq');
+    if(fe&&vf.length)fe.innerHTML=vf.map(function(x,i){return '<details class="vx-q"'+(i===0?' open':'')+'><summary>'+esc(x[0])+'<i aria-hidden="true"></i></summary><p>'+esc(x[1])+'</p></details>';}).join('');
+    var fq=document.getElementById('faq');if(fq)fq.style.display=(vf.length||fq.querySelector('.vx-faq-g:not(#hy-vfaq-wrap)'))?'':'none';
     // dates
     if(window.__lazoCal)window.__lazoCal(arr(f.unavailableDates).map(function(x){return s(x);}));
     var claimed=s(f.claimedBy);show('hy-claim',!claimed);show('hy-ww',!claimed);

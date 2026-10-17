@@ -145,6 +145,9 @@ def fmt_money(p) -> str:
     return f"${n:,}" + (f" {tail}" if tail else "")
 
 env.filters["money"] = fmt_money
+# JC-LAZO-LOCAL-1017-001: local facts on vendor pages (weather normals, light, travel, prices, demand, recommendations)
+import local_facts  # noqa: E402
+local_facts.install(env)
 # JC-LAZO-BUILD-0907-005: base.html links /assets/lazo.css?v={{ asset_v }} but nothing ever
 # set asset_v, so every build shipped "?v=" and browsers/Cloudflare kept the old stylesheet.
 # The build date busts it on every publish.
@@ -642,6 +645,7 @@ def build(vendors: list[dict]):
         import site_facts
         site_facts.attach(by_metro)
     build_content(by_metro)
+    local_facts.attach(by_metro, _DB if "_DB" in globals() else None)  # JC-LAZO-LOCAL-1017-001
 
     static_src = ROOT / "generate" / "static"
     DIST.mkdir(exist_ok=True)
