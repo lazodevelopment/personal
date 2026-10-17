@@ -8,6 +8,8 @@ we hold and is left out of the page when that data is missing:
             straight-line miles, drive times are labelled estimates
   prices    metroStats/{metro}__{cat}.priceFrom from nightlyVendorStats (needs 5+ priced vendors in the bucket)
   demand    the months couples in the metro marry, from couples.weddingDate (only with 25+ couples; never any one couple)
+  spots     photo spots near the metro centre (Google Places, data/local/photo_spots.json, fetched by
+            local_data.py photospots - PAID, kept 30 days at most, then left out until refreshed)
   recs      venues whose own preferred-vendor page links to this vendor's website (generate/data/preferred/harvest.json)
 
 build.py calls install(env) at import (template global local_for) and attach(by_metro, db) after build_content.
@@ -59,6 +61,12 @@ def _weather():
 def _airports():
     p = DATA / "local" / "airports.json"
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else []
+
+
+@lru_cache(maxsize=1)
+def _spots():
+    p = DATA / "local" / "photo_spots.json"
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
 @lru_cache(maxsize=1)
@@ -115,6 +123,22 @@ def for_metro(metro_id):
     near = [{"id": mm["id"], "name": mm["name"], "mi": int(round(d)), "drive": _drive(d, 1.2, 58)} for d, mm in cities if d <= 320][:4]
     if near:
         out["cities"] = near
+    # photo spots (Google Places, JC-LAZO-LOCAL-1017-003): Google allows keeping this content 30 days, so older is dropped
+    sp = _spots().get(metro_id)
+    if sp and sp.get("spots"):
+        try:
+            age = (dt.date.today() - dt.date.fromisoformat(sp["fetched"])).days
+        except (KeyError, ValueError):
+            age = 999
+        if age <= 30:
+            rows = []
+            for x in sp["spots"][:8]:
+                parts = [q.strip() for q in (x.get("addr") or "").split(",")]
+                area = parts[-3] if len(parts) >= 3 else (parts[0] if parts else "")
+                rows.append({"name": x["name"], "area": area, "mi": round(_mi(c, (x["lat"], x["lng"])), 1), "maps": x.get("maps") or "",
+                             "kind": (x.get("type") or "").replace("_", " ")})
+            out["spots"] = sorted(rows, key=lambda r: r["mi"])
+            out["spots_month"] = dt.date.fromisoformat(sp["fetched"]).strftime("%B %Y")
     return out
 
 

@@ -528,3 +528,6 @@ main .vx-stats b{font-family:var(--serif);font-size:28px;color:var(--plum);font-
   .vx-lb img{max-width:100vw;max-height:80vh;border-radius:0}
   .vx-lb .lb-c{bottom:34px}
 }
+main .vx-tbl-spots td small{display:block;font-size:11px;color:var(--muted);text-transform:capitalize;margin-top:2px}
+main .vx-tbl-spots td:nth-child(2){color:var(--muted)}
+@media (max-width:720px){main .vx-tbl-spots th:nth-child(2),main .vx-tbl-spots td:nth-child(2){display:none}}

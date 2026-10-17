@@ -394,6 +394,17 @@
         </section>
         {%- endif %}
 
+        {%- if L.spots and cat.slug in ('wedding-photographers', 'wedding-videographers') %}
+        <section class="vx-lblock">
+          <h2 class="vx-h2">Photo spots around {{ metro.name }}</h2>
+          <table class="vx-tbl vx-tbl-2 vx-tbl-spots">
+            <thead><tr><th scope="col">Place</th><th scope="col">Area</th><th scope="col">From downtown</th></tr></thead>
+            <tbody>{% for x in L.spots %}<tr><td>{% if x.maps %}<a href="{{ x.maps }}" rel="nofollow noopener" target="_blank">{{ x.name }}</a>{% else %}{{ x.name }}{% endif %}{% if x.kind %}<small>{{ x.kind }}</small>{% endif %}</td><td>{{ x.area }}</td><td>{{ x.mi }} mi</td></tr>{% endfor %}</tbody>
+          </table>
+          <p class="vx-fn">Parks, gardens and landmarks that photograph well, nearest to central {{ metro.name }} first. Check each place&rsquo;s rules for permits and session fees. Places from Google Maps, {{ L.spots_month }}.</p>
+        </section>
+        {%- endif %}
+
         {%- if LD %}
         <section class="vx-lblock">
           <h2 class="vx-h2">When couples marry in {{ metro.name }}</h2>
