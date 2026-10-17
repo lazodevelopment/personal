@@ -194,6 +194,8 @@ main .vx-sbtn:active{transform:scale(.96);transition-duration:var(--t-press)}
 main .vx-sbtn:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 main .vx-s-web{background:var(--plum-deep);border-color:var(--plum-deep);color:var(--ivory)}
 main .vx-s-web svg{color:var(--gold)}
+main .vx-sbtn .vx-ext{color:var(--gold);opacity:.85;margin-left:-2px;transition:transform var(--t-hover) var(--ease-out)}
+main .vx-s-web span{font-weight:600;letter-spacing:.005em}
 
 /* ---------- packages ---------- */
 main .vx-pack-group{font-family:var(--serif);font-size:22px;color:var(--plum);margin:22px 0 12px;font-weight:500}
@@ -325,6 +327,7 @@ main .vx .ww-strip,main .vx .claim-strip{margin-top:48px}
   main .vx-sheet a:hover{border-color:var(--gold);background:#FFF9EF}
   main .vx-sbtn:hover{border-color:var(--gold);background:#FFF9EF;transform:translateY(-1px);box-shadow:0 10px 20px -12px rgba(61,28,59,.35)}
   main .vx-s-web:hover{background:#52284F;border-color:var(--gold)}
+  main .vx-s-web:hover .vx-ext{transform:translate(2px,-2px)}
   main .vx-film:hover img{transform:scale(1.04)}
   main .vx-film:hover .vx-play{transform:scale(1.08)}
   main .vx-page:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover)}
@@ -511,3 +514,17 @@ main .vx-stats b{font-family:var(--serif);font-size:28px;color:var(--plum);font-
 }
 :where(html[data-theme=dark]) main .vx-lead-s{color:var(--ink-2)}
 :where(html[data-theme=dark]) main .vx-tbl thead th{background:var(--card-2)}
+
+/* ---------- the viewer: films fill the screen at 16:9 (an iframe with no size falls back to 300x150) ---------- */
+.vx-lb .lb-film:empty{display:none}
+.vx-lb .lb-film{width:min(calc(100vw - 150px),1400px,calc((100vh - 120px) * 16 / 9));aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.vx-lb .lb-film iframe{display:block;width:100%;height:100%;border:0}
+@supports (height:100dvh){.vx-lb .lb-film{width:min(calc(100vw - 150px),1400px,calc((100dvh - 120px) * 16 / 9))}}
+@media (max-width:720px){
+  .vx-lb{padding:0}
+  .vx-lb .lb-film{width:100vw;border-radius:0}
+  .vx-lb .lb-p,.vx-lb .lb-n{top:auto;bottom:max(20px,env(safe-area-inset-bottom));transform:none}
+  .vx-lb .lb-p:active,.vx-lb .lb-n:active{transform:scale(.92)}
+  .vx-lb img{max-width:100vw;max-height:80vh;border-radius:0}
+  .vx-lb .lb-c{bottom:34px}
+}

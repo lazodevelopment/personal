@@ -237,7 +237,7 @@
                 website and the older instagramUrl field when no Instagram handle covers it -#}
             {%- set sl_ids = (v.social_links or [])|map(attribute='id')|list -%}
             <p class="vx-social" id="hy-soc" {% if not (v.website or v.instagramUrl or v.social_links) %}style="display:none"{% endif %} aria-label="{{ v.name }} online">
-              {%- if v.website %}<a class="vx-sbtn vx-s-web" id="hy-owner-web" href="{{ v.website }}" rel="noopener nofollow" target="_blank">{{ ico('web') }}<span>Website</span></a>{% endif -%}
+              {%- if v.website %}{% set wdom = v.website.split('://')[-1].split('/')[0].split('?')[0]|replace('www.', '') %}<a class="vx-sbtn vx-s-web" id="hy-owner-web" href="{{ v.website }}" rel="noopener nofollow" target="_blank" aria-label="Visit {{ v.name }}&rsquo;s website, {{ wdom }}">{{ ico('web') }}<span>{{ wdom or 'Website' }}</span><svg class="vx-ext" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a>{% endif -%}
               {%- if v.instagramUrl and 'instagram' not in sl_ids %}<a class="vx-sbtn vx-s-instagram" id="hy-owner-ig" href="{{ v.instagramUrl }}" rel="noopener nofollow" target="_blank">{{ ico('instagram') }}<span>Instagram</span></a>{% endif -%}
               {%- for sl in v.social_links or [] %}<a class="vx-sbtn vx-s-{{ sl.id }}" href="{{ sl.url }}" rel="noopener nofollow" target="_blank">{{ ico(sl.id) }}<span>{{ sl.label }}</span></a>{% endfor -%}
             </p>
@@ -855,13 +855,15 @@ window.__lazoLogo=function(img){
         if(u)out.push([p[0],p[1],u]);});
       var web=s(f.website),ig=s(f.instagramUrl);
       if(ig&&!out.some(function(x){return x[0]==='instagram';}))out.unshift(['instagram','Instagram',ig,'hy-owner-ig']);
-      if(web)out.unshift(['web','Website',web,'hy-owner-web']);
+      if(web){var wd=web.split('://').pop().split('/')[0].split('?')[0].replace(/^www\./,'');out.unshift(['web',wd||'Website',web,'hy-owner-web']);}
       if(!out.length){el.style.display='none';return;}
       var tpl=document.getElementById('vx-ico');
       el.textContent='';
       out.forEach(function(x){var a=document.createElement('a');a.className='vx-sbtn vx-s-'+x[0];if(x[3])a.id=x[3];a.href=x[2];a.rel='noopener nofollow';a.target='_blank';
         var ic=tpl&&tpl.content.querySelector('[data-k="'+x[0]+'"]')||tpl&&tpl.content.querySelector('[data-k="link"]');if(ic)a.appendChild(ic.cloneNode(true));
-        var sp=document.createElement('span');sp.textContent=x[1];a.appendChild(sp);el.appendChild(a);});
+        var sp=document.createElement('span');sp.textContent=x[1];a.appendChild(sp);
+        if(x[0]==='web'){a.setAttribute('aria-label','Visit website, '+x[1]);var ex=document.createElementNS('http://www.w3.org/2000/svg','svg');ex.setAttribute('class','vx-ext');ex.setAttribute('viewBox','0 0 24 24');ex.setAttribute('width','13');ex.setAttribute('height','13');ex.setAttribute('aria-hidden','true');ex.innerHTML='<path d="M7 17L17 7M9 7h8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';a.appendChild(ex);}
+        el.appendChild(a);});
       el.style.display='';
     })();
     // style chips
