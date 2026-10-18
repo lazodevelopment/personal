@@ -944,6 +944,8 @@ Object.assign(exports, require('./couple-notify')(RESEND_API_KEY));
 
 // JC-LAZO-FNDASH-1016-JOIN-001: an off-platform client who signed or paid is invited to make her account (joinGo, joinStop, joinSweep)
 Object.assign(exports, require('./join')(RESEND_API_KEY));
+// JC-LAZO-FNDASH-1018-OUTREACH-001: the claim-your-profile campaign's tracked claim link, one-click unsubscribe and claimedVia stamp
+Object.assign(exports, require('./outreach')());
 
 // JC-LAZO-FNDASH-0913-019: real weddings showcase
 Object.assign(exports, require('./showcase')());

@@ -1130,6 +1130,20 @@ export default {
         return new Response(await up.text(), { status: up.status, headers: { ...h, "content-type": up.headers.get("content-type") || TYPES.html } });
       } catch (e) { return Response.redirect("https://app.meetlazo.com/", 302); }
     }
+    // JC-LAZO-WORKER-1018-CLAIM: the claim-your-profile campaign's links (functions-dashboard/outreach.js).
+    // /claim/{token} logs the click and 302s to the app's claim screen; /claim/{token}/stop is the one-click
+    // unsubscribe (GET from the email, POST from the List-Unsubscribe header). Same proxy shape as /join/.
+    const cMatch = url.pathname.match(/^\/claim\/([A-Za-z0-9_-]{16,40})(\/stop)?\/?$/);
+    if (cMatch && (req.method === "GET" || (req.method === "POST" && cMatch[2]))) {
+      const fn = cMatch[2] ? "outreachStop" : "outreachGo";
+      try {
+        const up = await fetch(`https://us-central1-lazo-513ec.cloudfunctions.net/${fn}?t=${encodeURIComponent(cMatch[1])}`, { method: req.method, redirect: "manual" });
+        const h = { "cache-control": "no-store", "x-robots-tag": "noindex" };
+        const loc = up.headers.get("location");
+        if (loc) return new Response(null, { status: 302, headers: { ...h, location: loc } });
+        return new Response(await up.text(), { status: up.status, headers: { ...h, "content-type": up.headers.get("content-type") || TYPES.html } });
+      } catch (e) { return Response.redirect("https://app.meetlazo.com/", 302); }
+    }
     // JC-LAZO-WORKER-0913-LEAD-001: embeddable lead form + hosted lead page
     if (url.pathname === "/embed/lead.js") return new Response(LEAD_JS, { headers: { "content-type": TYPES.js, "cache-control": "public, max-age=3600, s-maxage=86400", "access-control-allow-origin": "*" } });
     const leadMatch = url.pathname.match(/^\/lead\/([A-Za-z0-9_-]{3,120})\/?$/);
@@ -1243,7 +1257,9 @@ export default {
     // The home page follows the visitor (no-op for anyone far from a live metro).
     // Every HTML page then gets the tracker tag appended to <head>.
     // JC-LAZO-CONSENT-1004: the country/region hint goes on every page (pixel consent gate).
-    return withTracker(req, withRegion(req, key === "index.html" ? withGeo(req, resp) : resp));
+    // JC-LAZO-JUNE-DEMO-1016: the June demo pages want the visitor's city too
+    const geoPage = key === "index.html" || key === "for-vendors/index.html" || key === "ai-wedding-planner/index.html";
+    return withTracker(req, withRegion(req, geoPage ? withGeo(req, resp) : resp));
   }
 };
 
