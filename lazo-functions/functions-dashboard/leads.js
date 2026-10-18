@@ -174,6 +174,12 @@ module.exports = function leadsModule(RESEND_API_KEY) {
     const message = clip(b.message, 2000);
     if (!name || (!emailOk(email) && !phone)) return res.status(400).json({ ok: false, error: 'contact' });
 
+    // 2026-10-18 (Vendor v218): a sender the vendor blocked as spam / scam gets a quiet "ok" and nothing is written
+    const blocked = Array.isArray(v.blockedSenders) ? v.blockedSenders.map((x) => str(x).toLowerCase()) : [];
+    if ((email && blocked.includes(email)) || (phone && blocked.includes(phone))) {
+      return res.json({ ok: true, redirect: str(form.redirect) || '', thanks: str(form.thanks) || '' });
+    }
+
     const weddingDate = /^\d{4}-\d{2}-\d{2}$/.test(str(b.weddingDate)) ? str(b.weddingDate) : '';
     const utm = b.utm && typeof b.utm === 'object' ? b.utm : {};
     const sourceRef = {

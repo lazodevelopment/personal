@@ -411,10 +411,10 @@ module.exports = function paymentsModule(RESEND_API_KEY) {
         await invS.ref.set({ lastCheckout: { via: 'whop', id: out.checkoutId, tip: useTip, at: FieldValue.serverTimestamp() } }, { merge: true });
         return res.json({ url: out.url, via: 'whop' });
       }
-      // legacy pass-through (Stripe / Square), same query contract
-      const r = await fetch(`${LEGACY_CHECKOUT}?inquiry=${encodeURIComponent(inquiryId)}&invoice=${encodeURIComponent(invoiceId)}`);
-      const txt = await r.text();
-      res.status(r.status).set('content-type', 'application/json').send(txt || '{}');
+      // 2026-10-18 (Whop only): Lazo left Stripe (invoiceCheckout is not deployed) and Square was never
+      // set up, so there is no card checkout for a vendor who is not on Whop. Say so plainly instead of
+      // forwarding to a function that does not exist; the couple's thread shows the vendor's own links.
+      return res.status(409).json({ error: 'no-card', message: `${str(vendor.name) || 'This vendor'} takes payment through their own links. Open the thread for Venmo, Zelle or the method they listed.` });
     } catch (e) {
       console.error('payCheckout', e);
       res.status(500).json({ error: 'checkout failed', detail: e.message });

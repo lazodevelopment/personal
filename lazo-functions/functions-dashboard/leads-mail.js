@@ -276,6 +276,12 @@ module.exports = function leadsMailModule(RESEND_API_KEY, ANTHROPIC_API_KEY) {
           record.status = 'unrecognized'; record.vendorId = v.id;
           await logRef.set(record); await markRead(token, messageId); continue;
         }
+        // a couple the vendor blocked as spam / scam (Vendor v218): file it, tell nobody
+        const blocked = Array.isArray(v.blockedSenders) ? v.blockedSenders.map((x) => str(x).toLowerCase()) : [];
+        if ((parsed.email && blocked.includes(parsed.email)) || (parsed.phone && blocked.includes(parsed.phone))) {
+          record.status = 'blocked'; record.vendorId = v.id; record.name = parsed.name;
+          await logRef.set(record); await markRead(token, messageId); continue;
+        }
         const r = await createOrJoinLead(v, parsed, { platform, platformLabel, sender, subject, messageId });
         const link = `${APP}?thread=${r.inquiryId}`;
         const when = parsed.weddingDate ? ` · ${parsed.weddingDate}` : '';

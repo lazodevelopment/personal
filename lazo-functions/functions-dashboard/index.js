@@ -968,3 +968,6 @@ Object.assign(exports, require('./june-engagement')(ANTHROPIC_API_KEY, PLACES_AP
 Object.assign(exports, require('./meals')(RESEND_API_KEY));
 // JC-LAZO-LEADSMAIL-1018-001: leads@meetlazo.com - forwarded inquiries become leads (leads-mail.js)
 Object.assign(exports, require('./leads-mail')(RESEND_API_KEY, ANTHROPIC_API_KEY));
+
+// 1018: signup-nudge.js - abandoned sign-ups get one email at day 1 and one at day 4 (users.signupNudge)
+Object.assign(exports, require('./signup-nudge')(RESEND_API_KEY));
