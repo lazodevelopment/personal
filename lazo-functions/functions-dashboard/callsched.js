@@ -250,7 +250,10 @@ module.exports = function callSchedModule(RESEND_API_KEY) {
   });
 
   async function consultFor(uid, consultId) {
-    const cRef = db().collection('consults').doc(clip(consultId, 80));
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in first.');
+    const id = clip(consultId, 80);
+    if (!id || id.includes('/')) throw new HttpsError('invalid-argument', 'Which call?');
+    const cRef = db().collection('consults').doc(id);
     const s = await cRef.get();
     if (!s.exists) throw new HttpsError('not-found', 'Call not found.');
     const c = s.data() || {};
