@@ -24,11 +24,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from config.metros import METROS  # noqa: E402
+from config.taxonomy import CATEGORIES  # noqa: E402
 
 OUT_DIR = ROOT / "generate" / "data" / "outreach" / "batches"
 SITE = "https://meetlazo.com/"
 APP = "https://app.meetlazo.com/"
 METRO_NAME = {m["id"]: m["name"] for m in METROS}
+# the words the Smartlead template merges in: "Lazo's list of {{category_plural}}", "{{category_singular_cap}} · Phoenix"
+CAT_SINGULAR = {"wedding-photographers": "wedding photographer", "wedding-videographers": "wedding videographer", "wedding-venues": "wedding venue",
+                "wedding-planners": "wedding planner", "wedding-djs": "wedding DJ", "wedding-florists": "wedding florist", "wedding-caterers": "wedding caterer",
+                "wedding-cakes": "wedding cake baker", "hair-and-makeup": "bridal hair and makeup artist", "wedding-officiants": "wedding officiant",
+                "wedding-transportation": "wedding transportation company", "wedding-rentals": "wedding rental company", "wedding-bands": "wedding band",
+                "wedding-invitations": "wedding stationer", "day-of-coordination": "day-of coordinator"}
+CAT_PLURAL = {"wedding-photographers": "photographers", "wedding-videographers": "videographers", "wedding-venues": "venues", "wedding-planners": "planners",
+              "wedding-djs": "DJs", "wedding-florists": "florists", "wedding-caterers": "caterers", "wedding-cakes": "cake bakers", "hair-and-makeup": "hair and makeup artists",
+              "wedding-officiants": "officiants", "wedding-transportation": "transportation", "wedding-rentals": "rentals", "wedding-bands": "bands",
+              "wedding-invitations": "stationers", "day-of-coordination": "day-of coordinators"}
 
 
 def client():
@@ -90,12 +101,15 @@ def main():
     path = OUT_DIR / name
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["email", "first_name", "last_name", "company_name", "metro", "category", "page_url", "claim_url", "stop_url", "signup_url",
-                    "vendor_id", "token", "score", "kind"])
+        w.writerow(["email", "first_name", "last_name", "company_name", "metro", "category", "category_singular", "category_singular_cap", "category_plural",
+                    "site_host", "page_url", "claim_url", "stop_url", "signup_url", "vendor_id", "token", "score", "kind"])
         for d, v, em in rows:
             tok = v["token"]
-            w.writerow([em["addr"], "", "", v.get("name", ""), METRO_NAME.get(v.get("metroId"), v.get("metroId")), (v.get("categories") or [""])[0],
-                        v.get("pageUrl", ""), f"{SITE}claim/{tok}", f"{SITE}claim/{tok}/stop", f"{APP}?claim={d.id}", d.id, tok, em.get("score"), em.get("kind")])
+            cat = (v.get("categories") or [""])[0]
+            sing = CAT_SINGULAR.get(cat, "wedding vendor")
+            w.writerow([em["addr"], "", "", v.get("name", ""), METRO_NAME.get(v.get("metroId"), v.get("metroId")), cat, sing, sing[0].upper() + sing[1:],
+                        CAT_PLURAL.get(cat, "vendors"), v.get("siteHost") or "", v.get("pageUrl", ""), f"{SITE}claim/{tok}", f"{SITE}claim/{tok}/stop",
+                        f"{APP}?claim={d.id}", d.id, tok, em.get("score"), em.get("kind")])
     print(f"{len(docs):,} outreach docs in {', '.join(a.metro)}; {len(rows):,} rows exported to {path}; {len(shared):,} skipped as a shared website")
     if a.mark:
         batch, n = db.batch(), 0
