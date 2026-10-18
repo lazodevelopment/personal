@@ -93,10 +93,8 @@ exports.onLeadEmail = onDocumentCreated(
         (venue ? " at " + venue : "") + "." +
         (date ? "" : " They haven\u2019t locked a date yet \u2014 " +
           "worth asking.") + "</p>" +
-        (msg ? '<p style="background:#F1E9E0;border-radius:12px;' +
-          'padding:13px 15px;font-size:13.5px;font-style:italic">' +
-          msg.slice(0, 400) + "</p>" : "") +
-        E.button("Reply in Lazo", E.APP_URL) +
+        (msg ? E.quote(msg) : "") +   // 2026-10-18: the whole message, linked to the thread
+        E.button("Reply in Lazo", E.threadUrl(event.params.inquiryId)) +
         E.quiet("First reply usually wins the booking. This inquiry is free " +
           "\u2014 Lazo never charges you for a lead.");
       const subject = hasCouple
@@ -195,11 +193,19 @@ exports.messageDigestSweep = onSchedule(
         const read = m.vendorLastReadAt && m.vendorLastReadAt.toMillis
           ? m.vendorLastReadAt.toMillis() : 0;
         if (read >= last.toMillis()) continue;
-        const inner = E.h1((m.coupleName || "A couple") + " wrote to you.") +
-          (preview ? '<p style="background:#F1E9E0;border-radius:12px;' +
-            'padding:13px 15px;font-size:13.5px;font-style:italic">' +
-            preview + "</p>" : "") +
-          E.button("Reply in Lazo", E.APP_URL) +
+        // 2026-10-18: the whole message (every couple message since the vendor last read), not a 90-char preview
+        let texts = [];
+        try {
+          const ms = await d.ref.collection("messages").orderBy("at", "desc").limit(10).get();
+          texts = ms.docs.map((x) => x.data() || {})
+            .filter((x) => (x.senderRole || "").toString() === "couple" &&
+              (!read || !(x.at && x.at.toMillis) || x.at.toMillis() > read))
+            .map((x) => (x.text || "").toString().trim()).filter(Boolean).reverse();
+        } catch (e) { console.error("digest messages", d.id, e.message); }
+        if (!texts.length && preview) texts = [preview];
+        const inner = E.h1(E.esc(m.coupleName || "A couple") + " wrote to you.") +
+          texts.map((t) => E.quote(t)).join("") +
+          E.button("Reply in Lazo", E.threadUrl(d.id)) +
           E.quiet("We only email once per conversation, and never while " +
             "you're already replying.");
         await E.send(key, v.to,

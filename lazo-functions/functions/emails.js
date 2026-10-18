@@ -2,21 +2,42 @@
 // Lazo — one branded shell for every email we send (v52)
 // Written once so the fifth template can't drift from the first.
 const APP_URL = "https://app.meetlazo.com";
+const LOGO = "https://meetlazo.com/assets/foot-logo.png";
+
+// a thread deep link the dashboards open directly
+function threadUrl(inquiryId) {
+  return inquiryId ? APP_URL + "/?thread=" + encodeURIComponent(inquiryId) : APP_URL;
+}
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+// a couple's message, in full, as a quoted block (line breaks kept)
+function quote(text) {
+  return '<p style="background:#F1E9E0;border-radius:12px;padding:13px 15px;' +
+    'font-size:14px;line-height:1.55;white-space:pre-wrap;margin:0 0 12px">' +
+    esc(text).replace(/\n/g, "<br>") + "</p>";
+}
 
 function shell(inner, opts) {
   const o = opts || {};
   const foot = o.footer ||
-    'Lazo Weddings, LLC \u00b7 <a href="https://meetlazo.com" ' +
+    'Lazo Weddings, LLC &middot; <a href="https://meetlazo.com" ' +
     'style="color:#8A7F90">meetlazo.com</a>';
   return '<div style="background:#F1EAF0;padding:30px 0;font-family:Lato,' +
     'Helvetica,Arial,sans-serif">' +
     '<div style="max-width:520px;margin:0 auto;background:#FAF6F0;' +
     'border:1px solid rgba(217,183,124,.55);border-radius:20px;overflow:hidden">' +
     '<div style="background:linear-gradient(135deg,#52284F,#3D1C3B);padding:24px 28px">' +
-    '<div style="color:#FAF6F0;font-size:21px;letter-spacing:5px;' +
-    'font-family:Georgia,serif">L A Z O</div>' +
+    // 2026-10-18: the real lockup (same asset as functions-dashboard/email-frame.js), not spaced text
+    '<a href="https://meetlazo.com" style="text-decoration:none">' +
+    '<img src="' + LOGO + '" width="150" alt="Lazo" ' +
+    'style="display:block;width:150px;height:auto;border:0"></a>' +
     (o.eyebrow ? '<div style="color:#D9B77C;font-size:10px;letter-spacing:2.4px;' +
-      'margin-top:6px;font-weight:700">' + o.eyebrow + '</div>' : '') +
+      'margin-top:14px;font-weight:700">' + o.eyebrow + '</div>' : '') +
     '</div>' +
     '<div style="padding:26px 28px;color:#241E2B;font-size:15px;line-height:1.62">' +
     inner + '</div>' +
@@ -61,4 +82,4 @@ async function send(key, to, subject, html) {
   }
 }
 
-module.exports = { shell, h1, button, quiet, send, APP_URL };
+module.exports = { shell, h1, button, quiet, send, APP_URL, LOGO, threadUrl, esc, quote };
