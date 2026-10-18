@@ -1,0 +1,21 @@
+; meetlazo.com - claim-campaign sending subdomains (deploy/outreach_dns.py --export)
+$ORIGIN meetlazo.com.
+$TTL 300
+team	IN	MX	1 smtp.google.com.
+team	IN	TXT	"v=spf1 include:_spf.google.com ~all"
+_dmarc.team	IN	TXT	"v=DMARC1; p=quarantine; pct=100"
+vendors	IN	MX	1 smtp.google.com.
+vendors	IN	TXT	"v=spf1 include:_spf.google.com ~all"
+_dmarc.vendors	IN	TXT	"v=DMARC1; p=quarantine; pct=100"
+partners	IN	MX	1 smtp.google.com.
+partners	IN	TXT	"v=spf1 include:_spf.google.com ~all"
+_dmarc.partners	IN	TXT	"v=DMARC1; p=quarantine; pct=100"
+listings	IN	MX	1 smtp.google.com.
+listings	IN	TXT	"v=spf1 include:_spf.google.com ~all"
+_dmarc.listings	IN	TXT	"v=DMARC1; p=quarantine; pct=100"
+studio	IN	MX	1 smtp.google.com.
+studio	IN	TXT	"v=spf1 include:_spf.google.com ~all"
+_dmarc.studio	IN	TXT	"v=DMARC1; p=quarantine; pct=100"
+hello-from	IN	MX	1 smtp.google.com.
+hello-from	IN	TXT	"v=spf1 include:_spf.google.com ~all"
+_dmarc.hello-from	IN	TXT	"v=DMARC1; p=quarantine; pct=100"
