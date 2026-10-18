@@ -1,7 +1,17 @@
 rules_version = '2';
 // ============================================================
 // LAZO CANONICAL RULES
+// Build ID: JC-LAZO-RULES-1018-PRELAUNCH (RELEASED 2026-10-18 as ruleset 8a9acac8 on top of the live 6697146c; this repo file
+//   carries the same additions where its text matched - see side-session notes lazo-rules-1018-PRELAUNCH.rules for the released
+//   source): users/{uid}/fcm_tokens owner read/write; juneFeed (1014-019) now live; coupleInvites/vendorInvites readable by the
+//   couple/vendor they belong to; couple may set an invoice paid_pending; a missing weddingSites slug may be read when signed in;
+//   vendor may touch lastMessageAt/lastMessageRole/lastMessagePreview; vendor may create shared/meals with only finalDue fields.
 // Build ID: JC-LAZO-RULES-1016-021
+// + JC-LAZO-RULES-1016-022 (NOT DEPLOYED, safety): couples can't write an outside-call
+//   app or link (offPlatformText, the RULES_FLOOR of functions-dashboard/offplatform.js)
+//   in a message, an edit or a new inquiry's first message; a safety-blocked account
+//   (users.safetyBlock, server-only) can't write at all; a thread the vendor blocked
+//   (blockedByVendor) refuses the couple's messages. Deploy AFTER safety-guard.js.
 // + JC-LAZO-RULES-1016-MEALS (NOT DEPLOYED): RSVPs may carry meals[] (a meal,
 //   kid's meal and allergies per person, max 10) and an allergies line; new
 //   inquiries/{id}/shared/meals - the couple's meal counts for the vendor's
@@ -193,6 +203,27 @@ service cloud.firestore {
                .data.get('blockedByCouple', false) == true;
     }
 
+    // JC-LAZO-RULES-1016-022 (safety): "let's get on a Zoom call".
+    // offPlatformText: the floor from functions-dashboard/offplatform.js
+    // RULES_FLOOR - an outside call app or link (Zoom, Meet, FaceTime, WhatsApp,
+    // Telegram, Skype, Teams, Webex, Whereby). New apps send through the
+    // sendThreadMessage callable, which holds these with a nudge and catches
+    // more; this stops old app versions writing them directly.
+    function offPlatformText(t) {
+      return t is string && t.matches('(?is).*(zoom\\.us|meet\\.google\\.com|teams\\.microsoft\\.com|teams\\.live\\.com|wa\\.me/|chat\\.whatsapp\\.com|t\\.me/|whereby\\.com|webex\\.com|facetime|whats ?app|telegram|skype|google meet|zoom (call|meeting|link|chat|id|invite)|(on|via|over) zoom( |[.,!?]|$)).*');
+    }
+    // safetyBlocked: the account was blocked by safety-guard.js (users.safetyBlock).
+    function safetyBlocked() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid))
+             .data.get('safetyBlock', null) != null;
+    }
+    // the vendor blocked or reported this couple on this thread (safety.js blockCouple / reportCouple)
+    function inqBlockedByVendor(inquiryId) {
+      return get(/databases/$(database)/documents/inquiries/$(inquiryId))
+               .data.get('blockedByVendor', false) == true;
+    }
+
     // ---- GOD MODE READ (admin dashboard) ----
     match /{document=**} {
       allow read: if isAdmin();
@@ -280,7 +311,7 @@ service cloud.firestore {
         || (isOwner(uid)
         // JC-LAZO-RULES-1016-020: referredBy (the vendor who brought a couple in, set by leads.js) is server-only
         && !request.resource.data.diff(resource.data).affectedKeys()
-             .hasAny(['vendorId','vendorRole','coupleUid','referredBy'])
+             .hasAny(['vendorId','vendorRole','coupleUid','referredBy','safetyBlock','phoneVerified','phoneVerifiedAt'])
         // v016: signupSource is written once, never rewritten
         && (!request.resource.data.diff(resource.data).affectedKeys()
               .hasAny(['signupSource'])
@@ -290,6 +321,12 @@ service cloud.firestore {
             || ((!('role' in resource.data) || resource.data.role == null)
                 && request.resource.data.role in ['couple','vendor'])));
       allow delete: if false;
+
+      // JC-LAZO-RULES-1018-PRELAUNCH (a): push tokens, in FlutterFlow's own shape
+      // (users/{uid}/fcm_tokens/{token} = {fcm_token, device_type, created_at}); the owner writes their own.
+      match /fcm_tokens/{tokenId} {
+        allow read, write: if isOwner(uid);
+      }
 
       // JC-LAZO-RULES-1014-019: June's feed (the bell). Written only by the server
       // (functions-dashboard june-feed.js); the owner reads it and marks entries read.
@@ -391,9 +428,24 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // JC-LAZO-RULES-1016-023 (video calls): calls/{callId} is the server-side call
+    // log (callJoin creates it, the worker's events land through callEvent).
+    // The thread's couple and vendor can read it - it is the vendor's record if
+    // anyone tries to extort them with a doctored screenshot. Nobody writes it
+    // from a client. phoneCodes/{uid} has no rule on purpose: server only.
+    match /calls/{callId} {
+      allow read: if coupleAccess(resource.data.coupleUid)
+        || vendorAccess(resource.data.vendorId);
+      allow write: if false;
+    }
+
     match /inquiries/{inquiryId} {
       allow create: if coupleAccess(request.resource.data.coupleUid)
-        && request.resource.data.keys().hasAll(['coupleUid','vendorId','structuredIntent']);
+        && request.resource.data.keys().hasAll(['coupleUid','vendorId','structuredIntent'])
+        // JC-LAZO-RULES-1016-022 (safety)
+        && !safetyBlocked()
+        && !offPlatformText(request.resource.data.get('message', ''))
+        && !offPlatformText(request.resource.data.structuredIntent.get('message', ''));
       allow read: if coupleAccess(resource.data.coupleUid)
         || vendorAccess(resource.data.vendorId);
       allow update: if (vendorAccess(resource.data.vendorId)
@@ -405,7 +457,9 @@ service cloud.firestore {
                        'invoiceStatus','invoiceUpdatedAt','lastInvoiceId',
                        'deliveredAt','sneakPeekSentAt','teaserSentAt',
                        'unbookedAt','unbookReason','unbookLabel',
-                       'stage','tags']))
+                       'stage','tags',
+                       // 1018-PRELAUNCH (f): the vendor posted a message themselves
+                       'lastMessageAt','lastMessageRole','lastMessagePreview']))
         || (coupleAccess(resource.data.coupleUid)
         && ((request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['questionnaireStatus','questionnaireUpdatedAt'])
@@ -432,7 +486,11 @@ service cloud.firestore {
               || request.resource.data.keys().hasAny(
                    ['attachment','sneakPeek','teaser']))
           && ((request.resource.data.senderRole == 'couple'
-               && coupleAccess(inqCoupleUid(inquiryId)))
+               && coupleAccess(inqCoupleUid(inquiryId))
+               // JC-LAZO-RULES-1016-022 (safety)
+               && !offPlatformText(request.resource.data.text)
+               && !safetyBlocked()
+               && !inqBlockedByVendor(inquiryId))
               || (request.resource.data.senderRole == 'vendor'
                && vendorAccess(inqVendorId(inquiryId))
                // JC-LAZO-SAFETY-0918-001: a couple who blocked this vendor stops
@@ -449,7 +507,10 @@ service cloud.firestore {
           && request.resource.data.text.size() > 0
           && request.resource.data.text.size() < 3000
           && ((resource.data.senderRole == 'couple'
-               && coupleAccess(inqCoupleUid(inquiryId)))
+               && coupleAccess(inqCoupleUid(inquiryId))
+               // JC-LAZO-RULES-1016-022 (safety)
+               && !offPlatformText(request.resource.data.text)
+               && !safetyBlocked())
               || (resource.data.senderRole == 'vendor'
                && vendorAccess(inqVendorId(inquiryId))));
         allow delete: if false;
@@ -478,7 +539,13 @@ service cloud.firestore {
       }
 
       match /invoices/{invoiceId} {
-        allow create, update: if vendorAccess(inqVendorId(inquiryId));
+        allow create: if vendorAccess(inqVendorId(inquiryId));
+        // 1018-PRELAUNCH (d): the couple's I've-already-paid marks it paid_pending for the vendor to confirm
+        allow update: if vendorAccess(inqVendorId(inquiryId))
+          || (coupleAccess(inqCoupleUid(inquiryId))
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','paidClaimedAt'])
+              && request.resource.data.status == 'paid_pending'
+              && resource.data.status != 'paid' && resource.data.status != 'void');
         allow read: if coupleAccess(inqCoupleUid(inquiryId))
           || vendorAccess(inqVendorId(inquiryId));
         allow delete: if false;
@@ -532,11 +599,16 @@ service cloud.firestore {
         allow read: if coupleAccess(inqCoupleUid(inquiryId))
           || vendorAccess(inqVendorId(inquiryId));
         allow create: if signedIn() && docId == 'meals'
-          && coupleAccess(inqCoupleUid(inquiryId))
-          && request.resource.data.keys().hasOnly(
-               ['kind','totals','heads','awaiting','noChoice','kids','allergies',
-                'allergyCount','tables','vendorMeals','vendorCount','sentAt',
-                'sentBy','fileUrl','prev','prevAt','weddingDate','coupleName']);
+          && ((coupleAccess(inqCoupleUid(inquiryId))
+               && request.resource.data.keys().hasOnly(
+                    ['kind','totals','heads','awaiting','noChoice','kids','allergies',
+                     'allergyCount','tables','vendorMeals','vendorCount','sentAt',
+                     'sentBy','fileUrl','prev','prevAt','weddingDate','coupleName']))
+              // 1018-PRELAUNCH (g): the vendor sets a final-count date before the couple has sent counts
+              || (vendorAccess(inqVendorId(inquiryId))
+               && request.resource.data.keys().hasOnly(['finalDue','finalDueSetAt','vendorSeenAt'])
+               && (!('finalDue' in request.resource.data)
+                   || request.resource.data.finalDue is timestamp)));
         allow update: if signedIn() && docId == 'meals'
           && ((coupleAccess(inqCoupleUid(inquiryId))
                && request.resource.data.keys().hasOnly(
@@ -558,7 +630,11 @@ service cloud.firestore {
     }
 
     match /weddingSites/{slug} {
-      allow read: if isWorker() || coupleAccess(resource.data.coupleUid);
+      // 1018-PRELAUNCH (e): a get on a slug that does not exist yet is allowed for any signed-in user
+      // (the first publish probes for a free slug; resource.data on a missing doc used to error -> denied)
+      allow get: if isWorker() || coupleAccess(resource.data.coupleUid)
+        || (signedIn() && !exists(/databases/$(database)/documents/weddingSites/$(slug)));
+      allow list: if isWorker() || coupleAccess(resource.data.coupleUid);
       allow create: if coupleAccess(request.resource.data.coupleUid);
       allow update, delete: if coupleAccess(resource.data.coupleUid);
 
@@ -713,9 +789,11 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(
              ['vendorId','email','role','code','status','createdBy','createdAt'])
         && vendorAccess(request.resource.data.vendorId);
-      allow read: if signedIn() && resource.data.createdBy == request.auth.uid;
+      // 1018-PRELAUNCH (c): the vendor's team sheet lists by vendorId
+      allow read: if signedIn() && (resource.data.createdBy == request.auth.uid
+        || vendorAccess(resource.data.vendorId));
       allow update: if signedIn()
-        && resource.data.createdBy == request.auth.uid
+        && (resource.data.createdBy == request.auth.uid || vendorAccess(resource.data.vendorId))
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status','revokedAt'])
         && request.resource.data.status == 'revoked';
@@ -729,9 +807,11 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(
              ['coupleUid','email','code','status','createdBy','createdAt'])
         && coupleAccess(request.resource.data.coupleUid);
-      allow read: if signedIn() && resource.data.createdBy == request.auth.uid;
+      // 1018-PRELAUNCH (c): the Plan together sheet lists by coupleUid (either partner)
+      allow read: if signedIn() && (resource.data.createdBy == request.auth.uid
+        || coupleAccess(resource.data.coupleUid));
       allow update: if signedIn()
-        && resource.data.createdBy == request.auth.uid
+        && (resource.data.createdBy == request.auth.uid || coupleAccess(resource.data.coupleUid))
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['status','revokedAt'])
         && request.resource.data.status == 'revoked';

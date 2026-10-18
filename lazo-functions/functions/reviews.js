@@ -44,7 +44,7 @@ function parseWeddingDate(inq) {
   } catch (e) { return null; }
 }
 
-async function emailCouple(key, to, coupleName, vendorName, stage, waiting) {
+async function emailCouple(key, to, coupleName, vendorName, stage, waiting, googleUrl) {
   if (!key || !to) return;
   const first = (coupleName || "").split("&")[0].trim() || "there";
   if (waiting) {
@@ -74,7 +74,10 @@ async function emailCouple(key, to, coupleName, vendorName, stage, waiting) {
       ? "A quick word about " + vendorName + "?"
       : "Last ask - your " + vendorName + " review";
   const body = stage === 1
-    ? "<p>Hi " + first + ",</p><p>Congratulations again. Now that the day has passed, would you share a few words about working with <b>" + vendorName + "</b>?</p><p>Reviews on Lazo come only from couples who actually booked - which is why they matter. Yours helps the next couple choose well.</p><p><a href=\"https://app.meetlazo.com\">Leave your review</a></p><p>\u2014 Lazo</p>"
+    ? "<p>Hi " + first + ",</p><p>Congratulations again. Now that the day has passed, would you share a few words about working with <b>" + vendorName + "</b>?</p><p>Reviews on Lazo come only from couples who actually booked - which is why they matter. Yours helps the next couple choose well.</p><p><a href=\"https://app.meetlazo.com\">Leave your review</a></p>" +
+      // 2026-10-18 (Vendor v214 Automations): the vendor's Google review link rides along with the first ask
+      (googleUrl ? "<p>If you also use Google, <a href=\"" + googleUrl + "\">a review there</a> helps " + vendorName + " even more.</p>" : "") +
+      "<p>\u2014 Lazo</p>"
     : stage === 2
       ? "<p>Hi " + first + ",</p><p>No rush at all - but if you have two minutes, <b>" + vendorName + "</b> would love your review.</p><p><a href=\"https://app.meetlazo.com\">Leave your review</a></p><p>\u2014 Lazo</p>"
       : "<p>Hi " + first + ",</p><p>This is our last note about it - promise. If you'd like to leave <b>" + vendorName + "</b> a review, it takes a minute:</p><p><a href=\"https://app.meetlazo.com\">Leave your review</a></p><p>Either way, congratulations on the wedding.</p><p>\u2014 Lazo</p>";
@@ -110,12 +113,15 @@ exports.reviewRequestSweep = onSchedule(
 
       // vendor can switch the whole thing off; craft decides the clock
       let vendorName = "your vendor";
+      let googleUrl = "";
       let isDelivery = false;
       try {
         const v = await db.collection("vendors").doc(inq.vendorId).get();
         if (v.exists) {
           if (v.data().reviewRequestsEnabled === false) { skipped++; continue; }
           vendorName = (v.data().name || vendorName).toString();
+          const g = (v.data().googleReviewUrl || "").toString().trim();
+          if (/^https:\/\/[^\s"'<>]+$/.test(g)) googleUrl = g;
           const cats = Array.isArray(v.data().categories)
             ? v.data().categories : [];
           for (const c of cats) {
@@ -170,7 +176,7 @@ exports.reviewRequestSweep = onSchedule(
         }
       } catch (e) { /* the in-app card still lands */ }
       await emailCouple(RESEND_API_KEY.value(), email,
-        (inq.coupleName || "").toString(), vendorName, next.stage, waiting);
+        (inq.coupleName || "").toString(), vendorName, next.stage, waiting, googleUrl);
       asked++;
     }
     console.log("review sweep:", asked, "asked,", skipped, "skipped");

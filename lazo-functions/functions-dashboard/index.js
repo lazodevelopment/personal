@@ -966,3 +966,5 @@ Object.assign(exports, require('./june-engagement')(ANTHROPIC_API_KEY, PLACES_AP
 
 // JC-LAZO-FNDASH-1016-MEALS: final meal counts - the couple is reminded 7 and 2 days before the vendor's date, the vendor the day after
 Object.assign(exports, require('./meals')(RESEND_API_KEY));
+// JC-LAZO-LEADSMAIL-1018-001: leads@meetlazo.com - forwarded inquiries become leads (leads-mail.js)
+Object.assign(exports, require('./leads-mail')(RESEND_API_KEY, ANTHROPIC_API_KEY));
