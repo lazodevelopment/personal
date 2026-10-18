@@ -17,6 +17,8 @@ const F = require(path.join(__dirname, '..', '..', 'lazo-functions', 'functions-
 const { frame, esc, str, SITE, APP } = F;
 
 // CAN-SPAM needs a real postal address: the LLC's mailing address, also on /terms/ and /privacy/ (Jesse, 2026-10-18).
+const APP_STORE = 'https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675';
+const PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.meetlazo.app';
 const POSTAL = process.env.LAZO_POSTAL || 'Lazo Weddings, LLC · 1309 Coffeen Ave, Ste 1200, Sheridan, WY 82801';
 const SINGULAR = {
   'wedding-photographers': 'wedding photographer', 'wedding-videographers': 'wedding videographer', 'wedding-venues': 'wedding venue',
