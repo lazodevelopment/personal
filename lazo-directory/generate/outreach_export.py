@@ -121,12 +121,12 @@ def main():
         batch, n = db.batch(), 0
         from firebase_admin import firestore
         for d, v, em in rows:
-            batch.set(d.ref, {"status": "queued", "batch": a.mark, "queuedAt": firestore.SERVER_TIMESTAMP, "sendTo": em["addr"]}, merge=True)
+            batch.set(d.reference, {"status": "queued", "batch": a.mark, "queuedAt": firestore.SERVER_TIMESTAMP, "sendTo": em["addr"]}, merge=True)
             n += 1
             if n % 400 == 0:
                 batch.commit(); batch = db.batch()
         for d in shared:
-            batch.set(d.ref, {"status": "skipped", "skipWhy": "shared-website", "batch": a.mark}, merge=True)
+            batch.set(d.reference, {"status": "skipped", "skipWhy": "shared-website", "batch": a.mark}, merge=True)
             n += 1
             if n % 400 == 0:
                 batch.commit(); batch = db.batch()
