@@ -2,3 +2,4 @@ june-hub/.push-key
 
 # JC-LAZO-OUTREACH-1018: scraped vendor email addresses stay off git
 generate/data/outreach/
+generate/data/couples/
