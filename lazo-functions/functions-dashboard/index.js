@@ -946,6 +946,8 @@ Object.assign(exports, require('./couple-notify')(RESEND_API_KEY));
 Object.assign(exports, require('./join')(RESEND_API_KEY));
 // JC-LAZO-FNDASH-1018-OUTREACH-001: the claim-your-profile campaign's tracked claim link, one-click unsubscribe and claimedVia stamp
 Object.assign(exports, require('./outreach')());
+// JC-LAZO-FNDASH-1019-OUTREACH-DAILY-001: the campaign feed + Smartlead sync, every morning, from the cloud (not Jesse's PC)
+Object.assign(exports, require('./outreach-daily')());
 
 // JC-LAZO-FNDASH-0913-019: real weddings showcase
 Object.assign(exports, require('./showcase')());
