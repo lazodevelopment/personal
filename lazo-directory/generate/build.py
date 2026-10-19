@@ -301,6 +301,73 @@ def _locality(v, metro):
     parts = [p.strip() for p in v.get("address", "").split(",")]
     return parts[-3] if len(parts) >= 3 and parts[-3] and not parts[-3][0].isdigit() else metro["name"]
 
+# ---- JC-LAZO-TOWNS-1014 / JC-LAZO-STATES-1014 -------------------------------------------------------------------
+# Town pages (/boston/worcester/wedding-photographers/) only where a town has TOWN_MIN+ vendors in that category -
+# thinner ones would be doorway pages, which is exactly what Google is already wary of here. State pages
+# (/wedding-vendors/massachusetts/) go by each vendor's own address, not its metro.
+TOWN_MIN = 8
+from config.marriage_license import STATES as _ML_STATES, BY_ABBR as _ML_BY_ABBR   # 50 states + DC
+_STATE_SLUGS = dict(_ML_BY_ABBR)                                                  # 'MA' -> 'massachusetts'
+_STATE_NAMES = {a: _ML_STATES[s]["name"] for a, s in _ML_BY_ABBR.items()}        # 'MA' -> 'Massachusetts'
+_TOWNS = {}      # mid -> {(town, state): {cat_slug: count}}
+_TOWN_PAGES = {} # mid -> {(town, state): slug} for towns that got a hub
+
+
+def _vendor_state(v, metro):
+    parts = [p.strip() for p in (v.get("address") or "").split(",")]
+    if len(parts) >= 2:
+        m_ = re.match(r"([A-Z]{2})\b", parts[-2])
+        if m_:
+            return m_.group(1)
+    return metro["state"]
+
+
+_TZ_BY_STATE = {
+    **{s: "America/New_York" for s in "CT DC DE FL GA IN KY MA MD ME MI NC NH NJ NY OH PA RI SC TN VA VT WV".split()},
+    **{s: "America/Chicago" for s in "AL AR IA IL KS LA MN MO MS ND NE OK SD TX WI".split()},
+    **{s: "America/Denver" for s in "CO ID MT NM UT WY".split()},
+    **{s: "America/Los_Angeles" for s in "CA NV OR WA".split()},
+    "AZ": "America/Phoenix", "AK": "America/Anchorage", "HI": "Pacific/Honolulu",
+}
+
+
+def _metro_tz(m):
+    """IANA zone for a metro centre: by state, with the longitude splits that matter for wedding towns."""
+    st, lat, lng = m["state"], m["center"][0], m["center"][1]
+    if st == "TX" and lng < -104.9:
+        return "America/Denver"                       # El Paso
+    if st == "FL" and lng < -85.0:
+        return "America/Chicago"                      # the panhandle west of the Apalachicola
+    if st == "TN" and lng < -85.6:
+        return "America/Chicago"                      # middle + west Tennessee (Nashville, Memphis)
+    if st == "KY" and lng < -86.0:
+        return "America/Chicago"                      # Bowling Green, Paducah, Owensboro
+    if st == "IN" and (lng < -87.0 and (lat > 41.2 or lat < 38.4)):
+        return "America/Chicago"                      # Gary, Evansville
+    if st in ("KS", "NE") and lng < -101.0:
+        return "America/Denver"
+    if st == "ID" and lat > 45.5:
+        return "America/Los_Angeles"                  # Coeur d'Alene
+    if st in ("ND", "SD") and lng < -100.6:
+        return "America/Denver"
+    return _TZ_BY_STATE.get(st, "America/New_York")
+
+
+def _full_first(live_metros):
+    """JC-LAZO-AUDIT-1015: the metro the guides link to ("Find vendors in Albany") - the first, alphabetically, that has
+    every category. Plain alphabetical became Aberdeen SD once the small tranche-8 metros went live, and Aberdeen has
+    no officiants, so every tradition guide linked to a page that does not exist."""
+    cats = env.globals.get("foot_metro_cats") or {}
+    full = [m for m in live_metros if len(cats.get(m["id"], ())) >= len(CATEGORIES)]
+    pool = full or live_metros
+    return sorted(pool, key=lambda m: m["name"])[0] if pool else {"id": "phoenix", "name": "Phoenix"}
+
+
+def _town_slug(town, st, metro):
+    s = re.sub(r"[^a-z0-9]+", "-", town.lower()).strip("-")
+    return s if st == metro["state"] else f"{s}-{st.lower()}"
+
+
 def _seed(v):
     return int(hashlib.md5(v["placeId"].encode()).hexdigest(), 16)
 
@@ -555,12 +622,17 @@ def _writeback_slugs(by_metro):
     print(f"[build] slugs: wrote {done:,} slug(s) back to Firestore")
 
 
+_LIVE_IDS = set()   # metros this build writes pages for; set in build()
+
+
 def _near_metros(metro, n=6, max_mi=260):
     """The n nearest other metros within max_mi, for the nearby-cities links."""
     a = {"lat": metro["center"][0], "lng": metro["center"][1]}
     out = []
     for m in METROS:
         if m["id"] == metro["id"]:
+            continue
+        if _LIVE_IDS and m["id"] not in _LIVE_IDS:   # JC-LAZO-GAP-1014: a metro with no pages yet is not a neighbour
             continue
         d = _dist_mi(a, {"lat": m["center"][0], "lng": m["center"][1]})
         if d <= max_mi:
@@ -644,6 +716,9 @@ def build(vendors: list[dict]):
     if _os.environ.get("LAZO_SITEFACTS") == "1":
         import site_facts
         site_facts.attach(by_metro)
+    # JC-LAZO-SOCIALS-1014-001: the social handles a vendor saved in the dashboard
+    import socials
+    socials.attach(by_metro)
     build_content(by_metro)
     local_facts.attach(by_metro, _DB if "_DB" in globals() else None)  # JC-LAZO-LOCAL-1017-001
 
@@ -662,10 +737,16 @@ def build(vendors: list[dict]):
     t_home = env.get_template("home.html")
 
     live_metros = sorted((BY_ID[mid] for mid in by_metro if mid in BY_ID), key=lambda m: m["display"])  # JC-LAZO-SEO-0921-004: alphabetical everywhere (home dropdown, lists)
+    global _LIVE_IDS
+    _LIVE_IDS = {m["id"] for m in live_metros}
     _cats_of = {mid: {c for v in vs for c in v["categories"]} for mid, vs in by_metro.items()}  # JC-LAZO-SEO-0921-001
     # the footer is site-wide, so it links only cities that have a page
     env.globals["foot_metros"] = [{"id": m["id"], "name": m["name"]} for m in live_metros]
     env.globals["foot_cats"] = [{"slug": c["slug"], "label": c["label"]} for c in CATEGORIES]
+    # JC-LAZO-AUDIT-1015: the footer's "<city> vendors" column lists only the categories that city has - the
+    # small tranche-8 metros have no officiants or bands yet, and a link to every category was 7,000 dead links.
+    env.globals["foot_metro_cats"] = {mid: sorted({c for v in vs for c in (v.get("categories") or [])})
+                                      for mid, vs in by_metro.items()}
     vendor_total = sum(len(vs) for vs in by_metro.values())
     vendor_total_display = f"{(vendor_total // 100) * 100:,}+" if vendor_total >= 100 else str(vendor_total)
 
@@ -798,6 +879,33 @@ def build(vendors: list[dict]):
                              near=[m for m in _near_metros(metro) if cat["slug"] in _cats_of.get(m["id"], ())]), encoding="utf-8")
             urls.append(f"{BASE_URL}/{mid}/{cat['slug']}/")
 
+            # JC-LAZO-TOWNS-1014: the same list, one town at a time, where the town is deep enough to stand alone
+            _tg = {}
+            for v in cvs:
+                if v.get("homeCanonical"):        # a traveling copy: it belongs to its home town, not this one
+                    continue
+                _t = _locality(v, metro)
+                if not _t or _t == metro["name"]:
+                    continue
+                _tg.setdefault((_t, _vendor_state(v, metro)), []).append(v)
+            for (_t, _st), _tvs in _tg.items():
+                _TOWNS.setdefault(mid, {}).setdefault((_t, _st), {})[cat["slug"]] = len(_tvs)
+                if len(_tvs) < TOWN_MIN:
+                    continue
+                _ts = _town_slug(_t, _st, metro)
+                _tm = dict(metro, id=f"{mid}/{_ts}", name=_t, display=f"{_t}, {_STATE_NAMES.get(_st, _st)}")
+                _tdir = mdir / _ts / cat["slug"]
+                _tdir.mkdir(parents=True, exist_ok=True)
+                _tintro = (f"Lazo lists {len(_tvs)} {cat['label'].lower()} based in {_t}, {_st}, part of the {metro['display']} area. "
+                           "Verified couple reviews decide the order — never ad spend. Until reviews arrive, vendors who have "
+                           f"claimed and verified their profile come first. See all {metro['name']} {cat['label'].lower()} for the whole area.")
+                (_tdir / "index.html").write_text(
+                    t_cat.render(metro=_tm, cat=cat, vendors=_tvs, base=BASE_URL, cat_intro=_tintro, guide=None,
+                                 metro_names={k: BY_ID[k]["name"] for k in BY_ID},
+                                 cat_labels={c["slug"]: c["label"] for c in CATEGORIES}, live_metros=set(by_metro),
+                                 cost_typical=_COST_TYPICAL.get(cat["slug"]), near=[], vbase=mid), encoding="utf-8")
+                urls.append(f"{BASE_URL}/{mid}/{_ts}/{cat['slug']}/")
+
             for v in cvs:
                 vdir = cdir / v["slug"]
                 vdir.mkdir(exist_ok=True)
@@ -850,6 +958,102 @@ def build(vendors: list[dict]):
                 else:
                     _thin_count[0] += 1
 
+        # JC-LAZO-TOWNS-1014: a hub for every town that got at least one town list
+        _t_town = env.get_template("town.html")
+        _hubs = []
+        for (_t, _st), _cc in (_TOWNS.get(mid) or {}).items():
+            if max(_cc.values()) < TOWN_MIN:
+                continue
+            _ts = _town_slug(_t, _st, metro)
+            _TOWN_PAGES.setdefault(mid, {})[(_t, _st)] = _ts
+            _cats = sorted(({"slug": c, "label": BY_SLUG[c]["label"], "count": n, "page": n >= TOWN_MIN}
+                            for c, n in _cc.items() if c in BY_SLUG), key=lambda c: (not c["page"], -c["count"]))
+            _hubs.append((_t, _st, _ts, _cats))
+        for _t, _st, _ts, _cats in _hubs:
+            (mdir / _ts).mkdir(parents=True, exist_ok=True)
+            _town = {"name": _t, "slug": _ts, "state_abbr": _st, "state_name": _STATE_NAMES.get(_st, _st),
+                     "state_slug": _STATE_SLUGS.get(_st, ""), "total": sum(c["count"] for c in _cats), "cats": _cats}
+            (mdir / _ts / "index.html").write_text(_t_town.render(
+                metro=metro, town=_town, base=BASE_URL,
+                nearby=[{"name": h[0], "slug": h[2]} for h in _hubs if h[2] != _ts][:12]), encoding="utf-8")
+            urls.append(f"{BASE_URL}/{mid}/{_ts}/")
+
+    # JC-LAZO-STATES-1014: /wedding-vendors/ and one page per state, by vendor address
+    _sagg = {}
+    for mid, vs in by_metro.items():
+        metro = BY_ID.get(mid)
+        if not metro:
+            continue
+        for v in vs:
+            if v.get("homeCanonical"):
+                continue
+            st = _vendor_state(v, metro)
+            a = _sagg.setdefault(st, {"ids": set(), "cats": defaultdict(lambda: defaultdict(int)), "metros": defaultdict(int),
+                                      "towns": defaultdict(int)})
+            key = v.get("placeId") or v.get("slug")
+            if key in a["ids"]:
+                continue
+            a["ids"].add(key)
+            a["metros"][mid] += 1
+            for c in v["categories"]:
+                a["cats"][c][mid] += 1
+            a["towns"][(_locality(v, metro) or metro["name"], mid)] += 1
+    _sdir = DIST / "wedding-vendors"
+    _sdir.mkdir(exist_ok=True)
+    _t_state = env.get_template("state.html")
+    _sindex = []
+    for st, a in _sagg.items():
+        slug_ = _STATE_SLUGS.get(st)
+        if not slug_ or len(a["ids"]) < 5:
+            continue
+        _town_rows = []
+        for (tname, tmid), n in sorted(a["towns"].items(), key=lambda x: -x[1]):
+            hub = (_TOWN_PAGES.get(tmid) or {}).get((tname, st))
+            _town_rows.append({"name": tname, "count": n, "metro": tmid, "href": f"/{tmid}/{hub}/" if hub else ""})
+        _ms = sorted(({"id": m, "display": BY_ID[m]["display"], "name": BY_ID[m]["name"], "count": n}
+                      for m, n in a["metros"].items()), key=lambda m: -m["count"])
+        _cs = sorted(({"slug": c, "label": BY_SLUG[c]["label"], "count": sum(d.values()),
+                       "metros": [{"id": m, "name": BY_ID[m]["name"]} for m, _n in sorted(d.items(), key=lambda x: -x[1])][:6]}
+                      for c, d in a["cats"].items() if c in BY_SLUG), key=lambda c: -c["count"])
+        (_sdir / slug_).mkdir(exist_ok=True)
+        (_sdir / slug_ / "index.html").write_text(_t_state.render(
+            base=BASE_URL, st={"name": _STATE_NAMES[st], "slug": slug_, "abbr": st}, total=len(a["ids"]),
+            metros=[m for m in _ms if BY_ID[m["id"]]["state"] == st] or _ms, cats=_cs, towns=_town_rows, town_min=TOWN_MIN),
+            encoding="utf-8")
+        urls.append(f"{BASE_URL}/wedding-vendors/{slug_}/")
+        _sindex.append({"name": _STATE_NAMES[st], "slug": slug_, "total": len(a["ids"]), "towns": len(_town_rows)})
+    _sindex.sort(key=lambda s: s["name"])
+    (_sdir / "index.html").write_text(env.get_template("states_index.html").render(
+        base=BASE_URL, states=_sindex, total=f"{sum(s['total'] for s in _sindex):,}"), encoding="utf-8")
+    urls.append(f"{BASE_URL}/wedding-vendors/")
+    print(f"[build] states: {len(_sindex)} state pages; towns: {sum(len(x) for x in _TOWN_PAGES.values())} town hubs", flush=True)
+
+    # JC-LAZO-PLACES-1015: /assets/places.json - the place list the Couple and Vendor apps load at start (they keep
+    # their old 45-metro list only as the offline fallback). Every live metro, plus every town that has 3+ vendors,
+    # mapped to the metro most of its vendors belong to, so "Worcester" answers "Boston area".
+    _town_metro = defaultdict(lambda: defaultdict(int))
+    for mid, vs in by_metro.items():
+        metro = BY_ID.get(mid)
+        if not metro:
+            continue
+        for v in vs:
+            if v.get("homeCanonical"):
+                continue
+            _t = _locality(v, metro)
+            if _t and _t != metro["name"]:
+                _town_metro[(_t, _vendor_state(v, metro))][mid] += 1
+    _places = {
+        "v": _dt.date.today().isoformat(),
+        "metros": [{"id": m["id"], "label": m["display"].split(",")[0] if m["display"].count(",") == 1 else m["name"],
+                    "display": m["display"], "state": m["state"], "lat": m["center"][0], "lng": m["center"][1],
+                    "tz": _metro_tz(m)} for m in live_metros],
+        "towns": sorted(({"n": t, "s": st, "m": max(ms, key=ms.get)}
+                         for (t, st), ms in _town_metro.items() if sum(ms.values()) >= 3), key=lambda r: (r["n"], r["s"])),
+    }
+    (DIST / "assets").mkdir(exist_ok=True)
+    (DIST / "assets" / "places.json").write_text(json.dumps(_places, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print(f"[build] places.json: {len(_places['metros'])} metros, {len(_places['towns'])} towns", flush=True)
+
     # 404 page (served by the worker on any missing key)
     (DIST / "404.html").write_text(
         env.get_template("notfound.html").render(base=BASE_URL, metros=live_metros,
@@ -859,7 +1063,9 @@ def build(vendors: list[dict]):
     # JC-LAZO-CFORM-0916-001: delete-account joins the list. It used to be a
     # hand-rolled standalone file carrying an August footer and no site nav;
     # it now extends base.html like every other page here.
-    STATIC_PAGES = ["app", "why-lazo", "for-vendors", "about", "contact", "couples", "delete-account", "terms", "privacy", "the-knot-alternative", "zola-alternative", "weddingwire-alternative", "the-knot-alternative-for-vendors", "weddingwire-alternative-for-vendors", "honeybook-alternative", "folia-alternative"]
+    STATIC_PAGES = ["zola-the-knot", "app", "why-lazo", "for-vendors", "about", "contact", "couples", "delete-account", "terms", "privacy", "the-knot-alternative", "zola-alternative", "weddingwire-alternative", "the-knot-alternative-for-vendors", "weddingwire-alternative-for-vendors", "honeybook-alternative", "folia-alternative"]
+    # JC-LAZO-AUDIT-1016: feature landing pages for searches that had no page of their own
+    STATIC_PAGES += ["ai-wedding-planner", "wedding-seating-chart"]
     # JC-LAZO-WELCOME-1003: the five /welcome/<hook>/ ad landing pages (one hook, one
     # promise, one page each - the Zola/Knot pattern). Nested slug, so parents=True.
     # budget_json feeds /welcome/budget/ the same national ranges as /cost/.
@@ -938,7 +1144,7 @@ def build(vendors: list[dict]):
 
     (cost_dir / "index.html").write_text(env.get_template("cost_index.html").render(
         base=BASE_URL, rows=_rows, year=_cost_year, metro_count=len(live_metros),
-        first_metro=(sorted(live_metros, key=lambda m: m["name"])[0] if live_metros else {"id": "phoenix", "name": "Phoenix"}),
+        first_metro=_full_first(live_metros),
         metros=live_metros, categories=CATEGORIES), encoding="utf-8")
     urls.append(f"{BASE_URL}/cost/")
 
@@ -949,7 +1155,7 @@ def build(vendors: list[dict]):
     _tdir = DIST / "traditions"
     _tdir.mkdir(exist_ok=True)
     _t_one = env.get_template("tradition.html")
-    _first = sorted(live_metros, key=lambda m: m["name"])[0] if live_metros else {"id": "phoenix", "name": "Phoenix"}
+    _first = _full_first(live_metros)
     # /what-is-a-lazo/ keeps its own URL: indexed for months, and moving it under
     # /traditions/ to be tidy would discard whatever authority it has earned.
     _thref = lambda sl: "/what-is-a-lazo/" if sl == "what-is-a-lazo" else f"/traditions/{sl}/"
@@ -1093,7 +1299,10 @@ def build(vendors: list[dict]):
     _lyear = _ld.today().year
     _lstates = []
     _lmetros_by_state = {}
+    _lmax_t = max((m.get("tranche", 0) for m in live_metros), default=0)
     for _m in METROS:
+        if _m.get("tranche", 0) > _lmax_t:   # JC-LAZO-GAP-1014: not-yet-built metros never appear on license pages
+            continue
         _lmetros_by_state.setdefault(_LA.get(_m["state"], ""), []).append(_m)
     for _slug, _st in _LS.items():
         _row = dict(_st, slug=_slug, fee_text=_lft(_st["fee"]), wait_text=_lwt(_st["wait_days"]), valid_text=_lvt(_st["valid_days"]))
@@ -1119,6 +1328,8 @@ def build(vendors: list[dict]):
         urls.append(f"{BASE_URL}/marriage-license/{_row['slug']}/")
         _ldata["states"][_row["slug"]] = {k: _row[k] for k in ("name", "abbr", "issuer", "fee", "fee_text", "wait_days", "wait_text", "valid_days", "valid_text", "witnesses", "min_age", "course", "notes")}
     for _m in METROS:
+        if _m.get("tranche", 0) > _lmax_t:
+            continue
         _ldata["metros"][_m["id"]] = {"state": _LA.get(_m["state"], ""), "offices": [
             {"county": c, "office": o, "site": u, "fee": f, "note": n} for (c, o, u, f, n) in _LC.get(_m["id"], [])]}
     (_ldir / "data.json").write_text(_lj.dumps(_ldata, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -1420,6 +1631,7 @@ if __name__ == "__main__":
 
 def saturday_enrich(vendors):
     """Compute claimed-profile display fields + emit traveling-vendor copies."""
+    _market_copies = [0]
     by_pid = {}
     for v in vendors:
         pid = v.get("placeId")
@@ -1476,15 +1688,31 @@ def saturday_enrich(vendors):
         # serviceMetros -> display names + traveling copies
         sm = [m for m in (v.get("serviceMetros") or []) if m in BY_ID]
         home = v.get("metroId")
-        if sm:
+        # JC-LAZO-MARKETS-1019: Zola-style markets. homeMarkets (standard rates) map to Lazo
+        # metros through generate/data/markets.json; a copy in such a metro is the vendor's
+        # own page there (self-canonical, submitted when rich) - unless they picked more than
+        # MARKET_HOME_CAP metros ("Everywhere in the US"), which is a traveller in all but
+        # name: those copies, and every travelMarkets copy, canonical to the home listing and
+        # stay out of the sitemap. The category pages carry the reach either way.
+        home_mk = _market_metros(v.get("homeMarkets"))
+        travel_mk = _market_metros(v.get("travelMarkets")) - home_mk
+        nationwide = len(home_mk) > MARKET_HOME_CAP
+        if home_mk or travel_mk:
+            _market_copies[0] += 1
+        if sm or home_mk or travel_mk:
             ordered = [m for m in sm if m != home]
+            for m in sorted(home_mk | travel_mk):
+                if m != home and m not in ordered:
+                    ordered.append(m)
             v["serviceMetroNames"] = [BY_ID[home]["display"]] + [BY_ID[m]["display"] for m in ordered] if home in BY_ID else [BY_ID[m]["display"] for m in ordered]
             hp = home_path(v)
             for m in ordered:
                 cp = dict(v)
                 cp["metroId"] = m
-                cp["travelFrom"] = BY_ID[home]["name"] if home in BY_ID else ""
-                if hp:
+                own = m in home_mk and not nationwide          # their market, standard rates
+                cp["travelFrom"] = "" if own else (BY_ID[home]["name"] if home in BY_ID else "")
+                cp["travelFee"] = m in travel_mk and m not in home_mk
+                if hp and not own:
                     cp["homeCanonical"] = BASE_URL + hp
                 cp.pop("serviceMetroNames", None)
                 extra.append(cp)
@@ -1503,8 +1731,31 @@ def saturday_enrich(vendors):
             v["preferredResolved"] = resolved
 
     vendors.extend(extra)
-    print(f"saturday_enrich: +{len(extra)} traveling-vendor listings")
+    print(f"saturday_enrich: +{len(extra)} traveling-vendor listings ({_market_copies[0]} vendors with Zola-style markets)")
     return vendors
+
+
+# JC-LAZO-MARKETS-1019: market key -> the Lazo metros it overlaps (generate/data/markets.json)
+MARKET_HOME_CAP = 12
+_MARKET_METROS = None
+
+
+def _market_metros(keys):
+    """The set of built Lazo metro ids that a list of market keys maps to."""
+    global _MARKET_METROS
+    if _MARKET_METROS is None:
+        _MARKET_METROS = {}
+        try:
+            _doc = json.loads((Path(__file__).resolve().parent / "data" / "markets.json").read_text(encoding="utf-8"))
+            _MARKET_METROS = {m["key"]: list(m.get("lazoMetros") or []) for m in _doc.get("markets", [])}
+        except Exception as e:  # a missing table must never stop the nightly
+            print(f"[build] markets.json not read ({e}); market copies off")
+    out = set()
+    for k in (keys or []):
+        for mid in _MARKET_METROS.get(str(k), ()):
+            if mid in BY_ID:
+                out.add(mid)
+    return out
 
 # REPAIRED-TAIL
 

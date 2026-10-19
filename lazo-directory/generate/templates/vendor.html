@@ -130,7 +130,7 @@
       <p class="vx-crumb"><a href="/{{ metro.id }}/">{{ metro.display }}</a> <span>&rsaquo;</span> <a href="/{{ metro.id }}/{{ cat.slug }}/">{{ cat.label }}</a> <span>&rsaquo;</span> {{ v.name }}</p>
       <div class="vx-hero-body">
         <div class="vx-logo" id="hy-logo" {% if not v.logoUrl %}style="display:none"{% endif %}><img id="hy-logo-img" src="{{ th(v.logoUrl, 320) if v.logoUrl else '' }}" data-orig="{{ v.logoUrl or '' }}" alt="{{ v.name }} logo" width="160" height="160" onerror="if(this.dataset.orig&&this.src!==this.dataset.orig)this.src=this.dataset.orig" onload="if(window.__lazoLogo)window.__lazoLogo(this)"></div>
-        <p class="vx-eyebrow">{{ cat.singular }} &middot; {{ v.locality or metro.display }}{% if v.travelFrom %} &middot; travels from {{ v.travelFrom }}{% endif %}</p>
+        <p class="vx-eyebrow">{{ cat.singular }} &middot; {{ v.locality or metro.display }}{% if v.travelFrom %} &middot; travels from {{ v.travelFrom }}{% endif %}{% if v.travelFee %} &middot; travel fee may apply{% endif %}</p>
         <h1>{{ v.name }}</h1>
         <p class="vx-flags" id="hy-flags">
           {%- for k in ns.keys %}<span class="vx-chip{% if k == 'verified' %} is-gold{% endif %}{% if k == 'offer' %} is-offer{% endif %}">{% if k == 'verified' %}<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>{% endif %}{{ BADGE.get(k, k|replace('_', ' ')|capitalize) }}</span>{% endfor -%}

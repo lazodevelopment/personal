@@ -66,7 +66,8 @@ import { setWorkerEnv, fsHeaders, workerToken, pcToken, cookieVal, siteLocked, l
 // travelMarkets (travel fee may apply) by market key (generate/data/markets.json); a metro's
 // live category list and vendor pages include any vendor whose markets overlap that metro
 // (METRO_MARKETS), on top of the old metroId / serviceMetros membership, which stays as is.
-import { METRO_MARKETS } from "./markets.js";
+import { METRO_MARKETS, MARKET_METROS } from "./markets.js";
+const MARKET_HOME_CAP = 12;   // more home metros than this = nationwide; copies canonical to the home listing
 // JC-LAZO-GUESTCOMMS-1019: the contact collector form (/w/{slug}/contact) and
 // Message your guests (/api/w/{slug}/guest-message) - see guestcomms.js
 import { contactRoute, guestMessageRoute } from "./guestcomms.js";
@@ -404,6 +405,17 @@ async function livePage(key, env) {
   // JC-LAZO-MARKETS-1019: the travel tag sits in its own flags row under the name, so the
   // client-side hydration of #hy-flags never wipes it
   if (!isHome(f)) html = html.replace("</h1>", '</h1><p class="vx-flags"><span class="vx-chip" title="This vendor lists this area as a travel market">&#9992; Travel fee may apply</span></p>');
+  // JC-LAZO-MARKETS-1019 canonical: a travel-metro copy, or a copy for a vendor who took more
+  // than MARKET_HOME_CAP metros as home ("Everywhere in the US"), canonicals to the home
+  // listing so Google indexes one page per vendor; the category lists carry the reach.
+  // Same rule as generate/build.py saturday_enrich.
+  const homeMetro = String(fsVal(f.metroId) || "");
+  if (homeMetro && homeMetro !== metro) {
+    const homeMetros = new Set();
+    for (const k of (fsVal(f.homeMarkets) || [])) for (const m of (MARKET_METROS[k] || [])) homeMetros.add(m);
+    const own = homeMetros.has(metro) && homeMetros.size <= MARKET_HOME_CAP;   // serviceMetros copies canonical home too, as in build.py
+    if (!own) html = html.replace(/<link rel="canonical" href="[^"]*">/, `<link rel="canonical" href="https://meetlazo.com/${homeMetro}/${cat}/${slug}/">`);
+  }
   // the vendor's own words make a better description than the template's
   const bio = String(fsVal(f.bio) || "").replace(/\s+/g, " ").trim();
   if (bio) {

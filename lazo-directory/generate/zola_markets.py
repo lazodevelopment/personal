@@ -334,6 +334,11 @@ def main():
     for l in sorted(by_metro):
         js.append(f'  "{l}": {json.dumps(sorted(by_metro[l]))},')
     js.append("};")
+    js.append("export const MARKET_METROS = {")
+    for m in markets:
+        if m["lazoMetros"]:
+            js.append(f'  {json.dumps(m["key"])}: {json.dumps(m["lazoMetros"])},')
+    js.append("};")
     js.append("export const MARKET_LABELS = {")
     for m in markets:
         js.append(f'  {json.dumps(m["key"])}: {json.dumps(m["label"] + ", " + m["state"])},')

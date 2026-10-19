@@ -6,7 +6,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ItemList","name":"{{ cat.label }} in {{ metro.display }}","numberOfItems":{{ vendors|length }},"itemListElement":[
 {%- for v in vendors[:25] -%}
-{"@type":"ListItem","position":{{ loop.index }},"url":"{{ base }}/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/"}{{ "," if not loop.last }}
+{"@type":"ListItem","position":{{ loop.index }},"url":"{{ base }}/{{ vbase or metro.id }}/{{ cat.slug }}/{{ v.slug }}/"}{{ "," if not loop.last }}
 {%- endfor -%}
 ]}
 </script>
@@ -146,7 +146,7 @@
       <span class="vc2-thumb" style="background-image:linear-gradient(135deg,rgba(61,28,59,.66),rgba(82,40,79,.45)),url('/assets/photos/{{ cat.slug }}.jpg')" aria-hidden="true"></span>
       {% endif %}
       <div class="vc2-main">
-        <a class="vc2-name" href="/{{ metro.id }}/{{ cat.slug }}/{{ v.slug }}/">{{ v.name }}</a>
+        <a class="vc2-name" href="/{{ vbase or metro.id }}/{{ cat.slug }}/{{ v.slug }}/">{{ v.name }}</a>
         {%- if v.reviewCount %}
         <p class="vc2-score"><b>&#9733; {{ v.score|round|int }}</b><em>LAZO SCORE</em><i>&middot; {{ v.reviewCount }} verified review{{ '' if v.reviewCount == 1 else 's' }}</i></p>
         {%- endif %}
@@ -158,7 +158,7 @@
         <div class="vc2-chips">
           {% if v.verified %}<span class="ch-ver">&#10022; LAZO VERIFIED</span>{% endif %}
           {% if not v.reviewCount and not v.verified and not v.claimedBy %}<span class="ch-new">NEW TO LAZO</span>{% endif %}
-          {% if v.priceRangeDisplay %}<span class="ch-price">{{ v.priceRangeDisplay }}</span>{% endif %}
+          {% if v.priceRangeDisplay %}<span class="ch-price">{{ v.priceRangeDisplay }}</span>{% endif %}{% if v.travelFee %}<span class="ch-price" title="This vendor lists this area as a travel market">&#9992; Travel fee may apply</span>{% endif %}
           {% if v.hasOffer %}<span class="ch-offer">SPECIAL OFFER</span>{% endif %}
           {% if v.travelFrom %}<span class="ch-travel">TRAVELS FROM {{ v.travelFrom|upper }}</span>{% endif %}
           {% for ac in (v.alsoCats or [])[:2] %}{% if ac != cat.singular %}<span class="ch-also">ALSO: {{ ac|upper }}</span>{% endif %}{% endfor %}
