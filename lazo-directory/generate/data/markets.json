@@ -1,0 +1,6860 @@
+{
+ "source": "https://www.zola.com/web-marketplace-api/v1/vendor-market/list",
+ "fetched": "2026-10-19",
+ "count": 566,
+ "states": [
+  {
+   "code": "AL",
+   "name": "Alabama",
+   "count": 9
+  },
+  {
+   "code": "AK",
+   "name": "Alaska",
+   "count": 10
+  },
+  {
+   "code": "AZ",
+   "name": "Arizona",
+   "count": 8
+  },
+  {
+   "code": "AR",
+   "name": "Arkansas",
+   "count": 14
+  },
+  {
+   "code": "CA",
+   "name": "California",
+   "count": 26
+  },
+  {
+   "code": "CO",
+   "name": "Colorado",
+   "count": 15
+  },
+  {
+   "code": "CT",
+   "name": "Connecticut",
+   "count": 5
+  },
+  {
+   "code": "DE",
+   "name": "Delaware",
+   "count": 2
+  },
+  {
+   "code": "FL",
+   "name": "Florida",
+   "count": 17
+  },
+  {
+   "code": "GA",
+   "name": "Georgia",
+   "count": 14
+  },
+  {
+   "code": "HI",
+   "name": "Hawaii",
+   "count": 4
+  },
+  {
+   "code": "ID",
+   "name": "Idaho",
+   "count": 11
+  },
+  {
+   "code": "IL",
+   "name": "Illinois",
+   "count": 16
+  },
+  {
+   "code": "IN",
+   "name": "Indiana",
+   "count": 11
+  },
+  {
+   "code": "IA",
+   "name": "Iowa",
+   "count": 14
+  },
+  {
+   "code": "KS",
+   "name": "Kansas",
+   "count": 16
+  },
+  {
+   "code": "KY",
+   "name": "Kentucky",
+   "count": 9
+  },
+  {
+   "code": "LA",
+   "name": "Louisiana",
+   "count": 11
+  },
+  {
+   "code": "ME",
+   "name": "Maine",
+   "count": 5
+  },
+  {
+   "code": "MD",
+   "name": "Maryland",
+   "count": 6
+  },
+  {
+   "code": "MA",
+   "name": "Massachusetts",
+   "count": 10
+  },
+  {
+   "code": "MI",
+   "name": "Michigan",
+   "count": 17
+  },
+  {
+   "code": "MN",
+   "name": "Minnesota",
+   "count": 15
+  },
+  {
+   "code": "MS",
+   "name": "Mississippi",
+   "count": 12
+  },
+  {
+   "code": "MO",
+   "name": "Missouri",
+   "count": 11
+  },
+  {
+   "code": "MT",
+   "name": "Montana",
+   "count": 13
+  },
+  {
+   "code": "NE",
+   "name": "Nebraska",
+   "count": 15
+  },
+  {
+   "code": "NV",
+   "name": "Nevada",
+   "count": 6
+  },
+  {
+   "code": "NH",
+   "name": "New Hampshire",
+   "count": 4
+  },
+  {
+   "code": "NJ",
+   "name": "New Jersey",
+   "count": 4
+  },
+  {
+   "code": "NM",
+   "name": "New Mexico",
+   "count": 12
+  },
+  {
+   "code": "NY",
+   "name": "New York",
+   "count": 16
+  },
+  {
+   "code": "NC",
+   "name": "North Carolina",
+   "count": 15
+  },
+  {
+   "code": "ND",
+   "name": "North Dakota",
+   "count": 8
+  },
+  {
+   "code": "OH",
+   "name": "Ohio",
+   "count": 14
+  },
+  {
+   "code": "OK",
+   "name": "Oklahoma",
+   "count": 12
+  },
+  {
+   "code": "OR",
+   "name": "Oregon",
+   "count": 9
+  },
+  {
+   "code": "PA",
+   "name": "Pennsylvania",
+   "count": 13
+  },
+  {
+   "code": "RI",
+   "name": "Rhode Island",
+   "count": 1
+  },
+  {
+   "code": "SC",
+   "name": "South Carolina",
+   "count": 12
+  },
+  {
+   "code": "SD",
+   "name": "South Dakota",
+   "count": 9
+  },
+  {
+   "code": "TN",
+   "name": "Tennessee",
+   "count": 16
+  },
+  {
+   "code": "TX",
+   "name": "Texas",
+   "count": 30
+  },
+  {
+   "code": "UT",
+   "name": "Utah",
+   "count": 10
+  },
+  {
+   "code": "VT",
+   "name": "Vermont",
+   "count": 5
+  },
+  {
+   "code": "VA",
+   "name": "Virginia",
+   "count": 11
+  },
+  {
+   "code": "WA",
+   "name": "Washington",
+   "count": 15
+  },
+  {
+   "code": "DC",
+   "name": "Washington, D.C.",
+   "count": 1
+  },
+  {
+   "code": "WV",
+   "name": "West Virginia",
+   "count": 6
+  },
+  {
+   "code": "WI",
+   "name": "Wisconsin",
+   "count": 13
+  },
+  {
+   "code": "WY",
+   "name": "Wyoming",
+   "count": 8
+  }
+ ],
+ "markets": [
+  {
+   "id": 3510,
+   "key": "auburn-columbus",
+   "label": "Auburn-Columbus",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "auburn",
+    "columbus-ga"
+   ]
+  },
+  {
+   "id": 3511,
+   "key": "birmingham",
+   "label": "Birmingham",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "birmingham"
+   ]
+  },
+  {
+   "id": 3512,
+   "key": "dothan-southeast-alabama",
+   "label": "Dothan-Southeast Alabama",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dothan",
+    "enterprise"
+   ]
+  },
+  {
+   "id": 3513,
+   "key": "florence-muscle-shoals",
+   "label": "Florence-Muscle Shoals",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "florence"
+   ]
+  },
+  {
+   "id": 3514,
+   "key": "huntsville",
+   "label": "Huntsville",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "huntsville"
+   ]
+  },
+  {
+   "id": 3515,
+   "key": "mobile-gulf-coast",
+   "label": "Mobile-Gulf Coast",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "mobile"
+   ]
+  },
+  {
+   "id": 3516,
+   "key": "montgomery-mideast-alabama",
+   "label": "Montgomery-Mideast Alabama",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "montgomery"
+   ]
+  },
+  {
+   "id": 3517,
+   "key": "talladega",
+   "label": "Talladega",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "gadsden"
+   ]
+  },
+  {
+   "id": 3518,
+   "key": "tuscaloosa-central-west-alabama",
+   "label": "Tuscaloosa-Central West Alabama",
+   "state": "AL",
+   "stateName": "Alabama",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3593,
+   "key": "anchorage",
+   "label": "Anchorage",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "anchorage"
+   ]
+  },
+  {
+   "id": 3594,
+   "key": "fairbanks",
+   "label": "Fairbanks",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fairbanks"
+   ]
+  },
+  {
+   "id": 3595,
+   "key": "interior-alaska",
+   "label": "Interior Alaska",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fairbanks"
+   ]
+  },
+  {
+   "id": 3596,
+   "key": "juneau",
+   "label": "Juneau",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "juneau"
+   ]
+  },
+  {
+   "id": 3597,
+   "key": "kenai",
+   "label": "Kenai",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "anchorage"
+   ]
+  },
+  {
+   "id": 3598,
+   "key": "mat-su",
+   "label": "Mat-Su",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "anchorage"
+   ]
+  },
+  {
+   "id": 3599,
+   "key": "northwest-alaska",
+   "label": "Northwest Alaska",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3600,
+   "key": "southeast-alaska",
+   "label": "Southeast Alaska",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "juneau"
+   ]
+  },
+  {
+   "id": 3601,
+   "key": "southwest-alaska",
+   "label": "Southwest Alaska",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3602,
+   "key": "y-k-delta",
+   "label": "Y-K Delta",
+   "state": "AK",
+   "stateName": "Alaska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3408,
+   "key": "flagstaff-sedona-grand-canyon",
+   "label": "Flagstaff-Sedona-Grand Canyon",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sedona"
+   ]
+  },
+  {
+   "id": 3409,
+   "key": "mohave-country",
+   "label": "Mohave Country",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bullhead-city",
+    "kingman",
+    "lake-havasu-city"
+   ]
+  },
+  {
+   "id": 3410,
+   "key": "northeast-arizona",
+   "label": "Northeast Arizona",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3411,
+   "key": "phoenix",
+   "label": "Phoenix",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "phoenix"
+   ]
+  },
+  {
+   "id": 3412,
+   "key": "prescott",
+   "label": "Prescott",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3413,
+   "key": "southeast-arizona",
+   "label": "Southeast Arizona",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tucson"
+   ]
+  },
+  {
+   "id": 3414,
+   "key": "tucson",
+   "label": "Tucson",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tucson"
+   ]
+  },
+  {
+   "id": 3415,
+   "key": "west-coast-arizona",
+   "label": "West Coast Arizona",
+   "state": "AZ",
+   "stateName": "Arizona",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "yuma"
+   ]
+  },
+  {
+   "id": 3616,
+   "key": "east-central-arkansas",
+   "label": "East Central Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3617,
+   "key": "fayetteville-northwest-arkansas",
+   "label": "Fayetteville-Northwest Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bella-vista",
+    "fayetteville"
+   ]
+  },
+  {
+   "id": 3618,
+   "key": "fort-smith",
+   "label": "Fort Smith",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fort-smith"
+   ]
+  },
+  {
+   "id": 3619,
+   "key": "hot-springs-malvern",
+   "label": "Hot Springs-Malvern",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "little-rock"
+   ]
+  },
+  {
+   "id": 3620,
+   "key": "jonesboro-northeast-arkansas",
+   "label": "Jonesboro-Northeast Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jonesboro"
+   ]
+  },
+  {
+   "id": 3621,
+   "key": "little-rock-metropolitan",
+   "label": "Little Rock Metropolitan",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "little-rock"
+   ]
+  },
+  {
+   "id": 3622,
+   "key": "little-rock-northern-suburban",
+   "label": "Little Rock Northern Suburban",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "little-rock"
+   ]
+  },
+  {
+   "id": 3623,
+   "key": "little-rock-southern-suburban",
+   "label": "Little Rock Southern Suburban",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "little-rock"
+   ]
+  },
+  {
+   "id": 3624,
+   "key": "memphis-suburban-west",
+   "label": "Memphis Suburban West",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "memphis"
+   ]
+  },
+  {
+   "id": 3625,
+   "key": "north-central-arkansas",
+   "label": "North Central Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3626,
+   "key": "south-central-arkansas",
+   "label": "South Central Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3627,
+   "key": "southeast-arkansas",
+   "label": "Southeast Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "pine-bluff"
+   ]
+  },
+  {
+   "id": 3628,
+   "key": "texarkana-southwest-arkansas",
+   "label": "Texarkana-Southwest Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "texarkana"
+   ]
+  },
+  {
+   "id": 3629,
+   "key": "west-central-arkansas",
+   "label": "West Central Arkansas",
+   "state": "AR",
+   "stateName": "Arkansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "russellville"
+   ]
+  },
+  {
+   "id": 3179,
+   "key": "bakersfield",
+   "label": "Bakersfield",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bakersfield"
+   ]
+  },
+  {
+   "id": 3172,
+   "key": "central-valley",
+   "label": "Central Valley",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fresno",
+    "los-banos",
+    "merced"
+   ]
+  },
+  {
+   "id": 3173,
+   "key": "central-valley-north",
+   "label": "Central Valley North",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "modesto",
+    "stockton"
+   ]
+  },
+  {
+   "id": 3174,
+   "key": "central-valley-south",
+   "label": "Central Valley South",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fresno"
+   ]
+  },
+  {
+   "id": 3175,
+   "key": "coastal-north",
+   "label": "Coastal North",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "eureka"
+   ]
+  },
+  {
+   "id": 3176,
+   "key": "eastern-sierra",
+   "label": "Eastern Sierra",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "ridgecrest"
+   ]
+  },
+  {
+   "id": 3177,
+   "key": "far-north-shasta",
+   "label": "Far North-Shasta",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chico",
+    "redding"
+   ]
+  },
+  {
+   "id": 3180,
+   "key": "fresno",
+   "label": "Fresno",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fresno"
+   ]
+  },
+  {
+   "id": 3178,
+   "key": "gold-country",
+   "label": "Gold Country",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sacramento"
+   ]
+  },
+  {
+   "id": 3184,
+   "key": "imperial",
+   "label": "Imperial",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "el-centro"
+   ]
+  },
+  {
+   "id": 3185,
+   "key": "los-angeles",
+   "label": "Los Angeles",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lancaster",
+    "los-angeles"
+   ]
+  },
+  {
+   "id": 3186,
+   "key": "mendocino-lake",
+   "label": "Mendocino-Lake",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3187,
+   "key": "monterey-carmel",
+   "label": "Monterey-Carmel",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "monterey-big-sur"
+   ]
+  },
+  {
+   "id": 3188,
+   "key": "napa-sonoma-north-bay",
+   "label": "Napa/Sonoma-North Bay",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "napa-sonoma"
+   ]
+  },
+  {
+   "id": 3189,
+   "key": "oakland-east-bay",
+   "label": "Oakland-East Bay",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-francisco-bay"
+   ]
+  },
+  {
+   "id": 3190,
+   "key": "orange-county",
+   "label": "Orange County",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "orange-county"
+   ]
+  },
+  {
+   "id": 3191,
+   "key": "palm-springs-riverside",
+   "label": "Palm Springs-Riverside",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "palm-springs"
+   ]
+  },
+  {
+   "id": 3192,
+   "key": "sacramento-metropolitan",
+   "label": "Sacramento Metropolitan",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sacramento"
+   ]
+  },
+  {
+   "id": 3181,
+   "key": "sacramento-suburban",
+   "label": "Sacramento Suburban",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sacramento",
+    "yuba-city"
+   ]
+  },
+  {
+   "id": 3193,
+   "key": "san-bernardino",
+   "label": "San Bernardino",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "inland-empire"
+   ]
+  },
+  {
+   "id": 3194,
+   "key": "san-diego",
+   "label": "San Diego",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-diego"
+   ]
+  },
+  {
+   "id": 3195,
+   "key": "san-francisco-metropolitan",
+   "label": "San Francisco Metropolitan",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-francisco-bay"
+   ]
+  },
+  {
+   "id": 3196,
+   "key": "san-jose-south-bay",
+   "label": "San Jose-South Bay",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-francisco-bay"
+   ]
+  },
+  {
+   "id": 3197,
+   "key": "san-luis-obispo",
+   "label": "San Luis Obispo",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "el-paso-de-robles-paso-robles",
+    "san-luis-obispo"
+   ]
+  },
+  {
+   "id": 3182,
+   "key": "santa-barbara",
+   "label": "Santa Barbara",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "santa-barbara",
+    "santa-maria"
+   ]
+  },
+  {
+   "id": 3183,
+   "key": "ventura",
+   "label": "Ventura",
+   "state": "CA",
+   "stateName": "California",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3353,
+   "key": "boulder",
+   "label": "Boulder",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "denver"
+   ]
+  },
+  {
+   "id": 3354,
+   "key": "colorado-springs",
+   "label": "Colorado Springs",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "colorado-springs"
+   ]
+  },
+  {
+   "id": 3355,
+   "key": "denver-metropolitan",
+   "label": "Denver Metropolitan",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "denver"
+   ]
+  },
+  {
+   "id": 3356,
+   "key": "denver-suburban",
+   "label": "Denver Suburban",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "denver"
+   ]
+  },
+  {
+   "id": 3357,
+   "key": "durango-san-juan",
+   "label": "Durango-San Juan",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3358,
+   "key": "eastern-plains-co",
+   "label": "Eastern Plains CO",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3359,
+   "key": "fort-collins-larimer",
+   "label": "Fort Collins-Larimer",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "denver"
+   ]
+  },
+  {
+   "id": 3360,
+   "key": "front-range-foothills",
+   "label": "Front Range Foothills",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "denver"
+   ]
+  },
+  {
+   "id": 3361,
+   "key": "grand-junction-western-slope",
+   "label": "Grand Junction-Western Slope",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grand-junction"
+   ]
+  },
+  {
+   "id": 3362,
+   "key": "mountain-resorts",
+   "label": "Mountain Resorts",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "aspen-vail"
+   ]
+  },
+  {
+   "id": 3363,
+   "key": "northeast-colorado",
+   "label": "Northeast Colorado",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3364,
+   "key": "northwest-colorado",
+   "label": "Northwest Colorado",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3365,
+   "key": "pueblo",
+   "label": "Pueblo",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "colorado-springs"
+   ]
+  },
+  {
+   "id": 3366,
+   "key": "san-luis-valley",
+   "label": "San Luis Valley",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3367,
+   "key": "southeast-colorado",
+   "label": "Southeast Colorado",
+   "state": "CO",
+   "stateName": "Colorado",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3229,
+   "key": "eastern-connecticut",
+   "label": "Eastern Connecticut",
+   "state": "CT",
+   "stateName": "Connecticut",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3230,
+   "key": "fairfield",
+   "label": "Fairfield",
+   "state": "CT",
+   "stateName": "Connecticut",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "norwalk"
+   ]
+  },
+  {
+   "id": 3231,
+   "key": "hartford",
+   "label": "Hartford",
+   "state": "CT",
+   "stateName": "Connecticut",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hartford-new-haven"
+   ]
+  },
+  {
+   "id": 3232,
+   "key": "litchfield",
+   "label": "Litchfield",
+   "state": "CT",
+   "stateName": "Connecticut",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3233,
+   "key": "new-haven",
+   "label": "New Haven",
+   "state": "CT",
+   "stateName": "Connecticut",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hartford-new-haven"
+   ]
+  },
+  {
+   "id": 3279,
+   "key": "delaware",
+   "label": "Delaware",
+   "state": "DE",
+   "stateName": "Delaware",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dover"
+   ]
+  },
+  {
+   "id": 3280,
+   "key": "wilmington-de",
+   "label": "Wilmington",
+   "state": "DE",
+   "stateName": "Delaware",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dover"
+   ]
+  },
+  {
+   "id": 3263,
+   "key": "broward",
+   "label": "Broward",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "miami"
+   ]
+  },
+  {
+   "id": 3264,
+   "key": "daytona-space-coast",
+   "label": "Daytona-Space Coast",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "daytona-beach",
+    "palm-bay",
+    "titusville"
+   ]
+  },
+  {
+   "id": 3265,
+   "key": "florida-keys",
+   "label": "Florida Keys",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "key-west"
+   ]
+  },
+  {
+   "id": 3266,
+   "key": "fort-myers",
+   "label": "Fort Myers",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fort-myers-naples"
+   ]
+  },
+  {
+   "id": 3267,
+   "key": "gainesville-ocala",
+   "label": "Gainesville-Ocala",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "gainesville",
+    "ocala"
+   ]
+  },
+  {
+   "id": 3253,
+   "key": "jacksonville",
+   "label": "Jacksonville",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jacksonville"
+   ]
+  },
+  {
+   "id": 3268,
+   "key": "miami",
+   "label": "Miami",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "miami"
+   ]
+  },
+  {
+   "id": 3269,
+   "key": "north-central-florida",
+   "label": "North Central Florida",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3270,
+   "key": "northwest-florida",
+   "label": "Northwest Florida",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "crestview",
+    "panama-city",
+    "pensacola"
+   ]
+  },
+  {
+   "id": 3271,
+   "key": "orlando-kissimmee",
+   "label": "Orlando-Kissimmee",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "orlando"
+   ]
+  },
+  {
+   "id": 3272,
+   "key": "palm-beach",
+   "label": "Palm Beach",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3273,
+   "key": "sarasota-bradenton",
+   "label": "Sarasota-Bradenton",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sarasota"
+   ]
+  },
+  {
+   "id": 3274,
+   "key": "south-central-florida",
+   "label": "South Central Florida",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3275,
+   "key": "st-petersburg-clearwater",
+   "label": "St Petersburg-Clearwater",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tampa"
+   ]
+  },
+  {
+   "id": 3276,
+   "key": "tallahassee",
+   "label": "Tallahassee",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tallahassee"
+   ]
+  },
+  {
+   "id": 3277,
+   "key": "tampa",
+   "label": "Tampa",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tampa"
+   ]
+  },
+  {
+   "id": 3278,
+   "key": "vero-beach-port-st-lucie",
+   "label": "Vero Beach-Port St Lucie",
+   "state": "FL",
+   "stateName": "Florida",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fort-pierce"
+   ]
+  },
+  {
+   "id": 3248,
+   "key": "athens",
+   "label": "Athens",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3249,
+   "key": "atlanta-metropolitan",
+   "label": "Atlanta Metropolitan",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "atlanta"
+   ]
+  },
+  {
+   "id": 3250,
+   "key": "atlanta-suburban",
+   "label": "Atlanta Suburban",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "atlanta"
+   ]
+  },
+  {
+   "id": 3251,
+   "key": "augusta",
+   "label": "Augusta",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "augusta"
+   ]
+  },
+  {
+   "id": 3252,
+   "key": "columbus",
+   "label": "Columbus GA",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "columbus-ga"
+   ]
+  },
+  {
+   "id": 3254,
+   "key": "macon",
+   "label": "Macon",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "macon"
+   ]
+  },
+  {
+   "id": 3255,
+   "key": "northeast-georgia",
+   "label": "Northeast Georgia",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3256,
+   "key": "northwest-georgia",
+   "label": "Northwest Georgia",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dalton",
+    "rome"
+   ]
+  },
+  {
+   "id": 3257,
+   "key": "savannah",
+   "label": "Savannah",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "savannah"
+   ]
+  },
+  {
+   "id": 3258,
+   "key": "southeast-central-georgia",
+   "label": "Southeast Central Georgia",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "statesboro"
+   ]
+  },
+  {
+   "id": 3259,
+   "key": "southern-georgia",
+   "label": "Southern Georgia",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "valdosta"
+   ]
+  },
+  {
+   "id": 3260,
+   "key": "southwest-georgia",
+   "label": "Southwest Georgia",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "albany-ga"
+   ]
+  },
+  {
+   "id": 3261,
+   "key": "st-simons-jekyll-island",
+   "label": "St Simons-Jekyll Island",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "savannah"
+   ]
+  },
+  {
+   "id": 3262,
+   "key": "west-georgia",
+   "label": "West Georgia",
+   "state": "GA",
+   "stateName": "Georgia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "carrollton",
+    "lagrange"
+   ]
+  },
+  {
+   "id": 3683,
+   "key": "big-island",
+   "label": "Big Island",
+   "state": "HI",
+   "stateName": "Hawaii",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3684,
+   "key": "honolulu-oahu",
+   "label": "Honolulu-Oahu",
+   "state": "HI",
+   "stateName": "Hawaii",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "honolulu"
+   ]
+  },
+  {
+   "id": 3685,
+   "key": "kauai",
+   "label": "Kauai",
+   "state": "HI",
+   "stateName": "Hawaii",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3686,
+   "key": "maui",
+   "label": "Maui",
+   "state": "HI",
+   "stateName": "Hawaii",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "maui"
+   ]
+  },
+  {
+   "id": 3569,
+   "key": "boise",
+   "label": "Boise",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "boise"
+   ]
+  },
+  {
+   "id": 3570,
+   "key": "central-idaho",
+   "label": "Central Idaho",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3571,
+   "key": "coeur-d-alene-idaho-panhandle",
+   "label": "Coeur d'Alene-Idaho Panhandle",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "coeur-d-alene"
+   ]
+  },
+  {
+   "id": 3572,
+   "key": "idaho-falls-blackfoot",
+   "label": "Idaho Falls-Blackfoot",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "idaho-falls"
+   ]
+  },
+  {
+   "id": 3574,
+   "key": "magic-valley",
+   "label": "Magic Valley",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "twin-falls"
+   ]
+  },
+  {
+   "id": 3575,
+   "key": "nampa",
+   "label": "Nampa",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "boise"
+   ]
+  },
+  {
+   "id": 3576,
+   "key": "north-central-idaho",
+   "label": "North Central Idaho",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lewiston"
+   ]
+  },
+  {
+   "id": 3577,
+   "key": "pocatello-southeast-idaho",
+   "label": "Pocatello-Southeast Idaho",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "pocatello"
+   ]
+  },
+  {
+   "id": 3578,
+   "key": "rexburg",
+   "label": "Rexburg",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "rexburg"
+   ]
+  },
+  {
+   "id": 3579,
+   "key": "sun-valley",
+   "label": "Sun Valley",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3580,
+   "key": "treasure-valley",
+   "label": "Treasure Valley",
+   "state": "ID",
+   "stateName": "Idaho",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "boise"
+   ]
+  },
+  {
+   "id": 3198,
+   "key": "bloomington-normal",
+   "label": "Bloomington-Normal",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bloomington-il"
+   ]
+  },
+  {
+   "id": 3199,
+   "key": "central-illinois",
+   "label": "Central Illinois",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "danville-il",
+    "decatur"
+   ]
+  },
+  {
+   "id": 3201,
+   "key": "champaign-urbana",
+   "label": "Champaign-Urbana",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "champaign"
+   ]
+  },
+  {
+   "id": 3200,
+   "key": "chicago-metropolitan",
+   "label": "Chicago Metropolitan",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chicago"
+   ]
+  },
+  {
+   "id": 3207,
+   "key": "mattoon-charleston",
+   "label": "Mattoon-Charleston",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3208,
+   "key": "north-central-illinois",
+   "label": "North Central Illinois",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dekalb"
+   ]
+  },
+  {
+   "id": 3209,
+   "key": "northern-chicago-suburbs",
+   "label": "Northern Chicago Suburbs",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chicago"
+   ]
+  },
+  {
+   "id": 3202,
+   "key": "peoria",
+   "label": "Peoria",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "peoria"
+   ]
+  },
+  {
+   "id": 3203,
+   "key": "quad-cities",
+   "label": "Quad Cities",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "davenport"
+   ]
+  },
+  {
+   "id": 3204,
+   "key": "rockford",
+   "label": "Rockford",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "rockford"
+   ]
+  },
+  {
+   "id": 3210,
+   "key": "south-east-illinois",
+   "label": "South East Illinois",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3211,
+   "key": "southern-chicago-suburbs",
+   "label": "Southern Chicago Suburbs",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chicago"
+   ]
+  },
+  {
+   "id": 3212,
+   "key": "southern-illinois",
+   "label": "Southern Illinois",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3205,
+   "key": "springfield-il",
+   "label": "Springfield",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "springfield-il"
+   ]
+  },
+  {
+   "id": 3213,
+   "key": "west-central-illinois",
+   "label": "West Central Illinois",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "galesburg",
+    "quincy"
+   ]
+  },
+  {
+   "id": 3214,
+   "key": "western-chicago-suburbs",
+   "label": "Western Chicago Suburbs",
+   "state": "IL",
+   "stateName": "Illinois",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chicago"
+   ]
+  },
+  {
+   "id": 3531,
+   "key": "bloomington",
+   "label": "Bloomington",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bloomington"
+   ]
+  },
+  {
+   "id": 3532,
+   "key": "evansville",
+   "label": "Evansville",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "evansville"
+   ]
+  },
+  {
+   "id": 3533,
+   "key": "fort-wayne",
+   "label": "Fort Wayne",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fort-wayne"
+   ]
+  },
+  {
+   "id": 3534,
+   "key": "gary-chicago-suburban",
+   "label": "Gary-Chicago Suburban",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hammond"
+   ]
+  },
+  {
+   "id": 3535,
+   "key": "indianapolis-metropolitan",
+   "label": "Indianapolis Metropolitan",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "indianapolis"
+   ]
+  },
+  {
+   "id": 3536,
+   "key": "indianapolis-suburban",
+   "label": "Indianapolis Suburban",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "indianapolis",
+    "kokomo",
+    "marion"
+   ]
+  },
+  {
+   "id": 3537,
+   "key": "lafayette-west-lafayette",
+   "label": "Lafayette-West Lafayette",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lafayette"
+   ]
+  },
+  {
+   "id": 3539,
+   "key": "muncie-anderson",
+   "label": "Muncie-Anderson",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "muncie"
+   ]
+  },
+  {
+   "id": 3540,
+   "key": "south-bend-michiana",
+   "label": "South Bend-Michiana",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "michigan-city",
+    "south-bend"
+   ]
+  },
+  {
+   "id": 3541,
+   "key": "southeast-indiana",
+   "label": "Southeast Indiana",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "columbus-in",
+    "richmond-in"
+   ]
+  },
+  {
+   "id": 3542,
+   "key": "terre-haute",
+   "label": "Terre Haute",
+   "state": "IN",
+   "stateName": "Indiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "terre-haute"
+   ]
+  },
+  {
+   "id": 3630,
+   "key": "cedar-rapids",
+   "label": "Cedar Rapids",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cedar-rapids"
+   ]
+  },
+  {
+   "id": 3631,
+   "key": "central-iowa",
+   "label": "Central Iowa",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "des-moines",
+    "marshalltown"
+   ]
+  },
+  {
+   "id": 3632,
+   "key": "council-bluffs",
+   "label": "Council Bluffs",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "omaha"
+   ]
+  },
+  {
+   "id": 3633,
+   "key": "des-moines-metropolitan",
+   "label": "Des Moines Metropolitan",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "des-moines"
+   ]
+  },
+  {
+   "id": 3634,
+   "key": "des-moines-suburban",
+   "label": "Des Moines Suburban",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "des-moines"
+   ]
+  },
+  {
+   "id": 3712,
+   "key": "dubuque",
+   "label": "Dubuque",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dubuque"
+   ]
+  },
+  {
+   "id": 3635,
+   "key": "iowa-city",
+   "label": "Iowa City",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cedar-rapids"
+   ]
+  },
+  {
+   "id": 3636,
+   "key": "northeast-iowa",
+   "label": "Northeast Iowa",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "mason-city"
+   ]
+  },
+  {
+   "id": 3637,
+   "key": "northwest-iowa",
+   "label": "Northwest Iowa",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3638,
+   "key": "sioux-city",
+   "label": "Sioux City",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sioux-city"
+   ]
+  },
+  {
+   "id": 3639,
+   "key": "southeast-iowa",
+   "label": "Southeast Iowa",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "ottumwa"
+   ]
+  },
+  {
+   "id": 3640,
+   "key": "southwest-iowa",
+   "label": "Southwest Iowa",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3641,
+   "key": "waterloo-cedar-falls",
+   "label": "Waterloo-Cedar Falls",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "waterloo"
+   ]
+  },
+  {
+   "id": 3642,
+   "key": "west-central-iowa",
+   "label": "West Central Iowa",
+   "state": "IA",
+   "stateName": "Iowa",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3453,
+   "key": "central-kansas",
+   "label": "Central Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hutchinson"
+   ]
+  },
+  {
+   "id": 3454,
+   "key": "east-central-kansas",
+   "label": "East Central Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3455,
+   "key": "kansas-city-greater-area",
+   "label": "Kansas City Greater Area",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "gardner",
+    "kansas-city"
+   ]
+  },
+  {
+   "id": 3456,
+   "key": "kansas-city-metropolitan",
+   "label": "Kansas City Metropolitan",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "kansas-city"
+   ]
+  },
+  {
+   "id": 3457,
+   "key": "lawrence",
+   "label": "Lawrence",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3458,
+   "key": "manhattan-kansas",
+   "label": "Manhattan KS",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "manhattan"
+   ]
+  },
+  {
+   "id": 3459,
+   "key": "north-central-kansas",
+   "label": "North Central Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3460,
+   "key": "northeast-kansas",
+   "label": "Northeast Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3461,
+   "key": "northwest-kansas",
+   "label": "Northwest Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3462,
+   "key": "salina",
+   "label": "Salina",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "salina"
+   ]
+  },
+  {
+   "id": 3463,
+   "key": "south-central-kansas",
+   "label": "South Central Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "wichita"
+   ]
+  },
+  {
+   "id": 3464,
+   "key": "southeast-kansas",
+   "label": "Southeast Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3465,
+   "key": "southwest-kansas",
+   "label": "Southwest Kansas",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dodge-city",
+    "garden-city"
+   ]
+  },
+  {
+   "id": 3466,
+   "key": "topeka-metropolitan",
+   "label": "Topeka Metropolitan",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "topeka"
+   ]
+  },
+  {
+   "id": 3467,
+   "key": "topeka-suburban",
+   "label": "Topeka Suburban",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "topeka"
+   ]
+  },
+  {
+   "id": 3468,
+   "key": "wichita",
+   "label": "Wichita",
+   "state": "KS",
+   "stateName": "Kansas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "wichita"
+   ]
+  },
+  {
+   "id": 3543,
+   "key": "ashland",
+   "label": "Ashland",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3544,
+   "key": "bowling-green",
+   "label": "Bowling Green",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bowling-green"
+   ]
+  },
+  {
+   "id": 3545,
+   "key": "cumberland",
+   "label": "Cumberland",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3546,
+   "key": "eastern-kentucky",
+   "label": "Eastern Kentucky",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3547,
+   "key": "lexington",
+   "label": "Lexington",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lexington"
+   ]
+  },
+  {
+   "id": 3538,
+   "key": "louisville",
+   "label": "Louisville",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "louisville"
+   ]
+  },
+  {
+   "id": 3548,
+   "key": "northern-kentucky",
+   "label": "Northern Kentucky",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cincinnati"
+   ]
+  },
+  {
+   "id": 3549,
+   "key": "owensboro-henderson",
+   "label": "Owensboro-Henderson",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "owensboro"
+   ]
+  },
+  {
+   "id": 3550,
+   "key": "western-kentucky",
+   "label": "Western Kentucky",
+   "state": "KY",
+   "stateName": "Kentucky",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "paducah"
+   ]
+  },
+  {
+   "id": 3558,
+   "key": "alexandria-central-louisiana",
+   "label": "Alexandria-Central Louisiana",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "alexandria"
+   ]
+  },
+  {
+   "id": 3559,
+   "key": "baton-rouge",
+   "label": "Baton Rouge",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "baton-rouge"
+   ]
+  },
+  {
+   "id": 3560,
+   "key": "houma",
+   "label": "Houma",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "houma"
+   ]
+  },
+  {
+   "id": 3561,
+   "key": "lafayette",
+   "label": "Lafayette",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "baton-rouge"
+   ]
+  },
+  {
+   "id": 3562,
+   "key": "lake-charles-southwest-louisiana",
+   "label": "Lake Charles-Southwest Louisiana",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lake-charles"
+   ]
+  },
+  {
+   "id": 3563,
+   "key": "monroe",
+   "label": "Monroe",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "monroe"
+   ]
+  },
+  {
+   "id": 3564,
+   "key": "new-orleans-metropolitan",
+   "label": "New Orleans Metropolitan",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "new-orleans"
+   ]
+  },
+  {
+   "id": 3565,
+   "key": "new-orleans-suburban-north",
+   "label": "New Orleans Suburban North",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "new-orleans"
+   ]
+  },
+  {
+   "id": 3566,
+   "key": "new-orleans-suburban-south",
+   "label": "New Orleans Suburban South",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "new-orleans"
+   ]
+  },
+  {
+   "id": 3567,
+   "key": "northeast-louisiana",
+   "label": "Northeast Louisiana",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "monroe"
+   ]
+  },
+  {
+   "id": 3568,
+   "key": "shreveport",
+   "label": "Shreveport",
+   "state": "LA",
+   "stateName": "Louisiana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "shreveport"
+   ]
+  },
+  {
+   "id": 3425,
+   "key": "bangor",
+   "label": "Bangor",
+   "state": "ME",
+   "stateName": "Maine",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bangor"
+   ]
+  },
+  {
+   "id": 3426,
+   "key": "down-east-maine",
+   "label": "Down East Maine",
+   "state": "ME",
+   "stateName": "Maine",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3427,
+   "key": "inland-maine",
+   "label": "Inland Maine",
+   "state": "ME",
+   "stateName": "Maine",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3428,
+   "key": "mid-coast-maine",
+   "label": "Mid-Coast Maine",
+   "state": "ME",
+   "stateName": "Maine",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "portland-maine"
+   ]
+  },
+  {
+   "id": 3429,
+   "key": "portland",
+   "label": "Portland",
+   "state": "ME",
+   "stateName": "Maine",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "portland-maine"
+   ]
+  },
+  {
+   "id": 3281,
+   "key": "annapolis",
+   "label": "Annapolis",
+   "state": "MD",
+   "stateName": "Maryland",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "baltimore"
+   ]
+  },
+  {
+   "id": 3282,
+   "key": "baltimore",
+   "label": "Baltimore",
+   "state": "MD",
+   "stateName": "Maryland",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "baltimore"
+   ]
+  },
+  {
+   "id": 3235,
+   "key": "chesapeake-bay",
+   "label": "Chesapeake Bay",
+   "state": "MD",
+   "stateName": "Maryland",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3237,
+   "key": "eastern-shore",
+   "label": "Eastern Shore",
+   "state": "MD",
+   "stateName": "Maryland",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "salisbury"
+   ]
+  },
+  {
+   "id": 3283,
+   "key": "southern-maryland",
+   "label": "Southern Maryland",
+   "state": "MD",
+   "stateName": "Maryland",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3284,
+   "key": "western-maryland",
+   "label": "Western Maryland",
+   "state": "MD",
+   "stateName": "Maryland",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hagerstown"
+   ]
+  },
+  {
+   "id": 3368,
+   "key": "berkshires",
+   "label": "Berkshires",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "pittsfield"
+   ]
+  },
+  {
+   "id": 3369,
+   "key": "boston",
+   "label": "Boston",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "boston"
+   ]
+  },
+  {
+   "id": 3370,
+   "key": "cape-cod",
+   "label": "Cape Cod",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cape-cod"
+   ]
+  },
+  {
+   "id": 3371,
+   "key": "central-massachusetts",
+   "label": "Central Massachusetts",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3372,
+   "key": "marthas-vineyard",
+   "label": "Martha's Vineyard",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cape-cod"
+   ]
+  },
+  {
+   "id": 3373,
+   "key": "middlesex",
+   "label": "Middlesex",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "boston"
+   ]
+  },
+  {
+   "id": 3374,
+   "key": "nantucket",
+   "label": "Nantucket",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cape-cod"
+   ]
+  },
+  {
+   "id": 3375,
+   "key": "north-shore-ma",
+   "label": "North Shore MA",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "boston"
+   ]
+  },
+  {
+   "id": 3376,
+   "key": "southeast-massachusetts",
+   "label": "Southeast Massachusetts",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "taunton"
+   ]
+  },
+  {
+   "id": 3377,
+   "key": "western-massachusetts",
+   "label": "Western Massachusetts",
+   "state": "MA",
+   "stateName": "Massachusetts",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "springfield-ma"
+   ]
+  },
+  {
+   "id": 3336,
+   "key": "ann-arbor",
+   "label": "Ann Arbor",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "detroit"
+   ]
+  },
+  {
+   "id": 3337,
+   "key": "detroit-metropolitan",
+   "label": "Detroit Metropolitan",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "detroit"
+   ]
+  },
+  {
+   "id": 3338,
+   "key": "detroit-suburban",
+   "label": "Detroit Suburban",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "detroit"
+   ]
+  },
+  {
+   "id": 3339,
+   "key": "eastern-up",
+   "label": "Eastern UP",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3340,
+   "key": "flint",
+   "label": "Flint",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "flint"
+   ]
+  },
+  {
+   "id": 3323,
+   "key": "grand-rapids",
+   "label": "Grand Rapids MI",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grand-rapids"
+   ]
+  },
+  {
+   "id": 3342,
+   "key": "jackson-southern-michigan",
+   "label": "Jackson-Southern Michigan",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson-mi"
+   ]
+  },
+  {
+   "id": 3343,
+   "key": "lansing",
+   "label": "Lansing",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lansing"
+   ]
+  },
+  {
+   "id": 3344,
+   "key": "marquette",
+   "label": "Marquette",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3345,
+   "key": "mid-michigan",
+   "label": "Mid Michigan",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "saginaw"
+   ]
+  },
+  {
+   "id": 3346,
+   "key": "muskegon",
+   "label": "Muskegon",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grand-rapids"
+   ]
+  },
+  {
+   "id": 3347,
+   "key": "northern-michigan",
+   "label": "Northern Michigan",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3348,
+   "key": "southwest-michigan",
+   "label": "Southwest Michigan",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3349,
+   "key": "the-thumb",
+   "label": "The Thumb",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "port-huron"
+   ]
+  },
+  {
+   "id": 3350,
+   "key": "traverse-city-area-leelanau",
+   "label": "Traverse City Area & Leelanau",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3351,
+   "key": "western-michigan",
+   "label": "Western Michigan",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grand-rapids"
+   ]
+  },
+  {
+   "id": 3352,
+   "key": "western-up",
+   "label": "Western UP",
+   "state": "MI",
+   "stateName": "Michigan",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3321,
+   "key": "duluth",
+   "label": "Duluth",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "duluth"
+   ]
+  },
+  {
+   "id": 3322,
+   "key": "east-central-minnesota",
+   "label": "East Central Minnesota",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3551,
+   "key": "grand-rapids-mn",
+   "label": "Grand Rapids MN",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3324,
+   "key": "mankato",
+   "label": "Mankato",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "mankato"
+   ]
+  },
+  {
+   "id": 3325,
+   "key": "minneapolis",
+   "label": "Minneapolis",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "minneapolis"
+   ]
+  },
+  {
+   "id": 3326,
+   "key": "north-mankato",
+   "label": "North Mankato",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "mankato"
+   ]
+  },
+  {
+   "id": 3327,
+   "key": "north-shore",
+   "label": "North Shore MN",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3328,
+   "key": "northwest-minnesota",
+   "label": "Northwest Minnesota",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3724,
+   "key": "rochester-mn",
+   "label": "Rochester MN",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "rochester-mn"
+   ]
+  },
+  {
+   "id": 3330,
+   "key": "southeast-minnesota",
+   "label": "Southeast Minnesota",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "austin-mn",
+    "owatonna",
+    "rochester-mn",
+    "winona"
+   ]
+  },
+  {
+   "id": 3331,
+   "key": "southwest-minnesota",
+   "label": "Southwest Minnesota",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3332,
+   "key": "st-cloud",
+   "label": "St Cloud",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "st-cloud"
+   ]
+  },
+  {
+   "id": 3333,
+   "key": "st-paul",
+   "label": "St Paul",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "minneapolis"
+   ]
+  },
+  {
+   "id": 3334,
+   "key": "twin-cities-metro",
+   "label": "Twin Cities Metro",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "minneapolis"
+   ]
+  },
+  {
+   "id": 3335,
+   "key": "west-central-minnesota",
+   "label": "West Central Minnesota",
+   "state": "MN",
+   "stateName": "Minnesota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3643,
+   "key": "golden-triangle-east-central-mississippi",
+   "label": "Golden Triangle-East Central Mississippi",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "starkville"
+   ]
+  },
+  {
+   "id": 3644,
+   "key": "gulf-coast",
+   "label": "Gulf Coast",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "gulfport"
+   ]
+  },
+  {
+   "id": 3645,
+   "key": "hattiesburg",
+   "label": "Hattiesburg",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3646,
+   "key": "jackson-metropolitan",
+   "label": "Jackson Metropolitan",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson-ms"
+   ]
+  },
+  {
+   "id": 3647,
+   "key": "jackson-suburban-east",
+   "label": "Jackson Suburban East",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson-ms"
+   ]
+  },
+  {
+   "id": 3648,
+   "key": "jackson-suburban-west",
+   "label": "Jackson Suburban West",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson-ms"
+   ]
+  },
+  {
+   "id": 3649,
+   "key": "memphis-suburban-south",
+   "label": "Memphis Suburban South",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "memphis"
+   ]
+  },
+  {
+   "id": 3650,
+   "key": "meridian",
+   "label": "Meridian",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "meridian"
+   ]
+  },
+  {
+   "id": 3651,
+   "key": "pine-belt",
+   "label": "Pine Belt",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3652,
+   "key": "southwest-mississippi",
+   "label": "Southwest Mississippi",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3653,
+   "key": "tupelo-north-mississippi",
+   "label": "Tupelo-North Mississippi",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "oxford",
+    "tupelo"
+   ]
+  },
+  {
+   "id": 3654,
+   "key": "west-central-mississippi",
+   "label": "West Central Mississippi",
+   "state": "MS",
+   "stateName": "Mississippi",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greenville-ms"
+   ]
+  },
+  {
+   "id": 3469,
+   "key": "central-missouri",
+   "label": "Central Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "columbia"
+   ]
+  },
+  {
+   "id": 3470,
+   "key": "jefferson-city",
+   "label": "Jefferson City",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jefferson-city"
+   ]
+  },
+  {
+   "id": 3471,
+   "key": "northeast-missouri",
+   "label": "Northeast Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3472,
+   "key": "northwest-missouri",
+   "label": "Northwest Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3473,
+   "key": "ozarks",
+   "label": "Ozarks",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3474,
+   "key": "south-central-missouri",
+   "label": "South Central Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3475,
+   "key": "southeast-missouri",
+   "label": "Southeast Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cape-girardeau"
+   ]
+  },
+  {
+   "id": 3476,
+   "key": "southwest-missouri",
+   "label": "Southwest Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "joplin"
+   ]
+  },
+  {
+   "id": 3477,
+   "key": "springfield-metropolitan",
+   "label": "Springfield Metropolitan",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "springfield"
+   ]
+  },
+  {
+   "id": 3206,
+   "key": "st-louis",
+   "label": "St Louis",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "edwardsville",
+    "st-louis"
+   ]
+  },
+  {
+   "id": 3478,
+   "key": "west-central-missouri",
+   "label": "West Central Missouri",
+   "state": "MO",
+   "stateName": "Missouri",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3655,
+   "key": "big-sky",
+   "label": "Big Sky",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "billings"
+   ]
+  },
+  {
+   "id": 3656,
+   "key": "billings",
+   "label": "Billings",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "billings"
+   ]
+  },
+  {
+   "id": 3657,
+   "key": "bozeman",
+   "label": "Bozeman",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "billings"
+   ]
+  },
+  {
+   "id": 3658,
+   "key": "great-falls",
+   "label": "Great Falls",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "great-falls"
+   ]
+  },
+  {
+   "id": 3659,
+   "key": "helena",
+   "label": "Helena",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3660,
+   "key": "kalispell",
+   "label": "Kalispell",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3661,
+   "key": "missoula",
+   "label": "Missoula",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3662,
+   "key": "north-central-montana",
+   "label": "North Central Montana",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3663,
+   "key": "northeast-montana",
+   "label": "Northeast Montana",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3664,
+   "key": "northwest-montana",
+   "label": "Northwest Montana",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3665,
+   "key": "south-central-montana",
+   "label": "South Central Montana",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "billings"
+   ]
+  },
+  {
+   "id": 3666,
+   "key": "southeast-montana",
+   "label": "Southeast Montana",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3667,
+   "key": "southwest-montana",
+   "label": "Southwest Montana",
+   "state": "MT",
+   "stateName": "Montana",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "butte-silver-bow"
+   ]
+  },
+  {
+   "id": 3694,
+   "key": "columbus-ne",
+   "label": "Columbus NE",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3695,
+   "key": "grand-island",
+   "label": "Grand Island",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grand-island"
+   ]
+  },
+  {
+   "id": 3696,
+   "key": "lincoln",
+   "label": "Lincoln",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "omaha"
+   ]
+  },
+  {
+   "id": 3697,
+   "key": "nebraska-panhandle",
+   "label": "Nebraska Panhandle",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3698,
+   "key": "norfolk",
+   "label": "Norfolk",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "norfolk"
+   ]
+  },
+  {
+   "id": 3700,
+   "key": "north-platte",
+   "label": "North Platte",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3699,
+   "key": "northeast-nebraska",
+   "label": "Northeast Nebraska",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "norfolk"
+   ]
+  },
+  {
+   "id": 3701,
+   "key": "omaha-metropolitan",
+   "label": "Omaha Metropolitan",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "omaha"
+   ]
+  },
+  {
+   "id": 3702,
+   "key": "omaha-suburban",
+   "label": "Omaha Suburban",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "omaha"
+   ]
+  },
+  {
+   "id": 3703,
+   "key": "sandhills",
+   "label": "Sandhills",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3704,
+   "key": "scotts-bluff",
+   "label": "Scotts Bluff",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3705,
+   "key": "sioux-city-suburban-nebraska",
+   "label": "Sioux City Suburban Nebraska",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sioux-city"
+   ]
+  },
+  {
+   "id": 3707,
+   "key": "south-central-nebraska",
+   "label": "South Central Nebraska",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grand-island",
+    "kearney"
+   ]
+  },
+  {
+   "id": 3708,
+   "key": "southeast-nebraska",
+   "label": "Southeast Nebraska",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3709,
+   "key": "southwest-nebraska",
+   "label": "Southwest Nebraska",
+   "state": "NE",
+   "stateName": "Nebraska",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3504,
+   "key": "carson-city",
+   "label": "Carson City",
+   "state": "NV",
+   "stateName": "Nevada",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lake-tahoe-reno"
+   ]
+  },
+  {
+   "id": 3505,
+   "key": "central-nevada",
+   "label": "Central Nevada",
+   "state": "NV",
+   "stateName": "Nevada",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3506,
+   "key": "eastern-nevada",
+   "label": "Eastern Nevada",
+   "state": "NV",
+   "stateName": "Nevada",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3507,
+   "key": "las-vegas",
+   "label": "Las Vegas",
+   "state": "NV",
+   "stateName": "Nevada",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "las-vegas"
+   ]
+  },
+  {
+   "id": 3508,
+   "key": "reno-sparks",
+   "label": "Reno-Sparks",
+   "state": "NV",
+   "stateName": "Nevada",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lake-tahoe-reno"
+   ]
+  },
+  {
+   "id": 3509,
+   "key": "southwest-nevada",
+   "label": "Southwest Nevada",
+   "state": "NV",
+   "stateName": "Nevada",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "las-vegas"
+   ]
+  },
+  {
+   "id": 3421,
+   "key": "lakes-region",
+   "label": "Lakes Region",
+   "state": "NH",
+   "stateName": "New Hampshire",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "manchester-nh"
+   ]
+  },
+  {
+   "id": 3422,
+   "key": "merrimack-valley",
+   "label": "Merrimack Valley",
+   "state": "NH",
+   "stateName": "New Hampshire",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "manchester-nh"
+   ]
+  },
+  {
+   "id": 3423,
+   "key": "north-country",
+   "label": "North Country",
+   "state": "NH",
+   "stateName": "New Hampshire",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3424,
+   "key": "seacoast",
+   "label": "Seacoast",
+   "state": "NH",
+   "stateName": "New Hampshire",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "manchester-nh"
+   ]
+  },
+  {
+   "id": 3158,
+   "key": "central-new-jersey",
+   "label": "Central New Jersey",
+   "state": "NJ",
+   "stateName": "New Jersey",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "plainfield",
+    "trenton"
+   ]
+  },
+  {
+   "id": 3159,
+   "key": "jersey-shore",
+   "label": "Jersey Shore",
+   "state": "NJ",
+   "stateName": "New Jersey",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "atlantic-city"
+   ]
+  },
+  {
+   "id": 3160,
+   "key": "north-new-jersey-nj",
+   "label": "North New Jersey",
+   "state": "NJ",
+   "stateName": "New Jersey",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 3161,
+   "key": "south-new-jersey-nj",
+   "label": "Southwest New Jersey",
+   "state": "NJ",
+   "stateName": "New Jersey",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "philadelphia",
+    "vineland"
+   ]
+  },
+  {
+   "id": 3603,
+   "key": "albuquerque-metropolitan",
+   "label": "Albuquerque Metropolitan",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "albuquerque"
+   ]
+  },
+  {
+   "id": 3604,
+   "key": "central-new-mexico",
+   "label": "Central New Mexico",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "albuquerque"
+   ]
+  },
+  {
+   "id": 3605,
+   "key": "eastern-plains-nm",
+   "label": "Eastern Plains NM",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "clovis"
+   ]
+  },
+  {
+   "id": 3606,
+   "key": "four-corners-region",
+   "label": "Four Corners Region",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "farmington"
+   ]
+  },
+  {
+   "id": 3607,
+   "key": "las-cruces",
+   "label": "Las Cruces",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "alamogordo",
+    "el-paso"
+   ]
+  },
+  {
+   "id": 3608,
+   "key": "north-central-new-mexico",
+   "label": "North Central New Mexico",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3609,
+   "key": "northeast-new-mexico",
+   "label": "Northeast New Mexico",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3610,
+   "key": "roswell-carlsbad",
+   "label": "Roswell-Carlsbad",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "carlsbad",
+    "hobbs",
+    "roswell"
+   ]
+  },
+  {
+   "id": 3612,
+   "key": "santa-fe-metropolitan",
+   "label": "Santa Fe Metropolitan",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "albuquerque"
+   ]
+  },
+  {
+   "id": 3611,
+   "key": "santa-fe-suburban",
+   "label": "Santa Fe Suburban",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "albuquerque"
+   ]
+  },
+  {
+   "id": 3614,
+   "key": "southwest-new-mexico",
+   "label": "Southwest New Mexico",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3615,
+   "key": "taos",
+   "label": "Taos",
+   "state": "NM",
+   "stateName": "New Mexico",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3162,
+   "key": "north-country-ny",
+   "label": "Adirondacks",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3164,
+   "key": "albany-ny",
+   "label": "Albany",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "albany"
+   ]
+  },
+  {
+   "id": 1066,
+   "key": "bronx",
+   "label": "Bronx",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Borough",
+   "parentKey": "new-york-ny",
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 1062,
+   "key": "brooklyn",
+   "label": "Brooklyn",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Borough",
+   "parentKey": "new-york-ny",
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 3163,
+   "key": "western-new-york-ny",
+   "label": "Buffalo",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "buffalo",
+    "jamestown"
+   ]
+  },
+  {
+   "id": 3165,
+   "key": "hamptons-ny",
+   "label": "Hamptons",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hamptons"
+   ]
+  },
+  {
+   "id": 3166,
+   "key": "hudson-valley-ny",
+   "label": "Hudson Valley",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hudson-valley"
+   ]
+  },
+  {
+   "id": 3167,
+   "key": "ithaca-binghamton",
+   "label": "Ithaca-Binghamton",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "binghamton",
+    "elmira",
+    "ithaca"
+   ]
+  },
+  {
+   "id": 3168,
+   "key": "long-island-ny",
+   "label": "Long Island",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hamptons"
+   ]
+  },
+  {
+   "id": 1064,
+   "key": "manhattan",
+   "label": "Manhattan",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Borough",
+   "parentKey": "new-york-ny",
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 3169,
+   "key": "new-york-ny",
+   "label": "New York City",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 1063,
+   "key": "queens",
+   "label": "Queens",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Borough",
+   "parentKey": "new-york-ny",
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 3329,
+   "key": "rochester-ny",
+   "label": "Rochester NY",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "rochester"
+   ]
+  },
+  {
+   "id": 1065,
+   "key": "staten-island",
+   "label": "Staten Island",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Borough",
+   "parentKey": "new-york-ny",
+   "lazoMetros": [
+    "new-york-city"
+   ]
+  },
+  {
+   "id": 3723,
+   "key": "syracuse-ny",
+   "label": "Syracuse",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "syracuse",
+    "utica"
+   ]
+  },
+  {
+   "id": 3171,
+   "key": "westchester-county-ny",
+   "label": "Westchester County",
+   "state": "NY",
+   "stateName": "New York",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hudson-valley"
+   ]
+  },
+  {
+   "id": 3479,
+   "key": "asheville",
+   "label": "Asheville",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "asheville"
+   ]
+  },
+  {
+   "id": 3480,
+   "key": "charlotte-metropolitan",
+   "label": "Charlotte Metropolitan",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charlotte"
+   ]
+  },
+  {
+   "id": 3481,
+   "key": "charlotte-suburban",
+   "label": "Charlotte Suburban",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charlotte"
+   ]
+  },
+  {
+   "id": 3482,
+   "key": "fayetteville-lumberton-laurinburg",
+   "label": "Fayetteville-Lumberton-Laurinburg",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3483,
+   "key": "greensboro-high-point",
+   "label": "Greensboro-High Point",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greensboro"
+   ]
+  },
+  {
+   "id": 3484,
+   "key": "hickory-lenoir-morganton",
+   "label": "Hickory-Lenoir-Morganton",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "hickory"
+   ]
+  },
+  {
+   "id": 3485,
+   "key": "jacksonville-nc",
+   "label": "Jacksonville NC",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jacksonville-nc"
+   ]
+  },
+  {
+   "id": 3486,
+   "key": "northeast-north-carolina",
+   "label": "Northeast North Carolina",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greenville",
+    "rocky-mount"
+   ]
+  },
+  {
+   "id": 3487,
+   "key": "northwest-north-carolina",
+   "label": "Northwest North Carolina",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3488,
+   "key": "outer-banks",
+   "label": "Outer Banks",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "outer-banks"
+   ]
+  },
+  {
+   "id": 3489,
+   "key": "raleigh-durham-chapel-hill",
+   "label": "Raleigh-Durham-Chapel Hill",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "raleigh-durham"
+   ]
+  },
+  {
+   "id": 3490,
+   "key": "southeast-north-carolina",
+   "label": "Southeast North Carolina",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "goldsboro",
+    "new-bern"
+   ]
+  },
+  {
+   "id": 3491,
+   "key": "western-north-carolina",
+   "label": "Western North Carolina",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "asheville"
+   ]
+  },
+  {
+   "id": 3492,
+   "key": "wilmington-cape-fear",
+   "label": "Wilmington-Cape Fear",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "wilmington-nc"
+   ]
+  },
+  {
+   "id": 3493,
+   "key": "winston-salem",
+   "label": "Winston-Salem",
+   "state": "NC",
+   "stateName": "North Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greensboro"
+   ]
+  },
+  {
+   "id": 3668,
+   "key": "bismarck",
+   "label": "Bismarck",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fargo"
+   ]
+  },
+  {
+   "id": 3552,
+   "key": "fargo",
+   "label": "Fargo",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fargo"
+   ]
+  },
+  {
+   "id": 3553,
+   "key": "grand-forks",
+   "label": "Grand Forks",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3669,
+   "key": "jamestown-region",
+   "label": "Jamestown Region",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3670,
+   "key": "lake-region",
+   "label": "Lake Region",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3671,
+   "key": "minot",
+   "label": "Minot",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "minot"
+   ]
+  },
+  {
+   "id": 3672,
+   "key": "northwest-north-dakota",
+   "label": "Northwest North Dakota",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "williston"
+   ]
+  },
+  {
+   "id": 3673,
+   "key": "southwest-north-dakota",
+   "label": "Southwest North Dakota",
+   "state": "ND",
+   "stateName": "North Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dickinson"
+   ]
+  },
+  {
+   "id": 3441,
+   "key": "cincinnati-greater-area",
+   "label": "Cincinnati Greater Area",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cincinnati"
+   ]
+  },
+  {
+   "id": 3442,
+   "key": "cincinnati-metropolitan",
+   "label": "Cincinnati Metropolitan",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cincinnati"
+   ]
+  },
+  {
+   "id": 3443,
+   "key": "cleveland-metropolitan",
+   "label": "Cleveland Metropolitan",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cleveland"
+   ]
+  },
+  {
+   "id": 3444,
+   "key": "cleveland-suburban",
+   "label": "Cleveland Suburban",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cleveland"
+   ]
+  },
+  {
+   "id": 3445,
+   "key": "columbus-metropolitan",
+   "label": "Columbus Metropolitan",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "columbus"
+   ]
+  },
+  {
+   "id": 3446,
+   "key": "columbus-suburban",
+   "label": "Columbus Suburban",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "columbus"
+   ]
+  },
+  {
+   "id": 3447,
+   "key": "dayton",
+   "label": "Dayton",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dayton"
+   ]
+  },
+  {
+   "id": 3448,
+   "key": "north-central-ohio",
+   "label": "North Central Ohio",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "mansfield"
+   ]
+  },
+  {
+   "id": 3440,
+   "key": "northeast-oh",
+   "label": "Northeast Ohio",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "canton",
+    "cleveland",
+    "wooster"
+   ]
+  },
+  {
+   "id": 3449,
+   "key": "northwest-ohio",
+   "label": "Northwest Ohio",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lima",
+    "toledo"
+   ]
+  },
+  {
+   "id": 3450,
+   "key": "south-central-ohio",
+   "label": "South Central Ohio",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3451,
+   "key": "southeast-ohio",
+   "label": "Southeast Ohio",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3452,
+   "key": "toledo-port-clinton",
+   "label": "Toledo-Port Clinton",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "toledo"
+   ]
+  },
+  {
+   "id": 3219,
+   "key": "youngstown-warren",
+   "label": "Youngstown-Warren",
+   "state": "OH",
+   "stateName": "Ohio",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "youngstown"
+   ]
+  },
+  {
+   "id": 3581,
+   "key": "eastern-oklahoma-city-suburban",
+   "label": "Eastern Oklahoma City Suburban",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "oklahoma-city",
+    "shawnee"
+   ]
+  },
+  {
+   "id": 3582,
+   "key": "norman",
+   "label": "Norman",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "oklahoma-city"
+   ]
+  },
+  {
+   "id": 3583,
+   "key": "north-central-oklahoma",
+   "label": "North Central Oklahoma",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "enid"
+   ]
+  },
+  {
+   "id": 3584,
+   "key": "northeast-oklahoma",
+   "label": "Northeast Oklahoma",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bartlesville",
+    "muskogee"
+   ]
+  },
+  {
+   "id": 3585,
+   "key": "northwest-oklahoma-panhandle",
+   "label": "Northwest Oklahoma-Panhandle",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3586,
+   "key": "oklahoma-city-metropolitan",
+   "label": "Oklahoma City Metropolitan",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "oklahoma-city"
+   ]
+  },
+  {
+   "id": 3587,
+   "key": "south-central-oklahoma",
+   "label": "South Central Oklahoma",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3588,
+   "key": "southeast-oklahoma",
+   "label": "Southeast Oklahoma",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3589,
+   "key": "southwest-oklahoma",
+   "label": "Southwest Oklahoma",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lawton"
+   ]
+  },
+  {
+   "id": 3590,
+   "key": "tulsa-metropolitan",
+   "label": "Tulsa Metropolitan",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tulsa"
+   ]
+  },
+  {
+   "id": 3591,
+   "key": "tulsa-suburban",
+   "label": "Tulsa Suburban",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tulsa"
+   ]
+  },
+  {
+   "id": 3592,
+   "key": "western-oklahoma-city-suburban",
+   "label": "Western Oklahoma City Suburban",
+   "state": "OK",
+   "stateName": "Oklahoma",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "oklahoma-city"
+   ]
+  },
+  {
+   "id": 3431,
+   "key": "central-oregon",
+   "label": "Central Oregon",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bend"
+   ]
+  },
+  {
+   "id": 3432,
+   "key": "columbia-gorge-mount-hood",
+   "label": "Columbia Gorge-Mount Hood",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3433,
+   "key": "eastern-oregon",
+   "label": "Eastern Oregon",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3434,
+   "key": "northern-coast",
+   "label": "Northern Coast",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3435,
+   "key": "portland-metropolitan",
+   "label": "Portland Metropolitan",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "portland"
+   ]
+  },
+  {
+   "id": 3436,
+   "key": "portland-suburban",
+   "label": "Portland Suburban",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "portland"
+   ]
+  },
+  {
+   "id": 3437,
+   "key": "southern-coast",
+   "label": "Southern Coast",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3438,
+   "key": "southern-oregon",
+   "label": "Southern Oregon",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "grants-pass",
+    "medford"
+   ]
+  },
+  {
+   "id": 3439,
+   "key": "willamette-valley",
+   "label": "Willamette Valley",
+   "state": "OR",
+   "stateName": "Oregon",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "corvallis",
+    "eugene"
+   ]
+  },
+  {
+   "id": 3215,
+   "key": "allentown-lehigh-valley",
+   "label": "Allentown-Lehigh Valley",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lehigh-valley"
+   ]
+  },
+  {
+   "id": 3216,
+   "key": "central-pennsylvania",
+   "label": "Central Pennsylvania",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "state-college"
+   ]
+  },
+  {
+   "id": 3220,
+   "key": "great-lakes",
+   "label": "Great Lakes",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "erie"
+   ]
+  },
+  {
+   "id": 3221,
+   "key": "harrisburg-dutch-country",
+   "label": "Harrisburg-Dutch Country",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "harrisburg"
+   ]
+  },
+  {
+   "id": 3222,
+   "key": "pennsylvania-wilds",
+   "label": "Pennsylvania Wilds",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3223,
+   "key": "philadelphia-metropolitan",
+   "label": "Philadelphia Metropolitan",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "philadelphia"
+   ]
+  },
+  {
+   "id": 3226,
+   "key": "philadelphia-suburban",
+   "label": "Philadelphia Suburban",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "philadelphia"
+   ]
+  },
+  {
+   "id": 3224,
+   "key": "pittsburgh-metropolitan",
+   "label": "Pittsburgh Metropolitan",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "pittsburgh"
+   ]
+  },
+  {
+   "id": 3217,
+   "key": "pittsburgh-suburban",
+   "label": "Pittsburgh Suburban",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "pittsburgh"
+   ]
+  },
+  {
+   "id": 3225,
+   "key": "poconos",
+   "label": "Poconos",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "poconos"
+   ]
+  },
+  {
+   "id": 3218,
+   "key": "scranton-wilkes-barre",
+   "label": "Scranton-Wilkes Barre",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3227,
+   "key": "susquehanna-valley",
+   "label": "Susquehanna Valley",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "williamsport"
+   ]
+  },
+  {
+   "id": 3228,
+   "key": "the-alleghenies",
+   "label": "The Alleghenies",
+   "state": "PA",
+   "stateName": "Pennsylvania",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "altoona"
+   ]
+  },
+  {
+   "id": 3430,
+   "key": "rhode-island",
+   "label": "Rhode Island",
+   "state": "RI",
+   "stateName": "Rhode Island",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "providence"
+   ]
+  },
+  {
+   "id": 3519,
+   "key": "augusta-richmond",
+   "label": "Augusta-Richmond",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "augusta"
+   ]
+  },
+  {
+   "id": 3520,
+   "key": "charleston",
+   "label": "Charleston",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charleston"
+   ]
+  },
+  {
+   "id": 3521,
+   "key": "columbia",
+   "label": "Columbia",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "columbia-sc"
+   ]
+  },
+  {
+   "id": 3522,
+   "key": "florence",
+   "label": "Florence",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "florence-sc"
+   ]
+  },
+  {
+   "id": 3523,
+   "key": "greenville",
+   "label": "Greenville",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greenville-sc"
+   ]
+  },
+  {
+   "id": 3524,
+   "key": "hilton-head",
+   "label": "Hilton Head",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "savannah"
+   ]
+  },
+  {
+   "id": 3525,
+   "key": "lowcountry",
+   "label": "Lowcountry",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charleston"
+   ]
+  },
+  {
+   "id": 3526,
+   "key": "lower-savannah",
+   "label": "Lower Savannah",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3527,
+   "key": "myrtle-beach-coastal-south-carolina",
+   "label": "Myrtle Beach-Coastal South Carolina",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3528,
+   "key": "north-charleston-summerville",
+   "label": "North Charleston-Summerville",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charleston"
+   ]
+  },
+  {
+   "id": 3529,
+   "key": "pee-dee",
+   "label": "Pee Dee",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "florence-sc"
+   ]
+  },
+  {
+   "id": 3530,
+   "key": "upstate",
+   "label": "Upstate",
+   "state": "SC",
+   "stateName": "South Carolina",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greenville-sc"
+   ]
+  },
+  {
+   "id": 3674,
+   "key": "aberdeen-northeast-south-dakota",
+   "label": "Aberdeen-Northeast South Dakota",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "aberdeen"
+   ]
+  },
+  {
+   "id": 3675,
+   "key": "northwest-south-dakota",
+   "label": "Northwest South Dakota",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3676,
+   "key": "pierre-central-south-dakota",
+   "label": "Pierre-Central South Dakota",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3677,
+   "key": "rapid-city",
+   "label": "Rapid City",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sioux-falls"
+   ]
+  },
+  {
+   "id": 3678,
+   "key": "sioux-falls-metropolitan",
+   "label": "Sioux Falls Metropolitan",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sioux-falls"
+   ]
+  },
+  {
+   "id": 3679,
+   "key": "sioux-falls-suburban",
+   "label": "Sioux Falls Suburban",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sioux-falls"
+   ]
+  },
+  {
+   "id": 3680,
+   "key": "south-central-south-dakota",
+   "label": "South Central South Dakota",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3681,
+   "key": "southeast-south-dakota",
+   "label": "Southeast South Dakota",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3682,
+   "key": "southwest-south-dakota",
+   "label": "Southwest South Dakota",
+   "state": "SD",
+   "stateName": "South Dakota",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3306,
+   "key": "chattanooga",
+   "label": "Chattanooga",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chattanooga"
+   ]
+  },
+  {
+   "id": 3307,
+   "key": "clarksville",
+   "label": "Clarksville",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "clarksville"
+   ]
+  },
+  {
+   "id": 3308,
+   "key": "cleveland-dalton",
+   "label": "Cleveland-Dalton",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "chattanooga",
+    "dalton"
+   ]
+  },
+  {
+   "id": 3309,
+   "key": "jackson",
+   "label": "Jackson",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson"
+   ]
+  },
+  {
+   "id": 3310,
+   "key": "knoxville-metropolitan",
+   "label": "Knoxville Metropolitan",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "knoxville"
+   ]
+  },
+  {
+   "id": 3311,
+   "key": "knoxville-suburban",
+   "label": "Knoxville Suburban",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "knoxville"
+   ]
+  },
+  {
+   "id": 3312,
+   "key": "memphis-metropolitan",
+   "label": "Memphis Metropolitan",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "memphis"
+   ]
+  },
+  {
+   "id": 3554,
+   "key": "memphis-suburban-northeast",
+   "label": "Memphis Suburban Northeast",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "memphis"
+   ]
+  },
+  {
+   "id": 3315,
+   "key": "nashville-metropolitan",
+   "label": "Nashville Metropolitan",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "nashville"
+   ]
+  },
+  {
+   "id": 3555,
+   "key": "nashville-suburban-north",
+   "label": "Nashville Suburban North",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "nashville"
+   ]
+  },
+  {
+   "id": 3556,
+   "key": "nashville-suburban-south",
+   "label": "Nashville Suburban South",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "nashville"
+   ]
+  },
+  {
+   "id": 3317,
+   "key": "northwest-tennessee",
+   "label": "Northwest Tennessee",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3557,
+   "key": "smoky-mountains",
+   "label": "Smoky Mountains",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "smoky-mountains"
+   ]
+  },
+  {
+   "id": 3318,
+   "key": "south-central-tennessee",
+   "label": "South Central Tennessee",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3319,
+   "key": "tri-cities",
+   "label": "Tri Cities",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "johnson-city"
+   ]
+  },
+  {
+   "id": 3320,
+   "key": "upper-cumberland",
+   "label": "Upper Cumberland",
+   "state": "TN",
+   "stateName": "Tennessee",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cookeville"
+   ]
+  },
+  {
+   "id": 3378,
+   "key": "abilene-west-central-texas",
+   "label": "Abilene-West Central Texas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "abilene"
+   ]
+  },
+  {
+   "id": 3379,
+   "key": "amarillo-north-panhandle",
+   "label": "Amarillo-North Panhandle",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "amarillo"
+   ]
+  },
+  {
+   "id": 3380,
+   "key": "austin-metropolitan",
+   "label": "Austin Metropolitan",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "austin"
+   ]
+  },
+  {
+   "id": 3381,
+   "key": "austin-round-rock",
+   "label": "Austin-Round Rock",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "austin"
+   ]
+  },
+  {
+   "id": 3382,
+   "key": "bryan-college-station",
+   "label": "Bryan-College Station",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "college-station"
+   ]
+  },
+  {
+   "id": 3383,
+   "key": "corpus-christi-coastal-bend",
+   "label": "Corpus Christi-Coastal Bend",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "corpus-christi"
+   ]
+  },
+  {
+   "id": 3385,
+   "key": "dfw-metroplex",
+   "label": "DFW Metroplex",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dallas-fort-worth"
+   ]
+  },
+  {
+   "id": 3384,
+   "key": "dallas",
+   "label": "Dallas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "corsicana",
+    "dallas-fort-worth"
+   ]
+  },
+  {
+   "id": 3386,
+   "key": "east-texas",
+   "label": "East Texas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "beaumont",
+    "longview",
+    "lufkin",
+    "tyler"
+   ]
+  },
+  {
+   "id": 3387,
+   "key": "el-paso",
+   "label": "El Paso",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "el-paso"
+   ]
+  },
+  {
+   "id": 3388,
+   "key": "fort-worth",
+   "label": "Fort Worth",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "dallas-fort-worth"
+   ]
+  },
+  {
+   "id": 3389,
+   "key": "galveston",
+   "label": "Galveston",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "houston"
+   ]
+  },
+  {
+   "id": 3390,
+   "key": "houston-metropolitan",
+   "label": "Houston Metropolitan",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "houston"
+   ]
+  },
+  {
+   "id": 3391,
+   "key": "houston-suburban",
+   "label": "Houston Suburban",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "houston",
+    "huntsville-tx",
+    "lake-jackson"
+   ]
+  },
+  {
+   "id": 3392,
+   "key": "hudspeth",
+   "label": "Hudspeth",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "el-paso"
+   ]
+  },
+  {
+   "id": 3393,
+   "key": "killeen-central-texas",
+   "label": "Killeen-Central Texas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "killeen"
+   ]
+  },
+  {
+   "id": 3394,
+   "key": "laredo",
+   "label": "Laredo",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "laredo"
+   ]
+  },
+  {
+   "id": 3395,
+   "key": "lubbock",
+   "label": "Lubbock",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lubbock"
+   ]
+  },
+  {
+   "id": 3396,
+   "key": "midland-odessa-south-plains",
+   "label": "Midland-Odessa-South Plains",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "midland"
+   ]
+  },
+  {
+   "id": 3397,
+   "key": "northeast-texas",
+   "label": "Northeast Texas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "greenville-tx",
+    "sherman"
+   ]
+  },
+  {
+   "id": 3398,
+   "key": "rio-grande-valley",
+   "label": "Rio Grande Valley",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "brownsville",
+    "mcallen"
+   ]
+  },
+  {
+   "id": 3399,
+   "key": "san-angelo-concho-valley",
+   "label": "San Angelo-Concho Valley",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-angelo"
+   ]
+  },
+  {
+   "id": 3400,
+   "key": "san-antonio-metropolitan",
+   "label": "San Antonio Metropolitan",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-antonio"
+   ]
+  },
+  {
+   "id": 3401,
+   "key": "san-antonio-suburban",
+   "label": "San Antonio Suburban",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "san-antonio"
+   ]
+  },
+  {
+   "id": 3402,
+   "key": "southwest-texas",
+   "label": "Southwest Texas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "del-rio",
+    "eagle-pass"
+   ]
+  },
+  {
+   "id": 3403,
+   "key": "texarkana",
+   "label": "Texarkana",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "texarkana"
+   ]
+  },
+  {
+   "id": 3404,
+   "key": "victoria-golden-crescent",
+   "label": "Victoria-Golden Crescent",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "victoria"
+   ]
+  },
+  {
+   "id": 3405,
+   "key": "waco",
+   "label": "Waco",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "waco"
+   ]
+  },
+  {
+   "id": 3406,
+   "key": "west-texas",
+   "label": "West Texas",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3407,
+   "key": "wichita-falls",
+   "label": "Wichita Falls",
+   "state": "TX",
+   "stateName": "Texas",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "wichita-falls"
+   ]
+  },
+  {
+   "id": 3494,
+   "key": "logan",
+   "label": "Logan",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "logan"
+   ]
+  },
+  {
+   "id": 3495,
+   "key": "northeastern-utah",
+   "label": "Northeastern Utah",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3496,
+   "key": "northwest-central-utah",
+   "label": "Northwest Central Utah",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3497,
+   "key": "ogden-clearfield",
+   "label": "Ogden-Clearfield",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "salt-lake-city"
+   ]
+  },
+  {
+   "id": 3498,
+   "key": "park-city-ski-areas",
+   "label": "Park City-Ski Areas",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "salt-lake-city"
+   ]
+  },
+  {
+   "id": 3499,
+   "key": "provo-orem",
+   "label": "Provo-Orem",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "salt-lake-city"
+   ]
+  },
+  {
+   "id": 3500,
+   "key": "salt-lake-city",
+   "label": "Salt Lake City",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "salt-lake-city"
+   ]
+  },
+  {
+   "id": 3501,
+   "key": "southeast-utah",
+   "label": "Southeast Utah",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3502,
+   "key": "southwest-utah",
+   "label": "Southwest Utah",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cedar-city",
+    "st-george"
+   ]
+  },
+  {
+   "id": 3503,
+   "key": "st-george",
+   "label": "St George",
+   "state": "UT",
+   "stateName": "Utah",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "st-george"
+   ]
+  },
+  {
+   "id": 3416,
+   "key": "burlington",
+   "label": "Burlington",
+   "state": "VT",
+   "stateName": "Vermont",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "burlington-vt"
+   ]
+  },
+  {
+   "id": 3417,
+   "key": "central-vermont",
+   "label": "Central Vermont",
+   "state": "VT",
+   "stateName": "Vermont",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3418,
+   "key": "northeast-vermont",
+   "label": "Northeast Vermont",
+   "state": "VT",
+   "stateName": "Vermont",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3419,
+   "key": "southern-vermont",
+   "label": "Southern Vermont",
+   "state": "VT",
+   "stateName": "Vermont",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3420,
+   "key": "upper-valley",
+   "label": "Upper Valley",
+   "state": "VT",
+   "stateName": "Vermont",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3234,
+   "key": "charlottesville-va",
+   "label": "Charlottesville",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3238,
+   "key": "hampton-roads",
+   "label": "Hampton Roads",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "virginia-beach"
+   ]
+  },
+  {
+   "id": 3239,
+   "key": "lynchburg",
+   "label": "Lynchburg",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "lynchburg"
+   ]
+  },
+  {
+   "id": 3240,
+   "key": "new-river-valley",
+   "label": "New River Valley",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "blacksburg"
+   ]
+  },
+  {
+   "id": 3241,
+   "key": "northern-shenandoah-valley",
+   "label": "Northern Shenandoah Valley",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "winchester"
+   ]
+  },
+  {
+   "id": 3242,
+   "key": "northern-virginia",
+   "label": "Northern Virginia",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "fredericksburg",
+    "washington-dc"
+   ]
+  },
+  {
+   "id": 3243,
+   "key": "richmond-va",
+   "label": "Richmond",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "richmond"
+   ]
+  },
+  {
+   "id": 3244,
+   "key": "roanoke",
+   "label": "Roanoke",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "roanoke"
+   ]
+  },
+  {
+   "id": 3245,
+   "key": "south-central-virginia",
+   "label": "South Central Virginia",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "danville"
+   ]
+  },
+  {
+   "id": 3246,
+   "key": "southern-shenandoah-valley",
+   "label": "Southern Shenandoah Valley",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "harrisonburg"
+   ]
+  },
+  {
+   "id": 3247,
+   "key": "southwest-virginia",
+   "label": "Southwest Virginia",
+   "state": "VA",
+   "stateName": "Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3291,
+   "key": "north-central-washington",
+   "label": "North Central Washington",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "moses-lake",
+    "wenatchee"
+   ]
+  },
+  {
+   "id": 3293,
+   "key": "north-puget-sound",
+   "label": "North Puget Sound",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "seattle"
+   ]
+  },
+  {
+   "id": 3292,
+   "key": "northeast-washington",
+   "label": "Northeast Washington",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "spokane"
+   ]
+  },
+  {
+   "id": 3294,
+   "key": "northwest-washington",
+   "label": "Northwest Washington",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "bellingham"
+   ]
+  },
+  {
+   "id": 3295,
+   "key": "olympia-south-puget-sound",
+   "label": "Olympia-South Puget Sound",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "tumwater"
+   ]
+  },
+  {
+   "id": 3296,
+   "key": "peninsula-coast",
+   "label": "Peninsula - Coast",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3297,
+   "key": "seattle",
+   "label": "Seattle",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "seattle"
+   ]
+  },
+  {
+   "id": 3298,
+   "key": "southeast-washington",
+   "label": "Southeast Washington",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "kennewick",
+    "pullman"
+   ]
+  },
+  {
+   "id": 3299,
+   "key": "southwest-washington",
+   "label": "Southwest Washington",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "longview-wa"
+   ]
+  },
+  {
+   "id": 3300,
+   "key": "spokane",
+   "label": "Spokane",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "spokane"
+   ]
+  },
+  {
+   "id": 3301,
+   "key": "tacoma",
+   "label": "Tacoma",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "seattle"
+   ]
+  },
+  {
+   "id": 3302,
+   "key": "the-islands",
+   "label": "The Islands",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3303,
+   "key": "vancouver",
+   "label": "Vancouver",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "longview-wa"
+   ]
+  },
+  {
+   "id": 3304,
+   "key": "walla-walla",
+   "label": "Walla Walla",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "walla-walla"
+   ]
+  },
+  {
+   "id": 3305,
+   "key": "wine-country",
+   "label": "Wine Country",
+   "state": "WA",
+   "stateName": "Washington",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "yakima"
+   ]
+  },
+  {
+   "id": 3236,
+   "key": "dc-metropolitan",
+   "label": "DC Metropolitan",
+   "state": "DC",
+   "stateName": "Washington, D.C.",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "washington-dc"
+   ]
+  },
+  {
+   "id": 3285,
+   "key": "central-west-virginia",
+   "label": "Central West Virginia",
+   "state": "WV",
+   "stateName": "West Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charleston-wv"
+   ]
+  },
+  {
+   "id": 3286,
+   "key": "eastern-panhandle",
+   "label": "Eastern Panhandle",
+   "state": "WV",
+   "stateName": "West Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3287,
+   "key": "northern-west-virginia",
+   "label": "Northern West Virginia",
+   "state": "WV",
+   "stateName": "West Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "wheeling"
+   ]
+  },
+  {
+   "id": 3288,
+   "key": "potomac-highlands",
+   "label": "Potomac Highlands",
+   "state": "WV",
+   "stateName": "West Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3289,
+   "key": "southern-west-virginia",
+   "label": "Southern West Virginia",
+   "state": "WV",
+   "stateName": "West Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "charleston-wv"
+   ]
+  },
+  {
+   "id": 3290,
+   "key": "western-west-virginia",
+   "label": "Western West Virginia",
+   "state": "WV",
+   "stateName": "West Virginia",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3710,
+   "key": "appleton-oshkosh",
+   "label": "Appleton-Oshkosh",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "appleton",
+    "fond-du-lac"
+   ]
+  },
+  {
+   "id": 3711,
+   "key": "central-wisconsin",
+   "label": "Central Wisconsin",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "stevens-point",
+    "wausau"
+   ]
+  },
+  {
+   "id": 3713,
+   "key": "duluth-superior",
+   "label": "Duluth-Superior",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "duluth"
+   ]
+  },
+  {
+   "id": 3714,
+   "key": "eau-claire",
+   "label": "Eau Claire",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "eau-claire"
+   ]
+  },
+  {
+   "id": 3341,
+   "key": "green-bay",
+   "label": "Green Bay",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "green-bay"
+   ]
+  },
+  {
+   "id": 3715,
+   "key": "la-crosse",
+   "label": "La Crosse",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "la-crosse"
+   ]
+  },
+  {
+   "id": 3716,
+   "key": "madison",
+   "label": "Madison",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "madison"
+   ]
+  },
+  {
+   "id": 3717,
+   "key": "milwaukee-metropolitan",
+   "label": "Milwaukee Metropolitan",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "milwaukee"
+   ]
+  },
+  {
+   "id": 3718,
+   "key": "milwaukee-suburban",
+   "label": "Milwaukee Suburban",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "milwaukee"
+   ]
+  },
+  {
+   "id": 3719,
+   "key": "northeast-wisconsin",
+   "label": "Northeast Wisconsin",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "green-bay",
+    "manitowoc"
+   ]
+  },
+  {
+   "id": 3720,
+   "key": "northwest-wisconsin",
+   "label": "Northwest Wisconsin",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "eau-claire"
+   ]
+  },
+  {
+   "id": 3721,
+   "key": "sheboygan",
+   "label": "Sheboygan",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "sheboygan"
+   ]
+  },
+  {
+   "id": 3722,
+   "key": "southwest-wisconsin",
+   "label": "Southwest Wisconsin",
+   "state": "WI",
+   "stateName": "Wisconsin",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3687,
+   "key": "casper",
+   "label": "Casper",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "casper"
+   ]
+  },
+  {
+   "id": 3688,
+   "key": "cheyenne",
+   "label": "Cheyenne",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "cheyenne"
+   ]
+  },
+  {
+   "id": 3689,
+   "key": "east-central-wyoming",
+   "label": "East Central Wyoming",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  },
+  {
+   "id": 3573,
+   "key": "jackson-hole",
+   "label": "Jackson Hole",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson-hole"
+   ]
+  },
+  {
+   "id": 3690,
+   "key": "laramie",
+   "label": "Laramie",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "laramie"
+   ]
+  },
+  {
+   "id": 3691,
+   "key": "northeast-wyoming",
+   "label": "Northeast Wyoming",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "gillette"
+   ]
+  },
+  {
+   "id": 3692,
+   "key": "northwest-wyoming",
+   "label": "Northwest Wyoming",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": [
+    "jackson-hole"
+   ]
+  },
+  {
+   "id": 3693,
+   "key": "southwest-wyoming",
+   "label": "Southwest Wyoming",
+   "state": "WY",
+   "stateName": "Wyoming",
+   "level": "Metro",
+   "parentKey": null,
+   "lazoMetros": []
+  }
+ ]
+}

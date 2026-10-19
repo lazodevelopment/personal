@@ -62,6 +62,14 @@ import { guestPhotosRoute } from "./guestphotos.js";
 import { weatherRoute, translateRoute, cardsPage, playlistPage, setlistPage, dayBeforeRoute } from "./sitefeatures.js";
 // JC-LAZO-WORKER-0930-FSAUTH
 import { setWorkerEnv, fsHeaders, workerToken, pcToken, cookieVal, siteLocked, lockedResponse } from "./fsauth.js";
+// JC-LAZO-MARKETS-1019: Zola-style markets. A vendor lists homeMarkets (standard fees) and
+// travelMarkets (travel fee may apply) by market key (generate/data/markets.json); a metro's
+// live category list and vendor pages include any vendor whose markets overlap that metro
+// (METRO_MARKETS), on top of the old metroId / serviceMetros membership, which stays as is.
+import { METRO_MARKETS } from "./markets.js";
+// JC-LAZO-GUESTCOMMS-1019: the contact collector form (/w/{slug}/contact) and
+// Message your guests (/api/w/{slug}/guest-message) - see guestcomms.js
+import { contactRoute, guestMessageRoute } from "./guestcomms.js";
 
 const CORS = {
   "access-control-allow-origin": "*",
@@ -282,20 +290,39 @@ const _claimedByMetro = new Map();   // metro -> {at, list}
 async function claimedIn(metro) {
   const c = _claimedByMetro.get(metro);
   if (c && Date.now() - c.at < 60000) return c.list;
-  const docs = await fsRunQuery({ from: [{ collectionId: "vendors" }],
+  const homeQ = fsRunQuery({ from: [{ collectionId: "vendors" }],
     where: { compositeFilter: { op: "AND", filters: [
       { fieldFilter: { field: { fieldPath: "metroId" }, op: "EQUAL", value: { stringValue: metro } } },
       { fieldFilter: { field: { fieldPath: "claimStatus" }, op: "EQUAL", value: { stringValue: "claimed" } } }] } },
     limit: 300 });
-  const list = docs.map((d) => {
+  // JC-LAZO-MARKETS-1019: vendors whose home or travel markets cover this metro. One array
+  // filter per query and no second field, so no composite index is needed; claimStatus is
+  // checked below. ARRAY_CONTAINS_ANY takes up to 30 keys; no metro maps to more than 7.
+  const keys = METRO_MARKETS[metro] || [];
+  const marketQ = (field) => !keys.length ? Promise.resolve([]) : fsRunQuery({ from: [{ collectionId: "vendors" }],
+    where: { fieldFilter: { field: { fieldPath: field }, op: "ARRAY_CONTAINS_ANY",
+      value: { arrayValue: { values: keys.map((k) => ({ stringValue: k })) } } } }, limit: 300 });
+  const [docs, homeDocs, travelDocs] = await Promise.all([homeQ, marketQ("homeMarkets"), marketQ("travelMarkets")]);
+  const seen = new Set();
+  const list = [];
+  for (const [bucket, travel] of [[docs, false], [homeDocs, false], [travelDocs, true]]) for (const d of bucket) {
+    const id = d.name.split("/").pop();
+    if (seen.has(id)) continue;
     const f = d.fields || {}, g = (k) => fsVal(f[k]);
-    return { id: d.name.split("/").pop(), name: String(g("name") || ""), slug: String(g("slug") || ""),
+    if (g("claimStatus") !== "claimed") continue;
+    seen.add(id);
+    // a vendor is "travel" here only when nothing else makes this metro home for them
+    const home = !travel || g("metroId") === metro || (g("serviceMetros") || []).includes(metro)
+      || keys.some((k) => (g("homeMarkets") || []).includes(k));
+    list.push({ id, name: String(g("name") || ""), slug: String(g("slug") || ""),
       cats: g("categories") || [], delisted: g("delisted") === true, verified: g("verified") === true,
       bio: String(g("bio") || ""), address: String(g("address") || ""), website: String(g("website") || ""),
-      thumb: String(g("coverUrl") || (g("gallery") || [])[0] || g("logoUrl") || ""), price: String(g("priceRangeDisplay") || "") };
-  }).filter((v) => v.name && v.slug && !v.delisted);
-  _claimedByMetro.set(metro, { at: Date.now(), list });
-  return list;
+      thumb: String(g("coverUrl") || (g("gallery") || [])[0] || g("logoUrl") || ""), price: String(g("priceRangeDisplay") || ""),
+      travel: !home });
+  }
+  const filtered = list.filter((v) => v.name && v.slug && !v.delisted);
+  _claimedByMetro.set(metro, { at: Date.now(), list: filtered });
+  return filtered;
 }
 async function liveList(metro, cat, obj) {
   let list;
@@ -316,7 +343,7 @@ async function liveList(metro, cat, obj) {
       + thumb + `<div class="vc2-main"><a class="vc2-name" href="/${metro}/${cat}/${e(v.slug)}/">${e(v.name)}</a>`
       + `<p class="vc2-meta"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#D9B77C" stroke-width="2.4"><path d="M12 21s-7-6.1-7-11a7 7 0 1 1 14 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg> ${e(city)}${v.website ? " &nbsp;&middot;&nbsp; Has website" : ""}</p>`
       + (snip ? `<p class="vc2-bio">&ldquo;${e(snip)}&rdquo;</p>` : "")
-      + `<div class="vc2-chips">${v.verified ? '<span class="ch-ver">&#10022; LAZO VERIFIED</span>' : ""}${v.price ? `<span class="ch-price">${e(v.price)}</span>` : ""}</div></div>`
+      + `<div class="vc2-chips">${v.verified ? '<span class="ch-ver">&#10022; LAZO VERIFIED</span>' : ""}${v.price ? `<span class="ch-price">${e(v.price)}</span>` : ""}${v.travel ? '<span class="ch-price" title="This vendor lists this area as a travel market">&#9992; Travel fee may apply</span>' : ""}</div></div>`
       + `<span class="vc2-go" aria-hidden="true">&rarr;</span></li>`;
   }).join("");
   const at = html.indexOf('<ol class="vendor-list" id="vlist">');
@@ -346,11 +373,16 @@ async function livePage(key, env) {
   if (!shell) { _liveMiss.set(key, Date.now()); return null; }
   // the vendor: a hand-added listing by its id, else any vendor with this slug
   let id = null, f = null;
+  // JC-LAZO-MARKETS-1019: a market vendor belongs here too; travel-only gets a tag on the page
+  const keys = METRO_MARKETS[metro] || [];
+  const inMarkets = (x, field) => keys.some((k) => (fsVal(x[field]) || []).includes(k));
+  const isHome = (x) => { const g = (k) => fsVal(x[k]);
+    return g("metroId") === metro || (g("serviceMetros") || []).includes(metro) || inMarkets(x, "homeMarkets"); };
   const fits = (x) => {
     const g = (k) => fsVal(x[k]);
     if (g("delisted") === true) return false;
     if (!(g("categories") || []).includes(cat)) return false;
-    return g("metroId") === metro || (g("serviceMetros") || []).includes(metro);
+    return isHome(x) || inMarkets(x, "travelMarkets");
   };
   const manual = await fsDoc("vendors", `manual-${metro}-${slug}`);
   if (manual && fits(manual)) { id = `manual-${metro}-${slug}`; f = manual; }
@@ -369,6 +401,9 @@ async function livePage(key, env) {
   html = html.replace(/name=ZZLZNAMEZZ/g, "name=" + encodeURIComponent(name));
   // script blocks get JS escaping, everything else HTML escaping
   html = html.split(/(<script\b[^>]*>[\s\S]*?<\/script>)/i).map((p) => fill(p, p.startsWith("<script") ? jsEsc : htmlEsc)).join("");
+  // JC-LAZO-MARKETS-1019: the travel tag sits in its own flags row under the name, so the
+  // client-side hydration of #hy-flags never wipes it
+  if (!isHome(f)) html = html.replace("</h1>", '</h1><p class="vx-flags"><span class="vx-chip" title="This vendor lists this area as a travel market">&#9992; Travel fee may apply</span></p>');
   // the vendor's own words make a better description than the template's
   const bio = String(fsVal(f.bio) || "").replace(/\s+/g, " ").trim();
   if (bio) {
@@ -1176,6 +1211,11 @@ export default {
     if (url.pathname === "/api/translate") return translateRoute(req, env);
     const dbMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/day-before\/?$/);
     if (dbMatch) return dayBeforeRoute(dbMatch[1], req, env, venuePoint);
+    // JC-LAZO-GUESTCOMMS-1019
+    const gmMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/guest-message\/?$/);
+    if (gmMatch) return guestMessageRoute(gmMatch[1], req, env);
+    const ccMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/contact\/?$/);
+    if (ccMatch) { const r = await contactRoute(ccMatch[1], req, url); if (r) return r; }
     // JC-LAZO-WORKER-0930-FSAUTH
     const gdMatch = url.pathname.match(/^\/api\/w\/([a-z0-9-]{1,80})\/(guestbook|chapters|seat|room|invite\/[A-Za-z0-9_-]{4,120})\/?$/);
     if (gdMatch && req.method === "GET") return siteDataRoute(gdMatch[1], gdMatch[2], url, req);
