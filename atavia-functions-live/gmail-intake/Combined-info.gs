@@ -69,6 +69,7 @@ function sync() {
         seen.setProperty('sent:' + inq.email, new Date().toISOString()); seen.setProperty(key, 'sent');
         thread.addLabel(label);
         Logger.log('sent: ' + inq.email + ' (' + inq.found_us + ')');
+        tellLazo(inq, msg);   // JC-LAZO-COUPLES-1019: Lazo's couples list (LazoCouples.gs); fails silently
         if (auto) {
           var code = null; try { code = JSON.parse(res.getContentText()).code || null; } catch (e) {}
           try {

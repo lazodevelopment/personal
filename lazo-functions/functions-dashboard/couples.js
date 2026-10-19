@@ -222,7 +222,7 @@ module.exports = function couplesModule() {
   const coupleIntake = onRequest({ invoker: 'public', memory: '256MiB', secrets: [COUPLE_INTAKE_KEY] }, async (req, res) => {
     res.set('cache-control', 'no-store');
     if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'POST only' });
-    const want = COUPLE_INTAKE_KEY.value();
+    const want = str(COUPLE_INTAKE_KEY.value()).trim();
     if (!tokenOk(want, str(req.get('x-lazo-key')))) return res.status(401).json({ ok: false, error: 'bad key' });
     try {
       const b = req.body || {};
