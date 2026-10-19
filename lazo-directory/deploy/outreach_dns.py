@@ -91,8 +91,10 @@ def main():
     for x in r["result"]:
         if x["name"].lower() == f"_dmarc.{DOMAIN}":
             print("apex _dmarc now:", x["content"])
-            if a.apex_dmarc and "sp=" not in x["content"]:
-                new = x["content"].rstrip("; ") + "; sp=quarantine"
+            # Cloudflare hands TXT content back wrapped in quotes; strip them or the clause lands outside the string
+            cur = x["content"].strip().strip('"')
+            if a.apex_dmarc and "sp=" not in cur:
+                new = cur.rstrip("; ") + "; sp=quarantine"
                 u = requests.patch(f"{API}/zones/{ZONE}/dns_records/{x['id']}", headers=h, json={"content": new}).json()
                 print("apex _dmarc ->", new if u.get("success") else u.get("errors"))
     n = 0
