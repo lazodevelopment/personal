@@ -1144,6 +1144,20 @@ export default {
         return new Response(await up.text(), { status: up.status, headers: { ...h, "content-type": up.headers.get("content-type") || TYPES.html } });
       } catch (e) { return Response.redirect("https://app.meetlazo.com/", 302); }
     }
+    // JC-LAZO-WORKER-1019-COUPLES: the "come plan on Lazo" couples campaign's links (functions-dashboard/couples.js).
+    // /plan/{token} logs the click and 302s to the app (?src=couples&t=); /plan/{token}/stop is the one-click
+    // unsubscribe (GET from the email, POST from the List-Unsubscribe header). Same proxy shape as /claim/.
+    const pMatch = url.pathname.match(/^\/plan\/([A-Za-z0-9_-]{16,40})(\/stop)?\/?$/);
+    if (pMatch && (req.method === "GET" || (req.method === "POST" && pMatch[2]))) {
+      const fn = pMatch[2] ? "coupleStop" : "coupleGo";
+      try {
+        const up = await fetch(`https://us-central1-lazo-513ec.cloudfunctions.net/${fn}?t=${encodeURIComponent(pMatch[1])}`, { method: req.method, redirect: "manual" });
+        const h = { "cache-control": "no-store", "x-robots-tag": "noindex" };
+        const loc = up.headers.get("location");
+        if (loc) return new Response(null, { status: 302, headers: { ...h, location: loc } });
+        return new Response(await up.text(), { status: up.status, headers: { ...h, "content-type": up.headers.get("content-type") || TYPES.html } });
+      } catch (e) { return Response.redirect("https://app.meetlazo.com/", 302); }
+    }
     // JC-LAZO-WORKER-0913-LEAD-001: embeddable lead form + hosted lead page
     if (url.pathname === "/embed/lead.js") return new Response(LEAD_JS, { headers: { "content-type": TYPES.js, "cache-control": "public, max-age=3600, s-maxage=86400", "access-control-allow-origin": "*" } });
     const leadMatch = url.pathname.match(/^\/lead\/([A-Za-z0-9_-]{3,120})\/?$/);

@@ -948,6 +948,8 @@ Object.assign(exports, require('./join')(RESEND_API_KEY));
 Object.assign(exports, require('./outreach')());
 // JC-LAZO-FNDASH-1019-OUTREACH-DAILY-001: the campaign feed + Smartlead sync, every morning, from the cloud (not Jesse's PC)
 Object.assign(exports, require('./outreach-daily')());
+// JC-LAZO-FNDASH-1019-COUPLES-001: the 'come plan on Lazo' couples campaign (tracked /plan link, one-click stop, intake from the studios' inboxes, daily Smartlead feed)
+Object.assign(exports, require('./couples')());
 
 // JC-LAZO-FNDASH-0913-019: real weddings showcase
 Object.assign(exports, require('./showcase')());
