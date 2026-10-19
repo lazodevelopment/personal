@@ -116,6 +116,8 @@ function pick(docs, seenAddr) {
     if (fl.noWedding || fl.parked || fl.hijacked) continue;
     const em = (v.emails || [])[0] || {};
     if (Number(em.score || 0) < MIN_SCORE) continue;
+    // a city-run venue's site often lists a city department (liquor licensing, clerk): only venue-ish mailboxes on .gov
+    if (/\.gov$/i.test(em.addr || '') && !/^(events?|rentals?|bookings?|reservations?|facilit|parks?|rec|venue|weddings?|banquet|hall|center|centre)/i.test(em.addr)) continue;
     const list = bySite.get(v.website) || [];
     list.push({ d, v, em });
     bySite.set(v.website, list);

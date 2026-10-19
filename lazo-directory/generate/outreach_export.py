@@ -16,7 +16,7 @@ Columns: email, first_name, last_name, company_name, metro, category, page_url, 
 signup_url, vendor_id, token, score, kind. Smartlead merge tags use the column names ({{company_name}}...).
 After the send, the Smartlead CSV export (sent/bounced/replied/unsubscribed) goes back in with --import-events.
 """
-import argparse, csv, json, os, sys
+import argparse, csv, json, os, re, sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -62,6 +62,10 @@ def pick(docs, a):
             continue
         em = (v.get("emails") or [{}])[0]
         if int(em.get("score") or 0) < a.min_score:
+            continue
+        # a city-run venue's site often lists a city department (liquor licensing, clerk): only venue-ish mailboxes on .gov
+        addr = em.get("addr") or ""
+        if addr.endswith(".gov") and not re.match(r"^(events?|rentals?|bookings?|reservations?|facilit|parks?|rec|venue|weddings?|banquet|hall|center|centre)", addr, re.I):
             continue
         if a.kind and em.get("kind") not in a.kind:
             continue
