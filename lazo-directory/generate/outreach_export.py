@@ -83,13 +83,19 @@ def pick(docs, a):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("--metro", action="append", required=True)
+    ap.add_argument("--metro", action="append", default=[], help="metro id (repeatable)")
+    ap.add_argument("--state", action="append", default=[], help="every metro in this state, e.g. --state CA (repeatable; NE = all six New England states)")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--min-score", type=int, default=75)
     ap.add_argument("--kind", action="append", choices=["own-domain", "free-mail", "other-domain"])
     ap.add_argument("--include-nowedding", action="store_true")
     ap.add_argument("--mark", help="batch id; marks exported docs status=queued")
     a = ap.parse_args()
+    states = {x.upper() for st in a.state for x in (["ME", "NH", "VT", "MA", "RI", "CT"] if st.upper() == "NE" else [st])}
+    metros = list(a.metro) + [m["id"] for m in METROS if m["state"] in states and m["id"] not in a.metro]
+    if not metros:
+        ap.error("give --metro and/or --state")
+    a.metro = metros
     db = client()
     docs = []
     for mid in a.metro:
