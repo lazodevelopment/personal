@@ -1,5 +1,5 @@
 /* lazo.js - JC-LAZO-JS-0915-004
-   The site's only script. It does nine small things and nothing else:
+   The site's only script. It does ten small things and nothing else:
      1. html.motion  - set unless the visitor asked for reduced motion; every
                        CSS animation and reveal keys off it, so with it absent
                        the page simply appears.
@@ -25,6 +25,9 @@
      9. cookie notice - the Meta pixel waits for consent in the EU/EEA, UK and
                        California, runs opt-out elsewhere; "Cookie choices" in the footer
                        opens the notice for everyone.
+    10. night switch - the sun/moon pill in the header flips html[data-theme]
+                       and remembers the choice (localStorage 'lazo-theme'). Light is
+                       the default; base.html applies a stored choice in <head>.
    (0915-002 replaces a file that had been overwritten with a Python patch
    script, so none of this had been running.) */
 (function () {
@@ -34,6 +37,32 @@
   if (!reduce) html.classList.add('motion');
 
   d.addEventListener('touchstart', function () {}, { passive: true });
+
+  /* night switch  JC-LAZO-NIGHT-1014-002 */
+  (function () {
+    var sws = d.querySelectorAll('.theme-sw'); if (!sws.length) return;
+    var meta = d.querySelector('meta[name=theme-color]'), fade;
+    function sync() {
+      var night = html.getAttribute('data-theme') === 'dark';
+      for (var i = 0; i < sws.length; i++) sws[i].setAttribute('aria-checked', night ? 'true' : 'false');
+      if (meta) meta.setAttribute('content', night ? '#1C0E1E' : '#FAF6F0');
+    }
+    function flip() {
+      var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      html.classList.add('theme-anim'); clearTimeout(fade);
+      html.setAttribute('data-theme', next);
+      try { if (next === 'dark') localStorage.setItem('lazo-theme', 'dark'); else localStorage.removeItem('lazo-theme'); } catch (e) {}
+      sync();
+      fade = setTimeout(function () { html.classList.remove('theme-anim'); }, 600);
+    }
+    for (var i = 0; i < sws.length; i++) sws[i].addEventListener('click', flip);
+    /* another tab flipped it: follow along */
+    window.addEventListener('storage', function (e) {
+      if (e.key !== 'lazo-theme') return;
+      html.setAttribute('data-theme', e.newValue === 'dark' ? 'dark' : 'light'); sync();
+    });
+    sync();
+  })();
 
   /* header */
   var head = d.querySelector('.site-head'), ticking = false;
@@ -91,6 +120,28 @@
         }
       });
     }
+    if (mq.addEventListener) mq.addEventListener('change', sync);
+    else if (mq.addListener) mq.addListener(sync);
+    sync();
+  })();
+
+  /* ---- footer city list: a few rows + "Show all" on desktop (JC-LAZO-AUDIT-1016) ---- */
+  (function () {
+    var box = d.querySelector('.foot-cities'), btn = box && box.querySelector('.foot-more');
+    if (!btn) return;
+    var label = btn.textContent, mq = window.matchMedia('(max-width:760px)');
+    function sync() {
+      var phone = mq.matches;
+      box.classList.toggle('clamp', !phone);
+      btn.hidden = phone;
+      if (phone) box.classList.remove('all');
+    }
+    btn.addEventListener('click', function () {
+      var all = box.classList.toggle('all');
+      btn.textContent = all ? 'Show fewer cities' : label;
+      btn.setAttribute('aria-expanded', all ? 'true' : 'false');
+    });
+    btn.setAttribute('aria-expanded', 'false');
     if (mq.addEventListener) mq.addEventListener('change', sync);
     else if (mq.addListener) mq.addListener(sync);
     sync();
@@ -381,4 +432,97 @@
     window.addEventListener('resize', tick);
     frame();
   })();
+
+  /* ---- 11. home scroll motion (JC-LAZO-MOTION-1016) ----
+     a. the three app phones on the home page float up at three speeds as the section passes;
+     b. June listens: scroll speed is published as window.LZ_SCROLLV (0..1, decaying) and
+        lazo.june.js lets the idle core swell with it;
+     c. the category tiles tilt in one after another (CSS, keyed off .reveal/.in-view);
+     d. the couple feature cards stack: each card is sticky, and as the card below slides over
+        it, it settles back (scale and shade by how much of it is covered).
+     Transforms only, one rAF per scroll, none of it without html.motion (we only get here
+     when motion is allowed). */
+  (function () {
+    var hh = function () { var h = d.querySelector('.site-head'); html.style.setProperty('--hh', (h ? h.offsetHeight : 64) + 'px'); };
+    hh(); window.addEventListener('resize', hh);
+    var shots = [].slice.call(d.querySelectorAll('.apphome .shots img')), sp = [0.07, -0.05, 0.12];
+    var box = d.querySelector('.apphome .shots');
+    var cards = [].slice.call(d.querySelectorAll('#features .ftg > .fc'));
+    var grid = d.querySelector('#features .ftg');
+    if (grid) grid.classList.add('stack');
+    var lastY = window.scrollY || 0, lastT = 0, v = 0, busy = false;
+    window.LZ_SCROLLV = 0;
+    function cols() { if (!grid) return 1; var t = getComputedStyle(grid).gridTemplateColumns; return t ? t.split(' ').filter(Boolean).length : 1; }
+    function frame(now) {
+      busy = false;
+      var y = window.scrollY || 0, vh = window.innerHeight || 1;
+      var dt = Math.max(16, (now || 0) - lastT); lastT = now || 0;
+      v = Math.min(1, v * 0.6 + Math.abs(y - lastY) / dt * 0.35); lastY = y; window.LZ_SCROLLV = v;
+      if (box) {
+        var r = box.getBoundingClientRect();
+        if (r.bottom > -200 && r.top < vh + 200) {
+          var c = (r.top + r.height / 2 - vh / 2);
+          shots.forEach(function (im, i) { im.style.setProperty('--sy', (c * sp[i]).toFixed(1) + 'px'); });
+        }
+      }
+      if (cards.length) {
+        var n = cols();
+        cards.forEach(function (cd, i) {
+          var nx = cards[i + n]; if (!nx) { cd.style.removeProperty('--cov'); return; }
+          var a = cd.getBoundingClientRect(), b = nx.getBoundingClientRect();
+          var cov = Math.max(0, Math.min(1, (a.bottom - b.top) / (a.height || 1)));
+          cd.style.setProperty('--cov', cov.toFixed(3));
+        });
+      }
+    }
+    function tick() { if (busy) return; busy = true; requestAnimationFrame(frame); }
+    window.addEventListener('scroll', tick, { passive: true });
+    window.addEventListener('resize', tick);
+    // let the June core feel the scroll decay back to rest
+    setInterval(function () { if (window.LZ_SCROLLV > 0.001) { window.LZ_SCROLLV *= 0.85; v = window.LZ_SCROLLV; } }, 60);
+    frame(0);
+  })();
+})();
+
+/* JC-LAZO-VSONG-1020-002: the vendor's storefront song. Vendor pages only; the
+   worker answers /music/song?v= with a live clip when the vendor picked one in
+   the app (vendors.song), else null and nothing is mounted. Same pill as the
+   couple sites: a record that turns while it plays, one tap pauses, and when
+   the browser refuses autoplay the first tap anywhere starts it. */
+(function () {
+  if (window.top !== window) return;
+  var vp = document.querySelector('.vp[data-vendor-id]');
+  var id = vp && vp.getAttribute('data-vendor-id');
+  if (!id) return;
+  fetch('https://meetlazo.com/music/song?v=' + encodeURIComponent(id))
+    .then(function (r) { return r.json(); })
+    .then(function (j) { var S = j && j.song; if (S && S.src) mount(S); })
+    .catch(function () {});
+  function mount(S) {
+    var reduce = false; try { reduce = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+    var a = new Audio(); a.preload = 'auto'; a.src = S.src; a.loop = !!S.loop; a.volume = 0;
+    var el = document.createElement('button'); el.type = 'button'; el.className = 'oursong'; el.setAttribute('aria-label', 'Play their song');
+    var esc = function (t) { return String(t || '').replace(/[<>&"]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]; }); };
+    el.innerHTML = '<span class="disc"' + (S.art ? ' style="background-image:url(&quot;' + esc(S.art) + '&quot;)"' : '') + '></span>'
+      + '<span class="tx"><span class="t">' + esc(S.title || 'Their song') + '</span><span class="a">' + esc(S.artist || '') + '</span><span class="h" data-h>Tap to play</span></span>'
+      + '<span class="pp" aria-hidden="true"></span>';
+    document.body.appendChild(el);
+    var hint = el.querySelector('[data-h]'), fade = null, armed = false;
+    function setHint(t) { if (hint) hint.textContent = t; }
+    function fadeTo(v, ms) { clearInterval(fade); var steps = Math.max(1, Math.round(ms / 40)), i = 0, from = a.volume; fade = setInterval(function () { i++; a.volume = Math.max(0, Math.min(1, from + (v - from) * (i / steps))); if (i >= steps) clearInterval(fade); }, 40); }
+    function play() { var p = a.play(); if (p && p.then) p.then(function () { el.classList.add('playing'); setHint('Now playing'); fadeTo(.9, reduce ? 0 : 1400); try { sessionStorage.removeItem('lzvsongoff'); } catch (e) {} }).catch(function () { arm(); }); }
+    function pause() { fadeTo(0, reduce ? 0 : 500); setTimeout(function () { a.pause(); }, reduce ? 0 : 520); el.classList.remove('playing'); el.classList.add('off'); setHint('Paused · tap to play'); try { sessionStorage.setItem('lzvsongoff', '1'); } catch (e) {} }
+    function arm() {
+      if (armed) return; armed = true; setHint('Tap anywhere to play');
+      var go = function () { document.removeEventListener('pointerdown', go, true); document.removeEventListener('keydown', go, true); if (!el.classList.contains('playing') && !el.classList.contains('off')) play(); };
+      document.addEventListener('pointerdown', go, true); document.addEventListener('keydown', go, true);
+    }
+    el.addEventListener('click', function (e) { e.stopPropagation(); if (el.classList.contains('playing')) pause(); else { el.classList.remove('off'); play(); } });
+    a.addEventListener('ended', function () { el.classList.remove('playing'); setHint('Play it again'); });
+    a.addEventListener('error', function () { el.remove(); });
+    var off = false; try { off = sessionStorage.getItem('lzvsongoff') === '1'; } catch (e) {}
+    if (off) { el.classList.add('off'); setHint('Tap to play'); }
+    else if (S.autoplay !== false) { play(); }
+    else { setHint('Tap to play'); }
+  }
 })();

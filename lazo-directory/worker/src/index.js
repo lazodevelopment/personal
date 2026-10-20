@@ -27,6 +27,28 @@
 //   track id (dz…) is refreshed to a live preview URL at render time (their
 //   preview links expire) and every clip is served through /music/preview so
 //   it carries CORS and edge caching. No song, no player.
+// JC-LAZO-VSONG-1020-001: a vendor's storefront song. vendors/{id}.song holds the
+// same map the couple sites keep (title, artist, art, trackId, preview, autoplay,
+// loop); the storefront's lazo.js asks here so the clip is live (Deezer links
+// expire) and carries CORS. Cached five minutes per vendor, so a song picked in
+// the app plays on the storefront within minutes.
+async function vendorSong(url) {
+  const id = (url.searchParams.get("v") || "").trim();
+  const h = { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*", "cache-control": "public, max-age=300" };
+  if (!/^[A-Za-z0-9_-]{1,120}$/.test(id)) return new Response('{"song":null}', { status: 400, headers: { ...h, "cache-control": "no-store" } });
+  const key = new Request("https://meetlazo.com/music/song?v=" + encodeURIComponent(id), { method: "GET" });
+  const hit = await caches.default.match(key);
+  if (hit) return hit;
+  let song = null;
+  try {
+    const f = await fsDoc("vendors", id);
+    if (f && fsVal(f.delisted) !== true) song = await siteSong(fsVal(f.song));
+  } catch (e) {}
+  const res = new Response(JSON.stringify({ song }), { headers: h });
+  await caches.default.put(key, res.clone());
+  return res;
+}
+
 // JC-LAZO-GALLERY-0912-006: passcode compared as sha256 (doc is world-readable).
 // JC-LAZO-GALLERY-0911-005: post-wedding client delivery galleries (Pro Studio).
 //   + /g/{slug}           couple-facing gallery, hydrated from galleries/{slug}
@@ -1141,6 +1163,7 @@ export default {
     const rqMatch = url.pathname.match(/^\/w\/([a-z0-9-]{1,80})\/requests\/?$/);
     if (rqMatch) return requestPage(rqMatch[1]);
     if (url.pathname === "/music/search") return musicSearch(url);
+    if (url.pathname === "/music/song") return vendorSong(url);  // JC-LAZO-VSONG-1020-001
     if (url.pathname === "/api/unfurl" && req.method === "GET") return unfurl(url);
     if (url.pathname === "/api/nearby") return nearbyPlaces(url, env);
     if (url.pathname === "/api/stay") return stayPlaces(url, env);   // JC-LAZO-WORKER-1014-PLUS
