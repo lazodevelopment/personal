@@ -10,10 +10,9 @@ import 'package:flutter/material.dart';
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
 // lazo_vendor_dashboard.dart
-// Build ID: JC-LAZO-VSONG-1020-VENDOR (v223: YOUR SONG - a song that plays when a couple opens the storefront. A 'Your song' card in the profile editor under Video: search a title or artist (meetlazo.com/music/search, the couples' Music page search), hear the 30-second clip (web: an audio element read through dynamic; phones: the clip opens outside the app), pick one, choose whether it starts on arrival; Save writes vendors.song {title, artist, art, trackId, preview, autoplay, loop} - the same map the couples' wedding sites keep - and the storefront mounts the record pill from meetlazo.com/music/song?v=<id> (lazo.js, JC-LAZO-VSONG-1020-002). Remove deletes the field. No new dependencies. base v222)
-// What's new: Your storefront can play a song | Pick a track in Profile under Your song and it plays softly when a couple opens your page, with a record turning in the corner. | One tap pauses it; you choose whether it starts on arrival. | profile
+// Build ID: JC-LAZO-CLAIMFIX-1020-VENDOR (v223: CLAIM SHEET SAYS WHAT IS MISSING - Submit for verification without a proof photo used to set an error below the fold (nothing visible happened; Veiled Rose Films, 2026-10-20); now both the claim and Add-your-business sheets scroll to the error, toast it over the popup, label proof REQUIRED, and a failed upload or write shows its code; base v222)
 // Build ID: JC-LAZO-RELEASE-1020-VENDOR (v222: APP UPDATED NOTICE - the widget knows its build (kLzWidgetVersion, kBuildId) and reads stats/appRelease for the build live in the stores, the store links and the release notes; a phone behind the stores gets a 'Lazo has been updated' popup with the notes and Update on the App Store / Google Play (Later = again tomorrow); web and up-to-date phones get What's new once per release from the doc; the Today card and the Account sheet read the doc too, baked list as fallback, refreshed for the Oct 18-20 features; base v221)
-// What's new: Lazo tells you when it has been updated | On your phone, a note when a newer Lazo is in the App Store or Google Play, with what changed. | On the web, what's new opens once per release, and lives in Account. | leads
+// What's new: Claiming your business tells you what is missing | If Submit for verification needs a proof photo, the sheet now scrolls to it and says so. | A failed upload tells you why instead of going quiet. | leads
 // Build ID: JC-LAZO-PEARL-1019-VENDOR (v221: JUNE DRAFTS THE LISTING + WARMTH - 'Let June draft it' under Bio and Services detail (juneVendor writes from name, categories, markets, price and what is there; Use it / Try again / Keep mine); KEEN / HESITANT pills on inbox rows read from the couple's latest words; base v220)
 // Build ID: JC-LAZO-MARKETS-1019-VENDOR (v220: MARKETS, ZOLA-STYLE - home markets at standard rates and travel markets where a travel fee may apply, from Zola's 566 named markets (kLzMarkets); the picker takes a state, ticks markets, flips Travel fee per market, or Everywhere in the US; in Add your business step 2 (listingRequests.homeMarkets / travelMarkets, copied on approval) and the profile editor (vendors.homeMarkets / travelMarkets); metroId / serviceMetros / travelMiles untouched; base v219)
 // Build ID: JC-LAZO-UNBLOCK-1018-VENDOR (v219: UNBLOCK + HEADER FITS - Blocked senders list with unblock in Account > Lead form (vendors.blockedSenders arrayRemove); inbox goes three-column at 1100 px and the thread header hides the fit / Mark booked words under 520 px so it never overflows; base v218)
@@ -2471,17 +2470,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
   final TextEditingController _epAnnTitleC = TextEditingController();
   final TextEditingController _epAnnTextC = TextEditingController();
   final TextEditingController _epVideoC = TextEditingController();
-  // v223: the storefront song - what the vendor picked, the search, the preview
-  Map<String, dynamic>? _epSong;
-  bool _epSongAuto = true;
-  final TextEditingController _epSongQC = TextEditingController();
-  List<Map<String, dynamic>> _epSongHits = <Map<String, dynamic>>[];
-  bool _epSongBusy = false;
-  String _epSongErr = '';
-  Timer? _epSongT;
-  int _epSongTok = 0;
-  dynamic _epSongEl; // web only: the preview's audio element, read through dynamic
-  String _epSongPlaying = '';
   final TextEditingController _epBadgesC = TextEditingController();
   final TextEditingController _epServicesC = TextEditingController();
   String _epPriceRange = '';
@@ -3817,6 +3805,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     final TextEditingController bizPhoneC = TextEditingController();
     final TextEditingController legalEntityC = TextEditingController();
     String claimantRole = 'Owner';
+    final ScrollController sheetScroll = ScrollController(); // v223
     Uint8List? proofBytes;
     bool proofIsPdf = false;
     String proofExt = 'jpg';
@@ -3864,20 +3853,32 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               }
             }
 
+            // v223: an error must be seen - scroll the sheet to it and say it over the popup
+            void showErr(String m) {
+              setD(() {
+                busy = false;
+                formError = m;
+              });
+              _lzToastOver(m);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (sheetScroll.hasClients) {
+                  sheetScroll.animateTo(sheetScroll.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOut);
+                }
+              });
+            }
+
             Future<void> doSubmit() async {
               final Uint8List? bytes = proofBytes;
               if (bizEmailC.text.trim().isEmpty ||
                   bizPhoneC.text.trim().isEmpty) {
-                setD(() {
-                  formError = 'Business email and phone are required.';
-                });
+                showErr('Business email and phone are required.');
                 return;
               }
               if (bytes == null) {
-                setD(() {
-                  formError =
-                      'Please attach a proof photo so we can verify you.';
-                });
+                showErr(
+                    'One more thing: attach a proof photo (a license, an invoice or a business card with the business name) so we can verify you.');
                 return;
               }
               setD(() {
@@ -3922,10 +3923,9 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                 }
               } catch (e) {
                 debugPrint('LAZO claim submit error: ' + e.toString());
-                setD(() {
-                  busy = false;
-                  formError = 'Something went wrong submitting - try again.';
-                });
+                showErr('Something went wrong submitting - try again. (' +
+                    _lzErrShort(e) +
+                    ')');
               }
             }
 
@@ -3951,6 +3951,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                 v['address'] == null ? '' : v['address'].toString().trim();
             return _onbSheet(
               ctx: ctx2,
+              scroll: sheetScroll, // v223
               icon: Icons.verified_user_rounded,
               eyebrow: 'STEP 2 · VERIFY OWNERSHIP',
               title: name,
@@ -4007,7 +4008,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                         helper:
                             'The LLC or company on your license, if it differs from the name above.')),
                 const SizedBox(height: 22),
-                _onbLabel('PROOF OF OWNERSHIP'),
+                _onbLabel('PROOF OF OWNERSHIP \u00b7 REQUIRED'),
                 const SizedBox(height: 12),
                 _onbProof(
                     bytes: pb,
@@ -4065,6 +4066,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     final TextEditingController webC = TextEditingController();
     final TextEditingController legalEntityC = TextEditingController();
     final TextEditingController heardOtherC = TextEditingController();
+    final ScrollController sheetScroll = ScrollController(); // v223
     String? heardAbout; // JC-LAZO-VDASH-1012-188
     int step = 0; // v190: Business -> Services -> Verify
     final Set<String> picked = <String>{};
@@ -4117,9 +4119,27 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               }
             }
 
+            // v223: an error must be seen - scroll the sheet to it and say it over the popup
+            void showErr(String m) {
+              setD(() {
+                busy = false;
+                formError = m;
+              });
+              _lzToastOver(m);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (sheetScroll.hasClients) {
+                  sheetScroll.animateTo(sheetScroll.position.maxScrollExtent,
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeOut);
+                }
+              });
+            }
+
             Future<void> doSubmit() async {
               final Uint8List? bytes = proofBytes;
               if (bytes == null) {
+                showErr(
+                    'One more thing: attach a proof photo (a license, an invoice or a business card with the business name) so we can verify you.');
                 return;
               }
               setD(() {
@@ -4176,10 +4196,9 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                 }
               } catch (e) {
                 debugPrint('LAZO listing submit error: ' + e.toString());
-                setD(() {
-                  busy = false;
-                  formError = 'Something went wrong submitting - try again.';
-                });
+                showErr('Something went wrong submitting - try again. (' +
+                    _lzErrShort(e) +
+                    ')');
               }
             }
 
@@ -4473,7 +4492,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
                   ]),
                 ),
                 const SizedBox(height: 22),
-                _onbLabel('PROOF OF OWNERSHIP'),
+                _onbLabel('PROOF OF OWNERSHIP \u00b7 REQUIRED'),
                 const SizedBox(height: 12),
                 _onbProof(
                     bytes: pb,
@@ -4488,6 +4507,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
 
             return _onbSheet(
               ctx: ctx2,
+              scroll: sheetScroll, // v223
               icon: Icons.add_business_rounded,
               eyebrow: 'JOIN LAZO · FREE FOREVER',
               title: (step == 0 || bizName.isEmpty) ? 'Add your business' : bizName,
@@ -5927,6 +5947,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     List<String> steps = const <String>[],
     required List<Widget> body,
     required Widget footer,
+    ScrollController? scroll, // v223
   }) {
     final Size sz = MediaQuery.of(ctx).size;
     final bool phone = sz.width < 600;
@@ -6003,6 +6024,7 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               ),
               Flexible(
                 child: SingleChildScrollView(
+                  controller: scroll, // v223
                   padding: const EdgeInsets.fromLTRB(24, 22, 24, 8),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -7248,16 +7270,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
     _epStartPriceC.text =
         v['startingPrice'] == null ? '' : v['startingPrice'].toString();
     _epVideoC.text = v['videoUrl'] == null ? '' : v['videoUrl'].toString();
-    // v223: the storefront song
-    _epSong = v['song'] is Map ? Map<String, dynamic>.from(v['song'] as Map) : null;
-    if (_epSong != null && (_epSong!['title'] ?? '').toString().trim().isEmpty) {
-      _epSong = null;
-    }
-    _epSongAuto = _epSong == null ? true : _epSong!['autoplay'] != false;
-    _epSongQC.clear();
-    _epSongHits = <Map<String, dynamic>>[];
-    _epSongErr = '';
-    _epSongStop();
     _epServicesC.text =
         v['servicesNote'] == null ? '' : v['servicesNote'].toString();
     _epPriceRange =
@@ -7417,8 +7429,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
       _epEmailC.text,
       _epStartPriceC.text,
       _epVideoC.text,
-      json.encode(_epSong ?? ''), // v223
-      _epSongAuto.toString(),
       _epServicesC.text,
       _epAnnTitleC.text,
       _epAnnTextC.text,
@@ -8109,18 +8119,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
         'leadGender': _epLeadGender,
         'lgbtqOwned': _epLgbtqOwned,
         'videoUrl': _epVideoC.text.trim(),
-        // v223: the storefront song - the map the couples' sites keep in weddingSites.song
-        'song': _epSong == null
-            ? FieldValue.delete()
-            : <String, dynamic>{
-                'title': (_epSong!['title'] ?? '').toString(),
-                'artist': (_epSong!['artist'] ?? '').toString(),
-                'art': (_epSong!['art'] ?? '').toString(),
-                'trackId': (_epSong!['trackId'] ?? '').toString(),
-                'preview': (_epSong!['preview'] ?? '').toString(),
-                'autoplay': _epSongAuto,
-                'loop': false,
-              },
         'servicesNote': _epServicesC.text.trim(),
         'categories': _epCats.toList(),
         'serviceMetros': _epMetros.toList(),
@@ -8608,270 +8606,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
       ),
     );
     q.dispose();
-  }
-
-  // ---- v223: the storefront song ----------------------------------------
-  // Search goes through meetlazo.com/music/search (Deezer first, iTunes second,
-  // reshaped to iTunes field names). A pick keeps title, artist, art, trackId
-  // and preview; the worker refreshes Deezer clips at play time, so an old
-  // preview link never matters. The clip plays here on the web through an
-  // audio element read as dynamic (the phone stub of universal_html lacks the
-  // members); on phones it opens outside the app.
-  static const String _kSongSearch = 'https://meetlazo.com/music/search';
-
-  void _epSongChanged(String q) {
-    _epSongT?.cancel();
-    final String t = q.trim();
-    if (t.length < 2) {
-      setState(() {
-        _epSongHits = <Map<String, dynamic>>[];
-        _epSongBusy = false;
-        _epSongErr = '';
-      });
-      return;
-    }
-    _epSongT = Timer(const Duration(milliseconds: 350), () => _epSongSearch(t));
-  }
-
-  Future<void> _epSongSearch(String q) async {
-    final int tok = ++_epSongTok;
-    setState(() {
-      _epSongBusy = true;
-      _epSongErr = '';
-    });
-    List<Map<String, dynamic>> hits = <Map<String, dynamic>>[];
-    String err = '';
-    try {
-      final httpc.Response r = await httpc
-          .get(Uri.parse('$_kSongSearch?q=${Uri.encodeComponent(q)}'))
-          .timeout(const Duration(seconds: 10));
-      if (r.statusCode != 200) throw Exception('http ${r.statusCode}');
-      final Map<String, dynamic> j = json.decode(r.body) as Map<String, dynamic>;
-      final List<dynamic> rs = j['results'] is List ? j['results'] as List : <dynamic>[];
-      for (final dynamic x in rs) {
-        if (x is! Map) continue;
-        final String title = (x['trackName'] ?? '').toString().trim();
-        final String preview = (x['previewUrl'] ?? '').toString().trim();
-        if (title.isEmpty || preview.isEmpty) continue;
-        hits.add(<String, dynamic>{
-          'title': title,
-          'artist': (x['artistName'] ?? '').toString().trim(),
-          'art': (x['artworkUrl100'] ?? '').toString().replaceAll('100x100bb', '200x200bb'),
-          'trackId': (x['trackId'] ?? '').toString(),
-          'preview': preview,
-          'explicit': x['explicit'] == true,
-        });
-        if (hits.length >= 12) break;
-      }
-      if (hits.isEmpty) err = 'Nothing with a preview for that. Try the artist, or another title.';
-    } catch (e) {
-      debugPrint('LAZO song search: ' + e.toString());
-      err = 'Search is unavailable right now. Try again in a moment.';
-      hits = <Map<String, dynamic>>[];
-    }
-    if (!mounted || tok != _epSongTok) return;
-    setState(() {
-      _epSongHits = hits;
-      _epSongBusy = false;
-      _epSongErr = err;
-    });
-  }
-
-  void _epSongStop() {
-    if (_epSongEl != null) {
-      try {
-        _epSongEl.pause();
-      } catch (_) {}
-      _epSongEl = null;
-    }
-    if (_epSongPlaying.isNotEmpty && mounted) {
-      setState(() => _epSongPlaying = '');
-    } else {
-      _epSongPlaying = '';
-    }
-  }
-
-  void _epSongPreview(String url) {
-    if (url.isEmpty) return;
-    if (_epSongPlaying == url) {
-      _epSongStop();
-      return;
-    }
-    _epSongStop();
-    if (!kIsWeb) {
-      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      return;
-    }
-    try {
-      final dynamic el = html.document.createElement('audio');
-      el.src = url;
-      el.volume = 0.9;
-      el.play();
-      _epSongEl = el;
-      el.onEnded.listen((dynamic _) {
-        if (mounted && _epSongEl == el) {
-          setState(() => _epSongPlaying = '');
-          _epSongEl = null;
-        }
-      });
-      setState(() => _epSongPlaying = url);
-    } catch (e) {
-      debugPrint('LAZO song preview: ' + e.toString());
-    }
-  }
-
-  void _epSongPick(Map<String, dynamic> hit) {
-    _epSongStop();
-    _epSongT?.cancel();
-    setState(() {
-      _epSong = <String, dynamic>{
-        'title': hit['title'],
-        'artist': hit['artist'],
-        'art': hit['art'],
-        'trackId': hit['trackId'],
-        'preview': hit['preview'],
-      };
-      _epSongAuto = true;
-      _epSongHits = <Map<String, dynamic>>[];
-      _epSongQC.clear();
-      _epSongErr = '';
-    });
-  }
-
-  Widget _epSongArt(String art, double size) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(size / 2),
-      child: Container(
-        width: size,
-        height: size,
-        color: const Color(0xFF1A1A1A),
-        child: art.isEmpty
-            ? Icon(Icons.music_note_rounded, color: gold, size: size * .5)
-            : Image.network(art, width: size, height: size, fit: BoxFit.cover,
-                errorBuilder: (BuildContext c, Object e, StackTrace? st) =>
-                    Icon(Icons.music_note_rounded, color: gold, size: size * .5)),
-      ),
-    );
-  }
-
-  Widget _epSongCard() {
-    final Map<String, dynamic>? sg = _epSong;
-    final List<Widget> kids = <Widget>[];
-    if (sg != null) {
-      final String pv = (sg['preview'] ?? '').toString();
-      final bool on = _epSongPlaying.isNotEmpty && _epSongPlaying == pv;
-      kids.add(Row(children: <Widget>[
-        _epSongArt((sg['art'] ?? '').toString(), 52),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-            Text((sg['title'] ?? '').toString(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: _lzFg(ink), fontSize: 15, fontWeight: FontWeight.w700)),
-            Text((sg['artist'] ?? '').toString(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: _lzFg(muted), fontSize: 13)),
-          ]),
-        ),
-        IconButton(
-          tooltip: on ? 'Stop' : (kIsWeb ? 'Hear the clip' : 'Open the clip'),
-          onPressed: pv.isEmpty ? null : _h(() => _epSongPreview(pv)),
-          icon: Icon(on ? Icons.stop_circle_rounded : Icons.play_circle_fill_rounded,
-              color: _lzFg(plum), size: 30),
-        ),
-      ]));
-      kids.add(const SizedBox(height: 6));
-      kids.add(SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        value: _epSongAuto,
-        activeColor: Colors.white,
-        activeTrackColor: vGreen,
-        title: Text('Start playing when a couple arrives',
-            style: TextStyle(color: _lzFg(plum), fontWeight: FontWeight.w700, fontSize: 14)),
-        subtitle: Text(
-            _epSongAuto
-                ? 'It fades in softly. Browsers that wait for a tap play on the first one.'
-                : 'The record waits in the corner until they tap it.',
-            style: TextStyle(color: _lzFg(muted), fontSize: 12)),
-        onChanged: (bool v) => setState(() => _epSongAuto = v),
-      ));
-      kids.add(Row(children: <Widget>[
-        TextButton.icon(
-          onPressed: _h(() {
-            _epSongStop();
-            setState(() {
-              _epSong = null;
-              _epSongAuto = true;
-            });
-          }),
-          icon: Icon(Icons.close_rounded, size: 18, color: _lzFg(muted)),
-          label: Text('Remove the song', style: TextStyle(color: _lzFg(muted), fontSize: 13)),
-        ),
-        const Spacer(),
-        Text('Changes save with the profile.', style: TextStyle(color: _lzFg(muted), fontSize: 12)),
-      ]));
-    } else {
-      kids.add(TextField(
-        controller: _epSongQC,
-        onChanged: _epSongChanged,
-        textInputAction: TextInputAction.search,
-        cursorColor: _lzFg(plum),
-        style: TextStyle(color: _lzFg(ink), fontSize: 14.5),
-        decoration: _epDeco('Find a song', 'A title or an artist'),
-      ));
-      if (_epSongBusy) {
-        kids.add(const Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
-          child: Center(child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))),
-        ));
-      } else if (_epSongErr.isNotEmpty) {
-        kids.add(Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Text(_epSongErr, style: TextStyle(color: _lzFg(muted), fontSize: 13)),
-        ));
-      } else if (_epSongHits.isNotEmpty) {
-        kids.add(const SizedBox(height: 6));
-        for (final Map<String, dynamic> h in _epSongHits) {
-          final String pv = (h['preview'] ?? '').toString();
-          final bool on = _epSongPlaying.isNotEmpty && _epSongPlaying == pv;
-          kids.add(ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            dense: true,
-            leading: _epSongArt((h['art'] ?? '').toString(), 40),
-            title: Text(
-                (h['title'] ?? '').toString() + (h['explicit'] == true ? '  · E' : ''),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: _lzFg(ink), fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text((h['artist'] ?? '').toString(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: _lzFg(muted), fontSize: 12)),
-            trailing: Row(mainAxisSize: MainAxisSize.min, children: <Widget>[
-              IconButton(
-                tooltip: on ? 'Stop' : (kIsWeb ? 'Hear the clip' : 'Open the clip'),
-                onPressed: _h(() => _epSongPreview(pv)),
-                icon: Icon(on ? Icons.stop_circle_rounded : Icons.play_circle_outline_rounded,
-                    color: _lzFg(plum), size: 26),
-              ),
-              TextButton(
-                onPressed: _h(() => _epSongPick(h)),
-                child: Text('Use it', style: TextStyle(color: _lzFg(plum), fontWeight: FontWeight.w700)),
-              ),
-            ]),
-            onTap: _h(() => _epSongPick(h)),
-          ));
-        }
-      }
-    }
-    return _epCard(
-        'Your song',
-        sg == null
-            ? 'A track that plays softly when a couple opens your page - a record turning in the corner, one tap to pause. 30-second clips.'
-            : 'Plays softly on your storefront. A record turns in the corner; one tap pauses it.',
-        kids);
   }
 
   Widget _epCard(String title, String subtitle, List<Widget> children) {
@@ -9561,7 +9295,6 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
               decoration: _epDeco('Video URL',
                   'https://youtu.be/... or https://vimeo.com/...')),
         ]),
-        _epSongCard(), // v223
         _epCard(
             'Photo gallery',
             'Your best work, on your public profile. ${_epGallery.length} of $_epGalleryCap.',
@@ -11011,7 +10744,15 @@ class _LazoVendorDashboardState extends State<LazoVendorDashboard>
   // mark Planned / Building / Shipped, so "you asked, we built" is visible
   // to every vendor, not just the one who asked.
 
-  static const String kBuildId = 'JC-LAZO-VSONG-1020-223';
+  static const String kBuildId = 'JC-LAZO-CLAIMFIX-1020-223';
+  /// v223: a short, user-safe reason from a Firebase error, for the sheets' error line.
+  String _lzErrShort(Object e) {
+    String s = e is FirebaseException ? e.code : e.runtimeType.toString();
+    if (e is FirebaseException && e.message != null && e.message!.isNotEmpty) {
+      s += ': ' + e.message!;
+    }
+    return s.length > 90 ? s.substring(0, 90) : s;
+  }
   static const List<String> kBugAreas = <String>[
     'Inbox & messages',
     'Profile & photos',
