@@ -25,6 +25,7 @@ D7, D14, D30, D60, W8 = (NOW - timedelta(days=n) for n in (7, 14, 30, 60, 56))
 PROJECTS = {
     "atavia": ("atavia-c29cd", []),
     "es": ("elizabeth-scott-738e5", []),
+    "olivialayne": ("olivia-layne-506f3", []),
     "lazo": ("lazo-513ec", [r"C:\Users\kurvh\secrets\lazo-513ec-admin.json"]),
     "roven": ("roven-7efea", [r"C:\Users\kurvh\roven-admin\serviceAccount.json"]),
     "lr": ("lease-reputation", [r"C:\Users\kurvh\lease-reputation\serviceAccountKey.json"]),
@@ -147,6 +148,21 @@ def collect_films(db):
     # (invoice_amount); counting `balance` again at balance_paid_at double-counted them (Medlen/Cherigo, Schaefer, Oct 2026)
     charged = lambda b: num(first(b, "pif_total", "invoice_amount") if pif(b) else first(b, "total"))
 
+    # Olivia Layne's Whop caps one charge at $2,500: what was due at reservation above that is collected in
+    # follow-up `installments` (paid_at). Count those up to the reservation shortfall only; installments that
+    # split a plan balance are already counted through `balance` at balance_paid_at.
+    def followups(b):
+        inst = [i for i in (b.get("installments") or []) if i.get("status") == "paid" and ts(i.get("paid_at"))]
+        if not inst: return []
+        due = num(b.get("pif_total") if b.get("payment_option") == "pif" else b.get("retainer"))
+        cap = max(0.0, due - num(b.get("invoice_amount")))
+        out = []
+        for i in sorted(inst, key=lambda x: ts(x.get("paid_at"))):
+            if cap <= 0: break
+            amt = min(num(i.get("amount")), cap); cap -= amt
+            out.append((ts(i.get("paid_at")), amt))
+        return out
+
     def revenue(since, until):
         total = 0.0
         for b in live:
@@ -156,6 +172,7 @@ def collect_films(db):
             bal = ts(b.get("balance_paid_at"))
             if bal and since <= bal < until and not pif(b):
                 total += num(b.get("balance"))
+            total += sum(a for at, a in followups(b) if since <= at < until)
         try:
             for g in db.collection_group("gratuities").stream():
                 gd = g.to_dict(); at = ts(gd.get("at"))
@@ -202,6 +219,7 @@ def collect_films(db):
         if dep: months[dep.strftime("%Y-%m")] += num(first(b, "invoice_amount") or (b.get("pif_total") if b.get("payment_option") == "pif" else b.get("retainer")))
         bal = ts(b.get("balance_paid_at"))
         if bal and not pif(b): months[bal.strftime("%Y-%m")] += num(b.get("balance"))
+        for at, a in followups(b): months[at.strftime("%Y-%m")] += a
     try:
         for g in db.collection_group("gratuities").stream():
             gd = g.to_dict(); at = ts(gd.get("at"))
@@ -390,7 +408,7 @@ def collect_lr(db):
     }
 
 
-COLLECTORS = {"atavia": collect_films, "es": collect_films, "lazo": collect_lazo, "roven": collect_roven, "lr": collect_lr}
+COLLECTORS = {"atavia": collect_films, "es": collect_films, "olivialayne": collect_films, "lazo": collect_lazo, "roven": collect_roven, "lr": collect_lr}
 
 
 def main():

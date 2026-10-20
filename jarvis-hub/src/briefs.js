@@ -27,7 +27,7 @@ export async function makeMorning(env, request, slot) {
   if (!env.ANTHROPIC_API_KEY) return { error: "no brain" };
   slot = slot || slotNow(env);
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  const context = await buildContext(env, request);
+  const context = await buildContext(env, request, 12000);
   const history = (await kv.get(env, "briefs")) || [];
   const tzL = env.TZ || "America/Chicago", todayL = new Date().toLocaleDateString("en-CA", { timeZone: tzL });
   const prevToday = history.filter((b) => new Date(b.at).toLocaleDateString("en-CA", { timeZone: tzL }) === todayL && b.slot !== slot).map((b) => `${b.slot.toUpperCase()} (${b.at}): ${b.text}`).join("\n\n");
@@ -60,7 +60,7 @@ export async function observe(env, request, { force = false } = {}) {
   const h = localHour(env); if (!force && (h < 8 || h > 20)) return null;
   const prev = (await kv.get(env, "observations")) || [];
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  const context = await buildContext(env, request);
+  const context = await buildContext(env, request, 12000);
   const said = prev.filter((o) => Date.now() - new Date(o.at) < 36 * 3600e3).map((o) => `${o.at.slice(5, 16)}: ${o.text}`).join("\n");
   const r = await client.beta.messages.create({
     model: MODEL, max_tokens: 2000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", output_config: { effort: "medium" },

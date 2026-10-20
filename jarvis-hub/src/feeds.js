@@ -11,14 +11,20 @@ export async function weatherData(request, env, place) {
     daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset,uv_index_max,wind_speed_10m_max",
     hourly: "temperature_2m,weather_code,precipitation_probability,precipitation,wind_speed_10m,relative_humidity_2m",
     temperature_unit: "fahrenheit", wind_speed_unit: "mph", precipitation_unit: "inch", forecast_days: "7", timezone: "auto" });
+  // The forecast is the part that matters: per-call timeouts, one retry, and the last good reading (KV wx_last_<lat,lon>) when Open-Meteo
+  // is slow or rate-limits Cloudflare's shared IPs, which is what left the 5am brief saying "weather unavailable". AQI and NWS are extras.
+  const forecast = async () => { const r = await tfetch("https://api.open-meteo.com/v1/forecast?" + q, { cf: { cacheTtl: 600, cacheEverything: true } }, 5000); const j = await r.json(); if (!r.ok || j.error || !j.current) throw new Error(`open-meteo ${r.status} ${j.reason || ""}`.trim()); return j; };
+  const lastKey = `wx_last_${(+lat).toFixed(2)},${(+lon).toFixed(2)}`;
   const [wx, aq, al] = await Promise.all([
-    fetch("https://api.open-meteo.com/v1/forecast?" + q, { cf: { cacheTtl: 600, cacheEverything: true } }).then((r) => r.json()),
-    fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5&timezone=auto`, { cf: { cacheTtl: 1800, cacheEverything: true } }).then((r) => r.json()).catch(() => null),
-    fetch(`https://api.weather.gov/alerts/active?point=${(+lat).toFixed(4)},${(+lon).toFixed(4)}`, { headers: { "user-agent": UA, accept: "application/geo+json" }, cf: { cacheTtl: 300, cacheEverything: true } }).then((r) => r.json()).catch(() => ({ features: [] })),
+    forecast().catch(() => forecast()).catch(async (e) => { console.log("weather", e.message); const last = await kv.get(env, lastKey); return last && Date.now() - new Date(last.fetchedAt) < 12 * 3600e3 ? { ...last, stale: true } : { error: "weather " + e.message }; }),
+    tfetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&current=us_aqi,pm2_5&timezone=auto`, { cf: { cacheTtl: 1800, cacheEverything: true } }, 3000).then((r) => r.json()).catch(() => null),
+    tfetch(`https://api.weather.gov/alerts/active?point=${(+lat).toFixed(4)},${(+lon).toFixed(4)}`, { headers: { "user-agent": UA, accept: "application/geo+json" }, cf: { cacheTtl: 300, cacheEverything: true } }, 3000).then((r) => r.json()).catch(() => ({ features: [] })),
   ]);
-  wx.aqi = aq?.current || null; wx.lat = +lat; wx.lon = +lon;
+  if (wx.error) return wx;
+  if (!wx.stale) { wx.fetchedAt = new Date().toISOString(); await kv.put(env, lastKey, wx).catch(() => null); }
+  wx.aqi = aq?.current || wx.aqi || null; wx.lat = +lat; wx.lon = +lon;
   wx.place = place?.name || [cf.city, cf.regionCode].filter(Boolean).join(", ") || "Your location";
-  wx.nws = (al.features || []).map((f) => ({ id: f.id, event: f.properties.event, severity: f.properties.severity, headline: f.properties.headline, ends: f.properties.ends || f.properties.expires }));
+  wx.nws = (al?.features || []).map((f) => ({ id: f.id, event: f.properties.event, severity: f.properties.severity, headline: f.properties.headline, ends: f.properties.ends || f.properties.expires }));
   return wx;
 }
 const WMO = { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 48: "fog", 51: "drizzle", 53: "drizzle", 55: "drizzle", 61: "light rain", 63: "rain", 65: "heavy rain", 71: "snow", 73: "snow", 75: "snow", 80: "showers", 81: "showers", 82: "heavy showers", 95: "thunderstorms", 96: "thunderstorms", 99: "thunderstorms" };
@@ -26,7 +32,7 @@ export function weatherSummary(w) {
   if (!w || w.error) return "unavailable";
   const c = w.current, d = w.daily;
   const days = d.time.slice(0, 4).map((t, i) => `${i === 0 ? "today" : new Date(t + "T12:00").toLocaleDateString("en-US", { weekday: "short" })} ${WMO[d.weather_code[i]] || ""} ${Math.round(d.temperature_2m_max[i])}/${Math.round(d.temperature_2m_min[i])} rain ${d.precipitation_probability_max[i] ?? 0}%`).join("; ");
-  return `${w.place}: ${Math.round(c.temperature_2m)}°F ${WMO[c.weather_code] || ""}, feels ${Math.round(c.apparent_temperature)}, wind ${Math.round(c.wind_speed_10m)} mph gusting ${Math.round(c.wind_gusts_10m)}, humidity ${c.relative_humidity_2m}%, UV ${c.uv_index}, AQI ${w.aqi?.us_aqi ?? "n/a"}. Sunrise ${d.sunrise[0].slice(11)} sunset ${d.sunset[0].slice(11)}. Outlook: ${days}.${w.nws.length ? " NWS ALERTS: " + w.nws.map((a) => a.headline).join(" | ") : ""}`;
+  return `${w.place}${w.stale ? ` (last reading ${new Date(w.fetchedAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: w.timezone || "America/Chicago" })}, live feed slow)` : ""}: ${Math.round(c.temperature_2m)}°F ${WMO[c.weather_code] || ""}, feels ${Math.round(c.apparent_temperature)}, wind ${Math.round(c.wind_speed_10m)} mph gusting ${Math.round(c.wind_gusts_10m)}, humidity ${c.relative_humidity_2m}%, UV ${c.uv_index}, AQI ${w.aqi?.us_aqi ?? "n/a"}. Sunrise ${d.sunrise[0].slice(11)} sunset ${d.sunset[0].slice(11)}. Outlook: ${days}.${w.nws.length ? " NWS ALERTS: " + w.nws.map((a) => a.headline).join(" | ") : ""}`;
 }
 
 /* ---------------- calendar (private ICS link) ---------------- */

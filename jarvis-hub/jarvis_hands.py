@@ -155,7 +155,7 @@ def lazo_listing(p):
 
 def booking_note(p):
     from google.cloud import firestore
-    if p.get("business", "atavia") not in ("atavia", "es"): return False, "booking notes are for atavia or es only"
+    if p.get("business", "atavia") not in ("atavia", "es", "olivialayne"): return False, "booking notes are for atavia, es or olivialayne only"
     if not str(p.get("note") or "").strip(): return False, "empty note"
     db = db_for(p.get("business", "atavia"))
     ref = db.collection("bookings").document(p["bookingId"]); doc = ref.get()

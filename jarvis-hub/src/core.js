@@ -4,6 +4,7 @@ import { notify } from "./alarm.js";
 export const SITES = [
   { id: "atavia", name: "Atavia Weddings", url: "https://ataviaweddings.com" },
   { id: "es", name: "Elizabeth Scott", url: "https://elizabethscottweddings.com" },
+  { id: "olivialayne", name: "Olivia Layne", url: "https://olivialaynestudios.com" },
   { id: "lazo", name: "Lazo", url: "https://meetlazo.com" },
   { id: "roven", name: "Roven HR", url: "https://rovenhr.com" },
   { id: "lr", name: "LeaseReputation", url: "https://leasereputation.com" },
@@ -33,7 +34,7 @@ export async function pushAlert(env, alert) {
 
 
 /* ---------------- Gmail bridges (Apps Script in each account) ---------------- */
-export const BIZ_LABEL = { atavia: "Atavia", es: "Elizabeth Scott", lazo: "Lazo", roven: "Roven", lr: "LeaseReputation", brisk: "Brisk", other: "Other" };
+export const BIZ_LABEL = { atavia: "Atavia", es: "Elizabeth Scott", olivialayne: "Olivia Layne", lazo: "Lazo", roven: "Roven", lr: "LeaseReputation", brisk: "Brisk", other: "Other" };
 
 export const within = (p, ms, fallback = null) => Promise.race([p.catch(() => fallback), new Promise((r) => setTimeout(() => r(fallback), ms))]);
 export async function cached(env, key, ttlMs, fn) {

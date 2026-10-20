@@ -45,6 +45,7 @@ export default {
     if (cron.startsWith("*/5")) ctx.waitUntil(runChecks(env).then(() => checkStale(env)).then(() => tripWatch(env)).then(async () => { const t = await kv.get(env, "tick_at"); if (!t || Date.now() - new Date(t) > 90e3) await tickMinute(env); }).then(() => shipWatch(env)).then(() => socialFromLog(env)).then(() => watchMerged(env)).then((w) => w && watchWatch(env, { social: w.social, at: w.at })).catch((e) => console.log("5-min cron", e.message)));   // tickMinute here is only a backstop for a skipped minute cron
     else ctx.waitUntil((async () => {
       await loadCalendar(env, true).catch(() => null);
+      await weatherData(new Request(HUB_ORIGIN + "/", { cf: {} }), env, await kv.get(env, "place")).catch(() => null);   // keeps wx_last fresh so the brief has a fallback if Open-Meteo stalls at brief time
       await weddingWeather(env).catch(() => null);
       await briefIfDue(env);   // the brief goes before the slower jobs, so a long follow-up or observer run can't push it out of the tick
       await appStores(env).catch((e) => console.log("app stores", e.message));

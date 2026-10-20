@@ -6,10 +6,10 @@ import { notify } from "./alarm.js";
 export const isBot = (addr) => /no-?reply|donotreply|do-not-reply|notifications?@|mailer-daemon|postmaster|alerts?@/i.test(String(addr || ""));
 
 // Zola and The Knot inquiry notices for the film brands are answered by the Gmail intake script (Apps Script in that
-// account, 5-minute trigger: atavia-functions-live/gmail-intake, es-site/_src/gmail-intake). JARVIS never drafts a
+// account, 5-minute trigger: atavia-functions-live/gmail-intake, es-site/_src/gmail-intake, ol-site/_src/gmail-intake). JARVIS never drafts a
 // reply to those notices; instead it checks that the script's first reply went out (verifyIntake).
 const MARKET_FROM = /zola\.com|theknot\.com|weddingpro\.com/i;
-const INTAKE = { atavia: { synced: "atavia-synced", review: "atavia-needs-review" }, es: { synced: "esw-synced", review: "esw-needs-review" } };
+const INTAKE = { atavia: { synced: "atavia-synced", review: "atavia-needs-review" }, es: { synced: "esw-synced", review: "esw-needs-review" }, olivialayne: { synced: "ols-synced", review: "ols-needs-review" } };
 // true for a first-contact notice the script answers; false for a couple's follow-up, which is a real conversation JARVIS should flag
 function marketLead(m, business) {
   if (!INTAKE[business] || !MARKET_FROM.test(m.fromEmail || "")) return false;
