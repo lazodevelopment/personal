@@ -89,5 +89,8 @@
       "open": ""
     }
   ],
-  "covered": {}
+  "covered": {
+    "couple": 180,
+    "vendor": 222
+  }
 }

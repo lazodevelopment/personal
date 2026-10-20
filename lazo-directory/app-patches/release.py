@@ -246,6 +246,7 @@ def main() -> None:
     for role, (v, _) in latest.items():
         start = int(covered.get(role, v))  # first run: nothing new, just the live builds
         fresh = list(range(v, start, -1))
+        covered[role] = v
         if not fresh:
             print(f"{role}: v{v}, nothing new since v{start}")
             continue
