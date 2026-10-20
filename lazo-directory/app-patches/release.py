@@ -232,7 +232,13 @@ def main() -> None:
     ap.add_argument("--stores", action="store_true", help="newest masters are now live in both stores")
     ap.add_argument("--since", nargs="*", default=[], metavar="role=build",
                     help="redo notes from this build on (couple=172 vendor=212)")
+    ap.add_argument("--upto", nargs="*", default=[], metavar="role=build",
+                    help="cover masters only up to this build (the watcher passes the builds live on the web)")
     args = ap.parse_args()
+    upto: dict[str, int] = {}
+    for s in args.upto:
+        r, _, b = s.partition("=")
+        upto[r] = int(b)
 
     data = json.loads(NOTES.read_text(encoding="utf-8")) if NOTES.exists() else {
         "key": "", "title": "", "ios": "", "android": "", "notes": []}
@@ -242,11 +248,14 @@ def main() -> None:
         covered[r] = int(b) - 1
 
     latest = {r: newest(r) for r in ROLES}
+    for r, (v, p) in list(latest.items()):
+        if r in upto and upto[r] < v:
+            latest[r] = (upto[r], p)
     added: list[dict] = []
     for role, (v, _) in latest.items():
         start = int(covered.get(role, v))  # first run: nothing new, just the live builds
         fresh = list(range(v, start, -1))
-        covered[role] = v
+        covered[role] = max(v, int(covered.get(role, 0)))  # --upto never moves it back
         if not fresh:
             print(f"{role}: v{v}, nothing new since v{start}")
             continue
@@ -289,7 +298,9 @@ def main() -> None:
     NOTES.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     cmd = [sys.executable, str(HERE / "publish_release.py")]
     if args.stores:
-        cmd += ["--couple", str(latest["couple"][0]), "--vendor", str(latest["vendor"][0])]
+        c, v = str(latest["couple"][0]), str(latest["vendor"][0])
+        cmd += ["--couple", c, "--vendor", v, "--couple-ios", c, "--couple-android", c,
+                "--vendor-ios", v, "--vendor-android", v]
     elif not added:
         print("no new notes and no --stores: nothing to publish")
         return

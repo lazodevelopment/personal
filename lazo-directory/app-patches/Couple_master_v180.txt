@@ -17835,6 +17835,9 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
   // everyone else gets What's new once per release, from the doc, so the notes
   // change without a store round trip. The baked-in list below is the fallback.
   static const int kLzWidgetVersion = 180;
+  // Also a string the compiled web build keeps (app-patches/release_watch.py
+  // reads it from main.dart.js to see which build is live).
+  static const String kBuildId = 'JC-LAZO-RELEASE-1020-C180';
   static const String _kIosStore =
       'https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675';
   static const String _kPlayStore =
@@ -17855,6 +17858,10 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
         _rel = s.data() ?? <String, dynamic>{};
         _relLoaded = true;
       });
+      // the build this device runs, for support and for the watcher's marker
+      SharedPreferences.getInstance()
+          .then((SharedPreferences p) => p.setString('lazo_build', kBuildId))
+          .catchError((_) => true);
     } catch (_) {
       if (mounted) setState(() => _relLoaded = true);
     }
@@ -17870,13 +17877,18 @@ class _LazoCoupleDashboardState extends State<LazoCoupleDashboard>
     return t.isEmpty ? 'October 2026' : t;
   }
 
-  int get _relStoreBuild =>
-      _rel['couple'] is num ? (_rel['couple'] as num).toInt() : 0;
+  bool get _relIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// The build live in this phone's store: coupleIos / coupleAndroid when the
+  /// watcher has set them, else the shared couple number.
+  int get _relStoreBuild {
+    final dynamic own = _rel[_relIos ? 'coupleIos' : 'coupleAndroid'];
+    if (own is num) return own.toInt();
+    return _rel['couple'] is num ? (_rel['couple'] as num).toInt() : 0;
+  }
 
   /// This phone runs a widget older than the one in the stores.
   bool get _relOutdated => !kIsWeb && _relStoreBuild > kLzWidgetVersion;
-
-  bool get _relIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   String get _relStoreName => _relIos ? 'App Store' : 'Google Play';
 

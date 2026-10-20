@@ -30437,6 +30437,9 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
   // everyone else gets What's new once per release, from the doc, so the notes
   // change without a store round trip. The baked-in list below is the fallback.
   static const int kLzWidgetVersion = 222;
+  // Also a string the compiled web build keeps (app-patches/release_watch.py
+  // reads it from main.dart.js to see which build is live).
+  // kBuildId above carries the same number for the vendor build.
   static const String _kIosStore =
       'https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675';
   static const String _kPlayStore =
@@ -30457,6 +30460,10 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
         _rel = s.data() ?? <String, dynamic>{};
         _relLoaded = true;
       });
+      // the build this device runs, for support and for the watcher's marker
+      SharedPreferences.getInstance()
+          .then((SharedPreferences p) => p.setString('lazo_build', kBuildId))
+          .catchError((_) => true);
     } catch (_) {
       if (mounted) setState(() => _relLoaded = true);
     }
@@ -30472,13 +30479,18 @@ This Agreement is governed by the laws of the State of {governing_state} and is 
     return t.isEmpty ? 'October 2026' : t;
   }
 
-  int get _relStoreBuild =>
-      _rel['vendor'] is num ? (_rel['vendor'] as num).toInt() : 0;
+  bool get _relIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// The build live in this phone's store: vendorIos / vendorAndroid when the
+  /// watcher has set them, else the shared vendor number.
+  int get _relStoreBuild {
+    final dynamic own = _rel[_relIos ? 'vendorIos' : 'vendorAndroid'];
+    if (own is num) return own.toInt();
+    return _rel['vendor'] is num ? (_rel['vendor'] as num).toInt() : 0;
+  }
 
   /// This phone runs a widget older than the one in the stores.
   bool get _relOutdated => !kIsWeb && _relStoreBuild > kLzWidgetVersion;
-
-  bool get _relIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   String get _relStoreName => _relIos ? 'App Store' : 'Google Play';
 

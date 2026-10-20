@@ -3,3 +3,7 @@ june-hub/.push-key
 # JC-LAZO-OUTREACH-1018: scraped vendor email addresses stay off git
 generate/data/outreach/
 generate/data/couples/
+
+# release watcher state + log (app-patches/release_watch.py)
+app-patches/release_watch_state.json
+app-patches/release_watch.log

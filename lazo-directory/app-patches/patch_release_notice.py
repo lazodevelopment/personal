@@ -23,10 +23,17 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 
-def patch(src: str, dst: str, reps: list[tuple[str, str]], header_new: str, header_old: str) -> None:
+WHATS_NEW = (
+    "// What's new: Lazo tells you when it has been updated | On your phone, a note when a newer Lazo is "
+    "in the App Store or Google Play, with what changed. | On the web, what's new opens once per release, "
+    "and lives in Account. | {open}"
+)
+
+
+def patch(src: str, dst: str, reps: list[tuple[str, str]], header_new: str, header_old: str, open_: str) -> None:
     text = (HERE / src).read_text(encoding="utf-8")
     assert header_old in text, "old Build ID line missing"
-    text = text.replace(header_old, header_new + "\n" + header_old, 1)
+    text = text.replace(header_old, header_new + "\n" + WHATS_NEW.format(open=open_) + "\n" + header_old, 1)
     for old, new in reps:
         n = text.count(old)
         if n != 1:
@@ -50,6 +57,9 @@ def release_block(role: str, ver: int, baked_key_name: str, baked_list_name: str
   // everyone else gets What's new once per release, from the doc, so the notes
   // change without a store round trip. The baked-in list below is the fallback.
   static const int kLzWidgetVersion = {ver};
+  // Also a string the compiled web build keeps (app-patches/release_watch.py
+  // reads it from main.dart.js to see which build is live).
+  {"static const String kBuildId = 'JC-LAZO-RELEASE-1020-C180';" if role == "couple" else "// kBuildId above carries the same number for the vendor build."}
   static const String _kIosStore =
       'https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675';
   static const String _kPlayStore =
@@ -70,6 +80,10 @@ def release_block(role: str, ver: int, baked_key_name: str, baked_list_name: str
         _rel = s.data() ?? <String, dynamic>{{}};
         _relLoaded = true;
       }});
+      // the build this device runs, for support and for the watcher's marker
+      SharedPreferences.getInstance()
+          .then((SharedPreferences p) => p.setString('lazo_build', kBuildId))
+          .catchError((_) => true);
     }} catch (_) {{
       if (mounted) setState(() => _relLoaded = true);
     }}
@@ -85,13 +99,18 @@ def release_block(role: str, ver: int, baked_key_name: str, baked_list_name: str
     return t.isEmpty ? 'October 2026' : t;
   }}
 
-  int get _relStoreBuild =>
-      _rel['{role}'] is num ? (_rel['{role}'] as num).toInt() : 0;
+  bool get _relIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+
+  /// The build live in this phone's store: {role}Ios / {role}Android when the
+  /// watcher has set them, else the shared {role} number.
+  int get _relStoreBuild {{
+    final dynamic own = _rel[_relIos ? '{role}Ios' : '{role}Android'];
+    if (own is num) return own.toInt();
+    return _rel['{role}'] is num ? (_rel['{role}'] as num).toInt() : 0;
+  }}
 
   /// This phone runs a widget older than the one in the stores.
   bool get _relOutdated => !kIsWeb && _relStoreBuild > kLzWidgetVersion;
-
-  bool get _relIos => !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
 
   String get _relStoreName => _relIos ? 'App Store' : 'Google Play';
 
@@ -545,5 +564,5 @@ VENDOR_REPS: list[tuple[str, str]] = [
 
 
 if __name__ == "__main__":
-    patch("Couple_master_v179.txt", "Couple_master_v180.txt", COUPLE_REPS, COUPLE_NEW_HEADER, COUPLE_OLD_HEADER)
-    patch("Vendor_master_v221.txt", "Vendor_master_v222.txt", VENDOR_REPS, VENDOR_NEW_HEADER, VENDOR_OLD_HEADER)
+    patch("Couple_master_v179.txt", "Couple_master_v180.txt", COUPLE_REPS, COUPLE_NEW_HEADER, COUPLE_OLD_HEADER, "account")
+    patch("Vendor_master_v221.txt", "Vendor_master_v222.txt", VENDOR_REPS, VENDOR_NEW_HEADER, VENDOR_OLD_HEADER, "leads")

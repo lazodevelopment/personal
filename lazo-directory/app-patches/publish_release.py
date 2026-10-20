@@ -64,6 +64,9 @@ def main() -> None:
     ap.add_argument("--notes", default=str(HERE / "release_notes.json"))
     ap.add_argument("--couple", type=int, help="Couple widget build now live in the stores (e.g. 180)")
     ap.add_argument("--vendor", type=int, help="Vendor widget build now live in the stores (e.g. 222)")
+    for k in ("couple-ios", "couple-android", "vendor-ios", "vendor-android"):
+        ap.add_argument(f"--{k}", type=int, help=f"{k.replace('-', ' ')} store build (set by release_watch.py)")
+    ap.add_argument("--notes-only", action="store_true", help="skip the notes file; write only the store builds given")
     ap.add_argument("--show", action="store_true", help="print the current doc and exit")
     ap.add_argument("--dry-run", action="store_true", help="print what would be written, write nothing")
     args = ap.parse_args()
@@ -78,27 +81,35 @@ def main() -> None:
         print(json.dumps(snap.to_dict() or {}, indent=2, default=str))
         return
 
-    data = load_notes(Path(args.notes))
-    doc = {
-        "key": data["key"],
-        "title": data["title"],
-        "ios": data["ios"],
-        "android": data["android"],
-        "notes": data["notes"],
-        "publishedAt": datetime.now(timezone.utc),
+    doc: dict = {}
+    if not args.notes_only:
+        data = load_notes(Path(args.notes))
+        doc = {
+            "key": data["key"],
+            "title": data["title"],
+            "ios": data["ios"],
+            "android": data["android"],
+            "notes": data["notes"],
+            "publishedAt": datetime.now(timezone.utc),
+        }
+        couple_n = sum(1 for n in data["notes"] if n.get("for", "both") in ("couple", "both"))
+        vendor_n = sum(1 for n in data["notes"] if n.get("for", "both") in ("vendor", "both"))
+        print(f"release {data['key']} ({data['title']}): {couple_n} couple notes, {vendor_n} vendor notes")
+    stores = {
+        "couple": args.couple, "vendor": args.vendor,
+        "coupleIos": args.couple_ios, "coupleAndroid": args.couple_android,
+        "vendorIos": args.vendor_ios, "vendorAndroid": args.vendor_android,
     }
-    if args.couple is not None:
-        doc["couple"] = args.couple
-    if args.vendor is not None:
-        doc["vendor"] = args.vendor
-
-    couple_n = sum(1 for n in data["notes"] if n.get("for", "both") in ("couple", "both"))
-    vendor_n = sum(1 for n in data["notes"] if n.get("for", "both") in ("vendor", "both"))
-    print(f"release {data['key']} ({data['title']}): {couple_n} couple notes, {vendor_n} vendor notes")
-    if args.couple is None and args.vendor is None:
-        print("store builds untouched (pass --couple / --vendor once the store build is approved)")
+    stores = {k: v for k, v in stores.items() if v is not None}
+    doc.update(stores)
+    if stores:
+        doc["storesUpdatedAt"] = datetime.now(timezone.utc)
+        print("store builds -> " + ", ".join(f"{k}={v}" for k, v in stores.items()))
     else:
-        print(f"store builds -> couple={args.couple} vendor={args.vendor}")
+        print("store builds untouched (the watcher sets them when a store release goes live)")
+    if not doc:
+        print("nothing to write")
+        return
     if args.dry_run:
         print(json.dumps(doc, indent=2, default=str))
         return
