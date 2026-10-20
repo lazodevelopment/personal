@@ -148,7 +148,7 @@ const esc = (t) => String(t || "").replace(/[&<>"]/g,
 
 // JC-LAZO-WWSEO-0919-010: every public couple site (no passcode, has names),
 // fetched once from Firestore and cached six hours. Feeds the couples sitemap
-// and the /couples/ search. Sites with a passcode never appear anywhere.
+// and the /couples/ search. Sites with a passcode, noindex or unlisted never appear.
 async function listPublicCouples() {
   const key = new Request("https://meetlazo.com/_internal/public-couples.json");
   const hit = await caches.default.match(key);
@@ -158,6 +158,7 @@ async function listPublicCouples() {
   for (let i = 0; i < 40; i++) {
     const u = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/weddingSites`
       + "?pageSize=300&mask.fieldPaths=passcode&mask.fieldPaths=names&mask.fieldPaths=dateIso"
+      + "&mask.fieldPaths=noindex&mask.fieldPaths=unlisted"  // JC-LAZO-VISIBILITY-1019
       + (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
     let j;
     try {
@@ -170,6 +171,10 @@ async function listPublicCouples() {
       if (!/^[a-z0-9\-]{1,80}$/.test(slug)) continue;
       const f = d.fields || {};
       if (fsVal(f.passcode)) continue;
+      // JC-LAZO-VISIBILITY-1019: the couple's two switches - "Allow search engines to link
+      // to your site" (noindex) and "Appear in Find a couple" (unlisted). Either one keeps
+      // the site out of the couples sitemap and the /api/couples search.
+      if (fsVal(f.noindex) === true || fsVal(f.unlisted) === true) continue;
       const names = String(fsVal(f.names) || "").trim();
       if (!names) continue;
       out.push({ slug, names, dateIso: String(fsVal(f.dateIso) || ""), lm: String(d.updateTime || "").slice(0, 10) });
@@ -590,6 +595,8 @@ async function renderCoupleSite(slug, env, req) {
     vendorTeam: g("vendorTeam") || [],
     siteGallery: g("siteGallery") || [],
     passcode: g("passcode") || "",
+    noindex: g("noindex") === true,    // JC-LAZO-VISIBILITY-1019: search engines may not link to the site
+    unlisted: g("unlisted") === true,  // JC-LAZO-VISIBILITY-1019: not in Find a couple / couples sitemap
     rsvpOpen: g("rsvpOpen") !== false,
     coverUrl: g("coverUrl") || "",
     palette: g("palette") || "",
@@ -639,7 +646,10 @@ async function renderCoupleSite(slug, env, req) {
   }
   let inject = `<script>window.LAZO_SITE=${JSON.stringify(payload)
     .replace(/</g, "\\u003c")};</script>`;
-  if (priv) inject = '<meta name="robots" content="noindex, nofollow">\n' + inject;
+  // JC-LAZO-VISIBILITY-1019: a public site the couple asked search engines to skip
+  // gets the same robots meta/header as a passcode site; everything else stays public.
+  const hideFromSearch = priv || payload.noindex === true;
+  if (hideFromSearch) inject = '<meta name="robots" content="noindex, nofollow">\n' + inject;
 
   // Share preview: scrapers don't run the page's JavaScript, so the couple's
   // names, date, venue and photo go into the head here. A passcode site gets
@@ -693,6 +703,7 @@ async function renderCoupleSite(slug, env, req) {
     "x-lazo": "tied-together",
   };
   if (priv) { headers["x-robots-tag"] = "noindex, nofollow"; headers["cache-control"] = "private, no-store"; }
+  else if (hideFromSearch) headers["x-robots-tag"] = "noindex, nofollow";  // JC-LAZO-VISIBILITY-1019
   headers["x-lazo-fs"] = (await workerToken()) ? "signed-in" : "anonymous";  // JC-LAZO-WORKER-0930-FSAUTH: visible proof of the sign-in
   return new Response(html, { headers });
 }
