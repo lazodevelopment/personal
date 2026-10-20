@@ -1,0 +1,92 @@
+{
+  "key": "2026-10-20",
+  "title": "October 20, 2026",
+  "ios": "https://apps.apple.com/us/app/lazo-wedding-planner/id6812863675",
+  "android": "https://play.google.com/store/apps/details?id=com.meetlazo.app",
+  "notes": [
+    {
+      "for": "couple",
+      "title": "Your website, your way",
+      "line1": "Choose whether search engines can link to your site and whether it shows in Find a couple.",
+      "line2": "The password row sits right there too, on the Website screen.",
+      "open": "website"
+    },
+    {
+      "for": "couple",
+      "title": "Collect addresses, message guests, thank-you notes",
+      "line1": "A link and QR guests fill in with their address, from the Website screen.",
+      "line2": "Email a group of guests, and keep thank-you notes straight, from Guests.",
+      "open": "guests"
+    },
+    {
+      "for": "couple",
+      "title": "Three picks in your checklist",
+      "line1": "Every book-and-hire task shows three vendors from your city, free on your date first.",
+      "line2": "Tap one for the vendor, or See all to browse.",
+      "open": "checklist"
+    },
+    {
+      "for": "couple",
+      "title": "Planning checklist and invitations",
+      "line1": "A checklist by months out, seeded from your date, with overdue in rose.",
+      "line2": "Printable invitation cards with a QR to your site; guests and budget as CSV from Account.",
+      "open": "checklist"
+    },
+    {
+      "for": "couple",
+      "title": "Lazo video calls",
+      "line1": "Call any vendor from their thread. Your camera stays off until you turn it on.",
+      "line2": "Vendors on Pro can schedule a call with you, with reminders the day before.",
+      "open": "messages"
+    },
+    {
+      "for": "couple",
+      "title": "Meal choices on RSVPs",
+      "line1": "Guests pick a meal and note allergies when they RSVP.",
+      "line2": "Send the counts to your caterer in one tap from Guests.",
+      "open": "guests"
+    },
+    {
+      "for": "vendor",
+      "title": "June drafts your listing",
+      "line1": "Tap Let June draft it under Bio and Services detail; she writes from your name, categories, markets and price.",
+      "line2": "Use it, try again, or keep yours.",
+      "open": "profile"
+    },
+    {
+      "for": "vendor",
+      "title": "Home and travel markets",
+      "line1": "Pick the markets you serve at standard rates, and the ones where a travel fee may apply.",
+      "line2": "Couples searching in every one of them find you.",
+      "open": "profile"
+    },
+    {
+      "for": "vendor",
+      "title": "A cleaner inbox",
+      "line1": "Lost threads leave the inbox; spam gets reported and the sender blocked.",
+      "line2": "Each lead says where it came from: Zola, The Knot, a forwarded email, your site.",
+      "open": ""
+    },
+    {
+      "for": "vendor",
+      "title": "Forward your leads",
+      "line1": "Forward any Knot, Zola, WeddingWire or Instagram inquiry to leads@meetlazo.com from your sign-in email.",
+      "line2": "It lands in your inbox as a lead, with its source.",
+      "open": ""
+    },
+    {
+      "for": "vendor",
+      "title": "Automations and exports",
+      "line1": "Every rule Lazo runs for you, in one place in Account.",
+      "line2": "Leads and payments as CSV, also from Account.",
+      "open": "leads"
+    },
+    {
+      "for": "vendor",
+      "title": "Lazo video calls",
+      "line1": "Call a couple from the thread; their camera stays off until you allow it.",
+      "line2": "Schedule a call (Pro and Studio) with reminders the day before.",
+      "open": ""
+    }
+  ]
+}
